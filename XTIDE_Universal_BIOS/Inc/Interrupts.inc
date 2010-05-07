@@ -1,0 +1,91 @@
+; File name		:	Interrupts.inc
+; Project name	:	IDE BIOS
+; Created date	:	29.7.2007
+; Last update	:	6.11.2009
+; Author		:	Tomi Tilli
+; Description	:	Equates for Interrupts.
+%ifndef INTERRUPTS_INC
+%define INTERRUPTS_INC
+
+; 8259 Master and Slave Interrupt Controller Ports
+RPORT_8259MA_IRR_ISR		EQU		20h		; Master 8259 Read IRR / ISR
+WPORT_8259MA_COMMAND		EQU		20h		; Master 8259 Write command
+WPORT_8259MA_INIT			EQU		21h		; Master 8259 Write Init command
+PORT_8259MA_IMR				EQU		21h		; Master 8259 IMR
+RPORT_8259SL_IRR_ISR		EQU		0A0h	; Slave 8259 Read IRR / ISR
+WPORT_8259SL_COMMAND		EQU		0A0h	; Slave 8259 Write command
+WPORT_8259SL_INIT			EQU		0A1h	; Slave 8259 Write Init command
+PORT_8259SL_IMR				EQU		0A1h	; Slave 8259 IMR
+
+; Valid commands to port 20h (master, WPORT_8259MA_COMMAND) 
+; and A0h (slave, WPORT_8259SL_COMMAND)
+CMD_ROT_IN_AUTO_EOI_MODE_CLEAR	EQU		000h
+CMD_READ_IRR					EQU		00Ah
+CMD_READ_ISR					EQU		00Bh
+CMD_END_OF_INTERRUPT			EQU		020h
+CMD_NO_OPERATION				EQU		040h
+CMD_CLEAR_SPECIAL_MASK_MODE		EQU		048h
+CMD_SPEC_EOI_IRQ0				EQU		060h
+CMD_SPEC_EOI_IRQ1				EQU		061h
+CMD_SPEC_EOI_IRQ2				EQU		062h
+CMD_SPEC_EOI_IRQ3				EQU		063h
+CMD_SPEC_EOI_IRQ4				EQU		064h
+CMD_SPEC_EOI_IRQ5				EQU		065h
+CMD_SPEC_EOI_IRQ6				EQU		066h
+CMD_SPEC_EOI_IRQ7				EQU		067h
+CMD_SET_SPECIAL_MASK_MODE		EQU		068h
+CMD_ROT_IN_AUTO_EOI_MODE_SET	EQU		080h
+CMD_ROT_ON_NONSPEC_EOI			EQU		0A0h
+CMD_IRQ0_LOWST_PRIO				EQU		0C0h
+CMD_IRQ1_LOWST_PRIO				EQU		0C1h
+CMD_IRQ2_LOWST_PRIO				EQU		0C2h
+CMD_IRQ3_LOWST_PRIO				EQU		0C3h
+CMD_IRQ4_LOWST_PRIO				EQU		0C4h
+CMD_IRQ5_LOWST_PRIO				EQU		0C5h
+CMD_IRQ6_LOWST_PRIO				EQU		0C6h
+CMD_IRQ7_LOWST_PRIO				EQU		0C7h
+CMD_EOI_AND_IRQ0_LOWST_PRIO		EQU		0E0h
+CMD_EOI_AND_IRQ1_LOWST_PRIO		EQU		0E1h
+CMD_EOI_AND_IRQ2_LOWST_PRIO		EQU		0E2h
+CMD_EOI_AND_IRQ3_LOWST_PRIO		EQU		0E3h
+CMD_EOI_AND_IRQ4_LOWST_PRIO		EQU		0E4h
+CMD_EOI_AND_IRQ5_LOWST_PRIO		EQU		0E5h
+CMD_EOI_AND_IRQ6_LOWST_PRIO		EQU		0E6h
+CMD_EOI_AND_IRQ7_LOWST_PRIO		EQU		0E7h
+
+
+; Interrupt Vector Table
+INTV_IRQ0						EQU		08h		; System timer
+INTV_IRQ1						EQU		09h		; Keyboard
+INTV_IRQ2						EQU		0Ah
+INTV_IRQ3						EQU		0Bh
+INTV_IRQ4						EQU		0Ch
+INTV_IRQ5						EQU		0Dh
+INTV_IRQ6						EQU		0Eh
+INTV_IRQ7						EQU		0Fh
+INTV_EQUIPMENT_CONF				EQU		11h		; Equipment configuration
+INTV_MEMORY_SIZE				EQU		12h		; Base memory size
+INTV_DISK_FUNC					EQU		13h		; Disk functions
+INTV_SYSTEM_SERVICES			EQU		15h		; Different system functions
+INTV_KEYBOARD_FUNC				EQU		16h		; Keyboard functions
+INTV_BOOT_FAILURE				EQU		18h		; Process Boot Failure
+INTV_BOOTSTRAP					EQU		19h		; Boot Strap Loader
+INTV_TIME_OF_DAY				EQU		1Ah		; Time of day functions
+INTV_KEYB_BREAK					EQU		1Bh		; Keyboard break
+INTV_USER_TIMER_TICK			EQU		1Ch		; User timer tick
+INTV_DPT						EQU		1Eh		; Diskette Parameter Table
+INTV_FLOPPY_FUNC				EQU		40h		; Floppy functions
+INTV_HD0DPT						EQU		41h		; Ptr to HD0 Disk Parameter Table
+INTV_HD1DPT						EQU		46h		; Ptr to HD1 Disk Parameter Table
+INTV_USERS_ALARM				EQU		4Ah		; Users alarm
+INTV_IRQ8						EQU		70h
+INTV_IRQ9						EQU		71h
+INTV_IRQ10						EQU		72h
+INTV_IRQ11						EQU		73h
+INTV_IRQ12						EQU		74h
+INTV_IRQ13						EQU		75h
+INTV_IRQ14						EQU		76h
+INTV_IRQ15						EQU		77h
+
+
+%endif ; INTERRUPTS_INC
