@@ -78,8 +78,8 @@ TARGET = $(BUILD_DIR)/$(PROG)
 MAKE = mingw32-make.exe
 
 # Assembler
-#AS = yasm.exe
-AS = nasm.exe
+AS = yasm.exe
+#AS = nasm.exe
 
 # use this command to erase files.
 RM = -del /Q

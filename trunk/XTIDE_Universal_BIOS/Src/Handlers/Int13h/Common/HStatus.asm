@@ -1,7 +1,7 @@
 ; File name		:	HStatus.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	15.12.2009
-; Last update	:	13.4.2010
+; Last update	:	25.5.2010
 ; Author		:	Tomi Tilli
 ; Description	:	IDE Status Register polling functions.
 
@@ -25,7 +25,10 @@ SECTION .text
 ALIGN JUMP_ALIGN
 HStatus_WaitIrqOrRdy:
 	test	BYTE [di+DPT.bDrvCtrl], FLG_IDE_CTRL_nIEN
-	jz		HIRQ_WaitIRQ					; Wait for IRQ if enabled
+	jnz		SHORT .PollRdySinceIrqsAreDisabled
+	jmp		HIRQ_WaitIRQ
+ALIGN JUMP_ALIGN
+.PollRdySinceIrqsAreDisabled:
 	call	HStatus_ReadAndIgnoreAlternateStatus
 	mov		cl, B_TIMEOUT_DRQ				; Load DRQ (not RDY) timeout
 	jmp		SHORT HStatus_WaitRdy			; Jump to poll RDY
