@@ -1,7 +1,7 @@
 ; File name		:	menudraw.asm
 ; Project name	:	Menu library
 ; Created date	:	9.11.2009
-; Last update	:	21.1.2010
+; Last update	:	25.5.2010
 ; Author		:	Tomi Tilli
 ; Description	:	ASM library to menu system.
 ;					Contains menu drawing functions.
@@ -287,13 +287,15 @@ ALIGN JUMP_ALIGN
 MenuDraw_InfoBorders:
 	xor		dx, dx							; Zero DX
 	call	MenuCrsr_PointNfoBrdr			; Set cursor
-	cmp		BYTE [bp+MENUVARS.bInfoH], 0	; Any info strings?
-	jz		MenuDraw_BottomBorder			;  If not, draw bottom border
-	test	BYTE [bp+MENUVARS.bFlags], FLG_MNU_HIDENFO
-	jnz		MenuDraw_BottomBorder			; Draw bottom border if info is hidden
+	eMOVZX	cx, BYTE [bp+MENUVARS.bInfoH]	; Load number of info strings
+	test	BYTE [bp+MENUVARS.bFlags], FLG_MNU_HIDENFO	; Information hidden?
+	jnz		SHORT .JumpToBottomBorder
+	test	cx, cx							; Any info strings?
+	jz		SHORT MenuDraw_BottomBorder
+	push	cx
 	call	MenuDraw_MiddleBorder			; Draw middle border
 	call	MenuDraw_NewlineBrdr			; Change line
-	eMOVZX	cx, BYTE [bp+MENUVARS.bInfoH]	; Load number of info strings
+	pop		cx
 ALIGN JUMP_ALIGN
 .LineLoop:
 	push	cx
@@ -301,24 +303,25 @@ ALIGN JUMP_ALIGN
 	call	MenuDraw_NewlineBrdr
 	pop		cx
 	loop	.LineLoop
-	jmp		MenuDraw_BottomBorder
-	
+ALIGN JUMP_ALIGN
+.JumpToBottomBorder:
+	jmp		SHORT MenuDraw_BottomBorder
+
 ALIGN JUMP_ALIGN
 MenuDraw_Timeout:
 	xor		dx, dx							; Zero DX
 	call	MenuCrsr_PointNfoBrdr			; Set cursor
 	mov		ch, [bp+MENUVARS.bInfoH]		; Load info str count to CH
-	test	ch, ch							; Any info strings?
-	jz		MenuDraw_BottomBorder			;  If not, draw bottom border
+	and		cx, 0FF00h						; Any info strings? (clears CL)
+	jz		SHORT MenuDraw_BottomBorder		;  If not, draw bottom border
 	inc		ch								; Increment for info top border
-	xor		cl, cl							; Zero X coordinate
 	call	MenuCrsr_Move					; Move cursor
-	jmp		MenuDraw_BottomBorder
+	jmp		SHORT MenuDraw_BottomBorder
 
 ALIGN JUMP_ALIGN
 MenuDraw_ItemBorders:
-	cmp		WORD [bp+MENUVARS.wItemCnt], 0	; Any items?
-	jz		.Return							;  If not, return
+	cmp		WORD [bp+MENUVARS.wItemCnt], BYTE 0	; Any items?
+	jz		SHORT .Return					;  If not, return
 	xor		dx, dx							; Zero DX
 	call	MenuCrsr_PointItemBrdr			; Set cursor
 	eMOVZX	cx, BYTE [bp+MENUVARS.bVisCnt]	; Load max number of item strings
@@ -353,21 +356,21 @@ MenuDraw_TopBorder:
 	mov		bh, B_TL
 	mov		bl, B_H
 	mov		dh, B_TR
-	jmp		MenuDraw_BorderChars
+	jmp		SHORT MenuDraw_BorderChars
 	
 ALIGN JUMP_ALIGN
 MenuDraw_StringBorder:
 	mov		bh, B_V
 	mov		bl, ' '
 	mov		dh, B_V
-	jmp		MenuDraw_BorderChars
+	jmp		SHORT MenuDraw_BorderChars
 
 ALIGN JUMP_ALIGN
 MenuDraw_ScrollBorder:
 	call	MenuDraw_GetScrollChar			; Load scroll char to DH
 	mov		bh, B_V
 	mov		bl, ' '
-	jmp		MenuDraw_BorderChars
+	jmp		SHORT MenuDraw_BorderChars
 
 ALIGN JUMP_ALIGN
 MenuDraw_MiddleBorder:

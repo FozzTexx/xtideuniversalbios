@@ -1,7 +1,7 @@
 ; File name		:	menuloop.asm
 ; Project name	:	Menu library
 ; Created date	:	11.11.2009
-; Last update	:	10.12.2009
+; Last update	:	25.5.2010
 ; Author		:	Tomi Tilli
 ; Description	:	ASM library to menu system.
 ;					Contains event dispatching loop.
@@ -192,7 +192,10 @@ ALIGN JUMP_ALIGN
 	dec		ax								; Decrement menuitem index
 	mov		[bp+MENUVARS.wItemSel], ax		; Store new index
 	cmp		ax, [bp+MENUVARS.wItemTop]		; Need to scroll?
-	jae		.DrawSelection					;  If not, go to draw selection
+	jb		SHORT .ScrollUp
+	jmp		.DrawSelection					;  If not, go to draw selection
+ALIGN JUMP_ALIGN
+.ScrollUp:
 	dec		WORD [bp+MENUVARS.wItemTop]		; Scroll
 	jmp		.ScrollMenu
 
@@ -221,7 +224,10 @@ ALIGN JUMP_ALIGN
 	eMOVZX	bx, BYTE [bp+MENUVARS.bVisCnt]	; Load number of visible items
 	add		bx, [bp+MENUVARS.wItemTop]		; BX to one past last visible index
 	cmp		ax, bx							; Need to scroll?
-	jb		.DrawSelection					;  If not, go to draw selection
+	jae		.ScrollDown
+	jmp		.DrawSelection
+ALIGN JUMP_ALIGN
+.ScrollDown:
 	inc		WORD [bp+MENUVARS.wItemTop]		; Scroll
 	jmp		.ScrollMenu
 
@@ -235,6 +241,28 @@ ALIGN JUMP_ALIGN
 	inc		WORD [bp+MENUVARS.wItemTop]
 	jmp		.ScrollMenu
 %endif
+
+	; HOME pressed
+ALIGN JUMP_ALIGN
+.KeyHome:
+	xor		ax, ax
+	mov		[bp+MENUVARS.wItemSel], ax
+	mov		[bp+MENUVARS.wItemTop], ax
+	jmp		.ScrollMenu
+
+	; END pressed
+ALIGN JUMP_ALIGN
+.KeyEnd:
+	mov		ax, [bp+MENUVARS.wItemCnt]		; Load number if menuitems
+	mov		bx, ax							; Copy menuitem count to BX
+	dec		ax								; Decrement for last index
+	mov		[bp+MENUVARS.wItemSel], ax		; Store new selection
+	sub		bl, [bp+MENUVARS.bVisCnt]		; BX to first menuitem to draw
+	sbb		bh, 0
+	mov		[bp+MENUVARS.wItemTop], bx		; Store first menuitem to draw
+	jnc		.ScrollMenu	
+	mov		WORD [bp+MENUVARS.wItemTop], 0	; Overflow, start with 0
+	jmp		.ScrollMenu
 
 	; PGUP pressed
 ALIGN JUMP_ALIGN
@@ -261,28 +289,6 @@ ALIGN JUMP_ALIGN
 	jae		.KeyEnd							;  If so, select last menuitem
 	mov		[bp+MENUVARS.wItemSel], ax
 	mov		[bp+MENUVARS.wItemTop], ax
-	jmp		.ScrollMenu
-
-	; HOME pressed
-ALIGN JUMP_ALIGN
-.KeyHome:
-	xor		ax, ax
-	mov		[bp+MENUVARS.wItemSel], ax
-	mov		[bp+MENUVARS.wItemTop], ax
-	jmp		.ScrollMenu
-
-	; END pressed
-ALIGN JUMP_ALIGN
-.KeyEnd:
-	mov		ax, [bp+MENUVARS.wItemCnt]		; Load number if menuitems
-	mov		bx, ax							; Copy menuitem count to BX
-	dec		ax								; Decrement for last index
-	mov		[bp+MENUVARS.wItemSel], ax		; Store new selection
-	sub		bl, [bp+MENUVARS.bVisCnt]		; BX to first menuitem to draw
-	sbb		bh, 0
-	mov		[bp+MENUVARS.wItemTop], bx		; Store first menuitem to draw
-	jnc		.ScrollMenu	
-	mov		WORD [bp+MENUVARS.wItemTop], 0	; Overflow, start with 0
 	; Fall to .ScrollMenu
 
 	; Menuitem selection changed, redraw all items
