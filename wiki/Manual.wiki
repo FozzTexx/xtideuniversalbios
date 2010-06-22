@@ -1,6 +1,6 @@
-#Instructions for XTIDE Universal BIOS v1.1.0
+#summary Instructions for XTIDE Universal BIOS v1.1.0
 
-= 1 Introduction =
+= Introduction =
 
 XTIDE Universal BIOS is mainly used with XTIDE controller[1] that makes possible to use modern IDE drives on PC/XT systems. XTIDE Universal BIOS does more than that since it support 16- and 32-bit transfers too. 16-bit transfers are meant for 16-bit ISA controllers and 32-bit transfers are meant for VLB and PCI controllers.
 
@@ -18,23 +18,14 @@ Some of the features included in XTIDE Universal BIOS are...
 
 == Different builds ==
 
-At the moment there are three different builds included in the XTIDE Universal BIOS zip file.
-
-
-=== IDE_XT.BIN (XT build) ===
-
-XT build uses only instructions supported by 8086/8088 making it the only build that can be used on any PC, including the original IBM PC model 5150.
-
-
-=== IDE_XTP.BIN (XT+ build) ===
-
-XT+ build has the same features as the XT build but XT+ build uses instructions introduced in 80186/80188. Those instructions are supported by all later x86 CPUs, including NEC V20/V30. 8-bit transfers rates will be better thanks to INS and OUTS instructions.
-
-
-=== IDE_AT.BIN (AT build) ===
-
-AT build is meant for all AT class machines (16-bit or 32-bit bus). AT build supports OS hooks to allow operating system to do some processing while drive seeks the requested data. By default, the AT build is configured to full mode to take advantage of all the features the XTIDE Universal BIOS offers.
-
+At the moment there are three different builds included in the XTIDE Universal BIOS zip file:
+  * IDE_XT.BIN (XT build)
+   XT build uses only instructions supported by 8086/8088 making it the only build that can be used on any PC, including the original IBM PC model 5150.
+  * IDE_XTP.BIN (XT+ build)
+   XT+ build has the same features as the XT build but XT+ build uses instructions introduced in 80186/80188. Those instructions are supported by all later x86 CPUs, including NEC V20/V30. 8-bit transfers rates will be better thanks to INS and OUTS instructions.
+  * IDE_AT.BIN (AT build)
+   AT build is meant for all AT class machines (16-bit or 32-bit bus). AT build supports OS hooks to allow operating system to do some processing while drive seeks the requested data. By default, the AT build is configured to full mode to take advantage of all the features the XTIDE Universal BIOS offers.
+----
 
 = Installing XTIDE Universal BIOS =
 
@@ -129,18 +120,14 @@ Number of user specified P-CHS cylinders, heads and sectors per track. These men
 ==== Menuitem: Bus type ====
 
 Select bus type:
-
-===== 8-bit dual port (XTIDE) =====
-8-bit ISA controllers with two data ports. This is what the XTIDE card [1] uses.
-
-===== 8-bit single port =====
-8-bit ISA controllers with one data port.
-
-===== 16-bit =====
-16-bit I/O for ISA (16-bit), VLB and PCI controllers.
-
-===== 32-bit generic =====
-Generic 32-bit I/O for VLB and PCI controllers.
+  * 8-bit dual port (XTIDE)
+   8-bit ISA controllers with two data ports. This is what the XTIDE card [1] uses.
+  * 8-bit single port
+   8-bit ISA controllers with one data port.
+  * 16-bit
+   16-bit I/O for ISA (16-bit), VLB and PCI controllers.
+  * 32-bit generic
+   Generic 32-bit I/O for VLB and PCI controllers.
 
 
 ==== Menuitem: Base (cmd block) address ====
@@ -303,7 +290,7 @@ Larger page size will improve write performance but not all EEPROMs support larg
 === Menuitem: Generate checksum byte ===
 
 PC BIOSes require checksum byte to the end of expansion card BIOS ROMs. Checksum generation can be disabled so any type of binaries can be flashed.
-
+----
 
 = Boot menu =
 
@@ -364,7 +351,7 @@ Displays IRQ channel if IRQ has been enabled.
 
 ==== Reset ====
 Displays status information from drive reset and initialization. This should always be 00h. Anything else would indicate some sort of error. Let me know if you see something other than 00h.
-
+----
 
 = IDE controllers on VLB and PCI bus =
 
@@ -375,7 +362,7 @@ VLB and PCI IDE controllers are much more complex since they have an actual cont
 Unfortunately many of the controllers work only at PIO-0 by default. Some VLB multi I/O cards have jumpers to set transfer rates but most require controller specific programming to enable higher PIO modes. It is possible that your VLB multi I/O card don't offer any advantages over ISA multi I/O cards if your BIOS does not support the IDE controller on the VLB card. There are DOS drivers for many VLB IDE controllers so BIOS support isn't necessity.
 
 XTIDE Universal BIOS does not support any specific VLB controllers at the moment. I'm planning to add support for Vision QD6580 controller soon.
-
+----
 
 = Known problems =
 
@@ -419,7 +406,7 @@ Operating system and version (for example MS-DOS 6.22)
 Hard disk(s) you are using with XTIDE Universal BIOS
 Hard disk(s) not handled by XTIDE Universal BIOS (if any)
 Reset status that boot menu shows if problem is related to specific drive
-
+----
 
 = References =
 
