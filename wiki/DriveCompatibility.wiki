@@ -1,0 +1,23 @@
+#summary XTIDE Universal BIOS compatibility with hard disks, microdrives and CF cards
+<wiki:toc max_depth="1" />
+
+= Compactflash cards =
+|| *CF card* || *Capacity* || *Speed rating* || *Works as slave* || *MBR must be rewritten* || *Fast enough as hard disk* || *XTIDE Universal BIOS version tested with* || *Comments* ||
+|| Apacer Photo Steno || 64 MB || none || yes || yes || no || v1.1.0 || ||
+|| Apacer Photo Steno || 256 MB || none || yes || yes || no || v1.1.0 || ||
+|| Apacer Photo Steno II Pro || 256 MB || 100x || yes || no || yes || v1.1.0 || ||
+|| Apacer Photo Steno III || 512 MB || 88x || no || no || yes || v1.1.0 || ||
+
+----
+
+= Microdrives =
+|| *Microdrive* || *Model* || *Capacity* || *Works as slave* || *MBR must be rewritten* || *XTIDE Universal BIOS version tested with* || *Comments* ||
+|| Hitachi || HMS360606D5CF00 || 6 GB || yes || no || v1.1.0 || ||
+|| Magicstor || GS10040A-11 47 || 4 GB || - || yes || v1.1.0 || ||
+|| Seagate || ST64022CF || 4 GB || no || no|| v1.1.0 || ||
+
+----
+
+= Hard disks =
+|| *Hard disk* || *Model* || *Capacity* || *XTIDE Universal BIOS version tested with* || *Comments* ||
+|| Quantum ProDrive LPS || 340AT || 340 MB || v1.1.0 || Does not properly support block mode transfers when interrupts are disabled. ||
