@@ -237,35 +237,16 @@ XTIDE Universal BIOS does not support any specific VLB controllers at the moment
 
 == Problems with Compact Flash cards and microdrives ==
 
-CF cards and microdrives are IDE devices and should work as any hard disk. Unfortunately there are many CF cards and microdrives with limitations. Some of them only work as a master drive and not as a slave drive. Some of them requires MBR to be re-created before they can be booted. Avoid CF cards without speed ratings. They are too slow to be used as a hard disk replacements.
+CF cards and microdrives are IDE devices and should work as any hard disk. Unfortunately there are many CF cards and microdrives with limitations. Some of them only work as a master drive and not as a slave drive. Some of them requires MBR to be re-created before they can be booted. Avoid CF cards without speed ratings. They are too slow to be used as a hard disks.
 
 MBR can be re-created with FDISK /MBR switch. You can also use any low-level data wipe utility to clear non-bootable MBR. MBR will then be created automatically when partitioning the drive.
 
-=== Known good Compact Flash cards ===
-  * Apacer Photo Steno Pro II 256 MB, 100x
-
-=== Known Compact Flash cards with problems ===
-  * Apacer Photo Steno 64 MB, no speed rating: too slow, MBR must be re-created to be able to boot
-  * Apacer Photo Steno 256 MB, no speed rating: too slow, MBR must be re-created to be able to boot
-  * Apacer Photo Steno III 512 MB, 88x: does not work as slave drive
-
-=== Known good microdrives ===
-  * Hitachi 6GB (model HMS360606D5CF00)
-
-=== Known microdrives with problems ===
-  * Seagate ST1.2 4GB (model ST64022CF): does not work as slave drive
-  * Magicstor 4GB (model GS10040A-11 47): MBR must be re-created to be able to boot
-
-
-== Problems with certain hard disks ==
-
-=== Quantum ProDrive LPS 340AT ===
-The drive does not properly support block mode transfers when interrupts are disabled. Enable interrupts or disable block mode to use this drive. I have not detected this problem with any other drive.
+[http://code.google.com/p/xtideuniversalbios/wiki/DriveCompatibility Drive compatibility list can be found here].
 
 
 = Contact information =
 
-[http://www.vintage-computer.com/vcforum/showthread.php?17986-XTIDE-Universal-BIOS XTIDE Universal BIOS thread can be found at Vintage Computer Forums]. I recommend to post there but you can also send email to aitotat@gmail.com.
+[http://www.vintage-computer.com/vcforum/showthread.php?17986-XTIDE-Universal-BIOS XTIDE Universal BIOS thread can be found at Vintage Computer Forums]. I recommend to post there but you can also send email to aitotat (at) gmail.com.
 
 When reporting bugs or other problems, please post the following information:
 Computer specs (at least CPU and RAM but details about expansion card and how they are configured might be useful)
