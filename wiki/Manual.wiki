@@ -46,6 +46,7 @@ XTIDE Universal BIOS comes with DOS utility called idecfg.com. It configures XTI
 == Other things to know ==
 
 CTRL can be held down to skip XTIDE Universal BIOS initialization. Only drive detection will be skipped when late initialization is used.
+
 ----
 
 = Using IDECFG.COM (XTIDE Universal BIOS configuration and flashing program) =
@@ -54,241 +55,120 @@ Idecfg.com is intended to be user friendly. At the bottom of the screen appears 
 
 Some menu items appear only when needed to make configuring easier.
 
+== Menuitems on main menu ==
+  * Exit to DOS
+   This menu item exits to DOS but allows user to save any unsaved changes.
+  * Load BIOS from file
+   Loads any file with .BIN extension to be flashed.
+  * Load BIOS from EEPROM
+   This menu item appears only when supported version of XTIDE Universal BIOS is detected. It loads the BIOS from EEPROM to be reconfigured.
+  * Load old settings from EEPROM
+   This menu item appears only when supported version of XTIDE Universal BIOS is detected and same or another supported version is loaded to be configured. It loads the old settings so that the new version does not need to be reconfigured when updating XTIDE Universal BIOS to new version.
+  * Configure XTIDE Universal BIOS
+   All XTIDE Universal BIOS settings can be found and configured from this sub menu.
+  * Flash EEPROM
+   Settings for EEPROM flashing.
+
+== Menuitems on Configure XTIDE Universal BIOS submenu ==
+  * Back to previous menu
+   Resumes back to main menu.
+  * Primary IDE Controller
+  * Secondary IDE Controller
+  * Tertiary IDE Controller
+  * Quaternary IDE Controller
+  * Quinary IDE Controller
+   IDE Controller menu items appear based on selected number of IDE controllers.
+  * Boot menu settings
+   Opens sub menu for configuring boot menu. This menu item appears only when Boot loader type is set to Menu.
+  * Late initialization
+   Normally expansion card BIOSes are initialized before POST completes. Some (older) systems initialize expansion card BIOSes before they have initialized themselves. This might cause problems since XTIDE Universal BIOS requires some main BIOS functions for drive detection. This problem can be fixed by using late initialization to detect drives on boot loader. Late initialization requires that XTIDE Universal BIOS is the last BIOS that installs INT 19h handler. Make sure that XTIDE ROM is configured to highest address if you have other storage device controllers present.
+  * Maximize disk size
+   Old BIOSes reserve diagnostic cylinder (landing zone cylinder for MFM drives) that is not used. Later BIOSes do not reserve it to allow more data to be stored. Do not maximize disk size if you need to move the drive between XTIDE Universal BIOS controlled systems and systems with cylinder reserving BIOSes.
+  * Full operating mode
+   Full mode supports up to 5 IDE controllers (10 drives). Full mode reserves a bit of RAM from top of base memory. This makes possible to use ROM Basic and software that requires top of interrupt vectors where XTIDE Universal BIOS parameters would be stored in lite mode. Lite mode supports only one IDE controller (2 drives) and stores parameters to top of interrupt vectors (30:0h) so no base RAM needs to be reserved. Lite mode cannot be used if some software requires top of interrupt vectors. Usually this is not a problem since only IBM ROM Basic uses them. Tandy 1000 models with 640 kiB or less memory need to use lite mode since top of base RAM gets dynamically reserved by video hardware. This happens only with Tandy integrated video controller, not with expansion graphics cards. It is possible to use full mode if reserving RAM for video memory + what is required for XTIDE Universal BIOS. This would mean 129 kiB but most software should work with 65 kiB reserved.
+  * kiB to steal from RAM
+   Parameters for detected hard disks must be stored somewhere. In full mode they are stored to top of base RAM. At the moment 1 kiB is always enough but you might want to steal more if you want to use full mode with Tandy 1000. This menu item appears only when full operating mode is enabled.
+  * Number of IDE controllers
+   Number of IDE controllers handled by XTIDE Universal BIOS. This menu item appears only when full operating mode is enabled.
+
+== Menuitems on IDE Controller submenus ==
+  * Back to previous menu
+   Resumes back to Configure XTIDE Universal BIOS submenu.
+  * Master drive
+  * Slave drive
+   Drive specific settings for master and slave drives.
+  * Bus type
+    * 8-bit dual port (XTIDE)
+     8-bit ISA controllers with two data ports. This is what the XTIDE card uses.
+    * 8-bit single port
+     8-bit ISA controllers with one data port.
+    * 16-bit
+     16-bit I/O for ISA (16-bit), VLB and PCI controllers.
+    * 32-bit generic
+     Generic 32-bit I/O for VLB and PCI controllers.
+  * Base (cmd block) address
+   IDE controller command block address is the usual address mentioned for IDE controllers. By default the primary IDE controller uses port 1F0h and secondary controller uses port 170h. XTIDE uses port 300h by default.
+  * Control block address
+   IDE controller control block address is normally command block address + 200h. For XTIDE the control block registers are mapped right after command block registers so use command block address + 8h for XTIDE.
+  * Enable interrupt
+   IDE controller can use interrupts to signal when it is ready to transfer data. This makes possible to do other tasks while waiting drive to be ready. That is not useful in MS-DOS but using interrupts frees the bus for any DMA transfers. Polling mode is used when interrupts are disabled. Polling usually gives a little better access times since interrupt handling requires extra processing. There can be some compatibility issues with some old drives when polling is used with block mode transfers.
+  * IRQ
+   IRQ channel to use. All controllers managed by XTIDE Universal BIOS can use the same IRQ when MS-DOS is used. Other operating systems are likely to require different interrupts for each controller. This menu item appears only when interrupts are enabled.
+
+== Menuitems on Master and Slave drive submenus ==
+  * Block mode transfers
+   Block mode will speed up transfers since multiple sectors can be transferred before waiting next data request. Normally block mode should always be kept enabled but there is at least one drive with buggy block mode implementation.
+  * User specified CHS
+   Specify (P-)CHS parameters manually instead of autodetecting them. This can be used to limit drive size for old operating systems that do not support large hard disks. Limiting cylinders will work for all drives but drives may not accept all values for heads and sectors per track.
+  * Cylinders
+  * Heads
+  * Sectors per track
+   Number of user specified P-CHS cylinders, heads and sectors per track. These menu items appear only when user specified CHS is enabled.
+
+== Menuitems on Boot menu settings submenu ==
+  * Back to previous menu
+   Resumes back to XTIDE Universal BIOS configuration menu.
+  * Default boot drive
+   Default drive will be set selected by default when Boot Menu is displayed.
+  * Display drive info  
+   Boot Menu can display some details about the drives in system. Reading this data is slow on XTs so you might want to hide drive information.
+  * Display ROM boot
+   Some old systems have Basic or DOS in ROM. Since most systems don't have either, ROM Boot setting is disabled by default. Enable it if you have use for it.
+  * Maximum height
+   Boot Menu maximum height in characters.
+  * Min floppy drive count
+   Detecting correct number of floppy drives might fail when using floppy controller with it's own BIOS. Minimum number of floppy drives can be specified to force non-detected drives to appear on boot menu.
+  * Selection timeout
+   Boot Menu selection timeout in seconds. When time goes to zero, currently selected drive will be booted automatically. Timeout can be disabled by setting this to 0.
+  * Swap boot drive numbers
+   Some old operating systems (DOS) can only boot from Floppy Drive A (00h) or first Hard Disk (80h, usually drive C). Drive Translation can be used to modify drive numbers so that selected drive will be mapped to 00h or 80h so that it can be booted.
+  * Boot loader type
+   * Boot menu
+    Boot menu where user can select drive to boot from.
+   * Simple boot loader
+    Typical A, C, INT 18h boot order.
+   * System boot loader
+    Uses main BIOS boot loader or boot loader provided by some other BIOS. System boot loader works only when late initialization is disabled since late initialization is done on a boot loader.
+
+== Settings for Flash EEPROM submenu ==
+  * Back to previous menu
+   Resumes to main menu.
+  * Start flashing
+   Writes (configured) BIOS to EEPROM.
+  * SDP command
+   * None
+    Do not use Software Data Protection. Meant for EEPROMs that do not support SDP.
+   * Enable
+    Write protects the EEPROM after flashing. Software Data Protection should always be enabled if EEPROM supports it.
+   * Disable
+    Disables Software Data Protection after flashing.
+  * EEPROM address
+   Address (segment) where EEPROM is located.
+  * Page size
+   Larger page size will improve write performance but not all EEPROMs support large pages or page writing at all. Byte writing mode will be used when page size is set to 1. Byte writing mode is supported by every EEPROM. Large pages cannot be used with slow CPUs.
+  * Generate checksum byte
+   PC BIOSes require checksum byte to the end of expansion card BIOS ROMs. Checksum generation can be disabled so any type of binaries can be flashed.
 
-== Menuitem: Exit to DOS ==
-
-This menu item exits to DOS but allows user to save any unsaved changes.
-
-
-== Menuitem: Load BIOS from file ==
-
-Loads any file with .BIN extension to be flashed.
-
-
-== Menuitem: Load BIOS from EEPROM ==
-
-This menu item appears only when supported version of XTIDE Universal BIOS is detected. It loads the BIOS from EEPROM to be reconfigured.
-
-
-== Menuitem: Load old settings from EEPROM ==
-
-This menu item appears only when supported version of XTIDE Universal BIOS is detected and same or another supported version is loaded to be configured. It loads the old settings so that the new version does not need to be reconfigured when updating XTIDE Universal BIOS to new version.
-
-
-== Menuitem: Configure XTIDE Universal BIOS ==
-
-All XTIDE Universal BIOS settings can be found and configured from this sub menu.
-
-
-==== Menuitem: Back to previous menu ===
-
-Resumes back to main menu.
-
-
-=== Menuitems: Primary, Secondary, Tertiary, Quaternary and Quinary IDE Controllers ===
-
-IDE Controller menu items appear based on selected number of IDE controllers.
-
-
-==== Menuitem: Back to previous menu ====
-
-Resumes back to XTIDE Universal BIOS configuration menu.
-
-
-==== Menuitems: Master and Slave drives ====
-
-Drive specific settings for master and slave drives:
-
-====== Menuitem: Block mode transfers ======
-
-Block mode will speed up transfers since multiple sectors can be transferred before waiting next data request. Normally block mode should always be kept enabled but there is at least one drive with buggy block mode implementation.
-
-
-===== Menuitem: User specified CHS =====
-
-Specify (P-)CHS parameters manually instead of autodetecting them. This can be used to limit drive size for old operating systems that do not support large hard disks.
-
-Limiting cylinders will work for all drives but drives may not accept all values for heads and sectors per track.
-
-
-===== Menuitems: Cylinders, heads and Sectors per track =====
-
-Number of user specified P-CHS cylinders, heads and sectors per track. These menu items appear only when user specified CHS is enabled.
-
-
-==== Menuitem: Bus type ====
-
-Select bus type:
-  * 8-bit dual port (XTIDE)
-   8-bit ISA controllers with two data ports. This is what the XTIDE card uses.
-  * 8-bit single port
-   8-bit ISA controllers with one data port.
-  * 16-bit
-   16-bit I/O for ISA (16-bit), VLB and PCI controllers.
-  * 32-bit generic
-   Generic 32-bit I/O for VLB and PCI controllers.
-
-
-==== Menuitem: Base (cmd block) address ====
-
-IDE controller command block address is the usual address mentioned for IDE controllers.
-
-By default the primary IDE controller uses port 1F0h and secondary controller uses port 170h. XTIDE uses port 300h by default.
-
-
-==== Menuitem: Control block address ====
-
-IDE controller control block address is normally command block address + 200h.
-
-For XTIDE the control block registers are mapped right after command block registers so use command block address + 8h for XTIDE.
-
-
-==== Menuitem: Enable interrupt ====
-
-IDE controller can use interrupts to signal when it is ready to transfer data. This makes possible to do other tasks while waiting drive to be ready. That is not useful in MS-DOS but using interrupts frees the bus for any DMA transfers.
-
-Polling mode is used when interrupts are disabled. Polling usually gives a little better access times since interrupt handling requires extra processing. There can be some compatibility issues with some old drives when polling is used with block mode transfers.
-
-
-==== Menuitem: IRQ ====
-
-IRQ channel to use. All controllers managed by XTIDE Universal BIOS can use the same IRQ when MS-DOS is used. Other operating systems are likely to require different interrupts for each controller. This menu item appears only when interrupts are enabled.
-
-
-=== Menuitem: Boot menu settings ===
-
-Opens sub menu for configuring boot menu. This menu item appears only when Boot loader type is set to Menu.
-
-
-==== Menuitem: Back to previous menu ====
-
-Resumes back to XTIDE Universal BIOS configuration menu.
-
-
-==== Menuitem: Default boot drive ====
-
-Default drive will be set selected by default when Boot Menu is displayed.
-
-
-==== Menuitem: Display drive info ====
-
-Boot Menu can display some details about the drives in system. Reading this data is slow on XTs so you might want to hide drive information.
-
-
-==== Menuitem: Display ROM boot ====
-
-Some old systems have Basic or DOS in ROM. Since most systems don't have either, ROM Boot setting is disabled by default. Enable it if you have use for it.
-
-
-==== Menuitem: Maximum height ====
-
-Boot Menu maximum height in characters.
-
-
-==== Menuitem: Min floppy drive count ====
-
-Detecting correct number of floppy drives might fail when using floppy controller with it's own BIOS. Minimum number of floppy drives can be specified to force non-detected drives to appear on boot menu.
-
-
-==== Menuitem: Selection timeout ====
-
-Boot Menu selection timeout in seconds. When time goes to zero, currently selected drive will be booted automatically. Timeout can be disabled by setting this to 0.
-
-
-==== Menuitem: Swap boot drive numbers ====
-
-Some old operating systems (DOS) can only boot from Floppy Drive A (00h) or first Hard Disk (80h, usually drive C). Drive Translation can be used to modify drive numbers so that selected drive will be mapped to 00h or 80h so that it can be booted.
-
-
-=== Menuitem: Boot loader type ===
-
-Select boot loader type:
-
-==== Boot menu ====
-Boot menu where user can select drive to boot from.
-
-==== Simple boot loader ====
-Typical A, C, INT 18h boot order.
-
-==== System boot loader ====
-Uses main BIOS boot loader or boot loader provided by some other BIOS. System boot loader works only when late initialization is disabled since late initialization is done on a boot loader.
-
-
-=== Menuitem: Late initialization ===
-
-Normally expansion card BIOSes are initialized before POST completes. Some (older) systems initialize expansion card BIOSes before they have initialized themselves. This might cause problems since XTIDE Universal BIOS requires some main BIOS functions for drive detection.
-
-This problem can be fixed by using late initialization to detect drives on boot loader. Late initialization requires that XTIDE Universal BIOS is the last BIOS that installs INT 19h handler. Make sure that XTIDE ROM is configured to highest address if you have other storage device controllers present.
-
-
-=== Menuitem: Maximize disk size ===
-
-Old BIOSes reserve diagnostic cylinder (landing zone cylinder for MFM drives) that is not used. Later BIOSes do not reserve it to allow more data to be stored.
-
-Do not maximize disk size if you need to move the drive between XTIDE Universal BIOS controlled systems and systems with cylinder reserving BIOSes.
-
-
-=== Menuitem: Full operating mode ===
-
-Full mode supports up to 5 IDE controllers (10 drives). Full mode reserves a bit of RAM from top of base memory. This makes possible to use ROM Basic and software that requires top of interrupt vectors where XTIDE Universal BIOS parameters would be stored in lite mode.
-
-Lite mode supports only one IDE controller (2 drives) and stores parameters to top of interrupt vectors (30:0h) so no base RAM needs to be reserved. Lite mode cannot be used if some software requires top of interrupt vectors. Usually this is not a problem since only IBM ROM Basic uses them.
-
-Tandy 1000 models with 640 kiB or less memory need to use lite mode since top of base RAM gets dynamically reserved by video hardware. This happens only with Tandy integrated video controller, not with expansion graphics cards. It is possible to use full mode if reserving RAM for video memory + what is required for XTIDE Universal BIOS. This would mean 129 kiB but most software should work with 65 kiB reserved.
-
-
-=== Menuitem: kiB to steal from RAM ===
-
-Parameters for detected hard disks must be stored somewhere. In full mode they are stored to top of base RAM. At the moment 1 kiB is always enough but you might want to steal more if you want to use full mode with Tandy 1000. This menu item appears only when full operating mode is enabled.
-
-
-=== Menuitem: Number of IDE controllers ===
-
-Number of IDE controllers handled by XTIDE Universal BIOS. This menu item appears only when full operating mode is enabled.
-
-
-== Menuitem: Flash EEPROM ==
-
-Settings for EEPROM flashing.
-
-
-=== Menuitem: Back to previous menu ===
-
-Resumes to main menu.
-
-
-=== Menuitem: Start flashing ===
-
-Writes BIOS to EEPROM.
-
-
-=== Menuitem: SDP command ===
-
-Software Data Protection command:
-
-==== None ====
-Do not use Software Data Protection. Meant for EEPROMs that do not support SDP.
-
-==== Enable ====
-Write protects the EEPROM after flashing. Software Data Protection should always be enabled if EEPROM supports it.
-
-==== Disable ====
-Disables Software Data Protection after flashing.
-
-
-=== Menuitem: EEPROM address ===
-
-Address (segment) where EEPROM is located.
-
-
-=== Menuitem: Page size ===
-
-Larger page size will improve write performance but not all EEPROMs support large pages or page writing at all. Byte writing mode will be used when page size is set to 1. Byte writing mode is supported by every EEPROM. Large pages cannot be used with slow CPUs.
-
-
-=== Menuitem: Generate checksum byte ===
-
-PC BIOSes require checksum byte to the end of expansion card BIOS ROMs. Checksum generation can be disabled so any type of binaries can be flashed.
 ----
 
 = Boot menu =
@@ -384,7 +264,7 @@ MBR can be re-created with FDISK /MBR switch. You can also use any low-level dat
   * Apacer Photo Steno III 512 MB, 88x: does not work as slave drive
 
 === Known good microdrives ===
-*Hitachi 6GB (model HMS360606D5CF00)
+  * Hitachi 6GB (model HMS360606D5CF00)
 
 === Known microdrives with problems ===
   * Seagate ST1.2 4GB (model ST64022CF): does not work as slave drive
