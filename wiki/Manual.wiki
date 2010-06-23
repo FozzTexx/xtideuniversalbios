@@ -2,7 +2,7 @@
 
 = Introduction =
 
-XTIDE Universal BIOS is mainly used with XTIDE controller[1] that makes possible to use modern IDE drives on PC/XT systems. XTIDE Universal BIOS does more than that since it support 16- and 32-bit transfers too. 16-bit transfers are meant for 16-bit ISA controllers and 32-bit transfers are meant for VLB and PCI controllers.
+XTIDE Universal BIOS is mainly used with XTIDE controller that makes possible to use modern IDE drives on PC/XT systems. XTIDE Universal BIOS does more than that since it support 16- and 32-bit transfers too. 16-bit transfers are meant for 16-bit ISA controllers and 32-bit transfers are meant for VLB and PCI controllers.
 
 
 == Features ==
@@ -31,8 +31,7 @@ At the moment there are three different builds included in the XTIDE Universal B
 
 == Hardware supporting XTIDE Universal BIOS ROM ==
 
-
-The most convenient way to use XTIDE Universal BIOS is to use XTIDE card[1]. It can be used on any PC with free 8-bit ISA slot. You might not want to connect any drives to it in 16- or 32-bit systems since 8-bit transfer will be very very slow. Using XTIDE card allows EEPROM flashing so it is really easy to update XTIDE Universal BIOS.
+The most convenient way to use XTIDE Universal BIOS is to use XTIDE card. It can be used on any PC with free 8-bit ISA slot. You might not want to connect any drives to it in 16- or 32-bit systems since 8-bit transfer will be very very slow. Using XTIDE card allows EEPROM flashing so it is really easy to update XTIDE Universal BIOS.
 
 Another option is to use any card with free ROM socket for 8 kiB or larger ROMs. Official XTIDE builds are meant for 8 kiB ROMs but you can burn it on larger ROM if you append enough zeroes to the end (only append zeroes so checksum does not change). Many network cards have unused ROM sockets but there are also few multi I/O cards and IDE controllers with ROM sockets.
 
@@ -47,7 +46,7 @@ XTIDE Universal BIOS comes with DOS utility called idecfg.com. It configures XTI
 == Other things to know ==
 
 CTRL can be held down to skip XTIDE Universal BIOS initialization. Only drive detection will be skipped when late initialization is used.
-
+----
 
 = Using IDECFG.COM (XTIDE Universal BIOS configuration and flashing program) =
 
@@ -121,7 +120,7 @@ Number of user specified P-CHS cylinders, heads and sectors per track. These men
 
 Select bus type:
   * 8-bit dual port (XTIDE)
-   8-bit ISA controllers with two data ports. This is what the XTIDE card [1] uses.
+   8-bit ISA controllers with two data ports. This is what the XTIDE card uses.
   * 8-bit single port
    8-bit ISA controllers with one data port.
   * 16-bit
@@ -355,7 +354,7 @@ Displays status information from drive reset and initialization. This should alw
 
 = IDE controllers on VLB and PCI bus =
 
-16-bit ISA IDE controllers are very simple ISA<->PATA adapters and they all perform alike. ISA is not fast enough for anything above PIO-0 transfer method (theoretical maximum 3.3 MB/s)[2].
+16-bit ISA IDE controllers are very simple ISA to PATA adapters and they all perform alike. ISA is not fast enough for anything above PIO-0 transfer method (theoretical maximum 3.3 MB/s).
 
 VLB and PCI IDE controllers are much more complex since they have an actual controller between bus and IDE drive. This controller can buffer words so CPU can read 32-bits at a time. Later VLB and (all?) PCI controller also offer flow control so they can support PIO modes 3 and 4. Early VLB controller are limited to PIO-2. Later VLB multi I/O cards have two IDE connectors so you should use one of those even if you don't need the other IDE connector.
 
@@ -372,22 +371,24 @@ XTIDE Universal BIOS does not support any specific VLB controllers at the moment
 
 == Problems with Compact Flash cards and microdrives ==
 
-CF cards and microdrives are IDE devices and should work as any hard disk. Unfortunately there are many CF cards and microdrives with limitations. Some of them only work as a master drive and not as a slave drive. Many of them are not bootable even though they otherwise seem to work fine. Avoid CF cards without speed ratings. They are too slow to be used as a hard disk replacements.
+CF cards and microdrives are IDE devices and should work as any hard disk. Unfortunately there are many CF cards and microdrives with limitations. Some of them only work as a master drive and not as a slave drive. Some of them requires MBR to be re-created before they can be booted. Avoid CF cards without speed ratings. They are too slow to be used as a hard disk replacements.
+
+MBR can be re-created with FDISK /MBR switch. You can also use any low-level data wipe utility to clear non-bootable MBR. MBR will then be created automatically when partitioning the drive.
 
 === Known good Compact Flash cards ===
-*Apacer Photo Steno Pro II 256 MB, 100x
+  * Apacer Photo Steno Pro II 256 MB, 100x
 
 === Known Compact Flash cards with problems ===
-*Apacer Photo Steno 64 MB, no speed rating: not bootable, too slow
-*Apacer Photo Steno 256 MB, no speed rating: not bootable, too slow
-*Apacer Photo Steno III 512 MB, 88x: does not work as slave drive
+  * Apacer Photo Steno 64 MB, no speed rating: too slow, MBR must be re-created to be able to boot
+  * Apacer Photo Steno 256 MB, no speed rating: too slow, MBR must be re-created to be able to boot
+  * Apacer Photo Steno III 512 MB, 88x: does not work as slave drive
 
 === Known good microdrives ===
 *Hitachi 6GB (model HMS360606D5CF00)
 
 === Known microdrives with problems ===
-*Seagate ST1.2 4GB (model ST64022CF): does not work as slave drive
-*Magicstor 4GB (model GS10040A-11 47): not bootable
+  * Seagate ST1.2 4GB (model ST64022CF): does not work as slave drive
+  * Magicstor 4GB (model GS10040A-11 47): MBR must be re-created to be able to boot
 
 
 == Problems with certain hard disks ==
@@ -396,9 +397,9 @@ CF cards and microdrives are IDE devices and should work as any hard disk. Unfor
 The drive does not properly support block mode transfers when interrupts are disabled. Enable interrupts or disable block mode to use this drive. I have not detected this problem with any other drive.
 
 
-Contact information
+= Contact information =
 
-XTIDE Universal BIOS thread can be found at Vintage Computer Forums [3]. I recommend to post there but you can also send email to aitotat@gmail.com.
+[http://www.vintage-computer.com/vcforum/showthread.php?17986-XTIDE-Universal-BIOS XTIDE Universal BIOS thread can be found at Vintage Computer Forums]. I recommend to post there but you can also send email to aitotat@gmail.com.
 
 When reporting bugs or other problems, please post the following information:
 Computer specs (at least CPU and RAM but details about expansion card and how they are configured might be useful)
@@ -406,10 +407,3 @@ Operating system and version (for example MS-DOS 6.22)
 Hard disk(s) you are using with XTIDE Universal BIOS
 Hard disk(s) not handled by XTIDE Universal BIOS (if any)
 Reset status that boot menu shows if problem is related to specific drive
-----
-
-= References =
-
-[1] http://wiki.vintage-computer.com/index.php/XTIDE_project
-[2] http://en.wikipedia.org/wiki/Programmed_input/output
-[3] http://www.vintage-computer.com/vcforum/showthread.php?17986-XTIDE-Universal-BIOS
