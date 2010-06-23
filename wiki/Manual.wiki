@@ -1,5 +1,7 @@
 #summary Instructions for XTIDE Universal BIOS v1.1.0
-
+*Table of Contents*
+<wiki:toc max_depth="3" />
+----
 = Introduction =
 
 XTIDE Universal BIOS is mainly used with XTIDE controller that makes possible to use modern IDE drives on PC/XT systems. XTIDE Universal BIOS does more than that since it support 16- and 32-bit transfers too. 16-bit transfers are meant for 16-bit ISA controllers and 32-bit transfers are meant for VLB and PCI controllers.
