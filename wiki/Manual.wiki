@@ -25,6 +25,7 @@ At the moment there are three different builds included in the XTIDE Universal B
    XT+ build has the same features as the XT build but XT+ build uses instructions introduced in 80186/80188. Those instructions are supported by all later x86 CPUs, including NEC V20/V30. 8-bit transfers rates will be better thanks to INS and OUTS instructions.
   * IDE_AT.BIN (AT build)
    AT build is meant for all AT class machines (16-bit or 32-bit bus). AT build supports OS hooks to allow operating system to do some processing while drive seeks the requested data. By default, the AT build is configured to full mode to take advantage of all the features the XTIDE Universal BIOS offers.
+
 ----
 
 = Installing XTIDE Universal BIOS =
@@ -55,6 +56,7 @@ Idecfg.com is intended to be user friendly. At the bottom of the screen appears 
 
 Some menu items appear only when needed to make configuring easier.
 
+
 == Menuitems on main menu ==
   * Exit to DOS
    This menu item exits to DOS but allows user to save any unsaved changes.
@@ -68,6 +70,7 @@ Some menu items appear only when needed to make configuring easier.
    All XTIDE Universal BIOS settings can be found and configured from this sub menu.
   * Flash EEPROM
    Settings for EEPROM flashing.
+
 
 == Menuitems on Configure XTIDE Universal BIOS submenu ==
   * Back to previous menu
@@ -90,6 +93,7 @@ Some menu items appear only when needed to make configuring easier.
    Parameters for detected hard disks must be stored somewhere. In full mode they are stored to top of base RAM. At the moment 1 kiB is always enough but you might want to steal more if you want to use full mode with Tandy 1000. This menu item appears only when full operating mode is enabled.
   * Number of IDE controllers
    Number of IDE controllers handled by XTIDE Universal BIOS. This menu item appears only when full operating mode is enabled.
+
 
 == Menuitems on IDE Controller submenus ==
   * Back to previous menu
@@ -115,6 +119,7 @@ Some menu items appear only when needed to make configuring easier.
   * IRQ
    IRQ channel to use. All controllers managed by XTIDE Universal BIOS can use the same IRQ when MS-DOS is used. Other operating systems are likely to require different interrupts for each controller. This menu item appears only when interrupts are enabled.
 
+
 == Menuitems on Master and Slave drive submenus ==
   * Block mode transfers
    Block mode will speed up transfers since multiple sectors can be transferred before waiting next data request. Normally block mode should always be kept enabled but there is at least one drive with buggy block mode implementation.
@@ -124,6 +129,7 @@ Some menu items appear only when needed to make configuring easier.
   * Heads
   * Sectors per track
    Number of user specified P-CHS cylinders, heads and sectors per track. These menu items appear only when user specified CHS is enabled.
+
 
 == Menuitems on Boot menu settings submenu ==
   * Back to previous menu
@@ -149,6 +155,7 @@ Some menu items appear only when needed to make configuring easier.
     Typical A, C, INT 18h boot order.
    * System boot loader
     Uses main BIOS boot loader or boot loader provided by some other BIOS. System boot loader works only when late initialization is disabled since late initialization is done on a boot loader.
+
 
 == Settings for Flash EEPROM submenu ==
   * Back to previous menu
@@ -190,46 +197,24 @@ Keys A to Z work as a hotkeys for boot menu drives. Hotkeys have another benefit
 
 Boot menu can display a little bit information about the drive. Drive information can be disabled with idecfg.com.
 
+  * Drive capacity
+   Boot menu displays drive type for floppy drives. The type is read from BIOS and it is the same you usually set in CMOS setup. XT systems do not support the BIOS function to return drive type so 5.25" or 3.5" DD is displayed. For foreign hard disks (hard disks not handled by XTIDE Universal BIOS) the boot menu displays capacity calculated from CHS-parameters returned by BIOS function INT 13h, AH=8h. It is the same capacity that MS-DOS 6.xx and older versions see. Same CHS-capacity is displayed for hard disks handled by XTIDE Universal BIOS. In addition to the CHS capacity, the boot menu will display another size that is the full size of the hard disk.
+  * Drive configuration information is displayed for XTIDE Universal BIOS controlled drives. Information includes:
+   * Addressing (Addr.)
+    This can be L-CHS, P-CHS, LBA28 or LBA48. CHS addressing is the old type of addressing method where cylinder, head and sector numbers will be handled separately. Original PC BIOS functions are designed for CHS addressing with maximum  hard disk size being 7.8 GiB (8.4 GB) when some CHS translation method is being used. LBA addressing is modern addressing method where every sector has its own address. There are no cylinders or heads anymore. Enhanced BIOS functions were introduced for LBA drives but they are not supported before Windows 95 (DOS 7). These EBIOS function are not yet supported by XTIDE Universal BIOS. CHS address must be translated to LBA address when using old CHS BIOS functions with LBA addressing.
+    * L-CHS (known as NORMAL on many old BIOSes) is used for drives <= 504 MiB that can accept the CHS parameters without translation. That makes L-CHS the fastest addressing method.
+    * P-CHS (known as LARGE on many old BIOSes) is used for drives from 504 MiB up to 7.8 GiB. This is a bit slower than L-CHS since simple translation is required to make BIOS L-CHS parameters compatible with IDE P-CHS parameters.
+    * LBA28 (28-bit address) allows drive sizes up to 128 GiB (137 GB). L-CHS to LBA translation is more complex and slower than L-CHS to P-CHS conversion.
+    * LBA48 (48-bit address) work just like LBA28 but with 20 more address bits.
+   * Block mode (Block)
+    Block size in sectors for block mode transfers. XTIDE Universal BIOS always uses largest supported block size. Block mode is disabled or not supported if this is 1.
+   * Bus type (Bus)
+    Displays the bus type that has been selected with idecfg.com.
+   * IRQ
+    Displays IRQ channel if IRQ has been enabled.
+   * Reset
+    Displays status information from drive reset and initialization. This should always be 00h. Anything else would indicate some sort of error. Let me know if you see something other than 00h.
 
-=== Drive capacity ===
-
-Boot menu displays drive type for floppy drives. The type is read from BIOS and it is the same you usually set in CMOS setup. XT systems do not support the BIOS function to return drive type so 5.25" or 3.5" DD is displayed.
-
-For foreign hard disks (hard disks not handled by XTIDE Universal BIOS) the boot menu displays capacity calculated from CHS-parameters returned by BIOS function INT 13h, AH=8h. It is the same capacity that MS-DOS 6.xx and older versions see.
-
-Same CHS-capacity is displayed for hard disks handled by XTIDE Universal BIOS. In addition to the CHS capacity, the boot menu will display another size that is the full size of the hard disk.
-
-
-=== Drive configuration information ===
-
-Drive configuration information is displayed for XTIDE Universal BIOS controlled drives. Information includes:
-
-==== Addressing (Addr.) ====
-This can be L-CHS, P-CHS, LBA28 or LBA48.
-
-CHS addressing is the old type of addressing method where cylinder, head and sector numbers will be handled separately. Original PC BIOS functions are designed for CHS addressing with maximum  hard disk size being 7.8 GiB (8.4 GB) when some CHS translation method is being used.
-
-LBA addressing is modern addressing method where every sector has its own address. There are no cylinders or heads anymore. Enhanced BIOS functions were introduced for LBA drives but they are not supported before Windows 95 (DOS 7). These EBIOS function are not yet supported by XTIDE Universal BIOS. CHS address must be translated to LBA address when using old CHS BIOS functions with LBA addressing.
-
-L-CHS (known as NORMAL on many old BIOSes) is used for drives <= 504 MiB that can accept the CHS parameters without translation. That makes L-CHS the fastest addressing method.
-
-P-CHS (known as LARGE on many old BIOSes) is used for drives from 504 MiB up to 7.8 GiB. This is a bit slower than L-CHS since simple translation is required to make BIOS L-CHS parameters compatible with IDE P-CHS parameters.
-
-LBA28 (28-bit address) allows drive sizes up to 128 GiB (137 GB). L-CHS to LBA translation is more complex and slower than L-CHS to P-CHS conversion.
-
-LBA48 (48-bit address) work just like LBA28 but with 20 more address bits.
-
-==== Block mode (Block) ====
-Block size in sectors for block mode transfers. XTIDE Universal BIOS always uses largest supported block size. Block mode is disabled or not supported if this is 1.
-
-==== Bus type (Bus) ====
-Displays the bus type that has been selected with idecfg.com.
-
-==== IRQ ====
-Displays IRQ channel if IRQ has been enabled.
-
-==== Reset ====
-Displays status information from drive reset and initialization. This should always be 00h. Anything else would indicate some sort of error. Let me know if you see something other than 00h.
 ----
 
 = IDE controllers on VLB and PCI bus =
@@ -241,6 +226,7 @@ VLB and PCI IDE controllers are much more complex since they have an actual cont
 Unfortunately many of the controllers work only at PIO-0 by default. Some VLB multi I/O cards have jumpers to set transfer rates but most require controller specific programming to enable higher PIO modes. It is possible that your VLB multi I/O card don't offer any advantages over ISA multi I/O cards if your BIOS does not support the IDE controller on the VLB card. There are DOS drivers for many VLB IDE controllers so BIOS support isn't necessity.
 
 XTIDE Universal BIOS does not support any specific VLB controllers at the moment. I'm planning to add support for Vision QD6580 controller soon.
+
 ----
 
 = Known problems =
