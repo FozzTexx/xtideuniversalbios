@@ -1,7 +1,7 @@
 ; File name		:	Initialize.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	23.3.2010
-; Last update	:	2.5.2010
+; Last update	:	1.7.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for initializing the BIOS.
 
@@ -417,14 +417,7 @@ Initialize_ClearBitFrom8259MaskRegister:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Initialize_ResetDetectedDrives:
-	; Initialize to speed up POST. DOS will reset drives anyway.
-	eMOVZX	cx, BYTE [RAMVARS.bDrvCnt]
-	jcxz	.Return
-	mov		dl, [RAMVARS.bFirstDrv]
-ALIGN JUMP_ALIGN
-.InitLoop:
-	call	AH9h_InitializeDriveForUse
-	inc		dx					; Next drive
-	loop	.InitLoop
-.Return:
+	xor		ah, ah				; Disk Controller Reset
+	mov		dl, 80h				; Reset all floppy drives and hard disks
+	int		INTV_DISK_FUNC
 	ret
