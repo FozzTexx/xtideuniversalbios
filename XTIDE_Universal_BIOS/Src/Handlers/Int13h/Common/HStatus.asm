@@ -1,7 +1,7 @@
 ; File name		:	HStatus.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	15.12.2009
-; Last update	:	25.5.2010
+; Last update	:	26.6.2010
 ; Author		:	Tomi Tilli
 ; Description	:	IDE Status Register polling functions.
 
@@ -24,7 +24,7 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 HStatus_WaitIrqOrRdy:
-	test	BYTE [di+DPT.bDrvCtrl], FLG_IDE_CTRL_nIEN
+	test	BYTE [bx+DPT.bDrvCtrl], FLG_IDE_CTRL_nIEN
 	jnz		SHORT .PollRdySinceIrqsAreDisabled
 	jmp		HIRQ_WaitIRQ
 ALIGN JUMP_ALIGN

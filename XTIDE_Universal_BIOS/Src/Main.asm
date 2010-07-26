@@ -1,7 +1,7 @@
 ; File name		:	Main.asm
 ; Project name	:	XTIDE Universal BIOS
 ; Created date	:	28.7.2007
-; Last update	:	1.7.2010
+; Last update	:	26.7.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Main file for BIOS. This is the only file that needs
 ;					to be compiled since other files are included to this
@@ -37,7 +37,7 @@ istruc ROMVARS
 	at	ROMVARS.wRomSign,	dw	0AA55h			; PC ROM signature
 	at	ROMVARS.bRomSize,	db	CNT_ROM_BLOCKS	; ROM size in 512B blocks
 	at	ROMVARS.rgbJump, 	jmp	Initialize_FromMainBiosRomSearch
-	at	ROMVARS.rgbDate,	db	"07/01/10"		; Build data (mm/dd/yy)
+	at	ROMVARS.rgbDate,	db	"07/26/10"		; Build data (mm/dd/yy)
 	at	ROMVARS.rgbSign,	db	"XTIDE110"		; Signature for flash program
 	at	ROMVARS.szTitle
 		db	"-=XTIDE Universal BIOS"
@@ -48,7 +48,7 @@ istruc ROMVARS
 %else
 		db	" (XT)=-",STOP
 %endif
-	at	ROMVARS.szVersion,	db	"v1.1.1 (07/01/10)",STOP
+	at	ROMVARS.szVersion,	db	"v1.1.2 (07/26/10)",STOP
 
 ;---------------------------;
 ; AT Build default settings ;
