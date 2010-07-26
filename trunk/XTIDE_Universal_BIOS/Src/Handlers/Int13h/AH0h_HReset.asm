@@ -1,7 +1,7 @@
 ; File name		:	AH0h_HReset.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	27.9.2007
-; Last update	:	1.7.2010
+; Last update	:	26.7.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Int 13h function AH=0h, Disk Controller Reset.
 
@@ -36,13 +36,13 @@ AH0h_HandlerForDiskControllerReset:
 	push	ax
 
 	eMOVZX	bx, dl						; Copy requested drive to BL, zero BH to assume no errors
-	call	AH0h_ResetFloppyDrivesWithInt40h
-	test	bl, 80h						; Reset hard disks too?
-	jz		SHORT .Return
-	call	AH0h_ResetForeignHardDisks
-	call	AH0h_ResetAllOurControllers
+	call	ResetFloppyDrivesWithInt40h
+	test	bl, 80h
+	jz		SHORT .SkipHardDiskReset
+	call	ResetForeignHardDisks
+	call	ResetHardDisksHandledByOurBIOS
 ALIGN JUMP_ALIGN
-.Return:
+.SkipHardDiskReset:
 	mov		ah, bh						; Copy error code to AH
 	xor		al, al						; Zero AL...
 	sub		al, ah						; ...and set CF if error
@@ -50,7 +50,7 @@ ALIGN JUMP_ALIGN
 
 
 ;--------------------------------------------------------------------
-; AH0h_ResetFloppyDrivesWithInt40h
+; ResetFloppyDrivesWithInt40h
 ;	Parameters:
 ;		BL:		Requested drive (DL when entering AH=00h)
 ;		DL:		Drive number
@@ -60,15 +60,15 @@ ALIGN JUMP_ALIGN
 ;		AX, DL
 ;--------------------------------------------------------------------	
 ALIGN JUMP_ALIGN
-AH0h_ResetFloppyDrivesWithInt40h:
-	xor		ax, ax						; Disk Controller Reset
+ResetFloppyDrivesWithInt40h:
+	xor		ah, ah						; Disk Controller Reset
 	and		dl, 7Fh						; Clear bit 7
 	int		INTV_FLOPPY_FUNC
-	jmp		SHORT AH0h_BackupErrorCodeFromTheRequestedDriveToBH
+	jmp		SHORT BackupErrorCodeFromTheRequestedDriveToBH
 
 
 ;--------------------------------------------------------------------
-; AH0h_ResetForeignHardDisks
+; ResetForeignHardDisks
 ;	Parameters:
 ;		BL:		Requested drive (DL when entering AH=00h)
 ;		DS:		RAMVARS segment
@@ -78,105 +78,100 @@ AH0h_ResetFloppyDrivesWithInt40h:
 ;		AX, DL
 ;--------------------------------------------------------------------	
 ALIGN JUMP_ALIGN
-AH0h_ResetForeignHardDisks:
-	mov		cl, [RAMVARS.bFirstDrv]		; Load number of first our drive
-	and		cx, BYTE 7Fh				; CX = number of drives to reset
-	jz		SHORT .Return
-	mov		dl, 80h						; Start resetting from drive 80h
-ALIGN JUMP_ALIGN
-.DriveResetLoop:
+ResetForeignHardDisks:
+	mov		dl, bl						; Drive to reset
 	mov		ah, 0Dh						; Reset Hard Disk (Alternate reset)
+
 	pushf								; Push flags to simulate INT
 	cli									; Disable interrupts since INT does that
 	call	FAR [RAMVARS.fpOldI13h]
 	sti									; Make sure interrupts are enabled again (some BIOSes fails to enable it)
-	call	AH0h_BackupErrorCodeFromTheRequestedDriveToBH
-	inc		dx							; Next drive to reset
-	loop	.DriveResetLoop
-ALIGN JUMP_ALIGN
-.Return:
-	ret
+
+	jmp		SHORT BackupErrorCodeFromTheRequestedDriveToBH
 
 
 ;--------------------------------------------------------------------
-; AH0h_ResetAllOurControllers
+; ResetHardDisksHandledByOurBIOS
 ;	Parameters:
 ;		BL:		Requested drive (DL when entering AH=00h)
 ;		DS:		RAMVARS segment
 ;	Returns:
 ;		BH:		Error code from requested drive (if available)
 ;	Corrupts registers:
-;		AX, CX, DX, DI
+;		AX, CX, DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-AH0h_ResetAllOurControllers:
-	push	si
-	mov		si, ROMVARS.ideVars0			; Load offset to first IDEVARS
-	call	Initialize_GetIdeControllerCountToCX
+ResetHardDisksHandledByOurBIOS:
+	mov		dh, [RAMVARS.bDrvCnt]		; Load drive count to DH
+	test	dh, dh
+	jz		SHORT .AllDrivesReset		; Return if no drives
+	mov		dl, [RAMVARS.bFirstDrv]		; Load number of first our drive
+	add		dh, dl						; DH = one past last drive to reset
 ALIGN JUMP_ALIGN
-.ResetLoop:
-	call	AH0h_ResetIdevarsControllerMasterAndSlaveDrives
-	add		si, BYTE IDEVARS_size
-	loop	.ResetLoop
-.Return:
-	pop		si
-	ret
-
-
-;--------------------------------------------------------------------
-; AH0h_ResetIdevarsControllerMasterAndSlaveDrives
-;	Parameters:
-;		BL:		Requested drive (DL when entering AH=00h)
-;		CS:SI:	Ptr to IDEVARS
-;		DS:		RAMVARS segment
-;	Returns:
-;		BH:		Error code from requested drive (if available)
-;	Corrupts registers:
-;		AX, DX, DI
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-AH0h_ResetIdevarsControllerMasterAndSlaveDrives:
-	mov		dx, [cs:si+IDEVARS.wPort]
-	call	FindDPT_ForIdeMasterAtPort		; Find master drive to DL
-	jc		SHORT AH0h_ResetMasterAndSlaveDriveWithRetries
-	call	FindDPT_ForIdeSlaveAtPort		; Find slave if master not present
-	jc		SHORT AH0h_ResetMasterAndSlaveDriveWithRetries
-	ret
-
-;--------------------------------------------------------------------
-; AH0h_ResetMasterAndSlaveDriveWithRetries
-;	Parameters:
-;		BL:		Requested drive (DL when entering AH=00h)
-;		DL:		Drive number for master or slave drive
-;		DS:		RAMVARS segment
-;	Returns:
-;		BH:		Error code from requested drive (if available)
-;	Corrupts registers:
-;		AX, DI
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-AH0h_ResetMasterAndSlaveDriveWithRetries:
-	push	dx
-	push	cx
-	push	bx
-	mov		di, RETRIES_IF_RESET_FAILS
-ALIGN JUMP_ALIGN
-.RetryLoop:
+.DriveResetLoop:
 	call	AHDh_ResetDrive
-	jnc		SHORT .Return				; Jump if successful
-	mov		cx, TIMEOUT_BEFORE_RESET_RETRY
-	call	SoftDelay_TimerTicks
-	dec		di
-	jnz		SHORT .RetryLoop
-ALIGN JUMP_ALIGN
-.Return:
-	pop		bx
-	pop		cx
-	pop		dx
-	; Fall to AH0h_BackupErrorCodeFromTheRequestedDriveToBH
+	call	BackupErrorCodeFromTheRequestedDriveToBH
+	call	.SkipNextDriveIfItIsSlaveForThisController
+	inc		dx
+	cmp		dl, dh						; All done?
+	jb		SHORT .DriveResetLoop		;  If not, reset next drive
+.AllDrivesReset:
+	ret
 
 ;--------------------------------------------------------------------
-; AH0h_BackupErrorCodeFromTheRequestedDriveToBH
+; .SkipNextDriveIfItIsSlaveForThisController
+;	Parameters:
+;		DL:		Drive just resetted
+;		DS:		RAMVARS segment
+;	Returns:
+;		DL:		Incremented if next drive is slave drive
+;				(=already resetted)
+;	Corrupts registers:
+;		AX, CX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+.SkipNextDriveIfItIsSlaveForThisController:
+	push	di
+
+	call	.GetBasePortToAXfromDriveInDL
+	xchg	cx, ax
+
+	inc		dx
+	call	.GetBasePortToAXfromDriveInDL
+	jnc		SHORT .SkipNextDrive
+
+	cmp		ax, cx
+	je		SHORT .SkipNextDrive		; Same controller so slave already reset
+
+	dec		dx							; Restore DX
+.SkipNextDrive:
+	pop		di
+	ret
+
+;--------------------------------------------------------------------
+; .GetBasePortToAXfromDriveInDL
+;	Parameters:
+;		DL:		Drive whose base port to find
+;		DS:		RAMVARS segment
+;	Returns:
+;		AX:		Base port (if drive found)
+;		CF:		Set if drive found
+;				Cleared if drive not found
+;	Corrupts registers:
+;		DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+.GetBasePortToAXfromDriveInDL:
+	call	FindDPT_ForDriveNumber		; Get DPT to DS:DI
+	jnc		SHORT .DriveNotFound
+	eMOVZX	di, BYTE [di+DPT.bIdeOff]	; CS:DI now points to IDEVARS
+	mov		ax, [cs:di+IDEVARS.wPort]
+.DriveNotFound:
+	ret
+
+
+;--------------------------------------------------------------------
+; BackupErrorCodeFromTheRequestedDriveToBH
 ;	Parameters:
 ;		AH:		Error code from the last resetted drive
 ;		DL:		Drive last resetted
@@ -187,8 +182,8 @@ ALIGN JUMP_ALIGN
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-AH0h_BackupErrorCodeFromTheRequestedDriveToBH:
-	cmp		dl, bl						; Requested drive?
+BackupErrorCodeFromTheRequestedDriveToBH:
+	cmp		dl, bl				; Requested drive?
 	jne		SHORT .Return
 	mov		bh, ah
 ALIGN JUMP_ALIGN

@@ -231,7 +231,7 @@ HPIO_WriteBlock:
 ALIGN JUMP_ALIGN
 HPIO_WriteToDrive:
 	cld										; OUTS to increment SI
-	call	HStatus_WaitDrqDefTime			; Always poll DRQ for first block
+	call	HStatus_WaitDrqDefTime			; Always poll DRQ for first block, get data port to DX
 	jc		SHORT .RetError					; Return if error (code in AH)
 	sub		dx, BYTE REGR_IDE_ST			; DX to Data Port address
 ALIGN JUMP_ALIGN
@@ -250,7 +250,7 @@ ALIGN JUMP_ALIGN
 	call	[bp+PIOVARS.fnXfer]				; Transfer possibly partial block
 	jmp		HStatus_WaitIrqOrRdy			; Check for errors
 
-	
+
 ;--------------------------------------------------------------------
 ; Bus specific transfer functions and lookup table.
 ;

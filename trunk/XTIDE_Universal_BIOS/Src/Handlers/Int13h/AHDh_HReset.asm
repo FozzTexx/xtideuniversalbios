@@ -1,7 +1,7 @@
 ; File name		:	AHDh_HReset.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	9.12.2007
-; Last update	:	12.4.2010
+; Last update	:	26.7.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Int 13h function AH=Dh, Reset Hard Disk (Alternate reset).
 
@@ -24,12 +24,8 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AHDh_HandlerForResetHardDisk:
-	push	dx
-	push	cx
-	push	bx
-	push	ax
 	call	AHDh_ResetDrive
-	jmp		Int13h_PopXRegsAndReturn
+	jmp		Int13h_PopDiDsAndReturn
 
 
 ;--------------------------------------------------------------------
@@ -43,11 +39,16 @@ AHDh_HandlerForResetHardDisk:
 ;		AH:		Int 13h return status
 ;		CF:		0 if succesfull, 1 if error
 ;	Corrupts registers:
-;		AL, BX, CX, DX
+;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AHDh_ResetDrive:
 	push	di
+	push	dx
+	push	cx
+	push	bx
+	push	ax
+
 	call	FindDPT_ForDriveNumber		; DS:DI now points to DPT
 	call	AHDh_ResetMasterAndSlave
 	;jc		SHORT .ReturnError			; CF would be set if slave drive present without master
@@ -56,12 +57,12 @@ AHDh_ResetDrive:
 	; Initialize Master and Slave drives
 	mov		dx, [RAMVARS.wIdeBase]		; Load base port address
 	call	AHDh_InitializeMasterAndSlave
-	jc		SHORT .ReturnError
-	xor		ax, ax						; Clear AH since success
-	pop		di
-	ret
-.ReturnError:
-	mov		ah, RET_HD_RESETFAIL		; Load Reset Failed error code
+
+	pop		bx							; Pop old AX
+	mov		al, bl						; Restore AL
+	pop		bx
+	pop		cx
+	pop		dx
 	pop		di
 	ret
 
@@ -109,10 +110,11 @@ AHDh_ResetMasterAndSlave:
 ;	Parameters:
 ;		DX:		IDE Base Port address
 ;	Returns:
+;		AH:		Error code
 ;		CF:		0 if initialization succesfull
 ;				1 if any error
 ;	Corrupts registers:
-;		AX, BX, CX, DX, DI
+;		AL, BX, CX, DX, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AHDh_InitializeMasterAndSlave:
@@ -135,5 +137,6 @@ ALIGN JUMP_ALIGN
 	jnz		SHORT .ReturnError
 	ret
 .ReturnError:
+	mov		ah, RET_HD_RESETFAIL		; Load Reset Failed error code
 	stc
 	ret
