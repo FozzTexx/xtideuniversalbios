@@ -1,7 +1,7 @@
 ; File name		:	FloppyDrive.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	25.3.2010
-; Last update	:	2.5.2010
+; Last update	:	28.7.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Various floppy drive related functions that
 ;					Boot Menu uses.
@@ -24,12 +24,7 @@ SECTION .text
 ALIGN JUMP_ALIGN
 FloppyDrive_IsInt40hInstalled:
 	cmp		WORD [es:INTV_FLOPPY_FUNC*4+2], 0C000h	; Any ROM segment?
-	jae		SHORT .Int40hIsAlreadyInstalled
-	clc
-	ret
-ALIGN JUMP_ALIGN
-.Int40hIsAlreadyInstalled:
-	stc
+	cmc
 	ret
 
 

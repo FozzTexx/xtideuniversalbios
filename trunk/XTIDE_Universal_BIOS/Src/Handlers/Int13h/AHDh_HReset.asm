@@ -1,7 +1,7 @@
 ; File name		:	AHDh_HReset.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	9.12.2007
-; Last update	:	26.7.2010
+; Last update	:	28.7.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Int 13h function AH=Dh, Reset Hard Disk (Alternate reset).
 
@@ -39,11 +39,10 @@ AHDh_HandlerForResetHardDisk:
 ;		AH:		Int 13h return status
 ;		CF:		0 if succesfull, 1 if error
 ;	Corrupts registers:
-;		Nothing
+;		DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AHDh_ResetDrive:
-	push	di
 	push	dx
 	push	cx
 	push	bx
@@ -63,7 +62,6 @@ AHDh_ResetDrive:
 	pop		bx
 	pop		cx
 	pop		dx
-	pop		di
 	ret
 
 

@@ -1,6 +1,8 @@
-XTIDE Universal BIOS v1.1.2 (26 July 2010)
-*Fixed a bug where Disk Parameter Table was accessed with wrong pointer register after writing last block
-*Cleaned AH=00h, Disk Controller Reset a bit
+XTIDE Universal BIOS v1.1.2 (28 July 2010)
+  * v1.1.1 broke booting from foreign drives, it is now fixed.
+  * Fixed a bug where Disk Parameter Table was accessed with wrong pointer register after writing last block.
+  * Cleaned AH=00h, Disk Controller Reset a bit.
+  * Timeout errors might now get translated for better error codes on certain situations.
 
 
 XTIDE Universal BIOS v1.1.1 (19 July 2010)

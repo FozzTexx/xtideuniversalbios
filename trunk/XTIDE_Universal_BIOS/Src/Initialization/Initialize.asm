@@ -1,7 +1,7 @@
 ; File name		:	Initialize.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	23.3.2010
-; Last update	:	1.7.2010
+; Last update	:	28.7.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for initializing the BIOS.
 
@@ -417,7 +417,8 @@ Initialize_ClearBitFrom8259MaskRegister:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Initialize_ResetDetectedDrives:
-	xor		ah, ah				; Disk Controller Reset
-	mov		dl, 80h				; Reset all floppy drives and hard disks
-	int		INTV_DISK_FUNC
-	ret
+	xor		bx, bx
+	call	ResetFloppyDrivesWithInt40h
+	mov		bl, 80h
+	call	ResetForeignHardDisks
+	jmp		AH0h_ResetHardDisksHandledByOurBIOS
