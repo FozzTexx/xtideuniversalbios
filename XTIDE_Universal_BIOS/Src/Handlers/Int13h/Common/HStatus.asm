@@ -1,7 +1,7 @@
 ; File name		:	HStatus.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	15.12.2009
-; Last update	:	26.6.2010
+; Last update	:	28.7.2010
 ; Author		:	Tomi Tilli
 ; Description	:	IDE Status Register polling functions.
 
@@ -188,8 +188,7 @@ HStatus_WaitDrqBase:
 ;--------------------------------------------------------------------
 ; IDE Status register polling.
 ; This function first waits until controller is not busy.
-; When not busy, IDE Status Register is polled until wanted
-; flag (HBIT_ST_DRDY or HBIT_ST_DRQ) is set.
+; When not busy, IDE Status Register is polled until wanted flag is set.
 ;
 ; HStatus_PollBusyAndFlg
 ;	Parameters:
@@ -206,21 +205,19 @@ HStatus_WaitDrqBase:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 HStatus_PollBsyAndFlg:
-	call	SoftDelay_InitTimeout		; Initialize timeout counter
+	call	SoftDelay_InitTimeout				; Initialize timeout counter
 ALIGN JUMP_ALIGN
 .PollLoop:
-	in		al, dx						; Load IDE Status Register
-	test	al, FLG_IDE_ST_BSY			; Controller busy?
-	jnz		SHORT .UpdateTimeout		;  If so, jump to timeout update
-	test	al, ah						; Test secondary flag
-	jnz		SHORT HStatus_PollCompleted	; If set, break loop
+	in		al, dx								; Load IDE Status Register
+	test	al, FLG_IDE_ST_BSY					; Controller busy?
+	jnz		SHORT .UpdateTimeout				;  If so, jump to timeout update
+	test	al, ah								; Test secondary flag
+	jnz		SHORT GetErrorCodeFromPollingToAH	; If set, break loop
 ALIGN JUMP_ALIGN
 .UpdateTimeout:
-	call	SoftDelay_UpdTimeout		; Update timeout counter
-	jnc		SHORT .PollLoop				; Loop if time left (sets CF on timeout)
-	mov		ah, RET_HD_TIMEOUT			; Load error code for timeout
-	ret
-
+	call	SoftDelay_UpdTimeout				; Update timeout counter
+	jnc		SHORT .PollLoop						; Loop if time left (sets CF on timeout)
+	jmp		HError_GetErrorCodeToAHforBitPollingTimeout
 
 ;--------------------------------------------------------------------
 ; IDE Status register polling.
@@ -240,22 +237,14 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 HStatus_PollBsy:
-	call	SoftDelay_InitTimeout		; Initialize timeout counter
+	call	SoftDelay_InitTimeout				; Initialize timeout counter
 ALIGN JUMP_ALIGN
 .PollLoop:
-	in		al, dx						; Load IDE Status Reg
-	test	al, FLG_IDE_ST_BSY			; Controller busy? (clears CF)
-	jz		SHORT HStatus_PollCompleted	;  If not, jump to check errors
-	call	SoftDelay_UpdTimeout		; Update timeout counter
-	jnc		SHORT .PollLoop				; Loop if time left (sets CF on timeout)
-	mov		ah, RET_HD_TIMEOUT			; Load error code for timeout
-	ret
-
+	in		al, dx								; Load IDE Status Reg
+	test	al, FLG_IDE_ST_BSY					; Controller busy?
+	jz		SHORT GetErrorCodeFromPollingToAH	;  If not, jump to check errors
+	call	SoftDelay_UpdTimeout				; Update timeout counter
+	jnc		SHORT .PollLoop						; Loop if time left (sets CF on timeout)
 ALIGN JUMP_ALIGN
-HStatus_PollCompleted:
-	test	al, FLG_IDE_ST_DF | FLG_IDE_ST_ERR
-	jnz		SHORT .GetErrorCode			;  If errors, jump to get error code
-	xor		ah, ah						; Zero AH and clear CF
-	ret
-.GetErrorCode:
+GetErrorCodeFromPollingToAH:
 	jmp		HError_GetErrorCodeForStatusReg

@@ -87,7 +87,7 @@ Int13h_DiskFunctions:
 ALIGN JUMP_ALIGN
 Int13h_UnsupportedFunction:
 Int13h_DirectCallToAnotherBios:
-	; Temporarily store original DI and DS to RAMVARS
+	; Temporarily store original DI and DS from stack to RAMVARS
 	pop		WORD [RAMVARS.wI13hDI]
 	pop		WORD [RAMVARS.wI13hDS]
 

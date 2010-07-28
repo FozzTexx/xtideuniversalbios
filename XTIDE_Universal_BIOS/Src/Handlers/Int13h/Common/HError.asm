@@ -1,12 +1,32 @@
 ; File name		:	HError.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	30.11.2007
-; Last update	:	8.4.2010
+; Last update	:	28.7.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Error checking functions for BIOS Hard disk functions.
 
 ; Section containing code
 SECTION .text
+
+;--------------------------------------------------------------------
+; HError_GetErrorCodeToAHforBitPollingTimeout
+;	Parameters:
+;		AL:		IDE Status Register contents
+;		DX:		IDE Status Register Address
+;	Returns:
+;		AH:		Hard disk BIOS error code
+;		CF:		Set since error
+;	Corrupts registers:
+;		AL, CX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+HError_GetErrorCodeToAHforBitPollingTimeout:
+	test	al, FLG_IDE_ST_BSY						; Other bits undefined when BSY set
+	jnz		SHORT HError_GetErrorCodeForStatusReg	; Busy, normal timeout
+	test	al, FLG_IDE_ST_DF | FLG_IDE_ST_CORR | FLG_IDE_ST_ERR
+	jnz		SHORT HError_GetErrorCodeForStatusReg	; Not busy but some error
+	or		al, FLG_IDE_ST_BSY						; Polled bit got never set, force timeout
+	; Fall to HError_GetErrorCodeForStatusReg
 
 ;--------------------------------------------------------------------
 ; Converts Status Register error to BIOS error code.
@@ -36,8 +56,6 @@ HError_GetErrorCodeForStatusReg:
 	LOAD_BDA_SEGMENT_TO	ds, cx
 	mov		[HDBDA.wHDStAndErr], ax			; Store Status and Error to BDA
 	pop		ds
-
-	; Translate registers to BIOS error code
 	; Fall to HError_ConvertIdeErrorToBiosRet
 
 ;--------------------------------------------------------------------
@@ -57,10 +75,16 @@ HError_GetErrorCodeForStatusReg:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 HError_ConvertIdeErrorToBiosRet:
-	; Any error?
+	test	al, FLG_IDE_ST_BSY
+	jnz		SHORT .TimeoutError
 	test	al, FLG_IDE_ST_DF | FLG_IDE_ST_CORR | FLG_IDE_ST_ERR
 	jnz		SHORT .ReadErrorFromStatusReg
 	xor		ah, ah					; No errors, zero AH and CF
+	ret
+
+.TimeoutError:
+	mov		ah, RET_HD_TIMEOUT
+	stc
 	ret
 
 ; Convert error code based on status or error register
