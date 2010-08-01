@@ -1,7 +1,7 @@
 ; File name		:	Int19h.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	3.8.2007
-; Last update	:	2.5.2010
+; Last update	:	1.8.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Int 19h BIOS functions (Boot Strap Loader).
 
@@ -9,7 +9,6 @@
 SECTION .text
 
 B_READ_RETRY_TIMES	EQU	3	; Number of times to retry
-B_READ_RETRY_DELAY	EQU	3	; Timer ticks between retries
 
 
 ;--------------------------------------------------------------------
@@ -109,9 +108,9 @@ Int19h_LoadFirstSectorFromDL:
 	mov		di, B_READ_RETRY_TIMES			; Retry counter
 ALIGN JUMP_ALIGN
 .ReadRetryLoop:
-	call	Int19h_LoadFirstSectorFromDLToESBX
+	call	.ResetBootDriveFromDL
+	call	.LoadFirstSectorFromDLtoESBX
 	jnc		SHORT .Return
-	call	Int19h_ResetDriveOrWait
 	dec		di								; Decrement retry counter
 	jnz		SHORT .ReadRetryLoop			; Loop while retries left
 	stc
@@ -120,9 +119,30 @@ ALIGN JUMP_ALIGN
 	ret
 
 ;--------------------------------------------------------------------
+; .ResetBootDriveFromDL
+;	Parameters:
+;		DL:		Drive to boot from (translated, 00h or 80h)
+;	Returns:
+;		AH:		INT 13h error code
+;		CF:		Cleared if read successfull
+;				Set if any error
+;	Corrupts registers:
+;		AL
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+.ResetBootDriveFromDL:
+	xor		ax, ax							; AH=0h, Disk Controller Reset
+	test	dl, 80h							; Floppy drive?
+	jz		SHORT .ResetDriveFromDL			;  If so, jump to reset
+	mov		ah, 0Dh							; AH=Dh, Reset Hard Disk (Alternate reset)
+.ResetDriveFromDL:
+	int		INTV_DISK_FUNC
+	ret
+
+;--------------------------------------------------------------------
 ; Reads first sector (boot sector) from drive DL to ES:BX.
 ;
-; Int19h_LoadFirstSectorFromDLToESBX
+; .LoadFirstSectorFromDLtoESBX
 ;	Parameters:
 ;		DL:		Drive to boot from (translated, 00h or 80h)
 ;		ES:BX:	Destination buffer for boot sector
@@ -135,39 +155,11 @@ ALIGN JUMP_ALIGN
 ;		AL, CX, DH
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-Int19h_LoadFirstSectorFromDLToESBX:
+.LoadFirstSectorFromDLtoESBX:
 	mov		ax, 0201h						; Read 1 sector
 	mov		cx, 1							; Cylinder 0, Sector 1
 	xor		dh, dh							; Head 0
 	int		INTV_DISK_FUNC
-	ret
-
-
-;--------------------------------------------------------------------
-; Reset drive controller or waits a while before retrying
-; to load boot sector.
-;
-; Int19h_ResetDriveOrWait
-;	Parameters:
-;		DL:		Drive to boot from (translated, 00h or 80h)
-;		DI:		Retry counter
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		CX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-Int19h_ResetDriveOrWait:
-	test	di, 1<<0						; Reset on every other retry
-	jnz		SHORT .ResetDrive
-	mov		cx, B_READ_RETRY_DELAY			; Wait for a while
-	jmp		SoftDelay_TimerTicks
-ALIGN JUMP_ALIGN
-.ResetDrive:
-	xor		cx, cx
-	xchg	cx, ax							; AH=0h, Disk Controller Reset
-	int		INTV_DISK_FUNC
-	xchg	ax, cx							; Restore AX
 	ret
 
 

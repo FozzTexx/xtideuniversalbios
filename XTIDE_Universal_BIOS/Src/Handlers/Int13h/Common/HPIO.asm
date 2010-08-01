@@ -1,7 +1,7 @@
 ; File name		:	HPIO.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	14.12.2007
-; Last update	:	14.4.2010
+; Last update	:	1.8.2010
 ; Author		:	Tomi Tilli
 ; Description	:	PIO transfer functions.
 
@@ -167,7 +167,6 @@ ALIGN JUMP_ALIGN
 .XferLastBlock:
 	add		cx, [bp+PIOVARS.wWordsLeft]	; CX to partial block size
 	call	[bp+PIOVARS.fnXfer]			; Transfer possibly partial block
-	call	HStatus_ReadAndIgnoreAlternateStatus
 	jmp		HStatus_WaitBsyDefTime		; Check for errors
 .RetError:
 	ret
@@ -231,7 +230,7 @@ HPIO_WriteBlock:
 ALIGN JUMP_ALIGN
 HPIO_WriteToDrive:
 	cld										; OUTS to increment SI
-	call	HStatus_WaitDrqDefTime			; Always poll DRQ for first block, get data port to DX
+	call	HStatus_WaitDrqDefTime			; Always poll DRQ for first block, get status reg to DX
 	jc		SHORT .RetError					; Return if error (code in AH)
 	sub		dx, BYTE REGR_IDE_ST			; DX to Data Port address
 ALIGN JUMP_ALIGN

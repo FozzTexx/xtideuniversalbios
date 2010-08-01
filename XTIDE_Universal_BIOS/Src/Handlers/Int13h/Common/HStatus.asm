@@ -1,7 +1,7 @@
 ; File name		:	HStatus.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	15.12.2009
-; Last update	:	28.7.2010
+; Last update	:	1.8.2010
 ; Author		:	Tomi Tilli
 ; Description	:	IDE Status Register polling functions.
 
@@ -25,37 +25,13 @@ SECTION .text
 ALIGN JUMP_ALIGN
 HStatus_WaitIrqOrRdy:
 	test	BYTE [bx+DPT.bDrvCtrl], FLG_IDE_CTRL_nIEN
-	jnz		SHORT .PollRdySinceIrqsAreDisabled
+	jnz		SHORT .PollRdySinceInterruptsAreDisabled
 	jmp		HIRQ_WaitIRQ
+
 ALIGN JUMP_ALIGN
-.PollRdySinceIrqsAreDisabled:
-	call	HStatus_ReadAndIgnoreAlternateStatus
+.PollRdySinceInterruptsAreDisabled:
 	mov		cl, B_TIMEOUT_DRQ				; Load DRQ (not RDY) timeout
 	jmp		SHORT HStatus_WaitRdy			; Jump to poll RDY
-
-
-;--------------------------------------------------------------------
-; Reads Alternate Status Register and ignores result.
-; Alternate Status Register is read to prevent polling host from
-; reading status before it is valid.
-;
-; HStatus_ReadAndIgnoreAlternateStatus
-;	Parameters:
-;		DS:BX:	Ptr to DPT
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AL, CX, DX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-HStatus_ReadAndIgnoreAlternateStatus:
-	mov		cx, bx							; Backup BX
-	eMOVZX	bx, BYTE [bx+DPT.bIdeOff]		; CS:BX now points to IDEVARS
-	mov		dx, [cs:bx+IDEVARS.wPortCtrl]	; DX = Control Block base port
-	add		dx, BYTE REGR_IDEC_AST			; DX = Alternate Status Register address
-	in		al, dx							; Read Alternate Status Register
-	mov		bx, cx							; Restore BX
-	ret
 
 
 ;--------------------------------------------------------------------
@@ -73,21 +49,15 @@ HStatus_ReadAndIgnoreAlternateStatus:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 HStatus_WaitIrqOrDrq:
+	test	BYTE [bx+DPT.bDrvCtrl], FLG_IDE_CTRL_nIEN
+	jnz		SHORT .PollDrqSinceInterruptsAreDisabled
+	jmp		HIRQ_WaitIRQ
+
+ALIGN JUMP_ALIGN
+.PollDrqSinceInterruptsAreDisabled:
 	push	dx
 	push	cx
-
-	; Check if interrupts are enabled
-	test	BYTE [bx+DPT.bDrvCtrl], FLG_IDE_CTRL_nIEN
-	jnz		SHORT .PollDRQ					; Poll DRQ if IRQ disabled
-	call	HIRQ_WaitIRQ					; Wait for IRQ
-	jmp		SHORT .Return
-
-ALIGN JUMP_ALIGN
-.PollDRQ:
-	call	HStatus_ReadAndIgnoreAlternateStatus
 	call	HStatus_WaitDrqDefTime
-ALIGN JUMP_ALIGN
-.Return:
 	pop		cx
 	pop		dx
 	ret
@@ -206,6 +176,8 @@ HStatus_WaitDrqBase:
 ALIGN JUMP_ALIGN
 HStatus_PollBsyAndFlg:
 	call	SoftDelay_InitTimeout				; Initialize timeout counter
+	in		al, dx								; Discard contents for first read
+												; (should read Alternate Status Register)
 ALIGN JUMP_ALIGN
 .PollLoop:
 	in		al, dx								; Load IDE Status Register
@@ -217,7 +189,7 @@ ALIGN JUMP_ALIGN
 .UpdateTimeout:
 	call	SoftDelay_UpdTimeout				; Update timeout counter
 	jnc		SHORT .PollLoop						; Loop if time left (sets CF on timeout)
-	jmp		HError_GetErrorCodeToAHforBitPollingTimeout
+	jmp		HError_ProcessTimeoutAfterPollingBSYandSomeOtherStatusBit
 
 ;--------------------------------------------------------------------
 ; IDE Status register polling.
@@ -238,6 +210,8 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 HStatus_PollBsy:
 	call	SoftDelay_InitTimeout				; Initialize timeout counter
+	in		al, dx								; Discard contents for first read
+												; (should read Alternate Status Register)
 ALIGN JUMP_ALIGN
 .PollLoop:
 	in		al, dx								; Load IDE Status Reg
@@ -247,4 +221,4 @@ ALIGN JUMP_ALIGN
 	jnc		SHORT .PollLoop						; Loop if time left (sets CF on timeout)
 ALIGN JUMP_ALIGN
 GetErrorCodeFromPollingToAH:
-	jmp		HError_GetErrorCodeForStatusReg
+	jmp		HError_ProcessErrorsAfterPollingBSY

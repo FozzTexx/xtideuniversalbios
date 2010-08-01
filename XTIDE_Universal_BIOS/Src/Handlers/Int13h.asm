@@ -1,7 +1,7 @@
 ; File name		:	Int13h_Jump.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	21.9.2007
-; Last update	:	12.4.2010
+; Last update	:	1.8.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Int 13h BIOS functions (Floppy and Hard disk).
 
@@ -56,6 +56,7 @@ Int13h_DiskFunctions:
 	call	DriveXlate_WhenEnteringInt13h
 	call	RamVars_IsFunctionHandledByThisBIOS
 	jnc		SHORT Int13h_DirectCallToAnotherBios
+	;DEBUG_PRINT_DRIVE_AND_FUNCTION
 
 	; Jump to correct BIOS function
 	cmp		ah, 25h						; Valid BIOS function?
@@ -146,6 +147,8 @@ Int13h_ReturnFromAnotherBios:
 ; Returns from any BIOS function implemented by this BIOS.
 ;
 ; Int13h_ReturnWithoutSwappingDrives
+; Int13h_StoreErrorCodeToBDAandPopDSDIandReturn
+; Int13h_StoreErrorCodeToBDAandPopXRegsAndReturn
 ; Int13h_PopXRegsAndReturn
 ; Int13h_PopDiDsAndReturn
 ;	Parameters:
@@ -159,8 +162,18 @@ Int13h_ReturnFromAnotherBios:
 ALIGN JUMP_ALIGN
 Int13h_ReturnWithoutSwappingDrives:
 	pushf
-	dec		BYTE [RAMVARS.xlateVars+XLATEVARS.bRecurCnt]
-	jmp		SHORT Int13h_StoreErrorCodeAndLeave
+	dec		BYTE [RAMVARS.xlateVars+XLATEVARS.bRecurCnt]	; Preserves CF
+	call	HError_StoreBiosErrorCodeFromAHtoBDA
+	jmp		SHORT Int13h_Leave
+
+ALIGN JUMP_ALIGN
+Int13h_StoreErrorCodeToBDAandPopDSDIandReturn:
+	call	HError_StoreBiosErrorCodeFromAHtoBDA
+	jmp		SHORT Int13h_PopDiDsAndReturn
+
+ALIGN JUMP_ALIGN
+Int13h_StoreErrorCodeToBDAandPopXRegsAndReturn:
+	call	HError_StoreBiosErrorCodeFromAHtoBDA
 ALIGN JUMP_ALIGN
 Int13h_PopXRegsAndReturn:
 	pop		bx							; Pop old AX to BX
@@ -172,9 +185,6 @@ ALIGN JUMP_ALIGN
 Int13h_PopDiDsAndReturn:
 	pushf
 	call	DriveXlate_WhenLeavingInt13h
-Int13h_StoreErrorCodeAndLeave:
-	LOAD_BDA_SEGMENT_TO	ds, di
-	mov		[BDA.bHDLastSt], ah			; Store error code
 Int13h_Leave:
 	popf
 	pop		di

@@ -40,7 +40,7 @@ AH8h_HandlerForReadDiskDriveParameters:
 ;--------------------------------------------------------------------
 ; Returns L-CHS parameters for drive and total hard disk count.
 ;
-; AH8h_HParams
+; AH8h_GetDriveParameters
 ;	Parameters:
 ;		DL:		Drive number
 ;		DS:		RAMVARS segment

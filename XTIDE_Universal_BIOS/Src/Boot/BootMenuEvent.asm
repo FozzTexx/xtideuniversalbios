@@ -282,7 +282,8 @@ BootMenuEvent_EventGetDefaultMenuitem:
 	call	RamVars_GetSegmentToDS
 	mov		dl, [cs:ROMVARS.bBootDrv]	; Default boot drive
 	call	BootMenu_IsDriveInSystem
-	jns		SHORT .DoNotSetDefaultMenuitem
+	jnc		SHORT .DoNotSetDefaultMenuitem
+	call	DriveXlate_SetDriveToSwap
 	call	BootMenu_ConvertDriveToMenuitem
 	mov		ax, 1
 	ret
