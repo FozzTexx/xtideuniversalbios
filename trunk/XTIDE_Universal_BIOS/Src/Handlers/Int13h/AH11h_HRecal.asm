@@ -1,7 +1,7 @@
 ; File name		:	AH11h_HRecal.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	28.9.2007
-; Last update	:	12.4.2010
+; Last update	:	29.7.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Int 13h function AH=11h, Recalibrate.
 
@@ -54,5 +54,4 @@ AH11h_RecalibrateDrive:
 	; supported on later ATA-standards. Let's do seek instead.
 	mov		cx, 1						; Seek to Cylinder 0, Sector 1
 	xor		dh, dh						; Head 0
-	call	AHCh_SeekToCylinder
-	ret
+	jmp		AHCh_SeekToCylinder

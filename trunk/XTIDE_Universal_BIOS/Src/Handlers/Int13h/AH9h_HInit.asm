@@ -1,7 +1,7 @@
 ; File name		:	AH9h_HInit.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	9.12.2007
-; Last update	:	26.4.2010
+; Last update	:	1.8.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Int 13h function AH=9h, Initialize Drive Parameters.
 
@@ -77,9 +77,12 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 .InitializeBlockMode:
 	call	AH9h_InitializeBlockMode
-	;mov	dl, [di+DPT.bDrvNum]		; Restore DL
+	;mov		dl, [di+DPT.bDrvNum]		; Restore DL
 	jc		SHORT .ReturnNotSuccessfull
 	and		BYTE [di+DPT.bReset], ~FLG_RESET_nSETBLOCK
+
+	; Force PIO mode 0
+	;call	AH9h_ForcePioMode0
 
 .ReturnNotSuccessfull:
 	pop		cx
@@ -148,3 +151,28 @@ AH9h_InitializeBlockMode:
 	jmp		AH24h_SetBlockSize
 .Return:
 	ret
+
+
+;--------------------------------------------------------------------
+; AH9h_ForcePioMode0
+;	Parameters:
+;		DL:		Drive number
+;		DS:DI:	Ptr to DPT
+;	Returns:
+;		AH:		BIOS Error code
+;		CF:		Cleared if succesfull
+;				Set if any error
+;	Corrupts registers:
+;		AX, BX
+;--------------------------------------------------------------------
+;ALIGN JUMP_ALIGN
+;AH9h_ForcePioMode0:
+;	mov		bh, 08h		; Parameter to Sector Count Register (PIO Flow Control Transfer Mode 0)
+;	mov		ax, 2303h	; Feature: Set transfer mode based on value in Sector Count register
+;	int		13h
+;	jc		SHORT .FailedToForcePIO0
+;	; Debug output here
+;	ret
+;.FailedToForcePIO0:
+;	; Debug output here
+;	ret

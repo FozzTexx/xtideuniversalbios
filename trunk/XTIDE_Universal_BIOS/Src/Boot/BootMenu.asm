@@ -1,7 +1,7 @@
 ; File name		:	BootMenu.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	25.3.2010
-; Last update	:	1.4.2010
+; Last update	:	29.7.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Displays Boot Menu.
 
@@ -322,22 +322,20 @@ ALIGN JUMP_ALIGN
 ;		DL:		Drive number
 ;		DS:		RAMVARS segment
 ;	Returns:
-;		SF:		Set if drive number is valid
+;		CF:		Set if drive number is valid
 ;				Clear if drive is not present in system
 ;	Corrupts registers:
-;		AX
+;		AX, CX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenu_IsDriveInSystem:
 	test	dl, 80h					; Floppy drive?
 	jz		SHORT .IsFloppyDriveIsInSystem
-	call	RamVars_GetDriveCounts
-	mov		ax, 7Fh					; Load mask to clear floppy bit
-	and		ax, dx					; AX = Hard Disk index
-	cmp		ax, cx					; Valid drive index?
-	ret
-ALIGN JUMP_ALIGN
+	call	RamVars_GetDriveCounts	; Hard Disk count to CX
+	or		cl, 80h					; Set Hard Disk bit to CX
+	jmp		SHORT .CompareDriveNumberToDriveCount
 .IsFloppyDriveIsInSystem:
-	call	FloppyDrive_GetCount
+	call	FloppyDrive_GetCount	; Floppy Drive count to CX
+.CompareDriveNumberToDriveCount:
 	cmp		dl, cl
 	ret

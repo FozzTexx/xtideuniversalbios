@@ -151,21 +151,21 @@ ALIGN JUMP_ALIGN
 %macro eMOVZX 2
 %ifndef USE_386
 	%ifidni %1, ax
-		xor		ax, ax
 		mov		al, %2
+		xor		ah, ah
 	%elifidni %1, bx
 		mov		bl, %2
 		xor		bh, bh		; %2 may use BX in effective address
 	%elifidni %1, cx
-		xor		cx, cx
 		mov		cl, %2
+		xor		ch, ch
 	%elifidni %1, dx
-		xor		dx, dx
 		mov		dl, %2
+		xor		dh, dh
 	%else	; SI, DI, BP (all may be used in effective address)
 		push	ax
-		xor		ax, ax
 		mov		al, %2
+		xor		ah, ah
 		xchg	ax, %1
 		pop		ax
 	%endif

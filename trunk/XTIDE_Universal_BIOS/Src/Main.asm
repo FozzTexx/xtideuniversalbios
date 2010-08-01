@@ -37,7 +37,7 @@ istruc ROMVARS
 	at	ROMVARS.wRomSign,	dw	0AA55h			; PC ROM signature
 	at	ROMVARS.bRomSize,	db	CNT_ROM_BLOCKS	; ROM size in 512B blocks
 	at	ROMVARS.rgbJump, 	jmp	Initialize_FromMainBiosRomSearch
-	at	ROMVARS.rgbDate,	db	"07/28/10"		; Build data (mm/dd/yy)
+	at	ROMVARS.rgbDate,	db	"08/01/10"		; Build data (mm/dd/yy)
 	at	ROMVARS.rgbSign,	db	"XTIDE110"		; Signature for flash program
 	at	ROMVARS.szTitle
 		db	"-=XTIDE Universal BIOS"
@@ -48,7 +48,7 @@ istruc ROMVARS
 %else
 		db	" (XT)=-",STOP
 %endif
-	at	ROMVARS.szVersion,	db	"v1.1.2 (07/28/10)",STOP
+	at	ROMVARS.szVersion,	db	"v1.1.3 (08/01/10)",STOP
 
 ;---------------------------;
 ; AT Build default settings ;

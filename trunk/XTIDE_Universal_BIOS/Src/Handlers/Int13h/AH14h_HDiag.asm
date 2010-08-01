@@ -1,7 +1,7 @@
 ; File name		:	AH14h_HDiag.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	28.9.2007
-; Last update	:	12.4.2010
+; Last update	:	1.8.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Int 13h function AH=14h, Controller Internal Diagnostic.
 
@@ -32,8 +32,8 @@ AH14h_HandlerForControllerInternalDiagnostic:
 	test	al, al						; Any error?
 	jnz		SHORT .ReturnError
 	xor		ah, ah						; Zero AH and CF since success
-	jmp		Int13h_PopDiDsAndReturn
+	jmp		Int13h_StoreErrorCodeToBDAandPopDSDIandReturn
 .ReturnError:
 	mov		ah, RET_HD_RESETFAIL
 	stc
-	jmp		Int13h_PopDiDsAndReturn
+	jmp		Int13h_StoreErrorCodeToBDAandPopDSDIandReturn
