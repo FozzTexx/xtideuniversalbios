@@ -1,7 +1,7 @@
 ; File name		:	AH8h_HParams.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	27.9.2007
-; Last update	:	12.4.2010
+; Last update	:	3.8.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Int 13h function AH=8h, Read Disk Drive Parameters.
 
@@ -31,9 +31,18 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH8h_HandlerForReadDiskDriveParameters:
+	call	RamVars_IsDriveHandledByThisBIOS
+	jnc		SHORT .GetDriveParametersForForeignHardDiskInDL
+
 	push	bx
 	call	AH8h_GetDriveParameters
 	pop		bx
+	jmp		Int13h_ReturnWithoutSwappingDrives
+
+ALIGN JUMP_ALIGN
+.GetDriveParametersForForeignHardDiskInDL:
+	call	Int13h_CallPreviousInt13hHandler
+	call	RamVars_GetCountOfKnownDrivesToDL
 	jmp		Int13h_ReturnWithoutSwappingDrives
 
 
@@ -96,6 +105,7 @@ ALIGN JUMP_ALIGN
 ;		AX:		Number of L-CHS sectors per track (1...63)
 ;		BX:		Number of L-CHS cylinders available (1...1024)
 ;		DX:		Number of L-CHS heads (1...256)
+;		DS:		RAMVARS segment
 ;	Returns:
 ;		CH:		Maximum cylinder number, bits 7...0
 ;		CL:		Bits 7...6: Cylinder number bits 9...8
@@ -110,12 +120,8 @@ AH8h_PackReturnValues:
 	dec		bx						; Cylinder count to last cylinder
 	dec		dx						; Head count to max head number
 	mov		dh, dl					; Max head number to DH
-	push	ax
-	call	RamVars_GetDriveCounts	; Hard disk count to CX
-	pop		ax
-	mov		dl, cl					; Hard disk count to DL
 	mov		ch, bl					; Cylinder bits 7...0 to CH
 	mov		cl, bh					; Cylinder bits 9...8 to CL
 	eROR_IM	cl, 2					; Cylinder bits 9...8 to CL bits 7...6
 	or		cl, al					; Sectors per track to CL bits 5...0
-	ret
+	jmp		RamVars_GetCountOfKnownDrivesToDL

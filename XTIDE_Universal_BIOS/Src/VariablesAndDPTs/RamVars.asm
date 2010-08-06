@@ -1,7 +1,7 @@
 ; File name		:	RamVars.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	14.3.2010
-; Last update	:	2.5.2010
+; Last update	:	3.8.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for accessings RAMVARS.
 
@@ -129,8 +129,15 @@ RamVars_ClearToZero:
 ALIGN JUMP_ALIGN
 RamVars_IsFunctionHandledByThisBIOS:
 	test	ah, ah			; Reset for all floppy and hard disk drives?
-	jnz		SHORT RamVars_IsDriveHandledByThisBIOS
+	jz		SHORT .FunctionIsHandledByOurBIOS
+	cmp		ah, 08h			; Read Disk Drive Parameters?
+	jne		SHORT RamVars_IsDriveHandledByThisBIOS
+	test	dl, 80h			; We dot not handle floppy drives
+	jz		SHORT .FunctionIsNotHandledByOurBIOS
+ALIGN JUMP_ALIGN
+.FunctionIsHandledByOurBIOS:
 	stc
+.FunctionIsNotHandledByOurBIOS:
 	ret
 
 ;--------------------------------------------------------------------
@@ -189,22 +196,40 @@ ALIGN JUMP_ALIGN
 
 
 ;--------------------------------------------------------------------
-; Return number of Hard Disks in system.
-;
-; RamVars_GetDriveCounts
+; RamVars_GetHardDiskCountFromBDAtoCX
 ;	Parameters:
 ;		DS:		RAMVARS segment
 ;	Returns:
-;		AL:		Number of hard disks handled by our BIOS
-;		CX:		Total number of hard disks in system
+;		CX:		Total hard disk count
 ;	Corrupts registers:
-;		AH
-;--------------------------------------------------------------------
+;		Nothing
+;--------------------------------------------------------------------	
 ALIGN JUMP_ALIGN
-RamVars_GetDriveCounts:
+RamVars_GetHardDiskCountFromBDAtoCX:
 	push	es
+	push	dx
+
 	LOAD_BDA_SEGMENT_TO	es, cx			; Zero CX
-	mov		cl, [es:BDA.bHDCount]		; Total hard drive count
-	mov		al, [RAMVARS.bDrvCnt]		; Our drive count
+	call	RamVars_GetCountOfKnownDrivesToDL
+	MAX_U	dl, [es:BDA.bHDCount]
+	mov		cl, dl
+
+	pop		dx
 	pop		es
+	ret
+
+;--------------------------------------------------------------------
+; RamVars_GetCountOfKnownDrivesToDL
+;	Parameters:
+;		DS:		RAMVARS segment
+;	Returns:
+;		DL:		Total hard disk count
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------	
+ALIGN JUMP_ALIGN
+RamVars_GetCountOfKnownDrivesToDL:
+	mov		dl, [RAMVARS.bFirstDrv]		; Number for our first drive
+	add		dl, [RAMVARS.bDrvCnt]		; Our drives
+	and		dl, 7Fh						; Clear HD bit for drive count
 	ret

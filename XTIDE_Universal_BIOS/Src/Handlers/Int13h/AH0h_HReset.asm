@@ -1,12 +1,9 @@
 ; File name		:	AH0h_HReset.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	27.9.2007
-; Last update	:	29.7.2010
+; Last update	:	3.8.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Int 13h function AH=0h, Disk Controller Reset.
-
-RETRIES_IF_RESET_FAILS		EQU		3
-TIMEOUT_BEFORE_RESET_RETRY	EQU		5		; System timer ticks
 
 ; Section containing code
 SECTION .text
@@ -81,10 +78,7 @@ ALIGN JUMP_ALIGN
 ResetForeignHardDisks:
 	call	GetDriveNumberForForeignBiosesToDL
 	xor		ah, ah						; Disk Controller Reset
-	pushf								; Push flags to simulate INT
-	cli									; Disable interrupts since INT does that
-	call	FAR [RAMVARS.fpOldI13h]
-	sti									; Make sure interrupts are enabled again (some BIOSes fails to enable it)
+	call	Int13h_CallPreviousInt13hHandler
 	jmp		SHORT BackupErrorCodeFromTheRequestedDriveToBH
 
 

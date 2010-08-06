@@ -1,7 +1,7 @@
 ; File name		:	BootMenuPrint.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	26.3.2010
-; Last update	:	12.4.2010
+; Last update	:	3.8.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for printing boot menu strings.
 
@@ -23,7 +23,7 @@ ALIGN JUMP_ALIGN
 BootMenuPrint_TheBottomOfScreen:
 	call	FloppyDrive_GetCount
 	mov		bl, cl					; Floppy Drive count to BL
-	call	RamVars_GetDriveCounts
+	call	RamVars_GetHardDiskCountFromBDAtoCX
 	mov		bh, cl					; Hard Disk count to BH
 	call	BootMenuPrint_GetCoordinatesForBottomStrings
 	call	BootMenuPrint_SetCursorPosition
