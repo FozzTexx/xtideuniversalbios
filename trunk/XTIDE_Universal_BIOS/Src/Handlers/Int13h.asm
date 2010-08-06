@@ -112,6 +112,26 @@ Int13h_DirectCallToAnotherBios:
 
 
 ;--------------------------------------------------------------------
+; Int13h_CallPreviousInt13hHandler
+;	Parameters:
+;		AH:		Bios function
+;		DS:		RAMVARS segment
+;		Other:	Depends on function to call
+;	Returns:
+;		Depends on function to call
+;	Corrupts registers:
+;		FLAGS
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+Int13h_CallPreviousInt13hHandler:
+	pushf								; Push flags to simulate INT
+	cli									; Disable interrupts since INT does that
+	call	FAR [RAMVARS.fpOldI13h]
+	sti
+	ret
+
+
+;--------------------------------------------------------------------
 ; Return handlers from another INT 13h BIOS.
 ;
 ; Int13h_ReturnFromAnotherBiosWithoutSwappingDrives

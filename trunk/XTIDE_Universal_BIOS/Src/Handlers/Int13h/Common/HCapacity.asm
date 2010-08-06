@@ -1,7 +1,7 @@
 ; File name		:	HCapacity.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	16.3.2010
-; Last update	:	12.4.2010
+; Last update	:	3.8.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for hard disk capacity calculations.
 
@@ -25,7 +25,7 @@ SECTION .text
 ALIGN JUMP_ALIGN
 HCapacity_GetSectorCountFromForeignAH08h:
 	mov		ah, 08h			; Get Drive Parameters
-	int		INTV_DISK_FUNC
+	call	Int13h_CallPreviousInt13hHandler
 	jmp		SHORT HCapacity_ConvertAH08hReturnValuesToSectorCount
 
 ALIGN JUMP_ALIGN

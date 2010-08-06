@@ -1,7 +1,7 @@
 ; File name		:	BootMenu.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	25.3.2010
-; Last update	:	29.7.2010
+; Last update	:	3.8.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Displays Boot Menu.
 
@@ -56,8 +56,8 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenu_GetMenuitemCount:
-	call	RamVars_GetDriveCounts
-	mov		ax, cx
+	call	RamVars_GetHardDiskCountFromBDAtoCX
+	xchg	ax, cx
 	call	FloppyDrive_GetCount
 	add		ax, cx
 	call	BootMenu_GetMenuFunctionCount
@@ -253,7 +253,7 @@ BootMenu_ConvertMenuitemToDriveOrFunction:
 	cmp		dx, cx					; Floppy drive?
 	jb		SHORT .ReturnFloppyDriveInDX
 	sub		dx, cx					; Remove floppy drives from index
-	call	RamVars_GetDriveCounts
+	call	RamVars_GetHardDiskCountFromBDAtoCX
 	cmp		dx, cx					; Hard disk?
 	jb		SHORT .ReturnHardDiskInDX
 	sub		dx, cx					; Remove hard disks from index
@@ -329,13 +329,13 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenu_IsDriveInSystem:
-	test	dl, 80h					; Floppy drive?
+	test	dl, 80h								; Floppy drive?
 	jz		SHORT .IsFloppyDriveIsInSystem
-	call	RamVars_GetDriveCounts	; Hard Disk count to CX
-	or		cl, 80h					; Set Hard Disk bit to CX
+	call	RamVars_GetHardDiskCountFromBDAtoCX	; Hard Disk count to CX
+	or		cl, 80h								; Set Hard Disk bit to CX
 	jmp		SHORT .CompareDriveNumberToDriveCount
 .IsFloppyDriveIsInSystem:
-	call	FloppyDrive_GetCount	; Floppy Drive count to CX
+	call	FloppyDrive_GetCount				; Floppy Drive count to CX
 .CompareDriveNumberToDriveCount:
 	cmp		dl, cl
 	ret
