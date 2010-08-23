@@ -1,7 +1,7 @@
 ; File name		:	HStatus.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	15.12.2009
-; Last update	:	1.8.2010
+; Last update	:	23.8.2010
 ; Author		:	Tomi Tilli
 ; Description	:	IDE Status Register polling functions.
 
@@ -24,12 +24,12 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 HStatus_WaitIrqOrRdy:
-	test	BYTE [bx+DPT.bDrvCtrl], FLG_IDE_CTRL_nIEN
-	jnz		SHORT .PollRdySinceInterruptsAreDisabled
-	jmp		HIRQ_WaitIRQ
+	call	HIRQ_WaitForIRQ
+	jnc		SHORT .PollRdySinceNoWaitingOnOsHook
+	jmp		HError_ProcessErrorsAfterPollingBSY
 
 ALIGN JUMP_ALIGN
-.PollRdySinceInterruptsAreDisabled:
+.PollRdySinceNoWaitingOnOsHook:
 	mov		cl, B_TIMEOUT_DRQ				; Load DRQ (not RDY) timeout
 	jmp		SHORT HStatus_WaitRdy			; Jump to poll RDY
 
@@ -49,12 +49,12 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 HStatus_WaitIrqOrDrq:
-	test	BYTE [bx+DPT.bDrvCtrl], FLG_IDE_CTRL_nIEN
-	jnz		SHORT .PollDrqSinceInterruptsAreDisabled
-	jmp		HIRQ_WaitIRQ
+	call	HIRQ_WaitForIRQ
+	jnc		SHORT .PollDrqSinceNoWaitingOnOsHook
+	jmp		HError_ProcessErrorsAfterPollingBSY
 
 ALIGN JUMP_ALIGN
-.PollDrqSinceInterruptsAreDisabled:
+.PollDrqSinceNoWaitingOnOsHook:
 	push	dx
 	push	cx
 	call	HStatus_WaitDrqDefTime

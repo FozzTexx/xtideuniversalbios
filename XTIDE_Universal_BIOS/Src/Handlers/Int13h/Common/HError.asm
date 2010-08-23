@@ -9,24 +9,6 @@
 SECTION .text
 
 ;--------------------------------------------------------------------
-; HError_ProcessErrorsAfterPollingTaskFlag
-;	Parameters:
-;		DS:		RAMVARS segment
-;		CF:		Set if timeout
-;				Cleared if task flag was properly set
-;	Returns:
-;		AH:		BIOS error code
-;		CF:		Set if error
-;				Cleared if no error
-;	Corrupts registers:
-;		AL
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-HError_ProcessErrorsAfterPollingTaskFlag:
-	jnc		SHORT HError_ProcessErrorsAfterPollingBSY
-	; Fall to HError_ProcessTimeoutAfterPollingBSYandSomeOtherStatusBit
-
-;--------------------------------------------------------------------
 ; HError_ProcessTimeoutAfterPollingBSYandSomeOtherStatusBit
 ; HError_ProcessErrorsAfterPollingBSY
 ;	Parameters:
