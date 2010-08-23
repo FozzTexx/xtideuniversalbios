@@ -1,7 +1,7 @@
 ; File name		:	DetectDrives.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	17.3.2010
-; Last update	:	2.5.2010
+; Last update	:	23.8.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for detecting drive for the BIOS.
 
@@ -23,7 +23,7 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 DetectDrives_FromAllIDEControllers:
-	call	Initialize_GetIdeControllerCountToCX
+	call	RamVars_GetIdeControllerCountToCX
 	mov		bp, ROMVARS.ideVars0			; CS:BP now points to first IDEVARS
 ALIGN JUMP_ALIGN
 .DriveDetectLoop:

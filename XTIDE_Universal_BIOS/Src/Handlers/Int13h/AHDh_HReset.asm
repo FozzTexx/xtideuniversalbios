@@ -1,7 +1,7 @@
 ; File name		:	AHDh_HReset.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	9.12.2007
-; Last update	:	1.8.2010
+; Last update	:	23.8.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Int 13h function AH=Dh, Reset Hard Disk (Alternate reset).
 
@@ -49,6 +49,7 @@ AHDh_ResetDrive:
 	push	ax
 
 	call	FindDPT_ForDriveNumber		; DS:DI now points to DPT
+	call	Interrupts_UnmaskInterruptControllerForDriveInDSDI
 	call	AHDh_ResetMasterAndSlave
 	;jc		SHORT .ReturnError			; CF would be set if slave drive present without master
 										; (error register has special values after reset)

@@ -37,7 +37,7 @@ istruc ROMVARS
 	at	ROMVARS.wRomSign,	dw	0AA55h			; PC ROM signature
 	at	ROMVARS.bRomSize,	db	CNT_ROM_BLOCKS	; ROM size in 512B blocks
 	at	ROMVARS.rgbJump, 	jmp	Initialize_FromMainBiosRomSearch
-	at	ROMVARS.rgbDate,	db	"08/03/10"		; Build data (mm/dd/yy)
+	at	ROMVARS.rgbDate,	db	"08/23/10"		; Build data (mm/dd/yy)
 	at	ROMVARS.rgbSign,	db	"XTIDE110"		; Signature for flash program
 	at	ROMVARS.szTitle
 		db	"-=XTIDE Universal BIOS"
@@ -48,7 +48,7 @@ istruc ROMVARS
 %else
 		db	" (XT)=-",STOP
 %endif
-	at	ROMVARS.szVersion,	db	"v1.1.3 (08/03/10)",STOP
+	at	ROMVARS.szVersion,	db	"v1.1.3 (08/23/10)",STOP
 
 ;---------------------------;
 ; AT Build default settings ;
@@ -118,6 +118,7 @@ iend
 
 ; Include .asm files (Initialization and drive detection)
 %include "Initialize.asm"		; For BIOS initialization
+%include "Interrupts.asm"		; For Interrupt initialization
 %include "RamVars.asm"			; For RAMVARS initialization and access
 %include "CreateDPT.asm"		; For creating DPTs
 %include "FindDPT.asm"			; For finding DPTs

@@ -1,7 +1,7 @@
 ; File name		:	HError.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	30.11.2007
-; Last update	:	1.8.2010
+; Last update	:	23.8.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Error checking functions for BIOS Hard disk functions.
 
@@ -12,7 +12,6 @@ SECTION .text
 ; HError_ProcessErrorsAfterPollingTaskFlag
 ;	Parameters:
 ;		DS:		RAMVARS segment
-;		ES:		BDA segment (zero)
 ;		CF:		Set if timeout
 ;				Cleared if task flag was properly set
 ;	Returns:
@@ -24,12 +23,8 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 HError_ProcessErrorsAfterPollingTaskFlag:
-	jc		SHORT HError_ProcessTimeoutAfterPollingBSYandSomeOtherStatusBit
-	mov		ax, [es:HDBDA.wHDStAndErr]
-	call	GetBiosErrorCodeToAHfromStatusAndErrorRegistersInAX
-	mov		[es:BDA.bHDLastSt], ah
-	mov		BYTE [es:BDA.bHDTaskFlg], 0
-	ret
+	jnc		SHORT HError_ProcessErrorsAfterPollingBSY
+	; Fall to HError_ProcessTimeoutAfterPollingBSYandSomeOtherStatusBit
 
 ;--------------------------------------------------------------------
 ; HError_ProcessTimeoutAfterPollingBSYandSomeOtherStatusBit
