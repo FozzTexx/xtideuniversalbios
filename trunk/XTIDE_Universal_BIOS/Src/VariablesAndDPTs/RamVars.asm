@@ -1,7 +1,7 @@
 ; File name		:	RamVars.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	14.3.2010
-; Last update	:	3.8.2010
+; Last update	:	23.8.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for accessings RAMVARS.
 
@@ -22,15 +22,12 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 RamVars_Initialize:
-	call	RamVars_StealBaseMemory	; Get RAMVARS segment to DS even if no stealing
-	call	RamVars_ClearToZero
+	call	.StealMemoryForRAMVARS	; Get RAMVARS segment to DS even if no stealing
+	call	.ClearRamvarsFromDS
 	jmp		DriveXlate_Reset
 
-
 ;--------------------------------------------------------------------
-; Steals base memory to be used for RAMVARS.
-;
-; RamVars_StealBaseMemory
+; .StealMemoryForRAMVARS
 ;	Parameters:
 ;		Nothing
 ;	Returns:
@@ -39,16 +36,37 @@ RamVars_Initialize:
 ;		AX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-RamVars_StealBaseMemory:
+.StealMemoryForRAMVARS:
 	test	BYTE [cs:ROMVARS.wFlags], FLG_ROMVARS_FULLMODE
-	jz		SHORT RamVars_GetSegmentToDS	; No need to steal
+	jz		SHORT RamVars_GetSegmentToDS
 
-	LOAD_BDA_SEGMENT_TO	ds, ax				; Zero AX
+	LOAD_BDA_SEGMENT_TO	ds, ax		; Zero AX
 	mov		al, [cs:ROMVARS.bStealSize]
-	sub		[BDA.wBaseMem], ax				; Steal one or more kilobytes
-	mov		ax, [BDA.wBaseMem]				; Load base memory left
-	eSHL_IM	ax, 6							; Shift for segment address
-	mov		ds, ax							; Copy RAMVARS segment to DS
+	sub		[BDA.wBaseMem], ax
+	mov		ax, [BDA.wBaseMem]
+	eSHL_IM	ax, 6					; Segment to first stolen kB (*=40h)
+	mov		ds, ax
+	ret
+
+;--------------------------------------------------------------------
+; .ClearRamvarsFromDS
+;	Parameters:
+;		DS:		RAMVARS segment
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, CX, DI, ES
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+.ClearRamvarsFromDS:
+	call	FindDPT_PointToFirstDPT	; Get RAMVARS/FULLRAMVARS size to DI
+	mov		cx, di					; Copy byte count to CX
+	push	ds
+	pop		es
+	xor		di, di					; ES:DI now points to RAMVARS/FULLRAMVARS
+	xor		ax, ax					; Store zeroes
+	rep stosb
+	mov		WORD [FULLRAMVARS.wSign], W_SIGN_FULLRAMVARS
 	ret
 
 
@@ -68,47 +86,22 @@ RamVars_StealBaseMemory:
 ALIGN JUMP_ALIGN
 RamVars_GetSegmentToDS:
 	test	BYTE [cs:ROMVARS.wFlags], FLG_ROMVARS_FULLMODE
-	jnz		SHORT RamVars_GetStolenSegmentToDS
+	jnz		SHORT .GetStolenSegmentToDS
 	mov		di, SEGMENT_RAMVARS_TOP_OF_INTERRUPT_VECTORS
 	mov		ds, di
 	ret
 
 ALIGN JUMP_ALIGN
-RamVars_GetStolenSegmentToDS:
+.GetStolenSegmentToDS:
 	LOAD_BDA_SEGMENT_TO	ds, di
 	mov		di, [BDA.wBaseMem]		; Load available base memory size in kB
-	eSHL_IM	di, 6					; Segment to first stolen kB
+	eSHL_IM	di, 6					; Segment to first stolen kB (*=40h)
 ALIGN JUMP_ALIGN
 .LoopStolenKBs:
 	mov		ds, di					; EBDA segment to DS
 	add		di, BYTE 64				; DI to next stolen kB
 	cmp		WORD [FULLRAMVARS.wSign], W_SIGN_FULLRAMVARS
 	jne		SHORT .LoopStolenKBs	; Loop until sign found (always found eventually)
-	ret
-
-
-;--------------------------------------------------------------------
-; Clears RAMVARS variables to zero.
-; FULLRAMVARS sign will be saved if available.
-;
-; RamVars_ClearToZero
-;	Parameters:
-;		DS:		RAMVARS segment
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, CX, DI, ES
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-RamVars_ClearToZero:
-	call	FindDPT_PointToFirstDPT	; Get RAMVARS/FULLRAMVARS size to DI
-	mov		cx, di					; Copy byte count to CX
-	push	ds
-	pop		es
-	xor		di, di					; ES:DI now points to RAMVARS/FULLRAMVARS
-	xor		ax, ax					; Store zeroes
-	rep stosb
-	mov		WORD [FULLRAMVARS.wSign], W_SIGN_FULLRAMVARS
 	ret
 
 
@@ -232,4 +225,24 @@ RamVars_GetCountOfKnownDrivesToDL:
 	mov		dl, [RAMVARS.bFirstDrv]		; Number for our first drive
 	add		dl, [RAMVARS.bDrvCnt]		; Our drives
 	and		dl, 7Fh						; Clear HD bit for drive count
+	ret
+
+
+;--------------------------------------------------------------------
+; RamVars_GetIdeControllerCountToCX
+;	Parameters:
+;		Nothing
+;	Returns:
+;		CX:		Number of IDE controllers to handle
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------	
+ALIGN JUMP_ALIGN
+RamVars_GetIdeControllerCountToCX:
+	mov		cx, 1					; Assume lite mode (one controller)
+	test	BYTE [cs:ROMVARS.wFlags], FLG_ROMVARS_FULLMODE
+	jz		SHORT .Return
+	mov		cl, [cs:ROMVARS.bIdeCnt]
+ALIGN JUMP_ALIGN, ret
+.Return:
 	ret
