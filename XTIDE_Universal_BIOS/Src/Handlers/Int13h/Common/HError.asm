@@ -1,7 +1,7 @@
 ; File name		:	HError.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	30.11.2007
-; Last update	:	23.8.2010
+; Last update	:	24.8.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Error checking functions for BIOS Hard disk functions.
 
@@ -22,30 +22,19 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 HError_ProcessTimeoutAfterPollingBSYandSomeOtherStatusBit:
-	push	ds
-	push	dx
-
 	call	HError_GetStatusAndErrorRegistersToAXandStoreThemToBDA
 	call	GetBiosErrorCodeToAHfromStatusAndErrorRegistersInAX
-	jc		SHORT StoreErrorCodeFromAHtoBDA
+	jc		SHORT .ReturnErrorCodeInAH
 	mov		ah, RET_HD_TIMEOUT			; Force timeout since no actual error...
 	stc									; ...but wanted bit was never set
-	jmp		SHORT StoreErrorCodeFromAHtoBDA
+.ReturnErrorCodeInAH:
+	ret
 
 
 ALIGN JUMP_ALIGN
 HError_ProcessErrorsAfterPollingBSY:
-	push	ds
-	push	dx
-
 	call	HError_GetStatusAndErrorRegistersToAXandStoreThemToBDA
-	call	GetBiosErrorCodeToAHfromStatusAndErrorRegistersInAX
-StoreErrorCodeFromAHtoBDA:
-	mov		[BDA.bHDLastSt], ah			; Store BIOS error code to BDA
-
-	pop		dx
-	pop		ds
-	ret
+	jmp		SHORT GetBiosErrorCodeToAHfromStatusAndErrorRegistersInAX
 
 
 ;--------------------------------------------------------------------
@@ -55,33 +44,26 @@ StoreErrorCodeFromAHtoBDA:
 ;	Returns:
 ;		AL:		IDE Status Register contents
 ;		AH:		IDE Error Register contents
-;		DS:		BDA segment
 ;	Corrupts registers:
-;		DX
+;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 HError_GetStatusAndErrorRegistersToAXandStoreThemToBDA:
+	push	ds
+	push	dx
+
 	mov		dx, [RAMVARS.wIdeBase]		; Load IDE base port address
 	inc		dx							; Increment to Error Register
 	in		al, dx						; Read Error Register...
 	mov		ah, al						; ...and copy it to AH
 	add		dx, BYTE REGR_IDE_ST - REGR_IDE_ERROR
 	in		al, dx						; Read Status Register to AL
-	; Fall to .StoreStatusAndErrorRegistersFromAXtoBDA
 
-;--------------------------------------------------------------------
-; .StoreStatusAndErrorRegistersFromAXtoBDA
-;	Parameters:
-;		AL:		IDE Status Register contents
-;		AH:		IDE Error Register contents
-;	Returns:
-;		DS:		BDA segment (zero)
-;	Corrupts registers:
-;		DX
-;--------------------------------------------------------------------
-.StoreStatusAndErrorRegistersFromAXtoBDA:
 	LOAD_BDA_SEGMENT_TO	ds, dx
 	mov		[HDBDA.wHDStAndErr], ax
+
+	pop		dx
+	pop		ds
 	ret
 
 
@@ -147,22 +129,3 @@ ALIGN JUMP_ALIGN
 	db	RET_HD_UNCORRECC	; Bit6=UNC, Uncorrectable Data Error
 	db	RET_HD_BADSECTOR	; Bit7=BBK, Bad Block Detected
 	db	RET_HD_STATUSERR	; When Error Register is zero
-
-
-;--------------------------------------------------------------------
-; HError_StoreBiosErrorCodeFromAHtoBDA
-;	Parameters:
-;		AH:		BIOS error code
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		DI
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-HError_StoreBiosErrorCodeFromAHtoBDA:
-	push	ds
-	mov		di, 0					; Zero DI and preserve FLAGS
-	mov		ds, di					; Copy BDA segment to DS
-	mov		[BDA.bHDLastSt], ah
-	pop		ds
-	ret

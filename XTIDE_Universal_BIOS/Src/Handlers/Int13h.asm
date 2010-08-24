@@ -1,7 +1,7 @@
 ; File name		:	Int13h_Jump.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	21.9.2007
-; Last update	:	1.8.2010
+; Last update	:	24.8.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Int 13h BIOS functions (Floppy and Hard disk).
 
@@ -94,10 +94,10 @@ Int13h_DirectCallToAnotherBios:
 
 	; Special return processing required if target function
 	; returns something in DL
-	mov		di, Int13h_ReturnFromAnotherBiosWithoutSwappingDrives
+	mov		di, Int13h_ReturnFromAnotherBiosWithValueInDL
 	call	DriveXlate_DoesFunctionReturnSomethingInDL
 	jc		SHORT .PushIretAddress
-	add		di, BYTE Int13h_ReturnFromAnotherBios - Int13h_ReturnFromAnotherBiosWithoutSwappingDrives
+	add		di, BYTE Int13h_ReturnFromAnotherBios - Int13h_ReturnFromAnotherBiosWithValueInDL
 .PushIretAddress:
 	pushf								; Push FLAGS to simulate INT
 	push	cs							; Push return segment
@@ -132,9 +132,7 @@ Int13h_CallPreviousInt13hHandler:
 
 
 ;--------------------------------------------------------------------
-; Return handlers from another INT 13h BIOS.
-;
-; Int13h_ReturnFromAnotherBiosWithoutSwappingDrives
+; Int13h_ReturnFromAnotherBiosWithValueInDL
 ; Int13h_ReturnFromAnotherBios
 ;	Parameters:
 ;		AH:		Error code
@@ -146,13 +144,14 @@ Int13h_CallPreviousInt13hHandler:
 ;		Nothing (not even FLAGS)
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-Int13h_ReturnFromAnotherBiosWithoutSwappingDrives:
+Int13h_ReturnFromAnotherBiosWithValueInDL:
 	push	ds
 	push	di
 	pushf								; Store return flags
 	call	RamVars_GetSegmentToDS
-	dec		BYTE [RAMVARS.xlateVars+XLATEVARS.bRecurCnt]
+	call	DriveXlate_WhenLeavingInt13hWithReturnValueInDL
 	jmp		SHORT Int13h_Leave
+
 ALIGN JUMP_ALIGN
 Int13h_ReturnFromAnotherBios:
 	push	ds
@@ -166,9 +165,7 @@ Int13h_ReturnFromAnotherBios:
 ;--------------------------------------------------------------------
 ; Returns from any BIOS function implemented by this BIOS.
 ;
-; Int13h_ReturnWithoutSwappingDrives
-; Int13h_StoreErrorCodeToBDAandPopDSDIandReturn
-; Int13h_StoreErrorCodeToBDAandPopXRegsAndReturn
+; Int13h_ReturnWithValueInDL
 ; Int13h_PopXRegsAndReturn
 ; Int13h_PopDiDsAndReturn
 ;	Parameters:
@@ -180,20 +177,11 @@ Int13h_ReturnFromAnotherBios:
 ;		Nothing (not even FLAGS)
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-Int13h_ReturnWithoutSwappingDrives:
+Int13h_ReturnWithValueInDL:
 	pushf
-	dec		BYTE [RAMVARS.xlateVars+XLATEVARS.bRecurCnt]	; Preserves CF
-	call	HError_StoreBiosErrorCodeFromAHtoBDA
-	jmp		SHORT Int13h_Leave
+	call	DriveXlate_WhenLeavingInt13hWithReturnValueInDL
+	jmp		SHORT Int13h_LeaveAfterStoringErrorCodeToBDA
 
-ALIGN JUMP_ALIGN
-Int13h_StoreErrorCodeToBDAandPopDSDIandReturn:
-	call	HError_StoreBiosErrorCodeFromAHtoBDA
-	jmp		SHORT Int13h_PopDiDsAndReturn
-
-ALIGN JUMP_ALIGN
-Int13h_StoreErrorCodeToBDAandPopXRegsAndReturn:
-	call	HError_StoreBiosErrorCodeFromAHtoBDA
 ALIGN JUMP_ALIGN
 Int13h_PopXRegsAndReturn:
 	pop		bx							; Pop old AX to BX
@@ -201,10 +189,19 @@ Int13h_PopXRegsAndReturn:
 	pop		bx
 	pop		cx
 	pop		dx
+	; Fall to Int13h_PopDiDsAndReturn
+
 ALIGN JUMP_ALIGN
 Int13h_PopDiDsAndReturn:
 	pushf
 	call	DriveXlate_WhenLeavingInt13h
+	; Fall to Int13h_LeaveAfterStoringErrorCodeToBDA
+
+Int13h_LeaveAfterStoringErrorCodeToBDA:
+	LOAD_BDA_SEGMENT_TO	ds, di
+	mov		[BDA.bHDStatus], ah
+	; Fall to Int13h_Leave
+
 Int13h_Leave:
 	popf
 	pop		di

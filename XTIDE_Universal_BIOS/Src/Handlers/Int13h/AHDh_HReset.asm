@@ -1,7 +1,7 @@
 ; File name		:	AHDh_HReset.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	9.12.2007
-; Last update	:	23.8.2010
+; Last update	:	24.8.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Int 13h function AH=Dh, Reset Hard Disk (Alternate reset).
 
@@ -25,7 +25,7 @@ SECTION .text
 ALIGN JUMP_ALIGN
 AHDh_HandlerForResetHardDisk:
 	call	AHDh_ResetDrive
-	jmp		Int13h_StoreErrorCodeToBDAandPopDSDIandReturn
+	jmp		Int13h_PopDiDsAndReturn
 
 
 ;--------------------------------------------------------------------

@@ -1,7 +1,7 @@
 ; File name		:	AH15h_HSize.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	28.9.2007
-; Last update	:	12.4.2010
+; Last update	:	24.8.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Int 13h function AH=15h, Read Disk Drive Size.
 
@@ -43,4 +43,4 @@ AH15h_HandlerForReadDiskDriveSize:
 	pop		bx
 	mov		ah, 3								; Type code = Hard disk
 	clc
-	jmp		Int13h_ReturnWithoutSwappingDrives
+	jmp		Int13h_ReturnWithValueInDL
