@@ -1,7 +1,7 @@
 ; File name		:	AH2h_HRead.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	27.9.2007
-; Last update	:	1.8.2010
+; Last update	:	24.8.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Int 13h function AH=2h, Read Disk Sectors.
 
@@ -62,4 +62,4 @@ ALIGN JUMP_ALIGN
 AH2h_ZeroCntErr:
 	mov		ah, RET_HD_INVALID			; Invalid value passed
 	stc									; Set CF since error
-	jmp		Int13h_StoreErrorCodeToBDAandPopDSDIandReturn
+	jmp		Int13h_PopDiDsAndReturn

@@ -1,7 +1,7 @@
 ; File name		:	AH1h_HStatus.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	27.9.2007
-; Last update	:	29.7.2010
+; Last update	:	24.8.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Int 13h function AH=1h, Read Disk Status.
 
@@ -31,7 +31,7 @@ AH1h_HandlerForReadDiskStatus:
 	LOAD_BDA_SEGMENT_TO	ds, di
 	xor		ah, ah					; Zero AH
 	cmp		ah, [BDA.bHDLastSt]		; Set CF if error code is non-zero
-	xchg	ah, [BDA.bHDLastSt]		; Last error to AH, zero to BDA
+	mov		ah, [BDA.bHDLastSt]		; Last error to AH
 
 	pop		ds
 	jmp		Int13h_PopDiDsAndReturn

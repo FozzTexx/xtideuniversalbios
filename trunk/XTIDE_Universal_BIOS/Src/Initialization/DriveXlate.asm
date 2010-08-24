@@ -1,7 +1,7 @@
 ; File name		:	DriveXlate.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	15.3.2010
-; Last update	:	2.4.2010
+; Last update	:	24.8.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for swapping drive letters.
 
@@ -27,6 +27,20 @@ DriveXlate_WhenEnteringInt13h:
 	je		SHORT DriveXlate_ToOrBack
 	ret
 
+
+;--------------------------------------------------------------------
+; DriveXlate_WhenLeavingInt13hWithReturnValueInDL
+;	Parameters:
+;		DS:		RAMVARS segment
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+DriveXlate_WhenLeavingInt13hWithReturnValueInDL:
+	dec		BYTE [RAMVARS.xlateVars+XLATEVARS.bRecurCnt]
+	ret
 
 ;--------------------------------------------------------------------
 ; Translates drive number when leaving INT 13h.

@@ -1,7 +1,7 @@
 ; File name		:	AH0h_HReset.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	27.9.2007
-; Last update	:	3.8.2010
+; Last update	:	24.8.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Int 13h function AH=0h, Disk Controller Reset.
 
@@ -43,7 +43,7 @@ ALIGN JUMP_ALIGN
 	mov		ah, bh						; Copy error code to AH
 	xor		al, al						; Zero AL...
 	cmp		al, bh						; ...and set CF if error
-	jmp		Int13h_StoreErrorCodeToBDAandPopXRegsAndReturn
+	jmp		Int13h_PopXRegsAndReturn
 
 
 ;--------------------------------------------------------------------

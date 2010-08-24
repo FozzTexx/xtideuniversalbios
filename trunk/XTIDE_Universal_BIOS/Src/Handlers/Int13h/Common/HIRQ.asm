@@ -1,7 +1,7 @@
 ; File name		:	HIRQ.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	11.12.2009
-; Last update	:	23.8.2010
+; Last update	:	24.8.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Interrupt handling related functions.
 
@@ -97,6 +97,7 @@ HIRQ_InterruptServiceRoutineForIrqs2to7:
 	mov		al, CMD_END_OF_INTERRUPT
 	jmp		SHORT AcknowledgeMasterInterruptController
 
+
 ALIGN JUMP_ALIGN
 HIRQ_InterruptServiceRoutineForIrqs8to15:
 	push	ax
@@ -131,14 +132,15 @@ ALIGN JUMP_ALIGN
 AcknowledgeIdeInterruptAndStoreStatusAndErrorRegistersToBDA:
 	push	ds
 	push	di
-	push	dx
 
 	; Reading Status Register acknowledges IDE interrupt
 	call	RamVars_GetSegmentToDS
 	call	HError_GetStatusAndErrorRegistersToAXandStoreThemToBDA
+
+	; Set Task Flag
+	LOAD_BDA_SEGMENT_TO	ds, ax
 	mov		BYTE [BDA.bHDTaskFlg], 0FFh		; Set task flag
 
-	pop		dx
 	pop		di
 	pop		ds
 	ret
