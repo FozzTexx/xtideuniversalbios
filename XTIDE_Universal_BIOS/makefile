@@ -104,7 +104,7 @@ ASFLAGS += -O9					# Optimize operands to their shortest forms
 .PHONY: all at xtplus xt clean
 
 # Make clean debug and release versions
-all: clean at xtplus xt
+all: clean at xt
 	@echo All build!
 
 at:
