@@ -1,7 +1,7 @@
 ; File name		:	FloppyDrive.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	25.3.2010
-; Last update	:	28.7.2010
+; Last update	:	13.9.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Various floppy drive related functions that
 ;					Boot Menu uses.
@@ -21,10 +21,75 @@ SECTION .text
 ;	Corrupts registers:
 ;		BX, CX, DI
 ;--------------------------------------------------------------------	
-ALIGN JUMP_ALIGN
+;ALIGN JUMP_ALIGN
 FloppyDrive_IsInt40hInstalled:
 	cmp		WORD [es:INTV_FLOPPY_FUNC*4+2], 0C000h	; Any ROM segment?
+	jb		SHORT .Int40hHandlerIsNotInstalled
+	call	.VerifyInt40hHandlerSinceSomeBiosesSimplyReturnFromInt40h
+.Int40hHandlerIsNotInstalled:
 	cmc
+	ret
+
+;--------------------------------------------------------------------
+; .VerifyInt40hHandlerSinceSomeBiosesSimplyReturnFromInt40h
+;	Parameters:
+;		Nothing
+;	Returns:
+;		CF:		Cleared if INT 40h is installed
+;				Set if INT 40h is not installed
+;	Corrupts registers:
+;		BX, CX, DI
+;--------------------------------------------------------------------	
+;ALIGN JUMP_ALIGN
+.VerifyInt40hHandlerSinceSomeBiosesSimplyReturnFromInt40h:
+	push	es
+	push	dx
+	push	ax
+
+	call	.LoadInt40hVerifyParameters
+	int		INTV_DISK_FUNC
+	jc		SHORT .AH08hNotSupported	; AH=08h not supported on XTs but that doesn't
+	push	es							; matter since INT 40h does not need to be verified
+	push	di							; on XTs
+
+	call	.LoadInt40hVerifyParameters
+	int		INTV_FLOPPY_FUNC
+
+	pop		dx
+	pop		cx
+	cmp		dx, di						; Difference in offsets?
+	jne		SHORT .Int40hNotInstalled
+	mov		dx, es
+	cmp		cx, dx						; Difference in segments?
+	jne		SHORT .Int40hNotInstalled
+.AH08hNotSupported:
+	clc
+	jmp		SHORT .Int40hIsInstalled
+.Int40hNotInstalled:
+	stc
+.Int40hIsInstalled:
+	pop		ax
+	pop		dx
+	pop		es
+	ret
+
+;--------------------------------------------------------------------
+; .LoadInt40hVerifyParameters
+;	Parameters:
+;		Nothing
+;	Returns:
+;		AH:		08h (Get Drive Parameters)
+;		DL:		00h (floppy drive)
+;		ES:DI:	0:0h (to guard against BIOS bugs)
+;	Corrupts registers:
+;		DH
+;--------------------------------------------------------------------	
+;ALIGN JUMP_ALIGN
+.LoadInt40hVerifyParameters:
+	xor		dx, dx				; Floppy drive 0
+	mov		di, dx
+	mov		es, dx				; ES:DI = 0000:0000h to guard against BIOS bugs
+	mov		ah, 08h				; Get Drive Parameters
 	ret
 
 

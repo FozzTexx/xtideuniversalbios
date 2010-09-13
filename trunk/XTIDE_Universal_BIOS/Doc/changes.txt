@@ -1,3 +1,6 @@
+
+  * Better INT 40h handler detection to fix floppy drive detection with AMI 286 BIOS.
+
 XTIDE Universal BIOS v1.1.4 (24 August 2010)
   * Correct number of drives is now returned from AH=08h when it is redirected to foreign BIOS.
   * Interrupt controllers are now unmasked during drive reset.
