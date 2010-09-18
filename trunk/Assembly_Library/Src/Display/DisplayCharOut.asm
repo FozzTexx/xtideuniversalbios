@@ -1,7 +1,7 @@
 ; File name		:	DisplayCharOut.asm
 ; Project name	:	Assembly Library
 ; Created date	:	26.6.2010
-; Last update	:	13.8.2010
+; Last update	:	18.9.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for outputting characters to video memory.
 ;					These functions are meant to be called by Display_CharacterFromAL
@@ -10,6 +10,31 @@
 
 ; Section containing code
 SECTION .text
+
+;--------------------------------------------------------------------
+; WAIT_RETRACE_IF_NECESSARY_THEN
+;	Parameters:
+;		AL:		Character to output
+;		AH:		Attribute to output (stosw only)
+;		DS:		BDA segment (zero)
+;		ES:DI:	Ptr to video memory where to output
+;	Returns:
+;		DI:		Incremented for next character
+;	Corrupts registers:
+;		AX, DX
+;--------------------------------------------------------------------
+%macro WAIT_RETRACE_IF_NECESSARY_THEN 1
+%ifdef ELIMINATE_CGA_SNOW
+	%ifidn %1, stosb
+		call	StosbWithoutCgaSnow
+	%else
+		call	StoswWithoutCgaSnow
+	%endif
+%else
+	%1			; STOSB or STOSW
+%endif
+%endmacro
+
 
 ;--------------------------------------------------------------------
 ; DisplayCharOut_TeletypeOutputWithAttribute
@@ -28,7 +53,7 @@ ALIGN JUMP_ALIGN
 DisplayCharOut_TeletypeOutputWithAttribute:
 	cmp		al, ' '							; Printable character?
 	jb		SHORT DisplayCharOut_BiosTeletypeOutput
-	stosw
+	WAIT_RETRACE_IF_NECESSARY_THEN stosw
 	ret
 
 ALIGN JUMP_ALIGN
@@ -84,28 +109,29 @@ ALIGN JUMP_ALIGN
 ;	Parameters:
 ;		AL:		Character to output
 ;		AH:		Attribute to output
+;		DS:		BDA segment (zero)
 ;		ES:DI:	Ptr to video memory where to output
 ;	Returns:
 ;		DI:		Incremented for next character
 ;	Corrupts registers:
-;		AX
+;		AX, DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 DisplayCharOut_Attribute:
 	xchg	al, ah				; Swap character and attribute
 	inc		di					; Skip character
-	stosb
+	WAIT_RETRACE_IF_NECESSARY_THEN stosb
 	ret
 
 ALIGN JUMP_ALIGN
 DisplayCharOut_Character:
-	stosb
+	WAIT_RETRACE_IF_NECESSARY_THEN stosb
 	inc		di					; Skip attribute
 	ret
 
 ALIGN JUMP_ALIGN
 DisplayCharOut_CharacterWithAttribute:
-	stosw
+	WAIT_RETRACE_IF_NECESSARY_THEN stosw
 	ret
 
 
@@ -128,3 +154,102 @@ DisplayCharOut_WriteCharacterToBuffer:
 	stosb
 .BufferFull:
 	ret
+
+
+; STOSB and STOSW replacement functions to prevent CGA snow. These will slow
+; drawing a lot so use them only if it is necessary to eliminate CGA snow.
+%ifdef ELIMINATE_CGA_SNOW
+
+OFFSET_TO_CGA_STATUS_REGISTER	EQU		6		; Base port 3D4h + 6 = 3DAh
+CGA_STATUS_REGISTER				EQU		3DAh
+
+;--------------------------------------------------------------------
+; WAIT_UNTIL_SAFE_CGA_WRITE
+;	Parameters:
+;		DX:		CGA Status Register Address (3DAh)
+;	Returns:
+;		Interrupts disabled
+;	Corrupts registers:
+;		AL
+;--------------------------------------------------------------------
+%macro WAIT_UNTIL_SAFE_CGA_WRITE 0
+	cli				; Interrupt request would mess up timing
+%%WaitUntilNotInRetrace:
+	in		al, dx
+	shr		al, 1	; 1 = Bit 0: A 1 indicates that regen-buffer memory access can be
+					; made without interfering with the display. (H or V retrace)
+	jc		SHORT %%WaitUntilNotInRetrace
+	sti
+	nop				; Should have time to serve IRQ here
+	cli
+%%WaitUntilNextRetraceStarts:
+	in		al, dx
+	shr		al, 1
+	jnc		SHORT %%WaitUntilNextRetraceStarts
+%endmacro
+
+;--------------------------------------------------------------------
+; StosbWithoutCgaSnow
+; StoswWithoutCgaSnow
+;	Parameters:
+;		AL:		Character to output
+;		AH:		Attribute to output (StoswWithoutCgaSnow only)
+;		DS:		BDA segment (zero)
+;		ES:DI:	Ptr to video memory where to output
+;	Returns:
+;		DI:		Incremented for next character
+;	Corrupts registers:
+;		AX, DX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+StosbWithoutCgaSnow:
+	call	LoadAndVerifyStatusRegisterFromBDA
+	jne		SHORT .StosbWithoutWaitSinceUnknownPort
+
+	mov		ah, al
+	WAIT_UNTIL_SAFE_CGA_WRITE
+	mov		al, ah
+	stosb
+	sti
+	ret
+ALIGN JUMP_ALIGN
+.StosbWithoutWaitSinceUnknownPort:
+	stosb
+	ret
+
+ALIGN JUMP_ALIGN
+StoswWithoutCgaSnow:
+	call	LoadAndVerifyStatusRegisterFromBDA
+	jne		SHORT .StoswWithoutWaitSinceUnknownPort
+
+	push	bx
+	xchg	bx, ax
+	WAIT_UNTIL_SAFE_CGA_WRITE
+	xchg	ax, bx
+	stosw
+	pop		bx
+	sti
+	ret
+ALIGN JUMP_ALIGN
+.StoswWithoutWaitSinceUnknownPort:
+	stosw
+	ret
+
+;--------------------------------------------------------------------
+; LoadAndVerifyStatusRegisterFromBDA
+;	Parameters:
+;		DS:		BDA segment (zero)
+;	Returns:
+;		DX:		CGA Status Register Address
+;		ZF:		Set if CGA Base Port found in BDA
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+LoadAndVerifyStatusRegisterFromBDA:
+	mov		dx, [BDA.wVidPort]
+	add		dl, OFFSET_TO_CGA_STATUS_REGISTER
+	cmp		dx, CGA_STATUS_REGISTER
+	ret
+
+%endif ; ELIMINATE_CGA_SNOW
