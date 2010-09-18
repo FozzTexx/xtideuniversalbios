@@ -1,7 +1,7 @@
 ; File name		:	Display.asm
 ; Project name	:	Assembly Library
 ; Created date	:	26.6.2010
-; Last update	:	10.8.2010
+; Last update	:	18.9.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for display output.
 
@@ -249,6 +249,70 @@ DisplayPrint_Newline:
 
 
 ;--------------------------------------------------------------------
+; DisplayPrint_ClearScreen
+;	Parameters:
+;		DS:		BDA segment (zero)
+;		ES:DI:	Ptr to cursor location in video RAM
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, DX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+DisplayPrint_ClearScreen:
+	push	di
+	xor		ax, ax
+	call	DisplayCursor_SetCoordinatesFromAX
+	call	DisplayPage_GetColumnsToALandRowsToAH
+	call	DisplayPrint_ClearAreaWithHeightInAHandWidthInAL
+	pop		di
+	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fpCursorPosition], di
+	ret
+
+
+;--------------------------------------------------------------------
+; DisplayPrint_ClearAreaWithHeightInAHandWidthInAL
+;	Parameters:
+;		AH:		Area height
+;		AL:		Area width
+;		DS:		BDA segment (zero)
+;		ES:DI:	Ptr to cursor location in video RAM
+;	Returns:
+;		DI:		Updated offset to video RAM
+;	Corrupts registers:
+;		AX, DX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+DisplayPrint_ClearAreaWithHeightInAHandWidthInAL:
+	push	si
+	push	cx
+	push	bx
+
+	xchg	bx, ax							; Area size to BX
+	call	DisplayCursor_GetSoftwareCoordinatesToAX
+	xchg	si, ax							; Software (Y,X) coordinates now in SI
+	xor		cx, cx
+
+ALIGN JUMP_ALIGN
+.ClearRowLoop:
+	mov		cl, bl							; Area width now in CX
+	mov		al, ' '							; Clear with space
+	call	DisplayPrint_RepeatCharacterFromALwithCountInCX
+
+	xchg	ax, si							; Coordinates to AX
+	inc		ah								; Increment row
+	mov		si, ax
+	call	DisplayCursor_SetCoordinatesFromAX
+	dec		bh								; Decrement rows left
+	jnz		SHORT .ClearRowLoop
+
+	pop		bx
+	pop		cx
+	pop		si
+	ret
+
+
+;--------------------------------------------------------------------
 ; DisplayPrint_RepeatCharacterFromALwithCountInCX
 ;	Parameters:
 ;		AL:		Character to display
@@ -284,73 +348,3 @@ ALIGN JUMP_ALIGN
 DisplayPrint_CharacterFromAL:
 	mov		ah, [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bAttribute]
 	jmp		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fnCharOut]
-
-
-;--------------------------------------------------------------------
-; DisplayPrint_ClearScreen
-;	Parameters:
-;		DS:		BDA segment (zero)
-;		ES:DI:	Ptr to cursor location in video RAM
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, DX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-DisplayPrint_ClearScreen:
-	push	di
-	xor		ax, ax
-	call	DisplayCursor_SetCoordinatesFromAX
-	call	DisplayPage_GetColumnsToALandRowsToAH
-	call	DisplayPrint_ClearAreaWithHeightInAHandWidthInAL
-	pop		di
-	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fpCursorPosition], di
-	ret
-
-
-;--------------------------------------------------------------------
-; DisplayPrint_ClearAreaWithHeightInAHandWidthInAL
-;	Parameters:
-;		AH:		Area height
-;		AL:		Area width
-;		DS:		BDA segment (zero)
-;		ES:DI:	Ptr to cursor location in video RAM
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, DX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-DisplayPrint_ClearAreaWithHeightInAHandWidthInAL:
-	push	cx
-	push	bx
-	push	di
-
-	xchg	bx, ax							; Move parameters to BX
-	call	DisplayCursor_GetSoftwareCoordinatesToAX
-	xchg	dx, ax							; Coordinates now in DX
-	xor		cx, cx							; Zero CX
-
-ALIGN JUMP_ALIGN
-.ClearRowFromArea:
-	mov		al, ' '							; Clear with space
-	mov		ah, [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bAttribute]
-	mov		cl, bl							; Area width = WORDs to clear
-	rep stosw
-	dec		bh
-	jz		SHORT .AreaCleared
-
-	inc		dh								; Increment row
-	push	dx
-	xchg	ax, dx
-	call	DisplayCursor_SetCoordinatesFromAX
-	pop		dx
-	jmp		SHORT .ClearRowFromArea
-
-ALIGN JUMP_ALIGN
-.AreaCleared:
-	pop		di
-	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fpCursorPosition], di
-	pop		bx
-	pop		cx
-	ret

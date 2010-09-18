@@ -75,10 +75,10 @@ ALIGN JUMP_ALIGN
 Delay_TimerTicksFromAX:
 	push	dx
 
+	sti							; Make sure that interrupts are enabled
 	xchg	dx, ax
 	call	TimerTicks_ReadFromBdaToAX
 	add		dx, ax				; DX = end time
-	sti							; Make sure that interrupts are enabled
 .WaitLoop:
 	call	TimerTicks_ReadFromBdaToAX
 	cmp		ax, dx
