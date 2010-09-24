@@ -1,7 +1,7 @@
 ; File name		:	AH8h_HParams.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	27.9.2007
-; Last update	:	24.8.2010
+; Last update	:	24.9.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Int 13h function AH=8h, Read Disk Drive Parameters.
 
@@ -42,8 +42,11 @@ AH8h_HandlerForReadDiskDriveParameters:
 ALIGN JUMP_ALIGN
 .GetDriveParametersForForeignHardDiskInDL:
 	call	Int13h_CallPreviousInt13hHandler
+	jc		SHORT .ReturnErrorFromPreviousInt13hHandler
 	call	RamVars_GetCountOfKnownDrivesToDL
 	jmp		Int13h_ReturnWithValueInDL
+.ReturnErrorFromPreviousInt13hHandler:
+	jmp		Int13h_PopDiDsAndReturn
 
 
 ;--------------------------------------------------------------------

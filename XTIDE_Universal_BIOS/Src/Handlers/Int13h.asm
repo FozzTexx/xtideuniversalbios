@@ -120,7 +120,7 @@ Int13h_DirectCallToAnotherBios:
 ;	Returns:
 ;		Depends on function to call
 ;	Corrupts registers:
-;		FLAGS
+;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Int13h_CallPreviousInt13hHandler:
