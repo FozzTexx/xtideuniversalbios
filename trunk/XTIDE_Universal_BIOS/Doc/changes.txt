@@ -1,4 +1,5 @@
-
+  * Errors are now being checked when calling previous INT 13h handler on AH=08h Read Disk Drive Parameters.
+    This fixes infinite drive checking loop on unofficial MS-DOS 7.10 installer.
   * Better INT 40h handler detection to fix floppy drive detection with AMI 286 BIOS.
 
 XTIDE Universal BIOS v1.1.4 (24 August 2010)
