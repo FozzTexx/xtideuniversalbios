@@ -1,7 +1,7 @@
 ; File name		:	MenuTime.asm
 ; Project name	:	Assembly Library
 ; Created date	:	25.7.2010
-; Last update	:	13.8.2010
+; Last update	:	27.9.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Menu timeouts other time related functions.
 
@@ -140,11 +140,11 @@ GetSecondsUntilTimeoutToAXandPtrToTimeoutCounterToDSBX:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, DX, SI, DI
+;		AX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 DrawTimeoutInAXoverMenuBorders:
-	xchg	dx, ax
+	xchg	cx, ax
 	call	MenuBorders_AdjustDisplayContextForDrawingBorders
 	call	MenuLocation_GetBottomBordersTopLeftCoordinatesToAX
 	CALL_DISPLAY_LIBRARY SetCursorCoordinatesFromAX
@@ -153,7 +153,7 @@ DrawTimeoutInAXoverMenuBorders:
 ;--------------------------------------------------------------------
 ; .PrintTimeoutStringWithSecondsInDX
 ;	Parameters
-;		DX:		Seconds to print
+;		CX:		Seconds to print
 ;		SS:BP:	Ptr to MENU
 ;	Returns:
 ;		Nothing
@@ -165,10 +165,10 @@ DrawTimeoutInAXoverMenuBorders:
 	push	bp
 
 	mov		bp, sp
-	call	.GetTimeoutAttributeToAXfromSecondsInDX
+	call	.GetTimeoutAttributeToAXfromSecondsInCX
 	mov		si, .szSelectionTimeout
 	push	ax			; Push attribute
-	push	dx			; Push seconds
+	push	cx			; Push seconds
 	CALL_DISPLAY_LIBRARY FormatNullTerminatedStringFromCSSI
 	pop		bp
 
@@ -177,22 +177,22 @@ DrawTimeoutInAXoverMenuBorders:
 .szSelectionTimeout:
 	db		DOUBLE_BOTTOM_LEFT_CORNER
 	db		DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL
-	db		"%AAutoselection in %2ds",NULL
+	db		"%AAutoselection in %2-ds",NULL
 
 ;--------------------------------------------------------------------
-; .GetTimeoutAttributeToAXfromSecondsInDX
+; .GetTimeoutAttributeToAXfromSecondsInCX
 ;	Parameters
-;		DX:		Seconds to print
+;		CX:		Seconds to print
 ;	Returns:
 ;		AX:		Attribute byte for seconds
-;		DX:		Seconds to print
+;		CX:		Seconds to print
 ;	Corrupts registers:
 ;		SI, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-.GetTimeoutAttributeToAXfromSecondsInDX:
+.GetTimeoutAttributeToAXfromSecondsInCX:
 	mov		si, ATTRIBUTE_CHARS.cNormalTimeout
-	cmp		dx, BYTE 3
+	cmp		cx, BYTE 3
 	ja		SHORT .GetAttributeToAX
 	add		si, BYTE ATTRIBUTE_CHARS.cHurryTimeout - ATTRIBUTE_CHARS.cNormalTimeout
 ALIGN JUMP_ALIGN

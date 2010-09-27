@@ -1,7 +1,7 @@
 ; File name		:	MenuText.asm
 ; Project name	:	Assembly Library
 ; Created date	:	21.7.2010
-; Last update	:	11.8.2010
+; Last update	:	27.9.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for drawing menu texts by the user.
 
@@ -217,12 +217,13 @@ ALIGN JUMP_ALIGN
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, SI, DI
+;		AX, DX, SI, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AdjustDisplayContextForDrawingTexts:
+	mov		dl, ATTRIBUTES_ARE_USED
 	mov		ax, MenuCharOut_MenuTextTeletypeOutputWithAttribute
-	CALL_DISPLAY_LIBRARY SetCharacterOutputFunctionFromAX
+	CALL_DISPLAY_LIBRARY SetCharOutputFunctionFromAXwithAttribFlagInDL
 
 	mov		ax, bp
 	CALL_DISPLAY_LIBRARY SetCharacterOutputParameterFromAX

@@ -1,7 +1,7 @@
 ; File name		:	Display.asm
 ; Project name	:	Assembly Library
 ; Created date	:	2.7.2010
-; Last update	:	13.8.2010
+; Last update	:	27.9.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Display Library functions for CALL_DISPLAY_LIBRARY macro
 ;					that users should use to make library call.
@@ -64,30 +64,30 @@ ALIGN JUMP_ALIGN
 ALIGN WORD_ALIGN
 .rgfnDisplayLibraryFunctions:
 istruc DISPLAY_LIB
-	at	DISPLAY_LIB.InitializeDisplayContext,					dw	DisplayContext_Initialize
+	at	DISPLAY_LIB.InitializeDisplayContext,						dw	DisplayContext_Initialize
 
-	at	DISPLAY_LIB.SetCharacterPointerFromBXAX,				dw	DisplayContext_SetCharacterPointerFromBXAX
-	at	DISPLAY_LIB.SetCharacterOutputFunctionFromAX,			dw	DisplayContext_SetCharacterOutputFunctionFromAX
-	at	DISPLAY_LIB.SetCharacterOutputParameterFromAX,			dw	DisplayContext_SetCharacterOutputParameterFromAX
-	at	DISPLAY_LIB.SetCharacterAttributeFromAL,				dw	DisplayContext_SetCharacterAttributeFromAL
-	at	DISPLAY_LIB.SetCursorShapeFromAX,						dw	DisplayCursor_SetShapeFromAX
-	at	DISPLAY_LIB.SetCursorCoordinatesFromAX,					dw	DisplayCursor_SetCoordinatesFromAX
-	at	DISPLAY_LIB.SetNewPageFromAL,							dw	DisplayPage_SetFromAL
-	at	DISPLAY_LIB.SynchronizeDisplayContextToHardware,		dw	DisplayContext_SynchronizeToHardware
+	at	DISPLAY_LIB.SetCharacterPointerFromBXAX,					dw	DisplayContext_SetCharacterPointerFromBXAX
+	at	DISPLAY_LIB.SetCharOutputFunctionFromAXwithAttribFlagInDL,	dw	DisplayContext_SetCharOutputFunctionFromAXwithAttribFlagInDL
+	at	DISPLAY_LIB.SetCharacterOutputParameterFromAX,				dw	DisplayContext_SetCharacterOutputParameterFromAX
+	at	DISPLAY_LIB.SetCharacterAttributeFromAL,					dw	DisplayContext_SetCharacterAttributeFromAL
+	at	DISPLAY_LIB.SetCursorShapeFromAX,							dw	DisplayCursor_SetShapeFromAX
+	at	DISPLAY_LIB.SetCursorCoordinatesFromAX,						dw	DisplayCursor_SetCoordinatesFromAX
+	at	DISPLAY_LIB.SetNewPageFromAL,								dw	DisplayPage_SetFromAL
+	at	DISPLAY_LIB.SynchronizeDisplayContextToHardware,			dw	DisplayContext_SynchronizeToHardware
 
-	at	DISPLAY_LIB.GetCharacterPointerToBXAX,					dw	DisplayContext_GetCharacterPointerToBXAX
-	at	DISPLAY_LIB.GetSoftwareCoordinatesToAX,					dw	DisplayCursor_GetSoftwareCoordinatesToAX
-	at	DISPLAY_LIB.GetColumnsToALandRowsToAH,					dw	DisplayPage_GetColumnsToALandRowsToAH
+	at	DISPLAY_LIB.GetCharacterPointerToBXAX,						dw	DisplayContext_GetCharacterPointerToBXAX
+	at	DISPLAY_LIB.GetSoftwareCoordinatesToAX,						dw	DisplayCursor_GetSoftwareCoordinatesToAX
+	at	DISPLAY_LIB.GetColumnsToALandRowsToAH,						dw	DisplayPage_GetColumnsToALandRowsToAH
 
-	at	DISPLAY_LIB.FormatNullTerminatedStringFromCSSI,			dw	.FormatNullTerminatedStringFromCSSI
-	at	DISPLAY_LIB.PrintSignedDecimalIntegerFromAX,			dw	DisplayPrint_SignedDecimalIntegerFromAX
-	at	DISPLAY_LIB.PrintWordFromAXwithBaseInBX,				dw	DisplayPrint_WordFromAXWithBaseInBX
-	at	DISPLAY_LIB.PrintCharBufferFromBXSIwithLengthInCX,		dw	DisplayPrint_CharacterBufferFromBXSIwithLengthInCX
-	at	DISPLAY_LIB.PrintNullTerminatedStringFromBXSI,			dw	DisplayPrint_NullTerminatedStringFromBXSI
-	at	DISPLAY_LIB.PrintNullTerminatedStringFromCSSI,			dw	DisplayPrint_NullTerminatedStringFromCSSI
-	at	DISPLAY_LIB.PrintRepeatedCharacterFromALwithCountInCX,	dw	DisplayPrint_RepeatCharacterFromALwithCountInCX
-	at	DISPLAY_LIB.PrintCharacterFromAL,						dw	DisplayPrint_CharacterFromAL
-	at	DISPLAY_LIB.PrintNewlineCharacters,						dw	DisplayPrint_Newline
-	at	DISPLAY_LIB.ClearAreaWithHeightInAHandWidthInAL,		dw	DisplayPrint_ClearAreaWithHeightInAHandWidthInAL
-	at	DISPLAY_LIB.ClearScreen,								dw	DisplayPrint_ClearScreen
+	at	DISPLAY_LIB.FormatNullTerminatedStringFromCSSI,				dw	.FormatNullTerminatedStringFromCSSI
+	at	DISPLAY_LIB.PrintSignedWordFromAXWithBaseInBX,				dw	DisplayPrint_SignedWordFromAXWithBaseInBX
+	at	DISPLAY_LIB.PrintWordFromAXwithBaseInBX,					dw	DisplayPrint_WordFromAXWithBaseInBX
+	at	DISPLAY_LIB.PrintCharBufferFromBXSIwithLengthInCX,			dw	DisplayPrint_CharacterBufferFromBXSIwithLengthInCX
+	at	DISPLAY_LIB.PrintNullTerminatedStringFromBXSI,				dw	DisplayPrint_NullTerminatedStringFromBXSI
+	at	DISPLAY_LIB.PrintNullTerminatedStringFromCSSI,				dw	DisplayPrint_NullTerminatedStringFromCSSI
+	at	DISPLAY_LIB.PrintRepeatedCharacterFromALwithCountInCX,		dw	DisplayPrint_RepeatCharacterFromALwithCountInCX
+	at	DISPLAY_LIB.PrintCharacterFromAL,							dw	DisplayPrint_CharacterFromAL
+	at	DISPLAY_LIB.PrintNewlineCharacters,							dw	DisplayPrint_Newline
+	at	DISPLAY_LIB.ClearAreaWithHeightInAHandWidthInAL,			dw	DisplayPrint_ClearAreaWithHeightInAHandWidthInAL
+	at	DISPLAY_LIB.ClearScreen,									dw	DisplayPrint_ClearScreen
 iend

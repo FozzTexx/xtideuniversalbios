@@ -1,7 +1,7 @@
 ; File name		:	Display.asm
 ; Project name	:	Assembly Library
 ; Created date	:	26.6.2010
-; Last update	:	18.9.2010
+; Last update	:	27.9.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for display output.
 
@@ -64,32 +64,28 @@ DisplayPrint_FormattedNullTerminatedStringFromCSSI:
 
 
 ;--------------------------------------------------------------------
-; DisplayPrint_SignedDecimalIntegerFromAX
+; DisplayPrint_SignedWordFromAXWithBaseInBX
 ;	Parameters:
 ;		AX:		Word to display
+;		BX:		Integer base (binary=2, octal=8, decimal=10, hexadecimal=16)
 ;		DS:		BDA segment (zero)
 ;		ES:DI:	Ptr to cursor location in video RAM
 ;	Returns:
-;		BX:		Number of characters printed
 ;		DI:		Updated offset to video RAM
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-DisplayPrint_SignedDecimalIntegerFromAX:
-	mov		bx, 10
-	test	ah, 1<<7			; Sign bit set?
-	jz		SHORT DisplayPrint_WordFromAXWithBaseInBX
+DisplayPrint_SignedWordFromAXWithBaseInBX:
+	test	ax, ax
+	jns		SHORT DisplayPrint_WordFromAXWithBaseInBX
 
 	push	ax
 	mov		al, '-'
 	call	DisplayPrint_CharacterFromAL
 	pop		ax
 	neg		ax
-	call	DisplayPrint_WordFromAXWithBaseInBX
-	inc		bx					; Increment character count for '-'
-	ret
-
+	; Fall to DisplayPrint_WordFromAXWithBaseInBX
 
 ;--------------------------------------------------------------------
 ; DisplayPrint_WordFromAXWithBaseInBX
@@ -99,7 +95,6 @@ DisplayPrint_SignedDecimalIntegerFromAX:
 ;		DS:		BDA segment (zero)
 ;		ES:DI:	Ptr to cursor location in video RAM
 ;	Returns:
-;		BX:		Number of characters printed
 ;		DI:		Updated offset to video RAM
 ;	Corrupts registers:
 ;		AX, DX
@@ -107,6 +102,7 @@ DisplayPrint_SignedDecimalIntegerFromAX:
 ALIGN JUMP_ALIGN
 DisplayPrint_WordFromAXWithBaseInBX:
 	push	cx
+	push	bx
 
 	xor		cx, cx
 ALIGN JUMP_ALIGN
@@ -117,15 +113,17 @@ ALIGN JUMP_ALIGN
 	inc		cx					; Increment character count
 	test	ax, ax				; All divided?
 	jnz		SHORT .DivideLoop	;  If not, loop
-	mov		dx, cx				; Character count to DX
-ALIGN JUMP_ALIGN
-.PrintLoop:
-	pop		bx					; Pop digit
-	mov		al, [cs:bx+.rgcDigitToCharacter]
-	call	DisplayPrint_CharacterFromAL
-	loop	.PrintLoop
-	mov		bx, dx				; Return characters printed
 
+	mov		bx, .rgcDigitToCharacter
+ALIGN JUMP_ALIGN
+.PrintNextDigit:
+	pop		ax					; Pop digit
+	eSEG	cs
+	xlatb
+	call	DisplayPrint_CharacterFromAL
+	loop	.PrintNextDigit
+
+	pop		bx
 	pop		cx
 	ret
 .rgcDigitToCharacter:	db	"0123456789ABCDEF"
@@ -139,27 +137,28 @@ ALIGN JUMP_ALIGN
 ;		DS:		BDA segment (zero)
 ;		ES:DI:	Ptr to cursor location in video RAM
 ;	Returns:
-;		BX:		Number of characters printed
 ;		DI:		Updated offset to video RAM
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 DisplayPrint_CharacterBufferFromBXSIwithLengthInCX:
+	jcxz	.NothingToPrintSinceZeroLength
+	push	si
 	push	cx
 
-	mov		es, bx					; Buffer now in ES:SI
-	xor		bx, bx					; Zero character counter
-	jcxz	.BufferPrinted
 ALIGN JUMP_ALIGN
-.CharacterOutputLoop:
-	mov		al, [es:bx+si]
-	inc		bx
-	call	LoadDisplaySegmentAndPrintCharacterFromAL
-	loop	.CharacterOutputLoop
-.BufferPrinted:
-	mov		es, [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fpCursorPosition+2]
+.PrintNextCharacter:
+	mov		ds, bx
+	lodsb
+	LOAD_BDA_SEGMENT_TO	ds, dx
+	call	DisplayPrint_CharacterFromAL
+	loop	.PrintNextCharacter
+
+	LOAD_BDA_SEGMENT_TO	ds, dx
 	pop		cx
+	pop		si
+.NothingToPrintSinceZeroLength:
 	ret
 
 
@@ -170,15 +169,18 @@ ALIGN JUMP_ALIGN
 ;		DS:		BDA segment (zero)
 ;		ES:DI:	Ptr to cursor location in video RAM
 ;	Returns:
-;		BX:		Number of characters printed
 ;		DI:		Updated offset to video RAM
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 DisplayPrint_NullTerminatedStringFromCSSI:
+	push	bx
 	mov		bx, cs
-	; Fall to DisplayPrint_NullTerminatedStringFromBXSI
+	call	DisplayPrint_NullTerminatedStringFromBXSI
+	pop		bx
+	ret
+
 
 ;--------------------------------------------------------------------
 ; DisplayPrint_NullTerminatedStringFromBXSI
@@ -187,65 +189,31 @@ DisplayPrint_NullTerminatedStringFromCSSI:
 ;		BX:SI:	Ptr to NULL terminated string
 ;		ES:DI:	Ptr to cursor location in video RAM
 ;	Returns:
-;		BX:		Number of characters printed
 ;		DI:		Updated offset to video RAM
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 DisplayPrint_NullTerminatedStringFromBXSI:
-	mov		es, bx					; String now in ES:SI
-	xor		bx, bx					; Zero character counter
-ALIGN JUMP_ALIGN
-.CharacterOutputLoop:
-	mov		al, [es:bx+si]
-	test	al, al
-	jz		SHORT .AllCharacterPrinted
-	inc		bx
+	push	si
+	push	cx
 
-	call	LoadDisplaySegmentAndPrintCharacterFromAL
-	jmp		SHORT .CharacterOutputLoop
+	xor		cx, cx
 ALIGN JUMP_ALIGN
-.AllCharacterPrinted:
-	mov		es, [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fpCursorPosition+2]
-	ret
-
-;--------------------------------------------------------------------
-; LoadDisplaySegmentAndPrintCharacterFromAL
-;	Parameters:
-;		AL:		Character to print
-;		DI:		Offset to cursor location in video RAM
-;		DS:		BDA segment (zero)
-;	Returns:
-;		DI:		Updated offset to video RAM
-;	Corrupts registers:
-;		AX, DX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-LoadDisplaySegmentAndPrintCharacterFromAL:
-	push	es
-	mov		es, [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fpCursorPosition+2]
+.PrintNextCharacter:
+	mov		ds, bx				; String segment to DS
+	lodsb
+	mov		ds, cx				; BDA segment to DS
+	test	al, al				; NULL?
+	jz		SHORT .EndOfString
 	call	DisplayPrint_CharacterFromAL
-	pop		es
-	ret
+	jmp		SHORT .PrintNextCharacter
 
-
-;--------------------------------------------------------------------
-; DisplayPrint_Newline
-;	Parameters:
-;		DS:		BDA segment (zero)
-;		ES:DI:	Ptr to cursor location in video RAM
-;	Returns:
-;		DI:		Updated offset to video RAM
-;	Corrupts registers:
-;		AX, DX
-;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-DisplayPrint_Newline:
-	mov		al, CR
-	call	DisplayPrint_CharacterFromAL
-	mov		al, LF
-	jmp		SHORT DisplayPrint_CharacterFromAL
+.EndOfString:
+	pop		cx
+	pop		si
+	ret
 
 
 ;--------------------------------------------------------------------
@@ -296,7 +264,7 @@ DisplayPrint_ClearAreaWithHeightInAHandWidthInAL:
 ALIGN JUMP_ALIGN
 .ClearRowLoop:
 	mov		cl, bl							; Area width now in CX
-	mov		al, ' '							; Clear with space
+	mov		al, SCREEN_BACKGROUND_CHARACTER
 	call	DisplayPrint_RepeatCharacterFromALwithCountInCX
 
 	xchg	ax, si							; Coordinates to AX
@@ -326,11 +294,37 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 DisplayPrint_RepeatCharacterFromALwithCountInCX:
+	jcxz	.NothingToRepeat
+	push	cx
+
+ALIGN JUMP_ALIGN
+.RepeatCharacter:
 	push	ax
 	call	DisplayPrint_CharacterFromAL
 	pop		ax
-	loop	DisplayPrint_RepeatCharacterFromALwithCountInCX
+	loop	.RepeatCharacter
+
+	pop		cx
+.NothingToRepeat:
 	ret
+
+
+;--------------------------------------------------------------------
+; DisplayPrint_Newline
+;	Parameters:
+;		DS:		BDA segment (zero)
+;		ES:DI:	Ptr to cursor location in video RAM
+;	Returns:
+;		DI:		Updated offset to video RAM
+;	Corrupts registers:
+;		AX, DX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+DisplayPrint_Newline:
+	mov		al, CR
+	call	DisplayPrint_CharacterFromAL
+	mov		al, LF
+	; Fall to DisplayPrint_CharacterFromAL
 
 
 ;--------------------------------------------------------------------
