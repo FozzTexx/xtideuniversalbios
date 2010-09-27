@@ -1,7 +1,7 @@
 ; File name		:	DisplayCharOut.asm
 ; Project name	:	Assembly Library
 ; Created date	:	26.6.2010
-; Last update	:	18.9.2010
+; Last update	:	22.9.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for outputting characters to video memory.
 ;					These functions are meant to be called by Display_CharacterFromAL
@@ -179,9 +179,6 @@ CGA_STATUS_REGISTER				EQU		3DAh
 	shr		al, 1	; 1 = Bit 0: A 1 indicates that regen-buffer memory access can be
 					; made without interfering with the display. (H or V retrace)
 	jc		SHORT %%WaitUntilNotInRetrace
-	sti
-	nop				; Should have time to serve IRQ here
-	cli
 %%WaitUntilNextRetraceStarts:
 	in		al, dx
 	shr		al, 1

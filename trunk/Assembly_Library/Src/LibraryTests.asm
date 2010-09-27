@@ -1,7 +1,7 @@
 ; File name		:	LibraryTests.asm
 ; Project name	:	Assembly Library
 ; Created date	:	27.6.2010
-; Last update	:	15.9.2010
+; Last update	:	27.9.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Tests for Assembly Library.
 ;					This file should not be included when using the library on
@@ -253,8 +253,9 @@ ALIGN JUMP_ALIGN
 	mov		bx, cs
 	mov		ax, si
 	CALL_DISPLAY_LIBRARY SetCharacterPointerFromBXAX
+	mov		dl, ATTRIBUTES_NOT_USED
 	mov		ax, BUFFER_OUTPUT_WITH_CHAR_ONLY
-	CALL_DISPLAY_LIBRARY SetCharacterOutputFunctionFromAX
+	CALL_DISPLAY_LIBRARY SetCharOutputFunctionFromAXwithAttribFlagInDL
 	lea		ax, [si+STRING_BUFFER_SIZE]
 	CALL_DISPLAY_LIBRARY SetCharacterOutputParameterFromAX
 
@@ -407,11 +408,12 @@ LibraryTests_ForDisplayLibrary:
 	CALL_DISPLAY_LIBRARY PushDisplayContext
 	call	PrintHorizontalRuler
 	call	PrintVerticalRuler
+	
+	mov		al, COLOR_ATTRIBUTE(COLOR_BRIGHT_WHITE, COLOR_BLACK)
+	CALL_DISPLAY_LIBRARY SetCharacterAttributeFromAL
 
 	mov		ax, CURSOR_XY(0, 1)
 	CALL_DISPLAY_LIBRARY SetCursorCoordinatesFromAX
-	mov		al, COLOR_ATTRIBUTE(COLOR_BRIGHT_WHITE, COLOR_BLACK)
-	CALL_DISPLAY_LIBRARY SetCharacterAttributeFromAL
 	call	PrintFormattedStrings
 
 	CALL_DISPLAY_LIBRARY PopDisplayContext
@@ -493,7 +495,7 @@ PrintFormattedStrings:
 	CALL_DISPLAY_LIBRARY FormatNullTerminatedStringFromCSSI
 	ret
 .szIntegers:
-	db	"Integers -32768, -1, 0, 1, 65535:          %A|%6d|%6d|%6d|%6d|%6u|",LF,CR,NULL
+	db	"Integers -32768, -1, 0, 1, 65535:          %A|%6-d|%6-d|%6-d|%6-d|%6-u|",LF,CR,NULL
 
 .PrintHexadecimals:
 	mov		si, .szHexadecimals
@@ -507,7 +509,7 @@ PrintFormattedStrings:
 	CALL_DISPLAY_LIBRARY FormatNullTerminatedStringFromCSSI
 	ret
 .szHexadecimals:
-	db	"Hexadecimals CACAh, FFFFh, 0, 5A5Ah, A5A5h:%A|%6x|%6x|%6x|%6x|%6x|",LF,CR,NULL
+	db	"Hexadecimals CACAh, FFFFh, 0, 5A5Ah, A5A5h:%A|%6-x|%6-x|%6-x|%6-x|%6-x|",LF,CR,NULL
 
 .PrintCharacters:
 	mov		si, .szCharacters

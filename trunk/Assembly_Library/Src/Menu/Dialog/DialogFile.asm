@@ -1,7 +1,7 @@
 ; File name		:	DialogFile.asm
 ; Project name	:	Assembly Library
 ; Created date	:	6.9.2010
-; Last update	:	16.9.2010
+; Last update	:	27.9.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Displays file dialog.
 
@@ -147,7 +147,7 @@ LoadItemStringBufferToESDI:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, CX, SI, DI, DS, ES
+;		AX, CX, DX, SI, DI, DS, ES
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 CreateStringFromCurrentDirectoryContentsToESDI:
@@ -170,7 +170,7 @@ CreateStringFromCurrentDirectoryContentsToESDI:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, CX, DI
+;		AX, CX, DX, DI
 ;--------------------------------------------------------------------
 ;ALIGN JUMP_ALIGN
 .FindMatchingFilesAndWriteThemToESDI:
@@ -224,7 +224,7 @@ RemoveLastLFandTerminateESDIwithNull:
 ;	Returns:
 ;		DI:		Updated for next file
 ;	Corrupts registers:
-;		AX, BX, CX
+;		AX, BX, CX, DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AppendFileToBufferInESDIfromDtaInDSSI:
@@ -240,7 +240,7 @@ AppendFileToBufferInESDIfromDtaInDSSI:
 ;	Returns:
 ;		DI:		Updated for next file
 ;	Corrupts registers:
-;		AX, BX, CX
+;		AX, BX, CX, DX
 ;--------------------------------------------------------------------
 ;ALIGN JUMP_ALIGN
 .PrepareBufferFormattingAndFormatFromDTAinDSSI:
@@ -252,8 +252,9 @@ AppendFileToBufferInESDIfromDtaInDSSI:
 	mov		bx, es
 	xchg	ax, cx
 	CALL_DISPLAY_LIBRARY SetCharacterPointerFromBXAX
+	mov		dl, ATTRIBUTES_NOT_USED
 	mov		ax, BUFFER_OUTPUT_WITH_CHAR_ONLY
-	CALL_DISPLAY_LIBRARY SetCharacterOutputFunctionFromAX
+	CALL_DISPLAY_LIBRARY SetCharOutputFunctionFromAXwithAttribFlagInDL
 
 	call	.FormatFileOrDirectoryToBufferFromDTAinDSSI
 

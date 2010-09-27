@@ -1,7 +1,7 @@
 ; File name		:	Display.inc
 ; Project name	:	AssemblyLibrary
 ; Created date	:	25.6.2010
-; Last update	:	15.9.2010
+; Last update	:	27.9.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Defines for display library.
 %ifndef DISPLAY_INC
@@ -36,35 +36,39 @@
 struc DISPLAY_LIB
 	.PushDisplayContext:
 	.PopDisplayContext:
-	.InitializeDisplayContext					resb	2
+	.InitializeDisplayContext						resb	2
 
-	.SetCharacterPointerFromBXAX				resb	2
-	.SetCharacterOutputFunctionFromAX			resb	2
-	.SetCharacterOutputParameterFromAX			resb	2
-	.SetCharacterAttributeFromAL				resb	2
-	.SetCursorShapeFromAX						resb	2
-	.SetCursorCoordinatesFromAX					resb	2
-	.SetNewPageFromAL							resb	2
-	.SynchronizeDisplayContextToHardware		resb	2
+	.SetCharacterPointerFromBXAX					resb	2
+	.SetCharOutputFunctionFromAXwithAttribFlagInDL	resb	2
+	.SetCharacterOutputParameterFromAX				resb	2
+	.SetCharacterAttributeFromAL					resb	2
+	.SetCursorShapeFromAX							resb	2
+	.SetCursorCoordinatesFromAX						resb	2
+	.SetNewPageFromAL								resb	2
+	.SynchronizeDisplayContextToHardware			resb	2
 
-	.GetCharacterPointerToBXAX					resb	2
-	.GetSoftwareCoordinatesToAX					resb	2
-	.GetColumnsToALandRowsToAH					resb	2
+	.GetCharacterPointerToBXAX						resb	2
+	.GetSoftwareCoordinatesToAX						resb	2
+	.GetColumnsToALandRowsToAH						resb	2
 
-	.FormatNullTerminatedStringFromCSSI			resb	2
-	.PrintSignedDecimalIntegerFromAX			resb	2
-	.PrintWordFromAXwithBaseInBX				resb	2
-	.PrintCharBufferFromBXSIwithLengthInCX		resb	2
-	.PrintNullTerminatedStringFromBXSI			resb	2
-	.PrintNullTerminatedStringFromCSSI			resb	2
-	.PrintRepeatedCharacterFromALwithCountInCX	resb	2
-	.PrintCharacterFromAL						resb	2
-	.PrintNewlineCharacters						resb	2
-	.ClearAreaWithHeightInAHandWidthInAL		resb	2
-	.ClearScreen								resb	2
+	.FormatNullTerminatedStringFromCSSI				resb	2
+	.PrintSignedWordFromAXWithBaseInBX				resb	2
+	.PrintWordFromAXwithBaseInBX					resb	2
+	.PrintCharBufferFromBXSIwithLengthInCX			resb	2
+	.PrintNullTerminatedStringFromBXSI				resb	2
+	.PrintNullTerminatedStringFromCSSI				resb	2
+	.PrintRepeatedCharacterFromALwithCountInCX		resb	2
+	.PrintCharacterFromAL							resb	2
+	.PrintNewlineCharacters							resb	2
+	.ClearAreaWithHeightInAHandWidthInAL			resb	2
+	.ClearScreen									resb	2
 endstruc
 
-; Character output functions for DISPLAY_LIB.SetCharacterOutputFunctionFromAX
+; Attribute flags for DISPLAY_LIB.SetCharacterOutputFunctionFromAXwithAttributeFlagInDL
+ATTRIBUTES_NOT_USED							EQU		0
+ATTRIBUTES_ARE_USED							EQU		FLG_CONTEXT_ATTRIBUTES
+
+; Character output functions for DISPLAY_LIB.SetCharacterOutputFunctionFromAXwithAttributeFlagInDL
 TELETYPE_OUTPUT_WITH_ATTRIBUTE				EQU		DisplayCharOut_TeletypeOutputWithAttribute
 TELETYPE_OUTPUT_WITHOUT_ATTRIBUTE			EQU		DisplayCharOut_TeletypeOutput
 TELETYPE_OUTPUT_USING_BIOS					EQU		DisplayCharOut_BiosTeletypeOutput
@@ -97,8 +101,11 @@ struc DISPLAY_CONTEXT
 	.wCharOutParam		resb	2	; User parameter for custom character output function
 	.wCursorShape		resb	2	; Current cursor shape
 	.bAttribute			resb	1	; Selected character attribute
-						resb	1
+	.bFlags				resb	1	; Display context flags
 endstruc
+
+; Display context flags
+FLG_CONTEXT_ATTRIBUTES		EQU		(1<<0)	; Character output function uses attributes
 
 
 ; Text mode character attribute byte bits for CGA+ (color adapters)
@@ -202,6 +209,18 @@ SINGLE_LEFT_HORIZONTAL_TO_VERTICAL			EQU		180
 SINGLE_RIGHT_HORIZONTAL_TO_VERTICAL			EQU		195
 ANGLE_QUOTE_LEFT							EQU		174
 ANGLE_QUOTE_RIGHT							EQU		175
+BLOCK_MOSTLY_BACKGROUND						EQU		176
+BLOCK_EVEN_BACKGROUND_AND_FOREGROUND		EQU		177
+BLOCK_MOSTLY_FOREGROUND						EQU		178
+BLOCK_FULL_FOREGROUND						EQU		219
 
+
+; Background character for clearing screen
+%ifndef SCREEN_BACKGROUND_CHARACTER
+	%define	SCREEN_BACKGROUND_CHARACTER		BLOCK_MOSTLY_BACKGROUND
+%endif
+%ifndef SCREEN_BACKGROUND_ATTRIBUTE
+	%define	SCREEN_BACKGROUND_ATTRIBUTE		MONO_NORMAL
+%endif
 
 %endif ; DISPLAY_INC

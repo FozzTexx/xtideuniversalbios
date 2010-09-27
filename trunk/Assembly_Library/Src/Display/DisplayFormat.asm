@@ -1,7 +1,7 @@
 ; File name		:	DisplayFormat.asm
 ; Project name	:	Assembly Library
 ; Created date	:	29.6.2010
-; Last update	:	10.8.2010
+; Last update	:	26.9.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for displaying formatted strings.
 
@@ -12,29 +12,83 @@ SECTION .text
 ; DisplayFormat_ParseCharacters
 ;	Parameters:
 ;		DS:		BDA segment (zero)
+;		SS:BP:	Pointer to first format parameter (-=2 updates to next parameter)
+;		CS:SI:	Pointer to string to format
+;		ES:DI:	Ptr to cursor location in video RAM
+;	Returns:
+;		CS:SI:	Ptr to end of format string (ptr to one past NULL)
+;		DI:		Updated offset to video RAM
+;	Corrupts registers:
+;		AX, BX, CX, DX, BP
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+DisplayFormat_ParseCharacters:
+	call	ReadCharacterAndTestForNull
+	jz		SHORT .QuitCharacterParsing
+
+	ePUSH_T	cx, DisplayFormat_ParseCharacters	; Return address
+	xor		cx, cx								; Initial placeholder size
+	cmp		al, '%'								; Format specifier?
+	je		SHORT ParseFormatSpecifier
+	jmp		DisplayPrint_CharacterFromAL
+
+ALIGN JUMP_ALIGN
+.QuitCharacterParsing:
+	ret
+
+
+;--------------------------------------------------------------------
+; ParseFormatSpecifier
+;	Parameters:
+;		CX:		Placeholder size
+;		DS:		BDA segment (zero)
 ;		SS:BP:	Pointer to first format parameter (-=2 for next parameter)
 ;		CS:SI:	Pointer to string to format
 ;		ES:DI:	Ptr to cursor location in video RAM
 ;	Returns:
+;		SI:		Updated to first unparsed character
 ;		DI:		Updated offset to video RAM
+;		BP:		Updated to next format parameter
 ;	Corrupts registers:
-;		AX, BX, CX, DX, SI, BP
+;		AX, BX, CX, DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-DisplayFormat_ParseCharacters:
-	call	.ReadCharacterAndTestForNull
-	jz		SHORT .Return
-	xor		cx, cx							; Zero CX for parsing number parameter
-	cmp		al, '%'
-	je		SHORT .FormatParameterEncountered
-	call	DisplayPrint_CharacterFromAL	; Control or printable character
-	jmp		SHORT DisplayFormat_ParseCharacters
-ALIGN JUMP_ALIGN
-.Return:
+ParseFormatSpecifier:
+	call	ReadCharacterAndTestForNull
+	call	Char_IsDecimalDigitInAL
+	jc		SHORT .ParsePlaceholderSizeDigitFromALtoCX
+	call	GetFormatSpecifierParserToAX
+	call	ax				; Parser function
+	dec		bp
+	dec		bp				; SS:BP now points to next parameter
+	test	cx, cx
+	jnz		SHORT PrependOrAppendSpaces
 	ret
 
 ;--------------------------------------------------------------------
-; .ReadCharacterAndTestForNull
+; .ParsePlaceholderSizeDigitFromALtoCX
+;	Parameters:
+;		AL:		Digit character from format string
+;		CX:		Current placeholder size
+;		DS:		BDA segment (zero)
+;	Returns:
+;		CX:		Current placeholder size
+;		Jumps back to ParseFormatSpecifier
+;	Corrupts registers:
+;		AX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+.ParsePlaceholderSizeDigitFromALtoCX:
+	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fpCursorPosition], di
+	sub		al, '0'				; Digit '0'...'9' to integer 0...9
+	mov		ah, cl				; Previous number parameter to AH
+	aad							; AL += (AH * 10)
+	mov		cl, al				; Updated number parameter now in CX
+	jmp		SHORT ParseFormatSpecifier
+
+
+;--------------------------------------------------------------------
+; ReadCharacterAndTestForNull
 ;	Parameters:
 ;		CS:SI:	Pointer next character from string
 ;	Returns:
@@ -45,7 +99,7 @@ ALIGN JUMP_ALIGN
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-.ReadCharacterAndTestForNull:
+ReadCharacterAndTestForNull:
 	eSEG	cs
 	lodsb									; Load from CS:SI to AL
 	test	al, al							; NULL to end string?
@@ -53,241 +107,232 @@ ALIGN JUMP_ALIGN
 
 
 ;--------------------------------------------------------------------
-; .FormatParameterEncountered
+; GetFormatSpecifierParserToAX
 ;	Parameters:
-;		CX:		Zero or previous number parameter
-;		DS:		BDA segment (zero)
-;		SS:BP:	Pointer to next format parameter
-;		CS:SI:	Pointer to next format string character
-;		ES:DI:	Ptr to cursor location in video RAM
+;		AL:		Format specifier character
 ;	Returns:
-;		SI:		Incremented to next character
-;		BP:		Offset to next format parameter
-;		Eventually jumps to DisplayFormat_ParseCharacters
+;		AX:		Offset to parser function
 ;	Corrupts registers:
-;		AX, BX, CX, DX
+;		AX, BX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-.FormatParameterEncountered:
-	call	.ReadCharacterAndTestForNull
-	jz		SHORT .Return
-	call	Char_IsDecimalDigitInAL
-	jnc		SHORT .FormatWithCorrectFormatFunction
-	; Fall to .ParseNumberParameterToCX
-
-;--------------------------------------------------------------------
-; .ParseNumberParameterToCX
-;	Parameters:
-;		AL:		Number digit from format string
-;		CX:		Zero or previous number parameter
-;	Returns:
-;		CX:		Updated number parameter
-;		Jumps to .FormatParameterEncountered
-;	Corrupts registers:
-;		AX
-;--------------------------------------------------------------------
-.ParseNumberParameterToCX:
-	sub		al, '0'				; Digit '0'...'9' to integer 0...9
-	mov		ah, cl				; Previous number parameter to AH
-	aad							; AL += (AH * 10)
-	mov		cl, al				; Updated number parameter now in CX
-	jmp		SHORT .FormatParameterEncountered
-
-;--------------------------------------------------------------------
-; .FormatWithCorrectFormatFunction
-;	Parameters:
-;		AL:		Format placeholder character (non digit character after '%')
-;		CX:		Number parameter (zero if no number parameter present)
-;		DS:		BDA segment (zero)
-;		SS:BP:	Pointer to format parameter
-;		CS:SI:	Pointer to next format string character
-;		ES:DI:	Ptr to cursor location in video RAM
-;	Returns:
-;		Eventually jumps to DisplayFormat_ParseCharacters
-;	Corrupts registers:
-;		AX, BX, CX, DX
-;--------------------------------------------------------------------
+GetFormatSpecifierParserToAX:
+	mov		bx, .rgcFormatCharToLookupIndex
 ALIGN JUMP_ALIGN
-.FormatWithCorrectFormatFunction:
-	xor		bx, bx								; Zero lookup index
-ALIGN JUMP_ALIGN
-.PlaceholderComparisonLoop:
-	cmp		al, [cs:bx+.rgcFormatCharToLookupIndex]
-	je		SHORT .JumpToFormatPlaceholder
+.CheckForNextSpecifierParser:
+	cmp		al, [cs:bx]
+	je		SHORT .ConvertIndexToFunctionOffset
 	inc		bx
-	cmp		bl, .EndOFrgcFormatCharToLookupIndex - .rgcFormatCharToLookupIndex
-	jb		SHORT .PlaceholderComparisonLoop	; Loop
-	call	DisplayPrint_CharacterFromAL		; Display unsupported format character
-	; Fall to .UpdateSpacesToAppendAfterPrintingSingleCharacter
+	cmp		bx, .rgcFormatCharToLookupIndexEnd
+	jb		SHORT .CheckForNextSpecifierParser
+	mov		ax, c_FormatCharacter
+	ret
+ALIGN JUMP_ALIGN
+.ConvertIndexToFunctionOffset:
+	sub		bx, .rgcFormatCharToLookupIndex
+	shl		bx, 1				; Shift for WORD lookup
+	mov		ax, [cs:bx+.rgfnFormatSpecifierParser]
+	ret
+
+.rgcFormatCharToLookupIndex:
+	db		"aAduxsSct-+%"
+.rgcFormatCharToLookupIndexEnd:
+ALIGN WORD_ALIGN
+.rgfnFormatSpecifierParser:
+	dw		a_FormatAttributeForNextCharacter
+	dw		A_FormatAttributeForRemainingString
+	dw		d_FormatSignedDecimalWord
+	dw		u_FormatUnsignedDecimalWord
+	dw		x_FormatHexadecimalWord
+	dw		s_FormatStringFromSegmentCS
+	dw		S_FormatStringFromFarPointer
+	dw		c_FormatCharacter
+	dw		t_FormatRepeatCharacter
+	dw		PrepareToPrependParameterWithSpaces
+	dw		PrepareToAppendSpacesAfterParameter
+	dw		percent_FormatPercent
+
 
 ;--------------------------------------------------------------------
-; .UpdateSpacesToAppendAfterPrintingSingleCharacter
-; .UpdateSpacesToAppend
+; PrependOrAppendSpaces
 ;	Parameters:
-;		BX:		Number of characters printed (.UpdateSpacesToAppend only)
-;		CX:		Number parameter (zero if no number parameter present)
+;		CX:		Minimum length for format specifier in characters
 ;		DS:		BDA segment (zero)
-;		SS:BP:	Pointer to format parameter
-;		CS:SI:	Pointer to next format string character
 ;		ES:DI:	Ptr to cursor location in video RAM
 ;	Returns:
-;		CX:		Number of spaces to append
-;		Jumps to .PrepareToFormatNextParameter
+;		Nothing
 ;	Corrupts registers:
 ;		AX, BX, CX, DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-.UpdateSpacesToAppendAfterPrintingSingleCharacter:
-	mov		bx, 1
+PrependOrAppendSpaces:
+	mov		ax, di
+	sub		ax, [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fpCursorPosition]
+	test	cx, cx
+	js		SHORT .PrependWithSpaces
+	; Fall to .AppendSpaces
+
+;--------------------------------------------------------------------
+; .AppendSpaces
+;	Parameters:
+;		AX:		Number of format parameter BYTEs printed
+;		CX:		Minimum length for format specifier in characters
+;		DS:		BDA segment (zero)
+;		ES:DI:	Ptr to cursor location in video RAM
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, CX, DX
+;--------------------------------------------------------------------
+.AppendSpaces:
+	call	DisplayContext_GetCharacterOffsetToAXfromByteOffsetInAX
+	sub		cx, ax
+	jle		SHORT .NothingToAppendOrPrepend
+	mov		al, ' '
+	jmp		DisplayPrint_RepeatCharacterFromALwithCountInCX
+
+;--------------------------------------------------------------------
+; .PrependWithSpaces
+;	Parameters:
+;		AX:		Number of format parameter BYTEs printed
+;		CX:		Negative minimum length for format specifier in characters
+;		DS:		BDA segment (zero)
+;		ES:DI:	Ptr to cursor location in video RAM
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, BX, CX, DX
+;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-.UpdateSpacesToAppend:
-	jcxz	.PrepareToFormatNextParameter
-	sub		cx, bx				; Number of spaces to append
-	jle		SHORT .PrepareToFormatNextParameter
+.PrependWithSpaces:
+	xchg	ax, cx
+	neg		ax
+	call	DisplayContext_GetByteOffsetToAXfromCharacterOffsetInAX
+	sub		ax, cx				; AX = BYTEs to prepend, CX = BYTEs to move
+	jle		SHORT .NothingToAppendOrPrepend
+
+	mov		bx, di
+	add		bx, ax				; BX = DI after prepending
+
+	push	si
+	dec		di					; DI = Offset to last byte formatted
+	mov		si, di
+	add		di, ax				; DI = Offset to new location for last byte
+	std
+	eSEG_STR rep, es, movsb
+
+	mov		dl, [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bFlags]
+	and		dx, BYTE FLG_CONTEXT_ATTRIBUTES
+	not		dx
+	and		di, dx				; WORD alignment when using attributes
+
+	call	DisplayContext_GetCharacterOffsetToAXfromByteOffsetInAX
+	xchg	cx, ax				; CX = Spaces to prepend
 	mov		al, ' '
 	call	DisplayPrint_RepeatCharacterFromALwithCountInCX
-	; Fall to .PrepareToFormatNextParameter
+	cld							; Restore DF
 
-;--------------------------------------------------------------------
-; .PrepareToFormatNextParameter
+	mov		di, bx
+	pop		si
+.NothingToAppendOrPrepend:
+	ret
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Formatting functions
 ;	Parameters:
 ;		DS:		BDA segment (zero)
-;		SS:BP:	Pointer to format parameter
-;		CS:SI:	Pointer to next format string character
+;		SS:BP:	Pointer to next format parameter (-=2 updates to next parameter)
 ;		ES:DI:	Ptr to cursor location in video RAM
 ;	Returns:
-;		BP:		Adjusted to point next stack parameter
-;		Jumps to DisplayFormat_ParseCharacters
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-.PrepareToFormatNextParameter:
-	dec		bp
-	dec		bp
-	jmp		SHORT DisplayFormat_ParseCharacters
-
-
-;--------------------------------------------------------------------
-; .JumpToFormatPlaceholder
-;	Parameters:
-;		BX:		Lookup index for format function
-;		CX:		Number parameter (zero if no number parameter present)
-;		DS:		BDA segment (zero)
-;		SS:BP:	Pointer to next format parameter
-;		CS:SI:	Pointer to next format string character
-;		ES:DI:	Ptr to cursor location in video RAM
-;	Returns:
-;		Eventually jumps to DisplayFormat_ParseCharacters
+;		SS:BP:	Points to last WORD parameter used
 ;	Corrupts registers:
 ;		AX, BX, DX
-;--------------------------------------------------------------------
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ALIGN JUMP_ALIGN
-.JumpToFormatPlaceholder:
-	shl		bx, 1					; Shift for WORD lookup
-	jmp		[cs:bx+.rgfnFormatParameter]
-
-ALIGN JUMP_ALIGN
-.a_FormatAttributeForNextCharacter:
+a_FormatAttributeForNextCharacter:
 	mov		bl, [bp]
 	xchg	bl, [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bAttribute]
-	call	.ReadCharacterAndTestForNull
-	jz		SHORT .Return
-	call	DisplayPrint_CharacterFromAL
+	push	bx
+	push	cx
+	push	di
+	call	DisplayFormat_ParseCharacters	; Recursive call
+	pop		WORD [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fpCursorPosition]
+	pop		cx
+	pop		bx
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bAttribute], bl
-	jmp		SHORT .UpdateSpacesToAppendAfterPrintingSingleCharacter
+	ret
 
 ALIGN JUMP_ALIGN
-.A_FormatAttributeForRemainingString:
+A_FormatAttributeForRemainingString:
 	mov		al, [bp]
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bAttribute], al
-	jmp		SHORT .PrepareToFormatNextParameter
+	ret
 
 ALIGN JUMP_ALIGN
-.d_FormatSignedDecimalWord:
-	mov		ax, [bp]
-	call	DisplayPrint_SignedDecimalIntegerFromAX
-	jmp		SHORT .UpdateSpacesToAppend
-
-ALIGN JUMP_ALIGN
-.u_FormatUnsignedDecimalWord:
+d_FormatSignedDecimalWord:
 	mov		ax, [bp]
 	mov		bx, 10
-	call	DisplayPrint_WordFromAXWithBaseInBX
-	jmp		SHORT .UpdateSpacesToAppend
+	jmp		DisplayPrint_SignedWordFromAXWithBaseInBX
 
 ALIGN JUMP_ALIGN
-.x_FormatHexadecimalWord:
+u_FormatUnsignedDecimalWord:
+	mov		ax, [bp]
+	mov		bx, 10
+	jmp		DisplayPrint_WordFromAXWithBaseInBX
+
+ALIGN JUMP_ALIGN
+x_FormatHexadecimalWord:
 	mov		ax, [bp]
 	mov		bx, 16
 	call	DisplayPrint_WordFromAXWithBaseInBX
-	inc		bx					; Increment character count for 'h'
 	mov		al, 'h'
-	call	DisplayPrint_CharacterFromAL
-	jmp		SHORT .UpdateSpacesToAppend
+	jmp		DisplayPrint_CharacterFromAL
 
 ALIGN JUMP_ALIGN
-.s_FormatStringFromSegmentCS:
+s_FormatStringFromSegmentCS:
 	xchg	si, [bp]
 	call	DisplayPrint_NullTerminatedStringFromCSSI
-	mov		si, [bp]			; Restore SI
-	jmp		SHORT .UpdateSpacesToAppend
+	mov		si, [bp]
+	ret
 
 ALIGN JUMP_ALIGN
-.S_FormatStringFromFarPointer:
-	xchg	si, [bp]
+S_FormatStringFromFarPointer:
 	mov		bx, [bp-2]
+	xchg	si, [bp]
 	call	DisplayPrint_NullTerminatedStringFromBXSI
-	mov		si, [bp]			; Restore SI
-	jmp		SHORT .UpdateSpacesToAppendWithDWordParameter
+	mov		si, [bp]
+	dec		bp
+	dec		bp
+	ret
 
 ALIGN JUMP_ALIGN
-.c_FormatCharacter:
+c_FormatCharacter:
 	mov		al, [bp]
-	jmp		SHORT .FormatSingleCharacterFromAL
+	jmp		DisplayPrint_CharacterFromAL
 
 ALIGN JUMP_ALIGN
-.t_FormatRepeatCharacter:
+t_FormatRepeatCharacter:
+	push	cx
 	mov		cx, [bp-2]
-	mov		bx, cx
 	mov		al, [bp]
 	call	DisplayPrint_RepeatCharacterFromALwithCountInCX
-	jmp		SHORT .UpdateSpacesToAppendWithDWordParameter
+	pop		cx
+	dec		bp
+	dec		bp
+	ret
 
 ALIGN JUMP_ALIGN
-.percent_FormatPercent:
+percent_FormatPercent:
 	mov		al, '%'
-	inc		bp					; Adjust here since...
-	inc		bp					; ...no parameter on stack
-	; Fall to .FormatSingleCharacterFromAL
+	jmp		DisplayPrint_CharacterFromAL
 
 ALIGN JUMP_ALIGN
-.FormatSingleCharacterFromAL:
-	call	DisplayPrint_CharacterFromAL
-	jmp		.UpdateSpacesToAppendAfterPrintingSingleCharacter
+PrepareToPrependParameterWithSpaces:
+	neg		cx
+	; Fall to PrepareToAppendSpacesAfterParameter
 
 ALIGN JUMP_ALIGN
-.UpdateSpacesToAppendWithDWordParameter:
-	dec		bp
-	dec		bp
-	jmp		.UpdateSpacesToAppend
-
-
-; Table for converting format character to jump table index
-.rgcFormatCharToLookupIndex:
-	db		"aAduxsSct%"
-.EndOFrgcFormatCharToLookupIndex:
-
-; Jump table
-ALIGN WORD_ALIGN
-.rgfnFormatParameter:
-	dw		.a_FormatAttributeForNextCharacter
-	dw		.A_FormatAttributeForRemainingString
-	dw		.d_FormatSignedDecimalWord
-	dw		.u_FormatUnsignedDecimalWord
-	dw		.x_FormatHexadecimalWord
-	dw		.s_FormatStringFromSegmentCS
-	dw		.S_FormatStringFromFarPointer
-	dw		.c_FormatCharacter
-	dw		.t_FormatRepeatCharacter
-	dw		.percent_FormatPercent
+PrepareToAppendSpacesAfterParameter:
+	add		sp, BYTE 2				; Remove return offset
+	jmp		ParseFormatSpecifier

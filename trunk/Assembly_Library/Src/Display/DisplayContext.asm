@@ -1,7 +1,7 @@
 ; File name		:	DisplayContext.asm
 ; Project name	:	Assembly Library
 ; Created date	:	25.6.2010
-; Last update	:	13.8.2010
+; Last update	:	27.9.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for managing display context.
 
@@ -22,7 +22,8 @@ DisplayContext_Initialize:
 	call	.DetectAndSetDisplaySegment
 	mov		WORD [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fnCharOut], DEFAULT_CHARACTER_OUTPUT
 	mov		WORD [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.wCursorShape], CURSOR_NORMAL
-	mov		BYTE [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bAttribute], MONO_NORMAL
+	mov		BYTE [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bAttribute], SCREEN_BACKGROUND_ATTRIBUTE
+	mov		BYTE [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bFlags], FLG_CONTEXT_ATTRIBUTES
 
 	xor		ax, ax
 	call	DisplayCursor_SetCoordinatesFromAX
@@ -151,9 +152,10 @@ DisplayContext_GetCharacterPointerToBXAX:
 
 
 ;--------------------------------------------------------------------
-; DisplayContext_SetCharacterOutputFunctionFromAX
+; DisplayContext_SetCharOutputFunctionFromAXwithAttribFlagInDL
 ;	Parameters:
 ;		AX:		Offset to character output function
+;		DL:		Attribute Flag
 ;		DS:		BDA segment (zero)
 ;	Returns:
 ;		Nothing
@@ -161,8 +163,12 @@ DisplayContext_GetCharacterPointerToBXAX:
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-DisplayContext_SetCharacterOutputFunctionFromAX:
+DisplayContext_SetCharOutputFunctionFromAXwithAttribFlagInDL:
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fnCharOut], ax
+	and		BYTE [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bFlags], ~FLG_CONTEXT_ATTRIBUTES
+	mov		al, dl
+	and		al, FLG_CONTEXT_ATTRIBUTES
+	or		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bFlags], al
 	ret
 
 
@@ -209,4 +215,41 @@ DisplayContext_SetCharacterOutputParameterFromAX:
 ALIGN JUMP_ALIGN
 DisplayContext_GetCharacterOutputParameterToDX:
 	mov		dx, [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.wCharOutParam]
+	ret
+
+
+;--------------------------------------------------------------------
+; DisplayContext_GetCharacterOffsetToAXfromByteOffsetInAX
+;	Parameters:
+;		AX:		Offset in bytes from some character to another
+;		DS:		BDA segment (zero)
+;	Returns:
+;		AX:		Offset in characters from some character to another
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------	
+ALIGN JUMP_ALIGN
+DisplayContext_GetCharacterOffsetToAXfromByteOffsetInAX:
+	test	BYTE [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bFlags], FLG_CONTEXT_ATTRIBUTES
+	jz		SHORT ReturnOffsetInAX
+	sar		ax, 1		; BYTE count to WORD count
+	ret
+
+;--------------------------------------------------------------------
+; DisplayContext_GetByteOffsetToAXfromCharacterOffsetInAX
+;	Parameters:
+;		AX:		Offset in characters from some character to another
+;		DS:		BDA segment (zero)
+;	Returns:
+;		AX:		Offset in bytes from some character to another
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------	
+ALIGN JUMP_ALIGN
+DisplayContext_GetByteOffsetToAXfromCharacterOffsetInAX:
+	test	BYTE [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bFlags], FLG_CONTEXT_ATTRIBUTES
+	jz		SHORT ReturnOffsetInAX
+	sal		ax, 1		; WORD count to BYTE count
+ALIGN JUMP_ALIGN, ret
+ReturnOffsetInAX:
 	ret

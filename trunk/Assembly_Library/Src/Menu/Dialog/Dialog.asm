@@ -1,7 +1,7 @@
 ; File name		:	Dialog.asm
 ; Project name	:	Assembly Library
 ; Created date	:	6.8.2010
-; Last update	:	16.9.2010
+; Last update	:	27.9.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Common functions for many dialogs.
 
@@ -290,7 +290,7 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 .RedrawDialogAreaAndWholeParentWindow:
-	mov		al, MONO_NORMAL
+	mov		al, SCREEN_BACKGROUND_ATTRIBUTE
 	CALL_DISPLAY_LIBRARY SetCharacterAttributeFromAL
 	call	MenuLocation_GetTitleBordersTopLeftCoordinatesToAX
 	CALL_DISPLAY_LIBRARY SetCursorCoordinatesFromAX
