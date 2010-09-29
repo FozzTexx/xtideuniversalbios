@@ -1,7 +1,7 @@
 ; File name		:	Dialog.inc
 ; Project name	:	Assembly Library
 ; Created date	:	15.9.2010
-; Last update	:	15.9.2010
+; Last update	:	28.9.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Defines for Menu library dialogs.
 %ifndef DIALOG_INC
@@ -73,6 +73,10 @@ struc FILE_DIALOG_IO
 	.szFile				resb	FILENAME_BUFFER_SIZE
 endstruc
 
+
+; Progress bar dialog
+PROGRESS_COMPLETE_CHARACTER			EQU		BLOCK_FULL_FOREGROUND
+PROGRESS_INCOMPLETE_CHARACTER		EQU		BLOCK_MOSTLY_BACKGROUND
 
 ; File dialog
 FILENAME_BUFFER_SIZE				EQU		14	; 8+1+3+NULL+alignment

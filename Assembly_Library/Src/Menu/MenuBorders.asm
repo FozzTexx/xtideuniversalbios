@@ -1,7 +1,7 @@
 ; File name		:	MenuBorders.asm
 ; Project name	:	Assembly Library
 ; Created date	:	14.7.2010
-; Last update	:	27.9.2010
+; Last update	:	28.9.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for drawing menu borders.
 
@@ -44,13 +44,13 @@ MenuBorders_RefreshAll:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, DX, SI, DI
+;		AX, BX, SI, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MenuBorders_AdjustDisplayContextForDrawingBorders:
-	mov		dl, ATTRIBUTES_ARE_USED
+	mov		bl, ATTRIBUTES_ARE_USED
 	mov		ax, MenuCharOut_MenuBorderTeletypeOutputWithAttribute
-	CALL_DISPLAY_LIBRARY SetCharOutputFunctionFromAXwithAttribFlagInDL
+	CALL_DISPLAY_LIBRARY SetCharOutputFunctionFromAXwithAttribFlagInBL
 
 	mov		ax, bp
 	CALL_DISPLAY_LIBRARY SetCharacterOutputParameterFromAX
@@ -268,11 +268,11 @@ PrintShadowCharactersByDXtimes:
 	mov		si, ATTRIBUTE_CHARS.cShadow
 	call	MenuAttribute_SetToDisplayContextFromTypeInSI
 
-	push	dx
-	mov		dl, ATTRIBUTES_ARE_USED
+	push	bx
+	mov		bl, ATTRIBUTES_ARE_USED
 	mov		ax, FAST_OUTPUT_WITH_ATTRIBUTE_ONLY
-	CALL_DISPLAY_LIBRARY SetCharOutputFunctionFromAXwithAttribFlagInDL
-	pop		dx
+	CALL_DISPLAY_LIBRARY SetCharOutputFunctionFromAXwithAttribFlagInBL
+	pop		bx
 
 	call	PrintMultipleBorderCharactersFromAL	; AL does not matter
 

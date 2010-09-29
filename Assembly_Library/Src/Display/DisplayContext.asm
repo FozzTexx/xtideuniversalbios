@@ -1,7 +1,7 @@
 ; File name		:	DisplayContext.asm
 ; Project name	:	Assembly Library
 ; Created date	:	25.6.2010
-; Last update	:	27.9.2010
+; Last update	:	28.9.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for managing display context.
 
@@ -152,10 +152,10 @@ DisplayContext_GetCharacterPointerToBXAX:
 
 
 ;--------------------------------------------------------------------
-; DisplayContext_SetCharOutputFunctionFromAXwithAttribFlagInDL
+; DisplayContext_SetCharOutputFunctionFromAXwithAttribFlagInBL
 ;	Parameters:
 ;		AX:		Offset to character output function
-;		DL:		Attribute Flag
+;		BL:		Attribute Flag
 ;		DS:		BDA segment (zero)
 ;	Returns:
 ;		Nothing
@@ -163,12 +163,9 @@ DisplayContext_GetCharacterPointerToBXAX:
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-DisplayContext_SetCharOutputFunctionFromAXwithAttribFlagInDL:
+DisplayContext_SetCharOutputFunctionFromAXwithAttribFlagInBL:
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fnCharOut], ax
-	and		BYTE [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bFlags], ~FLG_CONTEXT_ATTRIBUTES
-	mov		al, dl
-	and		al, FLG_CONTEXT_ATTRIBUTES
-	or		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bFlags], al
+	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bFlags], bl
 	ret
 
 

@@ -1,7 +1,7 @@
 ; File name		:	DialogProgress.asm
 ; Project name	:	Assembly Library
 ; Created date	:	15.8.2010
-; Last update	:	16.9.2010
+; Last update	:	28.9.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Displays progress bar dialog and starts progress task.
 
@@ -166,13 +166,13 @@ DrawProgressBarFromDialogIoInDSSI:
 	call	.GetFullCharsToCXandEmptyCharsToDXwithDialogIoInDSSI
 	jcxz	.DrawEmptyCharsOnly
 
-	mov		al, SCROLL_THUMB_CHARACTER
+	mov		al, PROGRESS_COMPLETE_CHARACTER
 	CALL_DISPLAY_LIBRARY PrintRepeatedCharacterFromALwithCountInCX
 
 .DrawEmptyCharsOnly:
 	mov		cx, dx
 	jcxz	.NothingLeftToDraw
-	mov		al, SCROLL_TRACK_CHARACTER
+	mov		al, PROGRESS_INCOMPLETE_CHARACTER
 	CALL_DISPLAY_LIBRARY PrintRepeatedCharacterFromALwithCountInCX
 
 .NothingLeftToDraw:

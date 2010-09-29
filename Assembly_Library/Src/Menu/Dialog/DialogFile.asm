@@ -1,7 +1,7 @@
 ; File name		:	DialogFile.asm
 ; Project name	:	Assembly Library
 ; Created date	:	6.9.2010
-; Last update	:	27.9.2010
+; Last update	:	28.9.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Displays file dialog.
 
@@ -252,9 +252,9 @@ AppendFileToBufferInESDIfromDtaInDSSI:
 	mov		bx, es
 	xchg	ax, cx
 	CALL_DISPLAY_LIBRARY SetCharacterPointerFromBXAX
-	mov		dl, ATTRIBUTES_NOT_USED
+	mov		bl, ATTRIBUTES_NOT_USED
 	mov		ax, BUFFER_OUTPUT_WITH_CHAR_ONLY
-	CALL_DISPLAY_LIBRARY SetCharOutputFunctionFromAXwithAttribFlagInDL
+	CALL_DISPLAY_LIBRARY SetCharOutputFunctionFromAXwithAttribFlagInBL
 
 	call	.FormatFileOrDirectoryToBufferFromDTAinDSSI
 

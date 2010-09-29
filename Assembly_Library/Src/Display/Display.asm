@@ -1,7 +1,7 @@
 ; File name		:	Display.asm
 ; Project name	:	Assembly Library
 ; Created date	:	2.7.2010
-; Last update	:	27.9.2010
+; Last update	:	28.9.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Display Library functions for CALL_DISPLAY_LIBRARY macro
 ;					that users should use to make library call.
@@ -67,7 +67,7 @@ istruc DISPLAY_LIB
 	at	DISPLAY_LIB.InitializeDisplayContext,						dw	DisplayContext_Initialize
 
 	at	DISPLAY_LIB.SetCharacterPointerFromBXAX,					dw	DisplayContext_SetCharacterPointerFromBXAX
-	at	DISPLAY_LIB.SetCharOutputFunctionFromAXwithAttribFlagInDL,	dw	DisplayContext_SetCharOutputFunctionFromAXwithAttribFlagInDL
+	at	DISPLAY_LIB.SetCharOutputFunctionFromAXwithAttribFlagInBL,	dw	DisplayContext_SetCharOutputFunctionFromAXwithAttribFlagInBL
 	at	DISPLAY_LIB.SetCharacterOutputParameterFromAX,				dw	DisplayContext_SetCharacterOutputParameterFromAX
 	at	DISPLAY_LIB.SetCharacterAttributeFromAL,					dw	DisplayContext_SetCharacterAttributeFromAL
 	at	DISPLAY_LIB.SetCursorShapeFromAX,							dw	DisplayCursor_SetShapeFromAX

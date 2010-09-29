@@ -32,9 +32,10 @@ LibraryTests_Start:
 	CALL_DISPLAY_LIBRARY InitializeDisplayContext
 	CALL_DISPLAY_LIBRARY ClearScreen
 
-	call	LibraryTests_ForDisplayLibrary
+	call	LibraryTests_Sort
+	;call	LibraryTests_ForDisplayLibrary
 	;call	LibraryTests_ForKeyboardLibrary
-	call	LibraryTests_ForMenuLibrary
+	;call	LibraryTests_ForMenuLibrary
 
 	; Exit to DOS
 	;mov		ax, CURSOR_XY(1, 1)
@@ -253,9 +254,9 @@ ALIGN JUMP_ALIGN
 	mov		bx, cs
 	mov		ax, si
 	CALL_DISPLAY_LIBRARY SetCharacterPointerFromBXAX
-	mov		dl, ATTRIBUTES_NOT_USED
+	mov		bl, ATTRIBUTES_NOT_USED
 	mov		ax, BUFFER_OUTPUT_WITH_CHAR_ONLY
-	CALL_DISPLAY_LIBRARY SetCharOutputFunctionFromAXwithAttribFlagInDL
+	CALL_DISPLAY_LIBRARY SetCharOutputFunctionFromAXwithAttribFlagInBL
 	lea		ax, [si+STRING_BUFFER_SIZE]
 	CALL_DISPLAY_LIBRARY SetCharacterOutputParameterFromAX
 
@@ -550,7 +551,58 @@ PrintFormattedStrings:
 	ret
 .szRepeat:
 	db	"Repeating character '-':                   %A%t",LF,CR,NULL
-		
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+LibraryTests_Sort:
+	call	.PrintWords
+	push	cs
+	pop		ds
+	mov		si, .rgwItems
+	mov		dx, 7
+	mov		cx, 2
+	mov		bx, .Comparator
+	call	Sort_ItemsFromDSSIwithCountInDXsizeInCXandComparatorInBX
+	call	.PrintWords
+	ret
+
+
+.Comparator:
+	push	ax
+	mov		ax, [si]
+	;DISPLAY_DEBUG_CHARACTER 'I'
+	;DISPLAY_DEBUG_WORD_AND_WAIT_ANY_KEY ax, 10
+	;DISPLAY_DEBUG_CHARACTER ','
+	;DISPLAY_DEBUG_WORD_AND_WAIT_ANY_KEY [es:di], 10
+	;DISPLAY_DEBUG_CHARACTER ' '
+	cmp		ax, [es:di]
+	pop		ax
+	ret
+
+.PrintWords:
+	CALL_DISPLAY_LIBRARY PrintNewlineCharacters
+	mov		cx, 7
+	push	cs
+	pop		ds
+	mov		si, .rgwItems
+	mov		bx, 10
+.Loop:
+	lodsw
+	CALL_DISPLAY_LIBRARY PrintSignedWordFromAXWithBaseInBX
+	CALL_DISPLAY_LIBRARY PrintNewlineCharacters
+	loop	.Loop
+	ret
+
+
+.rgwItems:
+	dw		435
+	dw		-31551
+	dw		345
+	dw		0
+	dw		-18
+	dw		23
+	dw		435
+
 
 
 ; Section containing initialized data

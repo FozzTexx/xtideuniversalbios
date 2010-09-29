@@ -1,7 +1,7 @@
 ; File name		:	AssemblyLibrary.asm
 ; Project name	:	Assembly Library
 ; Created date	:	15.9.2010
-; Last update	:	15.9.2010
+; Last update	:	29.9.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Assembly Library main file. This is the only file that
 ;					needs to be included.
@@ -70,4 +70,5 @@ SECTION .text
 	%include "Bit.asm"
 	%include "Memory.asm"
 	%include "Size.asm"
+	%include "Sort.asm"
 %endif
