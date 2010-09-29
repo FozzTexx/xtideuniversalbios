@@ -1,7 +1,7 @@
 ; File name		:	Display.inc
 ; Project name	:	AssemblyLibrary
 ; Created date	:	25.6.2010
-; Last update	:	27.9.2010
+; Last update	:	28.9.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Defines for display library.
 %ifndef DISPLAY_INC
@@ -39,7 +39,7 @@ struc DISPLAY_LIB
 	.InitializeDisplayContext						resb	2
 
 	.SetCharacterPointerFromBXAX					resb	2
-	.SetCharOutputFunctionFromAXwithAttribFlagInDL	resb	2
+	.SetCharOutputFunctionFromAXwithAttribFlagInBL	resb	2
 	.SetCharacterOutputParameterFromAX				resb	2
 	.SetCharacterAttributeFromAL					resb	2
 	.SetCursorShapeFromAX							resb	2

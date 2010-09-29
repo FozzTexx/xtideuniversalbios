@@ -106,7 +106,7 @@ struc MENU
 	.dwUserData						resb	4	; User specified data
 
 	.bFlags							resb	1	; Menu flags
-	.bLastSecondPrinted				resb	1	; To minimize CGA snow when using timeouts
+									resb	1
 	.wTimeoutCounter				resb	2
 
 	.wHighlightedItem				resb	2	; Index for highlighted item

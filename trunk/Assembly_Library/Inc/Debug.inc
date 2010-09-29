@@ -1,7 +1,7 @@
 ; File name		:	Debug.inc
 ; Project name	:	Assembly Library
 ; Created date	:	8.8.2010
-; Last update	:	8.8.2010
+; Last update	:	29.9.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Debugging macros.
 %ifndef DEBUG_INC
@@ -19,6 +19,7 @@
 ;		Nothing
 ;--------------------------------------------------------------------
 %macro DISPLAY_DEBUG_WORD_AND_WAIT_ANY_KEY 2
+	pushf
 	push	di
 	push	bx
 	push	ax
@@ -32,6 +33,7 @@
 	pop		ax
 	pop		bx
 	pop		di
+	popf
 %endmacro
 
 
@@ -45,6 +47,7 @@
 ;		Nothing
 ;--------------------------------------------------------------------
 %macro DISPLAY_DEBUG_CHARACTER_AND_WAIT_ANY_KEY 1
+	pushf
 	push	di
 	push	ax
 
@@ -55,6 +58,7 @@
 
 	pop		ax
 	pop		di
+	popf
 %endmacro
 
 
@@ -68,12 +72,14 @@
 ;		Nothing
 ;--------------------------------------------------------------------
 %macro DISPLAY_DEBUG_CHARACTER 1
+	pushf
 	push	di
 	push	ax
 	mov		al, %1
 	CALL_DISPLAY_LIBRARY PrintCharacterFromAL
 	pop		ax
 	pop		di
+	popf
 %endmacro
 
 

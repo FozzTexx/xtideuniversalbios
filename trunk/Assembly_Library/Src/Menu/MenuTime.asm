@@ -1,7 +1,7 @@
 ; File name		:	MenuTime.asm
 ; Project name	:	Assembly Library
 ; Created date	:	25.7.2010
-; Last update	:	27.9.2010
+; Last update	:	28.9.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Menu timeouts other time related functions.
 
@@ -55,44 +55,61 @@ MenuTime_RestartSelectionTimeout:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MenuTime_UpdateSelectionTimeout:
-	cmp		WORD [bp+MENUINIT.wTimeoutTicks], BYTE 0
-	je		SHORT .ReturnSinceTimeoutDisabled	; CF cleared
 	push	ds
 
-	call	GetSecondsUntilTimeoutToAXandPtrToTimeoutCounterToDSBX
-	cmp		al, [bp+MENU.bLastSecondPrinted]
-	je		SHORT .SetCFifTimeoutAndReturn
-	mov		[bp+MENU.bLastSecondPrinted], al
-	call	DrawTimeoutInAXoverMenuBorders
+	call	MenuTime_DrawWithoutUpdating
+	jnc		SHORT .TimeoutDisabled
+	call	PointDSBXtoTimeoutCounter
+	call	TimerTicks_SetCarryIfTimeoutFromDSBX
 
 ALIGN JUMP_ALIGN
-.SetCFifTimeoutAndReturn:
-	call	TimerTicks_SetCarryIfTimeoutFromDSBX
+.TimeoutDisabled:
 	pop		ds
-.ReturnSinceTimeoutDisabled:
 	ret
-
 
 ;--------------------------------------------------------------------
 ; MenuTime_DrawWithoutUpdating
 ;	Parameters
 ;		SS:BP:	Ptr to MENU
 ;	Returns:
-;		Nothing
+;		CF:		Set if timeout enabled
+;				Cleared if timeout disabled
 ;	Corrupts registers:
 ;		AX, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MenuTime_DrawWithoutUpdating:
 	cmp		WORD [bp+MENUINIT.wTimeoutTicks], BYTE 0
-	je		SHORT .ReturnSinceTimeoutDisabled
+	je		SHORT .ReturnSinceTimeoutDisabled	; Clear CF
 
 	push	ds
-	call	GetSecondsUntilTimeoutToAXandPtrToTimeoutCounterToDSBX
+	call	GetSecondsLeftUntilTimeoutToAXandCounterToDSBX
 	call	DrawTimeoutInAXoverMenuBorders
 	pop		ds
+	stc
+ALIGN JUMP_ALIGN, ret
 .ReturnSinceTimeoutDisabled:
 	ret
+
+
+;--------------------------------------------------------------------
+; GetSecondsLeftUntilTimeoutToAXandCounterToDSBX
+;	Parameters
+;		SS:BP:	Ptr to MENU
+;	Returns:
+;		AX:		Seconds until timeout
+;		DS:BX:	Ptr to timeout counter
+;	Corrupts registers:
+;		AX, CX, DX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+GetSecondsLeftUntilTimeoutToAXandCounterToDSBX:
+	call	PointDSBXtoTimeoutCounter
+	call	TimerTicks_GetElapsedToAXfromDSBX
+	neg		ax			; Negate since DS:BX points to end time
+	MAX_S	ax, 0		; Set to zero if overflow
+	xchg	dx, ax
+	jmp		TimerTicks_GetSecondsToAXfromTicksInDX
 
 
 ;--------------------------------------------------------------------
@@ -110,26 +127,6 @@ PointDSBXtoTimeoutCounter:
 	pop		ds
 	lea		bx, [bp+MENU.wTimeoutCounter]
 	ret
-
-
-;--------------------------------------------------------------------
-; GetSecondsUntilTimeoutToAXandPtrToTimeoutCounterToDSBX
-;	Parameters
-;		SS:BP:	Ptr to MENU
-;	Returns:
-;		AX:		Seconds until timeout
-;		DS:BX:	Ptr to timeout counter
-;	Corrupts registers:
-;		AX, CX, DX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-GetSecondsUntilTimeoutToAXandPtrToTimeoutCounterToDSBX:
-	call	PointDSBXtoTimeoutCounter
-	call	TimerTicks_GetElapsedToAXfromDSBX
-	neg		ax			; Negate since DS:BX points to end time
-	MAX_S	ax, 0		; Set to zero if overflow
-	xchg	dx, ax
-	jmp		TimerTicks_GetSecondsToAXfromTicksInDX
 
 
 ;--------------------------------------------------------------------
@@ -172,12 +169,13 @@ DrawTimeoutInAXoverMenuBorders:
 	CALL_DISPLAY_LIBRARY FormatNullTerminatedStringFromCSSI
 	pop		bp
 
+	; Draw right border with normal border color
 	mov		al, DOUBLE_RIGHT_HORIZONTAL_TO_SINGLE_VERTICAL
 	jmp		MenuBorders_PrintSingleBorderCharacterFromAL
 .szSelectionTimeout:
 	db		DOUBLE_BOTTOM_LEFT_CORNER
 	db		DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL
-	db		"%AAutoselection in %2-ds",NULL
+	db		"%AAutoselection in %2-us",NULL
 
 ;--------------------------------------------------------------------
 ; .GetTimeoutAttributeToAXfromSecondsInCX
