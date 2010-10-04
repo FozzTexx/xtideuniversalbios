@@ -1,7 +1,7 @@
 ; File name		:	DisplayCharOut.asm
 ; Project name	:	Assembly Library
 ; Created date	:	26.6.2010
-; Last update	:	22.9.2010
+; Last update	:	4.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for outputting characters to video memory.
 ;					These functions are meant to be called by Display_CharacterFromAL
@@ -168,12 +168,11 @@ CGA_STATUS_REGISTER				EQU		3DAh
 ;	Parameters:
 ;		DX:		CGA Status Register Address (3DAh)
 ;	Returns:
-;		Interrupts disabled
+;		Nothing
 ;	Corrupts registers:
 ;		AL
 ;--------------------------------------------------------------------
 %macro WAIT_UNTIL_SAFE_CGA_WRITE 0
-	cli				; Interrupt request would mess up timing
 %%WaitUntilNotInRetrace:
 	in		al, dx
 	shr		al, 1	; 1 = Bit 0: A 1 indicates that regen-buffer memory access can be
@@ -200,40 +199,37 @@ CGA_STATUS_REGISTER				EQU		3DAh
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 StosbWithoutCgaSnow:
-	call	LoadAndVerifyStatusRegisterFromBDA
+	call	DisplayCharOut_LoadAndVerifyStatusRegisterFromBDA
 	jne		SHORT .StosbWithoutWaitSinceUnknownPort
 
 	mov		ah, al
+	cli				; Interrupt request would mess up timing
 	WAIT_UNTIL_SAFE_CGA_WRITE
 	mov		al, ah
-	stosb
-	sti
-	ret
-ALIGN JUMP_ALIGN
 .StosbWithoutWaitSinceUnknownPort:
 	stosb
+	sti
 	ret
 
 ALIGN JUMP_ALIGN
 StoswWithoutCgaSnow:
-	call	LoadAndVerifyStatusRegisterFromBDA
+	push	bx
+	call	DisplayCharOut_LoadAndVerifyStatusRegisterFromBDA
 	jne		SHORT .StoswWithoutWaitSinceUnknownPort
 
-	push	bx
 	xchg	bx, ax
+	cli				; Interrupt request would mess up timing
 	WAIT_UNTIL_SAFE_CGA_WRITE
 	xchg	ax, bx
+.StoswWithoutWaitSinceUnknownPort:
 	stosw
 	pop		bx
 	sti
 	ret
-ALIGN JUMP_ALIGN
-.StoswWithoutWaitSinceUnknownPort:
-	stosw
-	ret
+
 
 ;--------------------------------------------------------------------
-; LoadAndVerifyStatusRegisterFromBDA
+; DisplayCharOut_LoadAndVerifyStatusRegisterFromBDA
 ;	Parameters:
 ;		DS:		BDA segment (zero)
 ;	Returns:
@@ -243,7 +239,7 @@ ALIGN JUMP_ALIGN
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-LoadAndVerifyStatusRegisterFromBDA:
+DisplayCharOut_LoadAndVerifyStatusRegisterFromBDA:
 	mov		dx, [BDA.wVidPort]
 	add		dl, OFFSET_TO_CGA_STATUS_REGISTER
 	cmp		dx, CGA_STATUS_REGISTER

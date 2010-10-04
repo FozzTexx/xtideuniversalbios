@@ -1,7 +1,7 @@
 ; File name		:	DisplayFormat.asm
 ; Project name	:	Assembly Library
 ; Created date	:	29.6.2010
-; Last update	:	26.9.2010
+; Last update	:	4.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for displaying formatted strings.
 
@@ -211,31 +211,93 @@ ALIGN JUMP_ALIGN
 	sub		ax, cx				; AX = BYTEs to prepend, CX = BYTEs to move
 	jle		SHORT .NothingToAppendOrPrepend
 
-	mov		bx, di
-	add		bx, ax				; BX = DI after prepending
-
-	push	si
-	dec		di					; DI = Offset to last byte formatted
-	mov		si, di
-	add		di, ax				; DI = Offset to new location for last byte
 	std
+	push	si
+
+	lea		si, [di-1]			; SI = Offset to last byte formatted
+	add		di, ax				; DI = Cursor location after preceeding completed
+	push	di
+	dec		di					; DI = Offset where to move last byte formatted
+	xchg	bx, ax				; BX = BYTEs to prepend
+	call	.ReverseMoveCXbytesFromESSItoESDI
+	xchg	ax, bx
+	call	.ReversePrintAXspacesStartingFromESDI
+
+	pop		di
+	pop		si
+	cld							; Restore DF
+.NothingToAppendOrPrepend:
+	ret
+
+;--------------------------------------------------------------------
+; .ReverseMoveCXbytesFromESSItoESDI
+;	Parameters:
+;		CX:		Number of bytes to move
+;		DS:		BDA segment (zero)
+;		ES:SI:	Ptr to source in video RAM
+;		ES:DI:	Ptr to destination in video RAM
+;	Returns:
+;		DI:		Offset to character preceeding string just moved
+;	Corrupts registers:
+;		AX, CX, DX, SI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+.ReverseMoveCXbytesFromESSItoESDI:
+%ifdef ELIMINATE_CGA_SNOW
+	call	DisplayCharOut_LoadAndVerifyStatusRegisterFromBDA
+	je		SHORT .WaitUntilReadyToMoveNextByte
+%endif
+
 	eSEG_STR rep, es, movsb
 
-	mov		dl, [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bFlags]
-	and		dx, BYTE FLG_CONTEXT_ATTRIBUTES
-	not		dx
-	and		di, dx				; WORD alignment when using attributes
+%ifdef ELIMINATE_CGA_SNOW
+	jmp		SHORT .AlignDIforFirstPreceedingSpace
+.WaitUntilReadyToMoveNextByte:
+	cli				; Interrupt request would mess up timing
+	WAIT_UNTIL_SAFE_CGA_WRITE
+.MovsbWithoutWaitSinceUnknownPort:
+	eSEG	es
+	movsb
+	sti
+	loop	.WaitUntilReadyToMoveNextByte
+%endif
+	; Fall to .AlignDIforFirstPreceedingSpace
 
+;--------------------------------------------------------------------
+; .AlignDIforFirstPreceedingSpace
+;	Parameters:
+;		DS:		BDA segment (zero)
+;		ES:DI:	Byte offset before last byte moved
+;	Returns:
+;		DI:		Offset to space preceeding moved string
+;	Corrupts registers:
+;		AX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+.AlignDIforFirstPreceedingSpace:
+	mov		al, [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bFlags]
+	and		ax, BYTE FLG_CONTEXT_ATTRIBUTES
+	not		ax
+	and		di, ax
+	ret
+
+;--------------------------------------------------------------------
+; .ReversePrintAXspacesStartingFromESDI
+;	Parameters:
+;		AX:		Number of spaces to print
+;		DS:		BDA segment (zero)
+;		ES:DI:	Ptr to destination in video RAM
+;	Returns:
+;		DI:		Updated
+;	Corrupts registers:
+;		AX, CX, DX
+ALIGN JUMP_ALIGN
+.ReversePrintAXspacesStartingFromESDI:
 	call	DisplayContext_GetCharacterOffsetToAXfromByteOffsetInAX
 	xchg	cx, ax				; CX = Spaces to prepend
 	mov		al, ' '
-	call	DisplayPrint_RepeatCharacterFromALwithCountInCX
-	cld							; Restore DF
+	jmp		DisplayPrint_RepeatCharacterFromALwithCountInCX
 
-	mov		di, bx
-	pop		si
-.NothingToAppendOrPrepend:
-	ret
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

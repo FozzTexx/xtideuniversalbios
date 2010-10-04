@@ -1,7 +1,7 @@
 ; File name		:	MenuTime.asm
 ; Project name	:	Assembly Library
 ; Created date	:	25.7.2010
-; Last update	:	28.9.2010
+; Last update	:	4.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Menu timeouts other time related functions.
 
@@ -175,7 +175,7 @@ DrawTimeoutInAXoverMenuBorders:
 .szSelectionTimeout:
 	db		DOUBLE_BOTTOM_LEFT_CORNER
 	db		DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL
-	db		"%AAutoselection in %2-us",NULL
+	db		"%AAutoselection in %2u s",NULL
 
 ;--------------------------------------------------------------------
 ; .GetTimeoutAttributeToAXfromSecondsInCX
