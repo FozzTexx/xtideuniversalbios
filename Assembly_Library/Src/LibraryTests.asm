@@ -32,10 +32,10 @@ LibraryTests_Start:
 	CALL_DISPLAY_LIBRARY InitializeDisplayContext
 	CALL_DISPLAY_LIBRARY ClearScreen
 
-	call	LibraryTests_Sort
+	;call	LibraryTests_Sort
 	;call	LibraryTests_ForDisplayLibrary
 	;call	LibraryTests_ForKeyboardLibrary
-	;call	LibraryTests_ForMenuLibrary
+	call	LibraryTests_ForMenuLibrary
 
 	; Exit to DOS
 	;mov		ax, CURSOR_XY(1, 1)
@@ -570,11 +570,11 @@ LibraryTests_Sort:
 .Comparator:
 	push	ax
 	mov		ax, [si]
-	;DISPLAY_DEBUG_CHARACTER 'I'
-	;DISPLAY_DEBUG_WORD_AND_WAIT_ANY_KEY ax, 10
-	;DISPLAY_DEBUG_CHARACTER ','
-	;DISPLAY_DEBUG_WORD_AND_WAIT_ANY_KEY [es:di], 10
-	;DISPLAY_DEBUG_CHARACTER ' '
+	DISPLAY_DEBUG_CHARACTER 'I'
+	DISPLAY_DEBUG_WORD_AND_WAIT_ANY_KEY ax, 16
+	DISPLAY_DEBUG_CHARACTER ','
+	DISPLAY_DEBUG_WORD_AND_WAIT_ANY_KEY [es:di], 16
+	DISPLAY_DEBUG_CHARACTER ' '
 	cmp		ax, [es:di]
 	pop		ax
 	ret
@@ -585,7 +585,7 @@ LibraryTests_Sort:
 	push	cs
 	pop		ds
 	mov		si, .rgwItems
-	mov		bx, 10
+	mov		bx, 16
 .Loop:
 	lodsw
 	CALL_DISPLAY_LIBRARY PrintSignedWordFromAXWithBaseInBX
@@ -595,13 +595,13 @@ LibraryTests_Sort:
 
 
 .rgwItems:
-	dw		435
-	dw		-31551
-	dw		345
-	dw		0
-	dw		-18
-	dw		23
-	dw		435
+	dw		'['
+	dw		'n'
+	dw		'5'
+	dw		'.'
+	dw		']'
+	dw		'a'
+	dw		'A'
 
 
 

@@ -1,7 +1,7 @@
 ; File name		:	Memory.asm
 ; Project name	:	Assembly Library
 ; Created date	:	14.7.2010
-; Last update	:	15.9.2010
+; Last update	:	1.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for memory access.
 
@@ -9,25 +9,55 @@
 SECTION .text
 
 ;--------------------------------------------------------------------
-; Memory_ZeroDSSIbyWordsInCX
+; OPTIMIZE_STRING_OPERATION
 ;	Parameters
-;		CX:		Number of words to zero
-;		DS:SI:	Ptr to buffer to zero
+;		%1:		Repeat instruction
+;		%2:		String instruction without size (for example MOVS and not MOVSB or MOVSW)
+;		CX:		Number of BYTEs to operate
+;		DS:SI:	Ptr to source data
+;		ES:DI:	Ptr to destination
 ;	Returns:
-;		Nothing
+;		SI, DI:	Updated by number of bytes operated
 ;	Corrupts registers:
-;		AX
+;		Nothing
 ;--------------------------------------------------------------------
+%macro OPTIMIZE_STRING_OPERATION 2
+	push	cx
+
+	shr		cx, 1			; Operate with WORDs for performance
+	jcxz	%%HandleRemainingByte
+	%1		%2w
+%%HandleRemainingByte:
+	jnc		SHORT %%OperationCompleted
+	%2b
+
 ALIGN JUMP_ALIGN
-Memory_ZeroDSSIbyWordsInCX:
-	call	Memory_ExchangeDSSIwithESDI
-	call	Memory_ZeroESDIbyWordsInCX
-	jmp		SHORT Memory_ExchangeDSSIwithESDI
+%%OperationCompleted:
+	pop		cx
+%endmacro
+
 
 ;--------------------------------------------------------------------
-; Memory_ZeroSSBPbyWordsInCX
+; Memory_CopyCXbytesFromDSSItoESDI
 ;	Parameters
-;		CX:		Number of words to zero
+;		CX:		Number of bytes to copy
+;		DS:SI:	Ptr to source data
+;		ES:DI:	Ptr to destination buffer
+;	Returns:
+;		SI, DI:	Updated by number of bytes copied
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+Memory_CopyCXbytesFromDSSItoESDI:
+	OPTIMIZE_STRING_OPERATION rep, movs
+	ret
+
+
+;--------------------------------------------------------------------
+; Memory_ZeroSSBPwithSizeInCX
+;	Parameters
+;		CX:		Number of bytes to zero
 ;		SS:BP:	Ptr to buffer to zero
 ;	Returns:
 ;		Nothing
@@ -35,67 +65,68 @@ Memory_ZeroDSSIbyWordsInCX:
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-Memory_ZeroSSBPbyWordsInCX:
-	push	es
-	push	di
+Memory_ZeroSSBPwithSizeInCX:
 	push	ax
 
-	push	ss
-	pop		es
-	mov		di, bp
-	call	Memory_ZeroESDIbyWordsInCX
+	call	Memory_ExchangeSSBPwithESDI
+	call	Memory_ZeroESDIwithSizeInCX
+	call	Memory_ExchangeSSBPwithESDI
 
 	pop		ax
-	pop		di
-	pop		es
 	ret
 
 ;--------------------------------------------------------------------
-; Memory_ZeroESDIbyWordsInCX
+; Memory_ZeroESDIwithSizeInCX
 ;	Parameters
-;		CX:		Number of words to zero
-;		ES:DI:	Ptr to buffer to zero
+;		CX:		Number of bytes to zero
+;		ES:DI:	Ptr to destination buffer
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-Memory_ZeroESDIbyWordsInCX:
+Memory_ZeroESDIwithSizeInCX:
 	xor		ax, ax
-	; Fall to Memory_FillESDIwithAXbyCXtimes
+	; Fall to Memory_StoreCXbytesFromAccumToESDI
 
 ;--------------------------------------------------------------------
-; Memory_FillESDIwithAXbyCXtimes
+; Memory_StoreCXbytesFromAccumToESDI
 ;	Parameters
 ;		AX:		Word to use to fill buffer
-;		CX:		Number of words to fill
-;		ES:DI:	Ptr to buffer to fill
+;		CX:		Number of BYTEs to store
+;		ES:DI:	Ptr to destination buffer
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-Memory_FillESDIwithAXbyCXtimes:
-	cld
-	push	di
-	push	cx
-	rep stosw
-	pop		cx
-	pop		di
+Memory_StoreCXbytesFromAccumToESDI:
+	OPTIMIZE_STRING_OPERATION rep, stos
+	sub		di, cx
 	ret
 
 
 ;--------------------------------------------------------------------
+; Memory_ExchangeSSBPwithESDI
 ; Memory_ExchangeDSSIwithESDI
 ;	Parameters
 ;		Nothing
 ;	Returns:
-;		DS:SI and ES:DI are exchanged.
+;		SS:BP/DS:SI and ES:DI are exchanged.
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+Memory_ExchangeSSBPwithESDI:
+	xchg	bp, di
+	push	ss
+	push	es
+	pop		ss
+	pop		es
+	ret
+
 ALIGN JUMP_ALIGN
 Memory_ExchangeDSSIwithESDI:
 	xchg	si, di
@@ -107,22 +138,14 @@ Memory_ExchangeDSSIwithESDI:
 
 
 ;--------------------------------------------------------------------
-; Memory_CopySSBPtoDSSI
 ; Memory_CopySSBPtoESDI
 ;	Parameters
 ;		Nothing
 ;	Returns:
-;		DS:SI:		Same as SS:BP
+;		ES:DI:		Same as SS:BP
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-Memory_CopySSBPtoDSSI:
-	push	ss
-	pop		ds
-	mov		si, bp
-	ret
-
 ALIGN JUMP_ALIGN
 Memory_CopySSBPtoESDI:
 	push	ss

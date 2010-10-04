@@ -1,7 +1,7 @@
 ; File name		:	Dialog.asm
 ; Project name	:	Assembly Library
 ; Created date	:	6.8.2010
-; Last update	:	27.9.2010
+; Last update	:	1.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Common functions for many dialogs.
 
@@ -27,8 +27,8 @@ Dialog_DisplayWithDialogInputInDSSIandHandlerInBX:
 	mov		di, bp								; Backup parent MENU
 	eENTER_STRUCT DIALOG_size
 
-	mov		cx, DIALOG_size / 2
-	call	Memory_ZeroSSBPbyWordsInCX
+	mov		cx, DIALOG_size
+	call	Memory_ZeroSSBPwithSizeInCX
 	mov		[bp+DIALOG.fpDialogIO], si
 	mov		[bp+DIALOG.fpDialogIO+2], ds
 	mov		[bp+DIALOG.pParentMenu], di
