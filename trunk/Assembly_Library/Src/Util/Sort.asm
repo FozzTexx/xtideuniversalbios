@@ -1,22 +1,23 @@
 ; File name		:	Sort.asm
 ; Project name	:	Assembly Library
 ; Created date	:	28.9.2010
-; Last update	:	29.9.2010
+; Last update	:	1.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Sorting algorithms
 
 ; Algorith is from http://www.algolist.net/Algorithms/Sorting/Quicksort
 
 struc QSORT_PARAMS
-	.lpItems		resb	4
-	.tempStruct:
+	.lpItems			resb	4
+	.tempAndPivotItems:
 endstruc
 
 ;--------------------------------------------------------------------
 ; Prototype for comparator callback function
 ;	Parameters:
-;		DS:SI:	Offset to first item to compare
-;		ES:DI:	Offset to second item to compare
+;		CX:		Item size in bytes
+;		DS:SI:	Ptr to first item to compare
+;		ES:DI:	Ptr to second item to compare
 ;	Returns:
 ;		FLAGS:	Signed comparition between first and second item
 ;	Corrupts registers:
@@ -28,10 +29,12 @@ endstruc
 SECTION .text
 
 ;--------------------------------------------------------------------
-; DialogFile_GetFileNameWithIoInDSSI
+; Sort_ItemsFromDSSIwithCountInDXsizeInCXandComparatorInBX
 ;	Parameters:
-;		DS:SI:	Ptr to FILE_DIALOG_IO
-;		SS:BP:	Ptr to parent MENU
+;		CX:		Item size in bytes
+;		DX:		Number of items to sort (signed)
+;		CS:BX:	Comparator function
+;		DS:SI:	Ptr to array of items to sort
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
@@ -41,20 +44,23 @@ ALIGN JUMP_ALIGN
 Sort_ItemsFromDSSIwithCountInDXsizeInCXandComparatorInBX:
 	push	es
 	push	di
+	mov		di, cx
+	shl		cx, 1						; Reserve temp and pivot items
 	add		cx, BYTE QSORT_PARAMS_size
 	eENTER_STRUCT cx
+	push	cx
 
 	cld
-	sub		cx, BYTE QSORT_PARAMS_size	; Restore CX to item size
-	xor		ax, ax						; Zero for starting index
+	mov		cx, di						; Restore item size to CX
+	xor		ax, ax						; Zero starting index
 	dec		dx							; Count to index of last item
 	mov		[bp+QSORT_PARAMS.lpItems], si
 	mov		[bp+QSORT_PARAMS.lpItems+2], ds
 	call	QuicksortItemsInRangeFromAXtoDXwithQsortParamsInSSBP
 
 	lds		si, [bp+QSORT_PARAMS.lpItems]
-	add		cx, BYTE QSORT_PARAMS_size
-	eLEAVE_STRUCT cx
+	pop		ax
+	eLEAVE_STRUCT ax
 	pop		di
 	pop		es
 	ret
@@ -85,14 +91,14 @@ QuicksortItemsInRangeFromAXtoDXwithQsortParamsInSSBP:
 
 	; Does left partition need more sorting
 	cmp		si, dx			; if (first index < Index of rightmost unsorted item)
-	jae		SHORT .CheckIfRightPartitionNeedsMoreSorting
+	jge		SHORT .CheckIfRightPartitionNeedsMoreSorting
 	xchg	ax, si			; AX = first index, SI = Index of leftmost unsorted item
 	call	QuicksortItemsInRangeFromAXtoDXwithQsortParamsInSSBP
 	xchg	ax, si			; AX = Index of leftmost unsorted item
 
 .CheckIfRightPartitionNeedsMoreSorting:
 	cmp		ax, di			; if (Index of leftmost unsorted item < last index)
-	jae		SHORT .SortCompleted
+	jge		SHORT .SortCompleted
 	mov		dx, di			; DI = Index of leftmost unsorted item
 	call	QuicksortItemsInRangeFromAXtoDXwithQsortParamsInSSBP
 
@@ -132,11 +138,17 @@ ArrangeItemsInRangeAXtoDXusingMiddleItemAsPivot:
 ALIGN JUMP_ALIGN
 .GetPivotPointerToESDI:
 	push	ax
+
 	add		ax, dx
-	shr		ax, 1
+	shr		ax, 1			; AX = Middle index in partition
 	call	GetItemPointerToDSSIfromIndexInAX
+	call	GetPointerToTemporaryItemToESDI
+	add		di, cx			; Pivot is after temporary item
+	call	CopyItemFromDSSItoESDI
+	sub		di, cx			; Restore DI
+
 	pop		ax
-	jmp		Memory_ExchangeDSSIwithESDI
+	ret
 
 
 ;--------------------------------------------------------------------
@@ -157,7 +169,7 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 ArrangeItemsInRangeAXtoDXtoBothSidesOfPivotInESDI:
 	cmp		ax, dx	; while (left <= right)
-	ja		SHORT .BreakLoopSinceAllItemsExamined
+	jg		SHORT .BreakLoopSinceAllItemsExamined
 
 	call	GetItemPointerToDSSIfromIndexInAX
 	call	.GetIndexOfLeftmostItemToAXforItemThatIsGreaterThanEqualToPivotInESDI
@@ -166,7 +178,7 @@ ArrangeItemsInRangeAXtoDXtoBothSidesOfPivotInESDI:
 	call	.GetIndexOfRightmostItemToDXforItemThatIsGreaterThanPivotInESDI
 
 	cmp		ax, dx	; If (left <= right)
-	ja		SHORT ArrangeItemsInRangeAXtoDXtoBothSidesOfPivotInESDI
+	jg		SHORT ArrangeItemsInRangeAXtoDXtoBothSidesOfPivotInESDI
 	call	SwapItemsFromIndexesAXandDX
 	inc		ax
 	dec		dx
@@ -212,45 +224,39 @@ SwapItemsFromIndexesAXandDX:
 	push	di
 
 	; Item AX to stack
-	call	.GetPtrToTemporaryStructToESDI
+	call	GetPointerToTemporaryItemToESDI
 	call	GetItemPointerToDSSIfromIndexInAX
-	call	.CopyItemFromDSSItoESDI
+	call	CopyItemFromDSSItoESDI
 
 	; Item DX to Item AX
 	call	Memory_ExchangeDSSIwithESDI
 	call	GetItemPointerToDSSIfromIndexInDX
-	call	.CopyItemFromDSSItoESDI
+	call	CopyItemFromDSSItoESDI
 
 	; Stack to Item DX
-	call	.GetPtrToTemporaryStructToESDI
+	call	GetPointerToTemporaryItemToESDI
 	call	Memory_ExchangeDSSIwithESDI
-	call	.CopyItemFromDSSItoESDI
+	call	CopyItemFromDSSItoESDI
 
 	pop		di
 	pop		es
 	ret
 
+
+;--------------------------------------------------------------------
+; GetPointerToTemporaryItemToESDI
+;	Parameters:
+;		SS:BP:	Ptr to QSORT_PARAMS
+;	Returns:
+;		ES:DI:	Ptr to temporary item
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-.GetPtrToTemporaryStructToESDI:
-	lea		di, [bp+QSORT_PARAMS.tempStruct]
+GetPointerToTemporaryItemToESDI:
+	lea		di, [bp+QSORT_PARAMS.tempAndPivotItems]
 	push	ss
 	pop		es
-	ret
-
-ALIGN JUMP_ALIGN
-.CopyItemFromDSSItoESDI:
-	push	si
-	push	cx
-
-	shr		cx, 1			; We want to copy WORDs for performance
-	jcxz	.CopyLastByte
-	rep		movsw
-.CopyLastByte:
-	jnc		SHORT .CopyComplete
-	movsb
-.CopyComplete:
-	pop		cx
-	pop		si
 	ret
 
 
@@ -284,4 +290,22 @@ GetItemPointerToDSSIfromIndexInAX:
 
 	pop		ax
 	pop		dx
+	ret
+
+
+;--------------------------------------------------------------------
+; CopyItemFromDSSItoESDI
+;	Parameters:
+;		CX:		Item size in bytes
+;		DS:SI:	Ptr to source item
+;		ES:DI:	Ptr to destination buffer
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+CopyItemFromDSSItoESDI:
+	call	Memory_CopyCXbytesFromDSSItoESDI
+	sub		si, cx			; Restore SI
 	ret

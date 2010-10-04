@@ -1,7 +1,7 @@
 ; File name		:	String.asm
 ; Project name	:	Assembly Library
 ; Created date	:	12.7.2010
-; Last update	:	6.9.2010
+; Last update	:	1.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for handling characters.
 
@@ -74,4 +74,34 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 .EndOfString:
 	pop		ax
+	ret
+
+
+;--------------------------------------------------------------------
+; String_ConvertDSSItoLowerCase
+;	Parameters:
+;		DS:SI:	Ptr to NULL terminated string to convert
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+String_ConvertDSSItoLowerCase:
+	push	si
+	push	ax
+
+ALIGN JUMP_ALIGN
+.ConvertNextCharacter:
+	lodsb
+	test	al, al				; NULL to end string?
+	jz		SHORT .EndOfString
+	call	Char_ALtoLowerCaseLetter
+	mov		[si-1], al
+	jmp		SHORT .ConvertNextCharacter
+
+ALIGN JUMP_ALIGN
+.EndOfString:
+	pop		ax
+	pop		si
 	ret

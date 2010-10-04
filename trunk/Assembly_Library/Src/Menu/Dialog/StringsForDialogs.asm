@@ -1,7 +1,7 @@
 ; File name		:	StringsForDialogs.asm
 ; Project name	:	Assembly Library
 ; Created date	:	14.9.2010
-; Last update	:	27.9.2010
+; Last update	:	1.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Strings used by dialogs.
 
@@ -21,14 +21,15 @@ g_szSelectNewDrive:
 g_szEnterNewFileOrDirectory:
 	db		"Enter name for new file or directory.",NULL
 
+FILE_STRING_LENGTH		EQU		(24+1)	; +1 = LF in directory contents string
 g_szFileFormat:
-	db		"%14S  %4-u %c%cB",LF,NULL
+	db		"%16S%4-u %c%cB",LF,NULL
 g_szDirectoryFormat:
-	db		"[%12S]  %s-DIR",LF,NULL
+	db		"%16S%s-DIR",LF,NULL
 g_szSub:
 	db		ANGLE_QUOTE_RIGHT,"SUB",NULL
 g_szUp:
-	db		ANGLE_QUOTE_LEFT,"UP",NULL
+	db		ANGLE_QUOTE_LEFT," UP",NULL
 
 g_szSingleItem:			; Used by Dialog.asm for single item line
 g_szUpdir:

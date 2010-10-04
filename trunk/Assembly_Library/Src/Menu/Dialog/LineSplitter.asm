@@ -1,7 +1,7 @@
 ; File name		:	Line Splitter.asm
 ; Project name	:	Assembly Library
 ; Created date	:	8.8.2010
-; Last update	:	15.9.2010
+; Last update	:	1.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Splits long strings to multiple lines.
 
@@ -130,7 +130,7 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 .ProcessControlCharacter:
 	cmp		al, NULL			; End of string?
-	je		SHORT .EndOfString
+	je		SHORT .RemoveEmptyLinesAtTheEndIfAnyExists
 	cmp		al, LF				; Line feed?
 	je		SHORT .NewlineCharacter
 	cmp		al, SOH				; Previous newline character?
@@ -141,13 +141,24 @@ ALIGN JUMP_ALIGN
 
 ALIGN JUMP_ALIGN
 .NewlineCharacter:
-	mov		BYTE [si-1], SOH					; SOH marks previous newline character
+	mov		BYTE [si-1], SOH	; SOH marks previous newline character
 	mov		[bp+LINE_SPLITTER.pLastWord], si
 	jmp		SHORT .StartNewLine
 
 ALIGN JUMP_ALIGN
-.EndOfString:
+.RemoveEmptyLinesAtTheEndIfAnyExists:
+	mov		al, [si-2]			; Load character before NULL
+	cmp		al, SOH
+	je		SHORT .RemoveEmptyLineAtTheEndOfString
+	cmp		al, LF
+	je		SHORT .RemoveEmptyLineAtTheEndOfString
 	ret
+ALIGN JUMP_ALIGN
+.RemoveEmptyLineAtTheEndOfString:
+	dec		si
+	dec		WORD [bp+LINE_SPLITTER.wLines]
+	mov		BYTE [si-1], NULL
+	jmp		SHORT .RemoveEmptyLinesAtTheEndIfAnyExists
 
 
 ;--------------------------------------------------------------------
