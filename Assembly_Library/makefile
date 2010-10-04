@@ -49,9 +49,9 @@ HEADERS += Src/Util/
 #################################################################
 # Assembler preprocessor defines.                               #
 #################################################################
-DEFINES = ELIMINATE_CGA_SNOW
-DEFINES_XT = 
-DEFINES_XTPLUS = USE_186
+DEFINES = 
+DEFINES_XT = ELIMINATE_CGA_SNOW
+DEFINES_XTPLUS = USE_186 ELIMINATE_CGA_SNOW
 DEFINES_AT = USE_186 USE_286 USE_AT
 
 
