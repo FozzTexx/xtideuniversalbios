@@ -1,12 +1,42 @@
 ; File name		:	MenuText.asm
 ; Project name	:	Assembly Library
 ; Created date	:	21.7.2010
-; Last update	:	28.9.2010
+; Last update	:	7.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for drawing menu texts by the user.
 
 ; Section containing code
 SECTION .text
+
+;--------------------------------------------------------------------
+; MenuText_ClearTitleArea
+; MenuText_ClearInformationArea
+;	Parameters
+;		SS:BP:	Ptr to MENU
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, BX, CX, DX, SI, DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+MenuText_ClearTitleArea:
+	call	PrepareToDrawTitleArea
+	mov		cl, [bp+MENUINIT.bTitleLines]
+	jmp		SHORT ClearCLlinesOfText
+
+ALIGN JUMP_ALIGN
+MenuText_ClearInformationArea:
+	call	PrepareToDrawInformationArea
+	mov		cl, [bp+MENUINIT.bInfoLines]
+ClearCLlinesOfText:
+	mov		al, [bp+MENUINIT.bWidth]
+	sub		al, MENU_HORIZONTAL_BORDER_LINES+MENU_TEXT_COLUMN_OFFSET
+	mul		cl
+	xchg	cx, ax
+	mov		al, ' '
+	CALL_DISPLAY_LIBRARY PrintRepeatedCharacterFromALwithCountInCX
+	ret
+
 
 ;--------------------------------------------------------------------
 ; MenuText_RefreshTitle
@@ -16,29 +46,49 @@ SECTION .text
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, BX, DX, SI, DI
+;		AX, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MenuText_RefreshTitle:
 	cmp		BYTE [bp+MENUINIT.bTitleLines], 0
 	jz		SHORT NothingToRefresh
-
-	mov		si, ATTRIBUTE_CHARS.cTitle
-	call	AdjustDisplayContextForDrawingTexts
-	call	MenuLocation_GetTitleTextTopLeftCoordinatesToAX
-	CALL_DISPLAY_LIBRARY SetCursorCoordinatesFromAX
+	call	PrepareToDrawTitleArea
 	jmp		MenuEvent_RefreshTitle
 
 ALIGN JUMP_ALIGN
 MenuText_RefreshInformation:
 	cmp		BYTE [bp+MENUINIT.bInfoLines], 0
 	jz		SHORT NothingToRefresh
+	call	PrepareToDrawInformationArea
+	jmp		MenuEvent_RefreshInformation
 
+;--------------------------------------------------------------------
+; PrepareToDrawTitleArea
+; PrepareToDrawInformationArea
+;	Parameters
+;		SS:BP:	Ptr to MENU
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, BX, DX, SI, DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+PrepareToDrawTitleArea:
+	mov		si, ATTRIBUTE_CHARS.cTitle
+	mov		ax, MenuCharOut_MenuTextTeletypeOutputWithAttributeAndAutomaticLineChange
+	call	AdjustDisplayContextForDrawingTextsWithCharOutFunctionFromAX
+	call	MenuLocation_GetTitleTextTopLeftCoordinatesToAX
+	CALL_DISPLAY_LIBRARY SetCursorCoordinatesFromAX
+	ret
+
+ALIGN JUMP_ALIGN
+PrepareToDrawInformationArea:
 	mov		si, ATTRIBUTE_CHARS.cInformation
-	call	AdjustDisplayContextForDrawingTexts
+	mov		ax, MenuCharOut_MenuTextTeletypeOutputWithAttributeAndAutomaticLineChange
+	call	AdjustDisplayContextForDrawingTextsWithCharOutFunctionFromAX
 	call	MenuLocation_GetInformationTextTopLeftCoordinatesToAX
 	CALL_DISPLAY_LIBRARY SetCursorCoordinatesFromAX
-	jmp		MenuEvent_RefreshInformation
+	ret
 
 
 ;--------------------------------------------------------------------
@@ -108,7 +158,8 @@ MenuText_AdjustDisplayContextForDrawingItemFromAX:
 	call	MenuLocation_GetTextCoordinatesToAXforItemInAX
 	CALL_DISPLAY_LIBRARY SetCursorCoordinatesFromAX
 	call	.GetItemTextAttributeTypeToSIforItemInCX
-	jmp		SHORT AdjustDisplayContextForDrawingTexts
+	mov		ax, MenuCharOut_MenuTextTeletypeOutputWithAttribute
+	jmp		SHORT AdjustDisplayContextForDrawingTextsWithCharOutFunctionFromAX
 
 ;--------------------------------------------------------------------
 ; .GetItemTextAttributeTypeToSIforItemInCX
@@ -141,7 +192,7 @@ ALIGN JUMP_ALIGN, ret
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, DX, SI, DI
+;		AX, BX, DX, SI, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 DrawScrollbarIfNecessary:
@@ -187,14 +238,13 @@ ALIGN JUMP_ALIGN, ret
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, DX, SI, DI
+;		AX, BX, DX, SI, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 .DrawScrollbarCharacter:
 	push	cx
 
-	mov		si, ATTRIBUTE_CHARS.cBordersAndBackground
-	call	MenuAttribute_SetToDisplayContextFromTypeInSI
+	call	MenuBorders_AdjustDisplayContextForDrawingBorders
 
 	mov		ax, cx
 	call	MenuLocation_GetScrollbarCoordinatesToAXforItemInAX
@@ -210,8 +260,9 @@ ALIGN JUMP_ALIGN
 
 
 ;--------------------------------------------------------------------
-; AdjustDisplayContextForDrawingTexts
+; AdjustDisplayContextForDrawingTextsWithCharOutFunctionFromAX
 ;	Parameters
+;		AX:		Character output function
 ;		SI:		Attribute type (from ATTRIBUTE_CHARS)
 ;		SS:BP:	Ptr to MENU
 ;	Returns:
@@ -220,9 +271,8 @@ ALIGN JUMP_ALIGN
 ;		AX, BX, SI, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-AdjustDisplayContextForDrawingTexts:
+AdjustDisplayContextForDrawingTextsWithCharOutFunctionFromAX:
 	mov		bl, ATTRIBUTES_ARE_USED
-	mov		ax, MenuCharOut_MenuTextTeletypeOutputWithAttribute
 	CALL_DISPLAY_LIBRARY SetCharOutputFunctionFromAXwithAttribFlagInBL
 
 	mov		ax, bp

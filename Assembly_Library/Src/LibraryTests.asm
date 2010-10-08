@@ -82,8 +82,7 @@ ALIGN JUMP_ALIGN
 	stc
 	ret
 .szMenuTitle:
-	db		"First line for menu title.",CR,LF,
-	db		"This is the second line.",NULL
+	db		"Simple test program for Assembly Library. Can be used to find bugs.",NULL
 
 ALIGN JUMP_ALIGN
 .RefreshInformation:
@@ -96,8 +95,8 @@ ALIGN JUMP_ALIGN
 	ret
 .szInfoTitle:
 	db		"Information line 1,",CR,LF,
-	db		"Information line 2,",CR,LF,
-	db		"This is the last information line.",NULL
+	db		"Information line 2. ",
+	db		"This comes (12) right after Information line 2.",NULL
 
 ALIGN JUMP_ALIGN
 .RefreshItemFromCX:

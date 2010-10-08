@@ -1,7 +1,7 @@
 ; File name		:	DisplayContext.asm
 ; Project name	:	Assembly Library
 ; Created date	:	25.6.2010
-; Last update	:	28.9.2010
+; Last update	:	5.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for managing display context.
 
@@ -101,6 +101,33 @@ DisplayContext_Pop:
 
 
 ;--------------------------------------------------------------------
+; DisplayContext_PrepareOffScreenBufferInESBXtoESDI
+;	Parameters:
+;		BX:AX:	Ptr to off screen buffer
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+DisplayContext_PrepareOffScreenBufferInESBXtoESDI:
+	push	ds
+
+	LOAD_BDA_SEGMENT_TO	ds, di
+	xchg	ax, bx
+	mov		bx, es
+	call	DisplayContext_SetCharacterPointerFromBXAX	; ES:DI now has the pointer
+
+	mov		bl, ATTRIBUTES_NOT_USED
+	mov		ax, BUFFER_OUTPUT_WITH_CHAR_ONLY
+	call	DisplayContext_SetCharOutputFunctionFromAXwithAttribFlagInBL
+
+	mov		bx, di
+	pop		ds
+	ret
+
+
+;--------------------------------------------------------------------
 ; DisplayContext_SynchronizeToHardware
 ;	Parameters:
 ;		DS:		BDA segment (zero)
@@ -122,7 +149,7 @@ DisplayContext_SynchronizeToHardware:
 ;		BX:AX:	Ptr to destination for next character to output
 ;		DS:		BDA segment (zero)
 ;	Returns:
-;		ES:DI:	Pointer that was in DX:AX
+;		ES:DI:	Pointer that was in BX:AX
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------

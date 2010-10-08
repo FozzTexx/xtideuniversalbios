@@ -32,7 +32,7 @@ DialogProgress_StartProgressTaskWithIoInDSSIandParamInDXAX:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, BX, DX, SI, DI
+;		AX, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 DialogProgress_SetProgressValueFromAX:

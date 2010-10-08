@@ -1,7 +1,7 @@
 ; File name		:	DisplayFormat.asm
 ; Project name	:	Assembly Library
 ; Created date	:	29.6.2010
-; Last update	:	4.10.2010
+; Last update	:	8.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for displaying formatted strings.
 
@@ -219,7 +219,7 @@ ALIGN JUMP_ALIGN
 	push	di
 	dec		di					; DI = Offset where to move last byte formatted
 	xchg	bx, ax				; BX = BYTEs to prepend
-	call	.ReverseMoveCXbytesFromESSItoESDI
+	call	.ReverseCopyCXbytesFromESSItoESDI
 	xchg	ax, bx
 	call	.ReversePrintAXspacesStartingFromESDI
 
@@ -230,55 +230,28 @@ ALIGN JUMP_ALIGN
 	ret
 
 ;--------------------------------------------------------------------
-; .ReverseMoveCXbytesFromESSItoESDI
+; .ReverseCopyCXbytesFromESSItoESDI
 ;	Parameters:
-;		CX:		Number of bytes to move
+;		CX:		Number of bytes to copy
 ;		DS:		BDA segment (zero)
-;		ES:SI:	Ptr to source in video RAM
-;		ES:DI:	Ptr to destination in video RAM
+;		ES:SI:	Ptr to old location
+;		ES:DI:	Ptr to new location
 ;	Returns:
-;		DI:		Offset to character preceeding string just moved
+;		DI:		Updated to before last character copied
 ;	Corrupts registers:
 ;		AX, CX, DX, SI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-.ReverseMoveCXbytesFromESSItoESDI:
-%ifdef ELIMINATE_CGA_SNOW
-	call	DisplayCharOut_LoadAndVerifyStatusRegisterFromBDA
-	je		SHORT .WaitUntilReadyToMoveNextByte
-%endif
+.ReverseCopyCXbytesFromESSItoESDI:
+	test	BYTE [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bFlags], FLG_CONTEXT_ATTRIBUTES
+	jz		SHORT .CopyWithoutDisplayProcessing
 
-	eSEG_STR rep, es, movsb
-
-%ifdef ELIMINATE_CGA_SNOW
-	jmp		SHORT .AlignDIforFirstPreceedingSpace
-.WaitUntilReadyToMoveNextByte:
-	cli				; Interrupt request would mess up timing
-	WAIT_UNTIL_SAFE_CGA_WRITE
-.MovsbWithoutWaitSinceUnknownPort:
-	eSEG	es
-	movsb
-	sti
-	loop	.WaitUntilReadyToMoveNextByte
-%endif
-	; Fall to .AlignDIforFirstPreceedingSpace
-
-;--------------------------------------------------------------------
-; .AlignDIforFirstPreceedingSpace
-;	Parameters:
-;		DS:		BDA segment (zero)
-;		ES:DI:	Byte offset before last byte moved
-;	Returns:
-;		DI:		Offset to space preceeding moved string
-;	Corrupts registers:
-;		AX
-;--------------------------------------------------------------------
+	WAIT_RETRACE_IF_NECESSARY_THEN rep movsb
+	dec		di					; Point to preceeding character instead of attribute
+	ret
 ALIGN JUMP_ALIGN
-.AlignDIforFirstPreceedingSpace:
-	mov		al, [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bFlags]
-	and		ax, BYTE FLG_CONTEXT_ATTRIBUTES
-	not		ax
-	and		di, ax
+.CopyWithoutDisplayProcessing:
+	eSEG_STR rep, es, movsb
 	ret
 
 ;--------------------------------------------------------------------

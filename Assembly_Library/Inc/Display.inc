@@ -1,7 +1,7 @@
 ; File name		:	Display.inc
 ; Project name	:	AssemblyLibrary
 ; Created date	:	25.6.2010
-; Last update	:	28.9.2010
+; Last update	:	6.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Defines for display library.
 %ifndef DISPLAY_INC
@@ -25,6 +25,8 @@
 		call	DisplayContext_Push
 	%elifidn %1, PopDisplayContext
 		call	DisplayContext_Pop
+	%elifidn %1, PrepareOffScreenBufferInESBXtoESDI
+		call	DisplayContext_PrepareOffScreenBufferInESBXtoESDI
 	%else
 		mov		di, DISPLAY_LIB.%1
 		call	Display_FunctionFromDI
@@ -36,6 +38,7 @@
 struc DISPLAY_LIB
 	.PushDisplayContext:
 	.PopDisplayContext:
+	.PrepareOffScreenBufferInESBXtoESDI:
 	.InitializeDisplayContext						resb	2
 
 	.SetCharacterPointerFromBXAX					resb	2
@@ -180,6 +183,9 @@ MDA_TEXT_MODE				EQU		7		; Real monochrome attributes available
 ; Display segments
 COLOR_TEXT_SEGMENT			EQU		0B800h	; Text modes 0...3 (CGA+)
 MONO_TEXT_SEGMENT			EQU		0B000h	; Text mode 7 (MDA, Hercules)
+
+OFFSET_TO_CGA_STATUS_REGISTER	EQU		6	; Base port 3D4h + 6 = 3DAh
+CGA_STATUS_REGISTER				EQU		3DAh
 
 
 ; Control characters for teletype output

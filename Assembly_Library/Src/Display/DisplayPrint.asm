@@ -24,6 +24,10 @@ SECTION .text
 ;	Any placeholder can be set to minimum length by specifying
 ;	minimum number of characters. For example %8d would append spaces
 ;	after integer so that at least 8 characters would be printed.
+;
+;	When placing '-' after number, then spaces will be used for prepending.
+;	For example %8-d would prepend integer with spaces so that at least
+;	8 characters would be printed.
 ; 
 ; DisplayPrint_FormattedNullTerminatedStringFromCSSI
 ;	Parameters:

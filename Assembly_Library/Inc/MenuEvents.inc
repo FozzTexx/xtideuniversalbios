@@ -1,7 +1,7 @@
 ; File name		:	MenuEvents.inc
 ; Project name	:	Assembly Library
 ; Created date	:	13.7.2010
-; Last update	:	11.8.2010
+; Last update	:	5.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Defines for Menu events send to the user.
 %ifndef MENUEVENTS_INC
@@ -48,7 +48,8 @@ struc MENUEVENT
 	.KeyStrokeInAX					resb	2
 
 	; Parameters:
-	;	None but cursor has been positioned to the beginning of first line
+	;	CX:			Index of highlighted item
+	;	Cursor has been positioned to the beginning of first line
 	.RefreshTitle					resb	2
 	.RefreshInformation				resb	2
 

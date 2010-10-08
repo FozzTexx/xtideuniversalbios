@@ -259,18 +259,11 @@ AppendFileToBufferInESDIfromDtaInDSSI:
 	push	cx
 	mov		bx, di
 	CALL_DISPLAY_LIBRARY PushDisplayContext
-
-	xchg	ax, bx
-	mov		bx, es
-	CALL_DISPLAY_LIBRARY SetCharacterPointerFromBXAX
-	mov		bl, ATTRIBUTES_NOT_USED
-	mov		ax, BUFFER_OUTPUT_WITH_CHAR_ONLY
-	CALL_DISPLAY_LIBRARY SetCharOutputFunctionFromAXwithAttribFlagInBL
+	CALL_DISPLAY_LIBRARY PrepareOffScreenBufferInESBXtoESDI
 
 	call	.FormatFileOrDirectoryToBufferFromDTAinDSSI
 
 	CALL_DISPLAY_LIBRARY GetCharacterPointerToBXAX
-	mov		es, bx
 	xchg	bx, ax
 	CALL_DISPLAY_LIBRARY PopDisplayContext
 	mov		di, bx

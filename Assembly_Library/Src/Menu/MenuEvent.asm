@@ -1,7 +1,7 @@
 ; File name		:	MenuEvent.asm
 ; Project name	:	Assembly Library
 ; Created date	:	13.7.2010
-; Last update	:	11.8.2010
+; Last update	:	5.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for initializing menu system.
 
@@ -64,20 +64,24 @@ MenuEvent_IdleProcessing:
 ; MenuEvent_RefreshTitle
 ; MenuEvent_RefreshInformation
 ;	Parameters
+;		SS:BP:	Ptr to MENU
 ;		Cursor will be positioned to beginning of window
 ;	Returns:
 ;		CF:		Set if event processed
 ;				Cleared if event not processed
 ;	Corrupts registers:
-;		AX, BX, DX
+;		AX, CX, BX, DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MenuEvent_RefreshTitle:
 	mov		bx, MENUEVENT.RefreshTitle
-	jmp		SHORT MenuEvent_SendFromBX
+	jmp		SHORT LoadHighlightedItemToCXandSendMessageFromBX
+
 ALIGN JUMP_ALIGN
 MenuEvent_RefreshInformation:
 	mov		bx, MENUEVENT.RefreshInformation
+LoadHighlightedItemToCXandSendMessageFromBX:
+	mov		cx, [bp+MENU.wHighlightedItem]
 	jmp		SHORT MenuEvent_SendFromBX
 
 
@@ -85,6 +89,7 @@ MenuEvent_RefreshInformation:
 ; MenuEvent_RefreshItemFromCX
 ;	Parameters
 ;		CX:		Index of item to refresh
+;		SS:BP:	Ptr to MENU
 ;		Cursor has been positioned to the beginning of item line
 ;	Returns:
 ;		CF:		Set if event processed
@@ -102,6 +107,7 @@ MenuEvent_RefreshItemFromCX:
 ; MenuEvent_HighlightItemFromCX
 ;	Parameters
 ;		CX:		Index of item to highlight
+;		SS:BP:	Ptr to MENU
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
@@ -127,6 +133,7 @@ MenuEvent_HighlightItemFromCX:
 ;	Parameters
 ;		AL:		ASCII character for the key
 ;		AH:		Keyboard library scan code for the key
+;		SS:BP:	Ptr to MENU
 ;	Returns:
 ;		CF:		Set if event processed
 ;				Cleared if event not processed
@@ -143,6 +150,7 @@ MenuEvent_KeyStrokeInAX:
 ; MenuEvent_ItemSelectedFromCX
 ;	Parameters
 ;		CX:		Index of selected item
+;		SS:BP:	Ptr to MENU
 ;	Returns:
 ;		CF:		Set if event processed
 ;				Cleared if event not processed
