@@ -24,13 +24,13 @@
 %macro WAIT_RETRACE_IF_NECESSARY_THEN 1
 %ifdef ELIMINATE_CGA_SNOW
 	%ifidn %1, stosb
-		call	CgaSnow_StosbWithoutCgaSnow
+		call	CgaSnow_Stosb
 	%elifidn %1, stosw
-		call	CgaSnow_StoswWithoutCgaSnow
+		call	CgaSnow_Stosw
 	%elifidn %1, scasb
-		call	CgaSnow_ScasbWithoutCgaSnow
+		call	CgaSnow_Scasb
 	%elifidn %1, rep movsb
-		call	CgaSnow_RepMovsbWithoutCgaSnow
+		call	CgaSnow_RepMovsb
 	%else
 		%error	"Invalid instruction passed to WAIT_RETRACE_IF_NECESSARY_THEN"
 	%endif
