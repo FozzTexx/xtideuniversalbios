@@ -1,7 +1,7 @@
 ; File name		:	AssemblyLibrary.inc
 ; Project name	:	Assembly Library
 ; Created date	:	2.7.2010
-; Last update	:	16.9.2010
+; Last update	:	8.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Common defines for all library functions.
 %ifndef ASSEMBLY_LIBRARY_INC
@@ -11,6 +11,7 @@
 %include "Emulate.inc"			; Must be included first!
 %include "BiosData.inc"
 %include "BiosFunctions.inc"
+%include "CgaSnow.inc"
 %include "Debug.inc"
 %include "DosFunctions.inc"
 %include "Math.inc"

@@ -1,7 +1,7 @@
 ; File name		:	Keyboard.asm
 ; Project name	:	Assembly Library
 ; Created date	:	5.7.2010
-; Last update	:	12.8.2010
+; Last update	:	7.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for managing keyboard.
 
@@ -96,6 +96,8 @@ ALIGN JUMP_ALIGN
 	call	Keyboard_PrintInputtedCharacter
 	loop	.GetCharacterFromUser
 .PlayBellForRejectedCharacter:
+	cmp		al, BS								; No bell for backspace
+	je		SHORT .GetCharacterFromUser
 	call	Keyboard_PlayBellForUnwantedKeystroke
 	jmp		SHORT .GetCharacterFromUser
 
@@ -168,6 +170,7 @@ ALIGN JUMP_ALIGN
 	dec		bx									; Decrement characters inputted
 	dec		di
 	call	Keyboard_PrintBackspace
+	mov		al, BS								; Restore character
 .RejectCharacter:
 	test	al, al								; Clear ZF...
 	stc											; ...and set CF
@@ -226,7 +229,7 @@ ALIGN JUMP_ALIGN
 Keyboard_PrintInputtedCharacter:
 	push	di
 	CALL_DISPLAY_LIBRARY PrintCharacterFromAL
-	CALL_DISPLAY_LIBRARY SynchronizeDisplayContextToHardware
+	CALL_DISPLAY_LIBRARY SynchronizeDisplayContextToHardware	; Hardware cursor
 	pop		di
 	ret
 

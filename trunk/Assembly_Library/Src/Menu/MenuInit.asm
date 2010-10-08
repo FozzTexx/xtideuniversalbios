@@ -1,7 +1,7 @@
 ; File name		:	MenuInit.asm
 ; Project name	:	Assembly Library
 ; Created date	:	13.7.2010
-; Last update	:	1.10.2010
+; Last update	:	5.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for initializing menu system.
 
@@ -111,6 +111,20 @@ ALIGN JUMP_ALIGN
 MenuInit_HighlightItemFromAX:
 	sub		ax, [bp+MENU.wHighlightedItem]
 	jmp		MenuScrollbars_MoveHighlightedItemByAX
+
+;--------------------------------------------------------------------
+; MenuInit_GetHighlightedItemToAX
+;	Parameters
+;		SS:BP:	Ptr to MENU
+;	Returns:
+;		AX:		Index of highlighted item or NO_ITEM_HIGHLIGHTED
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+MenuInit_GetHighlightedItemToAX:
+	mov		ax, [bp+MENU.wHighlightedItem]
+	ret
 
 
 ;--------------------------------------------------------------------

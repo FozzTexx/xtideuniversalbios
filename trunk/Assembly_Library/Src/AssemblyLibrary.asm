@@ -1,7 +1,7 @@
 ; File name		:	AssemblyLibrary.asm
 ; Project name	:	Assembly Library
 ; Created date	:	15.9.2010
-; Last update	:	29.9.2010
+; Last update	:	8.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Assembly Library main file. This is the only file that
 ;					needs to be included.
@@ -10,6 +10,7 @@
 SECTION .text
 
 %ifdef INCLUDE_DISPLAY_LIBRARY
+	%include "CgaSnow.asm"
 	%include "Display.asm"
 	%include "DisplayCharOut.asm"
 	%include "DisplayContext.asm"

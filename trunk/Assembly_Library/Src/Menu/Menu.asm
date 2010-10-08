@@ -1,7 +1,7 @@
 ; File name		:	Menu.asm
 ; Project name	:	Assembly Library
 ; Created date	:	3.8.2010
-; Last update	:	15.9.2010
+; Last update	:	7.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Menu Library functions for CALL_MENU_LIBRARY macro
 ;					that users should use to make library call.
@@ -45,6 +45,7 @@ istruc MENU_LIB
 	;at	MENU_LIB.GetUserDataToDSSI,				dw	MenuInit_GetUserDataToDSSI				; Special case in CALL_MENU_LIBRARY
 
 	;at	MENU_LIB.SetTitleHeightFromAL,			dw	MenuInit_SetTitleHeightFromAL			; Special case in CALL_MENU_LIBRARY
+	at	MENU_LIB.ClearTitleArea,				dw	MenuText_ClearTitleArea
 	at	MENU_LIB.RefreshTitle,					dw	MenuText_RefreshTitle
 
 	at	MENU_LIB.HighlightItemFromAX,			dw	MenuInit_HighlightItemFromAX
@@ -52,6 +53,7 @@ istruc MENU_LIB
 	at	MENU_LIB.RefreshItemFromAX,				dw	MenuText_RefreshItemFromAX
 
 	;at	MENU_LIB.SetInformationHeightFromAL,	dw	MenuInit_SetInformationHeightFromAL		; Special case in CALL_MENU_LIBRARY
+	at	MENU_LIB.ClearInformationArea,			dw	MenuText_ClearInformationArea
 	at	MENU_LIB.RefreshInformation,			dw	MenuText_RefreshInformation
 
 	at	MENU_LIB.RestartTimeout,				dw	MenuTime_RestartSelectionTimeout

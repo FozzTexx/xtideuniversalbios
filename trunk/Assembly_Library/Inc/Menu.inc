@@ -1,7 +1,7 @@
 ; File name		:	Menu.inc
 ; Project name	:	Assembly Library
 ; Created date	:	13.7.2010
-; Last update	:	15.9.2010
+; Last update	:	5.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Defines for Menu library.
 %ifndef MENU_INC
@@ -34,6 +34,9 @@
 	%elifidn %1, SetTitleHeightFromAL
 		call	MenuInit_SetTitleHeightFromAL
 
+	%elifidn %1, GetHighlightedItemToAX
+		call	MenuInit_GetHighlightedItemToAX
+
 	%elifidn %1, SetTotalItemsFromAX
 		call	MenuInit_SetTotalItemsFromAX
 
@@ -59,13 +62,16 @@ struc MENU_LIB
 	.GetUserDataToDSSI:
 
 	.SetTitleHeightFromAL:
+	.ClearTitleArea								resb	2
 	.RefreshTitle								resb	2
 
+	.GetHighlightedItemToAX:
 	.HighlightItemFromAX						resb	2
 	.SetTotalItemsFromAX:
 	.RefreshItemFromAX							resb	2
 
 	.SetInformationHeightFromAL:
+	.ClearInformationArea						resb	2
 	.RefreshInformation							resb	2
 
 	.RestartTimeout								resb	2
@@ -129,6 +135,7 @@ SCROLL_THUMB_CHARACTER				EQU		BLOCK_FULL_FOREGROUND
 
 NO_ITEM_SELECTED					EQU		-1
 NO_ITEM_HIGHLIGHTED					EQU		-1
+NO_TIMEOUT_USED						EQU		0
 
 
 ; Keyboard keys (scan codes) used by menu library
