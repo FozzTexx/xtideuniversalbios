@@ -14,8 +14,8 @@ SECTION .text
 %ifdef ELIMINATE_CGA_SNOW
 
 ;--------------------------------------------------------------------
-; CgaSnow_StosbWithoutCgaSnow
-; CgaSnow_StoswWithoutCgaSnow
+; CgaSnow_Stosb
+; CgaSnow_Stosw
 ;	Parameters:
 ;		AL:		Character to output
 ;		AH:		Attribute to output (CgaSnow_StoswWithoutCgaSnow only)
@@ -27,7 +27,7 @@ SECTION .text
 ;		AX, DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-CgaSnow_StosbWithoutCgaSnow:
+CgaSnow_Stosb:
 	call	LoadAndVerifyStatusRegisterFromBDA
 	jne		SHORT .StosbWithoutWaitSinceUnknownPort
 
@@ -41,7 +41,7 @@ CgaSnow_StosbWithoutCgaSnow:
 	ret
 
 ALIGN JUMP_ALIGN
-CgaSnow_StoswWithoutCgaSnow:
+CgaSnow_Stosw:
 	push	bx
 	call	LoadAndVerifyStatusRegisterFromBDA
 	jne		SHORT .StoswWithoutWaitSinceUnknownPort
@@ -58,7 +58,7 @@ CgaSnow_StoswWithoutCgaSnow:
 
 
 ;--------------------------------------------------------------------
-; CgaSnow_ScasbWithoutCgaSnow
+; CgaSnow_Scasb
 ;	Parameters:
 ;		AL:		Byte for comparison
 ;		DS:		BDA segment (zero)
@@ -69,22 +69,22 @@ CgaSnow_StoswWithoutCgaSnow:
 ;		AX, DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-CgaSnow_ScasbWithoutCgaSnow:
+CgaSnow_Scasb:
 	call	LoadAndVerifyStatusRegisterFromBDA
 	jne		SHORT .ScasbWithoutWaitSinceUnknownPort
 
 	mov		ah, al
 	cli				; Interrupt request would mess up timing
 	WAIT_UNTIL_SAFE_CGA_WRITE
-.ScasbWithoutWaitSinceUnknownPort:
 	mov		al, ah
+.ScasbWithoutWaitSinceUnknownPort:
 	scasb
 	sti
 	ret
 
 
 ;--------------------------------------------------------------------
-; CgaSnow_RepMovsbWithoutCgaSnow
+; CgaSnow_RepMovsb
 ;	Parameters:
 ;		CX:		Number of characters to copy
 ;		DS:		BDA segment (zero)
@@ -96,7 +96,7 @@ CgaSnow_ScasbWithoutCgaSnow:
 ;		AX, CX, DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-CgaSnow_RepMovsbWithoutCgaSnow:
+CgaSnow_RepMovsb:
 	call	LoadAndVerifyStatusRegisterFromBDA
 	jne		SHORT .RepMovsbWithoutWaitSinceUnknownPort
 
