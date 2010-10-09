@@ -1,7 +1,7 @@
 ; File name		:	Display.inc
 ; Project name	:	AssemblyLibrary
 ; Created date	:	25.6.2010
-; Last update	:	6.10.2010
+; Last update	:	9.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Defines for display library.
 %ifndef DISPLAY_INC
@@ -109,6 +109,7 @@ endstruc
 
 ; Display context flags
 FLG_CONTEXT_ATTRIBUTES		EQU		(1<<0)	; Character output function uses attributes
+FLG_CONTEXT_CGA				EQU		(1<<1)	; CGA detected so prevent CGA snow
 
 
 ; Text mode character attribute byte bits for CGA+ (color adapters)

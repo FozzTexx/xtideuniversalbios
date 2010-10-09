@@ -1,7 +1,7 @@
 ; File name		:	Memory.asm
 ; Project name	:	Assembly Library
 ; Created date	:	14.7.2010
-; Last update	:	1.10.2010
+; Last update	:	9.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for memory access.
 
@@ -66,13 +66,14 @@ Memory_CopyCXbytesFromDSSItoESDI:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Memory_ZeroSSBPwithSizeInCX:
+	push	es
+	push	di
 	push	ax
-
-	call	Memory_ExchangeSSBPwithESDI
+	call	Memory_CopySSBPtoESDI
 	call	Memory_ZeroESDIwithSizeInCX
-	call	Memory_ExchangeSSBPwithESDI
-
 	pop		ax
+	pop		di
+	pop		es
 	ret
 
 ;--------------------------------------------------------------------
@@ -81,7 +82,7 @@ Memory_ZeroSSBPwithSizeInCX:
 ;		CX:		Number of bytes to zero
 ;		ES:DI:	Ptr to destination buffer
 ;	Returns:
-;		Nothing
+;		DI:		Updated by number of BYTEs stored
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
@@ -97,52 +98,43 @@ Memory_ZeroESDIwithSizeInCX:
 ;		CX:		Number of BYTEs to store
 ;		ES:DI:	Ptr to destination buffer
 ;	Returns:
-;		Nothing
+;		DI:		Updated by number of BYTEs stored
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Memory_StoreCXbytesFromAccumToESDI:
 	OPTIMIZE_STRING_OPERATION rep, stos
-	sub		di, cx
 	ret
 
 
 ;--------------------------------------------------------------------
-; Memory_ExchangeSSBPwithESDI
 ; Memory_ExchangeDSSIwithESDI
 ;	Parameters
 ;		Nothing
 ;	Returns:
-;		SS:BP/DS:SI and ES:DI are exchanged.
+;		DS:SI and ES:DI are exchanged.
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-Memory_ExchangeSSBPwithESDI:
-	xchg	bp, di
-	push	ss
-	push	es
-	pop		ss
-	pop		es
-	ret
-
-ALIGN JUMP_ALIGN
 Memory_ExchangeDSSIwithESDI:
-	xchg	si, di
 	push	ds
 	push	es
 	pop		ds
 	pop		es
+	xchg	si, di
 	ret
 
 
 ;--------------------------------------------------------------------
 ; Memory_CopySSBPtoESDI
+; Memory_CopySSBPtoDSSI
+; Memory_CopyESDItoDSSI
 ;	Parameters
 ;		Nothing
 ;	Returns:
-;		ES:DI:		Same as SS:BP
+;		Copies farm pointer to different segment/pointer register pair
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
@@ -151,6 +143,20 @@ Memory_CopySSBPtoESDI:
 	push	ss
 	pop		es
 	mov		di, bp
+	ret
+
+ALIGN JUMP_ALIGN
+Memory_CopySSBPtoDSSI:
+	push	ss
+	pop		ds
+	mov		si, bp
+	ret
+
+ALIGN JUMP_ALIGN
+Memory_CopyESDItoDSSI:
+	push	es
+	pop		ds
+	mov		si, di
 	ret
 
 

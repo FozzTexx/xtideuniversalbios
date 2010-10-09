@@ -14,6 +14,7 @@
 %include "CgaSnow.inc"
 %include "Debug.inc"
 %include "DosFunctions.inc"
+%include "File.inc"
 %include "Math.inc"
 
 ; Library dependencies

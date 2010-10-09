@@ -1,7 +1,7 @@
 ; File name		:	DialogFile.asm
 ; Project name	:	Assembly Library
 ; Created date	:	6.9.2010
-; Last update	:	4.10.2010
+; Last update	:	9.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Displays file dialog.
 
@@ -113,9 +113,7 @@ InitializeMenuinitFromSSBP:
 	call	CreateStringFromCurrentDirectoryContentsToESDI
 	call	LoadItemStringBufferToESDI
 	call	SortDirectoryContentsStringFromESDIwithCountInCX
-	push	ss
-	pop		ds
-	mov		si, bp
+	call	Memory_CopySSBPtoDSSI
 	call	Dialog_EventInitializeMenuinitFromDSSI
 	call	GetInfoLinesToCXandDialogFlagsToAX
 	mov		[bp+MENUINIT.bInfoLines], cl
@@ -198,9 +196,7 @@ CreateStringFromCurrentDirectoryContentsToESDI:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 .ClearDLifInRootDirectory:
-	push	es
-	pop		ds
-	mov		si, di
+	call	Memory_CopyESDItoDSSI
 	call	Directory_WriteCurrentPathToDSSI
 	mov		dl, [si]
 	ret
@@ -510,11 +506,10 @@ ParseSelectionFromItemLineInDSSI:
 	les		di, [bp+DIALOG.fpDialogIO]
 	add		di, BYTE FILE_DIALOG_IO.szFile
 	mov		cx, FILENAME_BUFFER_SIZE-1
-	cld
-	rep movsb
+	call	Memory_CopyCXbytesFromDSSItoESDI
 	xor		ax, ax
 	stosb						; Terminate with NULL
-	jmp		CloseFileDialogAfterSuccessfullSelection
+	jmp		SHORT CloseFileDialogAfterSuccessfullSelection
 
 ;--------------------------------------------------------------------
 ; .ChangeToUpdir

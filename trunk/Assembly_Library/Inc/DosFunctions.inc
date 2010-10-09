@@ -1,7 +1,7 @@
 ; File name		:	DosFunctions.inc
 ; Project name	:	AssemblyLibrary
 ; Created date	:	1.9.2010
-; Last update	:	3.9.2010
+; Last update	:	8.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Defines for MS-DOS functions.
 %ifndef DOS_FUNCTIONS_INC
@@ -29,15 +29,6 @@ FIND_NEXT_MATCHING_FILE								EQU		4Fh
 
 ; DOS errors
 ERR_DOS_DRIVE_NOT_READY								EQU		15h
-
-
-; File attribute flags
-FLG_FILEATTR_READ_ONLY			EQU		(1<<0)
-FLG_FILEATTR_HIDDEN				EQU		(1<<1)
-FLG_FILEATTR_SYSTEM				EQU		(1<<2)
-FLG_FILEATTR_VOLUME_LABEL		EQU		(1<<3)
-FLG_FILEATTR_DIRECTORY			EQU		(1<<4)
-FLG_FILEATTR_ARCHIVE			EQU		(1<<5)
 
 
 

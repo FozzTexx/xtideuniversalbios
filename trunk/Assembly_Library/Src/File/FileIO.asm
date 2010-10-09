@@ -1,25 +1,9 @@
 ; File name		:	FileIO.asm
 ; Project name	:	Assembly Library
 ; Created date	:	1.9.2010
-; Last update	:	3.9.2010
+; Last update	:	8.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for file access.
-
-
-; File access and sharing modes
-struc FILE_ACCESS
-	.ReadOnly		resb	1
-	.WriteOnly		resb	1
-	.ReadAndWrite	resb	1
-endstruc
-
-; Origin of file seek
-struc SEEK_FROM
-	.startOfFile			resb	1
-	.currentFilePosition	resb	1
-	.endOfFile				resb	1
-endstruc
-
 
 ; Section containing code
 SECTION .text
