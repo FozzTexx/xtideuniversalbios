@@ -223,12 +223,11 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 .AskFileFromUser:
 	mov		si, g_dialogInputOutput
-	mov		WORD [si+DIALOG_INPUT.fszItems], g_szBuffer
+	mov		WORD [si+FILE_DIALOG_IO.fszItemBuffer], g_szBuffer
 	mov		BYTE [si+FILE_DIALOG_IO.bDialogFlags], FLG_FILEDIALOG_DIRECTORY | FLG_FILEDIALOG_NEW | FLG_FILEDIALOG_DRIVES
 	mov		BYTE [si+FILE_DIALOG_IO.bFileAttributes], FLG_FILEATTR_DIRECTORY | FLG_FILEATTR_ARCHIVE
 	mov		WORD [si+FILE_DIALOG_IO.fpFileFilterString], .szAllFiles
 	mov		[si+FILE_DIALOG_IO.fpFileFilterString+2], cs
-	mov		[si+STRING_DIALOG_IO.fpReturnBuffer+2], cs
 	CALL_MENU_LIBRARY GetFileNameWithIoInDSSI
 	cmp		BYTE [g_dialogInputOutput+FILE_DIALOG_IO.bUserCancellation], TRUE
 	je		SHORT .FileSelectionCancelled

@@ -1,7 +1,7 @@
 ; File name		:	emulate.inc
 ; Project name	:	Emulation library
 ; Created date	:	21.10.2009
-; Last update	:	29.7.2010
+; Last update	:	9.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Macros for emulating later x86 instruction with older
 ;					processors.
@@ -317,8 +317,6 @@ ALIGN JUMP_ALIGN
 	push	bp
 	sub		sp, %1
 	mov		bp, sp
-	;eENTER	%1, 0
-	;sub		bp, %1			; SS:BP now points to struct
 %endmacro
 
 ;--------------------------------------------------------------------
@@ -333,8 +331,6 @@ ALIGN JUMP_ALIGN
 %macro eLEAVE_STRUCT 1
 	add		sp, %1
 	pop		bp
-	;add		bp, %1			; Restore BP to what it was after eENTER
-	;eLEAVE
 %endmacro
 
 

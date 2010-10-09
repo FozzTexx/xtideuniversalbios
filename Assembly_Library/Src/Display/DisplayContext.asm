@@ -1,7 +1,7 @@
 ; File name		:	DisplayContext.asm
 ; Project name	:	Assembly Library
 ; Created date	:	25.6.2010
-; Last update	:	5.10.2010
+; Last update	:	9.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for managing display context.
 
@@ -19,15 +19,13 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 DisplayContext_Initialize:
-	call	.DetectAndSetDisplaySegment
+	call	.DetectAndSetDisplaySegment	; and .InitializeFlags
 	mov		WORD [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fnCharOut], DEFAULT_CHARACTER_OUTPUT
 	mov		WORD [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.wCursorShape], CURSOR_NORMAL
 	mov		BYTE [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bAttribute], SCREEN_BACKGROUND_ATTRIBUTE
-	mov		BYTE [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bFlags], FLG_CONTEXT_ATTRIBUTES
-
 	xor		ax, ax
 	call	DisplayCursor_SetCoordinatesFromAX
-	jmp		SHORT DisplayContext_SynchronizeToHardware
+	jmp		DisplayContext_SynchronizeToHardware
 
 ;--------------------------------------------------------------------
 ; .DetectAndSetDisplaySegment
@@ -36,14 +34,33 @@ DisplayContext_Initialize:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		Nothing
+;		AX, DX
 ;--------------------------------------------------------------------
 .DetectAndSetDisplaySegment:
-	mov		WORD [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fpCursorPosition+2], COLOR_TEXT_SEGMENT
+	mov		ax, COLOR_TEXT_SEGMENT
 	cmp		BYTE [VIDEO_BDA.bMode], MDA_TEXT_MODE
-	jne		SHORT .Return
-	sub		WORD [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fpCursorPosition+2], COLOR_TEXT_SEGMENT - MONO_TEXT_SEGMENT
-.Return:
+	jne		SHORT .StoreSegmentToDisplayContext
+	mov		ax, MONO_TEXT_SEGMENT
+.StoreSegmentToDisplayContext:
+	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fpCursorPosition+2], ax
+	; Fall to InitializeFlags
+
+;--------------------------------------------------------------------
+; .InitializeFlags
+;	Parameters:
+;		DS:		BDA segment (zero)
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, DX
+;--------------------------------------------------------------------
+.InitializeFlags:
+	mov		dl, FLG_CONTEXT_ATTRIBUTES
+	call	CgaSnow_IsCgaPresent
+	jnc		SHORT .DoNotSetCgaFlag
+	or		dl, FLG_CONTEXT_CGA
+.DoNotSetCgaFlag:
+	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bFlags], dl
 	ret
 
 
@@ -187,12 +204,14 @@ DisplayContext_GetCharacterPointerToBXAX:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		Nothing
+;		BL
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 DisplayContext_SetCharOutputFunctionFromAXwithAttribFlagInBL:
+	and		bl, FLG_CONTEXT_ATTRIBUTES
+	and		BYTE [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bFlags], ~FLG_CONTEXT_ATTRIBUTES
+	or		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bFlags], bl
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fnCharOut], ax
-	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bFlags], bl
 	ret
 
 

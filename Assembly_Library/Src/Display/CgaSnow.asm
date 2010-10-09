@@ -1,12 +1,36 @@
 ; File name		:	CgaSnow.asm
 ; Project name	:	Assembly Library
 ; Created date	:	8.10.2010
-; Last update	:	8.10.2010
+; Last update	:	9.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for preventing CGA snow.
 
 ; Section containing code
 SECTION .text
+
+;--------------------------------------------------------------------
+; CgaSnow_IsCgaPresent
+;	Parameters:
+;		DS:		BDA segment (zero)
+;	Returns:
+;		CF:		Set if CGA detected
+;				Cleared if CGA not detected
+;	Corrupts registers:
+;		AX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+CgaSnow_IsCgaPresent:
+	cmp		WORD [BDA.wVidPort], CGA_STATUS_REGISTER - OFFSET_TO_CGA_STATUS_REGISTER
+	jne		SHORT .CgaNotFound
+	call	DisplayPage_GetColumnsToALandRowsToAH
+	cmp		ah, [BDA.bVidRows]		; Video rows stored only by EGA and later
+	je		SHORT .CgaNotFound		; Must be EGA or later
+	stc
+	ret
+ALIGN JUMP_ALIGN
+.CgaNotFound:
+	clc
+	ret
 
 
 ; CGA snow preventing must be kept optional so unnecerrasy overhead
@@ -28,8 +52,8 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 CgaSnow_Stosb:
-	call	LoadAndVerifyStatusRegisterFromBDA
-	jne		SHORT .StosbWithoutWaitSinceUnknownPort
+	call	LoadCgaStatusRegisterAddressToDXifCgaPresent
+	jz		SHORT .StosbWithoutWaitSinceUnknownPort
 
 	mov		ah, al
 	cli				; Interrupt request would mess up timing
@@ -43,8 +67,8 @@ CgaSnow_Stosb:
 ALIGN JUMP_ALIGN
 CgaSnow_Stosw:
 	push	bx
-	call	LoadAndVerifyStatusRegisterFromBDA
-	jne		SHORT .StoswWithoutWaitSinceUnknownPort
+	call	LoadCgaStatusRegisterAddressToDXifCgaPresent
+	jz		SHORT .StoswWithoutWaitSinceUnknownPort
 
 	xchg	bx, ax
 	cli				; Interrupt request would mess up timing
@@ -70,8 +94,8 @@ CgaSnow_Stosw:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 CgaSnow_Scasb:
-	call	LoadAndVerifyStatusRegisterFromBDA
-	jne		SHORT .ScasbWithoutWaitSinceUnknownPort
+	call	LoadCgaStatusRegisterAddressToDXifCgaPresent
+	jz		SHORT .ScasbWithoutWaitSinceUnknownPort
 
 	mov		ah, al
 	cli				; Interrupt request would mess up timing
@@ -97,8 +121,8 @@ CgaSnow_Scasb:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 CgaSnow_RepMovsb:
-	call	LoadAndVerifyStatusRegisterFromBDA
-	jne		SHORT .RepMovsbWithoutWaitSinceUnknownPort
+	call	LoadCgaStatusRegisterAddressToDXifCgaPresent
+	jz		SHORT .RepMovsbWithoutWaitSinceUnknownPort
 
 .MovsbNextByte:
 	cli				; Interrupt request would mess up timing
@@ -114,32 +138,23 @@ CgaSnow_RepMovsb:
 
 
 ;--------------------------------------------------------------------
-; LoadAndVerifyStatusRegisterFromBDA
+; LoadCgaStatusRegisterAddressToDXifCgaPresent
 ;	Parameters:
 ;		DS:		BDA segment (zero)
 ;	Returns:
 ;		DX:		CGA Status Register Address
-;		ZF:		Set if CGA Base Port found in BDA
+;		ZF:		Set if CGA not present
+;				Cleared if CGA present
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-LoadAndVerifyStatusRegisterFromBDA:
-	mov		dx, [BDA.wVidPort]
-	add		dl, OFFSET_TO_CGA_STATUS_REGISTER
-	cmp		dx, CGA_STATUS_REGISTER
-	je		SHORT .CheckIfEgaOrLater
-	ret
-
-ALIGN JUMP_ALIGN
-.CheckIfEgaOrLater:
-	push	ax
-	call	DisplayPage_GetColumnsToALandRowsToAH
-	cmp		ah, [BDA.bVidRows]		; Video rows stored only by EGA and later
-	lahf
-	xor		ah, 1<<6				; Invert ZF
-	sahf
-	pop		ax
+LoadCgaStatusRegisterAddressToDXifCgaPresent:
+	test	BYTE [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bFlags], FLG_CONTEXT_CGA
+	jz		SHORT .NoCgaDetected
+	mov		dx, CGA_STATUS_REGISTER
+ALIGN JUMP_ALIGN, ret
+.NoCgaDetected:
 	ret
 
 
