@@ -1,7 +1,7 @@
 ; File name		:	FileIO.asm
 ; Project name	:	Assembly Library
 ; Created date	:	1.9.2010
-; Last update	:	8.10.2010
+; Last update	:	10.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for file access.
 
@@ -27,6 +27,7 @@ FileIO_OpenWithPathInDSSIandFileAccessInAL:
 	mov		ah, OPEN_EXISTING_FILE
 	int		DOS_INTERRUPT_21h
 	xchg	si, dx
+	mov		bx, ax		; Copy file handle to BX
 	ret
 
 
@@ -67,7 +68,7 @@ FileIO_CloseUsingHandleFromBX:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 FileIO_ReadCXbytesToDSSIusingHandleFromBX:
-	xchg	dx, si				; DS:DX now points to source buffer
+	xchg	dx, si				; DS:DX now points to destination buffer
 	mov		ah, READ_FROM_FILE_OR_DEVICE
 	int		DOS_INTERRUPT_21h
 	xchg	si, dx
@@ -101,13 +102,51 @@ FileIO_WriteCXbytesFromDSSIusingHandleFromBX:
 
 
 ;--------------------------------------------------------------------
+; FileIO_GetFileSizeToDXAXusingHandleFromBXandResetFilePosition:
+;	Parameters:
+;		BX:		File handle
+;	Returns:
+;		DX:AX:	Signed file size (if CF cleared)
+;		AX:		DOS error code (if CF set)
+;		CF:		Clear if successfull
+;				Set if error
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+FileIO_GetFileSizeToDXAXusingHandleFromBXandResetFilePosition:
+	push	cx
+
+	; Get file size to DX:AX
+	xor		cx, cx
+	xor		dx, dx
+	mov		al, SEEK_FROM.endOfFile
+	call	FileIO_SeekFromOriginInALtoOffsetInDXAXusingHandleFromBX
+	jc		SHORT .ReturnFileError
+	push	dx
+	push	ax
+
+	; Reset file position
+	xor		dx, dx
+	mov		al, SEEK_FROM.startOfFile
+	call	FileIO_SeekFromOriginInALtoOffsetInDXAXusingHandleFromBX
+	pop		ax
+	pop		dx
+
+.ReturnFileError:
+	pop		cx
+	ret
+
+
+;--------------------------------------------------------------------
 ; FileIO_SeekFromOriginInALtoOffsetInDXAXusingHandleFromBX:
 ;	Parameters:
 ;		AL:		SEEK_FROM.(origin)
 ;		BX:		File handle
-;		DX:AX:	Seek offset (signed)
+;		CX:DX:	Signed offset to seek starting from AL
 ;	Returns:
-;		AX:		DOS error code if CF set
+;		DX:AX:	New file position in bytes from start of file (if CF cleared)
+;		AX:		DOS error code (if CF set)
 ;		CF:		Clear if successfull
 ;				Set if error
 ;	Corrupts registers:
@@ -115,14 +154,6 @@ FileIO_WriteCXbytesFromDSSIusingHandleFromBX:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 FileIO_SeekFromOriginInALtoOffsetInDXAXusingHandleFromBX:
-	push	dx
-	push	cx
-
-	mov		cx, dx				; DOS wants high word in CX
-	xchg	dx, ax				; DOS wants low word in DX
 	mov		ah, SET_CURRENT_FILE_POSITION
 	int		DOS_INTERRUPT_21h
-
-	pop		cx
-	pop		dx
 	ret

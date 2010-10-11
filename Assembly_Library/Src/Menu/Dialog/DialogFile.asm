@@ -1,7 +1,7 @@
 ; File name		:	DialogFile.asm
 ; Project name	:	Assembly Library
 ; Created date	:	6.9.2010
-; Last update	:	9.10.2010
+; Last update	:	10.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Displays file dialog.
 
@@ -522,6 +522,8 @@ ParseSelectionFromItemLineInDSSI:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 .ChangeToUpdir:
+	push	cs
+	pop		ds
 	mov		si, g_szUpdir
 	jmp		SHORT .ChangeDirectoryToDSSI
 
