@@ -1,7 +1,7 @@
 ; File name		:	MenuCharOut.asm
 ; Project name	:	Assembly Library
 ; Created date	:	15.7.2010
-; Last update	:	8.10.2010
+; Last update	:	10.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Character out function for printing withing menu window.
 
@@ -79,8 +79,8 @@ MenuCharOut_MenuTextTeletypeOutputWithAttribute:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MovePartialWordToNewTextLineAndPrintCharacterFromAX:
-	cmp		al, ' '
-	je		SHORT .MoveCursorInDItoBeginningOfNextLine
+	cmp		al, ' '		; Space or any control character
+	jb		SHORT .MoveCursorInDItoBeginningOfNextLine
 	push	si
 	push	cx
 	push	ax

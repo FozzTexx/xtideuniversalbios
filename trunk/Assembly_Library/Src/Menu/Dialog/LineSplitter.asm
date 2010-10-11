@@ -147,10 +147,7 @@ ALIGN JUMP_ALIGN
 
 ALIGN JUMP_ALIGN
 .RemoveEmptyLinesAtTheEndIfAnyExists:
-	mov		al, [si-2]			; Load character before NULL
-	cmp		al, SOH
-	je		SHORT .RemoveEmptyLineAtTheEndOfString
-	cmp		al, LF
+	cmp		BYTE [si-2], SOH	; Character before NULL
 	je		SHORT .RemoveEmptyLineAtTheEndOfString
 	ret
 ALIGN JUMP_ALIGN
@@ -202,14 +199,14 @@ ALIGN JUMP_ALIGN
 LineSplitter_GetOffsetToSIforLineCXfromStringInESDI:
 	mov		si, di				; SI points to start of first line
 	mov		al, STX				; Last control character to scan for
-	inc		cx					; Increment CX to get length for first line
+	inc		cx					; Increment CX to line count
 	cld
 ALIGN JUMP_ALIGN
 .LineScanLoop:
 	scasb						; cmp al, [es:di]. Increment DI
-	jb		SHORT .LineScanLoop	; Non control character
+	jb		SHORT .LineScanLoop	; Ignore all above STX
 
-	; Our end of line characters or NULL character
+	; NULL, SOH or STX
 	dec		cx					; Decrement lines to scan through
 	jz		SHORT .WantedLineFound
 	cmp		BYTE [es:di-1], NULL
@@ -222,7 +219,7 @@ ALIGN JUMP_ALIGN
 	stc							; Set CF since wanted line was found
 .EndOfString:
 	lahf						; Load FLAGS low to AH
-	lea		cx, [di-1]			; We don't want control character to be printed
-	sub		cx, si				; String length to CX
+	lea		cx, [di-1]			; CX = offset to NULL, SOH or STX
+	sub		cx, si				; CX = string length
 	sahf						; Store AH to FLAGS low
 	ret

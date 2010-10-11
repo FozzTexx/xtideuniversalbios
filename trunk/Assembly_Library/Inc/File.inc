@@ -1,7 +1,7 @@
 ; File name		:	File.inc
 ; Project name	:	Assembly Library
 ; Created date	:	8.10.2010
-; Last update	:	8.10.2010
+; Last update	:	10.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	File library defines.
 %ifndef FILE_INC
@@ -16,9 +16,9 @@ endstruc
 
 ; Origin of file seek
 struc SEEK_FROM
-	.startOfFile			resb	1
-	.currentFilePosition	resb	1
-	.endOfFile				resb	1
+	.startOfFile			resb	1	; 00h
+	.currentFilePosition	resb	1	; 01h
+	.endOfFile				resb	1	; 02h
 endstruc
 
 ; File attribute flags
