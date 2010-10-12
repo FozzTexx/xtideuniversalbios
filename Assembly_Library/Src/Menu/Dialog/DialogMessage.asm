@@ -1,7 +1,7 @@
 ; File name		:	DialogMessage.asm
 ; Project name	:	Assembly Library
 ; Created date	:	6.8.2010
-; Last update	:	6.9.2010
+; Last update	:	12.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Displays message dialog.
 
@@ -43,8 +43,8 @@ MessageEventHandler:
 ALIGN JUMP_ALIGN
 .InitializeMenuinitFromDSSI:
 	or		BYTE [bp+MENU.bFlags], FLG_MENU_USER_HANDLES_SCROLLING | FLG_MENU_NOHIGHLIGHT
-	mov		WORD [bp+MENU.wHighlightedItem], 0
-	jmp		Dialog_EventInitializeMenuinitFromDSSI
+	xor		ax, ax		; Cannot be NO_ITEM_HIGHLIGHTED because of scrolling
+	jmp		Dialog_EventInitializeMenuinitFromDSSIwithHighlightedItemInAX
 
 
 ALIGN JUMP_ALIGN
@@ -90,11 +90,11 @@ ProcessMessageScrollingKeysFromAX:
 
 ALIGN JUMP_ALIGN
 .DecrementLines:
-	cmp		WORD [bp+MENU.wHighlightedItem], BYTE 0
+	cmp		WORD [bp+MENUINIT.wHighlightedItem], BYTE 0
 	je		SHORT .AlreadyAtTheTopOrBottom
 
 	mov		ax, [bp+MENU.wFirstVisibleItem]
-	mov		[bp+MENU.wHighlightedItem], ax
+	mov		[bp+MENUINIT.wHighlightedItem], ax
 	mov		ah, MENU_KEY_UP
 	jmp		MenuLoop_ProcessScrollingKeysFromAX
 
@@ -102,11 +102,11 @@ ALIGN JUMP_ALIGN
 .IncrementLines:
 	mov		ax, [bp+MENUINIT.wItems]
 	dec		ax						; Last possible item to highlight
-	cmp		[bp+MENU.wHighlightedItem], ax
+	cmp		[bp+MENUINIT.wHighlightedItem], ax
 	jae		SHORT .AlreadyAtTheTopOrBottom
 
 	call	MenuScrollbars_GetLastVisibleItemOnPageToAX
-	mov		[bp+MENU.wHighlightedItem], ax
+	mov		[bp+MENUINIT.wHighlightedItem], ax
 	mov		ah, MENU_KEY_DOWN
 	jmp		MenuLoop_ProcessScrollingKeysFromAX
 

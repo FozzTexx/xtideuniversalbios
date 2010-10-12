@@ -1,7 +1,7 @@
 ; File name		:	String.asm
 ; Project name	:	Assembly Library
 ; Created date	:	12.7.2010
-; Last update	:	1.10.2010
+; Last update	:	12.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for handling characters.
 
@@ -15,39 +15,29 @@ SECTION .text
 ;		DS:SI:	Ptr to string to convert
 ;	Returns:
 ;		AX:		Word converted from string
-;		DI:		Offset to NULL or first invalid character
-;		CF:		Set if conversion successfull
-;				Cleared if invalid string
+;		SI:		Updated
+;		CF:		Cleared if successfull
+;				Set if error during conversion
 ;	Corrupts registers:
-;		DX
+;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 String_ConvertWordToAXfromStringInDSSIwithBaseInBX:
-	xor		dx, dx
-	cld
+	push	di
+	push	dx
 
-ALIGN JUMP_ALIGN
-.ConvertWordToAXfromStringInDSSIwithBaseInBX:
-	lodsb						; Load character from DS:SI to AL
-	call	Char_ConvertIntegerToALfromDigitInALwithBaseInBX
-	jnc		SHORT .InvalidCharacter
-	xor		ah, ah
-	push	ax					; Push integer
-	xchg	ax, dx				; Copy WORD to AX
-	mul		bx					; DX:AX = word in AX * base in BX
-	pop		dx					; Pop integer
-	add		dx, ax				; WORD back to DX
-	jmp		SHORT .ConvertWordToAXfromStringInDSSIwithBaseInBX
+	xor		di, di
+	mov		dx, StringProcess_ConvertToWordInDIWithBaseInBX
+	call	StringProcess_DSSIwithFunctionInDX
+	xchg	ax, di
 
-ALIGN JUMP_ALIGN
-.InvalidCharacter:
-	sub		al, 1				; Set CF if NULL character, clear CF otherwise
-	xchg	ax, dx				; Return WORD in AX
+	pop		dx
+	pop		di
 	ret
 
 
 ;--------------------------------------------------------------------
-; String_CopyToESDIfromDSSIwithoutTerminatingESDI
+; String_CopyDSSItoESDIandGetSizeToCX
 ;	Parameters:
 ;		DS:SI:	Ptr to source NULL terminated string
 ;		ES:DI:	Ptr to destination buffer
@@ -58,18 +48,18 @@ ALIGN JUMP_ALIGN
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-String_CopyToESDIfromDSSIwithoutTerminatingESDI:
+String_CopyDSSItoESDIandGetSizeToCX:
 	push	ax
-	xor		cx, cx
 
+	xor		cx, cx
 ALIGN JUMP_ALIGN
-.GetAndStoreNewCharacter:
+.CopyNextCharacter:
 	lodsb						; Load from DS:SI to AL
 	test	al, al				; NULL to end string?
 	jz		SHORT .EndOfString
 	stosb						; Store from AL to ES:DI
 	inc		cx					; Increment number of characters written
-	jmp		SHORT .GetAndStoreNewCharacter
+	jmp		SHORT .CopyNextCharacter
 
 ALIGN JUMP_ALIGN
 .EndOfString:
@@ -78,30 +68,28 @@ ALIGN JUMP_ALIGN
 
 
 ;--------------------------------------------------------------------
-; String_ConvertDSSItoLowerCase
+; String_GetLengthFromDSSItoCX
 ;	Parameters:
-;		DS:SI:	Ptr to NULL terminated string to convert
+;		DS:SI:	Ptr to NULL terminated string
 ;	Returns:
-;		Nothing
+;		CX:		String length in characters
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-String_ConvertDSSItoLowerCase:
-	push	si
+String_GetLengthFromDSSItoCX:
 	push	ax
+	push	si
 
-ALIGN JUMP_ALIGN
-.ConvertNextCharacter:
-	lodsb
-	test	al, al				; NULL to end string?
-	jz		SHORT .EndOfString
-	call	Char_ALtoLowerCaseLetter
-	mov		[si-1], al
-	jmp		SHORT .ConvertNextCharacter
+	call	Memory_ExchangeDSSIwithESDI
+	xor		ax, ax		; Find NULL
+	mov		cx, -1		; Full segment if necessary
+	repne scasb
+	mov		cx, di
+	call	Memory_ExchangeDSSIwithESDI
 
-ALIGN JUMP_ALIGN
-.EndOfString:
-	pop		ax
 	pop		si
+	stc
+	sbb		cx, si		; Subtract NULL
+	pop		ax
 	ret

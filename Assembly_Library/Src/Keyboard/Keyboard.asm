@@ -1,7 +1,7 @@
 ; File name		:	Keyboard.asm
 ; Project name	:	Assembly Library
 ; Created date	:	5.7.2010
-; Last update	:	7.10.2010
+; Last update	:	12.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for managing keyboard.
 
@@ -25,27 +25,26 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Keyboard_ReadUserInputtedWordWhilePrinting:
-	push	es
-	push	di
+	push	ds
+	push	si
 	push	cx
 
-	eENTER_STRUCT BUFFER_SIZE_FOR_WORD_INPUT
-	call	Memory_CopySSBPtoESDI
-
 	mov		cx, BUFFER_SIZE_FOR_WORD_INPUT
-	call	Char_GetFilterFunctionToDXforNumericBaseInBX
-	call	Keyboard_ReadUserInputtedStringToESDIWhilePrinting
-	jz		SHORT .Return
+	call	Memory_ReserveCXbytesFromStackToDSSI
 
+	call	Char_GetFilterFunctionToDXforNumericBaseInBX
 	call	Memory_ExchangeDSSIwithESDI
+	call	Keyboard_ReadUserInputtedStringToESDIWhilePrinting
+	call	Memory_ExchangeDSSIwithESDI	; Does not modify FLAGS
+	jz		SHORT .CancelledByUser
+
 	call	String_ConvertWordToAXfromStringInDSSIwithBaseInBX
-	call	Memory_ExchangeDSSIwithESDI
-.Return:
-	eLEAVE_STRUCT BUFFER_SIZE_FOR_WORD_INPUT
+.CancelledByUser:
+	add		sp, BYTE BUFFER_SIZE_FOR_WORD_INPUT
 	test	cx, cx					; Set ZF if string length is zero
 	pop		cx
-	pop		di
-	pop		es
+	pop		si
+	pop		ds
 	ret
 
 

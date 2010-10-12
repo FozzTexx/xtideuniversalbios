@@ -1,7 +1,7 @@
 ; File name		:	Memory.asm
 ; Project name	:	Assembly Library
 ; Created date	:	14.7.2010
-; Last update	:	9.10.2010
+; Last update	:	11.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for memory access.
 
@@ -130,6 +130,7 @@ Memory_ExchangeDSSIwithESDI:
 ;--------------------------------------------------------------------
 ; Memory_CopySSBPtoESDI
 ; Memory_CopySSBPtoDSSI
+; Memory_CopyDSSItoESDI
 ; Memory_CopyESDItoDSSI
 ;	Parameters
 ;		Nothing
@@ -150,6 +151,13 @@ Memory_CopySSBPtoDSSI:
 	push	ss
 	pop		ds
 	mov		si, bp
+	ret
+
+ALIGN JUMP_ALIGN
+Memory_CopyDSSItoESDI:
+	push	ds
+	pop		es
+	mov		di, si
 	ret
 
 ALIGN JUMP_ALIGN

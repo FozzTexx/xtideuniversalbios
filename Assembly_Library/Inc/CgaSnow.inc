@@ -1,7 +1,7 @@
 ; File name		:	CgaSnow.inc
 ; Project name	:	AssemblyLibrary
 ; Created date	:	8.10.2010
-; Last update	:	8.10.2010
+; Last update	:	11.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Macros for preventing CGA snow.
 %ifndef CGASNOW_INC
@@ -27,8 +27,6 @@
 		call	CgaSnow_Stosb
 	%elifidn %1, stosw
 		call	CgaSnow_Stosw
-	%elifidn %1, scasb
-		call	CgaSnow_Scasb
 	%elifidn %1, rep movsb
 		call	CgaSnow_RepMovsb
 	%else

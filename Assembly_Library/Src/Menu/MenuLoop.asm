@@ -1,7 +1,7 @@
 ; File name		:	MenuLoop.asm
 ; Project name	:	Assembly Library
 ; Created date	:	22.7.2010
-; Last update	:	16.9.2010
+; Last update	:	12.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Menu loop for waiting keystrokes.
 
@@ -101,13 +101,13 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 .LeaveMenuWithoutSelectingItem:
 	call	MenuInit_CloseMenuWindow
-	mov		WORD [bp+MENU.wHighlightedItem], NO_ITEM_HIGHLIGHTED
+	mov		WORD [bp+MENUINIT.wHighlightedItem], NO_ITEM_HIGHLIGHTED
 	stc
 	ret
 
 ALIGN JUMP_ALIGN
 .SelectItem:
-	mov		cx, [bp+MENU.wHighlightedItem]
+	mov		cx, [bp+MENUINIT.wHighlightedItem]
 	call	MenuEvent_ItemSelectedFromCX
 	stc
 	ret
@@ -150,13 +150,13 @@ ALIGN JUMP_ALIGN
 	call	MenuScrollbars_GetMaxVisibleItemsOnPageToCX
 	xchg	ax, cx
 	neg		ax
-	mov		cx, [bp+MENU.wHighlightedItem]
+	mov		cx, [bp+MENUINIT.wHighlightedItem]
 	add		cx, ax
 	jge		SHORT .MoveHighlightedItemByAX	; No rotation for PgUp
 	; Fall to .SelectFirstItem
 ALIGN JUMP_ALIGN
 .SelectFirstItem:
-	mov		ax, [bp+MENU.wHighlightedItem]
+	mov		ax, [bp+MENUINIT.wHighlightedItem]
 	neg		ax
 	jmp		SHORT .MoveHighlightedItemByAX
 
@@ -164,7 +164,7 @@ ALIGN JUMP_ALIGN
 .ChangeToNextPage:
 	call	MenuScrollbars_GetMaxVisibleItemsOnPageToCX
 	xchg	ax, cx
-	mov		cx, [bp+MENU.wHighlightedItem]
+	mov		cx, [bp+MENUINIT.wHighlightedItem]
 	add		cx, ax
 	cmp		cx, [bp+MENUINIT.wItems]
 	jb		SHORT .MoveHighlightedItemByAX	; No rotation for PgDn
@@ -172,7 +172,7 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 .SelectLastItem:
 	mov		ax, [bp+MENUINIT.wItems]
-	sub		ax, [bp+MENU.wHighlightedItem]
+	sub		ax, [bp+MENUINIT.wHighlightedItem]
 	dec		ax
 	jmp		SHORT .MoveHighlightedItemByAX
 

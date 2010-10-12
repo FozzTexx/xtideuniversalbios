@@ -1,7 +1,7 @@
 ; File name		:	MenuScrollbars.asm
 ; Project name	:	Assembly Library
 ; Created date	:	20.7.2010
-; Last update	:	9.8.2010
+; Last update	:	12.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for drawing scroll bars over menu borders.
 
@@ -97,7 +97,7 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MenuScrollbars_MoveHighlightedItemByAX:
-	mov		cx, [bp+MENU.wHighlightedItem]
+	mov		cx, [bp+MENUINIT.wHighlightedItem]
 	add		cx, ax
 	call	.RotateItemInCX
 	; Fall to .ScrollPageForNewItemInCX
@@ -117,7 +117,7 @@ MenuScrollbars_MoveHighlightedItemByAX:
 	jc		SHORT .HighlightNewItemOnCX
 
 	mov		dx, [bp+MENU.wFirstVisibleItem]
-	sub		dx, [bp+MENU.wHighlightedItem]
+	sub		dx, [bp+MENUINIT.wHighlightedItem]
 	add		dx, cx
 	MAX_S	dx, 0
 	call	.GetMaxFirstVisibleItemToAX

@@ -1,7 +1,7 @@
 ; File name		:	DialogFile.asm
 ; Project name	:	Assembly Library
 ; Created date	:	6.9.2010
-; Last update	:	10.10.2010
+; Last update	:	12.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Displays file dialog.
 
@@ -48,9 +48,8 @@ FileEventHandler:
 ALIGN JUMP_ALIGN
 .ItemSelectedFromCX:
 	call	LoadItemStringBufferToESDI
-	call	LineSplitter_GetOffsetToSIforLineCXfromStringInESDI
-	push	es
-	pop		ds
+	call	Memory_CopyESDItoDSSI
+	call	ItemLineSplitter_GetLineToDSSIandLengthToCXfromStringInDSSIwithIndexInCX
 	jmp		ParseSelectionFromItemLineInDSSI
 
 
@@ -114,14 +113,13 @@ InitializeMenuinitFromSSBP:
 	call	LoadItemStringBufferToESDI
 	call	SortDirectoryContentsStringFromESDIwithCountInCX
 	call	Memory_CopySSBPtoDSSI
-	call	Dialog_EventInitializeMenuinitFromDSSI
+	xor		ax, ax
+	call	Dialog_EventInitializeMenuinitFromDSSIwithHighlightedItemInAX
 	call	GetInfoLinesToCXandDialogFlagsToAX
 	mov		[bp+MENUINIT.bInfoLines], cl
 	CALL_DISPLAY_LIBRARY GetColumnsToALandRowsToAH
 	mov		[bp+MENUINIT.bHeight], ah				; Always max height
-	xor		ax, ax
-	mov		[bp+MENU.wHighlightedItem], ax
-	mov		[bp+MENU.wFirstVisibleItem], ax
+	mov		WORD [bp+MENU.wFirstVisibleItem], 0
 	ret
 
 
@@ -255,7 +253,8 @@ AppendFileToBufferInESDIfromDtaInDSSI:
 	push	cx
 	mov		bx, di
 	CALL_DISPLAY_LIBRARY PushDisplayContext
-	CALL_DISPLAY_LIBRARY PrepareOffScreenBufferInESBXtoESDI
+	mov		cx, -1
+	CALL_DISPLAY_LIBRARY PrepareOffScreenBufferInESBXwithLengthInCX
 
 	call	.FormatFileOrDirectoryToBufferFromDTAinDSSI
 
@@ -298,10 +297,13 @@ ALIGN JUMP_ALIGN
 ;		AX, BX, CX, DX, SI, DI, BP
 ;--------------------------------------------------------------------
 .FormatFile:
-	; Push parameters for file name
+	; Convert file name to lower case
 	xchg	si, ax
-	call	String_ConvertDSSItoLowerCase
+	mov		dx, StringProcess_ConvertToLowerCase
+	call	StringProcess_DSSIwithFunctionInDX
 	xchg	ax, si
+
+	; Push parameters for file name
 	push	ax				; Push directory name offset
 	push	ds				; Push directory name segment
 

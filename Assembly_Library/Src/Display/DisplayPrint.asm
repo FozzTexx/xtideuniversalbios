@@ -1,7 +1,7 @@
 ; File name		:	Display.asm
 ; Project name	:	Assembly Library
 ; Created date	:	26.6.2010
-; Last update	:	27.9.2010
+; Last update	:	11.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for display output.
 
@@ -325,11 +325,10 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 DisplayPrint_Newline:
-	mov		al, CR
-	call	DisplayPrint_CharacterFromAL
 	mov		al, LF
+	call	DisplayPrint_CharacterFromAL
+	mov		al, CR
 	; Fall to DisplayPrint_CharacterFromAL
-
 
 ;--------------------------------------------------------------------
 ; DisplayPrint_CharacterFromAL

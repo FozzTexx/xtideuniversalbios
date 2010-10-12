@@ -1,7 +1,7 @@
 ; File name		:	Dialog.asm
 ; Project name	:	Assembly Library
 ; Created date	:	6.8.2010
-; Last update	:	9.10.2010
+; Last update	:	12.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Common functions for many dialogs.
 
@@ -37,7 +37,7 @@ Dialog_DisplayWithDialogInputInDSSIandHandlerInBX:
 	call	Dialog_RemoveFromScreenByRedrawingParentMenu
 	call	Keyboard_RemoveAllKeystrokesFromBuffer
 
-	mov		ax, [bp+MENU.wHighlightedItem]
+	mov		ax, [bp+MENUINIT.wHighlightedItem]
 	eLEAVE_STRUCT DIALOG_size
 	pop		ds
 	pop		es
@@ -77,8 +77,9 @@ Dialog_EventAnyThatClosesDialog:
 
 
 ;--------------------------------------------------------------------
-; Dialog_EventInitializeMenuinitFromDSSIforSingleItem
+; Dialog_EventInitializeMenuinitFromDSSIforSingleItemWithHighlightedItemInAX
 ;	Parameters:
+;		AX:			Index of highlighted item
 ;		DS:SI:		Ptr to MENUINIT struct to initialize
 ;		SS:BP:		Ptr to DIALOG
 ;	Returns:
@@ -86,15 +87,16 @@ Dialog_EventAnyThatClosesDialog:
 ;		CF:			Set since event processed
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-Dialog_EventInitializeMenuinitFromDSSIforSingleItem:
+Dialog_EventInitializeMenuinitFromDSSIforSingleItemWithHighlightedItemInAX:
 	les		di, [bp+DIALOG.fpDialogIO]
 	mov		WORD [es:di+DIALOG_INPUT.fszItems], g_szSingleItem
 	mov		[es:di+DIALOG_INPUT.fszItems+2], cs
-	; Fall to Dialog_EventInitializeMenuinitFromDSSI
+	; Fall to Dialog_EventInitializeMenuinitFromDSSIwithHighlightedItemInAX
 
 ;--------------------------------------------------------------------
-; Dialog_EventInitializeMenuinitFromDSSI
+; Dialog_EventInitializeMenuinitFromDSSIwithHighlightedItemInAX
 ;	Parameters:
+;		AX:			Index of highlighted item
 ;		DS:SI:		Ptr to MENUINIT struct to initialize
 ;		SS:BP:		Ptr to DIALOG
 ;	Returns:
@@ -102,25 +104,22 @@ Dialog_EventInitializeMenuinitFromDSSIforSingleItem:
 ;		CF:			Set since event processed
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-Dialog_EventInitializeMenuinitFromDSSI:
+Dialog_EventInitializeMenuinitFromDSSIwithHighlightedItemInAX:
+	mov		[bp+MENUINIT.wHighlightedItem], ax
 	les		di, [bp+DIALOG.fpDialogIO]
 	call	.GetWidthBasedOnParentMenuToAL
 	mov		[bp+MENUINIT.bWidth], al
 
-	call	MenuLocation_GetMaxTextLineLengthToAX
-	mov		bx, ax
 	lds		si, [es:di+DIALOG_INPUT.fszTitle]
-	call	LineSplitter_SplitStringFromDSSIwithMaxLineLengthInAXandGetLineCountToAX
+	call	ItemLineSplitter_GetLinesToAXforStringInDSSI
 	mov		[bp+MENUINIT.bTitleLines], al
 
-	mov		ax, bx
 	lds		si, [es:di+DIALOG_INPUT.fszItems]
-	call	LineSplitter_SplitStringFromDSSIwithMaxLineLengthInAXandGetLineCountToAX
+	call	ItemLineSplitter_GetLinesToAXforStringInDSSI
 	mov		[bp+MENUINIT.wItems], ax
 
-	xchg	ax, bx
 	lds		si, [es:di+DIALOG_INPUT.fszInfo]
-	call	LineSplitter_SplitStringFromDSSIwithMaxLineLengthInAXandGetLineCountToAX
+	call	ItemLineSplitter_GetLinesToAXforStringInDSSI
 	mov		[bp+MENUINIT.bInfoLines], al
 
 	call	.GetHeightToAH				; Line counts are required
@@ -177,31 +176,20 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Dialog_EventRefreshTitle:
-	mov		dl, [bp+MENUINIT.bTitleLines]
 	lds		si, [bp+DIALOG.fpDialogIO]
-	les		di, [si+DIALOG_INPUT.fszTitle]
-	jmp		SHORT PrintDLlinesFromESDI
+	lds		si, [si+DIALOG_INPUT.fszTitle]
+	jmp		SHORT PrintTitleOrInfoLine
 
 ALIGN JUMP_ALIGN
 Dialog_EventRefreshInformation:
-	mov		dl, [bp+MENUINIT.bInfoLines]
 	lds		si, [bp+DIALOG.fpDialogIO]
-	les		di, [si+DIALOG_INPUT.fszInfo]
-	; Fall to PrintDLlinesFromESDI
+	lds		si, [si+DIALOG_INPUT.fszInfo]
+	; Fall to PrintTitleOrInfoLine
 
 ALIGN JUMP_ALIGN
-PrintDLlinesFromESDI:
-	xor		cx, cx				; Start from line zero
-	mov		dh, cl				; Line count now in DX
-ALIGN JUMP_ALIGN
-.PrintNextLine:
-	call	LineSplitter_PrintLineInCXfromStringInESDI
-	push	di
-	CALL_DISPLAY_LIBRARY PrintNewlineCharacters
-	pop		di
-	inc		cx
-	dec		dx
-	jnz		SHORT .PrintNextLine
+PrintTitleOrInfoLine:
+	mov		bx, ds
+	CALL_DISPLAY_LIBRARY PrintNullTerminatedStringFromBXSI
 	stc
 	ret
 
@@ -217,8 +205,13 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 Dialog_EventRefreshItemFromCX:
 	lds		si, [bp+DIALOG.fpDialogIO]
-	les		di, [si+DIALOG_INPUT.fszItems]
-	call	LineSplitter_PrintLineInCXfromStringInESDI
+	lds		si, [si+DIALOG_INPUT.fszItems]
+	call	ItemLineSplitter_GetLineToDSSIandLengthToCXfromStringInDSSIwithIndexInCX
+	jnc		SHORT .LineNotFound
+
+	mov		bx, ds
+	CALL_DISPLAY_LIBRARY PrintCharBufferFromBXSIwithLengthInCX
+.LineNotFound:
 	stc
 	ret
 

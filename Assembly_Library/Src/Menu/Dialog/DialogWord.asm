@@ -1,7 +1,7 @@
 ; File name		:	DialogWord.asm
 ; Project name	:	Assembly Library
 ; Created date	:	10.8.2010
-; Last update	:	7.9.2010
+; Last update	:	12.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Displays word input dialog.
 
@@ -42,9 +42,15 @@ WordEventHandler:
 
 
 ALIGN JUMP_ALIGN
+.InitializeMenuinitFromDSSI:
+	xor		ax, ax
+	jmp		Dialog_EventInitializeMenuinitFromDSSIforSingleItemWithHighlightedItemInAX
+
+
+ALIGN JUMP_ALIGN
 .IdleProcessing:
-	xor		ax, ax						; Item 0 is used as input line
-	call	MenuText_AdjustDisplayContextForDrawingItemFromAX
+	xor		cx, cx						; Item 0 is used as input line
+	call	MenuText_AdjustDisplayContextForDrawingItemFromCX
 	call	GetWordFromUser
 	call	MenuInit_CloseMenuWindow
 	stc
@@ -54,7 +60,7 @@ ALIGN JUMP_ALIGN
 ALIGN WORD_ALIGN
 .rgfnEventHandlers:
 istruc MENUEVENT
-	at	MENUEVENT.InitializeMenuinitFromDSSI,	dw	Dialog_EventInitializeMenuinitFromDSSIforSingleItem
+	at	MENUEVENT.InitializeMenuinitFromDSSI,	dw	.InitializeMenuinitFromDSSI
 	at	MENUEVENT.ExitMenu,						dw	Dialog_EventNotHandled
 	at	MENUEVENT.IdleProcessing,				dw	.IdleProcessing
 	at	MENUEVENT.ItemHighlightedFromCX,		dw	Dialog_EventNotHandled

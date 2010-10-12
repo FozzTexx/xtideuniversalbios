@@ -1,7 +1,7 @@
 ; File name		:	MenuText.asm
 ; Project name	:	Assembly Library
 ; Created date	:	21.7.2010
-; Last update	:	7.10.2010
+; Last update	:	12.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for drawing menu texts by the user.
 
@@ -75,20 +75,16 @@ MenuText_RefreshInformation:
 ALIGN JUMP_ALIGN
 PrepareToDrawTitleArea:
 	mov		si, ATTRIBUTE_CHARS.cTitle
-	mov		ax, MenuCharOut_MenuTextTeletypeOutputWithAttributeAndAutomaticLineChange
-	call	AdjustDisplayContextForDrawingTextsWithCharOutFunctionFromAX
 	call	MenuLocation_GetTitleTextTopLeftCoordinatesToAX
-	CALL_DISPLAY_LIBRARY SetCursorCoordinatesFromAX
-	ret
+	jmp		SHORT FinishPreparationsToDrawTitleOrInformationArea
 
 ALIGN JUMP_ALIGN
 PrepareToDrawInformationArea:
 	mov		si, ATTRIBUTE_CHARS.cInformation
-	mov		ax, MenuCharOut_MenuTextTeletypeOutputWithAttributeAndAutomaticLineChange
-	call	AdjustDisplayContextForDrawingTextsWithCharOutFunctionFromAX
 	call	MenuLocation_GetInformationTextTopLeftCoordinatesToAX
-	CALL_DISPLAY_LIBRARY SetCursorCoordinatesFromAX
-	ret
+FinishPreparationsToDrawTitleOrInformationArea:
+	mov		dx, MenuCharOut_MenuTeletypeOutputWithAutomaticLineChange
+	jmp		SHORT AdjustDisplayContextForDrawingTextsAtCoordsInAXwithAttrTypeInSIandCharOutFunctionInDX
 
 
 ;--------------------------------------------------------------------
@@ -133,8 +129,7 @@ MenuText_RefreshItemFromAX:
 
 	call	MenuScrollbars_IsItemInCXonVisiblePage
 	jnc		SHORT .InvalidItem
-	mov		ax, cx
-	call	MenuText_AdjustDisplayContextForDrawingItemFromAX
+	call	MenuText_AdjustDisplayContextForDrawingItemFromCX
 	call	MenuEvent_RefreshItemFromCX
 	call	DrawScrollbarIfNecessary
 .InvalidItem:
@@ -143,26 +138,49 @@ MenuText_RefreshItemFromAX:
 	ret
 
 ;--------------------------------------------------------------------
-; MenuText_AdjustDisplayContextForDrawingItemFromAX
+; MenuText_AdjustDisplayContextForDrawingItemFromCX
 ;	Parameters
-;		AX:		Item to refresh
+;		CX:		Item to refresh
 ;		SS:BP:	Ptr to MENU
 ;	Returns:
-;		CX:		Item to refresh
+;		Nothing
 ;	Corrupts registers:
-;		AX, SI, DI
+;		AX, BX, DX, SI, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-MenuText_AdjustDisplayContextForDrawingItemFromAX:
-	mov		cx, ax
+MenuText_AdjustDisplayContextForDrawingItemFromCX:
+	mov		ax, cx
+	call	GetItemTextAttributeTypeToSIforItemInCX
 	call	MenuLocation_GetTextCoordinatesToAXforItemInAX
-	CALL_DISPLAY_LIBRARY SetCursorCoordinatesFromAX
-	call	.GetItemTextAttributeTypeToSIforItemInCX
-	mov		ax, MenuCharOut_MenuTextTeletypeOutputWithAttribute
-	jmp		SHORT AdjustDisplayContextForDrawingTextsWithCharOutFunctionFromAX
+	mov		dx, MenuCharOut_MenuTeletypeOutput
+	; Fall to AdjustDisplayContextForDrawingTextsAtCoordinatesInAXwithAttributeTypeInSI
 
 ;--------------------------------------------------------------------
-; .GetItemTextAttributeTypeToSIforItemInCX
+; AdjustDisplayContextForDrawingTextsAtCoordsInAXwithAttrTypeInSIandCharOutFunctionInDX
+;	Parameters
+;		AX:		Cursor coordinates to set
+;		DX:		Character output function
+;		SI:		Attribute type (from ATTRIBUTE_CHARS)
+;		SS:BP:	Ptr to MENU
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, BX, DX, SI, DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+AdjustDisplayContextForDrawingTextsAtCoordsInAXwithAttrTypeInSIandCharOutFunctionInDX:
+	CALL_DISPLAY_LIBRARY SetCursorCoordinatesFromAX
+
+	xchg	ax, dx
+	mov		bl, ATTRIBUTES_ARE_USED
+	CALL_DISPLAY_LIBRARY SetCharOutputFunctionFromAXwithAttribFlagInBL
+
+	call	CharOutLineSplitter_PrepareForPrintingTextLines
+	jmp		MenuAttribute_SetToDisplayContextFromTypeInSI
+
+
+;--------------------------------------------------------------------
+; GetItemTextAttributeTypeToSIforItemInCX
 ;	Parameters
 ;		CX:		Item to refresh
 ;		SS:BP:	Ptr to MENU
@@ -172,11 +190,12 @@ MenuText_AdjustDisplayContextForDrawingItemFromAX:
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-.GetItemTextAttributeTypeToSIforItemInCX:
+GetItemTextAttributeTypeToSIforItemInCX:
 	mov		si, ATTRIBUTE_CHARS.cItem
 	test	BYTE [bp+MENU.bFlags], FLG_MENU_NOHIGHLIGHT
 	jnz		SHORT .ReturnAttributeTypeInSI
-	cmp		cx, [bp+MENU.wHighlightedItem]
+
+	cmp		cx, [bp+MENUINIT.wHighlightedItem]
 	jne		SHORT .ReturnAttributeTypeInSI
 	sub		si, BYTE ATTRIBUTE_CHARS.cItem - ATTRIBUTE_CHARS.cHighlightedItem
 ALIGN JUMP_ALIGN, ret
@@ -257,25 +276,3 @@ ALIGN JUMP_ALIGN
 
 	pop		cx
 	ret
-
-
-;--------------------------------------------------------------------
-; AdjustDisplayContextForDrawingTextsWithCharOutFunctionFromAX
-;	Parameters
-;		AX:		Character output function
-;		SI:		Attribute type (from ATTRIBUTE_CHARS)
-;		SS:BP:	Ptr to MENU
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, BX, SI, DI
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-AdjustDisplayContextForDrawingTextsWithCharOutFunctionFromAX:
-	mov		bl, ATTRIBUTES_ARE_USED
-	CALL_DISPLAY_LIBRARY SetCharOutputFunctionFromAXwithAttribFlagInBL
-
-	mov		ax, bp
-	CALL_DISPLAY_LIBRARY SetCharacterOutputParameterFromAX
-
-	jmp		MenuAttribute_SetToDisplayContextFromTypeInSI

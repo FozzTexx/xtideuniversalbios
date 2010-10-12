@@ -1,7 +1,7 @@
 ; File name		:	DialogSelection.asm
 ; Project name	:	Assembly Library
 ; Created date	:	13.8.2010
-; Last update	:	13.8.2010
+; Last update	:	12.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Displays selection dialog.
 
@@ -42,8 +42,8 @@ SelectionEventHandler:
 
 ALIGN JUMP_ALIGN
 .InitializeMenuinitFromDSSI:
-	mov		WORD [bp+MENU.wHighlightedItem], 0
-	jmp		Dialog_EventInitializeMenuinitFromDSSI
+	xor		ax, ax
+	jmp		Dialog_EventInitializeMenuinitFromDSSIwithHighlightedItemInAX
 
 
 ALIGN WORD_ALIGN
