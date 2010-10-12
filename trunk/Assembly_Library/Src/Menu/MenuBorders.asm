@@ -1,7 +1,7 @@
 ; File name		:	MenuBorders.asm
 ; Project name	:	Assembly Library
 ; Created date	:	14.7.2010
-; Last update	:	28.9.2010
+; Last update	:	11.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for drawing menu borders.
 
@@ -49,10 +49,10 @@ MenuBorders_RefreshAll:
 ALIGN JUMP_ALIGN
 MenuBorders_AdjustDisplayContextForDrawingBorders:
 	mov		bl, ATTRIBUTES_ARE_USED
-	mov		ax, MenuCharOut_MenuBorderTeletypeOutputWithAttribute
+	mov		ax, MenuCharOut_MenuTeletypeOutput
 	CALL_DISPLAY_LIBRARY SetCharOutputFunctionFromAXwithAttribFlagInBL
 
-	mov		ax, bp
+	call	CharOutLineSplitter_GetFirstBorderLineColumnOffsetToAX
 	CALL_DISPLAY_LIBRARY SetCharacterOutputParameterFromAX
 
 	call	MenuLocation_GetTitleBordersTopLeftCoordinatesToAX

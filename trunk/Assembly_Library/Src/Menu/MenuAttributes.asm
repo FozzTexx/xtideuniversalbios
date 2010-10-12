@@ -23,7 +23,7 @@ endstruc
 SECTION .text
 
 ;--------------------------------------------------------------------
-; MenuAttribute_GetToALfromTypeInSI
+; MenuAttribute_SetToDisplayContextFromTypeInSI
 ;	Parameters
 ;		SI:		Attribute type (from ATTRIBUTE_CHARS)
 ;	Returns:

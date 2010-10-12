@@ -1,7 +1,7 @@
 ; File name		:	AssemblyLibrary.asm
 ; Project name	:	Assembly Library
 ; Created date	:	15.9.2010
-; Last update	:	8.10.2010
+; Last update	:	12.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Assembly Library main file. This is the only file that
 ;					needs to be included.
@@ -32,6 +32,7 @@ SECTION .text
 %endif
 
 %ifdef INCLUDE_MENU_LIBRARY
+	%include "CharOutLineSplitter.asm"
 	%include "Menu.asm"
 	%include "MenuAttributes.asm"
 	%include "MenuBorders.asm"
@@ -52,7 +53,7 @@ SECTION .text
 		%include "DialogSelection.asm"
 		%include "DialogString.asm"
 		%include "DialogWord.asm"
-		%include "LineSplitter.asm"
+		%include "ItemLineSplitter.asm"
 		%include "StringsForDialogs.asm"
 	%endif
 %endif
@@ -60,6 +61,7 @@ SECTION .text
 %ifdef INCLUDE_STRING_LIBRARY
 	%include "Char.asm"
 	%include "String.asm"
+	%include "StringProcess.asm"
 %endif
 
 %ifdef INCLUDE_TIME_LIBRARY

@@ -1,7 +1,7 @@
 ; File name		:	Menu.inc
 ; Project name	:	Assembly Library
 ; Created date	:	13.7.2010
-; Last update	:	5.10.2010
+; Last update	:	12.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Defines for Menu library.
 %ifndef MENU_INC
@@ -94,6 +94,7 @@ endstruc
 struc MENUINIT
 	.wTimeoutTicks					resb	2	; Selection timeout in system timer ticks
 	.wItems							resb	2	; Number of items in menu
+	.wHighlightedItem				resb	2	; Index for highlighted item
 
 	.wTitleAndInfoLines:
 	.bTitleLines					resb	1	; Number of title lines
@@ -114,8 +115,6 @@ struc MENU
 	.bFlags							resb	1	; Menu flags
 									resb	1
 	.wTimeoutCounter				resb	2
-
-	.wHighlightedItem				resb	2	; Index for highlighted item
 	.wFirstVisibleItem				resb	2	; Index for first visible item on the menu
 endstruc
 

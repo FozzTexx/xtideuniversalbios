@@ -1,7 +1,7 @@
 ; File name		:	DialogProgress.asm
 ; Project name	:	Assembly Library
 ; Created date	:	15.8.2010
-; Last update	:	28.9.2010
+; Last update	:	12.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Displays progress bar dialog and starts progress task.
 
@@ -77,7 +77,8 @@ ProgressEventHandler:
 
 ALIGN JUMP_ALIGN
 .InitializeMenuinitFromDSSI:
-	call	Dialog_EventInitializeMenuinitFromDSSIforSingleItem
+	mov		ax, NO_ITEM_HIGHLIGHTED
+	call	Dialog_EventInitializeMenuinitFromDSSIforSingleItemWithHighlightedItemInAX
 	lds		si, [bp+DIALOG.fpDialogIO]
 	call	TimerTicks_ReadFromBdaToAX
 	mov		[si+PROGRESS_DIALOG_IO.wStartTimeTicks], ax

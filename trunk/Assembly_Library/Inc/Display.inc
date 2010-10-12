@@ -1,7 +1,7 @@
 ; File name		:	Display.inc
 ; Project name	:	AssemblyLibrary
 ; Created date	:	25.6.2010
-; Last update	:	9.10.2010
+; Last update	:	11.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Defines for display library.
 %ifndef DISPLAY_INC
@@ -25,8 +25,8 @@
 		call	DisplayContext_Push
 	%elifidn %1, PopDisplayContext
 		call	DisplayContext_Pop
-	%elifidn %1, PrepareOffScreenBufferInESBXtoESDI
-		call	DisplayContext_PrepareOffScreenBufferInESBXtoESDI
+	%elifidn %1, PrepareOffScreenBufferInESBXwithLengthInCX
+		call	DisplayContext_PrepareOffScreenBufferInESBXwithLengthInCX
 	%else
 		mov		di, DISPLAY_LIB.%1
 		call	Display_FunctionFromDI
@@ -38,7 +38,6 @@
 struc DISPLAY_LIB
 	.PushDisplayContext:
 	.PopDisplayContext:
-	.PrepareOffScreenBufferInESBXtoESDI:
 	.InitializeDisplayContext						resb	2
 
 	.SetCharacterPointerFromBXAX					resb	2

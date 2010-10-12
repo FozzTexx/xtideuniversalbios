@@ -1,7 +1,7 @@
 ; File name		:	DisplayContext.asm
 ; Project name	:	Assembly Library
 ; Created date	:	25.6.2010
-; Last update	:	9.10.2010
+; Last update	:	11.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for managing display context.
 
@@ -118,16 +118,17 @@ DisplayContext_Pop:
 
 
 ;--------------------------------------------------------------------
-; DisplayContext_PrepareOffScreenBufferInESBXtoESDI
+; DisplayContext_PrepareOffScreenBufferInESBXwithLengthInCX
 ;	Parameters:
-;		BX:AX:	Ptr to off screen buffer
+;		CX:		Off screen buffer length in characters
+;		ES:BX:	Ptr to off screen buffer
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX
+;		AX, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-DisplayContext_PrepareOffScreenBufferInESBXtoESDI:
+DisplayContext_PrepareOffScreenBufferInESBXwithLengthInCX:
 	push	ds
 
 	LOAD_BDA_SEGMENT_TO	ds, di
@@ -138,6 +139,7 @@ DisplayContext_PrepareOffScreenBufferInESBXtoESDI:
 	mov		bl, ATTRIBUTES_NOT_USED
 	mov		ax, BUFFER_OUTPUT_WITH_CHAR_ONLY
 	call	DisplayContext_SetCharOutputFunctionFromAXwithAttribFlagInBL
+	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.wCharOutParam], cx
 
 	mov		bx, di
 	pop		ds

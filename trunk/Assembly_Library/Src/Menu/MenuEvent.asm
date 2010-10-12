@@ -1,7 +1,7 @@
 ; File name		:	MenuEvent.asm
 ; Project name	:	Assembly Library
 ; Created date	:	13.7.2010
-; Last update	:	5.10.2010
+; Last update	:	12.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for initializing menu system.
 
@@ -81,7 +81,7 @@ ALIGN JUMP_ALIGN
 MenuEvent_RefreshInformation:
 	mov		bx, MENUEVENT.RefreshInformation
 LoadHighlightedItemToCXandSendMessageFromBX:
-	mov		cx, [bp+MENU.wHighlightedItem]
+	mov		cx, [bp+MENUINIT.wHighlightedItem]
 	jmp		SHORT MenuEvent_SendFromBX
 
 
@@ -116,7 +116,7 @@ MenuEvent_RefreshItemFromCX:
 ALIGN JUMP_ALIGN
 MenuEvent_HighlightItemFromCX:
 	mov		dx, cx
-	xchg	dx, [bp+MENU.wHighlightedItem]
+	xchg	dx, [bp+MENUINIT.wHighlightedItem]
 	push	dx
 
 	mov		bx, MENUEVENT.ItemHighlightedFromCX
@@ -124,7 +124,7 @@ MenuEvent_HighlightItemFromCX:
 
 	pop		ax
 	call	MenuText_RefreshItemFromAX
-	mov		ax, [bp+MENU.wHighlightedItem]
+	mov		ax, [bp+MENUINIT.wHighlightedItem]
 	jmp		MenuText_RefreshItemFromAX
 
 

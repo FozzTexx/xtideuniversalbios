@@ -1,7 +1,7 @@
 ; File name		:	MenuInit.asm
 ; Project name	:	Assembly Library
 ; Created date	:	13.7.2010
-; Last update	:	5.10.2010
+; Last update	:	12.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for initializing menu system.
 
@@ -29,7 +29,7 @@ MenuInit_DisplayMenuWithHandlerInBXandUserDataInDXAX:
 	mov		cx, MENU_size
 	call	Memory_ZeroSSBPwithSizeInCX
 	call	MenuInit_EnterMenuWithHandlerInBXandUserDataInDXAX
-	mov		ax, [bp+MENU.wHighlightedItem]
+	mov		ax, [bp+MENUINIT.wHighlightedItem]
 
 	eLEAVE_STRUCT MENU_size
 	pop		ax
@@ -55,7 +55,6 @@ MenuInit_EnterMenuWithHandlerInBXandUserDataInDXAX:
 	mov		[bp+MENU.fnEventHandler], bx
 	mov		[bp+MENU.dwUserData], ax
 	mov		[bp+MENU.dwUserData+2], dx
-	mov		WORD [bp+MENU.wHighlightedItem], NO_ITEM_HIGHLIGHTED
 
 	mov		ax, CURSOR_HIDDEN
 	CALL_DISPLAY_LIBRARY SetCursorShapeFromAX
@@ -109,7 +108,7 @@ MenuInit_CloseMenuWindow:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MenuInit_HighlightItemFromAX:
-	sub		ax, [bp+MENU.wHighlightedItem]
+	sub		ax, [bp+MENUINIT.wHighlightedItem]
 	jmp		MenuScrollbars_MoveHighlightedItemByAX
 
 ;--------------------------------------------------------------------
@@ -123,7 +122,7 @@ MenuInit_HighlightItemFromAX:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MenuInit_GetHighlightedItemToAX:
-	mov		ax, [bp+MENU.wHighlightedItem]
+	mov		ax, [bp+MENUINIT.wHighlightedItem]
 	ret
 
 

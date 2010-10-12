@@ -1,7 +1,7 @@
 ; File name		:	LibraryTests.asm
 ; Project name	:	Assembly Library
 ; Created date	:	27.6.2010
-; Last update	:	27.9.2010
+; Last update	:	12.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Tests for Assembly Library.
 ;					This file should not be included when using the library on
@@ -70,8 +70,7 @@ ALIGN JUMP_ALIGN
 	mov		BYTE [si+MENUINIT.bHeight], 20
 	mov		BYTE [si+MENUINIT.bTitleLines], TEST_MENU_TITLE_LINES
 	mov		BYTE [si+MENUINIT.bInfoLines], TEST_MENU_INFO_LINES
-	mov		ax, 1
-	CALL_MENU_LIBRARY HighlightItemFromAX
+	mov		WORD [si+MENUINIT.wHighlightedItem], 1
 	stc
 	ret
 
@@ -94,7 +93,7 @@ ALIGN JUMP_ALIGN
 	stc
 	ret
 .szInfoTitle:
-	db		"Information line 1,",CR,LF,
+	db		"Information line 1,",LF,CR,
 	db		"Information line 2. ",
 	db		"This comes (12) right after Information line 2.",NULL
 
@@ -614,13 +613,13 @@ g_szVeryLongString:
 	db		"This is a very long string containing multiple lines of text. This is needed "
 	db		"so scroll bars and message dialog can be tested. This string does not use "
 	db		"formatting so it should be simple to display this correctly. This string "
-	db		"does, however, use newline characters. Lets change line right now!",CR,LF,
+	db		"does, however, use newline characters. Lets change line right now!",LF,CR,
 	db		"Well did it work? Let's try line feed alone",LF,"Well? "
+	db		"Now two LFs:",LF,LF,"What happened? "
 	db		"We could also see what two spaces does _  _. There was two spaces between "
 	db		"underscores. Lets try three this time _   _. Well, did they work correctly? "
-	db		"What next, I guess that was all, no wait. Let's see what TAB does! Here it "
-	db		"goes:",TAB,"Well did it work? Just one more time:",TAB,"Well are we good? "
-	db		"No since LF is the only supported control character, unfortunately. "
+	db		"Too bad that LF, CR and BS (backspace) are the only supported control "
+	db		"characters. Others don't either work or they break line splitting. "
 	db		"This is the last sentence of this long string!",NULL
 
 g_dialogInputOutput:

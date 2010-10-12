@@ -1,7 +1,7 @@
 ; File name		:	CgaSnow.asm
 ; Project name	:	Assembly Library
 ; Created date	:	8.10.2010
-; Last update	:	9.10.2010
+; Last update	:	12.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for preventing CGA snow.
 
@@ -22,9 +22,10 @@ ALIGN JUMP_ALIGN
 CgaSnow_IsCgaPresent:
 	cmp		WORD [BDA.wVidPort], CGA_STATUS_REGISTER - OFFSET_TO_CGA_STATUS_REGISTER
 	jne		SHORT .CgaNotFound
-	call	DisplayPage_GetColumnsToALandRowsToAH
-	cmp		ah, [BDA.bVidRows]		; Video rows stored only by EGA and later
-	je		SHORT .CgaNotFound		; Must be EGA or later
+
+	; All standard CGA modes use 25 rows but only EGA and later store it to BDA.
+	cmp		BYTE [BDA.bVidRows], 25
+	jge		SHORT .CgaNotFound
 	stc
 	ret
 ALIGN JUMP_ALIGN
@@ -77,32 +78,6 @@ CgaSnow_Stosw:
 .StoswWithoutWaitSinceUnknownPort:
 	stosw
 	pop		bx
-	sti
-	ret
-
-
-;--------------------------------------------------------------------
-; CgaSnow_Scasb
-;	Parameters:
-;		AL:		Byte for comparison
-;		DS:		BDA segment (zero)
-;		ES:DI:	Ptr to video memory where to output
-;	Returns:
-;		DI:		Incremented for next character
-;	Corrupts registers:
-;		AX, DX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-CgaSnow_Scasb:
-	call	LoadCgaStatusRegisterAddressToDXifCgaPresent
-	jz		SHORT .ScasbWithoutWaitSinceUnknownPort
-
-	mov		ah, al
-	cli				; Interrupt request would mess up timing
-	WAIT_UNTIL_SAFE_CGA_WRITE
-	mov		al, ah
-.ScasbWithoutWaitSinceUnknownPort:
-	scasb
 	sti
 	ret
 
