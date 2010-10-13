@@ -1,7 +1,7 @@
 ; File name		:	DialogFile.asm
 ; Project name	:	Assembly Library
 ; Created date	:	6.9.2010
-; Last update	:	12.10.2010
+; Last update	:	13.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Displays file dialog.
 
@@ -76,6 +76,21 @@ ALIGN JUMP_ALIGN
 	ret
 
 
+ALIGN JUMP_ALIGN
+.RefreshItemFromCX:
+	call	LoadItemStringBufferToESDI
+	mov		ax, FILE_STRING_LENGTH
+	xchg	ax, cx
+	mul		cx
+	add		di, ax
+	mov		si, di
+	mov		bx, es
+	dec		cx				; Do not print LF at the end of file string
+	CALL_DISPLAY_LIBRARY PrintCharBufferFromBXSIwithLengthInCX
+	stc
+	ret
+
+
 ALIGN WORD_ALIGN
 .rgszInfoStringLookup:
 	dw		g_szChangeDrive
@@ -92,7 +107,7 @@ istruc MENUEVENT
 	at	MENUEVENT.KeyStrokeInAX,				dw	HandleFunctionKeyFromAH
 	at	MENUEVENT.RefreshTitle,					dw	Dialog_EventRefreshTitle
 	at	MENUEVENT.RefreshInformation,			dw	.RefreshInformation
-	at	MENUEVENT.RefreshItemFromCX,			dw	Dialog_EventRefreshItemFromCX
+	at	MENUEVENT.RefreshItemFromCX,			dw	.RefreshItemFromCX
 iend
 
 
@@ -112,6 +127,7 @@ InitializeMenuinitFromSSBP:
 	call	CreateStringFromCurrentDirectoryContentsToESDI
 	call	LoadItemStringBufferToESDI
 	call	SortDirectoryContentsStringFromESDIwithCountInCX
+	call	RemoveLastLFandTerminateESDIwithNull
 	call	Memory_CopySSBPtoDSSI
 	xor		ax, ax
 	call	Dialog_EventInitializeMenuinitFromDSSIwithHighlightedItemInAX
@@ -147,39 +163,27 @@ LoadItemStringBufferToESDI:
 ;	Returns:
 ;		CX:		Number of files or directories found
 ;	Corrupts registers:
-;		AX, DX, SI, DI, DS, ES
+;		AX, BX, DX, SI, DI, DS
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 CreateStringFromCurrentDirectoryContentsToESDI:
+	mov		bx, di
+	CALL_DISPLAY_LIBRARY PushDisplayContext
+	mov		cx, -1
+	CALL_DISPLAY_LIBRARY PrepareOffScreenBufferInESBXwithLengthInCX	; ES:DI now points to buffer
+
 	lds		si, [bp+DIALOG.fpDialogIO]
 	eMOVZX	cx, BYTE [si+FILE_DIALOG_IO.bFileAttributes]
 	lds		si, [si+FILE_DIALOG_IO.fpFileFilterString]
 	call	Directory_UpdateDTAForFirstMatchForDSSIwithAttributesInCX
-	rcr		cx, 1			; Store CF
+
 	call	.ClearDLifInRootDirectory
 	call	Directory_GetDiskTransferAreaAddressToDSSI
-	rcl		cx, 1			; Restore CF
 	xor		cx, cx			; Clear file/directory count
-	; Fall to .FindMatchingFilesAndWriteThemToESDI
+	call	.FindMatchingFilesAndPrintThemToOffScreenBuffer
 
-;--------------------------------------------------------------------
-; .FindMatchingFilesAndWriteThemToESDI
-;	Parameters:
-;		CX:		Initial directory count
-;		DL:		Zero if root directory selected
-;		DS:SI:	Ptr to DTA with first matching file
-;		ES:DI:	Ptr to destination string buffer
-;	Returns:
-;		CX:		Incremented by number of files/directories found
-;	Corrupts registers:
-;		AX, DX, DI
-;--------------------------------------------------------------------
-;ALIGN JUMP_ALIGN
-.FindMatchingFilesAndWriteThemToESDI:
-	jc		SHORT TerminateESDIwithNull
-	call	AppendFileToBufferInESDIfromDtaInDSSI
-	call	Directory_UpdateDTAForNextMatchUsingPreviousParameters
-	jmp		SHORT .FindMatchingFilesAndWriteThemToESDI
+	CALL_DISPLAY_LIBRARY PopDisplayContext
+	ret
 
 ;--------------------------------------------------------------------
 ; .ClearDLifInRootDirectory
@@ -199,154 +203,51 @@ ALIGN JUMP_ALIGN
 	mov		dl, [si]
 	ret
 
-
 ;--------------------------------------------------------------------
-; TerminateESDIwithNull
+; .FindMatchingFilesAndPrintThemToOffScreenBuffer
 ;	Parameters:
-;		ES:DI:	Ptr to destination string buffer
+;		CX:		Initial directory count
+;		DL:		Zero if root directory selected
+;		DS:SI:	Ptr to DTA with first matching file
 ;	Returns:
-;		Nothing
+;		CX:		Incremented by number of files/directories found
 ;	Corrupts registers:
-;		AX
+;		AX, BX, DX, DI, DS
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-TerminateESDIwithNull:
-	xor		ax, ax
-	stosb
+.FindMatchingFilesAndPrintThemToOffScreenBuffer:
+	call	AppendFileFromDTAinDSSItoOffScreenBuffer
+	call	Directory_UpdateDTAForNextMatchUsingPreviousParameters
+	jnc		SHORT .FindMatchingFilesAndPrintThemToOffScreenBuffer
 	ret
 
 
 ;--------------------------------------------------------------------
-; AppendFileToBufferInESDIfromDtaInDSSI
+; AppendFileFromDTAinDSSItoOffScreenBuffer
 ;	Parameters:
 ;		CX:		Files/directores found
 ;		DL:		Zero if root directory selected
 ;		DS:SI:	Ptr to DTA containing file information
-;		ES:DI:	Ptr to destination string buffer
 ;	Returns:
 ;		CX:		Incremented by number of files/directories found
-;		DI:		Updated for next file
 ;	Corrupts registers:
-;		AX, BX, DX
+;		AX, BX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-AppendFileToBufferInESDIfromDtaInDSSI:
+AppendFileFromDTAinDSSItoOffScreenBuffer:
 	call	.FilterCurrentDirectory			; We never want "."
 	call	.FilterUpDirectoryWhenInRoot	; No ".." when in root directory
 	inc		cx								; Nothing filtered so increment files/directories
-	; Fall to .PrepareBufferFormattingAndFormatFromDTAinDSSI
 
-;--------------------------------------------------------------------
-; .PrepareBufferFormattingAndFormatFromDTAinDSSI
-;	Parameters:
-;		DS:SI:	Ptr to DTA containing file information
-;		ES:DI:	Ptr to destination string buffer
-;	Returns:
-;		DI:		Updated for next file
-;	Corrupts registers:
-;		AX, BX, DX
-;--------------------------------------------------------------------
-;ALIGN JUMP_ALIGN
-.PrepareBufferFormattingAndFormatFromDTAinDSSI:
 	push	bp
 	push	si
-	push	cx
-	mov		bx, di
-	CALL_DISPLAY_LIBRARY PushDisplayContext
-	mov		cx, -1
-	CALL_DISPLAY_LIBRARY PrepareOffScreenBufferInESBXwithLengthInCX
-
-	call	.FormatFileOrDirectoryToBufferFromDTAinDSSI
-
-	CALL_DISPLAY_LIBRARY GetCharacterPointerToBXAX
-	xchg	bx, ax
-	CALL_DISPLAY_LIBRARY PopDisplayContext
-	mov		di, bx
-	pop		cx
-	pop		si
-	pop		bp
-	ret
-
-;--------------------------------------------------------------------
-; .FormatFileOrDirectoryToBufferFromDTAinDSSI
-;	Parameters:
-;		DS:SI:	Ptr to DTA containing file information
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, BX, CX, DX, SI, DI, BP
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-.FormatFileOrDirectoryToBufferFromDTAinDSSI:
-	mov		bp, sp
-	lea		ax, [si+DTA.szFile]
-
-	test	BYTE [si+DTA.bFileAttributes], FLG_FILEATTR_DIRECTORY
-	jnz		SHORT .FormatDirectory
-	; Fall to .FormatFile
-
-;--------------------------------------------------------------------
-; .FormatFile
-;	Parameters:
-;		BP:		SP before pushing formatting parameters
-;		DS:AX:	Far pointer to file name
-;		DS:SI:	Ptr to DTA containing file information
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, BX, CX, DX, SI, DI, BP
-;--------------------------------------------------------------------
-.FormatFile:
-	; Convert file name to lower case
-	xchg	si, ax
-	mov		dx, StringProcess_ConvertToLowerCase
-	call	StringProcess_DSSIwithFunctionInDX
-	xchg	ax, si
-
-	; Push parameters for file name
-	push	ax				; Push directory name offset
-	push	ds				; Push directory name segment
-
-	; Push parameters for file size
-	mov		ax, [si+DTA.dwFileSize]
-	mov		dx, [si+DTA.dwFileSize+2]
-	xor		bx, bx
-	xor		cx, cx
-	call	Size_GetSizeToAXAndCharToDLfromBXDXAXwithMagnitudeInCX
-	mov		cl, 'i'
-	cmp		dl, ' '
-	eCMOVE	cl, dl
-	push	ax
 	push	dx
 	push	cx
-
-	; Format to buffer
-	mov		si, g_szFileFormat
-	jmp		SHORT .FormatStringInCSSIandReturn
-
-;--------------------------------------------------------------------
-; .FormatDirectory
-;	Parameters:
-;		BP:		SP before pushing formatting parameters
-;		DS:AX:	Far pointer to directory name
-;		DS:SI:	Ptr to DTA containing file information
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, BX, CX, DX, SI, DI, BP
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-.FormatDirectory:
-	push	ax				; Push directory name offset
-	push	ds				; Push directory name segment
-	mov		ax, g_szSub
-	cmp		WORD [si+DTA.szFile], UPDIR_CHARACTERS
-	eCMOVE	ax, g_szUp
-	push	ax
-	mov		si, g_szDirectoryFormat
-ALIGN JUMP_ALIGN
-.FormatStringInCSSIandReturn:
-	CALL_DISPLAY_LIBRARY FormatNullTerminatedStringFromCSSI
+	call	.FormatFileOrDirectoryToBufferFromDTAinDSSI
+	pop		cx
+	pop		dx
+	pop		si
+	pop		bp
 	ret
 
 ;--------------------------------------------------------------------
@@ -379,6 +280,86 @@ ALIGN JUMP_ALIGN, ret
 .ReturnWithoutFiltering:
 	ret
 
+;--------------------------------------------------------------------
+; .FormatFileOrDirectoryToBufferFromDTAinDSSI
+;	Parameters:
+;		DS:SI:	Ptr to DTA containing file information
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, BX, CX, DX, SI, DI, BP
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+.FormatFileOrDirectoryToBufferFromDTAinDSSI:
+	mov		bp, sp
+	lea		ax, [si+DTA.szFile]
+
+	test	BYTE [si+DTA.bFileAttributes], FLG_FILEATTR_DIRECTORY
+	jnz		SHORT .FormatDirectory
+	; Fall to .FormatFile
+
+;--------------------------------------------------------------------
+; .FormatFile
+;	Parameters:
+;		BP:		SP before pushing formatting parameters
+;		DS:AX:	Far pointer to file name
+;		DS:SI:	Ptr to DTA containing file information
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, BX, CX, DX, SI, DI
+;--------------------------------------------------------------------
+.FormatFile:
+	xchg	si, ax
+	call	String_ConvertDSSItoLowerCase
+	xchg	ax, si
+
+	; Push parameters for file name
+	push	ax				; Push file name offset
+	push	ds				; Push file name segment
+
+	; Push parameters for file size
+	mov		ax, [si+DTA.dwFileSize]
+	mov		dx, [si+DTA.dwFileSize+2]
+	xor		bx, bx
+	xor		cx, cx
+	call	Size_GetSizeToAXAndCharToDLfromBXDXAXwithMagnitudeInCX
+	mov		cl, 'i'
+	cmp		dl, ' '
+	eCMOVE	cl, dl
+	push	ax
+	push	dx
+	push	cx
+
+	; Format to buffer
+	mov		si, g_szFileFormat
+	jmp		SHORT .FormatStringInCSSIandReturn
+
+;--------------------------------------------------------------------
+; .FormatDirectory
+;	Parameters:
+;		BP:		SP before pushing formatting parameters
+;		DS:AX:	Far pointer to directory name
+;		DS:SI:	Ptr to DTA containing file information
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, SI, DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+.FormatDirectory:
+	push	ax				; Push directory name offset
+	push	ds				; Push directory name segment
+	mov		ax, g_szSub
+	cmp		WORD [si+DTA.szFile], UPDIR_CHARACTERS
+	eCMOVE	ax, g_szUp
+	push	ax
+	mov		si, g_szDirectoryFormat
+ALIGN JUMP_ALIGN
+.FormatStringInCSSIandReturn:
+	CALL_DISPLAY_LIBRARY FormatNullTerminatedStringFromCSSI
+	ret
+
 
 ;--------------------------------------------------------------------
 ; SortDirectoryContentsStringFromESDIwithCountInCX
@@ -387,17 +368,25 @@ ALIGN JUMP_ALIGN, ret
 ;		ES:DI:	Buffer containing directory contents string
 ;		SS:BP:	Ptr to DIALOG
 ;	Returns:
-;		Nothing
+;		ES:DI:	Ptr to end of directory contents string
 ;	Corrupts registers:
-;		AX, BX, CX, DX, SI, DI, DS, ES
+;		AX, BX, CX, DX, SI, DS
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 SortDirectoryContentsStringFromESDIwithCountInCX:
-	call	Memory_ExchangeDSSIwithESDI
+	call	Memory_CopyESDItoDSSI
+	call	.AddDirectoryContentsStringLengthToDI
 	mov		bx, .FileStringComparator
 	xchg	dx, cx
 	mov		cx, FILE_STRING_LENGTH
 	jmp		Sort_ItemsFromDSSIwithCountInDXsizeInCXandComparatorInBX
+
+ALIGN JUMP_ALIGN
+.AddDirectoryContentsStringLengthToDI:
+	mov		ax, FILE_STRING_LENGTH
+	mul		cx
+	add		di, ax
+	ret
 
 ;--------------------------------------------------------------------
 ; .FileStringComparator
@@ -738,7 +727,7 @@ ALIGN JUMP_ALIGN
 	mov		bx, dx
 	or		bx, cx
 	jnz		SHORT .BitShiftLoop
-	jmp		TerminateESDIwithNull
+	jmp		SHORT TerminateESDIwithNull
 
 ;--------------------------------------------------------------------
 ; .ConvertDriveNumberToDLfromItemIndexInAX
@@ -764,6 +753,26 @@ ALIGN JUMP_ALIGN
 	jnc		SHORT .BitScanLoop
 	mov		dl, ch
 	stc						; Drive selected by user
+	ret
+
+
+;--------------------------------------------------------------------
+; RemoveLastLFandTerminateESDIwithNull
+; TerminateESDIwithNull
+;	Parameters:
+;		ES:DI:	Ptr to end of buffer to terminate
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+RemoveLastLFandTerminateESDIwithNull:
+	dec		di
+ALIGN JUMP_ALIGN
+TerminateESDIwithNull:
+	xor		ax, ax
+	stosb
 	ret
 
 

@@ -1,12 +1,35 @@
 ; File name		:	String.asm
 ; Project name	:	Assembly Library
 ; Created date	:	12.7.2010
-; Last update	:	12.10.2010
+; Last update	:	13.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for handling characters.
 
 ; Section containing code
 SECTION .text
+
+;--------------------------------------------------------------------
+; String_ConvertDSSItoLowerCase
+;	Parameters:
+;		DS:SI:	Ptr to string to convert
+;	Returns:
+;		CX:		Number of characters processed
+;		SI:		Updated
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+String_ConvertDSSItoLowerCase:
+	push	dx
+	push	ax
+
+	mov		dx, StringProcess_ConvertToLowerCase
+	call	StringProcess_DSSIwithFunctionInDX
+
+	pop		ax
+	pop		dx
+	ret
+
 
 ;--------------------------------------------------------------------
 ; String_ConvertWordToAXfromStringInDSSIwithBaseInBX
@@ -15,6 +38,7 @@ SECTION .text
 ;		DS:SI:	Ptr to string to convert
 ;	Returns:
 ;		AX:		Word converted from string
+;		CX:		Number of characters processed
 ;		SI:		Updated
 ;		CF:		Cleared if successfull
 ;				Set if error during conversion
@@ -37,7 +61,7 @@ String_ConvertWordToAXfromStringInDSSIwithBaseInBX:
 
 
 ;--------------------------------------------------------------------
-; String_CopyDSSItoESDIandGetSizeToCX
+; String_CopyDSSItoESDIandGetLengthToCX
 ;	Parameters:
 ;		DS:SI:	Ptr to source NULL terminated string
 ;		ES:DI:	Ptr to destination buffer
@@ -48,7 +72,7 @@ String_ConvertWordToAXfromStringInDSSIwithBaseInBX:
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-String_CopyDSSItoESDIandGetSizeToCX:
+String_CopyDSSItoESDIandGetLengthToCX:
 	push	ax
 
 	xor		cx, cx
