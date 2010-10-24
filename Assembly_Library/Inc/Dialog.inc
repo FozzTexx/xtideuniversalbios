@@ -1,7 +1,7 @@
 ; File name		:	Dialog.inc
 ; Project name	:	Assembly Library
 ; Created date	:	15.9.2010
-; Last update	:	28.9.2010
+; Last update	:	22.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Defines for Menu library dialogs.
 %ifndef DIALOG_INC
@@ -56,6 +56,14 @@ struc PROGRESS_DIALOG_IO
 	; Progress Dialog internal values
 	.wProgressPerCharacter			resb	2
 	.wStartTimeTicks				resb	2
+endstruc
+
+struc DRIVE_DIALOG_IO
+	.dialogInput		resb	DIALOG_INPUT_size
+	.bUserCancellation	resb	1
+						resb	1
+	.cReturnDriveLetter	resb	1
+	.bReturnDriveNumber	resb	1
 endstruc
 
 struc FILE_DIALOG_IO

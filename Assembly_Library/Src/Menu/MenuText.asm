@@ -1,7 +1,7 @@
 ; File name		:	MenuText.asm
 ; Project name	:	Assembly Library
 ; Created date	:	21.7.2010
-; Last update	:	12.10.2010
+; Last update	:	24.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for drawing menu texts by the user.
 
@@ -26,11 +26,11 @@ MenuText_ClearTitleArea:
 
 ALIGN JUMP_ALIGN
 MenuText_ClearInformationArea:
-	call	PrepareToDrawInformationArea
+	call	MenuText_PrepareToDrawInformationArea
 	mov		cl, [bp+MENUINIT.bInfoLines]
 ClearCLlinesOfText:
 	mov		al, [bp+MENUINIT.bWidth]
-	sub		al, MENU_HORIZONTAL_BORDER_LINES+MENU_TEXT_COLUMN_OFFSET
+	sub		al, MENU_HORIZONTAL_BORDER_LINES+(MENU_TEXT_COLUMN_OFFSET/2)
 	mul		cl
 	xchg	cx, ax
 	mov		al, ' '
@@ -59,7 +59,7 @@ ALIGN JUMP_ALIGN
 MenuText_RefreshInformation:
 	cmp		BYTE [bp+MENUINIT.bInfoLines], 0
 	jz		SHORT NothingToRefresh
-	call	PrepareToDrawInformationArea
+	call	MenuText_PrepareToDrawInformationArea
 	jmp		MenuEvent_RefreshInformation
 
 ;--------------------------------------------------------------------
@@ -79,7 +79,7 @@ PrepareToDrawTitleArea:
 	jmp		SHORT FinishPreparationsToDrawTitleOrInformationArea
 
 ALIGN JUMP_ALIGN
-PrepareToDrawInformationArea:
+MenuText_PrepareToDrawInformationArea:
 	mov		si, ATTRIBUTE_CHARS.cInformation
 	call	MenuLocation_GetInformationTextTopLeftCoordinatesToAX
 FinishPreparationsToDrawTitleOrInformationArea:

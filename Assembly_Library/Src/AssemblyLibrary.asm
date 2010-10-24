@@ -1,7 +1,7 @@
 ; File name		:	AssemblyLibrary.asm
 ; Project name	:	Assembly Library
 ; Created date	:	15.9.2010
-; Last update	:	12.10.2010
+; Last update	:	24.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Assembly Library main file. This is the only file that
 ;					needs to be included.
@@ -47,6 +47,7 @@ SECTION .text
 
 	%ifdef INCLUDE_MENU_DIALOGS
 		%include "Dialog.asm"
+		%include "DialogDrive.asm"
 		%include "DialogFile.asm"
 		%include "DialogMessage.asm"
 		%include "DialogProgress.asm"
@@ -72,6 +73,7 @@ SECTION .text
 %ifdef INCLUDE_UTIL_LIBRARY
 	%include "Bit.asm"
 	%include "Memory.asm"
+	%include "Registers.asm"
 	%include "Size.asm"
 	%include "Sort.asm"
 %endif

@@ -1,7 +1,7 @@
 ; File name		:	Sort.asm
 ; Project name	:	Assembly Library
 ; Created date	:	28.9.2010
-; Last update	:	1.10.2010
+; Last update	:	24.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Sorting algorithms
 
@@ -229,13 +229,13 @@ SwapItemsFromIndexesAXandDX:
 	call	CopyItemFromDSSItoESDI
 
 	; Item DX to Item AX
-	call	Memory_ExchangeDSSIwithESDI
+	call	Registers_ExchangeDSSIwithESDI
 	call	GetItemPointerToDSSIfromIndexInDX
 	call	CopyItemFromDSSItoESDI
 
 	; Stack to Item DX
 	call	GetPointerToTemporaryItemToESDI
-	call	Memory_ExchangeDSSIwithESDI
+	call	Registers_ExchangeDSSIwithESDI
 	call	CopyItemFromDSSItoESDI
 
 	pop		di

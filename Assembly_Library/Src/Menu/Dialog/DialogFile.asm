@@ -1,7 +1,7 @@
 ; File name		:	DialogFile.asm
 ; Project name	:	Assembly Library
 ; Created date	:	6.9.2010
-; Last update	:	13.10.2010
+; Last update	:	24.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Displays file dialog.
 
@@ -48,7 +48,7 @@ FileEventHandler:
 ALIGN JUMP_ALIGN
 .ItemSelectedFromCX:
 	call	LoadItemStringBufferToESDI
-	call	Memory_CopyESDItoDSSI
+	call	Registers_CopyESDItoDSSI
 	call	ItemLineSplitter_GetLineToDSSIandLengthToCXfromStringInDSSIwithIndexInCX
 	jmp		ParseSelectionFromItemLineInDSSI
 
@@ -112,9 +112,9 @@ iend
 
 
 ;--------------------------------------------------------------------
+; ReInitializeMenuinitFromSSBP
 ; InitializeMenuinitFromSSBP
 ;	Parameters:
-;		DS:SI:		Ptr to MENUINIT to initialize (also points to DIALOG)
 ;		SS:BP:		Ptr to DIALOG
 ;	Returns:
 ;		Nothing
@@ -122,13 +122,16 @@ iend
 ;		All, except BP
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
+ReInitializeMenuinitFromSSBP:
+	call	DisplayLoadingMessageInInformationArea
 InitializeMenuinitFromSSBP:
 	call	LoadItemStringBufferToESDI
 	call	CreateStringFromCurrentDirectoryContentsToESDI
 	call	LoadItemStringBufferToESDI
 	call	SortDirectoryContentsStringFromESDIwithCountInCX
 	call	RemoveLastLFandTerminateESDIwithNull
-	call	Memory_CopySSBPtoDSSI
+
+	call	Registers_CopySSBPtoDSSI
 	xor		ax, ax
 	call	Dialog_EventInitializeMenuinitFromDSSIwithHighlightedItemInAX
 	call	GetInfoLinesToCXandDialogFlagsToAX
@@ -198,7 +201,7 @@ CreateStringFromCurrentDirectoryContentsToESDI:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 .ClearDLifInRootDirectory:
-	call	Memory_CopyESDItoDSSI
+	call	Registers_CopyESDItoDSSI
 	call	Directory_WriteCurrentPathToDSSI
 	mov		dl, [si]
 	ret
@@ -374,7 +377,7 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 SortDirectoryContentsStringFromESDIwithCountInCX:
-	call	Memory_CopyESDItoDSSI
+	call	Registers_CopyESDItoDSSI
 	call	.AddDirectoryContentsStringLengthToDI
 	mov		bx, .FileStringComparator
 	xchg	dx, cx
@@ -430,6 +433,23 @@ ALIGN JUMP_ALIGN
 .ForceValueFromDSSItoBeLess:
 	cmp		bh, bl
 	jmp		SHORT .ReturnFromComparison
+
+
+;--------------------------------------------------------------------
+; RemoveLastLFandTerminateESDIwithNull
+;	Parameters:
+;		ES:DI:	Ptr to end of buffer to terminate
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+RemoveLastLFandTerminateESDIwithNull:
+	dec		di
+	xor		ax, ax
+	stosb
+	ret
 
 
 ;--------------------------------------------------------------------
@@ -546,7 +566,7 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 RefreshFilesToDisplay:
-	call	InitializeMenuinitFromSSBP
+	call	ReInitializeMenuinitFromSSBP
 	jmp		MenuInit_RefreshMenuWindow
 
 
@@ -660,119 +680,68 @@ HandleFunctionKeyForDriveChange:
 	test	al, FLG_FILEDIALOG_DRIVES
 	jz		SHORT ReturnWithoutHandlingKeystroke
 
-	call	.ShowDriveSelectionDialogAndGetDriveNumberToDL
-	jnc		SHORT RefreshFilesToDisplay
-	call	Drive_SetDefaultFromDL
-	jmp		SHORT RefreshFilesToDisplay
+	call	DisplayLoadingMessageInInformationArea
+	mov		cx, DRIVE_DIALOG_IO_size
+	call	Memory_ReserveCXbytesFromStackToDSSI
+	call	.DisplayDriveSelectionDialogWithIoInDSSI
+	call	.ChangeDriveToUserSelectionFromIoInDSSI
+	add		sp, BYTE DRIVE_DIALOG_IO_size
+	ret
 
 ;--------------------------------------------------------------------
-; .ShowDriveSelectionDialogAndGetDriveNumberToDL
+; .DisplayDriveSelectionDialogWithIoInDSSI
 ;	Parameters:
+;		DS:SI:	Ptr to uninitialized DRIVE_DIALOG_IO
 ;		SS:BP:	Ptr to DIALOG
 ;	Returns:
-;		DL:		Drive selected by user
-;		CF:		Set if new drive selected
-;				Cleared if selection cancelled by user
+;		DS:SI:	Ptr to DRIVE_DIALOG_IO
+;	Corrupts registers:
+;		AX, DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+.DisplayDriveSelectionDialogWithIoInDSSI:
+	call	InitializeNullStringsToDialogInputInDSSI
+	mov		WORD [si+DIALOG_INPUT.fszTitle], g_szSelectNewDrive
+	CALL_MENU_LIBRARY GetDriveWithIoInDSSI
+	ret
+
+;--------------------------------------------------------------------
+; .ChangeDriveToUserSelectionFromIoInDSSI
+;	Parameters:
+;		DS:SI:	Ptr to DRIVE_DIALOG_IO
+;		SS:BP:	Ptr to DIALOG
+;	Returns:
+;		Nothing
 ;	Corrupts registers:
 ;		All, except BP
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-.ShowDriveSelectionDialogAndGetDriveNumberToDL:
-	mov		cx, DIALOG_INPUT_size
-	call	Memory_ReserveCXbytesFromStackToDSSI
-	call	.InitializeDialogInputInDSSIforDriveSelection
-	call	DialogSelection_GetSelectionToAXwithInputInDSSI
-	add		sp, BYTE DIALOG_INPUT_size
-	cmp		ax, BYTE NO_ITEM_SELECTED	; Clear CF if equal
-	jne		SHORT .ConvertDriveNumberToDLfromItemIndexInAX
-	ret
+.ChangeDriveToUserSelectionFromIoInDSSI:
+	cmp		BYTE [si+DRIVE_DIALOG_IO.bUserCancellation], FALSE
+	jne		SHORT .UserCancelledDriveChange
 
-ALIGN JUMP_ALIGN
-.InitializeDialogInputInDSSIforDriveSelection:
-	call	InitializeNullStringsToDialogInputInDSSI
-	call	LoadItemStringBufferToESDI
-	mov		WORD [si+DIALOG_INPUT.fszTitle], g_szSelectNewDrive
-	mov		[si+DIALOG_INPUT.fszItems], di
-	mov		[si+DIALOG_INPUT.fszItems+2], es
-	call	Drive_GetFlagsForAvailableDrivesToDXAX
-	; Fall to .GenerateDriveSelectionStringToESDIfromDriveFlagsInDXAX
-
-;--------------------------------------------------------------------
-; .GenerateDriveSelectionStringToESDIfromDriveFlagsInDXAX
-;	Parameters:
-;		DX:AX:	Drive letter flags
-;		ES:DI:	Ptr to item string buffer
-;		SS:BP:	Ptr to DIALOG
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, BX, CX, DX, DI, ES
-;--------------------------------------------------------------------
-;ALIGN JUMP_ALIGN
-.GenerateDriveSelectionStringToESDIfromDriveFlagsInDXAX:
-	cld
-	xchg	cx, ax
-	mov		ax, 3A41h		; A:
-ALIGN JUMP_ALIGN
-.BitShiftLoop:
-	shr		dx, 1
-	rcr		cx, 1
-	jnc		SHORT .CheckIfMoreDrivesLeft
-	stosw
-	mov		BYTE [es:di], LF
-	inc		di
-ALIGN JUMP_ALIGN
-.CheckIfMoreDrivesLeft:
-	inc		ax				; Next drive letter
-	mov		bx, dx
-	or		bx, cx
-	jnz		SHORT .BitShiftLoop
-	jmp		SHORT TerminateESDIwithNull
-
-;--------------------------------------------------------------------
-; .ConvertDriveNumberToDLfromItemIndexInAX
-;	Parameters:
-;		AX:		Selected drive item	
-;	Returns:
-;		DL:		Drive number
-;		CF:		Set since drive selected
-;	Corrupts registers:
-;		AX, CX, DH
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-.ConvertDriveNumberToDLfromItemIndexInAX:
-	mov		ah, -1
-	xchg	cx, ax
-	call	Drive_GetFlagsForAvailableDrivesToDXAX
-ALIGN JUMP_ALIGN
-.BitScanLoop:
-	shr		dx, 1
-	rcr		ax, 1
-	inc		ch				; Increment drive number
-	sbb		cl, 0			; Decrement selection index
-	jnc		SHORT .BitScanLoop
-	mov		dl, ch
-	stc						; Drive selected by user
+	mov		dl, [si+DRIVE_DIALOG_IO.bReturnDriveNumber]
+	call	Drive_SetDefaultFromDL
+	jmp		RefreshFilesToDisplay
+.UserCancelledDriveChange:
 	ret
 
 
 ;--------------------------------------------------------------------
-; RemoveLastLFandTerminateESDIwithNull
-; TerminateESDIwithNull
+; DisplayLoadingMessageInInformationArea
 ;	Parameters:
-;		ES:DI:	Ptr to end of buffer to terminate
+;		SS:BP:		Ptr to DIALOG
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX
+;		AX, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-RemoveLastLFandTerminateESDIwithNull:
-	dec		di
-ALIGN JUMP_ALIGN
-TerminateESDIwithNull:
-	xor		ax, ax
-	stosb
+DisplayLoadingMessageInInformationArea:
+	call	MenuText_ClearInformationArea
+	call	MenuText_PrepareToDrawInformationArea
+	mov		si, g_szLoadingPleaseWait
+	CALL_DISPLAY_LIBRARY PrintNullTerminatedStringFromCSSI
 	ret
 
 
