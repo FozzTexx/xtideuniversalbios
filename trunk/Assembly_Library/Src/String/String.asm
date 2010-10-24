@@ -1,7 +1,7 @@
 ; File name		:	String.asm
 ; Project name	:	Assembly Library
 ; Created date	:	12.7.2010
-; Last update	:	13.10.2010
+; Last update	:	24.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for handling characters.
 
@@ -105,12 +105,12 @@ String_GetLengthFromDSSItoCX:
 	push	ax
 	push	si
 
-	call	Memory_ExchangeDSSIwithESDI
+	call	Registers_ExchangeDSSIwithESDI
 	xor		ax, ax		; Find NULL
 	mov		cx, -1		; Full segment if necessary
 	repne scasb
 	mov		cx, di
-	call	Memory_ExchangeDSSIwithESDI
+	call	Registers_ExchangeDSSIwithESDI
 
 	pop		si
 	stc

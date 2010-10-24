@@ -1,7 +1,7 @@
 ; File name		:	StringsForDialogs.asm
 ; Project name	:	Assembly Library
 ; Created date	:	14.9.2010
-; Last update	:	1.10.2010
+; Last update	:	23.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Strings used by dialogs.
 
@@ -10,6 +10,9 @@ g_szTimeElapsed:		db	"Time elapsed  :",NULL
 g_szTimeLeft:			db	"Estimated left:",NULL
 g_szTimeFormat:			db	" %2-u min %2-u sec",LF,CR,NULL
 
+; Strings for Drive Dialog
+g_szDriveFormat:		db	"%c:",NULL
+
 ; Strings for File Dialog
 g_szChangeDrive:		db	"F2 Change Drive",LF,CR,NULL
 g_szSelectDirectory:	db	"F3 Select Current Directory",LF,CR,NULL
@@ -17,6 +20,8 @@ g_szCreateNew:			db	"F4 Input new File or Directory",NULL
 
 g_szSelectNewDrive:
 	db		"Select new drive.",NULL
+g_szLoadingPleaseWait:
+	db		"Loading. Please wait...",NULL
 
 g_szEnterNewFileOrDirectory:
 	db		"Enter name for new file or directory.",NULL

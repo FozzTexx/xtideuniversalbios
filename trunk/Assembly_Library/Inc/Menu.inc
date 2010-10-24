@@ -1,7 +1,7 @@
 ; File name		:	Menu.inc
 ; Project name	:	Assembly Library
 ; Created date	:	13.7.2010
-; Last update	:	12.10.2010
+; Last update	:	23.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Defines for Menu library.
 %ifndef MENU_INC
@@ -86,6 +86,7 @@ struc MENU_LIB
 	.GetWordWithIoInDSSI							resb	2
 	.GetStringWithIoInDSSI							resb	2
 	.GetFileNameWithIoInDSSI						resb	2
+	.GetDriveWithIoInDSSI							resb	2
 %endif
 endstruc
 

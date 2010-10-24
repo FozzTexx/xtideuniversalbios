@@ -1,7 +1,7 @@
 ; File name		:	Menu.asm
 ; Project name	:	Assembly Library
 ; Created date	:	3.8.2010
-; Last update	:	7.10.2010
+; Last update	:	23.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Menu Library functions for CALL_MENU_LIBRARY macro
 ;					that users should use to make library call.
@@ -68,5 +68,6 @@ istruc MENU_LIB
 	at	MENU_LIB.GetWordWithIoInDSSI,							dw	DialogWord_GetWordWithIoInDSSI
 	at	MENU_LIB.GetStringWithIoInDSSI,							dw	DialogString_GetStringWithIoInDSSI
 	at	MENU_LIB.GetFileNameWithIoInDSSI,						dw	DialogFile_GetFileNameWithIoInDSSI
+	at	MENU_LIB.GetDriveWithIoInDSSI,							dw	DialogDrive_GetDriveWithIoInDSSI
 %endif
 iend

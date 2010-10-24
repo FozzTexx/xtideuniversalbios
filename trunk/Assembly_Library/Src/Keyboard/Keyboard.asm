@@ -1,7 +1,7 @@
 ; File name		:	Keyboard.asm
 ; Project name	:	Assembly Library
 ; Created date	:	5.7.2010
-; Last update	:	12.10.2010
+; Last update	:	24.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for managing keyboard.
 
@@ -33,15 +33,15 @@ Keyboard_ReadUserInputtedWordWhilePrinting:
 	call	Memory_ReserveCXbytesFromStackToDSSI
 
 	call	Char_GetFilterFunctionToDXforNumericBaseInBX
-	call	Memory_ExchangeDSSIwithESDI
+	call	Registers_ExchangeDSSIwithESDI
 	call	Keyboard_ReadUserInputtedStringToESDIWhilePrinting
-	call	Memory_ExchangeDSSIwithESDI	; Does not modify FLAGS
+	call	Registers_ExchangeDSSIwithESDI	; Does not modify FLAGS
 	jz		SHORT .CancelledByUser
 
 	call	String_ConvertWordToAXfromStringInDSSIwithBaseInBX
 .CancelledByUser:
 	add		sp, BYTE BUFFER_SIZE_FOR_WORD_INPUT
-	test	cx, cx					; Set ZF if string length is zero
+	test	cx, cx							; Set ZF if string length is zero
 	pop		cx
 	pop		si
 	pop		ds

@@ -1,7 +1,7 @@
 ; File name		:	Memory.asm
 ; Project name	:	Assembly Library
 ; Created date	:	14.7.2010
-; Last update	:	11.10.2010
+; Last update	:	24.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for memory access.
 
@@ -69,7 +69,7 @@ Memory_ZeroSSBPwithSizeInCX:
 	push	es
 	push	di
 	push	ax
-	call	Memory_CopySSBPtoESDI
+	call	Registers_CopySSBPtoESDI
 	call	Memory_ZeroESDIwithSizeInCX
 	pop		ax
 	pop		di
@@ -105,84 +105,6 @@ Memory_ZeroESDIwithSizeInCX:
 ALIGN JUMP_ALIGN
 Memory_StoreCXbytesFromAccumToESDI:
 	OPTIMIZE_STRING_OPERATION rep, stos
-	ret
-
-
-;--------------------------------------------------------------------
-; Memory_ExchangeDSSIwithESDI
-;	Parameters
-;		Nothing
-;	Returns:
-;		DS:SI and ES:DI are exchanged.
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-Memory_ExchangeDSSIwithESDI:
-	push	ds
-	push	es
-	pop		ds
-	pop		es
-	xchg	si, di
-	ret
-
-
-;--------------------------------------------------------------------
-; Memory_CopySSBPtoESDI
-; Memory_CopySSBPtoDSSI
-; Memory_CopyDSSItoESDI
-; Memory_CopyESDItoDSSI
-;	Parameters
-;		Nothing
-;	Returns:
-;		Copies farm pointer to different segment/pointer register pair
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-Memory_CopySSBPtoESDI:
-	push	ss
-	pop		es
-	mov		di, bp
-	ret
-
-ALIGN JUMP_ALIGN
-Memory_CopySSBPtoDSSI:
-	push	ss
-	pop		ds
-	mov		si, bp
-	ret
-
-ALIGN JUMP_ALIGN
-Memory_CopyDSSItoESDI:
-	push	ds
-	pop		es
-	mov		di, si
-	ret
-
-ALIGN JUMP_ALIGN
-Memory_CopyESDItoDSSI:
-	push	es
-	pop		ds
-	mov		si, di
-	ret
-
-
-;--------------------------------------------------------------------
-; Memory_SetZFifNullPointerInDSSI
-;	Parameters
-;		DS:SI:	Far pointer
-;	Returns:
-;		ZF:		Set if NULL pointer in DS:SI
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-Memory_SetZFifNullPointerInDSSI:
-	push	ax
-	mov		ax, ds
-	or		ax, si
-	pop		ax
 	ret
 
 
