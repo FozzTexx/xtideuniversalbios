@@ -1,7 +1,7 @@
 ; File name		:	DisplayCharOut.asm
 ; Project name	:	Assembly Library
 ; Created date	:	26.6.2010
-; Last update	:	8.10.2010
+; Last update	:	24.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for outputting characters to video memory.
 ;					These functions are meant to be called by Display_CharacterFromAL
@@ -116,7 +116,7 @@ DisplayCharOut_CharacterWithAttribute:
 ;		AL:		Character to output
 ;		DS:		BDA segment (zero)
 ;		ES:DI:	Ptr to destination string buffer
-;		DISPLAY_CONTEXT.wCharOutParam:	Offset to end of buffer (one past last)
+;		DISPLAY_CONTEXT.wCharOutParam:	Characters left in buffer
 ;	Returns:
 ;		ES:DI:	Updated for next character
 ;	Corrupts registers:
@@ -124,8 +124,9 @@ DisplayCharOut_CharacterWithAttribute:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 DisplayCharOut_WriteCharacterToBuffer:
-	cmp		di, [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.wCharOutParam]
-	jae		SHORT .BufferFull
+	cmp		WORD [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.wCharOutParam], BYTE 0
+	je		SHORT .BufferFull
 	stosb
+	dec		WORD [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.wCharOutParam]
 .BufferFull:
 	ret
