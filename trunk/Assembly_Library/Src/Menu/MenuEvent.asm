@@ -33,8 +33,8 @@ MenuEvent_InitializeMenuinit:
 ;	Parameters
 ;		SS:BP:	Ptr to MENU
 ;	Returns:
-;		CF:		Set if event processed
-;				Cleared if event not processed
+;		CF:		Set to exit from menu
+;				Cleared to cancel exit
 ;	Corrupts registers:
 ;		AX, BX, DX
 ;--------------------------------------------------------------------

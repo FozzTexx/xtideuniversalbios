@@ -1,7 +1,7 @@
 ; File name		:	Dialog.asm
 ; Project name	:	Assembly Library
 ; Created date	:	6.8.2010
-; Last update	:	12.10.2010
+; Last update	:	18.11.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Common functions for many dialogs.
 
@@ -62,6 +62,7 @@ Dialog_EventNotHandled:
 
 ;--------------------------------------------------------------------
 ; Dialog_EventAnyThatClosesDialog
+; Dialog_EventExitMenu
 ;	Parameters:
 ;		SS:BP:	Ptr to DIALOG
 ;	Returns:
@@ -72,6 +73,8 @@ Dialog_EventNotHandled:
 ALIGN JUMP_ALIGN
 Dialog_EventAnyThatClosesDialog:
 	call	MenuInit_CloseMenuWindow
+ALIGN JUMP_ALIGN
+Dialog_EventExitMenu:
 	stc
 	ret
 

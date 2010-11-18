@@ -1,7 +1,7 @@
 ; File name		:	DialogWord.asm
 ; Project name	:	Assembly Library
 ; Created date	:	10.8.2010
-; Last update	:	12.10.2010
+; Last update	:	18.11.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Displays word input dialog.
 
@@ -61,7 +61,7 @@ ALIGN WORD_ALIGN
 .rgfnEventHandlers:
 istruc MENUEVENT
 	at	MENUEVENT.InitializeMenuinitFromDSSI,	dw	.InitializeMenuinitFromDSSI
-	at	MENUEVENT.ExitMenu,						dw	Dialog_EventNotHandled
+	at	MENUEVENT.ExitMenu,						dw	Dialog_EventExitMenu
 	at	MENUEVENT.IdleProcessing,				dw	.IdleProcessing
 	at	MENUEVENT.ItemHighlightedFromCX,		dw	Dialog_EventNotHandled
 	at	MENUEVENT.ItemSelectedFromCX,			dw	Dialog_EventNotHandled
