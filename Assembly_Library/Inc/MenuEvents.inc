@@ -1,7 +1,7 @@
 ; File name		:	MenuEvents.inc
 ; Project name	:	Assembly Library
 ; Created date	:	13.7.2010
-; Last update	:	5.10.2010
+; Last update	:	18.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Defines for Menu events send to the user.
 %ifndef MENUEVENTS_INC
@@ -27,6 +27,9 @@ struc MENUEVENT
 
 	; Parameters:
 	;	None
+	; Returns:
+	;	CF:			Set to exit menu
+	;				Clear to cancel exit
 	.ExitMenu						resb	2
 
 	; Parameters:

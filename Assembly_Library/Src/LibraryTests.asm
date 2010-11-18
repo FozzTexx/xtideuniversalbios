@@ -135,7 +135,7 @@ ALIGN JUMP_ALIGN
 
 ALIGN WORD_ALIGN
 .rgfnSelectionHandler:
-	dw		.ExitMenu
+	dw		.ExitMenuByItem
 	dw		.ToggleTitle
 	dw		.ToggleInfo
 	dw		.ShowMessageDialogWithUnformattedText
@@ -147,8 +147,9 @@ ALIGN WORD_ALIGN
 
 
 ALIGN JUMP_ALIGN
-.ExitMenu:
+.ExitMenuByItem:
 	CALL_MENU_LIBRARY Close
+.ExitMenuByMenuLibrary:
 	stc
 	ret
 
@@ -316,15 +317,15 @@ ALIGN JUMP_ALIGN
 
 ALIGN WORD_ALIGN
 .rgfnMenuEvents:
-	dw		.InitializeMenu		; .InitializeMenuinitToDSSI
-	dw		.NotHandled			; .ExitMenu
-	dw		.NotHandled			; .IdleProcessing
-	dw		.NotHandled			; .ItemHighlightedFromCX
-	dw		.ItemSelectedFromCX	; .ItemSelectedFromCX
-	dw		.NotHandled			; .KeyStrokeInDX
-	dw		.RefreshTitle		; .RefreshTitle
-	dw		.RefreshInformation	; .RefreshInformation
-	dw		.RefreshItemFromCX	; .RefreshItemFromCX
+	dw		.InitializeMenu			; .InitializeMenuinitToDSSI
+	dw		.ExitMenuByMenuLibrary	; .ExitMenu
+	dw		.NotHandled				; .IdleProcessing
+	dw		.NotHandled				; .ItemHighlightedFromCX
+	dw		.ItemSelectedFromCX		; .ItemSelectedFromCX
+	dw		.NotHandled				; .KeyStrokeInDX
+	dw		.RefreshTitle			; .RefreshTitle
+	dw		.RefreshInformation		; .RefreshInformation
+	dw		.RefreshItemFromCX		; .RefreshItemFromCX
 
 .rgszItems:
 	dw		.szExitMenu

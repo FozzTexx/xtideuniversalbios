@@ -1,7 +1,7 @@
 ; File name		:	DialogDrive.asm
 ; Project name	:	Assembly Library
 ; Created date	:	22.10.2010
-; Last update	:	23.10.2010
+; Last update	:	18.11.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Displays drive dialog.
 
@@ -90,7 +90,7 @@ ALIGN JUMP_ALIGN
 .rgfnEventHandlers:
 istruc MENUEVENT
 	at	MENUEVENT.InitializeMenuinitFromDSSI,	dw	.InitializeMenuinitFromDSSI
-	at	MENUEVENT.ExitMenu,						dw	Dialog_EventNotHandled
+	at	MENUEVENT.ExitMenu,						dw	Dialog_EventExitMenu
 	at	MENUEVENT.IdleProcessing,				dw	Dialog_EventNotHandled
 	at	MENUEVENT.ItemHighlightedFromCX,		dw	Dialog_EventNotHandled
 	at	MENUEVENT.ItemSelectedFromCX,			dw	.ItemSelectedFromCX

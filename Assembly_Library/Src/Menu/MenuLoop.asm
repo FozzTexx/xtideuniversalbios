@@ -1,7 +1,7 @@
 ; File name		:	MenuLoop.asm
 ; Project name	:	Assembly Library
 ; Created date	:	22.7.2010
-; Last update	:	12.10.2010
+; Last update	:	18.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Menu loop for waiting keystrokes.
 
@@ -19,37 +19,41 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MenuLoop_Enter:
-	test	BYTE [bp+MENU.bFlags], FLG_MENU_EXIT
-	jnz		SHORT .ExitMenu
+	call	KeystrokeProcessing
+	call	TimeoutProcessing
 	call	IdleTimeProcessing
-
-	call	MenuTime_UpdateSelectionTimeout
-	mov		ah, MENU_KEY_ENTER			; Fake ENTER to select item
-	jc		SHORT .ProcessFakedKeystrokeCausedByTimeout
-
-	call	Keyboard_GetKeystrokeToAX
+	test	BYTE [bp+MENU.bFlags], FLG_MENU_EXIT
 	jz		SHORT MenuLoop_Enter
-.ProcessFakedKeystrokeCausedByTimeout:
-	call	ProcessKeystrokeFromAX
-	jmp		SHORT MenuLoop_Enter
-
-ALIGN JUMP_ALIGN
-.ExitMenu:
-	jmp		MenuEvent_ExitMenu
+	ret
 
 
 ;--------------------------------------------------------------------
 ; IdleTimeProcessing
+; TimeoutProcessing
+; KeystrokeProcessing
 ;	Parameters
 ;		SS:BP:	Ptr to MENU
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, BX, DX
+;		All, except SS:BP
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 IdleTimeProcessing:
-	jmp		MenuEvent_IdleProcessing	; User idle processing
+	jmp		MenuEvent_IdleProcessing		; User idle processing
+
+ALIGN JUMP_ALIGN
+TimeoutProcessing:
+	call	MenuTime_UpdateSelectionTimeout
+	mov		ah, MENU_KEY_ENTER				; Fake ENTER to select item
+	jc		SHORT ProcessKeystrokeFromAX	; Process faked ENTER
+	ret
+
+ALIGN JUMP_ALIGN
+KeystrokeProcessing:
+	call	Keyboard_GetKeystrokeToAX
+	jnz		SHORT ProcessKeystrokeFromAX
+	ret
 
 
 ;--------------------------------------------------------------------
@@ -100,8 +104,11 @@ ALIGN JUMP_ALIGN
 
 ALIGN JUMP_ALIGN
 .LeaveMenuWithoutSelectingItem:
+	call	MenuEvent_ExitMenu
+	jnc		SHORT .CancelMenuExit
 	call	MenuInit_CloseMenuWindow
 	mov		WORD [bp+MENUINIT.wHighlightedItem], NO_ITEM_HIGHLIGHTED
+.CancelMenuExit:
 	stc
 	ret
 

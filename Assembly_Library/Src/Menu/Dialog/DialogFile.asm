@@ -1,7 +1,7 @@
 ; File name		:	DialogFile.asm
 ; Project name	:	Assembly Library
 ; Created date	:	6.9.2010
-; Last update	:	24.10.2010
+; Last update	:	18.11.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Displays file dialog.
 
@@ -100,7 +100,7 @@ ALIGN WORD_ALIGN
 .rgfnEventHandlers:
 istruc MENUEVENT
 	at	MENUEVENT.InitializeMenuinitFromDSSI,	dw	InitializeMenuinitFromSSBP
-	at	MENUEVENT.ExitMenu,						dw	Dialog_EventNotHandled
+	at	MENUEVENT.ExitMenu,						dw	Dialog_EventExitMenu
 	at	MENUEVENT.IdleProcessing,				dw	Dialog_EventNotHandled
 	at	MENUEVENT.ItemHighlightedFromCX,		dw	Dialog_EventNotHandled
 	at	MENUEVENT.ItemSelectedFromCX,			dw	.ItemSelectedFromCX
