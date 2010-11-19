@@ -1,7 +1,7 @@
 ; File name		:	IdeControllerMenu.asm
 ; Project name	:	XTIDE Universal BIOS Configurator v2
 ; Created date	:	2.11.2010
-; Last update	:	3.11.2010
+; Last update	:	18.11.2010
 ; Author		:	Tomi Tilli
 ; Description	:	"IDE Controller" menu structs and functions.
 
@@ -12,6 +12,7 @@ ALIGN WORD_ALIGN
 g_MenupageForIdeControllerMenu:
 istruc MENUPAGE
 	at	MENUPAGE.fnEnter,			dw	IdeControllerMenu_EnterMenuOrModifyItemVisibility
+	at	MENUPAGE.fnBack,			dw	ConfigurationMenu_EnterMenuOrModifyItemVisibility
 	at	MENUPAGE.wMenuitems,		dw	8
 iend
 
@@ -48,7 +49,7 @@ iend
 g_MenuitemIdeControllerBusType:
 istruc MENUITEM
 	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiseSelectionForMenuitemInDSSI
-	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromItemInDSSI
+	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromShiftedItemInDSSI
 	at	MENUITEM.szName,			dw	g_szItemIdeBusType
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoIdeBusType
 	at	MENUITEM.szHelp,			dw	g_szNfoIdeBusType
@@ -94,7 +95,7 @@ iend
 g_MenuitemIdeControllerEnableInterrupt:
 istruc MENUITEM
 	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiseSelectionForMenuitemInDSSI
-	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromItemInDSSI
+	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromShiftedItemInDSSI
 	at	MENUITEM.szName,			dw	g_szItemIdeEnIRQ
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoIdeEnIRQ
 	at	MENUITEM.szHelp,			dw	g_szHelpIdeEnIRQ

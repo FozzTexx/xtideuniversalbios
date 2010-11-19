@@ -1,34 +1,12 @@
 ; File name		:	Menuitem.asm
 ; Project name	:	XTIDE Universal BIOS Configurator v2
 ; Created date	:	5.10.2010
-; Last update	:	2.11.2010
+; Last update	:	19.11.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for accessing MENUITEM structs.
 
 ; Section containing code
 SECTION .text
-
-;--------------------------------------------------------------------
-; Menuitem_SetVisibleFromDSSI
-; Menuitem_SetInvisibleFromDSSI
-;	Parameters:
-;		DS:SI:	Ptr to MENUITEM
-;	Returns: (Menuitem_IsVisibleFromDSSI only)
-;		ZF:		Clear if visible
-;				Set if not visible
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-Menuitem_SetVisibleFromDSSI:
-	or		BYTE [si+MENUITEM.bFlags], FLG_MENUITEM_VISIBLE
-	ret
-
-ALIGN JUMP_ALIGN
-Menuitem_SetInvisibleFromDSSI:
-	and		BYTE [si+MENUITEM.bFlags], ~FLG_MENUITEM_VISIBLE
-	ret
-
 
 ;--------------------------------------------------------------------
 ; Menuitem_DisplayHelpMessageFromDSSI
@@ -172,7 +150,7 @@ Menuitem_StoreValueFromAXtoMenuitemInDSSI:
 	cmp		bl, TYPE_MENUITEM_HEX
 	ja		SHORT .InvalidItemType
 
-	call	Buffers_GetFileBufferToESDI
+	call	GetConfigurationBufferToESDIforMenuitemInDSSI
 	add		di, [si+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset]
 	jmp		[cs:bx+.rgfnJumpToStoreValueBasedOnItemType]
 .InvalidItemType:
@@ -258,7 +236,10 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 .SetUnsavedChanges:
+	test	BYTE [si+MENUITEM.bFlags], FLG_MENUITEM_PROGRAMVAR
+	jnz		SHORT .NoUnsavedChangesForProgramVariables
 	call	Buffers_SetUnsavedChanges
+.NoUnsavedChangesForProgramVariables:
 	test	BYTE [si+MENUITEM.bFlags], FLG_MENUITEM_MODIFY_MENU
 	jnz		SHORT .ModifyItemVisibility
 	CALL_MENU_LIBRARY RefreshTitle
@@ -290,12 +271,22 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Menuitem_GetValueToAXfromMenuitemInDSSI:
-	mov		bx, [si+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset]
-	call	Buffers_GetRomvarsValueToAXfromOffsetInBX
+	call	.GetMenuitemValueToAX
 	test	BYTE [si+MENUITEM.bFlags], FLG_MENUITEM_BYTEVALUE
 	jnz		SHORT .ConvertWordToByteValue
 	test	BYTE [si+MENUITEM.bFlags], FLG_MENUITEM_FLAGVALUE
 	jnz		SHORT .ConvertWordToFlagValue
+	ret
+
+ALIGN JUMP_ALIGN
+.GetMenuitemValueToAX:
+	push	es
+	push	di
+	call	GetConfigurationBufferToESDIforMenuitemInDSSI
+	add		di, [si+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset]
+	mov		ax, [es:di]
+	pop		di
+	pop		es
 	ret
 
 ALIGN JUMP_ALIGN
@@ -312,4 +303,26 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 .ReturnTrue:
 	mov		ax, TRUE<<1		; Shift for lookup
+	ret
+
+
+;--------------------------------------------------------------------
+; GetConfigurationBufferToESDIforMenuitemInDSSI
+;	Parameters:
+;		DS:SI:	Ptr to MENUITEM
+;	Returns:
+;		ES:DI:	Ptr to configuration buffer
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+GetConfigurationBufferToESDIforMenuitemInDSSI:
+	test	BYTE [si+MENUITEM.bFlags], FLG_MENUITEM_PROGRAMVAR
+	jnz		SHORT .ReturnCfgvarsInESDI
+	jmp		Buffers_GetFileBufferToESDI
+ALIGN JUMP_ALIGN
+.ReturnCfgvarsInESDI:
+	push	cs
+	pop		es
+	mov		di, g_cfgVars
 	ret

@@ -1,7 +1,7 @@
 ; File name		:	MasterSlaveMenu.asm
 ; Project name	:	XTIDE Universal BIOS Configurator v2
 ; Created date	:	3.11.2010
-; Last update	:	3.11.2010
+; Last update	:	18.11.2010
 ; Author		:	Tomi Tilli
 ; Description	:	"Master/Slave Drive" menu structs and functions.
 
@@ -12,6 +12,7 @@ ALIGN WORD_ALIGN
 g_MenupageForMasterSlaveMenu:
 istruc MENUPAGE
 	at	MENUPAGE.fnEnter,			dw	MasterSlaveMenu_EnterMenuOrModifyItemVisibility
+	at	MENUPAGE.fnBack,			dw	IdeControllerMenu_EnterMenuOrModifyItemVisibility
 	at	MENUPAGE.wMenuitems,		dw	6
 iend
 
@@ -28,7 +29,7 @@ iend
 g_MenuitemMasterSlaveBlockModeTransfers:
 istruc MENUITEM
 	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiseSelectionForMenuitemInDSSI
-	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromItemInDSSI
+	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromShiftedItemInDSSI
 	at	MENUITEM.szName,			dw	g_szItemDrvBlockMode
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoDrvBlockMode
 	at	MENUITEM.szHelp,			dw	g_szHelpDrvBlockMode
@@ -44,7 +45,7 @@ iend
 g_MenuitemMasterSlaveUserCHS:
 istruc MENUITEM
 	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiseSelectionForMenuitemInDSSI
-	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromItemInDSSI
+	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromShiftedItemInDSSI
 	at	MENUITEM.szName,			dw	g_szItemDrvUserCHS
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoDrvUserCHS
 	at	MENUITEM.szHelp,			dw	g_szHelpDrvUserCHS

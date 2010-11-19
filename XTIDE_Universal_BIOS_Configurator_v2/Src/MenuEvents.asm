@@ -1,7 +1,7 @@
 ; File name		:	MenuEvents.asm
 ; Project name	:	XTIDE Universal BIOS Configurator v2
 ; Created date	:	5.10.2010
-; Last update	:	6.10.2010
+; Last update	:	18.10.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Menu event handling.
 
@@ -19,8 +19,6 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MenuEvents_DisplayMenu:
-	mov		ax, g_MenupageForMainMenu
-	mov		dx, ds
 	mov		bx, MenuEventHandler
 	CALL_MENU_LIBRARY DisplayWithHandlerInBXandUserDataInDXAX
 	ret
@@ -87,8 +85,27 @@ ALIGN JUMP_ALIGN
 
 ; Parameters:
 ;	None
+; Returns:
+;	CF:		Set to exit menu
+;			Clear to cancel exit
 ALIGN JUMP_ALIGN
 .ExitMenu:
+	call	Menupage_GetActiveMenupageToDSDI
+	mov		si, [di+MENUPAGE.fnBack]
+	cmp		si, ExitToDos
+	je		SHORT .QuitProgram
+	call	si					; Back to previous menu
+	clc
+	ret
+
+ALIGN JUMP_ALIGN
+.QuitProgram:
+	call	Dialogs_DisplayQuitDialog
+	jz		SHORT .ExitToDOS
+	clc
+	ret
+.ExitToDOS:
+	call	Buffers_SaveChangesIfFileLoaded
 	stc
 	ret
 
@@ -121,8 +138,11 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 .KeyStrokeInAX:
 	cmp		ah, KEY_DISPLAY_ITEM_HELP
-	jne		SHORT .EventNotHandled
+	je		SHORT .DisplayHelp
+	jmp		SHORT .EventNotHandled
 
+ALIGN JUMP_ALIGN
+.DisplayHelp:
 	call	Menupage_GetActiveMenupageToDSDI
 	CALL_MENU_LIBRARY GetHighlightedItemToAX
 	xchg	cx, ax

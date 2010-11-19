@@ -1,7 +1,7 @@
 ; File name		:	MenuStructs.inc
 ; Project name	:	XTIDE Universal BIOS Configurator v2
 ; Created date	:	5.10.2010
-; Last update	:	2.11.2010
+; Last update	:	18.11.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Menu page and item structs.
 %ifndef MENU_STRUCTS_INC
@@ -9,6 +9,7 @@
 
 struc MENUPAGE
 	.fnEnter			resb	2	; Function to initialize MENUPAGE
+	.fnBack				resb	2	; Function to initialize previous MENUPAGE
 	.wMenuitems			resb	2	; Number of MENUITEM structs
 	.rgMenuitem:					; All MENUITEM structs in this MENUPAGE
 endstruc
@@ -31,6 +32,7 @@ FLG_MENUITEM_VISIBLE		EQU	(1<<0)	; Item is visible
 FLG_MENUITEM_MODIFY_MENU	EQU	(1<<1)	; Item modifies visibility of other items
 FLG_MENUITEM_FLAGVALUE		EQU	(1<<2)	; Item value is single bit
 FLG_MENUITEM_BYTEVALUE		EQU	(1<<3)	; Item value is single byte
+FLG_MENUITEM_PROGRAMVAR		EQU	(1<<4)	; Item is for configuring program, not BIOS
 
 ; Values for MENUITEM.bType
 TYPE_MENUITEM_PAGEBACK		EQU	(0<<1)	; Item returns to previous MENUPAGE

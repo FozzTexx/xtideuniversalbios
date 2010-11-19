@@ -1,7 +1,7 @@
 ; File name		:	Strings.asm
 ; Project name	:	XTIDE Universal BIOS Configurator v2
 ; Created date	:	5.10.2010
-; Last update	:	2.11.2010
+; Last update	:	19.11.2010
 ; Author		:	Tomi Tilli
 ; Description	:	All strings.
 
@@ -22,7 +22,7 @@ g_szUnsaved:						db	" ",SINGLE_LEFT_HORIZONTAL_TO_VERTICAL,
 									
 ; Item formatting
 g_szFormatItemWithoutValue:			db	"%c%s",NULL
-g_szFormatItemNameWithValue:		db	"%26s%-9S",NULL
+g_szFormatItemNameWithValue:		db	"%25s%-10S",NULL
 
 
 g_szNo:								db	"No",NULL
@@ -30,6 +30,10 @@ g_szYes:							db	"Yes",NULL
 g_szMultichoiseBooleanFlag:
 									db	"No",LF
 									db	"Yes",NULL
+
+; Exit messages
+g_szDlgExitToDos:		db	"Exit to DOS?",NULL
+g_szDlgSaveChanges:		db	"Do you want to save changes to XTIDE Universal BIOS image file?",NULL
 
 
 ; Generic dialog strings
@@ -75,7 +79,7 @@ g_szItemCfgBootMenu:	db	"Boot menu settings",NULL
 g_szItemCfgBootLoader:	db	"Boot loader type",NULL
 g_szItemCfgFullMode:	db	"Full operating mode",NULL
 g_szItemCfgStealSize:	db	"kiB to steal from RAM",NULL
-g_szItemCfgIdeCnt:		db	"Number of IDE controllers",NULL
+g_szItemCfgIdeCnt:		db	"IDE controllers",NULL
 
 g_szDlgCfgFullMode:		db	"Enable full operating mode?",NULL
 g_szDlgCfgStealSize:	db	"How many kiB of base memory to steal for XTIDE Universal BIOS variables (1...255)?",NULL
@@ -85,7 +89,7 @@ g_szNfoCfgIde:			db	"IDE controller and drive configuration.",NULL
 g_szNfoCfgBootMenu:		db	"Boot menu configuration.",NULL
 g_szNfoCfgBootLoader:	db	"Boot loader selection for INT 19h.",NULL
 g_szNfoCfgFullMode:		db	"Full mode supports multiple controllers and has more features.",NULL
-g_szNfoCfgStealSize:	db	"Number of kiB of base memory to steal for BIOS variables.",NULL
+g_szNfoCfgStealSize:	db	"How many kiB's to steal from Conventional memory for XTIDE Universal BIOS variables.",NULL
 g_szNfoCfgIdeCnt:		db	"Number of IDE controllers to manage.",NULL
 
 g_szHelpCfgFullMode:	db	"incbin goes here.",NULL
@@ -158,7 +162,7 @@ g_szDlgDrvHeads:		db	"Enter number of P-CHS heads (1...16).",NULL
 g_szDlgDrvSect:			db	"Enter number of sectors per track (1...63).",NULL
 
 g_szNfoDrvBlockMode:	db	"Transfer multiple sectors per data request.",NULL
-g_szNfoDrvUserCHS:		db	"Specify (P-)CHS manually instead of autodetect.",NULL
+g_szNfoDrvUserCHS:		db	"Specify (P-)CHS parameters manually instead of autodetecting them.",NULL
 g_szNfoDrvCyls:			db	"Number of user specified P-CHS cylinders.",NULL
 g_szNfoDrvHeads:		db	"Number of user specified P-CHS heads.",NULL
 g_szNfoDrvSect:			db	"Number of user specified P-CHS sectors per track.",NULL
@@ -168,49 +172,59 @@ g_szHelpDrvUserCHS:		db	"incbin goes here.",NULL
 
 
 ; Strings for boot menu settings menu
-g_szItemBootHeight:		db	"Maximum height",NULL
 g_szItemBootTimeout:	db	"Selection timeout",NULL
 g_szItemBootDrive:		db	"Default boot drive",NULL
-g_szItemBootMinFDD:		db	"Min floppy drive count",NULL
+g_szItemBootFloppyDrvs:	db	"Number of Floppy Drives",NULL
 g_szItemBootSwap:		db	"Swap boot drive numbers",NULL
 g_szItemBootRomBoot:	db	"Display ROM boot",NULL
-g_szItemBootInfo:		db	"Display drive info",NULL
 
-g_szDlgBootHeight:		db	"Enter boot menu maximum height in characters (8...25).",NULL
 g_szDlgBootTimeout:		db	"Enter Boot Menu selection timeout in seconds (1...60, 0 disables timeout).",NULL
 g_szDlgBootDrive:		db	"Enter default drive number (0xh for Floppy Drives, 8xh for Hard Disks, FFh for ROM boot).",NULL
-g_szDlgBootMinFDD:		db	"Enter minimum number of floppy drives.",NULL
+g_szDlgBootFloppyDrvs:	db	"Enter number of Floppy Drives to display on boot menu.",NULL
 g_szDlgBootSwap:		db	"Enable drive number translation?",NULL
 g_szDlgBootRomBoot:		db	"Show ROM Boot option on boot menu?",NULL
-g_szDlgBootInfo:		db	"Show drive information on boot menu?",NULL
 
-g_szNfoBootHeight:		db	"Boot Menu maximum height in characters.",NULL
 g_szNfoBootTimeout:		db	"Menu item selection timeout in seconds.",NULL
 g_szNfoBootDrive:		db	"Default drive on boot menu.",NULL
-g_szNfoBootMinFDD:		db	"Minimum number of floppy drives to display.",NULL
+g_szNfoBootFloppyDrvs:	db	"Number of Floppy Drives to display on boot menu.",NULL
 g_szNfoBootSwap:		db	"Drive Number Translation (swap first drive with selected).",NULL
 g_szNfoBootRomBoot:		db	"Show ROM Basic or ROM DOS boot option.",NULL
-g_szNfoBootInfo:		db	"Show detailed drive information on boot menu.",NULL
 
 g_szHelpBootTimeout:	db	"incbin goes here.",NULL
 g_szHelpBootDrive:		db	"incbin goes here.",NULL
-g_szHelpBootMinFDD:		db	"incbin goes here.",NULL
+g_szHelpBootFloppyDrvs:	db	"incbin goes here.",NULL
 g_szHelpBootSwap:		db	"incbin goes here.",NULL
 g_szHelpBootRomBoot:	db	"incbin goes here.",NULL
-g_szHelpBootInfo:		db	"incbin goes here.",NULL
+
+g_szMultichoiseBootFloppyDrvs:
+						db	"Autodetect",LF
+						db	"1",LF
+						db	"2",LF
+						db	"3",LF
+						db	"4",NULL
+
+g_szValueBootFloppyDrvsAuto:	db	"Auto",NULL
+g_szValueBootFloppyDrvs1:		db	"1",NULL
+g_szValueBootFloppyDrvs2:		db	"2",NULL
+g_szValueBootFloppyDrvs3:		db	"3",NULL
+g_szValueBootFloppyDrvs4:		db	"4",NULL
 
 
 ; Strings for Flash menu
 g_szItemFlashStart:		db	"Start flashing",NULL
+g_szItemFlashEepromType:db	"EEPROM type",NULL
 g_szItemFlashSDP:		db	"SDP command",NULL
 g_szItemFlashAddr:		db	"EEPROM address",NULL
 g_szItemFlashPageSize:	db	"Page size",NULL
 g_szItemFlashChecksum:	db	"Generate checksum byte",NULL
 
+g_szDlgFlashEepromType:	db	"Select EEPROM type.",NULL
+g_szDlgFlashSDP:		db	"Select Software Data Protection command.",NULL
 g_szDlgFlashAddr:		db	"Enter segment address where EEPROM is located.",NULL
-g_szDlgFlashPageSize:	db	"Enter write page size (1, 2, 4, 8, 16, 32 or 64 bytes).",NULL
+g_szDlgFlashPageSize:	db	"Select write page size.",NULL
 g_szDlgFlashChecksum:	db	"Generate checksum byte to the end of BIOS image?",NULL
 
+g_szNfoFlashEepromType:	db	"EEPROM type.",NULL
 g_szNfoFlashStart:		db	"Writes BIOS to EEPROM.",NULL
 g_szNfoFlashSDP:		db	"Software Data Protection command.",NULL
 g_szNfoFlashAddr:		db	"Address (segment) where EEPROM is located.",NULL
@@ -221,15 +235,40 @@ g_szHelpFlashSDP:		db	"incbin goes here.",NULL
 g_szHelpFlashPageSize:	db	"incbin goes here.",NULL
 g_szHelpFlashChecksum:	db	"incbin goes here.",NULL
 
+g_szMultichoiseEepromType:
+						db	"2816 (2 kiB)",LF
+						db	"2832 (4 kiB)",LF
+						db	"2864 (8 kiB)",LF
+						db	"28128 (16 kiB)",LF
+						db	"28256 (32 kiB)",LF
+						db	"28512 (64 kiB)",NULL
+g_szValueFlash2816:		db	"2816",NULL
+g_szValueFlash2832:		db	"2832",NULL
+g_szValueFlash2864:		db	"2864",NULL
+g_szValueFlash28128:	db	"28128",NULL
+g_szValueFlash28256:	db	"28256",NULL
+g_szValueFlash28512:	db	"28512",NULL
 
-; Strings for SDP command menu
-g_szValueSdpNone:
-g_szItemSdpNone:		db	"None",NULL
-g_szValueSdpEnable:
-g_szItemSdpEnable:		db	"Enable",NULL
-g_szValueSdpDisable:
-g_szItemSdpDisable:		db	"Disable",NULL
+g_szMultichoiseSdpCommand:
+						db	"None",LF
+						db	"Enable",LF
+						db	"Disable",NULL
+g_szValueFlashNone:		db	"None",NULL
+g_szValueFlashEnable:	db	"Enable",NULL
+g_szValueFlashDisable:	db	"Disable",NULL
 
-g_szNfoSdpNone:			db	"Do not use Software Data Protection.",NULL
-g_szNfoSdpEnable:		db	"Enable Software Data Protection after flashing.",NULL
-g_szNfoSdpDisable:		db	"Disable Software Data Protection after flashing.",NULL
+g_szMultichoisePageSize:
+						db	"1 byte",LF
+						db	"2 bytes",LF
+						db	"4 bytes",LF
+						db	"8 bytes",LF
+						db	"16 bytes",LF
+						db	"32 bytes",LF
+						db	"64 bytes",NULL
+g_szValueFlash1byte:	db	"None",NULL
+g_szValueFlash2bytes:	db	"2 bytes",NULL
+g_szValueFlash4bytes:	db	"4 bytes",NULL
+g_szValueFlash8bytes:	db	"8 bytes",NULL
+g_szValueFlash16bytes:	db	"16 bytes",NULL
+g_szValueFlash32bytes:	db	"32 bytes",NULL
+g_szValueFlash64bytes:	db	"64 bytes",NULL
