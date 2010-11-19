@@ -1,7 +1,7 @@
 ; File name		:	Variables.inc
 ; Project name	:	XTIDE Univeral BIOS Configurator v2
 ; Created date	:	5.10.2010
-; Last update	:	1.11.2010
+; Last update	:	19.11.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Global variables for configuration program.
 %ifndef VARIABLES_INC
@@ -21,8 +21,10 @@ struc CFGVARS
 	.wFlags				resb	2			; Program flags
 	.wImageSize			resb	2			; Size in bytes for BIOS image to be flashed (0=65536)
 	.wEepromSegment		resb	2			; Segment where EEPROM is located
-	.bPageSize			resb	1			; EEPROM page size in bytes
+	.bEepromType		resb	1			; EEPROM type
+	.bEepromPageSize	resb	1			; EEPROM page size in bytes
 	.bSdpCommand		resb	1			; Command for Software Data Protection
+						resb	1
 	.szOpenedFile		resb	FILENAME_BUFFER_SIZE
 	.flashVars			resb	FLASHVARS_size
 endstruc
@@ -33,16 +35,39 @@ FLG_CFGVARS_ROMLOADED	EQU		(1<<1)	; BIOS is loaded from EEPROM
 FLG_CFGVARS_UNSAVED		EQU		(1<<2)	; BIOS has unsaved changes
 FLG_CFGVARS_CHECKSUM	EQU		(1<<3)	; Generate checksum byte
 
-; SDP command for CFGVARS.bSdpCommand
-CMD_SDP_NONE			EQU		(0<<1)	; Do not use any SDP command
-CMD_SDP_ENABLE			EQU		(1<<1)	; Flash with SDP enable command
-CMD_SDP_DISABLE			EQU		(2<<1)	; Flash with SDP disable command
+; EEPROM types
+struc EEPROM_TYPE
+	.2816_2kiB			resb	2
+	.2832_4kiB			resb	2
+	.2864_8kiB			resb	2
+	.28128_16kiB		resb	2
+	.28256_32kiB		resb	2
+	.28512_64kiB		resb	2
+endstruc
+
+; Software Data Protection commands
+struc SDP_COMMAND
+	.none				resb	2	; Do not use any SDP command
+	.enable				resb	2	; Flash with SDP enable command
+	.disable			resb	2	; Flash with SDP disable command
+endstruc
+
+; Page sizes
+struc EEPROM_PAGE_SIZE
+	.1_byte				resb	2
+	.2_bytes			resb	2
+	.4_bytes			resb	2
+	.8_bytes			resb	2
+	.16_bytes			resb	2
+	.32_bytes			resb	2
+	.64_bytes			resb	2
+endstruc
 
 ; Default CFGVARS settings
 DEFAULT_CFGVARS_FLAGS	EQU		FLG_CFGVARS_CHECKSUM
 DEFAULT_EEPROM_SEGMENT	EQU		0D000h
-DEFAULT_PAGE_SIZE		EQU		1
-DEFAULT_SDP_COMMAND		EQU		CMD_SDP_ENABLE
+DEFAULT_PAGE_SIZE		EQU		EEPROM_PAGE_SIZE.1_byte
+DEFAULT_SDP_COMMAND		EQU		SDP_COMMAND.enable
 
 
 ; Variables required for flashing

@@ -1,7 +1,7 @@
 ; File name		:	Dialogs.asm
 ; Project name	:	XTIDE Univeral BIOS Configurator v2
 ; Created date	:	10.10.2010
-; Last update	:	10.10.2010
+; Last update	:	19.11.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for displaying dialogs.
 
@@ -79,23 +79,6 @@ DisplayMessageDialogWithMessageInCSDXandDialogInputInDSSI:
 	pop		ds
 	ret
 
-;--------------------------------------------------------------------
-; InitializeDialogInputFromDSSI
-;	Parameters:
-;		DS:SI:	Ptr to DIALOG_INPUT
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-InitializeDialogInputFromDSSI:
-	mov		[si+DIALOG_INPUT.fszTitle+2], cs
-	mov		[si+DIALOG_INPUT.fszItems+2], cs
-	mov		WORD [si+DIALOG_INPUT.fszInfo], g_szGenericDialogInfo
-	mov		[si+DIALOG_INPUT.fszInfo+2], cs
-	ret
-
 
 ;--------------------------------------------------------------------
 ; Dialogs_DisplayFileDialogWithDialogIoInDSSI
@@ -122,4 +105,67 @@ Dialogs_DisplayFileDialogWithDialogIoInDSSI:
 	CALL_MENU_LIBRARY GetFileNameWithIoInDSSI
 
 	pop		es
+	ret
+
+
+;--------------------------------------------------------------------
+; Dialogs_DisplayQuitDialog
+; Dialogs_DisplaySaveChangesDialog
+;	Parameters:
+;		Nothing
+;	Returns:
+;		ZF:		Set if user wants to do the action
+;				Cleared if user wants to cancel
+;	Corrupts registers:
+;		AX, CX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+Dialogs_DisplayQuitDialog:
+	push	ds
+
+	mov		cx, DIALOG_INPUT_size
+	call	Memory_ReserveCXbytesFromStackToDSSI
+	call	InitializeDialogInputFromDSSI
+	mov		WORD [si+DIALOG_INPUT.fszTitle], g_szDlgExitToDos
+	mov		WORD [si+DIALOG_INPUT.fszItems], g_szMultichoiseBooleanFlag
+	CALL_MENU_LIBRARY GetSelectionToAXwithInputInDSSI
+	add		sp, BYTE DIALOG_INPUT_size
+	cmp		ax, BYTE 1		; 1 = YES
+
+	pop		ds
+	ret
+
+
+ALIGN JUMP_ALIGN
+Dialogs_DisplaySaveChangesDialog:
+	push	ds
+
+	mov		cx, DIALOG_INPUT_size
+	call	Memory_ReserveCXbytesFromStackToDSSI
+	call	InitializeDialogInputFromDSSI
+	mov		WORD [si+DIALOG_INPUT.fszTitle], g_szDlgSaveChanges
+	mov		WORD [si+DIALOG_INPUT.fszItems], g_szMultichoiseBooleanFlag
+	CALL_MENU_LIBRARY GetSelectionToAXwithInputInDSSI
+	add		sp, BYTE DIALOG_INPUT_size
+	cmp		ax, BYTE 1		; 1 = YES
+
+	pop		ds
+	ret
+
+
+;--------------------------------------------------------------------
+; InitializeDialogInputFromDSSI
+;	Parameters:
+;		DS:SI:	Ptr to DIALOG_INPUT
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+InitializeDialogInputFromDSSI:
+	mov		[si+DIALOG_INPUT.fszTitle+2], cs
+	mov		[si+DIALOG_INPUT.fszItems+2], cs
+	mov		WORD [si+DIALOG_INPUT.fszInfo], g_szGenericDialogInfo
+	mov		[si+DIALOG_INPUT.fszInfo+2], cs
 	ret

@@ -1,7 +1,7 @@
 ; File name		:	ConfigurationMenu.asm
 ; Project name	:	XTIDE Universal BIOS Configurator v2
 ; Created date	:	24.10.2010
-; Last update	:	3.11.2010
+; Last update	:	18.11.2010
 ; Author		:	Tomi Tilli
 ; Description	:	"Configure XTIDE Universal BIOS" menu structs and functions.
 
@@ -12,6 +12,7 @@ ALIGN WORD_ALIGN
 g_MenupageForConfigurationMenu:
 istruc MENUPAGE
 	at	MENUPAGE.fnEnter,			dw	ConfigurationMenu_EnterMenuOrModifyItemVisibility
+	at	MENUPAGE.fnBack,			dw	MainMenu_EnterMenuOrModifyItemVisibility
 	at	MENUPAGE.wMenuitems,		dw	11
 iend
 
@@ -77,7 +78,7 @@ iend
 
 g_MenuitemConfigurationBootMenuSettings:
 istruc MENUITEM
-	at	MENUITEM.fnActivate,		dw	BootMenuSettings
+	at	MENUITEM.fnActivate,		dw	BootMenuSettingsMenu_EnterMenuOrModifyItemVisibility
 	at	MENUITEM.szName,			dw	g_szItemCfgBootMenu
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoCfgBootMenu
 	at	MENUITEM.szHelp,			dw	g_szNfoCfgBootMenu
@@ -88,11 +89,11 @@ iend
 g_MenuitemConfigurationBootLoaderType:
 istruc MENUITEM
 	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiseSelectionForMenuitemInDSSI
-	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromItemInDSSI
+	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromShiftedItemInDSSI
 	at	MENUITEM.szName,			dw	g_szItemCfgBootLoader
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoCfgBootLoader
 	at	MENUITEM.szHelp,			dw	g_szNfoCfgBootLoader
-	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE | FLG_MENUITEM_BYTEVALUE
+	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE | FLG_MENUITEM_MODIFY_MENU | FLG_MENUITEM_BYTEVALUE
 	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOISE
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	ROMVARS.bBootLdrType
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szItemCfgBootLoader
@@ -104,7 +105,7 @@ iend
 g_MenuitemConfigurationFullOperatingMode:
 istruc MENUITEM
 	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiseSelectionForMenuitemInDSSI
-	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromItemInDSSI
+	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromShiftedItemInDSSI
 	at	MENUITEM.szName,			dw	g_szItemCfgFullMode
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoCfgFullMode
 	at	MENUITEM.szHelp,			dw	g_szHelpCfgFullMode
@@ -177,6 +178,7 @@ ConfigurationMenu_EnterMenuOrModifyItemVisibility:
 	pop		ds
 	call	.DisableAllIdeControllerMenuitems
 	call	.EnableIdeControllerMenuitemsBasedOnConfiguration
+	call	.EnableOrDisableBootMenuSettings
 	call	.EnableOrDisableKiBtoStealFromRAM
 	call	.EnableOrDisableIdeControllerCount
 	mov		si, g_MenupageForConfigurationMenu
@@ -228,8 +230,7 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 .GetIdeControllerCountToCX:
-	mov		bx, ROMVARS.wFlags
-	call	Buffers_GetRomvarsValueToAXfromOffsetInBX
+	call	Buffers_GetRomvarsFlagsToAX
 	test	ax, FLG_ROMVARS_FULLMODE
 	jz		SHORT .AllowOnlyOneIdeControllerInLiteMode
 
@@ -242,6 +243,26 @@ ALIGN JUMP_ALIGN
 	mov		cx, 1
 	ret
 
+
+;--------------------------------------------------------------------
+; .EnableOrDisableBootMenuSettings
+;	Parameters:
+;		SS:BP:	Menu handle
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, BX, CX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+.EnableOrDisableBootMenuSettings:
+	mov		bx, ROMVARS.bBootLdrType
+	call	Buffers_GetRomvarsValueToAXfromOffsetInBX
+	mov		bx, g_MenuitemConfigurationBootMenuSettings
+	cmp		ax, BYTE BOOTLOADER_TYPE_MENU
+	jne		SHORT .DisableMenuitemFromCSBX
+	jmp		SHORT .EnableMenuitemFromCSBX
+
+
 ;--------------------------------------------------------------------
 ; .EnableOrDisableKiBtoStealFromRAM
 ;	Parameters:
@@ -253,8 +274,7 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 .EnableOrDisableKiBtoStealFromRAM:
-	mov		bx, ROMVARS.wFlags
-	call	Buffers_GetRomvarsValueToAXfromOffsetInBX
+	call	Buffers_GetRomvarsFlagsToAX
 	mov		bx, g_MenuitemConfigurationKiBtoStealFromRAM
 	test	ax, FLG_ROMVARS_FULLMODE
 	jz		SHORT .DisableMenuitemFromCSBX
@@ -271,8 +291,7 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 .EnableOrDisableIdeControllerCount:
-	mov		bx, ROMVARS.wFlags
-	call	Buffers_GetRomvarsValueToAXfromOffsetInBX
+	call	Buffers_GetRomvarsFlagsToAX
 	mov		bx, g_MenuitemConfigurationIdeControllers
 	test	ax, FLG_ROMVARS_FULLMODE
 	jz		SHORT .DisableMenuitemFromCSBX
@@ -338,8 +357,3 @@ ALIGN JUMP_ALIGN
 DisplayIdeControllerMenu:
 	call	IdeControllerMenu_InitializeToIdevarsOffsetInBX
 	jmp		IdeControllerMenu_EnterMenuOrModifyItemVisibility
-
-
-ALIGN JUMP_ALIGN
-BootMenuSettings:
-	ret

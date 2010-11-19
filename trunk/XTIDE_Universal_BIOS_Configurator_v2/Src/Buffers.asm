@@ -1,7 +1,7 @@
 ; File name		:	Buffers.asm
 ; Project name	:	XTIDE Universal BIOS Configurator v2
 ; Created date	:	6.10.2010
-; Last update	:	10.10.2010
+; Last update	:	19.11.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for accessing file and flash buffers.
 
@@ -180,6 +180,29 @@ Buffers_ClearUnsavedChanges:
 
 
 ;--------------------------------------------------------------------
+; Buffers_SaveChangesIfFileLoaded
+;	Parameters:
+;		Nothing
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, BX, CX, SI, DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+Buffers_SaveChangesIfFileLoaded:
+	mov		ax, [cs:g_cfgVars+CFGVARS.wFlags]
+	and		ax, BYTE (FLG_CFGVARS_FILELOADED | FLG_CFGVARS_UNSAVED)
+	cmp		ax, BYTE (FLG_CFGVARS_FILELOADED | FLG_CFGVARS_UNSAVED)
+	jne		SHORT .NothingToSave
+	call	Dialogs_DisplaySaveChangesDialog
+	jnz		SHORT .NothingToSave
+	jmp		BiosFile_SaveUnsavedChanges
+ALIGN JUMP_ALIGN
+.NothingToSave:
+	ret
+
+
+;--------------------------------------------------------------------
 ; Buffers_GenerateChecksum
 ;	Parameters:
 ;		Nothing
@@ -207,6 +230,20 @@ ALIGN JUMP_ALIGN
 	pop		es
 	ret
 
+
+;--------------------------------------------------------------------
+; Buffers_GetRomvarsFlagsToAX
+;	Parameters:
+;		Nothing
+;	Returns:
+;		AX:		ROMVARS.wFlags
+;	Corrupts registers:
+;		BX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+Buffers_GetRomvarsFlagsToAX:
+	mov		bx, ROMVARS.wFlags
+	; Fall to Buffers_GetRomvarsValueToAXfromOffsetInBX
 
 ;--------------------------------------------------------------------
 ; Buffers_GetRomvarsValueToAXfromOffsetInBX
@@ -240,6 +277,13 @@ Buffers_GetRomvarsValueToAXfromOffsetInBX:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Buffers_GetFileDialogItemBufferToESDI:
+	call	Buffers_GetFileBufferToESDI
+	push	di
+	mov		di, es
+	add		di, 1000h		; Third 64k page
+	mov		es, di
+	pop		di
+	ret
 Buffers_GetFileBufferToESDI:
 	mov		di, cs
 	add		di, 1000h		; Change to next 64k page

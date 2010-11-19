@@ -1,7 +1,7 @@
 ; File name		:	main.asm
 ; Project name	:	XTIDE Univeral BIOS Configurator v2
 ; Created date	:	5.10.2010
-; Last update	:	3.11.2010
+; Last update	:	19.11.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Program start and exit.			
 
@@ -38,7 +38,9 @@ Start:
 %include "Menupage.asm"
 %include "Strings.asm"
 
+%include "BootMenuSettingsMenu.asm"
 %include "ConfigurationMenu.asm"
+%include "FlashMenu.asm"
 %include "IdeControllerMenu.asm"
 %include "MainMenu.asm"
 %include "MasterSlaveMenu.asm"
@@ -90,11 +92,11 @@ SECTION .data
 ALIGN WORD_ALIGN
 g_cfgVars:
 istruc CFGVARS
-	at	CFGVARS.pMenupage,		dw	g_MenupageForMainMenu
-	at	CFGVARS.wFlags,			dw	DEFAULT_CFGVARS_FLAGS
-	at	CFGVARS.wEepromSegment,	dw	DEFAULT_EEPROM_SEGMENT
-	at	CFGVARS.bPageSize,		db	DEFAULT_PAGE_SIZE
-	at	CFGVARS.bSdpCommand,	db	DEFAULT_SDP_COMMAND
+	at	CFGVARS.pMenupage,			dw	g_MenupageForMainMenu
+	at	CFGVARS.wFlags,				dw	DEFAULT_CFGVARS_FLAGS
+	at	CFGVARS.wEepromSegment,		dw	DEFAULT_EEPROM_SEGMENT
+	at	CFGVARS.bEepromPageSize,	db	DEFAULT_PAGE_SIZE
+	at	CFGVARS.bSdpCommand,		db	DEFAULT_SDP_COMMAND
 iend
 
 

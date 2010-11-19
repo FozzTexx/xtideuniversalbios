@@ -38,16 +38,16 @@ HEADERS += Src/
 HEADERS += Src/Menupages/
 
 # Subdirectories where library files are:
-LIBS = ../AssemblyLibrary/Inc/
-LIBS += ../AssemblyLibrary/Src/
-LIBS += ../AssemblyLibrary/Src/Display/
-LIBS += ../AssemblyLibrary/Src/File/
-LIBS += ../AssemblyLibrary/Src/Keyboard/
-LIBS += ../AssemblyLibrary/Src/Menu/
-LIBS += ../AssemblyLibrary/Src/Menu/Dialog/
-LIBS += ../AssemblyLibrary/Src/String/
-LIBS += ../AssemblyLibrary/Src/Time/
-LIBS += ../AssemblyLibrary/Src/Util/
+LIBS = ../Assembly_Library/Inc/
+LIBS += ../Assembly_Library/Src/
+LIBS += ../Assembly_Library/Src/Display/
+LIBS += ../Assembly_Library/Src/File/
+LIBS += ../Assembly_Library/Src/Keyboard/
+LIBS += ../Assembly_Library/Src/Menu/
+LIBS += ../Assembly_Library/Src/Menu/Dialog/
+LIBS += ../Assembly_Library/Src/String/
+LIBS += ../Assembly_Library/Src/Time/
+LIBS += ../Assembly_Library/Src/Util/
 LIBS += ../XTIDE_Universal_BIOS/Inc/
 HEADERS += $(LIBS)
 

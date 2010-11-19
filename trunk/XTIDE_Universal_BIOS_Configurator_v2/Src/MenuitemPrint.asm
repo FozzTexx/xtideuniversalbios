@@ -138,10 +138,11 @@ ALIGN JUMP_ALIGN
 	mov		bp, bx
 	pop		si
 	ret
-	
+
 
 ;--------------------------------------------------------------------
-; MenuitemPrint_WriteLookupValueStringToBufferInESDIfromItemInDSSI
+; MenuitemPrint_WriteLookupValueStringToBufferInESDIfromUnshiftedItemInDSSI
+; MenuitemPrint_WriteLookupValueStringToBufferInESDIfromShiftedItemInDSSI
 ;	Parameters:
 ;		DS:SI:	Ptr to MENUITEM
 ;		ES:DI:	Ptr to destination buffer
@@ -151,15 +152,34 @@ ALIGN JUMP_ALIGN
 ;		AX, BX, CX
 ;--------------------------------------------------------------------	
 ALIGN JUMP_ALIGN
-MenuitemPrint_WriteLookupValueStringToBufferInESDIfromItemInDSSI:
-	push	si
-
+MenuitemPrint_WriteLookupValueStringToBufferInESDIfromUnshiftedItemInDSSI:
 	call	Menuitem_GetValueToAXfromMenuitemInDSSI
+	shl		ax, 1
+	jmp		SHORT PrintLookupValueFromAXtoBufferInESDI
+
+ALIGN JUMP_ALIGN
+MenuitemPrint_WriteLookupValueStringToBufferInESDIfromShiftedItemInDSSI:
+	call	Menuitem_GetValueToAXfromMenuitemInDSSI
+	; Fall to PrintLookupValueFromAXtoBufferInESDI
+
+;--------------------------------------------------------------------
+; MenuitemPrint_WriteLookupValueStringToBufferInESDIfromItemInDSSI
+;	Parameters:
+;		AX:		Value to print
+;		DS:SI:	Ptr to MENUITEM
+;		ES:DI:	Ptr to destination buffer
+;	Returns:
+;		DI:		Updated
+;	Corrupts registers:
+;		AX, BX, CX
+;--------------------------------------------------------------------	
+ALIGN JUMP_ALIGN
+PrintLookupValueFromAXtoBufferInESDI:
+	push	si
 	add		ax, [si+MENUITEM.itemValue+ITEM_VALUE.rgszValueToStringLookup]
 	xchg	bx, ax
 	mov		si, [bx]
 	call	String_CopyDSSItoESDIandGetLengthToCX
-
 	pop		si
 	ret
 

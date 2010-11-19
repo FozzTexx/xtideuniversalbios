@@ -1,7 +1,7 @@
 ; File name		:	MainMenu.asm
 ; Project name	:	XTIDE Universal BIOS Configurator v2
 ; Created date	:	6.10.2010
-; Last update	:	2.11.2010
+; Last update	:	19.11.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Main menu structs and functions.
 
@@ -12,6 +12,7 @@ ALIGN WORD_ALIGN
 g_MenupageForMainMenu:
 istruc MENUPAGE
 	at	MENUPAGE.fnEnter,			dw	MainMenu_EnterMenuOrModifyItemVisibility
+	at	MENUPAGE.fnBack,			dw	ExitToDos
 	at	MENUPAGE.wMenuitems,		dw	6
 iend
 
@@ -57,7 +58,7 @@ iend
 
 g_MenuitemMainMenuConfigureXtideUniversalBios:
 istruc MENUITEM
-	at	MENUITEM.fnActivate,		dw	ConfigureXtideUniversalBios
+	at	MENUITEM.fnActivate,		dw	ConfigurationMenu_EnterMenuOrModifyItemVisibility
 	at	MENUITEM.szName,			dw	g_szItemMainConfigure
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoMainConfigure
 	at	MENUITEM.szHelp,			dw	g_szNfoMainConfigure
@@ -67,7 +68,7 @@ iend
 
 g_MenuitemMainMenuFlashEeprom:
 istruc MENUITEM
-	at	MENUITEM.fnActivate,		dw	FlashEeprom
+	at	MENUITEM.fnActivate,		dw	FlashMenu_EnterMenuOrModifyItemVisibility
 	at	MENUITEM.szName,			dw	g_szItemMainFlash
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoMainFlash
 	at	MENUITEM.szHelp,			dw	g_szNfoMainFlash
@@ -206,6 +207,7 @@ ExitToDos:
 
 ALIGN JUMP_ALIGN
 LoadBiosFromFile:
+	call	Buffers_SaveChangesIfFileLoaded
 	mov		cx, FILE_DIALOG_IO_size
 	call	Memory_ReserveCXbytesFromStackToDSSI
 	call	Dialogs_DisplayFileDialogWithDialogIoInDSSI
@@ -222,6 +224,7 @@ LoadBiosFromFile:
 
 ALIGN JUMP_ALIGN
 LoadXtideUniversalBiosFromRom:
+	call	Buffers_SaveChangesIfFileLoaded
 	call	EEPROM_LoadXtideUniversalBiosFromRomToRamBuffer
 	mov		ax, FLG_CFGVARS_ROMLOADED
 	call	Buffers_NewBiosWithSizeInCXandSourceInAXhasBeenLoadedForConfiguration
@@ -234,20 +237,11 @@ LoadXtideUniversalBiosFromRom:
 
 ALIGN JUMP_ALIGN
 LoadOldSettingsFromEeprom:
+	call	Buffers_SaveChangesIfFileLoaded
 	call	EEPROM_LoadOldSettingsFromRomToRamBuffer
 	and		WORD [g_cfgVars+CFGVARS.wFlags], ~FLG_CFGVARS_UNSAVED
 	push	cs
 	pop		ds
 	mov		si, g_szDlgMainLoadStngs
 	CALL_MENU_LIBRARY DisplayMessageWithInputInDSSI
-	ret
-
-
-ALIGN JUMP_ALIGN
-ConfigureXtideUniversalBios:
-	jmp		ConfigurationMenu_EnterMenuOrModifyItemVisibility
-
-
-ALIGN JUMP_ALIGN
-FlashEeprom:
 	ret
