@@ -1,7 +1,7 @@
 ; File name		:	LibraryTests.asm
 ; Project name	:	Assembly Library
 ; Created date	:	27.6.2010
-; Last update	:	12.10.2010
+; Last update	:	22.11.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Tests for Assembly Library.
 ;					This file should not be included when using the library on
@@ -64,13 +64,15 @@ ALIGN JUMP_ALIGN
 
 ALIGN JUMP_ALIGN
 .InitializeMenu:
-	mov		WORD [si+MENUINIT.wTimeoutTicks], 10000 / 55	; 10 seconds
 	mov		WORD [si+MENUINIT.wItems], 51
 	mov		BYTE [si+MENUINIT.bWidth], 40
 	mov		BYTE [si+MENUINIT.bHeight], 20
 	mov		BYTE [si+MENUINIT.bTitleLines], TEST_MENU_TITLE_LINES
 	mov		BYTE [si+MENUINIT.bInfoLines], TEST_MENU_INFO_LINES
 	mov		WORD [si+MENUINIT.wHighlightedItem], 1
+	
+	mov		ax, 10000 / 55	; 10 seconds
+	CALL_MENU_LIBRARY StartSelectionTimeoutWithTicksInAX
 	stc
 	ret
 
@@ -165,7 +167,7 @@ ALIGN JUMP_ALIGN
 	xor		al, TEST_MENU_INFO_LINES
 	CALL_MENU_LIBRARY SetInformationHeightFromAL
 .RefreshMenuWindow:
-	CALL_MENU_LIBRARY RestartTimeout
+	;CALL_MENU_LIBRARY RestartTimeout
 	CALL_MENU_LIBRARY RefreshWindow
 	stc
 	ret

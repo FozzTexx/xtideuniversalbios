@@ -1,7 +1,7 @@
 ; File name		:	MenuLocation.asm
 ; Project name	:	Assembly Library
 ; Created date	:	14.7.2010
-; Last update	:	11.8.2010
+; Last update	:	25.11.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for calculation menu window dimensions.
 
@@ -158,4 +158,25 @@ ALIGN JUMP_ALIGN
 MenuLocation_GetMaxTextLineLengthToAX:
 	eMOVZX	ax, BYTE [bp+MENUINIT.bWidth]
 	sub		ax, BYTE MENU_HORIZONTAL_BORDER_LINES + MENU_TEXT_COLUMN_OFFSET
+	ret
+
+
+;--------------------------------------------------------------------
+; MenuLocation_MoveCursorByALcolumnsAndAHrows
+;	Parameters
+;		AL:		Number of columns to move
+;		AH:		Numver of rows to move
+;		SS:BP:	Ptr to MENU
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+MenuLocation_MoveCursorByALcolumnsAndAHrows:
+	push	ax
+	CALL_DISPLAY_LIBRARY GetSoftwareCoordinatesToAX
+	pop		di
+	add		ax, di
+	CALL_DISPLAY_LIBRARY SetCursorCoordinatesFromAX
 	ret

@@ -1,7 +1,7 @@
 ; File name		:	Menu.asm
 ; Project name	:	Assembly Library
 ; Created date	:	3.8.2010
-; Last update	:	23.10.2010
+; Last update	:	22.11.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Menu Library functions for CALL_MENU_LIBRARY macro
 ;					that users should use to make library call.
@@ -56,8 +56,7 @@ istruc MENU_LIB
 	at	MENU_LIB.ClearInformationArea,			dw	MenuText_ClearInformationArea
 	at	MENU_LIB.RefreshInformation,			dw	MenuText_RefreshInformation
 
-	at	MENU_LIB.RestartTimeout,				dw	MenuTime_RestartSelectionTimeout
-	;at	MENU_LIB.SetTimeoutValueFromAX,			dw	MenuTime_SetSelectionTimeoutValueFromAX	; Special case in CALL_MENU_LIBRARY
+	at	MENU_LIB.StartSelectionTimeoutWithTicksInAX,	dw	MenuTime_StartSelectionTimeoutWithTicksInAX
 
 %ifdef INCLUDE_MENU_DIALOGS
 	at	MENU_LIB.StartProgressTaskWithIoInDSSIandParamInDXAX,	dw	DialogProgress_StartProgressTaskWithIoInDSSIandParamInDXAX

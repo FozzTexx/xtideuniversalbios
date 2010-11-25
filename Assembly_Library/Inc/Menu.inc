@@ -1,7 +1,7 @@
 ; File name		:	Menu.inc
 ; Project name	:	Assembly Library
 ; Created date	:	13.7.2010
-; Last update	:	23.10.2010
+; Last update	:	22.11.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Defines for Menu library.
 %ifndef MENU_INC
@@ -74,8 +74,7 @@ struc MENU_LIB
 	.ClearInformationArea						resb	2
 	.RefreshInformation							resb	2
 
-	.RestartTimeout								resb	2
-	.SetTimeoutValueFromAX:
+	.StartSelectionTimeoutWithTicksInAX			resb	2
 
 %ifdef INCLUDE_MENU_DIALOGS
 	.StartProgressTaskWithIoInDSSIandParamInDXAX	resb	2
@@ -93,7 +92,6 @@ endstruc
 
 ; Menu initialization parameters
 struc MENUINIT
-	.wTimeoutTicks					resb	2	; Selection timeout in system timer ticks
 	.wItems							resb	2	; Number of items in menu
 	.wHighlightedItem				resb	2	; Index for highlighted item
 
@@ -123,6 +121,7 @@ endstruc
 FLG_MENU_EXIT						EQU		(1<<0)	; Close and exit menu
 FLG_MENU_NOHIGHLIGHT				EQU		(1<<1)	; Never highlight items
 FLG_MENU_USER_HANDLES_SCROLLING		EQU		(1<<2)
+FLG_MENU_TIMEOUT_COUNTDOWN			EQU		(1<<3)	; Timeout countdown in progress
 
 
 MENU_VERTICAL_BORDER_LINES			EQU		5	; Title top and bottom + Info top and bottom + bottom shadow

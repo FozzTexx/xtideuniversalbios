@@ -1,7 +1,7 @@
 ; File name		:	MenuLoop.asm
 ; Project name	:	Assembly Library
 ; Created date	:	22.7.2010
-; Last update	:	18.10.2010
+; Last update	:	25.11.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Menu loop for waiting keystrokes.
 
@@ -69,7 +69,10 @@ KeystrokeProcessing:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 ProcessKeystrokeFromAX:
-	call	.ProcessMenuSystemKeystroke
+	xchg	cx, ax
+	call	MenuTime_StopSelectionTimeout
+	xchg	ax, cx
+	call	.ProcessMenuSystemKeystrokeFromAX
 	jc		SHORT .Return
 	jmp		MenuEvent_KeyStrokeInAX
 ALIGN JUMP_ALIGN, ret
@@ -77,7 +80,7 @@ ALIGN JUMP_ALIGN, ret
 	ret
 
 ;--------------------------------------------------------------------
-; .ProcessMenuSystemKeystroke
+; .ProcessMenuSystemKeystrokeFromAX
 ;	Parameters
 ;		AL:		ASCII character
 ;		AH:		BIOS scan code
@@ -91,7 +94,7 @@ ALIGN JUMP_ALIGN, ret
 ;		BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-.ProcessMenuSystemKeystroke:
+.ProcessMenuSystemKeystrokeFromAX:
 	cmp		ah, MENU_KEY_ESC
 	je		SHORT .LeaveMenuWithoutSelectingItem
 	cmp		ah, MENU_KEY_ENTER
@@ -193,6 +196,5 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 .MoveHighlightedItemByAX:
 	call	MenuScrollbars_MoveHighlightedItemByAX
-	call	MenuTime_RestartSelectionTimeout
 	stc
 	ret

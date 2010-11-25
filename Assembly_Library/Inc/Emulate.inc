@@ -1,7 +1,7 @@
 ; File name		:	emulate.inc
 ; Project name	:	Emulation library
 ; Created date	:	21.10.2009
-; Last update	:	9.10.2010
+; Last update	:	25.11.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Macros for emulating later x86 instruction with older
 ;					processors.
@@ -156,6 +156,12 @@ ALIGN JUMP_ALIGN
 
 %macro eCMOVE 2
 	jne		SHORT %%Return
+	mov		%1, %2
+%%Return:
+%endmacro
+
+%macro eCMOVB 2
+	jnb		SHORT %%Return
 	mov		%1, %2
 %%Return:
 %endmacro
