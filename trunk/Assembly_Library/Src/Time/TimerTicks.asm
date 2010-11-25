@@ -1,7 +1,7 @@
 ; File name		:	TimerTicks.asm
 ; Project name	:	Assembly Library
 ; Created date	:	24.7.2010
-; Last update	:	3.8.2010
+; Last update	:	22.11.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for system timer related operations.
 
@@ -71,11 +71,11 @@ TimerTicks_InitializeTimeoutFromAX:
 	add		[bx], ax					; Add latest time to timeout ticks
 	ret
 
+
 ;--------------------------------------------------------------------
-; Timeout counter can be initialized with TimerTicks_InitializeTimeoutFromAX.
-;
-; TimerTicks_SetCarryIfTimeoutFromDSBX
+; TimerTicks_GetTimeoutTicksLeftToAXfromDSBX
 ;	Parameters:
+;		AX:			Number of ticks left before timeout
 ;		DS:BX:		Ptr to timeout variable WORD
 ;	Returns:
 ;		CF:			Set if timeout
@@ -84,11 +84,13 @@ TimerTicks_InitializeTimeoutFromAX:
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-TimerTicks_SetCarryIfTimeoutFromDSBX:
-	push	ax
+TimerTicks_GetTimeoutTicksLeftToAXfromDSBX:
+	push	dx
+	mov		dx, [bx]
 	call	TimerTicks_ReadFromBdaToAX
-	cmp		[bx], ax		; Set CF if timeout WORD is less than time
-	pop		ax
+	xchg	ax, dx
+	sub		ax, dx		; AX = End time - current time
+	pop		dx
 	ret
 
 

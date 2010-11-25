@@ -1,7 +1,7 @@
 ; File name		:	MenuBorders.asm
 ; Project name	:	Assembly Library
 ; Created date	:	14.7.2010
-; Last update	:	11.10.2010
+; Last update	:	25.11.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for drawing menu borders.
 
@@ -33,8 +33,44 @@ MenuBorders_RefreshAll:
 	call	RefreshItemBorders
 	call	RefreshInformationBorders
 	call	DrawBottomBorderLine
-	call	DrawBottomShadowLine
-	jmp		MenuTime_DrawWithoutUpdating
+	call	DrawTimeoutCounterOverBottomBorderLine
+	jmp		DrawBottomShadowLine
+
+
+;--------------------------------------------------------------------
+; MenuBorders_RedrawBottomBorderLine
+;	Parameters
+;		SS:BP:	Ptr to MENU
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, BX, DX, SI, DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+MenuBorders_RedrawBottomBorderLine:
+	call	MenuBorders_AdjustDisplayContextForDrawingBorders
+	call	MenuLocation_GetBottomBordersTopLeftCoordinatesToAX
+	CALL_DISPLAY_LIBRARY SetCursorCoordinatesFromAX
+	call	GetNumberOfMiddleCharactersToDX
+	jmp		DrawBottomBorderLine
+
+
+;--------------------------------------------------------------------
+; MenuBorders_RedrawTimeoutValue
+;	Parameters
+;		SS:BP:	Ptr to MENU
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, BX, SI, DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+MenuBorders_RedrawTimeoutValue:
+	call	MenuBorders_AdjustDisplayContextForDrawingBorders
+	call	MenuLocation_GetBottomBordersTopLeftCoordinatesToAX
+	inc		ah		; Increment for shadow border
+	CALL_DISPLAY_LIBRARY SetCursorCoordinatesFromAX
+	jmp		DrawTimeoutCounterOverBottomBorderLine
 
 
 ;--------------------------------------------------------------------
@@ -173,6 +209,7 @@ ALIGN JUMP_ALIGN
 ; DrawTopBorderLine
 ; DrawSeparationBorderLine
 ; DrawBottomBorderLine
+; DrawTimeoutCounterOverBottomBorderLine
 ; DrawBottomShadowLine
 ; DrawTextBorderLine
 ;	Parameters
@@ -200,10 +237,21 @@ DrawBottomBorderLine:
 	jmp		SHORT PrintBorderCharactersFromCSSIandShadowCharacter
 
 ALIGN JUMP_ALIGN
+DrawTimeoutCounterOverBottomBorderLine:
+	test	BYTE [bp+MENU.bFlags], FLG_MENU_TIMEOUT_COUNTDOWN
+	jz		SHORT .NoNeedToDrawSinceTimeoutDisabled
+	mov		ax, (-1)<<8	; Decrement row
+	call	MenuLocation_MoveCursorByALcolumnsAndAHrows
+	call	MenuTime_GetTimeoutSecondsLeftToAX
+	call	PrintTimeoutStringWithSecondsInAX
+	jmp		SHORT PrintNewlineToEndBorderLine
+.NoNeedToDrawSinceTimeoutDisabled:
+	ret
+
+ALIGN JUMP_ALIGN
 DrawBottomShadowLine:
-	CALL_DISPLAY_LIBRARY GetSoftwareCoordinatesToAX
-	inc		ax			; Increment column
-	CALL_DISPLAY_LIBRARY SetCursorCoordinatesFromAX
+	mov		ax, 1		; Increment column
+	call	MenuLocation_MoveCursorByALcolumnsAndAHrows
 	inc		dx			; Increment repeat count...
 	inc		dx			; ...for both corner characters
 	call	PrintShadowCharactersByDXtimes
@@ -331,6 +379,53 @@ PrintMultipleBorderCharactersFromAL:
 	pop		cx
 	ret
 
+
+;--------------------------------------------------------------------
+; PrintTimeoutStringWithSecondsInAX
+;	Parameters
+;		AX:		Seconds to print
+;		SS:BP:	Ptr to MENU
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, SI, DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+PrintTimeoutStringWithSecondsInAX:
+	push	bp
+
+	xchg	di, ax
+	mov		bp, sp
+	call	.GetTimeoutAttributeToAXfromSecondsInDI
+	mov		si, .szSelectionTimeout
+	push	ax			; Push attribute
+	push	di			; Push seconds
+	CALL_DISPLAY_LIBRARY FormatNullTerminatedStringFromCSSI
+	pop		bp
+
+	; Draw right border with normal border color
+	mov		al, DOUBLE_RIGHT_HORIZONTAL_TO_SINGLE_VERTICAL
+	jmp		MenuBorders_PrintSingleBorderCharacterFromAL
+.szSelectionTimeout:
+	db		DOUBLE_BOTTOM_LEFT_CORNER
+	db		DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL
+	db		"%AAutoselection in %2u s",NULL
+
+;--------------------------------------------------------------------
+; .GetTimeoutAttributeToAXfromSecondsInDI
+;	Parameters
+;		DI:		Seconds to print
+;	Returns:
+;		AX:		Attribute byte for seconds
+;	Corrupts registers:
+;		SI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+.GetTimeoutAttributeToAXfromSecondsInDI:
+	mov		si, ATTRIBUTE_CHARS.cNormalTimeout
+	cmp		di, BYTE 3
+	eCMOVB	si, ATTRIBUTE_CHARS.cHurryTimeout
+	jmp		MenuAttribute_GetToAXfromTypeInSI
 
 
 ; Lookup tables for border characters

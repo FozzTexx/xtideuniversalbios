@@ -1,7 +1,7 @@
 ; File name		:	MenuInit.asm
 ; Project name	:	Assembly Library
 ; Created date	:	13.7.2010
-; Last update	:	12.10.2010
+; Last update	:	22.11.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for initializing menu system.
 
@@ -59,7 +59,6 @@ MenuInit_EnterMenuWithHandlerInBXandUserDataInDXAX:
 	mov		ax, CURSOR_HIDDEN
 	CALL_DISPLAY_LIBRARY SetCursorShapeFromAX
 	call	MenuEvent_InitializeMenuinit		; User initialization
-	call	MenuTime_RestartSelectionTimeout
 	call	MenuInit_RefreshMenuWindow
 	jmp		MenuLoop_Enter
 

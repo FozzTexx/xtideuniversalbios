@@ -1,7 +1,7 @@
 ; File name		:	Dialog.asm
 ; Project name	:	Assembly Library
 ; Created date	:	6.8.2010
-; Last update	:	18.11.2010
+; Last update	:	22.11.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Common functions for many dialogs.
 
@@ -231,28 +231,11 @@ Dialog_EventRefreshItemFromCX:
 ALIGN JUMP_ALIGN
 Dialog_RemoveFromScreenByRedrawingParentMenu:
 	mov		si, [bp+DIALOG.pParentMenu]	; SS:SI points to parent MENU
-	call	.ResetSelectionTimeoutFromParentMenuInSSSI
 	call	.GetParentTitleBorderCoordinatesToDX
 	call	MenuLocation_GetTitleBordersTopLeftCoordinatesToAX
 	cmp		ah, dh		; Dialog taller than parent?
 	jb		SHORT .RedrawDialogAreaAndWholeParentWindow
 	jmp		SHORT .RedrawWholeParentWindow
-
-;--------------------------------------------------------------------
-; .ResetSelectionTimeoutFromParentMenuInSSSI
-;	Parameters:
-;		SS:SI:	Ptr to parent MENU
-;	Returns:
-;		Nothing
-;	Corrupts:
-;		AX, BX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-.ResetSelectionTimeoutFromParentMenuInSSSI:
-	xchg	bp, si
-	call	MenuTime_RestartSelectionTimeout	; Restart timeout for parent MENU
-	xchg	si, bp
-	ret
 
 ;--------------------------------------------------------------------
 ; .GetParentTitleBorderCoordinatesToDX
