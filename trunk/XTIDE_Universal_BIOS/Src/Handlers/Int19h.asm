@@ -1,7 +1,7 @@
 ; File name		:	Int19h.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	3.8.2007
-; Last update	:	1.8.2010
+; Last update	:	28.11.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Int 19h BIOS functions (Boot Strap Loader).
 
@@ -73,8 +73,12 @@ Int19h_TryToLoadBootSectorFromDL:
 	call	BootPrint_TryToBootFromDL
 	call	Int19h_LoadFirstSectorFromDL
 	jc		SHORT .FailedToLoadFirstSector
+
+	test	dl, 80h
+	jz		SHORT .AlwaysBootFromFloppyDriveForBooterGames
 	cmp		WORD [es:bx+510], 0AA55h		; Valid boot sector?
-	jne		SHORT .FirstSectorNotBootable
+	jne		SHORT .FirstHardDiskSectorNotBootable
+.AlwaysBootFromFloppyDriveForBooterGames:
 	call	BootPrint_BootSectorLoaded
 	stc
 	ret
@@ -82,7 +86,7 @@ Int19h_TryToLoadBootSectorFromDL:
 	call	BootPrint_FailedToLoadFirstSector
 	clc
 	ret
-.FirstSectorNotBootable:
+.FirstHardDiskSectorNotBootable:
 	call	BootPrint_FirstSectorNotBootable
 	clc
 	ret
