@@ -1,7 +1,7 @@
 ; File name		:	MenuBorders.asm
 ; Project name	:	Assembly Library
 ; Created date	:	14.7.2010
-; Last update	:	25.11.2010
+; Last update	:	30.11.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for drawing menu borders.
 
@@ -33,7 +33,6 @@ MenuBorders_RefreshAll:
 	call	RefreshItemBorders
 	call	RefreshInformationBorders
 	call	DrawBottomBorderLine
-	call	DrawTimeoutCounterOverBottomBorderLine
 	jmp		DrawBottomShadowLine
 
 
@@ -52,25 +51,7 @@ MenuBorders_RedrawBottomBorderLine:
 	call	MenuLocation_GetBottomBordersTopLeftCoordinatesToAX
 	CALL_DISPLAY_LIBRARY SetCursorCoordinatesFromAX
 	call	GetNumberOfMiddleCharactersToDX
-	jmp		DrawBottomBorderLine
-
-
-;--------------------------------------------------------------------
-; MenuBorders_RedrawTimeoutValue
-;	Parameters
-;		SS:BP:	Ptr to MENU
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, BX, SI, DI
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-MenuBorders_RedrawTimeoutValue:
-	call	MenuBorders_AdjustDisplayContextForDrawingBorders
-	call	MenuLocation_GetBottomBordersTopLeftCoordinatesToAX
-	inc		ah		; Increment for shadow border
-	CALL_DISPLAY_LIBRARY SetCursorCoordinatesFromAX
-	jmp		DrawTimeoutCounterOverBottomBorderLine
+	jmp		SHORT DrawBottomBorderLine
 
 
 ;--------------------------------------------------------------------
@@ -234,18 +215,14 @@ DrawSeparationBorderLine:
 ALIGN JUMP_ALIGN
 DrawBottomBorderLine:
 	mov		si, g_rgbBottomBorderCharacters
-	jmp		SHORT PrintBorderCharactersFromCSSIandShadowCharacter
-
-ALIGN JUMP_ALIGN
-DrawTimeoutCounterOverBottomBorderLine:
 	test	BYTE [bp+MENU.bFlags], FLG_MENU_TIMEOUT_COUNTDOWN
-	jz		SHORT .NoNeedToDrawSinceTimeoutDisabled
-	mov		ax, (-1)<<8	; Decrement row
-	call	MenuLocation_MoveCursorByALcolumnsAndAHrows
-	call	MenuTime_GetTimeoutSecondsLeftToAX
-	call	PrintTimeoutStringWithSecondsInAX
-	jmp		SHORT PrintNewlineToEndBorderLine
-.NoNeedToDrawSinceTimeoutDisabled:
+	jz		SHORT PrintBorderCharactersFromCSSIandShadowCharacter
+
+	call	DrawTimeoutCounterString
+	sub		dx, BYTE MENU_TIMEOUT_STRING_CHARACTERS
+	mov		si, g_BottomBorderWithTimeoutCharacters
+	call	PrintBorderCharactersFromCSSIandShadowCharacter
+	add		dx, BYTE MENU_TIMEOUT_STRING_CHARACTERS
 	ret
 
 ALIGN JUMP_ALIGN
@@ -381,7 +358,21 @@ PrintMultipleBorderCharactersFromAL:
 
 
 ;--------------------------------------------------------------------
-; PrintTimeoutStringWithSecondsInAX
+; DrawTimeoutCounterString
+;	Parameters
+;		SS:BP:	Ptr to MENU
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, SI, DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+DrawTimeoutCounterString:
+	call	MenuTime_GetTimeoutSecondsLeftToAX
+	; Fall to .PrintTimeoutStringWithSecondsInAX
+
+;--------------------------------------------------------------------
+; .PrintTimeoutStringWithSecondsInAX
 ;	Parameters
 ;		AX:		Seconds to print
 ;		SS:BP:	Ptr to MENU
@@ -390,8 +381,8 @@ PrintMultipleBorderCharactersFromAL:
 ;	Corrupts registers:
 ;		AX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-PrintTimeoutStringWithSecondsInAX:
+;ALIGN JUMP_ALIGN
+.PrintTimeoutStringWithSecondsInAX:
 	push	bp
 
 	xchg	di, ax
@@ -402,10 +393,7 @@ PrintTimeoutStringWithSecondsInAX:
 	push	di			; Push seconds
 	CALL_DISPLAY_LIBRARY FormatNullTerminatedStringFromCSSI
 	pop		bp
-
-	; Draw right border with normal border color
-	mov		al, DOUBLE_RIGHT_HORIZONTAL_TO_SINGLE_VERTICAL
-	jmp		MenuBorders_PrintSingleBorderCharacterFromAL
+	ret
 .szSelectionTimeout:
 	db		DOUBLE_BOTTOM_LEFT_CORNER
 	db		DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL
@@ -423,7 +411,7 @@ PrintTimeoutStringWithSecondsInAX:
 ALIGN JUMP_ALIGN
 .GetTimeoutAttributeToAXfromSecondsInDI:
 	mov		si, ATTRIBUTE_CHARS.cNormalTimeout
-	cmp		di, BYTE 3
+	cmp		di, BYTE MENU_TIMEOUT_SECONDS_FOR_HURRY
 	eCMOVB	si, ATTRIBUTE_CHARS.cHurryTimeout
 	jmp		MenuAttribute_GetToAXfromTypeInSI
 
@@ -446,6 +434,13 @@ iend
 g_rgbBottomBorderCharacters:
 istruc BORDER_CHARS
 	at	BORDER_CHARS.cLeft,		db	DOUBLE_BOTTOM_LEFT_CORNER
+	at	BORDER_CHARS.cMiddle,	db	DOUBLE_HORIZONTAL
+	at	BORDER_CHARS.cRight,	db	DOUBLE_BOTTOM_RIGHT_CORNER
+iend
+
+g_BottomBorderWithTimeoutCharacters:
+istruc BORDER_CHARS
+	at	BORDER_CHARS.cLeft,		db	DOUBLE_RIGHT_HORIZONTAL_TO_SINGLE_VERTICAL
 	at	BORDER_CHARS.cMiddle,	db	DOUBLE_HORIZONTAL
 	at	BORDER_CHARS.cRight,	db	DOUBLE_BOTTOM_RIGHT_CORNER
 iend
