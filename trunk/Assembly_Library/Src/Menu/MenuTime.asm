@@ -1,7 +1,7 @@
 ; File name		:	MenuTime.asm
 ; Project name	:	Assembly Library
 ; Created date	:	25.7.2010
-; Last update	:	25.11.2010
+; Last update	:	30.11.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Menu timeouts other time related functions.
 
@@ -74,7 +74,7 @@ MenuTime_UpdateSelectionTimeout:
 
 ALIGN JUMP_ALIGN
 .RedrawSinceNoTimeout:
-	call	MenuBorders_RedrawTimeoutValue
+	call	MenuBorders_RedrawBottomBorderLine
 	clc
 ALIGN JUMP_ALIGN
 .ReturnSinceTimeoutDisabled:
@@ -99,15 +99,13 @@ MenuTime_GetTimeoutSecondsLeftToAX:
 
 	call	PointDSBXtoTimeoutCounter
 	call	TimerTicks_GetTimeoutTicksLeftToAXfromDSBX
-	jc		SHORT .TimeoutHasOccurred
+	jc		SHORT .TimeoutHasOccurredSoMakeSureTicksAreNotBelowZero
 
 	xchg	dx, ax
 	call	TimerTicks_GetSecondsToAXfromTicksInDX
-	clc
 	jmp		SHORT .PopRegistersAndReturn
-.TimeoutHasOccurred:
+.TimeoutHasOccurredSoMakeSureTicksAreNotBelowZero:
 	xor		ax, ax
-	stc
 .PopRegistersAndReturn:
 	pop		bx
 	pop		cx
