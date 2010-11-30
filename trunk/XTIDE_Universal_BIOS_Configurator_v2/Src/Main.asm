@@ -95,6 +95,7 @@ istruc CFGVARS
 	at	CFGVARS.pMenupage,			dw	g_MenupageForMainMenu
 	at	CFGVARS.wFlags,				dw	DEFAULT_CFGVARS_FLAGS
 	at	CFGVARS.wEepromSegment,		dw	DEFAULT_EEPROM_SEGMENT
+	at	CFGVARS.bEepromType,		db	DEFAULT_EEPROM_TYPE
 	at	CFGVARS.bEepromPageSize,	db	DEFAULT_PAGE_SIZE
 	at	CFGVARS.bSdpCommand,		db	DEFAULT_SDP_COMMAND
 iend
@@ -102,7 +103,3 @@ iend
 
 ; Section containing uninitialized data
 SECTION .bss
-
-g_uninitialized:
-	resb		32768
-

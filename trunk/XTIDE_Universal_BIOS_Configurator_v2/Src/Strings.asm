@@ -237,15 +237,11 @@ g_szHelpFlashChecksum:	db	"incbin goes here.",NULL
 
 g_szMultichoiseEepromType:
 						db	"2816 (2 kiB)",LF
-						db	"2832 (4 kiB)",LF
 						db	"2864 (8 kiB)",LF
-						db	"28128 (16 kiB)",LF
 						db	"28256 (32 kiB)",LF
 						db	"28512 (64 kiB)",NULL
 g_szValueFlash2816:		db	"2816",NULL
-g_szValueFlash2832:		db	"2832",NULL
 g_szValueFlash2864:		db	"2864",NULL
-g_szValueFlash28128:	db	"28128",NULL
 g_szValueFlash28256:	db	"28256",NULL
 g_szValueFlash28512:	db	"28512",NULL
 
