@@ -84,3 +84,8 @@ Registers_SetZFifNullPointerInDSSI:
 	or		ax, si
 	pop		ax
 	ret
+
+	
+ALIGN JUMP_ALIGN
+Registers_SetCFifCXisZero:
+	
