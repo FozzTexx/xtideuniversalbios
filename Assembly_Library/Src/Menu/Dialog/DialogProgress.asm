@@ -1,7 +1,7 @@
 ; File name		:	DialogProgress.asm
 ; Project name	:	Assembly Library
 ; Created date	:	15.8.2010
-; Last update	:	18.11.2010
+; Last update	:	5.12.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Displays progress bar dialog and starts progress task.
 
@@ -82,6 +82,7 @@ ALIGN JUMP_ALIGN
 	lds		si, [bp+DIALOG.fpDialogIO]
 	call	TimerTicks_ReadFromBdaToAX
 	mov		[si+PROGRESS_DIALOG_IO.wStartTimeTicks], ax
+	MAX_U	WORD [si+PROGRESS_DIALOG_IO.wMaxProgressValue], 0FFFFh	; Max cannot be zero
 	jmp		SHORT CalculateProgressNeededBeforeUpdatingCharacter
 
 
@@ -89,7 +90,9 @@ ALIGN JUMP_ALIGN
 .IdleProcessing:
 	call	MenuInit_GetUserDataToDSSI
 	les		di, [bp+DIALOG.fpDialogIO]
+	push	bp
 	call	[es:di+PROGRESS_DIALOG_IO.fnTaskWithParamInDSSI]
+	pop		bp
 	call	MenuInit_CloseMenuWindow
 	stc
 	ret
