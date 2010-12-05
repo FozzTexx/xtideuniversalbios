@@ -1,9 +1,30 @@
 ; File name		:	EEPROM.asm
 ; Project name	:	XTIDE Univeral BIOS Configurator v2
 ; Created date	:	19.4.2010
-; Last update	:	10.10.2010
+; Last update	:	3.12.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for managing EEPROM contents.
+
+; Section containing initialized data
+SECTION .data
+
+ALIGN WORD_ALIGN
+g_rgwEepromTypeToSizeInWords:
+	dw		(2<<10) / 2		; EEPROM_TYPE.2816_2kiB
+	dw		(8<<10) / 2
+	dw		(32<<10) / 2
+	dw		(64<<10) / 2
+
+g_rgwEepromPageToSizeInBytes:
+	dw		1				; EEPROM_PAGE.1_byte
+	dw		2
+	dw		4
+	dw		8
+	dw		16
+	dw		32
+	dw		64
+
+
 
 ; Section containing code
 SECTION .text
@@ -133,16 +154,27 @@ ALIGN JUMP_ALIGN
 
 
 ;--------------------------------------------------------------------
-; EEPROM_GetPointerForFlashingToESDI
+; EEPROM_LoadFromRomToRamComparisonBuffer
 ;	Parameters:
 ;		Nothing
 ;	Returns:
-;		ES:DI:	Ptr to EEPROM to be flashed
-;	Corrupts registers:
 ;		Nothing
+;	Corrupts registers:
+;		BX, CX, SI, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-EEPROM_GetPointerForFlashingToESDI:
-	mov		es, [cs:g_cfgVars+CFGVARS.wEepromSegment]
-	xor		di, di
+EEPROM_LoadFromRomToRamComparisonBuffer:
+	push	es
+	push	ds
+
+	mov		ds, [cs:g_cfgVars+CFGVARS.wEepromSegment]
+	xor		si, si
+	call	Buffers_GetFlashComparisonBufferToESDI
+	eMOVZX	bx, BYTE [cs:g_cfgVars+CFGVARS.bEepromType]
+	mov		cx, [cs:bx+g_rgwEepromTypeToSizeInWords]
+	cld
+	rep movsw
+
+	pop		ds
+	pop		es
 	ret

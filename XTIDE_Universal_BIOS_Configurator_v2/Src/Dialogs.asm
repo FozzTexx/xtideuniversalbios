@@ -1,7 +1,7 @@
 ; File name		:	Dialogs.asm
 ; Project name	:	XTIDE Univeral BIOS Configurator v2
 ; Created date	:	10.10.2010
-; Last update	:	19.11.2010
+; Last update	:	2.12.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for displaying dialogs.
 
@@ -84,6 +84,7 @@ DisplayMessageDialogWithMessageInCSDXandDialogInputInDSSI:
 ; Dialogs_DisplayFileDialogWithDialogIoInDSSI
 ;	Parameters:
 ;		DS:SI:	Ptr to FILE_DIALOG_IO
+;		SS:BP:	Menu handle
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
@@ -112,7 +113,7 @@ Dialogs_DisplayFileDialogWithDialogIoInDSSI:
 ; Dialogs_DisplayQuitDialog
 ; Dialogs_DisplaySaveChangesDialog
 ;	Parameters:
-;		Nothing
+;		SS:BP:	Menu handle
 ;	Returns:
 ;		ZF:		Set if user wants to do the action
 ;				Cleared if user wants to cancel
@@ -150,6 +151,40 @@ Dialogs_DisplaySaveChangesDialog:
 	cmp		ax, BYTE 1		; 1 = YES
 
 	pop		ds
+	ret
+
+
+;--------------------------------------------------------------------
+; Dialogs_DisplayProgressDialogForFlashingWithDialogIoInDSSIandFlashvarsInDSBX
+;	Parameters:
+;		DS:BX:	Ptr to FLASHVARS
+;		DS:SI:	Ptr to PROGRESS_DIALOG_IO
+;		SS:BP:	Menu handle
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, DX, DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+Dialogs_DisplayProgressDialogForFlashingWithDialogIoInDSSIandFlashvarsInDSBX:
+	call	.InitializeProgressDialogIoInDSSIwithFlashvarsInDSBX
+	mov		dx, ds
+	mov		ax, bx
+	CALL_MENU_LIBRARY StartProgressTaskWithIoInDSSIandParamInDXAX
+	ret
+
+ALIGN JUMP_ALIGN
+.InitializeProgressDialogIoInDSSIwithFlashvarsInDSBX:
+	call	InitializeDialogInputFromDSSI
+	mov		WORD [si+DIALOG_INPUT.fszTitle], g_szEEPROM
+
+	xor		ax, ax
+	mov		[si+PROGRESS_DIALOG_IO.wCurrentProgressValue], ax
+	mov		dx, [bx+FLASHVARS.wPagesToFlash]
+	mov		[si+PROGRESS_DIALOG_IO.wMaxProgressValue], dx
+	mov		[si+PROGRESS_DIALOG_IO.wMinProgressValue], ax
+	mov		WORD [si+PROGRESS_DIALOG_IO.fnTaskWithParamInDSSI], Flash_EepromWithFlashvarsInDSSI
+	mov		[si+PROGRESS_DIALOG_IO.fnTaskWithParamInDSSI+2], cs
 	ret
 
 

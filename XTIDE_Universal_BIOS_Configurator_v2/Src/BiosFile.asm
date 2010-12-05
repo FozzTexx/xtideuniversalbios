@@ -1,7 +1,7 @@
 ; File name		:	BiosFile.asm
 ; Project name	:	XTIDE Univeral BIOS Configurator v2
 ; Created date	:	10.10.2010
-; Last update	:	24.10.2010
+; Last update	:	30.11.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for loading and saving BIOS image file.
 
@@ -162,7 +162,8 @@ BiosFile_SaveRamBufferToFileInDSSI:
 	call	Buffers_GenerateChecksum
 	call	Buffers_GetFileBufferToESDI
 	call	Registers_CopyESDItoDSSI
-	mov		cx, [cs:g_cfgVars+CFGVARS.wImageSize]
+	mov		cx, [cs:g_cfgVars+CFGVARS.wImageSizeInWords]
+	shl		cx, 1
 	call	FileIO_WriteCXbytesFromDSSIusingHandleFromBX
 	jc		SHORT .DisplayErrorMessage
 

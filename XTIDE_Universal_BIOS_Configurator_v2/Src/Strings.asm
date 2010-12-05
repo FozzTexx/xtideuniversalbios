@@ -1,7 +1,7 @@
 ; File name		:	Strings.asm
 ; Project name	:	XTIDE Universal BIOS Configurator v2
 ; Created date	:	5.10.2010
-; Last update	:	19.11.2010
+; Last update	:	5.12.2010
 ; Author		:	Tomi Tilli
 ; Description	:	All strings.
 
@@ -11,7 +11,7 @@ SECTION .data
 
 ; Menu title
 g_szProgramTitle:
-	db	"Configuration and Flashing program for XTIDE Universal BIOS v1.1.4.",LF,CR,NULL
+	db	"Configuration and Flashing program for XTIDE Universal BIOS v1.1.5.",LF,CR,NULL
 g_szXtideUniversalBiosSignature:	db	"XTIDE110",NULL
 g_szBiosIsNotLoaded:				db	"BIOS is not loaded!",NULL
 g_szEEPROM:							db	"EEPROM",NULL
@@ -40,6 +40,15 @@ g_szDlgSaveChanges:		db	"Do you want to save changes to XTIDE Universal BIOS ima
 g_szNotificationDialog:	db	"Notification.",NULL
 g_szErrorDialog:		db	"Error!",NULL
 g_szGenericDialogInfo:	db	"Press ENTER or ESC to close dialog.",NULL
+
+; Flashing related strings
+g_szErrEepromPolling:	db	"Timeout when polling EEPROM.",LF
+						db	"EEPROM was not flashed properly!",NULL
+g_szErrEepromVerify:	db	"EEPROM did not return the same byte that was written.",LF
+						db	"EEPROM was not flashed properly!",NULL
+g_szPCFlashSuccessfull:	db	"EEPROM was written successfully.",LF
+						db	"Press any key to reboot.",NULL
+g_szForeignFlash:		db	"EEPROM was written successfully.",NULL
 
 
 ; Strings for main menu
@@ -261,7 +270,7 @@ g_szMultichoisePageSize:
 						db	"16 bytes",LF
 						db	"32 bytes",LF
 						db	"64 bytes",NULL
-g_szValueFlash1byte:	db	"None",NULL
+g_szValueFlash1byte:	db	"1 byte",NULL
 g_szValueFlash2bytes:	db	"2 bytes",NULL
 g_szValueFlash4bytes:	db	"4 bytes",NULL
 g_szValueFlash8bytes:	db	"8 bytes",NULL

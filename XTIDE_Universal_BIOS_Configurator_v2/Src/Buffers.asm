@@ -1,7 +1,7 @@
 ; File name		:	Buffers.asm
 ; Project name	:	XTIDE Universal BIOS Configurator v2
 ; Created date	:	6.10.2010
-; Last update	:	19.11.2010
+; Last update	:	5.12.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for accessing file and flash buffers.
 
@@ -40,11 +40,17 @@ Buffers_IsXtideUniversalBiosLoaded:
 	jz		SHORT .NoFileOrBiosLoaded
 
 	call	Buffers_GetFileBufferToESDI
-	jmp		SHORT Buffers_IsXtideUniversalBiosSignatureInESDI
+	call	Buffers_IsXtideUniversalBiosSignatureInESDI
+	jnz		SHORT .NoFileOrBiosLoaded
+	jmp		SHORT .IsSupportedVersionOfXtideUniversalBiosLoaded
 .NoFileOrBiosLoaded:
 	or		cl, 1		; Clear ZF
 	ret
 
+
+ALIGN JUMP_ALIGN
+.IsSupportedVersionOfXtideUniversalBiosLoaded:
+	
 
 ;--------------------------------------------------------------------
 ; Buffers_IsXtideUniversalBiosSignatureInESDI
@@ -78,83 +84,16 @@ Buffers_IsXtideUniversalBiosSignatureInESDI:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, BX, CX, DX
+;		AX, CX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Buffers_NewBiosWithSizeInCXandSourceInAXhasBeenLoadedForConfiguration:
 	and		WORD [cs:g_cfgVars+CFGVARS.wFlags], ~(FLG_CFGVARS_FILELOADED | FLG_CFGVARS_ROMLOADED | FLG_CFGVARS_UNSAVED)
 	or		WORD [cs:g_cfgVars+CFGVARS.wFlags], ax
-	; Fall to .AdjustBiosImageSizeToSupportedEepromSize
-
-;--------------------------------------------------------------------
-; .AdjustBiosImageSizeInCXtoSupportedEepromSize
-;	Parameters:
-;		CX:		Size of loaded BIOS image
-;	Returns:
-;		CX:		Size of BIOS image (and EEPROM required)
-;	Corrupts registers:
-;		AX, BX, DX
-;--------------------------------------------------------------------
-.AdjustBiosImageSizeInCXtoSupportedEepromSize:
-	mov		bx, .rgwSupportedEepromSizes
-	mov		dx, NUMBER_OF_SUPPORTED_EEPROM_SIZES-1
-ALIGN JUMP_ALIGN
-.CheckNextEepromSize:
-	cmp		cx, [cs:bx]
-	je		SHORT .StoreImageSizeFromCX
-	jb		SHORT .AppendZeroesToTheEndOfBuffer
-	inc		bx
-	inc		bx
-	dec		dx
-	jnz		SHORT .CheckNextEepromSize
-	xor		cx, cx
-	jmp		SHORT .StoreImageSizeFromCX	; 0 = 65536
-ALIGN WORD_ALIGN
-.rgwSupportedEepromSizes:
-	dw		4<<10
-	dw		8<<10
-	dw		16<<10
-	dw		32<<10
-
-;--------------------------------------------------------------------
-; .AppendZeroesToTheEndOfBuffer
-;	Parameters:
-;		CX:		Size of loaded BIOS image
-;		CS:BX:	Ptr to EEPROM size
-;	Returns:
-;		CX:		EEPROM size
-;	Corrupts registers:
-;		AX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-.AppendZeroesToTheEndOfBuffer:
-	push	es
-	push	di
-
-	call	Buffers_GetFileBufferToESDI
-	mov		ax, [cs:bx]
-	sub		ax, cx			; AX = zeroes to append
-	xchg	ax, cx			; AX = BIOS image size, CX = zeroes to append
-	add		di, ax
-	call	Memory_ZeroESDIwithSizeInCX
-	mov		cx, [cs:bx]
-
-	pop		di
-	pop		es
-	; Fall to .StoreImageSizeFromCX
-
-;--------------------------------------------------------------------
-; .StoreImageSizeFromCX
-;	Parameters:
-;		CX:		Size of BIOS image (and EEPROM required)
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-.StoreImageSizeFromCX:
-	mov		[cs:g_cfgVars+CFGVARS.wImageSize], cx
+	mov		ax, (64<<10) / 2	; 32768 WORDs
+	shr		cx, 1				; Bytes to WORDs
+	eCMOVZ	cx, ax
+	mov		[cs:g_cfgVars+CFGVARS.wImageSizeInWords], cx
 	ret
 
 
@@ -203,6 +142,37 @@ ALIGN JUMP_ALIGN
 
 
 ;--------------------------------------------------------------------
+; Buffers_AppendZeroesIfNeeded
+;	Parameters:
+;		Nothing
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, CX, DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+Buffers_AppendZeroesIfNeeded:
+	push	es
+
+	eMOVZX	di, BYTE [cs:g_cfgVars+CFGVARS.bEepromType]
+	mov		cx, [cs:di+g_rgwEepromTypeToSizeInWords]
+	sub		cx, [cs:g_cfgVars+CFGVARS.wImageSizeInWords]	; CX = WORDs to append
+	jle		SHORT .NoNeedToAppendZeroes
+
+	call	Buffers_GetFileBufferToESDI
+	mov		ax, [cs:g_cfgVars+CFGVARS.wImageSizeInWords]
+	shl		ax, 1
+	add		di, ax			; ES:DI now point first unused image byte
+	xor		ax, ax
+	cld
+	rep stosw
+ALIGN JUMP_ALIGN
+.NoNeedToAppendZeroes:
+	pop		es
+	ret
+
+
+;--------------------------------------------------------------------
 ; Buffers_GenerateChecksum
 ;	Parameters:
 ;		Nothing
@@ -216,7 +186,8 @@ Buffers_GenerateChecksum:
 	push	es
 
 	call	Buffers_GetFileBufferToESDI
-	mov		cx, [cs:g_cfgVars+CFGVARS.wImageSize]
+	mov		cx, [cs:g_cfgVars+CFGVARS.wImageSizeInWords]
+	shl		cx, 1			; Words to bytes
 	dec		cx				; Leave space for checksum byte
 	xor		ax, ax
 ALIGN JUMP_ALIGN
@@ -267,6 +238,7 @@ Buffers_GetRomvarsValueToAXfromOffsetInBX:
 
 ;--------------------------------------------------------------------
 ; Buffers_GetFileBufferToESDI
+; Buffers_GetFlashComparisonBufferToESDI
 ; Buffers_GetFileDialogItemBufferToESDI
 ;	Parameters:
 ;		Nothing
@@ -276,6 +248,7 @@ Buffers_GetRomvarsValueToAXfromOffsetInBX:
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
+Buffers_GetFlashComparisonBufferToESDI:
 Buffers_GetFileDialogItemBufferToESDI:
 	call	Buffers_GetFileBufferToESDI
 	push	di
@@ -284,6 +257,7 @@ Buffers_GetFileDialogItemBufferToESDI:
 	mov		es, di
 	pop		di
 	ret
+ALIGN JUMP_ALIGN
 Buffers_GetFileBufferToESDI:
 	mov		di, cs
 	add		di, 1000h		; Change to next 64k page

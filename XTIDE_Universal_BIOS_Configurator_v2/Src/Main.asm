@@ -1,7 +1,7 @@
 ; File name		:	main.asm
 ; Project name	:	XTIDE Univeral BIOS Configurator v2
 ; Created date	:	5.10.2010
-; Last update	:	19.11.2010
+; Last update	:	3.12.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Program start and exit.			
 
@@ -32,6 +32,7 @@ Start:
 %include "Buffers.asm"
 %include "Dialogs.asm"
 %include "EEPROM.asm"
+%include "Flash.asm"
 %include "MenuEvents.asm"
 %include "Menuitem.asm"
 %include "MenuitemPrint.asm"
@@ -96,7 +97,7 @@ istruc CFGVARS
 	at	CFGVARS.wFlags,				dw	DEFAULT_CFGVARS_FLAGS
 	at	CFGVARS.wEepromSegment,		dw	DEFAULT_EEPROM_SEGMENT
 	at	CFGVARS.bEepromType,		db	DEFAULT_EEPROM_TYPE
-	at	CFGVARS.bEepromPageSize,	db	DEFAULT_PAGE_SIZE
+	at	CFGVARS.bEepromPage,		db	DEFAULT_PAGE_SIZE
 	at	CFGVARS.bSdpCommand,		db	DEFAULT_SDP_COMMAND
 iend
 

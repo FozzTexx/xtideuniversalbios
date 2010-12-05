@@ -1,7 +1,7 @@
 ; File name		:	MenuitemPrint.asm
 ; Project name	:	XTIDE Universal BIOS Configurator v2
 ; Created date	:	5.10.2010
-; Last update	:	2.11.2010
+; Last update	:	5.12.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for printing MENUITEM name and value.
 
@@ -201,8 +201,10 @@ MenuitemPrint_WriteUnsignedValueStringToBufferInESDIfromItemInDSSI:
 	CALL_DISPLAY_LIBRARY PushDisplayContext
 	CALL_DISPLAY_LIBRARY PrepareOffScreenBufferInESBXwithLengthInCX
 
+	call	Menuitem_GetValueToAXfromMenuitemInDSSI
 	mov		bx, 10
-	jmp		SHORT PrintByteOrWordValue
+	CALL_DISPLAY_LIBRARY PrintWordFromAXwithBaseInBX
+	jmp		SHORT FinishPrintingUnsignedOrHexValue
 
 ;--------------------------------------------------------------------
 ; MenuitemPrint_WriteHexValueStringToBufferInESDIfromItemInDSSI
@@ -221,13 +223,13 @@ MenuitemPrint_WriteHexValueStringToBufferInESDIfromItemInDSSI:
 	CALL_DISPLAY_LIBRARY PushDisplayContext
 	CALL_DISPLAY_LIBRARY PrepareOffScreenBufferInESBXwithLengthInCX
 
-	mov		bx, 16
-PrintByteOrWordValue:
-	push	bx
 	call	Menuitem_GetValueToAXfromMenuitemInDSSI
-	pop		bx
-
+	mov		bx, 16
 	CALL_DISPLAY_LIBRARY PrintWordFromAXwithBaseInBX
+	mov		al, 'h'
+	CALL_DISPLAY_LIBRARY PrintCharacterFromAL
+ALIGN JUMP_ALIGN
+FinishPrintingUnsignedOrHexValue:
 	CALL_DISPLAY_LIBRARY GetCharacterPointerToBXAX
 	xchg	bx, ax
 
