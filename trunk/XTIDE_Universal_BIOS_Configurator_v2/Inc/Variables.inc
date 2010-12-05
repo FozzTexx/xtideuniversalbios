@@ -1,7 +1,7 @@
 ; File name		:	Variables.inc
 ; Project name	:	XTIDE Univeral BIOS Configurator v2
 ; Created date	:	5.10.2010
-; Last update	:	19.11.2010
+; Last update	:	2.12.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Global variables for configuration program.
 %ifndef VARIABLES_INC
@@ -11,7 +11,7 @@
 MAX_ALLOWED_IDE_CONTROLLERS			EQU		5	; Maximum number of IDE controllers
 EEPROM_POLLING_TIMEOUT_TICKS		EQU		3	; 1 tick = 54.9 ms
 XTIDE_SIGNATURE_LENGTH				EQU		8	; XTIDE Universal BIOS signature string length
-NUMBER_OF_SUPPORTED_EEPROM_SIZES	EQU		5
+NUMBER_OF_EEPROM_TYPES				EQU		4
 MAX_EEPROM_SIZE						EQU	65536
 
 
@@ -19,14 +19,13 @@ MAX_EEPROM_SIZE						EQU	65536
 struc CFGVARS
 	.pMenupage			resb	2			; Offset to MENUPAGE to display
 	.wFlags				resb	2			; Program flags
-	.wImageSize			resb	2			; Size in bytes for BIOS image to be flashed (0=65536)
+	.wImageSizeInWords	resb	2			; Size in words for loaded ROM or FILE
 	.wEepromSegment		resb	2			; Segment where EEPROM is located
 	.bEepromType		resb	1			; EEPROM type
-	.bEepromPageSize	resb	1			; EEPROM page size in bytes
+	.bEepromPage		resb	1			; EEPROM page size (EEPROM_PAGE)
 	.bSdpCommand		resb	1			; Command for Software Data Protection
 						resb	1
 	.szOpenedFile		resb	FILENAME_BUFFER_SIZE
-	.flashVars			resb	FLASHVARS_size
 endstruc
 
 ; Bit defines for CFGVARS.wFlags
@@ -51,7 +50,7 @@ struc SDP_COMMAND
 endstruc
 
 ; Page sizes
-struc EEPROM_PAGE_SIZE
+struc EEPROM_PAGE
 	.1_byte				resb	2
 	.2_bytes			resb	2
 	.4_bytes			resb	2
@@ -65,15 +64,32 @@ endstruc
 DEFAULT_CFGVARS_FLAGS	EQU		FLG_CFGVARS_CHECKSUM
 DEFAULT_EEPROM_SEGMENT	EQU		0D000h
 DEFAULT_EEPROM_TYPE		EQU		EEPROM_TYPE.2864_8kiB
-DEFAULT_PAGE_SIZE		EQU		EEPROM_PAGE_SIZE.1_byte
+DEFAULT_PAGE_SIZE		EQU		EEPROM_PAGE.1_byte
 DEFAULT_SDP_COMMAND		EQU		SDP_COMMAND.enable
 
 
 ; Variables required for flashing
 struc FLASHVARS
-	.wTotalPages		resb	2		; Total number of pages to write
-	.wPagesLeft			resb	2		; Pages left to write
-	.wByteOffset		resb	2		; Offset to byte to write next
+	.fpNextSourcePage			resb	4
+	.fpNextComparisonPage		resb	4
+	.fpNextDestinationPage		resb	4
+	.wPagesToFlash				resb	2	; 0 = 65536
+	.wEepromPageSize			resb	2	; 1, 2, 4, 8, 16, 32 or 64
+	.bEepromSdpCommand			resb	1
+	.bEepromType				resb	1
+
+	.wProgressUpdateParam		resb	2
+	.wTimeoutCounter			resb	2
+	.wLastOffsetWritten			resb	2
+	.bLastByteWritten			resb	1
+	.flashResult				resb	1
+endstruc
+
+; Flashing results
+struc FLASH_RESULT
+	.success					resb	2
+	.PollingTimeoutError		resb	2
+	.DataVerifyError			resb	2
 endstruc
 
 

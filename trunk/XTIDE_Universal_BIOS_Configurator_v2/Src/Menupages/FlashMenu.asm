@@ -1,7 +1,7 @@
 ; File name		:	FlashMenu.asm
 ; Project name	:	XTIDE Universal BIOS Configurator v2
 ; Created date	:	19.11.2010
-; Last update	:	19.11.2010
+; Last update	:	5.12.2010
 ; Author		:	Tomi Tilli
 ; Description	:	"Flash EEPROM" menu structs and functions.
 
@@ -77,7 +77,7 @@ istruc MENUITEM
 	at	MENUITEM.szHelp,			dw	g_szHelpFlashPageSize
 	at	MENUITEM.bFlags,			db	FLG_MENUITEM_PROGRAMVAR | FLG_MENUITEM_BYTEVALUE | FLG_MENUITEM_VISIBLE
 	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOISE
-	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	CFGVARS.bEepromPageSize
+	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	CFGVARS.bEepromPage
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgFlashPageSize
 	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoise,				dw	g_szMultichoisePageSize
 	at	MENUITEM.itemValue + ITEM_VALUE.rgwChoiseToValueLookup,		dw	g_rgwChoiseToValueLookupForPageSize
@@ -136,13 +136,13 @@ g_rgszValueToStringLookupForSdpCommand:
 	dw	g_szValueFlashDisable
 
 g_rgwChoiseToValueLookupForPageSize:
-	dw	EEPROM_PAGE_SIZE.1_byte
-	dw	EEPROM_PAGE_SIZE.2_bytes
-	dw	EEPROM_PAGE_SIZE.4_bytes
-	dw	EEPROM_PAGE_SIZE.8_bytes
-	dw	EEPROM_PAGE_SIZE.16_bytes
-	dw	EEPROM_PAGE_SIZE.32_bytes
-	dw	EEPROM_PAGE_SIZE.64_bytes
+	dw	EEPROM_PAGE.1_byte
+	dw	EEPROM_PAGE.2_bytes
+	dw	EEPROM_PAGE.4_bytes
+	dw	EEPROM_PAGE.8_bytes
+	dw	EEPROM_PAGE.16_bytes
+	dw	EEPROM_PAGE.32_bytes
+	dw	EEPROM_PAGE.64_bytes
 g_rgszValueToStringLookupForPageSize:
 	dw	g_szValueFlash1byte
 	dw	g_szValueFlash2bytes
@@ -184,4 +184,172 @@ FlashMenu_EnterMenuOrModifyItemVisibility:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 StartFlashing:
+	push	es
+	push	ds
+
+	call	.PrepareBuffersForFlashing
+	mov		cx, FLASHVARS_size + PROGRESS_DIALOG_IO_size
+	call	Memory_ReserveCXbytesFromStackToDSSI
+	call	.InitializeFlashvarsFromDSSI
+	mov		bx, si							; DS:BX now points to FLASHVARS
+	add		si, BYTE FLASHVARS_size			; DS:SI now points to PROGRESS_DIALOG_IO
+	call	Dialogs_DisplayProgressDialogForFlashingWithDialogIoInDSSIandFlashvarsInDSBX
+	call	.DisplayFlashingResultsFromFlashvarsInDSBX
+
+	add		sp, BYTE FLASHVARS_size + PROGRESS_DIALOG_IO_size
+	pop		ds
+	pop		es
 	ret
+
+;--------------------------------------------------------------------
+; .PrepareBuffersForFlashing
+;	Parameters:
+;		SS:BP:	Ptr to MENU
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, BX, CX, SI, DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+.PrepareBuffersForFlashing:
+	call	EEPROM_LoadFromRomToRamComparisonBuffer
+	call	Buffers_AppendZeroesIfNeeded
+	test	WORD [cs:g_cfgVars+CFGVARS.wFlags], FLG_CFGVARS_CHECKSUM
+	jz		SHORT .DoNotGenerateChecksumByte
+	jmp		Buffers_GenerateChecksum
+.DoNotGenerateChecksumByte:
+	ret
+
+;--------------------------------------------------------------------
+; .InitializeFlashvarsFromDSSI
+;	Parameters:
+;		DS:SI:	Ptr to FLASHVARS to initialize
+;		SS:BP:	Ptr to MENU
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, BX, DX, DI, ES
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+.InitializeFlashvarsFromDSSI:
+	call	Buffers_GetFileBufferToESDI
+	mov		[si+FLASHVARS.fpNextSourcePage], di
+	mov		[si+FLASHVARS.fpNextSourcePage+2], es
+
+	call	Buffers_GetFlashComparisonBufferToESDI
+	mov		[si+FLASHVARS.fpNextComparisonPage], di
+	mov		[si+FLASHVARS.fpNextComparisonPage+2], es
+
+	mov		ax, [cs:g_cfgVars+CFGVARS.wEepromSegment]
+	mov		WORD [si+FLASHVARS.fpNextDestinationPage], 0
+	mov		[si+FLASHVARS.fpNextDestinationPage+2], ax
+
+	mov		al, [cs:g_cfgVars+CFGVARS.bEepromType]
+	mov		[si+FLASHVARS.bEepromType], al
+
+	mov		al, [cs:g_cfgVars+CFGVARS.bSdpCommand]
+	mov		[si+FLASHVARS.bEepromSdpCommand], al
+
+	eMOVZX	bx, BYTE [cs:g_cfgVars+CFGVARS.bEepromPage]
+	mov		ax, [cs:bx+g_rgwEepromPageToSizeInBytes]
+	mov		[si+FLASHVARS.wEepromPageSize], ax
+
+	call	.GetNumberOfPagesToFlashToAX
+	mov		[si+FLASHVARS.wPagesToFlash], ax
+	ret
+
+;--------------------------------------------------------------------
+; .GetNumberOfPagesToFlashToAX
+;	Parameters:
+;		DS:SI:	Ptr to FLASHVARS to initialize
+;	Returns:
+;		AX:		Number of pages to flash (0 = 65536)
+;	Corrupts registers:
+;		BX, DX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+.GetNumberOfPagesToFlashToAX:
+	eMOVZX	bx, BYTE [si+FLASHVARS.bEepromType]
+	mov		ax, [cs:bx+g_rgwEepromTypeToSizeInWords]
+	xor		dx, dx
+	shl		ax, 1		; Size in bytes to...
+	rcl		dx, 1		; ...DX:AX
+
+	cmp		WORD [si+FLASHVARS.wEepromPageSize], BYTE 1
+	jbe		SHORT .PreventDivideException
+	div		WORD [si+FLASHVARS.wEepromPageSize]
+.PreventDivideException:
+	ret
+
+
+;--------------------------------------------------------------------
+; .DisplayFlashingResultsFromFlashvarsInDSBX
+;	Parameters:
+;		DS:BX:	Ptr to FLASHVARS
+;		SS:BP:	Ptr to MENU
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, BX, DX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+.DisplayFlashingResultsFromFlashvarsInDSBX:
+	eMOVZX	bx, BYTE [bx+FLASHVARS.flashResult]
+	jmp		[cs:bx+.rgfnFlashResultMessage]
+
+ALIGN WORD_ALIGN
+.rgfnFlashResultMessage:
+	dw		.DisplayFlashSuccessful
+	dw		.DisplayPollingError
+	dw		.DisplayDataVerifyError
+
+
+;--------------------------------------------------------------------
+; .DisplayPollingError
+; .DisplayDataVerifyError
+; .DisplayFlashSuccessful
+;	Parameters:
+;		SS:BP:	Ptr to MENU
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, DX, DI, ES
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+.DisplayPollingError:
+	mov		dx, g_szErrEepromPolling
+	jmp		Dialogs_DisplayErrorFromCSDX
+
+ALIGN JUMP_ALIGN
+.DisplayDataVerifyError:
+	mov		dx, g_szErrEepromVerify
+	jmp		Dialogs_DisplayErrorFromCSDX
+
+ALIGN JUMP_ALIGN
+.DisplayFlashSuccessful:
+	call	Buffers_GetFileBufferToESDI
+	cmp		WORD [es:di+ROMVARS.wRomSign], 0AA55h	; PC ROM?
+	je		SHORT .DisplayRebootMessageAndReboot
+	mov		dx, g_szForeignFlash
+	jmp		Dialogs_DisplayNotificationFromCSDX
+ALIGN JUMP_ALIGN
+.DisplayRebootMessageAndReboot:
+	mov		dx, g_szPCFlashSuccessfull
+	call	Dialogs_DisplayNotificationFromCSDX
+	; Fall to .RebootComputer
+
+
+;--------------------------------------------------------------------
+; .RebootComputer
+;	Parameters:
+; 		Nothing
+;	Returns:
+;		Nothing, function never returns
+;	Corrupts registers:
+;		Doesn't matter
+;--------------------------------------------------------------------
+.RebootComputer:
+	mov		al, 0FEh				; System reset (AT+ keyboard controller)
+	out		64h, al					; Reset computer (AT+)
+	nop
+	jmp		WORD 0F000h:0FFF0h		; XT reset
