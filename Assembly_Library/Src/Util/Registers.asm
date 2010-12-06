@@ -1,12 +1,62 @@
 ; File name		:	Registers.asm
 ; Project name	:	Assembly Library
 ; Created date	:	24.10.2010
-; Last update	:	24.10.2010
+; Last update	:	6.12.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for register operations.
 
+;--------------------------------------------------------------------
+; NORMALIZE_FAR_POINTER
+;	Parameters:
+;		%1:%2:		Far pointer to normalize
+;		%3:			Scratch register
+;		%4:			Scratch register
+;	Returns:
+;		%1:%2:		Normalized far pointer
+;	Corrupts registers:
+;		%3, %4
+;--------------------------------------------------------------------
+%macro NORMALIZE_FAR_POINTER 4
+	mov		%4, %2				; Copy offset to scratch reg
+	and		%2, BYTE 0Fh		; Clear offset bits 15...4
+	eSHR_IM	%4, 4				; Divide offset by 16
+	mov		%3, %1				; Copy segment to scratch reg
+	add		%3, %4				; Add shifted offset to segment
+	mov		%1, %3				; Set normalized segment
+%endmacro
+
+
 ; Section containing code
 SECTION .text
+
+;--------------------------------------------------------------------
+; Registers_NormalizeDSSI
+; Registers_NormalizeESDI
+;	Parameters
+;		DS:SI or ES:DI:	Ptr to normalize
+;	Returns:
+;		DS:SI or ES:DI:	Normalized pointer
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+Registers_NormalizeDSSI:
+	push	dx
+	push	ax
+	NORMALIZE_FAR_POINTER ds, si, ax, dx
+	pop		ax
+	pop		dx
+	ret
+
+ALIGN JUMP_ALIGN
+Registers_NormalizeESDI:
+	push	dx
+	push	ax
+	NORMALIZE_FAR_POINTER es, di, ax, dx
+	pop		ax
+	pop		dx
+	ret
+
 
 ;--------------------------------------------------------------------
 ; Registers_ExchangeDSSIwithESDI
@@ -84,8 +134,3 @@ Registers_SetZFifNullPointerInDSSI:
 	or		ax, si
 	pop		ax
 	ret
-
-	
-ALIGN JUMP_ALIGN
-Registers_SetCFifCXisZero:
-	

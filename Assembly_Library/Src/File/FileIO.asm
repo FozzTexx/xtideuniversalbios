@@ -1,7 +1,7 @@
 ; File name		:	FileIO.asm
 ; Project name	:	Assembly Library
 ; Created date	:	1.9.2010
-; Last update	:	10.10.2010
+; Last update	:	6.12.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for file access.
 
@@ -50,6 +50,27 @@ FileIO_CloseUsingHandleFromBX:
 
 
 ;--------------------------------------------------------------------
+; FileIO_ReadDXCXbytesToDSSIusingHandleFromBX
+;	Parameters:
+;		BX:		File handle
+;		DX:CX:	Number of bytes to read
+;		DS:SI:	Ptr to destination buffer
+;	Returns:
+;		AX:		DOS error code if CF set
+;		CF:		Clear if successfull
+;				Set if error
+;	Corrupts registers:
+;		AX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+FileIO_ReadDXCXbytesToDSSIusingHandleFromBX:
+	push	bp
+	mov		bp, FileIO_ReadCXbytesToDSSIusingHandleFromBX
+	call	SplitLargeReadOrWritesToSmallerBlocks
+	pop		bp
+	ret
+
+;--------------------------------------------------------------------
 ; File position is updated so next read will start where
 ; previous read stopped.
 ; 
@@ -76,6 +97,27 @@ FileIO_ReadCXbytesToDSSIusingHandleFromBX:
 
 
 ;--------------------------------------------------------------------
+; FileIO_WriteDXCXbytesFromDSSIusingHandleFromBX
+;	Parameters:
+;		BX:		File handle
+;		DX:CX:	Number of bytes to write
+;		DS:SI:	Ptr to source buffer
+;	Returns:
+;		AX:		DOS error code if CF set
+;		CF:		Clear if successfull
+;				Set if error
+;	Corrupts registers:
+;		AX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+FileIO_WriteDXCXbytesFromDSSIusingHandleFromBX:
+	push	bp
+	mov		bp, FileIO_WriteCXbytesFromDSSIusingHandleFromBX
+	call	SplitLargeReadOrWritesToSmallerBlocks
+	pop		bp
+	ret
+
+;--------------------------------------------------------------------
 ; File position is updated so next write will start where
 ; previous write stopped.
 ; 
@@ -99,6 +141,58 @@ FileIO_WriteCXbytesFromDSSIusingHandleFromBX:
 	int		DOS_INTERRUPT_21h
 	xchg	si, dx
 	ret
+
+
+;--------------------------------------------------------------------
+; SplitLargeReadOrWritesToSmallerBlocks
+;	Parameters:
+;		BX:		File handle
+;		BP:		Ptr to transfer function
+;		DX:CX:	Number of bytes to transfer
+;		DS:SI:	Ptr to transfer buffer
+;	Returns:
+;		AX:		DOS error code if CF set
+;		CF:		Clear if successfull
+;				Set if error
+;	Corrupts registers:
+;		AX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+SplitLargeReadOrWritesToSmallerBlocks:
+	push	ds
+	push	si
+	push	dx
+	push	cx
+
+	xchg	ax, cx					; DX:AX now holds bytes to transfer
+	mov		cx, SPLIT_SIZE_FOR_LARGE_TRANSFERS
+	div		cx						; AX = Number of full transfers
+	push	dx						; Bytes for last transfer
+	test	ax, ax
+	jz		SHORT .TransferRemainingBytes
+	xchg	dx, ax					; DX = Number of full transfers
+
+ALIGN JUMP_ALIGN
+.TransferNextBytes:
+	call	Registers_NormalizeDSSI
+	call	bp						; Transfer function
+	jc		SHORT .ErrorOccurredDuringTransfer
+	dec		dx
+	jnz		SHORT .TransferNextBytes
+.TransferRemainingBytes:
+	pop		cx						; CX = Bytes for last transfer
+	jcxz	.ReturnErrorCodeInAX	; No remaining bytes
+	call	Registers_NormalizeDSSI
+	call	bp
+.ReturnErrorCodeInAX:
+	pop		cx
+	pop		dx
+	pop		si
+	pop		ds
+	ret
+.ErrorOccurredDuringTransfer:
+	pop		cx						; Remove bytes for last transfer
+	jmp		SHORT .ReturnErrorCodeInAX
 
 
 ;--------------------------------------------------------------------
