@@ -1,7 +1,7 @@
 ; File name		:	Display.asm
 ; Project name	:	Assembly Library
 ; Created date	:	2.7.2010
-; Last update	:	28.9.2010
+; Last update	:	7.12.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Display Library functions for CALL_DISPLAY_LIBRARY macro
 ;					that users should use to make library call.
@@ -89,5 +89,5 @@ istruc DISPLAY_LIB
 	at	DISPLAY_LIB.PrintCharacterFromAL,							dw	DisplayPrint_CharacterFromAL
 	at	DISPLAY_LIB.PrintNewlineCharacters,							dw	DisplayPrint_Newline
 	at	DISPLAY_LIB.ClearAreaWithHeightInAHandWidthInAL,			dw	DisplayPrint_ClearAreaWithHeightInAHandWidthInAL
-	at	DISPLAY_LIB.ClearScreen,									dw	DisplayPrint_ClearScreen
+	at	DISPLAY_LIB.ClearScreenWithCharInALandAttrInAH,				dw	DisplayPrint_ClearScreenWithCharInALandAttributeInAH
 iend

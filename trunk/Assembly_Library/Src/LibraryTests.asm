@@ -1,7 +1,7 @@
 ; File name		:	LibraryTests.asm
 ; Project name	:	Assembly Library
 ; Created date	:	27.6.2010
-; Last update	:	22.11.2010
+; Last update	:	7.12.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Tests for Assembly Library.
 ;					This file should not be included when using the library on
@@ -30,7 +30,8 @@ Start:
 ALIGN JUMP_ALIGN
 LibraryTests_Start:	
 	CALL_DISPLAY_LIBRARY InitializeDisplayContext
-	CALL_DISPLAY_LIBRARY ClearScreen
+	mov		ax, SCREEN_BACKGROUND_CHARACTER_AND_ATTRIBUTE
+	CALL_DISPLAY_LIBRARY ClearScreenWithCharInALandAttrInAH
 
 	;call	LibraryTests_Sort
 	;call	LibraryTests_ForDisplayLibrary

@@ -1,7 +1,7 @@
 ; File name		:	Display.inc
 ; Project name	:	AssemblyLibrary
 ; Created date	:	25.6.2010
-; Last update	:	11.10.2010
+; Last update	:	7.12.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Defines for display library.
 %ifndef DISPLAY_INC
@@ -63,7 +63,7 @@ struc DISPLAY_LIB
 	.PrintCharacterFromAL							resb	2
 	.PrintNewlineCharacters							resb	2
 	.ClearAreaWithHeightInAHandWidthInAL			resb	2
-	.ClearScreen									resb	2
+	.ClearScreenWithCharInALandAttrInAH				resb	2
 endstruc
 
 ; Attribute flags for DISPLAY_LIB.SetCharacterOutputFunctionFromAXwithAttributeFlagInDL
@@ -228,5 +228,7 @@ BLOCK_FULL_FOREGROUND						EQU		219
 %ifndef SCREEN_BACKGROUND_ATTRIBUTE
 	%define	SCREEN_BACKGROUND_ATTRIBUTE		MONO_NORMAL
 %endif
+%define SCREEN_BACKGROUND_CHARACTER_AND_ATTRIBUTE	(SCREEN_BACKGROUND_CHARACTER | (SCREEN_BACKGROUND_ATTRIBUTE<<8))
+%define DOS_BACKGROUND_CHARACTER_AND_ATTRIBUTE		(' ' | (MONO_NORMAL<<8))
 
 %endif ; DISPLAY_INC

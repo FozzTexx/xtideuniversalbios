@@ -1,7 +1,7 @@
 ; File name		:	Display.asm
 ; Project name	:	Assembly Library
 ; Created date	:	26.6.2010
-; Last update	:	11.10.2010
+; Last update	:	7.12.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for display output.
 
@@ -221,8 +221,10 @@ ALIGN JUMP_ALIGN
 
 
 ;--------------------------------------------------------------------
-; DisplayPrint_ClearScreen
+; DisplayPrint_ClearScreenWithCharInALandAttributeInAH
 ;	Parameters:
+;		AL:		Character to clear with
+;		AH:		Attribute to clear with
 ;		DS:		BDA segment (zero)
 ;		ES:DI:	Ptr to cursor location in video RAM
 ;	Returns:
@@ -231,12 +233,19 @@ ALIGN JUMP_ALIGN
 ;		AX, DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-DisplayPrint_ClearScreen:
+DisplayPrint_ClearScreenWithCharInALandAttributeInAH:
 	push	di
+	push	cx
+
+	xchg	cx, ax
 	xor		ax, ax
-	call	DisplayCursor_SetCoordinatesFromAX
+	call	DisplayCursor_SetCoordinatesFromAX		; Updates DI
 	call	DisplayPage_GetColumnsToALandRowsToAH
-	call	DisplayPrint_ClearAreaWithHeightInAHandWidthInAL
+	mul		ah		; AX = AL*AH = Characters on screen
+	xchg	cx, ax	; AX = Char+Attr, CX = WORDs to store
+	rep stosw
+
+	pop		cx
 	pop		di
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fpCursorPosition], di
 	ret
