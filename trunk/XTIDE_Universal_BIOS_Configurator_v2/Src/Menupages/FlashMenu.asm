@@ -184,6 +184,8 @@ FlashMenu_EnterMenuOrModifyItemVisibility:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 StartFlashing:
+	call	.MakeSureThatImageFitsInEeprom
+	jc		SHORT .InvalidFlashingParameters
 	push	es
 	push	ds
 
@@ -199,6 +201,30 @@ StartFlashing:
 	add		sp, BYTE FLASHVARS_size + PROGRESS_DIALOG_IO_size
 	pop		ds
 	pop		es
+.InvalidFlashingParameters:
+	ret
+
+;--------------------------------------------------------------------
+; .MakeSureThatImageFitsInEeprom
+;	Parameters:
+;		SS:BP:	Ptr to MENU
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, BX, DX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+.MakeSureThatImageFitsInEeprom:
+	call	.GetSelectedEepromSizeInWordsToAX
+	cmp		ax, [cs:g_cfgVars+CFGVARS.wImageSizeInWords]
+	jae		SHORT .ImageFitsInSelectedEeprom
+	mov		dx, g_szErrEepromTooSmall
+	call	Dialogs_DisplayErrorFromCSDX
+	stc
+	ret
+ALIGN JUMP_ALIGN
+.ImageFitsInSelectedEeprom:
+	clc
 	ret
 
 ;--------------------------------------------------------------------
@@ -269,8 +295,7 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 .GetNumberOfPagesToFlashToAX:
-	eMOVZX	bx, BYTE [si+FLASHVARS.bEepromType]
-	mov		ax, [cs:bx+g_rgwEepromTypeToSizeInWords]
+	call	.GetSelectedEepromSizeInWordsToAX
 	xor		dx, dx
 	shl		ax, 1		; Size in bytes to...
 	rcl		dx, 1		; ...DX:AX
@@ -281,6 +306,20 @@ ALIGN JUMP_ALIGN
 .PreventDivideException:
 	ret
 
+;--------------------------------------------------------------------
+; .GetSelectedEepromSizeInWordsToAX
+;	Parameters:
+;		Nothing
+;	Returns:
+;		AX:		Selected EEPROM size in WORDs
+;	Corrupts registers:
+;		BX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+.GetSelectedEepromSizeInWordsToAX:
+	eMOVZX	bx, BYTE [cs:g_cfgVars+CFGVARS.bEepromType]
+	mov		ax, [cs:bx+g_rgwEepromTypeToSizeInWords]
+	ret
 
 ;--------------------------------------------------------------------
 ; .DisplayFlashingResultsFromFlashvarsInDSBX

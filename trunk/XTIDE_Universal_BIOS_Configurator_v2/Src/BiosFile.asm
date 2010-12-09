@@ -1,7 +1,7 @@
 ; File name		:	BiosFile.asm
 ; Project name	:	XTIDE Univeral BIOS Configurator v2
 ; Created date	:	10.10.2010
-; Last update	:	30.11.2010
+; Last update	:	6.12.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for loading and saving BIOS image file.
 
@@ -22,13 +22,13 @@ ALIGN JUMP_ALIGN
 BiosFile_LoadFileFromDSSItoRamBuffer:
 	push	ds
 
-	call	.OpenFileForLoadingFromDSSIandGetSizeToCX
+	call	.OpenFileForLoadingFromDSSIandGetSizeToDXCX
 	jc		SHORT .DisplayErrorMessage
-	call	.LoadFileWithNameInDSSIhandleInBXandSizeInCXtoRamBuffer
+	call	.LoadFileWithNameInDSSIhandleInBXandSizeInDXCXtoRamBuffer
 	jc		SHORT .DisplayErrorMessage
 
 	mov		ax, FLG_CFGVARS_FILELOADED
-	call	Buffers_NewBiosWithSizeInCXandSourceInAXhasBeenLoadedForConfiguration
+	call	Buffers_NewBiosWithSizeInDXCXandSourceInAXhasBeenLoadedForConfiguration
 	call	DisplayFileLoadedSuccesfully
 	call	FileIO_CloseUsingHandleFromBX
 	jmp		SHORT .Return
@@ -42,32 +42,31 @@ ALIGN JUMP_ALIGN
 	ret
 
 ;--------------------------------------------------------------------
-; .OpenFileForLoadingFromDSSIandGetSizeToCX
+; .OpenFileForLoadingFromDSSIandGetSizeInBytesToDXCX
 ;	Parameters:
 ;		DS:SI:	Name of file to open
 ;	Returns:
 ;		BX:		File handle (if succesfull)
-;		CX:		File size (if succesfull)
+;		DX:CX:	File size (if succesfull)
 ;		CF:		Clear if successfull
 ;				Set if error
 ;	Corrupts registers:
-;		AX, DX
+;		AX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-.OpenFileForLoadingFromDSSIandGetSizeToCX:
+.OpenFileForLoadingFromDSSIandGetSizeToDXCX:
 	mov		al, FILE_ACCESS.ReadOnly
 	call	FileIO_OpenWithPathInDSSIandFileAccessInAL
 	jc		SHORT .FileError
 	call	FileIO_GetFileSizeToDXAXusingHandleFromBXandResetFilePosition
 	jc		SHORT .FileError
 
-	cmp		dx, BYTE 1		; File size over 65536 bytes?
+	cmp		dx, MAX_EEPROM_SIZE_IN_BYTES >> 16
 	ja		SHORT .FileTooBig
-	jb		SHORT .CopyFileSizeToCX
-	test	ax, ax
-	jnz		SHORT .FileTooBig
-	dec		ax				; Prepare to load 65535 bytes
-.CopyFileSizeToCX:
+	jb		SHORT .FileNotTooBig
+	cmp		ax, MAX_EEPROM_SIZE_IN_BYTES & 0FFFFh
+	ja		SHORT .FileTooBig
+.FileNotTooBig:
 	xchg	cx, ax
 	clc
 	ret
@@ -78,10 +77,10 @@ ALIGN JUMP_ALIGN
 	ret
 
 ;--------------------------------------------------------------------
-; .LoadFileWithNameInDSSIhandleInBXandSizeInCXtoRamBuffer
+; .LoadFileWithNameInDSSIhandleInBXandSizeInDXCXtoRamBuffer
 ;	Parameters:
 ;		BX:		File Handle
-;		CX:		File size
+;		DX:CX:	File size
 ;		DS:SI:	File name
 ;	Returns:
 ;		CF:		Clear if successfull
@@ -90,12 +89,12 @@ ALIGN JUMP_ALIGN
 ;		AX, SI, DI, DS
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-.LoadFileWithNameInDSSIhandleInBXandSizeInCXtoRamBuffer:
+.LoadFileWithNameInDSSIhandleInBXandSizeInDXCXtoRamBuffer:
 	push	es
 
 	call	Buffers_GetFileBufferToESDI
 	call	Registers_ExchangeDSSIwithESDI
-	call	FileIO_ReadCXbytesToDSSIusingHandleFromBX
+	call	FileIO_ReadDXCXbytesToDSSIusingHandleFromBX
 	jnc		SHORT .StoreFileNameToCfgvarsFromESDI
 
 	pop		es
@@ -162,9 +161,11 @@ BiosFile_SaveRamBufferToFileInDSSI:
 	call	Buffers_GenerateChecksum
 	call	Buffers_GetFileBufferToESDI
 	call	Registers_CopyESDItoDSSI
+	xor		dx, dx
 	mov		cx, [cs:g_cfgVars+CFGVARS.wImageSizeInWords]
 	shl		cx, 1
-	call	FileIO_WriteCXbytesFromDSSIusingHandleFromBX
+	rcl		dx, 1			; WORDs to BYTEs
+	call	FileIO_WriteDXCXbytesFromDSSIusingHandleFromBX
 	jc		SHORT .DisplayErrorMessage
 
 	call	Buffers_ClearUnsavedChanges

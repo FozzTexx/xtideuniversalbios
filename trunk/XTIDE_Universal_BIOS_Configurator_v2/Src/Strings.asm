@@ -1,7 +1,7 @@
 ; File name		:	Strings.asm
 ; Project name	:	XTIDE Universal BIOS Configurator v2
 ; Created date	:	5.10.2010
-; Last update	:	5.12.2010
+; Last update	:	9.12.2010
 ; Author		:	Tomi Tilli
 ; Description	:	All strings.
 
@@ -42,6 +42,7 @@ g_szErrorDialog:		db	"Error!",NULL
 g_szGenericDialogInfo:	db	"Press ENTER or ESC to close dialog.",NULL
 
 ; Flashing related strings
+g_szErrEepromTooSmall:	db	"Image is too large for selected EEPROM type!",NULL
 g_szErrEepromPolling:	db	"Timeout when polling EEPROM.",LF
 						db	"EEPROM was not flashed properly!",NULL
 g_szErrEepromVerify:	db	"EEPROM did not return the same byte that was written.",LF
@@ -101,8 +102,10 @@ g_szNfoCfgFullMode:		db	"Full mode supports multiple controllers and has more fe
 g_szNfoCfgStealSize:	db	"How many kiB's to steal from Conventional memory for XTIDE Universal BIOS variables.",NULL
 g_szNfoCfgIdeCnt:		db	"Number of IDE controllers to manage.",NULL
 
-g_szHelpCfgFullMode:	db	"incbin goes here.",NULL
-g_szHelpCfgStealSize:	db	"incbin goes here.",NULL
+g_szHelpCfgFullMode:	incbin	"Configuration_FullMode.txt"
+						db	NULL
+g_szHelpCfgStealSize:	incbin	"Configuration_StealSize.txt"
+						db	NULL
 
 g_szMultichoiseCfgBootLoader:
 						db	"Boot menu",LF
@@ -139,10 +142,14 @@ g_szNfoIdeCtrlPort:		db	"IDE Controller Control Block address. Usually Cmd Block
 g_szNfoIdeEnIRQ:		db	"Interrupt or polling mode.",NULL
 g_szNfoIdeIRQ:			db	"IRQ channel to use.",NULL
 
-g_szHelpIdeCmdPort:		db	"incbin goes here.",NULL
-g_szHelpIdeCtrlPort:	db	"incbin goes here.",NULL
-g_szHelpIdeEnIRQ:		db	"incbin goes here.",NULL
-g_szHelpIdeIRQ:			db	"incbin goes here.",NULL
+g_szHelpIdeCmdPort:		incbin	"IDE_CommandPort.txt"
+						db	NULL
+g_szHelpIdeCtrlPort:	incbin	"IDE_ControlPort.txt"
+						db	NULL
+g_szHelpIdeEnIRQ:		incbin	"IDE_EnableInterrupt.txt"
+						db	NULL
+g_szHelpIdeIRQ:			incbin	"IDE_IRQ.txt"
+						db	NULL
 
 g_szMultichoiseCfgBusType:
 						db	"8-bit dual port (XTIDE)",LF
@@ -176,8 +183,10 @@ g_szNfoDrvCyls:			db	"Number of user specified P-CHS cylinders.",NULL
 g_szNfoDrvHeads:		db	"Number of user specified P-CHS heads.",NULL
 g_szNfoDrvSect:			db	"Number of user specified P-CHS sectors per track.",NULL
 
-g_szHelpDrvBlockMode:	db	"incbin goes here.",NULL
-g_szHelpDrvUserCHS:		db	"incbin goes here.",NULL
+g_szHelpDrvBlockMode:	incbin	"Drive_BlockMode.txt"
+						db	NULL
+g_szHelpDrvUserCHS:		incbin	"Drive_UserCHS.txt"
+						db	NULL
 
 
 ; Strings for boot menu settings menu
@@ -199,11 +208,16 @@ g_szNfoBootFloppyDrvs:	db	"Number of Floppy Drives to display on boot menu.",NUL
 g_szNfoBootSwap:		db	"Drive Number Translation (swap first drive with selected).",NULL
 g_szNfoBootRomBoot:		db	"Show ROM Basic or ROM DOS boot option.",NULL
 
-g_szHelpBootTimeout:	db	"incbin goes here.",NULL
-g_szHelpBootDrive:		db	"incbin goes here.",NULL
-g_szHelpBootFloppyDrvs:	db	"incbin goes here.",NULL
-g_szHelpBootSwap:		db	"incbin goes here.",NULL
-g_szHelpBootRomBoot:	db	"incbin goes here.",NULL
+g_szHelpBootTimeout:	incbin	"Bootmenu_Timeout.txt"
+						db	NULL
+g_szHelpBootDrive:		incbin	"Bootmenu_DefaultDrive.txt"
+						db	NULL
+g_szHelpBootFloppyDrvs:	incbin	"Bootmenu_FloppyDrives.txt"
+						db	NULL
+g_szHelpBootSwap:		incbin	"Bootmenu_SwapDrives.txt"
+						db	NULL
+g_szHelpBootRomBoot:	incbin	"Bootmenu_RomBoot.txt"
+						db	NULL
 
 g_szMultichoiseBootFloppyDrvs:
 						db	"Autodetect",LF
@@ -240,9 +254,12 @@ g_szNfoFlashAddr:		db	"Address (segment) where EEPROM is located.",NULL
 g_szNfoFlashPageSize:	db	"Number of bytes to write before delay.",NULL
 g_szNfoFlashChecksum:	db	"Generate checksum byte to the end of BIOS image.",NULL
 
-g_szHelpFlashSDP:		db	"incbin goes here.",NULL
-g_szHelpFlashPageSize:	db	"incbin goes here.",NULL
-g_szHelpFlashChecksum:	db	"incbin goes here.",NULL
+g_szHelpFlashSDP:		incbin	"Flash_SdpCommand.txt"
+						db	NULL
+g_szHelpFlashPageSize:	incbin	"Flash_PageSize.txt"
+						db	NULL
+g_szHelpFlashChecksum:	incbin	"Flash_Checksum.txt"
+						db	NULL
 
 g_szMultichoiseEepromType:
 						db	"2816 (2 kiB)",LF

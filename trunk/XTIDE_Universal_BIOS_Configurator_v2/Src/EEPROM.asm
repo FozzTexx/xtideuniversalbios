@@ -1,7 +1,7 @@
 ; File name		:	EEPROM.asm
 ; Project name	:	XTIDE Univeral BIOS Configurator v2
 ; Created date	:	19.4.2010
-; Last update	:	3.12.2010
+; Last update	:	9.12.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for managing EEPROM contents.
 
@@ -30,38 +30,39 @@ g_rgwEepromPageToSizeInBytes:
 SECTION .text
 
 ;--------------------------------------------------------------------
-; EEPROM_LoadXtideUniversalBiosFromRomToRamBuffer
+; EEPROM_LoadXtideUniversalBiosFromRomToRamBufferAndReturnSizeInDXCX
 ;	Parameters:
 ;		Nothing
 ;	Returns:
-;		CX:		BIOS size in bytes
+;		DX:CX:	BIOS size in bytes
 ;	Corrupts registers:
 ;		AX, BX, SI, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-EEPROM_LoadXtideUniversalBiosFromRomToRamBuffer:
+EEPROM_LoadXtideUniversalBiosFromRomToRamBufferAndReturnSizeInDXCX:
 	push	es
 
 	call	EEPROM_FindXtideUniversalBiosROMtoESDI
-	call	.GetXtideUniversalBiosSizeFromEStoCX
+	call	.GetXtideUniversalBiosSizeFromEStoDXCX
 	xor		si, si				; Load from beginning of ROM
 	call	LoadBytesFromRomToRamBuffer
 
-	call	.GetXtideUniversalBiosSizeFromEStoCX
+	call	.GetXtideUniversalBiosSizeFromEStoDXCX
 	pop		es
 	ret
 
 ;--------------------------------------------------------------------
-; .GetXtideUniversalBiosSizeFromEStoCX
+; .GetXtideUniversalBiosSizeFromEStoDXCX
 ;	Parameters:
 ;		Nothing
 ;	Returns:
-;		AX:		Bios size in bytes
+;		DX:CX:	Bios size in bytes
 ;	Corrupts registers:
-;		AX, BX
+;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-.GetXtideUniversalBiosSizeFromEStoCX:
+.GetXtideUniversalBiosSizeFromEStoDXCX:
+	xor		dx, dx
 	eMOVZX	cx, BYTE [es:ROMVARS.bRomSize]
 	eSHL_IM	cx, 9				; *= 512 for byte count
 	ret

@@ -1,7 +1,7 @@
 ; File name		:	main.asm
 ; Project name	:	XTIDE Univeral BIOS Configurator v2
 ; Created date	:	5.10.2010
-; Last update	:	3.12.2010
+; Last update	:	7.12.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Program start and exit.			
 
@@ -53,16 +53,36 @@ Start:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Main_Start:
-	CALL_DISPLAY_LIBRARY InitializeDisplayContext
-	CALL_DISPLAY_LIBRARY ClearScreen
+	mov		ax, SCREEN_BACKGROUND_CHARACTER_AND_ATTRIBUTE
+	call	InitializeScreenWithBackgroudCharAndAttrInAX
 
 	call	Main_InitializeCfgVars
 	call	MenuEvents_DisplayMenu
+	mov		ax, DOS_BACKGROUND_CHARACTER_AND_ATTRIBUTE
+	call	InitializeScreenWithBackgroudCharAndAttrInAX
 
 	; Exit to DOS
-	CALL_DISPLAY_LIBRARY SynchronizeDisplayContextToHardware
 	mov 	ax, 4C00h			; Exit to DOS
 	int 	21h
+
+
+;--------------------------------------------------------------------
+; InitializeScreenWithBackgroudCharAndAttrInAX
+;	Parameters:
+;		AL:		Background character
+;		AH:		Background attribute
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, DX, DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+InitializeScreenWithBackgroudCharAndAttrInAX:
+	xchg	dx, ax
+	CALL_DISPLAY_LIBRARY InitializeDisplayContext	; Reset cursor etc
+	xchg	ax, dx
+	CALL_DISPLAY_LIBRARY ClearScreenWithCharInALandAttrInAH
+	ret
 
 
 ;--------------------------------------------------------------------

@@ -34,6 +34,7 @@ BUILD_DIR = Build
 
 # Subdirectories where included files are:
 HEADERS = Inc/
+HEADERS += Inc/Help/
 HEADERS += Src/
 HEADERS += Src/Menupages/
 

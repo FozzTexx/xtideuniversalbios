@@ -1,7 +1,7 @@
 ; File name		:	MainMenu.asm
 ; Project name	:	XTIDE Universal BIOS Configurator v2
 ; Created date	:	6.10.2010
-; Last update	:	19.11.2010
+; Last update	:	9.12.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Main menu structs and functions.
 
@@ -225,14 +225,11 @@ LoadBiosFromFile:
 ALIGN JUMP_ALIGN
 LoadXtideUniversalBiosFromRom:
 	call	Buffers_SaveChangesIfFileLoaded
-	call	EEPROM_LoadXtideUniversalBiosFromRomToRamBuffer
+	call	EEPROM_LoadXtideUniversalBiosFromRomToRamBufferAndReturnSizeInDXCX
 	mov		ax, FLG_CFGVARS_ROMLOADED
-	call	Buffers_NewBiosWithSizeInCXandSourceInAXhasBeenLoadedForConfiguration
-	push	cs
-	pop		ds
-	mov		si, g_szDlgMainLoadROM
-	CALL_MENU_LIBRARY DisplayMessageWithInputInDSSI
-	ret
+	call	Buffers_NewBiosWithSizeInDXCXandSourceInAXhasBeenLoadedForConfiguration
+	mov		dx, g_szDlgMainLoadROM
+	jmp		Dialogs_DisplayNotificationFromCSDX
 
 
 ALIGN JUMP_ALIGN
@@ -240,8 +237,5 @@ LoadOldSettingsFromEeprom:
 	call	Buffers_SaveChangesIfFileLoaded
 	call	EEPROM_LoadOldSettingsFromRomToRamBuffer
 	and		WORD [g_cfgVars+CFGVARS.wFlags], ~FLG_CFGVARS_UNSAVED
-	push	cs
-	pop		ds
-	mov		si, g_szDlgMainLoadStngs
-	CALL_MENU_LIBRARY DisplayMessageWithInputInDSSI
-	ret
+	mov		dx, g_szDlgMainLoadStngs
+	jmp		Dialogs_DisplayNotificationFromCSDX

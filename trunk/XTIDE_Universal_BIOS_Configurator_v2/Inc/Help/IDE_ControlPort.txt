@@ -1,0 +1,1 @@
+IDE controller Control Block address is normally Command Block address + 200h. For XTIDE card the Control Block registers are mapped right after Command Block registers so use Command Block address + 8h for XTIDE card.
