@@ -1,7 +1,7 @@
 ; File name		:	MenuScrollbars.asm
 ; Project name	:	Assembly Library
 ; Created date	:	20.7.2010
-; Last update	:	12.10.2010
+; Last update	:	9.12.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for drawing scroll bars over menu borders.
 
@@ -16,12 +16,14 @@ SECTION .text
 ;		CF:		Set if scroll bars are needed
 ;				Cleared if no scroll bars needed
 ;	Corrupts registers:
-;		CX
+;		AX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MenuScrollbars_AreScrollbarsNeeded:
+	xchg	ax, cx
 	call	MenuScrollbars_GetMaxVisibleItemsOnPageToCX
 	cmp		cx, [bp+MENUINIT.wItems]		; Set CF if max visible < total items
+	xchg	cx, ax
 	ret
 
 

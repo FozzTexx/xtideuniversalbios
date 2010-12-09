@@ -1,7 +1,7 @@
 ; File name		:	StringProcess.asm
 ; Project name	:	Assembly Library
 ; Created date	:	12.10.2010
-; Last update	:	12.10.2010
+; Last update	:	7.12.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for processing characters in a string.
 
@@ -9,10 +9,10 @@
 SECTION .text
 
 ;--------------------------------------------------------------------
-; Character processing callback function prototype for StringProcess_DSSIwithFunctionInBX.
+; Character processing callback function prototype for StringProcess_DSSIwithFunctionInDX.
 ;	Parameters:
 ;		AL:			Character to process
-;		CX:			Number of characters processed
+;		CX:			Character number (index for next character)
 ;		DS:SI:		Ptr to next character
 ;		BX,DI,ES:	Free to use by processing function
 ;	Returns:

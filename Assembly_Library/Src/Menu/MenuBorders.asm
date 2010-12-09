@@ -1,7 +1,7 @@
 ; File name		:	MenuBorders.asm
 ; Project name	:	Assembly Library
 ; Created date	:	14.7.2010
-; Last update	:	30.11.2010
+; Last update	:	9.12.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for drawing menu borders.
 
@@ -28,7 +28,7 @@ SECTION .text
 ALIGN JUMP_ALIGN	
 MenuBorders_RefreshAll:
 	call	MenuBorders_AdjustDisplayContextForDrawingBorders
-	call	GetNumberOfMiddleCharactersToDX
+	call	MenuBorders_GetNumberOfMiddleCharactersToDX
 	call	RefreshTitleBorders
 	call	RefreshItemBorders
 	call	RefreshInformationBorders
@@ -50,7 +50,7 @@ MenuBorders_RedrawBottomBorderLine:
 	call	MenuBorders_AdjustDisplayContextForDrawingBorders
 	call	MenuLocation_GetBottomBordersTopLeftCoordinatesToAX
 	CALL_DISPLAY_LIBRARY SetCursorCoordinatesFromAX
-	call	GetNumberOfMiddleCharactersToDX
+	call	MenuBorders_GetNumberOfMiddleCharactersToDX
 	jmp		SHORT DrawBottomBorderLine
 
 
@@ -94,12 +94,12 @@ MenuBorders_RefreshItemBorders:
 	call	MenuLocation_GetItemBordersTopLeftCoordinatesToAX
 	CALL_DISPLAY_LIBRARY SetCursorCoordinatesFromAX
 
-	call	GetNumberOfMiddleCharactersToDX
+	call	MenuBorders_GetNumberOfMiddleCharactersToDX
 	jmp		SHORT RefreshItemBorders
 
 
 ;--------------------------------------------------------------------
-; GetNumberOfMiddleCharactersToDX
+; MenuBorders_GetNumberOfMiddleCharactersToDX
 ;	Parameters
 ;		SS:BP:	Ptr to MENU
 ;	Returns:
@@ -108,7 +108,7 @@ MenuBorders_RefreshItemBorders:
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-GetNumberOfMiddleCharactersToDX:
+MenuBorders_GetNumberOfMiddleCharactersToDX:
 	eMOVZX	dx, BYTE [bp+MENUINIT.bWidth]
 	sub		dx, BYTE MENU_HORIZONTAL_BORDER_LINES
 	ret
@@ -299,7 +299,7 @@ PrintShadowCharactersByDXtimes:
 	CALL_DISPLAY_LIBRARY SetCharOutputFunctionFromAXwithAttribFlagInBL
 	pop		bx
 
-	call	PrintMultipleBorderCharactersFromAL	; AL does not matter
+	call	MenuBorders_PrintMultipleBorderCharactersFromAL	; AL does not matter
 
 	CALL_DISPLAY_LIBRARY PopDisplayContext
 	ret
@@ -325,7 +325,7 @@ PrintBorderCharactersFromCSSI:
 
 	eSEG	cs
 	lodsb			; Load from [si+BORDER_CHARS.cMiddle] to AL
-	call	PrintMultipleBorderCharactersFromAL
+	call	MenuBorders_PrintMultipleBorderCharactersFromAL
 
 	eSEG	cs
 	lodsb			; Load from [si+BORDER_CHARS.cRight] to AL
@@ -333,10 +333,10 @@ PrintBorderCharactersFromCSSI:
 
 ;--------------------------------------------------------------------
 ; MenuBorders_PrintSingleBorderCharacterFromAL
-; PrintMultipleBorderCharactersFromAL
+; MenuBorders_PrintMultipleBorderCharactersFromAL
 ;	Parameters
 ;		AL:		Character to print
-;		DX:		Repeat count (PrintMultipleBorderCharactersFromAL)
+;		DX:		Repeat count (MenuBorders_PrintMultipleBorderCharactersFromAL)
 ;		SS:BP:	Ptr to MENU
 ;	Returns:
 ;		Nothing
@@ -349,7 +349,7 @@ MenuBorders_PrintSingleBorderCharacterFromAL:
 	ret
 
 ALIGN JUMP_ALIGN
-PrintMultipleBorderCharactersFromAL:
+MenuBorders_PrintMultipleBorderCharactersFromAL:
 	push	cx
 	mov		cx, dx
 	CALL_DISPLAY_LIBRARY PrintRepeatedCharacterFromALwithCountInCX

@@ -1,7 +1,7 @@
 ; File name		:	MenuText.asm
 ; Project name	:	Assembly Library
 ; Created date	:	21.7.2010
-; Last update	:	24.10.2010
+; Last update	:	9.12.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for drawing menu texts by the user.
 
@@ -125,15 +125,17 @@ NothingToRefresh:
 ALIGN JUMP_ALIGN
 MenuText_RefreshItemFromAX:
 	push	cx
-	mov		cx, ax					; Backup item to CX
+	push	ax
 
+	xchg	cx, ax
 	call	MenuScrollbars_IsItemInCXonVisiblePage
 	jnc		SHORT .InvalidItem
 	call	MenuText_AdjustDisplayContextForDrawingItemFromCX
+	call	ClearPreviousItem
 	call	MenuEvent_RefreshItemFromCX
-	call	DrawScrollbarIfNecessary
+	call	DrawScrollbarCharacterForItemInCXifNecessary
 .InvalidItem:
-	xchg	ax, cx					; Restore AX
+	pop		ax
 	pop		cx
 	ret
 
@@ -180,6 +182,30 @@ AdjustDisplayContextForDrawingTextsAtCoordsInAXwithAttrTypeInSIandCharOutFunctio
 
 
 ;--------------------------------------------------------------------
+; ClearPreviousItem
+;	Parameters
+;		SS:BP:	Ptr to MENU
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, BX, DX, DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+ClearPreviousItem:
+	CALL_DISPLAY_LIBRARY GetSoftwareCoordinatesToAX
+	xchg	bx, ax
+
+	call	MenuBorders_GetNumberOfMiddleCharactersToDX
+	sub		dx, BYTE MENU_TEXT_COLUMN_OFFSET
+	mov		al, [cs:g_rgbTextBorderCharacters+BORDER_CHARS.cMiddle]
+	call	MenuBorders_PrintMultipleBorderCharactersFromAL
+
+	xchg	ax, bx
+	CALL_DISPLAY_LIBRARY SetCursorCoordinatesFromAX
+	ret
+
+
+;--------------------------------------------------------------------
 ; GetItemTextAttributeTypeToSIforItemInCX
 ;	Parameters
 ;		CX:		Item to refresh
@@ -204,67 +230,24 @@ ALIGN JUMP_ALIGN, ret
 
 
 ;--------------------------------------------------------------------
-; DrawScrollbarIfNecessary
+; DrawScrollbarCharacterForItemInCXifNecessary
 ;	Parameters
 ;		CX:		Item to refresh
 ;		SS:BP:	Ptr to MENU
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, BX, DX, SI, DI
+;		AX, CX, BX, DX, SI, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-DrawScrollbarIfNecessary:
-	push	cx
-	call	.DrawSpacesBeforeScrollbarCharacter
+DrawScrollbarCharacterForItemInCXifNecessary:
 	call	MenuScrollbars_AreScrollbarsNeeded
-	pop		cx
 	jc		SHORT .DrawScrollbarCharacter
 	ret
 
-;--------------------------------------------------------------------
-; .DrawSpacesBeforeScrollbarCharacter
-;	Parameters
-;		CX:		Item to refresh
-;		SS:BP:	Ptr to MENU
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, CX, DX, DI
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-.DrawSpacesBeforeScrollbarCharacter:
-	CALL_DISPLAY_LIBRARY GetSoftwareCoordinatesToAX
-	xchg	dx, ax					; Current coordinates to DX
-	mov		ax, cx
-	call	MenuLocation_GetScrollbarCoordinatesToAXforItemInAX
-	sub		al, dl
-	sub		al, MENU_TEXT_COLUMN_OFFSET/2
-
-	eMOVZX	cx, al
-	jcxz	.NoSpacesNeeded
-	mov		al, ' '
-	CALL_DISPLAY_LIBRARY PrintRepeatedCharacterFromALwithCountInCX
-ALIGN JUMP_ALIGN, ret
-.NoSpacesNeeded:
-	ret
-
-;--------------------------------------------------------------------
-; .DrawScrollbarCharacter
-;	Parameters
-;		CX:		Item to refresh
-;		SS:BP:	Ptr to MENU
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, BX, DX, SI, DI
-;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 .DrawScrollbarCharacter:
-	push	cx
-
 	call	MenuBorders_AdjustDisplayContextForDrawingBorders
-
 	mov		ax, cx
 	call	MenuLocation_GetScrollbarCoordinatesToAXforItemInAX
 	CALL_DISPLAY_LIBRARY SetCursorCoordinatesFromAX
@@ -272,7 +255,4 @@ ALIGN JUMP_ALIGN
 	mov		di, cx
 	sub		di, [bp+MENU.wFirstVisibleItem]		; Item to line
 	call	MenuScrollbars_GetScrollCharacterToALForLineInDI
-	CALL_DISPLAY_LIBRARY PrintCharacterFromAL
-
-	pop		cx
-	ret
+	jmp		MenuBorders_PrintSingleBorderCharacterFromAL

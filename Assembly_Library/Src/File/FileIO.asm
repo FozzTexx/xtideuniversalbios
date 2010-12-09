@@ -177,6 +177,7 @@ ALIGN JUMP_ALIGN
 	call	Registers_NormalizeDSSI
 	call	bp						; Transfer function
 	jc		SHORT .ErrorOccurredDuringTransfer
+	add		si, SPLIT_SIZE_FOR_LARGE_TRANSFERS
 	dec		dx
 	jnz		SHORT .TransferNextBytes
 .TransferRemainingBytes:
