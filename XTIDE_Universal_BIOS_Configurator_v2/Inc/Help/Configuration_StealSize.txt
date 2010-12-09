@@ -1,0 +1,1 @@
+Parameters for detected hard disks must be stored somewhere. In Full mode they are stored to top of Conventional memory. At the moment 1 kiB is always enough but you might want to reserve more if you want to use Full mode on Tandy 1000.

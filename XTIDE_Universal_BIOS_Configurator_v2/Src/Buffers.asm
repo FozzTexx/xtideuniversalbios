@@ -1,7 +1,7 @@
 ; File name		:	Buffers.asm
 ; Project name	:	XTIDE Universal BIOS Configurator v2
 ; Created date	:	6.10.2010
-; Last update	:	5.12.2010
+; Last update	:	6.12.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for accessing file and flash buffers.
 
@@ -40,17 +40,11 @@ Buffers_IsXtideUniversalBiosLoaded:
 	jz		SHORT .NoFileOrBiosLoaded
 
 	call	Buffers_GetFileBufferToESDI
-	call	Buffers_IsXtideUniversalBiosSignatureInESDI
-	jnz		SHORT .NoFileOrBiosLoaded
-	jmp		SHORT .IsSupportedVersionOfXtideUniversalBiosLoaded
+	jmp		SHORT Buffers_IsXtideUniversalBiosSignatureInESDI
 .NoFileOrBiosLoaded:
 	or		cl, 1		; Clear ZF
 	ret
 
-
-ALIGN JUMP_ALIGN
-.IsSupportedVersionOfXtideUniversalBiosLoaded:
-	
 
 ;--------------------------------------------------------------------
 ; Buffers_IsXtideUniversalBiosSignatureInESDI
@@ -80,19 +74,18 @@ Buffers_IsXtideUniversalBiosSignatureInESDI:
 ; Buffers_NewBiosWithSizeInCXandSourceInAXhasBeenLoadedForConfiguration
 ;	Parameters:
 ;		AX:		EEPROM source (FLG_CFGVARS_FILELOADED or FLG_CFGVARS_ROMLOADED)
-;		CX:		EEPROM size in bytes
+;		DX:CX:	EEPROM size in bytes
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, CX
+;		AX, CX, DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-Buffers_NewBiosWithSizeInCXandSourceInAXhasBeenLoadedForConfiguration:
+Buffers_NewBiosWithSizeInDXCXandSourceInAXhasBeenLoadedForConfiguration:
 	and		WORD [cs:g_cfgVars+CFGVARS.wFlags], ~(FLG_CFGVARS_FILELOADED | FLG_CFGVARS_ROMLOADED | FLG_CFGVARS_UNSAVED)
 	or		WORD [cs:g_cfgVars+CFGVARS.wFlags], ax
-	mov		ax, (64<<10) / 2	; 32768 WORDs
-	shr		cx, 1				; Bytes to WORDs
-	eCMOVZ	cx, ax
+	shr		dx, 1
+	rcr		cx, 1
 	mov		[cs:g_cfgVars+CFGVARS.wImageSizeInWords], cx
 	ret
 

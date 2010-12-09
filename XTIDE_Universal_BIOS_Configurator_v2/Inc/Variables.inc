@@ -1,7 +1,7 @@
 ; File name		:	Variables.inc
 ; Project name	:	XTIDE Univeral BIOS Configurator v2
 ; Created date	:	5.10.2010
-; Last update	:	2.12.2010
+; Last update	:	6.12.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Global variables for configuration program.
 %ifndef VARIABLES_INC
@@ -12,7 +12,7 @@ MAX_ALLOWED_IDE_CONTROLLERS			EQU		5	; Maximum number of IDE controllers
 EEPROM_POLLING_TIMEOUT_TICKS		EQU		3	; 1 tick = 54.9 ms
 XTIDE_SIGNATURE_LENGTH				EQU		8	; XTIDE Universal BIOS signature string length
 NUMBER_OF_EEPROM_TYPES				EQU		4
-MAX_EEPROM_SIZE						EQU	65536
+MAX_EEPROM_SIZE_IN_BYTES			EQU		65536
 
 
 ; Program global variables
