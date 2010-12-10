@@ -1,7 +1,7 @@
 ; File name		:	DialogProgress.asm
 ; Project name	:	Assembly Library
 ; Created date	:	15.8.2010
-; Last update	:	5.12.2010
+; Last update	:	10.12.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Displays progress bar dialog and starts progress task.
 
@@ -82,7 +82,7 @@ ALIGN JUMP_ALIGN
 	lds		si, [bp+DIALOG.fpDialogIO]
 	call	TimerTicks_ReadFromBdaToAX
 	mov		[si+PROGRESS_DIALOG_IO.wStartTimeTicks], ax
-	MAX_U	WORD [si+PROGRESS_DIALOG_IO.wMaxProgressValue], 0FFFFh	; Max cannot be zero
+	MAX_U	WORD [si+PROGRESS_DIALOG_IO.wMaxProgressValue], 1	; Max cannot be zero
 	jmp		SHORT CalculateProgressNeededBeforeUpdatingCharacter
 
 
@@ -168,19 +168,13 @@ CalculateProgressNeededBeforeUpdatingCharacter:
 ALIGN JUMP_ALIGN
 DrawProgressBarFromDialogIoInDSSI:
 	call	.GetFullCharsToCXandEmptyCharsToDXwithDialogIoInDSSI
-	jcxz	.DrawEmptyCharsOnly
 
 	mov		al, PROGRESS_COMPLETE_CHARACTER
-	CALL_DISPLAY_LIBRARY PrintRepeatedCharacterFromALwithCountInCX
+	call	.RepeatProgressCharacterCXtimesFromAL
 
-.DrawEmptyCharsOnly:
 	mov		cx, dx
-	jcxz	.NothingLeftToDraw
 	mov		al, PROGRESS_INCOMPLETE_CHARACTER
-	CALL_DISPLAY_LIBRARY PrintRepeatedCharacterFromALwithCountInCX
-
-.NothingLeftToDraw:
-	ret
+	jmp		SHORT .RepeatProgressCharacterCXtimesFromAL
 
 ;--------------------------------------------------------------------
 ; .GetFullCharsToCXandEmptyCharsToDXwithDialogIoInDSSI
@@ -204,6 +198,24 @@ ALIGN JUMP_ALIGN
 
 	sub		ax, cx
 	xchg	dx, ax		; DX = Number of empty chars
+	ret
+
+;--------------------------------------------------------------------
+; .RepeatProgressCharacterCXtimesFromAL
+;	Parameters:
+;		AL:		Progress bar character to repeat
+;		CX:		Number of times to repeat the progress character
+;	Returns:
+;		Nothing
+;	Corrupts:
+;		AX, CX, DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+.RepeatProgressCharacterCXtimesFromAL:
+	jcxz	.NothingToRepeat
+	CALL_DISPLAY_LIBRARY PrintRepeatedCharacterFromALwithCountInCX
+ALIGN JUMP_ALIGN, ret
+.NothingToRepeat:
 	ret
 
 
