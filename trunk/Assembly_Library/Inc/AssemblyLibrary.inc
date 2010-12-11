@@ -1,7 +1,7 @@
 ; File name		:	AssemblyLibrary.inc
 ; Project name	:	Assembly Library
 ; Created date	:	2.7.2010
-; Last update	:	8.10.2010
+; Last update	:	11.12.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Common defines for all library functions.
 %ifndef ASSEMBLY_LIBRARY_INC
@@ -39,6 +39,10 @@
 %ifdef INCLUDE_DISPLAY_LIBRARY
 	%include "Display.inc"
 	%define INCLUDE_STRING_LIBRARY
+%endif
+
+%ifdef INCLUDE_STRING_LIBRARY
+	%define INCLUDE_UTIL_LIBRARY
 %endif
 
 %ifdef INCLUDE_FILE_LIBRARY
