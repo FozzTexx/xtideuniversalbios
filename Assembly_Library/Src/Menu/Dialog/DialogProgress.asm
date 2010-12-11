@@ -82,7 +82,11 @@ ALIGN JUMP_ALIGN
 	lds		si, [bp+DIALOG.fpDialogIO]
 	call	TimerTicks_ReadFromBdaToAX
 	mov		[si+PROGRESS_DIALOG_IO.wStartTimeTicks], ax
-	MAX_U	WORD [si+PROGRESS_DIALOG_IO.wMaxProgressValue], 1	; Max cannot be zero
+
+	; 0 = 65536 but it needs to be adjusted to 65535 prevent division by zero
+	cmp		WORD [si+PROGRESS_DIALOG_IO.wMaxProgressValue], BYTE 0
+	jne		SHORT CalculateProgressNeededBeforeUpdatingCharacter
+	dec		WORD [si+PROGRESS_DIALOG_IO.wMaxProgressValue]
 	jmp		SHORT CalculateProgressNeededBeforeUpdatingCharacter
 
 
