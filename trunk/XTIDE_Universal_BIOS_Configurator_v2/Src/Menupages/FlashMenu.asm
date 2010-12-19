@@ -1,7 +1,7 @@
 ; File name		:	FlashMenu.asm
 ; Project name	:	XTIDE Universal BIOS Configurator v2
 ; Created date	:	19.11.2010
-; Last update	:	5.12.2010
+; Last update	:	19.12.2010
 ; Author		:	Tomi Tilli
 ; Description	:	"Flash EEPROM" menu structs and functions.
 
@@ -388,7 +388,16 @@ ALIGN JUMP_ALIGN
 ;		Doesn't matter
 ;--------------------------------------------------------------------
 .RebootComputer:
+.ResetAT:
 	mov		al, 0FEh				; System reset (AT+ keyboard controller)
 	out		64h, al					; Reset computer (AT+)
-	nop
-	jmp		WORD 0F000h:0FFF0h		; XT reset
+	mov		ax, 10
+	call	Delay_MicrosecondsFromAX
+.ResetXT:
+	xor		ax, ax
+	push	ax
+	popf							; Clear FLAGS (disables interrupt)
+	mov		ds, ax
+	mov		es, ax
+	mov		ss, ax
+	jmp		WORD 0FFFFh:0h			; XT reset
