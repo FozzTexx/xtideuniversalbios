@@ -1,8 +1,9 @@
 ; File name		:	string.asm
 ; Project name	:	String library
 ; Created date	:	7.10.2009
-; Last update	:	26.11.2009
-; Author		:	Tomi Tilli
+; Last update	:	20.12.2009
+; Author		:	Tomi Tilli,
+;				:	Krille (optimizations)
 ; Description	:	ASM library to work as Standard C String and Character.
 
 ;--------------- Equates -----------------------------
@@ -89,20 +90,14 @@ SECTION .text
 %ifdef USE_STR_ISCHAR
 ALIGN JUMP_ALIGN
 String_IsAlphaNum:
-	call	String_IsAlpha		; Is alphabetic letter?
-	jnc		.CheckDigit			;  If not, jump to check if digit
-	ret
-.CheckDigit:
-	call	String_IsDigit		; Is dec digit?
+	call	String_IsAlpha
+	jnc		SHORT String_IsDigit
 	ret
 
 ALIGN JUMP_ALIGN
 String_IsAlpha:
-	call	String_IsLower		; Is lower case letter?
-	jnc		.CheckUpper			;  If not, jump to check if upper
-	ret
-.CheckUpper:
-	call	String_IsUpper		; Is upper case letter?
+	call	String_IsLower
+	jnc		SHORT String_IsUpper
 	ret
 
 ALIGN JUMP_ALIGN
