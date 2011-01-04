@@ -1,9 +1,10 @@
 ; File name		:	print.asm
 ; Project name	:	Print library
 ; Created date	:	6.10.2009
-; Last update	:	31.12.2009
-; Author		:	Tomi Tilli
-; Description	:	ASM library to for character and string
+; Last update	:	4.1.2011
+; Author		:	Tomi Tilli,
+;				:	Krister Nordvall (optimizations)
+; Description	:	ASM library for character and string
 ;					printing related functions.
 
 ;--------------- Equates -----------------------------
@@ -466,9 +467,9 @@ ALIGN JUMP_ALIGN
 %ifdef USE_PRINT_INTSW
 ALIGN JUMP_ALIGN
 Print_IntSW:
+	test	ax, ax				; Positive integer?
+	jns		Print_IntUW			;  If so, jump to print it
 	push	di					; Store DI
-	cmp		ax, 0				; Positive integer?
-	jge		Print_IntUW			;  If so, jump to print it
 	push	ax					; Store word
 	mov		dl, '-'				; Print '-'
 	PRINT_CHAR
