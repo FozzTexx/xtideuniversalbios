@@ -1,8 +1,9 @@
 ; File name		:	keys.asm
 ; Project name	:	Keyboard library
 ; Created date	:	17.11.2009
-; Last update	:	31.12.2009
-; Author		:	Tomi Tilli
+; Last update	:	4.1.2011
+; Author		:	Tomi Tilli,
+;				:	Krister Nordvall (optimizations)
 ; Description	:	ASM library to for keyboard related functions.		
 
 ;--------------- Equates -----------------------------
@@ -310,9 +311,9 @@ Keys_Bell:
 %ifdef USE_KEYS_PRNTGETUINT
 ALIGN JUMP_ALIGN
 Keys_Backspace:
-	push	dx
 	test	si, si				; At the beginning?
 	jz		.Return				;  If so, return
+	push	dx					; Save DX
 	dec		si					; Decrement char counter
 	dec		di					; Decrement offset to buffer
 	mov		dl, BS				; Write backspace
@@ -321,8 +322,8 @@ Keys_Backspace:
 	PRINT_CHAR
 	mov		dl, BS				; Back again
 	PRINT_CHAR
+	pop		dx					; Restore DX
 ALIGN JUMP_ALIGN
 .Return:
-	pop		dx
 	ret
 %endif
