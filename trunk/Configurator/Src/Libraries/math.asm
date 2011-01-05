@@ -1,8 +1,9 @@
 ; File name		:	math.asm
 ; Project name	:	Math library
 ; Created date	:	7.10.2009
-; Last update	:	1.1.2010
-; Author		:	Tomi Tilli
+; Last update	:	4.1.2011
+; Author		:	Tomi Tilli,
+;				:	Krister Nordvall (optimizations)
 ; Description	:	ASM library to for math related functions.		
 
 ;--------------- Equates -----------------------------
@@ -121,7 +122,7 @@ Math_MulDWbyW:
 ALIGN JUMP_ALIGN
 .RetZero:						; Return 0 in DX:AX
 	xor		ax, ax
-	xor		dx, dx
+	cwd
 	ret
 %endif
 
@@ -142,9 +143,9 @@ ALIGN JUMP_ALIGN
 %ifdef USE_MATH_DIVDWBYW
 ALIGN JUMP_ALIGN
 Math_DivDWbyW:
-	mov		bx, ax
-	mov		ax, dx
-	xor		dx, dx
+	xor		bx, bx
+	xchg	bx, ax
+	xchg	dx, ax
 	div		cx
 	xchg	ax, bx
 	div		cx
@@ -170,8 +171,8 @@ ALIGN JUMP_ALIGN
 Math_RemToTenths:
 	push	cx
 	push	ax
-	mov		ax, cx				; Copy divisor to AX
-	mov		cl, 10				; Load 10 to CL
+	mov		al, 10				; Load 10 to AL
+	xchg	cx, ax				; AX = Divisor CL = 10
 	div		cl					; AL = Divisor divided by 10
 	inc		ax					; Increment to compensate new remainder
 	xchg	ax, bx				; AX = 16-bit remainder to convert

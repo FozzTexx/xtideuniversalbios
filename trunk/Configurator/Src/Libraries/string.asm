@@ -1,9 +1,9 @@
 ; File name		:	string.asm
 ; Project name	:	String library
 ; Created date	:	7.10.2009
-; Last update	:	20.12.2009
+; Last update	:	4.1.2011
 ; Author		:	Tomi Tilli,
-;				:	Krille (optimizations)
+;				:	Krister Nordvall (optimizations)
 ; Description	:	ASM library to work as Standard C String and Character.
 
 ;--------------- Equates -----------------------------
@@ -129,13 +129,13 @@ String_IsUpper:
 ALIGN JUMP_ALIGN
 String_IsHexDigit:
 	call	String_IsAlphaNum	; Is alphabetic letter or digit?
-	jc		.CheckHex			;  If so, jump to check A...F
-	ret
-.CheckHex:
+	jnc		.ExitStrIsHexDigit	; If it is, check A...F. If not, exit
 	push	ax					; Store character
 	call	String_ToLower		; Convert to lower case letter
 	cmp		al, 'f'+1			; Last valid hex alphanumeric?
 	pop		ax					; Restore character
+
+.ExitStrIsHexDigit:
 	ret
 
 ALIGN JUMP_ALIGN
@@ -164,26 +164,21 @@ ALIGN JUMP_ALIGN
 String_IsBaseChar:
 	mov		ah, al				; Copy char to AH
 	call	String_IsDigit		; Is '0'...'9'?
-	jc		.ConvertDigit		;  If so, jump to convert
+	jnc		.CheckForAlpha		; If not, check for alphabetic letter
+	sub		al, '0'				; Convert char to integer
+	jmp		.FinalizeAXAndCheckBase
+
+.CheckForAlpha:
 	call	String_IsAlpha		; Is alphabetic letter?
-	jnc		.RetFalse			;  If not, return FALSE
+	jnc		.JustRet			; If not, return FALSE
 	call	String_ToLower		; Convert to lower case
+	sub		al, 'a'-10			; From char to integer: a=10, b=11...
+
+.FinalizeAXAndCheckBase:
 	xchg	al, ah				; Converted char to AH
-	sub		ah, 'a'-10			; From char to integer: a=10, b=11...
 	cmp		ah, cl				; Belongs to base?
-	jae		.RetFalse			; If not, return FALSE
-	stc							; Set CF since belongs to base
-	ret
-ALIGN JUMP_ALIGN
-.ConvertDigit:
-	sub		ah, '0'				; Convert char to integer
-	cmp		ah, cl				; Belongs to base?
-	jae		.RetFalse			; If not, return FALSE
-	stc							; Set CF since belongs to base
-	ret
-ALIGN JUMP_ALIGN
-.RetFalse:
-	clc							; Clear CF since char doesn't belong to b
+
+.JustRet:						; CF now reflects TRUE/FALSE so just return
 	ret
 %endif
 
@@ -323,21 +318,13 @@ ALIGN JUMP_ALIGN
 	dec		di					; Decrement characters left
 	jnz		.CharLoop			; Loop while characters left
 
-	mov		ax, bx				; Copy loword to AX
-	pop		bx					; Restore BX
-	pop		di					; Restore DI
-	pop		si					; Restore SI
-	pop		ds					; Restore DS
 	stc							; Set CF since success
-	ret
-ALIGN JUMP_ALIGN
-.RetFalse:
-	mov		ax, bx				; Copy (likely incomplete) loword to AX
+.RetFalse:	; If we jumped to here no CLC is needed to reflect a FALSE condition
+	mov		ax, bx				; Copy loword to AX (may be incomplete)
 	pop		bx					; Restore BX
 	pop		di					; Restore DI
 	pop		si					; Restore SI
 	pop		ds					; Restore DS
-	clc							; Clear CF since error
 	ret
 %endif
 
@@ -447,10 +434,9 @@ ALIGN JUMP_ALIGN
 	ret
 ALIGN JUMP_ALIGN
 .Str2NotFound:
-	xor		bx, bx				; Zero BX
+	xor		bx, bx				; Zero BX and clear CF
 	pop		si					; Restore SI
 	pop		cx					; Restore CX
-	clc							; Clear CF since str2 was not found
 	ret
 %endif
 
@@ -577,19 +563,13 @@ ALIGN JUMP_ALIGN
 	jmp		.CharLoop			; Loop while valid characters
 ALIGN JUMP_ALIGN
 .ConvComplete:
-	mov		ax, bx				; Copy loword to AX
-	pop		bx					; Restore BX
-	pop		si					; Restore SI
-	pop		ds					; Restore DS
 	stc							; Set CF since success
-	ret
 ALIGN JUMP_ALIGN
-.RetFalse:
-	mov		ax, bx				; Copy (likely incomplete) loword to AX
+.RetFalse:	; If we jumped to here no CLC is needed to reflect a FALSE condition
+	mov		ax, bx				; Copy loword to AX (may be incomplete)
 	pop		bx					; Restore BX
 	pop		si					; Restore SI
 	pop		ds					; Restore DS
-	clc							; Clear CF since error
 	ret
 %endif
 
