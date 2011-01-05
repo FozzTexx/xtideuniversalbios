@@ -1,7 +1,7 @@
 ; File name		:	menu.asm
 ; Project name	:	Menu library
 ; Created date	:	9.11.2009
-; Last update	:	20.4.2010
+; Last update	:	21.1.2010
 ; Author		:	Tomi Tilli
 ; Description	:	ASM library to menu system.
 ;
@@ -12,7 +12,7 @@
 ; Optional features.
 %define USE_MENU_DIALOGS		; All dialogs
 ;%define USE_MENU_SETSEL		; Menu_SetSel
-%define USE_MENU_TOGGLEINFO		; Menu_ToggleInfo
+%define USE_MENU_TOGGLEINFO	; Menu_ToggleInfo
 %define USE_MENU_INVITEMCNT		; Menu_InvItemCnt
 
 ; Include other menu source files.
@@ -418,7 +418,7 @@ Menu_InvItemCnt:
 	mov		[bp+MENUVARS.wItemSel], ax
 	mov		[bp+MENUVARS.wItemTop], ax
 	mov		cx, -1					; Invalidate all items
-	or		dl, MFL_UPD_ITEM | MFL_UPD_NFO
+	or		dl, MFL_UPD_ITEM
 %endif
 ALIGN JUMP_ALIGN
 Menu_Invalidate:

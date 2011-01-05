@@ -97,7 +97,7 @@ ALIGN JUMP_ALIGN
 	lodsb							; Load char from [DS:SI] to AL
 	cmp		al, STOP				; End of string?
 	je		.Return					;  If so, return
-	mov		ah, FN_BIOS_WR_CHAR_TEL	; Some BIOSes corrupt AH when returning
+	mov		ah, FN_BIOS_WR_CHAR_TEL	; Some BIOSes corrupts AX when returning
 	int		10h
 	inc		dx						; Increment chars printed
 	jmp		.CharLoop				; Loop while chars left

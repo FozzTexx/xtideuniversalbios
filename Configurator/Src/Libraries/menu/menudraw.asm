@@ -1,8 +1,9 @@
 ; File name		:	menudraw.asm
 ; Project name	:	Menu library
 ; Created date	:	9.11.2009
-; Last update	:	25.5.2010
-; Author		:	Tomi Tilli
+; Last update	:	4.1.2011
+; Author		:	Tomi Tilli,
+;				:	Krister Nordvall (optimizations)
 ; Description	:	ASM library to menu system.
 ;					Contains menu drawing functions.
 
@@ -40,9 +41,9 @@ MenuDraw_ClrScr:
 	int		10h
 	mov		al, CNT_SCRN_ROW			; Load row count
 	mul		ah							; AX=Column count * row count
-	mov		cx, ax						; Copy char count to CX
+	mov		cx, 0920h					; Write Char and attr, space char
 	mov		bx, ATTR_MDA_NORMAL			; Page zero, normal attribute
-	mov		ax, 0920h					; Write Char and attr, space char
+	xchg	cx, ax						; CX=Char count AX=Space char and attr
 	int		10h
 	ret
 
@@ -353,29 +354,25 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MenuDraw_TopBorder:
-	mov		bh, B_TL
-	mov		bl, B_H
+	mov		bx, (B_TL << 8) + B_H
 	mov		dh, B_TR
 	jmp		SHORT MenuDraw_BorderChars
 	
 ALIGN JUMP_ALIGN
 MenuDraw_StringBorder:
-	mov		bh, B_V
-	mov		bl, ' '
+	mov		bx, (B_V << 8) + ' '
 	mov		dh, B_V
 	jmp		SHORT MenuDraw_BorderChars
 
 ALIGN JUMP_ALIGN
 MenuDraw_ScrollBorder:
 	call	MenuDraw_GetScrollChar			; Load scroll char to DH
-	mov		bh, B_V
-	mov		bl, ' '
+	mov		bx, (B_V << 8) + ' '
 	jmp		SHORT MenuDraw_BorderChars
 
 ALIGN JUMP_ALIGN
 MenuDraw_MiddleBorder:
-	mov		bh, BVL_THR
-	mov		bl, T_H
+	mov		bx, (BVL_THR << 8) + T_H
 	mov		dh, THL_BVR
 
 ALIGN JUMP_ALIGN
@@ -392,8 +389,7 @@ MenuDraw_BorderChars:
 
 ALIGN JUMP_ALIGN
 MenuDraw_BottomBorder:
-	mov		bh, B_LL
-	mov		bl, B_H
+	mov		bx, (B_LL << 8) + B_H
 	mov		dh, B_LR
 	cmp		WORD [bp+MENUVARS.wTimeInit], 0	; Timeout enabled?
 	jz		MenuDraw_BorderChars			;  If not, draw normal
