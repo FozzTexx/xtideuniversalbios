@@ -1,8 +1,9 @@
 ; File name		:	BootInfo.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	16.3.2010
-; Last update	:	9.4.2010
-; Author		:	Tomi Tilli
+; Last update	:	6.1.2011
+; Author		:	Tomi Tilli,
+;				:	Krister Nordvall (optimizations)
 ; Description	:	Functions for generating and accessing drive
 ;					information to be displayed on boot menu.
 
@@ -49,8 +50,8 @@ BootInfo_GetOffsetToBX:
 	mov		al, BOOTNFO_size			; Size of struct
 	sub		bl, [RAMVARS.bFirstDrv]		; Drive number to index
 	mul		bl							; AX = Offset inside BOOTNFO array
-	mov		bx, ax						; Copy offset to BX
-	add		bx, BOOTVARS.rgBootNfo		; Add offset to BOOTNFO array
+	add		ax, BOOTVARS.rgBootNfo		; Add offset to BOOTNFO array
+	xchg	bx, ax						; Copy result to BX
 	ret
 
 

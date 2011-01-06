@@ -1,8 +1,9 @@
 ; File name		:	menufile.asm
 ; Project name	:	Menu library
 ; Created date	:	20.11.2009
-; Last update	:	8.1.2010
-; Author		:	Tomi Tilli
+; Last update	:	6.1.2011
+; Author		:	Tomi Tilli,
+;				:	Krister Nordvall (Optimizations)
 ; Description	:	ASM library to menu system.
 ;					Contains functions for displaying file dialog.
 
@@ -71,7 +72,7 @@ MenuFile_ShowDlg:
 	xor		cx, cx
 	mov		[bp+FDLGVARS.wDrvCnt], cx
 	mov		WORD [bp+MENUVARS.fnEvent], MenuFile_Event
-	mov		BYTE [bp+FDLGVARS.fSuccess], 0	; For user cancel
+	mov		[bp+FDLGVARS.fSuccess], cl		; For user cancel
 	call	MenuMsg_GetLineCnt				; Get Info line count to CX
 	xchg	cl, ch							; CH=Info lines, CL=Title lines
 	mov		[bp+MENUVARS.wTopDwnH], cx
