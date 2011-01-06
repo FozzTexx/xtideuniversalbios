@@ -70,8 +70,7 @@ TARGET = $(BUILD_DIR)\$(PROG).com
 MAKE = mingw32-make.exe
 
 # Assembler
-#AS = nasm.exe
-AS = yasm.exe
+AS = nasm.exe
 
 # use this command to erase files.
 RM = -del /Q
@@ -108,5 +107,5 @@ clean:
 
 # Build
 build:
-	@$(AS) "$(SRC_ASM)" $(ASFLAGS) -o"$(TARGET)"
+	@$(AS) "$(SRC_ASM)" $(ASFLAGS) -l"$(BUILD_DIR)\$(PROG).lst" -o"$(TARGET)"
 	@echo "$(TARGET)" build.
