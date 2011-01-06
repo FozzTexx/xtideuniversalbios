@@ -78,8 +78,7 @@ TARGET = $(BUILD_DIR)/$(PROG)
 MAKE = mingw32-make.exe
 
 # Assembler
-AS = yasm.exe
-#AS = nasm.exe
+AS = nasm.exe
 
 # use this command to erase files.
 RM = -del /Q
@@ -108,15 +107,15 @@ all: clean at xtplus xt
 	@echo All build!
 
 at:
-	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_AT) -o"$(TARGET)_at.bin"
+	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_AT) -l"$(TARGET)_at.lst" -o"$(TARGET)_at.bin"
 	@echo AT version "$(TARGET)_at.bin" build.
 
 xtplus:
-	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XTPLUS) -o"$(TARGET)_xtp.bin"
+	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XTPLUS) -l"$(TARGET)_xtp.lst" -o"$(TARGET)_xtp.bin"
 	@echo XT plus version "$(TARGET)_xtp.bin" build.
 
 xt:
-	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XT) -o"$(TARGET)_xt.bin"
+	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XT) -l"$(TARGET)_xt.lst" -o"$(TARGET)_xt.bin"
 	@echo XT version "$(TARGET)_xt.bin" build.
 
 clean:
