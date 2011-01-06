@@ -1,8 +1,9 @@
 ; File name		:	menu.asm
 ; Project name	:	Menu library
 ; Created date	:	9.11.2009
-; Last update	:	21.1.2010
-; Author		:	Tomi Tilli
+; Last update	:	6.1.2011
+; Author		:	Tomi Tilli,
+;				:	Krister Nordvall (optimizations)
 ; Description	:	ASM library to menu system.
 ;
 ;					Menu.asm contains function to be called from
@@ -417,7 +418,8 @@ Menu_InvItemCnt:
 	mov		[bp+MENUVARS.wItemCnt], cx
 	mov		[bp+MENUVARS.wItemSel], ax
 	mov		[bp+MENUVARS.wItemTop], ax
-	mov		cx, -1					; Invalidate all items
+	xchg	cx, ax					; CX = 0
+	dec		cx						; CX = -1 (Invalidate all items)
 	or		dl, MFL_UPD_ITEM
 %endif
 ALIGN JUMP_ALIGN
@@ -543,14 +545,12 @@ Menu_IsItemVisible:
 	jb		.RetFalse						;  If below, return false
 	add		dl, [bp+MENUVARS.bVisCnt]		; Inc to one past...
 	adc		dh, 0							; ...last visible menuitem
-	cmp		ax, dx							; Over last visible?
-	jae		.RetFalse						;  If so, return false
-	pop		dx
-	ret										; Return with CF set
-ALIGN JUMP_ALIGN
+	cmp		ax, dx							; Over last visible or not?
+	cmc										; Either way, fall through
+ALIGN JUMP_ALIGN							; CF will reflect TRUE/FALSE
 .RetFalse:
+	cmc
 	pop		dx
-	clc
 	ret
 
 
@@ -630,13 +630,7 @@ Menu_ShowDWDlg:
 ALIGN JUMP_ALIGN
 Menu_ShowYNDlg:
 	mov		dx, MenuDlg_YNEvent	; Offset to event handler
-	call	MenuDlg_Show
-	push	ax
-	pushf
-	call	Menu_RefreshMenu
-	popf
-	pop		ax
-	ret
+	jmp		ContinueMenuShowDlg
 
 
 ;--------------------------------------------------------------------
@@ -659,6 +653,7 @@ Menu_ShowYNDlg:
 ALIGN JUMP_ALIGN
 Menu_ShowStrDlg:
 	mov		dx, MenuDlg_StrEvent	; Offset to event handler
+ContinueMenuShowDlg:
 	call	MenuDlg_Show
 	push	ax
 	pushf
