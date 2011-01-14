@@ -1,8 +1,9 @@
 ; File name		:	BootMenu.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	25.3.2010
-; Last update	:	3.8.2010
-; Author		:	Tomi Tilli
+; Last update	:	14.1.2011
+; Author		:	Tomi Tilli,
+;				:	Krister Nordvall (optimizations)
 ; Description	:	Displays Boot Menu.
 
 ; Section containing code
@@ -30,8 +31,8 @@ BootMenu_DisplayAndReturnSelection:
 	mov		di, BootMenuEvent_Handler
 	call	BootMenu_Enter			; Get selected menuitem index to CX
 	call	BootMenuPrint_ClearScreen
-	cmp		cx, BYTE 0				; -1 if nothing selected (ESC pressed)
-	jl		SHORT BootMenu_DisplayAndReturnSelection
+	test	cx, cx					; -1 if nothing selected (ESC pressed)
+	js		SHORT BootMenu_DisplayAndReturnSelection
 	call	BootMenu_CheckAndConvertHotkeyToMenuitem
 	jc		SHORT .SetDriveTranslationForHotkey
 	jmp		BootMenu_ConvertMenuitemToDriveOrFunction

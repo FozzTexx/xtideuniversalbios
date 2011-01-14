@@ -1,8 +1,9 @@
 ; File name		:	AH0h_HReset.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	27.9.2007
-; Last update	:	24.8.2010
-; Author		:	Tomi Tilli
+; Last update	:	13.1.2011
+; Author		:	Tomi Tilli,
+;				:	Krister Nordvall (optimizations)
 ; Description	:	Int 13h function AH=0h, Disk Controller Reset.
 
 ; Section containing code
@@ -97,11 +98,10 @@ ALIGN JUMP_ALIGN
 GetDriveNumberForForeignBiosesToDL:
 	mov		dl, bl
 	call	RamVars_IsDriveHandledByThisBIOS
-	jc		SHORT .GetFirstDriveForForeignBios
-	ret		; Return what was in BL unmodified
-ALIGN JUMP_ALIGN
-.GetFirstDriveForForeignBios:
+	jnc		SHORT .Return				; Return what was in BL unmodified
 	mov		dl, 80h
+ALIGN JUMP_ALIGN
+.Return:
 	ret
 
 

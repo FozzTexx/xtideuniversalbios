@@ -1,8 +1,9 @@
 ; File name		:	BootMenuPrint.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	26.3.2010
-; Last update	:	3.8.2010
-; Author		:	Tomi Tilli
+; Last update	:	14.1.2011
+; Author		:	Tomi Tilli,
+;				:	Krister Nordvall (optimizations)
 ; Description	:	Functions for printing boot menu strings.
 
 ; Section containing code
@@ -42,16 +43,15 @@ BootMenuPrint_TheBottomOfScreen:
 ;		DL:		Cursor X coordinate
 ;		DH:		Cursor Y coordinate
 ;	Corrupts registers:
-;		AX
+;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenuPrint_GetCoordinatesForBottomStrings:
 	mov		dx, 1800h				; (0, 24)
-	xor		ax, ax					; Zero AX
-	sub		al, bl					; Set CF if any floppy drives
-	sbb		dh, 0					; Decrement Y-coordinate if necessary
-	sub		ah, bh					; Set CF if any hard disks
-	sbb		dh, 0					; Decrement Y-coordinate if necessary
+	cmp		dl, bl					; Set CF if any floppy drives
+	sbb		dh, dl					; Decrement Y-coordinate if necessary
+	cmp		dl, bh					; Set CF if any hard disks
+	sbb		dh, dl					; Decrement Y-coordinate if necessary
 	ret
 
 

@@ -1,8 +1,9 @@
 ; File name		:	AH14h_HDiag.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	28.9.2007
-; Last update	:	24.8.2010
-; Author		:	Tomi Tilli
+; Last update	:	14.1.2011
+; Author		:	Tomi Tilli,
+;				:	Krister Nordvall (optimizations)
 ; Description	:	Int 13h function AH=14h, Controller Internal Diagnostic.
 
 ; Section containing code
@@ -30,10 +31,9 @@ AH14h_HandlerForControllerInternalDiagnostic:
 	call	FindDPT_ForDriveNumber		; DS:DI now points to DPT
 	mov		al, [di+DPT.bReset]			; Load reset byte to AL
 	test	al, al						; Any error?
-	jnz		SHORT .ReturnError
-	xor		ah, ah						; Zero AH and CF since success
-	jmp		Int13h_PopDiDsAndReturn
-.ReturnError:
-	mov		ah, RET_HD_RESETFAIL
+	mov		ah, RET_HD_RESETFAIL		; Assume there was an error
 	stc
+	jnz		SHORT .Return
+	xor		ah, ah						; Zero AH and CF since success
+.Return:
 	jmp		Int13h_PopDiDsAndReturn

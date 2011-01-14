@@ -1,8 +1,9 @@
 ; File name		:	AH9h_HInit.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	9.12.2007
-; Last update	:	1.8.2010
-; Author		:	Tomi Tilli
+; Last update	:	14.1.2011
+; Author		:	Tomi Tilli,
+;				:	Krister Nordvall (optimizations)
 ; Description	:	Int 13h function AH=9h, Initialize Drive Parameters.
 
 ; Section containing code
@@ -30,8 +31,13 @@ AH9h_HandlerForInitializeDriveParameters:
 	push	cx
 	push	bx
 	push	ax
+%ifndef USE_186
 	call	AH9h_InitializeDriveForUse
 	jmp		Int13h_PopXRegsAndReturn
+%else
+	push	Int13h_PopXRegsAndReturn
+	; Fall through to AH9h_InitializeDriveForUse
+%endif
 
 
 ;--------------------------------------------------------------------

@@ -1,8 +1,9 @@
 ; File name		:	AH4h_HVerify.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	13.10.2007
-; Last update	:	13.4.2010
-; Author		:	Tomi Tilli
+; Last update	:	14.1.2011
+; Author		:	Tomi Tilli,
+;				:	Krister Nordvall (optimizations)
 ; Description	:	Int 13h function AH=4h, Verify Disk Sectors.
 
 ; Section containing code
@@ -38,8 +39,13 @@ AH4h_HandlerForVerifyDiskSectors:
 	push	cx
 	push	bx
 	push	ax
+%ifndef USE_186
 	call	AH4h_VerifySectors
 	jmp		Int13h_PopXRegsAndReturn
+%else
+	push	Int13h_PopXRegsAndReturn
+	; Fall through to AH4h_VerifySectors
+%endif
 
 
 ;--------------------------------------------------------------------

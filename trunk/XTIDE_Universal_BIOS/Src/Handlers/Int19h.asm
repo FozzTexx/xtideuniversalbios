@@ -1,8 +1,9 @@
 ; File name		:	Int19h.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	3.8.2007
-; Last update	:	28.11.2010
-; Author		:	Tomi Tilli
+; Last update	:	14.1.2011
+; Author		:	Tomi Tilli,
+;				:	Krister Nordvall (optimizations)
 ; Description	:	Int 19h BIOS functions (Boot Strap Loader).
 
 ; Section containing code
@@ -117,7 +118,6 @@ ALIGN JUMP_ALIGN
 	jnc		SHORT .Return
 	dec		di								; Decrement retry counter
 	jnz		SHORT .ReadRetryLoop			; Loop while retries left
-	stc
 ALIGN JUMP_ALIGN
 .Return:
 	ret
