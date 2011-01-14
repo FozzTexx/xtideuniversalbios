@@ -1,8 +1,9 @@
 ; File name		:	AHCh_HSeek.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	13.12.2007
-; Last update	:	12.4.2010
-; Author		:	Tomi Tilli
+; Last update	:	14.1.2011
+; Author		:	Tomi Tilli,
+;				:	Krister Nordvall (optimizations)
 ; Description	:	Int 13h function AH=Ch, Seek.
 
 ; Section containing code
@@ -34,8 +35,13 @@ AHCh_HandlerForSeek:
 	push	cx
 	push	bx
 	push	ax
+%ifndef USE_186
 	call	AHCh_SeekToCylinder
 	jmp		Int13h_PopXRegsAndReturn
+%else
+	push	Int13h_PopXRegsAndReturn
+	; Fall through to AHCh_SeekToCylinder
+%endif
 
 
 ;--------------------------------------------------------------------

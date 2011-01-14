@@ -1,8 +1,9 @@
 ; File name		:	Int13h_Jump.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	21.9.2007
-; Last update	:	24.8.2010
-; Author		:	Tomi Tilli
+; Last update	:	14.1.2011
+; Author		:	Tomi Tilli,
+;				:	Krister Nordvall (optimizations)
 ; Description	:	Int 13h BIOS functions (Floppy and Hard disk).
 
 ; Section containing code
@@ -62,8 +63,16 @@ Int13h_DiskFunctions:
 	cmp		ah, 25h						; Valid BIOS function?
 	ja		SHORT Int13h_UnsupportedFunction
 	mov		di, ax
+%ifndef USE_186	; This uses 9 bytes less and is about 5 cycles faster
+	mov		al, ah						; Copy bits in AH to AL and then
+	shl		al, 1						; shift them "back" 1 step
+	and		al, 7Eh						; AND them (clears the MSB)
+	cbw									; Clear AH using sign extension
+	xchg	di, ax						; and finally swap DI with AX
+%else
 	eSHR_IM	di, 7						; Shift function to DI...
 	and		di, BYTE 7Eh				; ...and prepare for word lookup
+%endif
 	jmp		[cs:di+g_rgw13hFuncJump]	; Jump to BIOS function
 
 

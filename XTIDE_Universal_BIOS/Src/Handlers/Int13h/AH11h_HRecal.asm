@@ -1,8 +1,9 @@
 ; File name		:	AH11h_HRecal.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	28.9.2007
-; Last update	:	29.7.2010
-; Author		:	Tomi Tilli
+; Last update	:	14.1.2011
+; Author		:	Tomi Tilli,
+;				:	Krister Nordvall (optimizations)
 ; Description	:	Int 13h function AH=11h, Recalibrate.
 
 ; Section containing code
@@ -30,8 +31,13 @@ AH11h_HandlerForRecalibrate:
 	push	cx
 	push	bx
 	push	ax
+%ifndef USE_186
 	call	AH11h_RecalibrateDrive
 	jmp		Int13h_PopXRegsAndReturn
+%else
+	push	Int13h_PopXRegsAndReturn
+	; Fall through to AH11h_RecalibrateDrive
+%endif
 
 
 ;--------------------------------------------------------------------

@@ -1,8 +1,9 @@
 ; File name		:	AH24h_HSetBlocks.asm
 ; Project name	:	IDE BIOS
 ; Created date	:	28.12.2009
-; Last update	:	12.4.2010
-; Author		:	Tomi Tilli
+; Last update	:	14.1.2011
+; Author		:	Tomi Tilli,
+;				:	Krister Nordvall (optimizations)
 ; Description	:	Int 13h function AH=24h, Set Multiple Blocks.
 
 ; Section containing code
@@ -31,8 +32,13 @@ AH24h_HandlerForSetMultipleBlocks:
 	push	cx
 	push	bx
 	push	ax
+%ifndef USE_186
 	call	AH24h_SetBlockSize
 	jmp		Int13h_PopXRegsAndReturn
+%else
+	push	Int13h_PopXRegsAndReturn
+	; Fall through to AH24h_SetBlockSize
+%endif
 
 
 ;--------------------------------------------------------------------
