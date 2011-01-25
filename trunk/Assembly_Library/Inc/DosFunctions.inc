@@ -1,7 +1,7 @@
 ; File name		:	DosFunctions.inc
 ; Project name	:	AssemblyLibrary
 ; Created date	:	1.9.2010
-; Last update	:	8.10.2010
+; Last update	:	3.1.2011
 ; Author		:	Tomi Tilli
 ; Description	:	Defines for MS-DOS functions.
 %ifndef DOS_FUNCTIONS_INC
@@ -10,11 +10,11 @@
 ; DOS interrupts
 DOS_INTERRUPT_21h									EQU		21h
 DOS_CRITICAL_ERROR_HANDLER_24h						EQU		24h
+DOS_TSR_MULTIPLEX_INTERRUPT_2Fh						EQU		2Fh
 
-; DOS file functions
+; DOS drive and file functions
 SELECT_DEFAULT_DRIVE								EQU		0Eh
 GET_CURRENT_DEFAULT_DRIVE							EQU		19h
-SET_INTERRUPT_VECTOR								EQU		25h
 GET_DISK_TRANSFER_AREA_ADDRESS						EQU		2Fh
 GET_DOS_DRIVE_PARAMETER_BLOCK_FOR_SPECIFIC_DRIVE	EQU		32h
 SET_CURRENT_DIRECTORY								EQU		3Bh
@@ -26,6 +26,10 @@ SET_CURRENT_FILE_POSITION							EQU		42h
 GET_CURRENT_DIRECTORY								EQU		47h
 FIND_FIRST_MATCHING_FILE							EQU		4Eh
 FIND_NEXT_MATCHING_FILE								EQU		4Fh
+
+; DOS functions for TSRs
+SET_INTERRUPT_VECTOR								EQU		25h
+GET_INTERRUPT_VECTOR								EQU		35h
 
 ; DOS errors
 ERR_DOS_DRIVE_NOT_READY								EQU		15h

@@ -75,9 +75,9 @@ TimerTicks_InitializeTimeoutFromAX:
 ;--------------------------------------------------------------------
 ; TimerTicks_GetTimeoutTicksLeftToAXfromDSBX
 ;	Parameters:
-;		AX:			Number of ticks left before timeout
 ;		DS:BX:		Ptr to timeout variable WORD
 ;	Returns:
+;		AX:			Number of ticks left before timeout
 ;		CF:			Set if timeout
 ;					Cleared if time left
 ;	Corrupts registers:
