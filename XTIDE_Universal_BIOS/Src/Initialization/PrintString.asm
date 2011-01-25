@@ -1,10 +1,5 @@
-; File name		:	PrintString.asm
 ; Project name	:	IDE BIOS
-; Created date	:	19.3.2010
-; Last update	:	31.3.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for printing strings used in this IDE BIOS.
-
 
 ; Section containing code
 SECTION .text
@@ -12,7 +7,7 @@ SECTION .text
 ;--------------------------------------------------------------------
 ; Prints string with formatting parameters.
 ; Do not call PrintString_JumpToFormat!!! Jump there only!
-; 
+;
 ; PrintString_JumpToFormat
 ;	Parameters:
 ;		DH:		Number of bytes pushed to stack
@@ -41,7 +36,7 @@ PrintString_JumpToFormat:
 
 ;--------------------------------------------------------------------
 ; Prints STOP terminated string from wanted segment.
-; 
+;
 ; PrintString_FromCS
 ; PrintString_FromES
 ; PrintString_FromDS
@@ -55,16 +50,11 @@ PrintString_JumpToFormat:
 ALIGN JUMP_ALIGN
 PrintString_FromCS:
 	push	ds
-	push	cs					; Push string segment...
-	pop		ds					; ...and pop it to DS
-	call	PrintString_FromDS
-	pop		ds
-	ret
-
-ALIGN JUMP_ALIGN
+	push	cs					; Push string segment here...
+	SKIP2B	ax					; mov ax, <next 2 bytes/instructions>
 PrintString_FromES:
 	push	ds
-	push	es					; Push string segment...
+	push	es					; ...or here...
 	pop		ds					; ...and pop it to DS
 	call	PrintString_FromDS
 	pop		ds

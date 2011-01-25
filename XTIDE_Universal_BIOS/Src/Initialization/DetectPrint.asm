@@ -1,8 +1,4 @@
-; File name		:	DetectPrint.asm
 ; Project name	:	IDE BIOS
-; Created date	:	28.3.2010
-; Last update	:	9.4.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for printing drive detection strings.
 
 ; Section containing code
@@ -24,8 +20,7 @@ DetectPrint_RomFoundAtSegment:
 	push	cs
 	ePUSH_T	ax, ROMVARS.szTitle
 	mov		si, g_szRomAt
-	mov		dh, 4						; 4 bytes pushed to stack
-	jmp		PrintString_JumpToFormat
+	jmp		SHORT DetectPrint_4BytesPushedToStack
 
 
 ;--------------------------------------------------------------------
@@ -66,6 +61,7 @@ DetectPrint_StartingDriveDetect:
 	push	WORD [cs:bp+IDEVARS.wPort]
 	push	ax
 	mov		si, g_szDetect
+DetectPrint_4BytesPushedToStack:
 	mov		dh, 4						; 4 bytes pushed to stack
 	jmp		PrintString_JumpToFormat
 

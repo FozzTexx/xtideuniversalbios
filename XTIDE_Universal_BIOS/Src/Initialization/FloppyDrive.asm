@@ -1,8 +1,4 @@
-; File name		:	FloppyDrive.asm
 ; Project name	:	IDE BIOS
-; Created date	:	25.3.2010
-; Last update	:	13.9.2010
-; Author		:	Tomi Tilli
 ; Description	:	Various floppy drive related functions that
 ;					Boot Menu uses.
 
@@ -20,7 +16,7 @@ SECTION .text
 ;				Cleared if INT 40h is not installed
 ;	Corrupts registers:
 ;		BX, CX, DI
-;--------------------------------------------------------------------	
+;--------------------------------------------------------------------
 ;ALIGN JUMP_ALIGN
 FloppyDrive_IsInt40hInstalled:
 	cmp		WORD [es:INTV_FLOPPY_FUNC*4+2], 0C000h	; Any ROM segment?
@@ -39,7 +35,7 @@ FloppyDrive_IsInt40hInstalled:
 ;				Set if INT 40h is not installed
 ;	Corrupts registers:
 ;		BX, CX, DI
-;--------------------------------------------------------------------	
+;--------------------------------------------------------------------
 ;ALIGN JUMP_ALIGN
 .VerifyInt40hHandlerSinceSomeBiosesSimplyReturnFromInt40h:
 	push	es
@@ -83,13 +79,13 @@ FloppyDrive_IsInt40hInstalled:
 ;		ES:DI:	0:0h (to guard against BIOS bugs)
 ;	Corrupts registers:
 ;		DH
-;--------------------------------------------------------------------	
+;--------------------------------------------------------------------
 ;ALIGN JUMP_ALIGN
 .LoadInt40hVerifyParameters:
-	xor		dx, dx				; Floppy drive 0
+	mov		ah, 08h				; Get Drive Parameters
+	cwd							; Floppy drive 0
 	mov		di, dx
 	mov		es, dx				; ES:DI = 0000:0000h to guard against BIOS bugs
-	mov		ah, 08h				; Get Drive Parameters
 	ret
 
 
@@ -170,7 +166,7 @@ FloppyDrive_GetCountFromBIOS:
 	push	ax
 
 	mov		ah, 08h					; Get Drive Parameters
-	xor		dx, dx					; Floppy Drive 00h
+	cwd								; Floppy Drive 00h
 	int		INTV_FLOPPY_FUNC
 	mov		cl, dl					; Number of Floppy Drives to CL
 

@@ -1,10 +1,5 @@
-; File name		:	DetectDrives.asm
 ; Project name	:	IDE BIOS
-; Created date	:	17.3.2010
-; Last update	:	23.8.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for detecting drive for the BIOS.
-
 
 ; Section containing code
 SECTION .text
@@ -79,8 +74,7 @@ DetectDrives_WithIDEVARS:
 ALIGN JUMP_ALIGN
 DetectDrives_DetectMasterDrive:
 	mov		bh, MASK_IDE_DRVHD_SET		; Select Master drive
-	jmp		SHORT DetectDrives_StartDetection
-ALIGN JUMP_ALIGN
+	SKIP2B	ax							; mov ax, <next instruction>
 DetectDrives_DetectSlaveDrive:
 	mov		bh, MASK_IDE_DRVHD_SET | FLG_IDE_DRVHD_DRV
 	; Fall to DetectDrives_StartDetection
@@ -137,28 +131,6 @@ DetectDrives_ReadAtaInfoFromDrive:
 
 
 ;--------------------------------------------------------------------
-; Reads ATAPI information from the drive (for CD/DVD-ROMs).
-;
-; DetectDrives_ReadAtapiInfoFromDrive
-;	Parameters:
-;		BH:		Drive Select byte for Drive and Head Register
-;		CS:BP:	Ptr to IDEVARS for the drive
-;		DS:		RAMVARS segment
-;		ES:		Zero (BDA segment)
-;	Returns:
-;		ES:SI	Ptr to ATAPI information (read with IDENTIFY PACKET DEVICE command)
-;		CF:		Cleared if ATAPI-information read successfully
-;				Set if any error
-;	Corrupts registers:
-;		AX, BL, CX, DX, DI
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-DetectDrives_ReadAtapiInfoFromDrive:
-	stc
-	ret
-
-
-;--------------------------------------------------------------------
 ; Creates all BIOS tables for detected hard disk.
 ;
 ; DetectDrives_CreateBiosTablesForHardDisk
@@ -184,6 +156,29 @@ DetectDrives_CreateBiosTablesForHardDisk:
 	;clc
 .InvalidAtaInfo:
 	ret
+
+
+;--------------------------------------------------------------------
+; Reads ATAPI information from the drive (for CD/DVD-ROMs).
+;
+; DetectDrives_ReadAtapiInfoFromDrive
+;	Parameters:
+;		BH:		Drive Select byte for Drive and Head Register
+;		CS:BP:	Ptr to IDEVARS for the drive
+;		DS:		RAMVARS segment
+;		ES:		Zero (BDA segment)
+;	Returns:
+;		ES:SI	Ptr to ATAPI information (read with IDENTIFY PACKET DEVICE command)
+;		CF:		Cleared if ATAPI-information read successfully
+;				Set if any error
+;	Corrupts registers:
+;		AX, BL, CX, DX, DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+DetectDrives_ReadAtapiInfoFromDrive:
+	;stc
+	;ret
+	; Fall through to DetectDrives_CreateBiosTablesForCDROM
 
 
 ;--------------------------------------------------------------------

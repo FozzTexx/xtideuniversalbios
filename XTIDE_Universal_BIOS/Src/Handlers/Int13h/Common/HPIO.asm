@@ -1,12 +1,8 @@
-; File name		:	HPIO.asm
 ; Project name	:	IDE BIOS
-; Created date	:	14.12.2007
-; Last update	:	1.8.2010
-; Author		:	Tomi Tilli
 ; Description	:	PIO transfer functions.
 
 ; Structure containing variables for PIO transfer functions
-struc PIOVARS
+struc PIOVARS, -6
 	.fnXfer			resb	2	; Offset to transfer function
 	.wBlockSize		resb	2	; Block size in WORDs
 	.wWordsLeft		resb	2	; Number of WORDs left to transfer
@@ -62,7 +58,7 @@ HPIO_ReadBlock:
 
 	; Create PIOVARS to stack
 	eENTER	PIOVARS_size, 0
-	sub		bp, BYTE PIOVARS_size			; SS:BP now points to PIOVARS
+
 	push	si
 	mov		si, g_rgfnPioRead				; Offset to read function lookup
 	call	HPIO_InitializePIOVARS			; Store word count and block size
@@ -74,10 +70,7 @@ HPIO_ReadBlock:
 	call	HPIO_ReadFromDrive
 
 	; Destroy stack frame
-	rcl		al, 1							; CF to AL bit 0
-	add		bp, BYTE PIOVARS_size
 	eLEAVE
-	rcr		al, 1							; Restore CF
 	mov		di, bx							; Restore DI
 	pop		es
 	ret
@@ -157,7 +150,7 @@ HPIO_ReadFromDrive:
 ALIGN JUMP_ALIGN
 .BlockLoop:
 	call	HStatus_WaitIrqOrDrq		; Wait until ready to transfer
-	jc		SHORT .RetError				; Return if error (code in AH)
+	jc		SHORT HPIO_WriteToDrive.RetError	; Return if error (code in AH)
 	mov		cx, [bp+PIOVARS.wBlockSize]	; Load block size
 	sub		[bp+PIOVARS.wWordsLeft], cx	; Transferring last (possibly partial) block?
 	jbe		SHORT .XferLastBlock		;  If so, jump to transfer
@@ -168,8 +161,6 @@ ALIGN JUMP_ALIGN
 	add		cx, [bp+PIOVARS.wWordsLeft]	; CX to partial block size
 	call	[bp+PIOVARS.fnXfer]			; Transfer possibly partial block
 	jmp		HStatus_WaitBsyDefTime		; Check for errors
-.RetError:
-	ret
 
 
 ;--------------------------------------------------------------------
@@ -194,7 +185,7 @@ HPIO_WriteBlock:
 
 	; Create PIOVARS to stack
 	eENTER	PIOVARS_size, 0
-	sub		bp, BYTE PIOVARS_size			; SS:BP now points to PIOVARS
+
 	mov		si, g_rgfnPioWrite				; Offset to write function lookup
 	call	HPIO_InitializePIOVARS			; Store word count and block size
 
@@ -204,13 +195,12 @@ HPIO_WriteBlock:
 	call	HPIO_WriteToDrive
 
 	; Destroy stack frame
-	rcl		al, 1							; CF to AL bit 0
-	add		bp, BYTE PIOVARS_size
 	eLEAVE
-	rcr		al, 1							; Restore CF
+
 	pop		si
 	pop		es
 	ret
+
 
 ;--------------------------------------------------------------------
 ; Writes blocks using PIO transfers.
@@ -242,7 +232,7 @@ ALIGN JUMP_ALIGN
 	call	HStatus_WaitIrqOrDrq			; Wait until ready to transfer
 	jnc		SHORT .BlockLoop				; If no error, loop while blocks left
 .RetError:
-	ret
+	ret										; This ret is shared with HPIO_ReadFromDrive
 ALIGN JUMP_ALIGN
 .XferLastBlock:
 	add		cx, [bp+PIOVARS.wWordsLeft]		; CX to partial block size

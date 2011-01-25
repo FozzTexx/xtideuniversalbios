@@ -1,8 +1,4 @@
-; File name		:	HIRQ.asm
 ; Project name	:	IDE BIOS
-; Created date	:	11.12.2009
-; Last update	:	24.8.2010
-; Author		:	Tomi Tilli
 ; Description	:	Interrupt handling related functions.
 
 ; Section containing code
@@ -40,7 +36,7 @@ ALIGN JUMP_ALIGN
 
 	LOAD_BDA_SEGMENT_TO	ds, ax			; Zero AX
 	cli									; Disable interrupts
-	cmp		al, [ds:BDA.bHDTaskFlg]		; Task flag already set?
+	cmp		al, [BDA.bHDTaskFlg]		; Task flag already set?
 	jc		SHORT .ReturnFromWaitNotify	;  If so, skip OS notification
 
 	mov		ah, 90h						; Hard disk busy (AX=9000h)
