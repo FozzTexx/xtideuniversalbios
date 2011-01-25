@@ -1,8 +1,4 @@
-; File name		:	menucrsr.asm
 ; Project name	:	Menu library
-; Created date	:	10.11.2009
-; Last update	:	17.1.2010
-; Author		:	Tomi Tilli
 ; Description	:	ASM library to menu system.
 ;					Contains menu cursor functions.
 
@@ -159,10 +155,9 @@ MenuCrsr_PointTitleBrdr:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MenuCrsr_SetCursor:
-	xor		bx, bx						; Zero page
 	mov		ah, 02h						; Set Cursor Position and Size
-	int		10h
-	ret
+	SKIP2B	bx							; mov bx, <next instruction>
+	; Fall through to MenuCrsr_GetCursor
 
 
 ;--------------------------------------------------------------------
@@ -177,10 +172,10 @@ MenuCrsr_SetCursor:
 ;	Corrupts registers:
 ;		AX, BX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+;ALIGN JUMP_ALIGN
 MenuCrsr_GetCursor:
-	xor		bx, bx						; Zero page
 	mov		ah, 03h						; Get Cursor Position and Size
+	xor		bx, bx						; Zero page
 	int		10h
 	ret
 

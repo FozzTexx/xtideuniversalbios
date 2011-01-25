@@ -1,19 +1,19 @@
-; File name		:	Main.asm
 ; Project name	:	XTIDE Universal BIOS
-; Created date	:	28.7.2007
-; Last update	:	28.11.2010
-; Author		:	Tomi Tilli
+; Authors		:	Tomi Tilli
+;				:	aitotat@gmail.com
+;				:
+;				:	Krister Nordvall
+;				:	krille_n_@hotmail.com
+;				:
 ; Description	:	Main file for BIOS. This is the only file that needs
 ;					to be compiled since other files are included to this
 ;					file (so no linker needed, Nasm does it all).
-;
-;					Tomi Tilli
-;					aitotat@gmail.com
 
 ORG 000h						; Code start offset 0000h
 
 ; Included .inc files
 %include "emulate.inc"			; Must be included first!
+%include "macros.inc"			; For generic macros
 %include "BiosData.inc"			; For BIOS Data area equates
 %include "Interrupts.inc"		; For interrupt equates
 %include "ATA_ID.inc"			; For ATA Drive Information structs

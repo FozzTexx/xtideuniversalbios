@@ -1,8 +1,4 @@
-; File name		:	HError.asm
 ; Project name	:	IDE BIOS
-; Created date	:	30.11.2007
-; Last update	:	24.8.2010
-; Author		:	Tomi Tilli
 ; Description	:	Error checking functions for BIOS Hard disk functions.
 
 ; Section containing code
@@ -33,8 +29,13 @@ HError_ProcessTimeoutAfterPollingBSYandSomeOtherStatusBit:
 
 ALIGN JUMP_ALIGN
 HError_ProcessErrorsAfterPollingBSY:
+%ifndef USE_186
 	call	HError_GetStatusAndErrorRegistersToAXandStoreThemToBDA
 	jmp		SHORT GetBiosErrorCodeToAHfromStatusAndErrorRegistersInAX
+%else
+	push	GetBiosErrorCodeToAHfromStatusAndErrorRegistersInAX
+	; Fall through to HError_GetStatusAndErrorRegistersToAXandStoreThemToBDA
+%endif
 
 
 ;--------------------------------------------------------------------

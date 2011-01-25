@@ -1,8 +1,4 @@
-; File name		:	Interrupts.asm
 ; Project name	:	IDE BIOS
-; Created date	:	23.8.2010
-; Last update	:	23.8.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for initializing the BIOS.
 
 ; Section containing code
@@ -17,12 +13,13 @@ SECTION .text
 ;		Nothing
 ;	Corrupts registers:
 ;		All except segments
-;--------------------------------------------------------------------	
+;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Interrupts_InitializeInterruptVectors:
 	call	Interrupts_InitializeInt13hAnd40h
 	call	Interrupts_InitializeInt19h
 	jmp		SHORT Interrupts_InitializeHardwareIrqHandlers
+	; Maybe all this should be inlined?
 
 
 ;--------------------------------------------------------------------
@@ -34,7 +31,7 @@ Interrupts_InitializeInterruptVectors:
 ;		Nothing
 ;	Corrupts registers:
 ;		AX, BX, CX, DX, SI, DI
-;--------------------------------------------------------------------	
+;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Interrupts_InitializeInt13hAnd40h:
 	mov		ax, [es:INTV_DISK_FUNC*4]			; Load old INT 13h offset
@@ -49,23 +46,10 @@ Interrupts_InitializeInt13hAnd40h:
 	; At least AMI BIOS for 286 stores 40h handler by itself and calls
 	; 40h from 13h. That system locks to infinite loop if we copy 13h to 40h.
 	call	FloppyDrive_IsInt40hInstalled
-	jnc		SHORT .InitializeInt40h
-	ret
-
-;--------------------------------------------------------------------
-; .InitializeInt40h
-;	Parameters:
-;		DX:AX:	Ptr to old INT 13h handler
-;		ES:		BDA and Interrupt Vector segment (zero)
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------	
-ALIGN JUMP_ALIGN
-.InitializeInt40h:
+	jc		SHORT .Return
 	mov		[es:INTV_FLOPPY_FUNC*4], ax		; Store offset
 	mov		[es:INTV_FLOPPY_FUNC*4+2], dx	; Store segment
+.Return:
 	ret
 
 
@@ -78,7 +62,7 @@ ALIGN JUMP_ALIGN
 ;		Nothing
 ;	Corrupts registers:
 ;		BX, SI
-;--------------------------------------------------------------------	
+;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Interrupts_InitializeInt19h:
 	eMOVZX	bx, [cs:ROMVARS.bBootLdrType]	; Load boot loader type
@@ -115,7 +99,7 @@ ALIGN JUMP_ALIGN
 ;		Nothing
 ;	Corrupts registers:
 ;		BX, CX, DX, SI, DI
-;--------------------------------------------------------------------		
+;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Interrupts_InitializeHardwareIrqHandlers:
 	call	RamVars_GetIdeControllerCountToCX
@@ -126,7 +110,8 @@ ALIGN JUMP_ALIGN
 	add		di, BYTE IDEVARS_size			; Increment to next controller
 	call	.InstallLowOrHighIrqHandler
 	loop	.IdeControllerLoop
-	ret
+.Return:
+	ret		; This ret is shared with .InstallLowOrHighIrqHandler
 
 ;--------------------------------------------------------------------
 ; .InstallLowOrHighIrqHandler
@@ -137,14 +122,14 @@ ALIGN JUMP_ALIGN
 ;		Nothing
 ;	Corrupts registers:
 ;		BX, SI
-;--------------------------------------------------------------------		
+;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 .InstallLowOrHighIrqHandler:
-	cmp		bl, 8
-	jae		SHORT .InstallHighIrqHandler
 	test	bl, bl
-	jnz		SHORT .InstallLowIrqHandler
-	ret		; IRQ not used
+	jz		SHORT .Return	; IRQ not used
+	cmp		bl, 8
+	jb		SHORT .InstallLowIrqHandler
+	; Fall through to .InstallHighIrqHandler
 
 ;--------------------------------------------------------------------
 ; .InstallHighIrqHandler
@@ -155,9 +140,9 @@ ALIGN JUMP_ALIGN
 ;		Nothing
 ;	Corrupts registers:
 ;		BX, SI
-;--------------------------------------------------------------------		
-ALIGN JUMP_ALIGN
-.InstallHighIrqHandler:
+;--------------------------------------------------------------------
+;ALIGN JUMP_ALIGN
+;.InstallHighIrqHandler:
 	add		bx, BYTE INTV_IRQ8 - 8			; Interrupt vector number
 	mov		si, HIRQ_InterruptServiceRoutineForIrqs8to15
 	jmp		SHORT Interrupts_InstallHandlerToVectorInBXFromCSSI
@@ -171,7 +156,7 @@ ALIGN JUMP_ALIGN
 ;		Nothing
 ;	Corrupts registers:
 ;		BX, SI
-;--------------------------------------------------------------------		
+;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 .InstallLowIrqHandler:
 	add		bx, BYTE INTV_IRQ0				; Interrupt vector number
@@ -189,7 +174,7 @@ ALIGN JUMP_ALIGN
 ;		Nothing
 ;	Corrupts registers:
 ;		BX
-;--------------------------------------------------------------------	
+;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Interrupts_InstallHandlerToVectorInBXFromCSSI:
 	eSHL_IM	bx, 2					; Shift for DWORD offset
@@ -211,11 +196,11 @@ ALIGN JUMP_ALIGN
 Interrupts_UnmaskInterruptControllerForDriveInDSDI:
 	eMOVZX	bx, BYTE [di+DPT.bIdeOff]
 	mov		al, [cs:bx+IDEVARS.bIRQ]
-	cmp		al, 8
-	jae		SHORT .UnmaskHighIrqController
 	test	al, al
-	jnz		SHORT .UnmaskLowIrqController
-	ret		; Interrupts disabled
+	jz		SHORT .Return	; Interrupts disabled
+	cmp		al, 8
+	jb		SHORT .UnmaskLowIrqController
+	; Fall through to .UnmaskHighIrqController
 
 ;--------------------------------------------------------------------
 ; .UnmaskHighIrqController
@@ -226,8 +211,8 @@ Interrupts_UnmaskInterruptControllerForDriveInDSDI:
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-.UnmaskHighIrqController:
+;ALIGN JUMP_ALIGN
+;.UnmaskHighIrqController:
 	sub		al, 8				; Slave interrupt number
 	mov		dx, PORT_8259SL_IMR	; Load Slave Mask Register address
 	call	.ClearBitFrom8259MaskRegister
@@ -269,4 +254,5 @@ ALIGN JUMP_ALIGN
 	and		al, ch				; Clear wanted bit
 	out		dx, al				; Write modified Interrupt Mask Register
 	pop		cx
+.Return:
 	ret
