@@ -1,18 +1,22 @@
-; File name		:	Size.asm
 ; Project name	:	Assembly Library
-; Created date	:	7.9.2010
-; Last update	:	15.9.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for size calculations.
+
+struc BYTE_MULTIPLES
+	.B			resb	1
+	.kiB		resb	1
+	.MiB		resb	1
+	.GiB		resb	1
+	.TiB		resb	1
+endstruc
 
 ; Section containing code
 SECTION .text
 
 ;--------------------------------------------------------------------
-; Size_GetWordSizeToAXfromBXDXAXwithMagnitudeInCX
+; Size_GetSizeToAXAndCharToDLfromBXDXAXwithMagnitudeInCX
 ;	Parameters:
 ;		BX:DX:AX:	Size in magnitude
-;		CX:			Magnitude (0=B, 1=kiB, 2=MiB...)
+;		CX:			Magnitude in BYTE_MULTIPLES
 ;	Returns:
 ;		AX:			Size in magnitude
 ;		CX:			Tenths
@@ -51,11 +55,11 @@ ALIGN JUMP_ALIGN
 ; Size_DivideSizeInBXDXAXby1024andIncrementMagnitudeInCX
 ;	Parameters:
 ;		BX:DX:AX:	Size
-;		CX:			Magnitude (0=B, 1=kiB, 2=MiB...)
+;		CX:			Magnitude in BYTE_MULTIPLES
 ;	Returns:
 ;		BX:DX:AX:	Size in magnitude
 ;		SI:			Remainder (0...1023)
-;		CX:			Magnitude (1=kiB, 2=MiB...)
+;		CX:			Magnitude in BYTE_MULTIPLES
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
@@ -120,7 +124,7 @@ Size_ConvertMagnitudeRemainderInSItoTenths:
 ;--------------------------------------------------------------------
 ; Size_GetMagnitudeCharacterToDLfromMagnitudeInCX
 ;	Parameters:
-;		CX:		Magnitude (0=B, 1=kiB, 2=MiB...)
+;		CX:		Magnitude in BYTE_MULTIPLES
 ;	Returns:
 ;		DL:		Magnitude character
 ;	Corrupts registers:
