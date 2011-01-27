@@ -84,7 +84,7 @@ istruc ROMVARS
 ;-----------------------------------;
 ; XT and XT+ Build default settings ;
 ;-----------------------------------;
-	at	ROMVARS.wFlags,			dw	FLG_ROMVARS_DRVXLAT | FLG_ROMVARS_ROMBOOT | FLG_ROMVARS_MAXSIZE
+	at	ROMVARS.wFlags,			dw	FLG_ROMVARS_DRVXLAT | FLG_ROMVARS_MAXSIZE
 	at	ROMVARS.bIdeCnt,		db	1						; Number of supported controllers
 	at	ROMVARS.bBootDrv,		db	80h						; Boot Menu default drive
 	at	ROMVARS.bBootDelay,		db	30						; Boot Menu selection delay (secs)
