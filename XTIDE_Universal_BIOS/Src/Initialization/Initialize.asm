@@ -1,8 +1,4 @@
-; File name		:	Initialize.asm
-; Project name	:	IDE BIOS
-; Created date	:	23.3.2010
-; Last update	:	23.8.2010
-; Author		:	Tomi Tilli
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Functions for initializing the BIOS.
 
 ; Section containing code
@@ -27,16 +23,16 @@ Initialize_FromMainBiosRomSearch:
 	push	ds
 	ePUSHA
 
+	LOAD_BDA_SEGMENT_TO	es, ax
 	call	Initialize_ShouldSkip
-	jc		SHORT .ReturnFromRomInit
+	jnz		SHORT .SkipRomInitialization
 
-	ePUSH_T	ax, .ReturnFromRomInit		; Push return address
-	test	BYTE [cs:ROMVARS.wFlags], FLG_ROMVARS_LATE
-	jnz		SHORT Initialize_PrepareLateInitialization
-	jmp		SHORT Initialize_AndDetectDrives
-
-ALIGN JUMP_ALIGN
-.ReturnFromRomInit:
+%ifdef USE_AT	; Early initialization on AT build
+	call	Initialize_AndDetectDrives
+%else			; Late initialization on XT builds
+	call	Int19hLate_InitializeInt19h
+%endif
+.SkipRomInitialization:
 	ePOPA
 	pop		ds
 	pop		es
@@ -49,39 +45,18 @@ ALIGN JUMP_ALIGN
 ;
 ; Initialize_ShouldSkip
 ;	Parameters:
-;		Nothing
+;		ES:		BDA segment
 ;	Returns:
-;		CF:		Set if ROM initialization is to be skipped
-;				Cleared to continue ROM initialization
+;		ZF:		Cleared if ROM initialization is to be skipped
+;				Set to continue ROM initialization
 ;	Corrupts registers:
-;		AX, DS
+;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Initialize_ShouldSkip:
-	sti							; Enable interrupts
-	LOAD_BDA_SEGMENT_TO	ds, ax
-	mov		al, [BDA.bKBFlgs1]	; Load shift flags
-	eSHR_IM	al, 3				; Set CF if CTRL is held down
+	sti										; Enable interrupts
+	test	BYTE [es:BDA.bKBFlgs1], (1<<2)	; Clear ZF if CTRL is held down
 	ret
-
-
-;--------------------------------------------------------------------
-; Installs INT 19h boot loader handler for late initialization.
-;
-; Initialize_PrepareLateInitialization
-;	Parameters:
-;		Nothing
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		BX, SI, ES
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-Initialize_PrepareLateInitialization:
-	LOAD_BDA_SEGMENT_TO	es, bx
-	mov		bl, INTV_BOOTSTRAP
-	mov		si, Int19h_LateInitialization
-	jmp		Interrupts_InstallHandlerToVectorInBXFromCSSI
 
 
 ;--------------------------------------------------------------------
@@ -89,7 +64,7 @@ Initialize_PrepareLateInitialization:
 ;
 ; Initialize_AndDetectDrives
 ;	Parameters:
-;		Nothing
+;		ES:		BDA Segment
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
@@ -100,7 +75,6 @@ Initialize_AndDetectDrives:
 	call	DetectPrint_RomFoundAtSegment
 	call	RamVars_Initialize
 	call	RamVars_GetSegmentToDS
-	LOAD_BDA_SEGMENT_TO	es, ax
 	call	Interrupts_InitializeInterruptVectors
 	call	DetectDrives_FromAllIDEControllers
 	call	CompatibleDPT_CreateForDrives80hAnd81h

@@ -1,9 +1,4 @@
-; File name		:	BootVars.asm
-; Project name	:	IDE BIOS
-; Created date	:	1.4.2010
-; Last update	:	14.1.2011
-; Author		:	Tomi Tilli,
-;				:	Krister Nordvall (optimizations)
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Functions to access BOOTVARS struct.
 
 ; Section containing code
@@ -76,46 +71,3 @@ BootVars_SwitchBackToPostStack:
 %endif
 	sti									; Enable interrupts
 	jmp		ax
-
-
-;--------------------------------------------------------------------
-; Backups system INT 18h ROM Boot / Boot Failure handler and
-; installs our own for boot menu INT 18h callbacks.
-;
-; BootVars_StoreSystemInt18hAndInstallOurs
-;	Parameters:
-;		DS:		BDA and Interrupt Vector segment (zero)
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, BX, ES
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-BootVars_StoreSystemInt18hAndInstallOurs:
-	mov		bx, INTV_BOOT_FAILURE*4		; Offset to INT 18h vector
-	les		ax, [bx]					; Load system INT 18h
-	mov		[BOOTVARS.dwSys18h], ax
-	mov		[BOOTVARS.dwSys18h+2], es
-	mov		WORD [bx], Int18h_BootError	; Install our INT 18h
-	mov		WORD [bx+2], cs
-	ret
-
-
-;--------------------------------------------------------------------
-; Restores system INT 18h ROM Boot or Boot Error handler.
-;
-; BootVars_RestoreSystemInt18h
-;	Parameters:
-;		Nothing
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, DS, ES
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-BootVars_RestoreSystemInt18h:
-	LOAD_BDA_SEGMENT_TO	ds, ax
-	les		ax, [BOOTVARS.dwSys18h]
-	mov		[INTV_BOOT_FAILURE*4], ax
-	mov		[INTV_BOOT_FAILURE*4+2], es
-	ret

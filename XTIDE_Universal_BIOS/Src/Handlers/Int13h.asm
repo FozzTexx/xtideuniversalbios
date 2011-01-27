@@ -1,9 +1,4 @@
-; File name		:	Int13h_Jump.asm
-; Project name	:	IDE BIOS
-; Created date	:	21.9.2007
-; Last update	:	14.1.2011
-; Author		:	Tomi Tilli,
-;				:	Krister Nordvall (optimizations)
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Int 13h BIOS functions (Floppy and Hard disk).
 
 ; Section containing code
@@ -226,7 +221,7 @@ g_rgw13hFuncJump:
 	dw	AH2h_HandlerForReadDiskSectors					; 02h, Read Disk Sectors (All)
 	dw	AH3h_HandlerForWriteDiskSectors					; 03h, Write Disk Sectors (All)
 	dw	AH4h_HandlerForVerifyDiskSectors				; 04h, Verify Disk Sectors (All)
-	dw	AH5h_HandlerForFormatDiskTrack					; 05h, Format Disk Track (XT, AT, EISA)
+	dw	Int13h_UnsupportedFunction						; 05h, Format Disk Track (XT, AT, EISA)
 	dw	Int13h_UnsupportedFunction						; 06h, Format Disk Track with Bad Sectors (XT)
 	dw	Int13h_UnsupportedFunction						; 07h, Format Multiple Cylinders (XT)
 	dw	AH8h_HandlerForReadDiskDriveParameters			; 08h, Read Disk Drive Parameters (All)
@@ -241,7 +236,7 @@ g_rgw13hFuncJump:
 	dw	AH11h_HandlerForRecalibrate						; 11h, Recalibrate (All)
 	dw	Int13h_UnsupportedFunction						; 12h, Controller RAM Diagnostic (XT)
 	dw	Int13h_UnsupportedFunction						; 13h, Drive Diagnostic (XT)
-	dw	AH14h_HandlerForControllerInternalDiagnostic	; 14h, Controller Internal Diagnostic (All)
+	dw	Int13h_UnsupportedFunction						; 14h, Controller Internal Diagnostic (All)
 	dw	AH15h_HandlerForReadDiskDriveSize				; 15h, Read Disk Drive Size (AT+)
 	dw	Int13h_UnsupportedFunction						; 16h, 
 	dw	Int13h_UnsupportedFunction						; 17h, 

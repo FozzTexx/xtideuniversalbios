@@ -19,9 +19,8 @@ endstruc
 ; Segment is always 0000h, same as BDA segment
 struc BOOTVARS
 					resb	800h
-	.dwSys18h		resb	4		;  800h, System INT 18h handler (Diskless boot, Boot failure)
 	.dwPostStack	resb	4		;  804h, POST stack when entering INT 19h
-					resb	4
+					resb	8
 	.rgBootNfo		resb	73F4h	;  80Ch, Array containing BOOTNFO structs
 	.rgbMnuStack:					; 7C00h and below, Boot Menu stack
 	.rgbAtaInfo:					; 7C00h, ATA Information for drive detection

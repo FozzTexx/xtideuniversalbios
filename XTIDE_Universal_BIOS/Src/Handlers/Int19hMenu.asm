@@ -1,8 +1,4 @@
-; File name		:	Int19hMenu.asm
-; Project name	:	IDE BIOS
-; Created date	:	25.3.2010
-; Last update	:	12.4.2010
-; Author		:	Tomi Tilli
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Int 19h BIOS functions for Boot Menu.
 
 ; Section containing code
@@ -23,7 +19,6 @@ ALIGN JUMP_ALIGN
 Int19hMenu_BootLoader:
 	LOAD_BDA_SEGMENT_TO	ds, ax
 	call	BootVars_StorePostStackPointer
-	call	BootVars_StoreSystemInt18hAndInstallOurs
 
 	; Install new INT 19h handler now that BOOTVARS has been initialized
 	mov		WORD [INTV_BOOTSTRAP*4], Int19hMenu_Display
@@ -110,7 +105,5 @@ Int19hMenu_ExecuteSelectedFunction:
 	ret
 ALIGN JUMP_ALIGN
 .Int18hRomBoot:
-	call	BootVars_RestoreSystemInt18h
 	call	BootVars_SwitchBackToPostStack
-	call	Int19h_BootFailure			; Should never return
-	jmp		SHORT Int19hMenu_BootLoader	; Status unknown so reinitialize boot loader
+	jmp		Int19h_BootFailure			; Never returns
