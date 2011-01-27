@@ -1,8 +1,4 @@
-; File name		:	Display.inc
 ; Project name	:	AssemblyLibrary
-; Created date	:	25.6.2010
-; Last update	:	7.12.2010
-; Author		:	Tomi Tilli
 ; Description	:	Defines for display library.
 %ifndef DISPLAY_INC
 %define DISPLAY_INC
@@ -200,6 +196,7 @@ CR							EQU		0Dh		; Carriage return
 ESC							EQU		1Bh		; Escape
 
 ; Non ASCII characters (code page 437)
+QUOTATION_MARK								EQU		34
 DOUBLE_TOP_RIGHT_CORNER						EQU		187
 DOUBLE_TOP_LEFT_CORNER						EQU		201
 DOUBLE_BOTTOM_RIGHT_CORNER					EQU		188
@@ -220,6 +217,8 @@ BLOCK_MOSTLY_BACKGROUND						EQU		176
 BLOCK_EVEN_BACKGROUND_AND_FOREGROUND		EQU		177
 BLOCK_MOSTLY_FOREGROUND						EQU		178
 BLOCK_FULL_FOREGROUND						EQU		219
+ONE_HALF									EQU		171
+ONE_QUARTER									EQU		172
 
 
 ; Background character for clearing screen
