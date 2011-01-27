@@ -1,9 +1,5 @@
 ; File name		:	BootInfo.asm
-; Project name	:	IDE BIOS
-; Created date	:	16.3.2010
-; Last update	:	6.1.2011
-; Author		:	Tomi Tilli,
-;				:	Krister Nordvall (optimizations)
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Functions for generating and accessing drive
 ;					information to be displayed on boot menu.
 
@@ -144,7 +140,7 @@ BootInfo_StoreAtaString:
 	jc		SHORT .Return			; Return if invalid character
 	loop	BootInfo_StoreAtaString	; Loop while words left
 .Return:
-	mov		al, STOP				; End string with STOP
+	xor		ax, ax					; Terminate string with NULL
 	stosb
 	ret
 

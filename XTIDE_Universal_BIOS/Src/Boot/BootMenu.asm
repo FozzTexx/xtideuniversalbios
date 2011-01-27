@@ -1,9 +1,4 @@
-; File name		:	BootMenu.asm
-; Project name	:	IDE BIOS
-; Created date	:	25.3.2010
-; Last update	:	14.1.2011
-; Author		:	Tomi Tilli,
-;				:	Krister Nordvall (optimizations)
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Displays Boot Menu.
 
 ; Section containing code
@@ -27,27 +22,36 @@ ALIGN JUMP_ALIGN
 BootMenu_DisplayAndReturnSelection:
 	call	DriveXlate_Reset
 	call	BootMenuPrint_TheBottomOfScreen
-	call	BootMenu_GetMenuitemCount
-	mov		di, BootMenuEvent_Handler
 	call	BootMenu_Enter			; Get selected menuitem index to CX
 	call	BootMenuPrint_ClearScreen
-	test	cx, cx					; -1 if nothing selected (ESC pressed)
-	js		SHORT BootMenu_DisplayAndReturnSelection
-	call	BootMenu_CheckAndConvertHotkeyToMenuitem
-	jc		SHORT .SetDriveTranslationForHotkey
+	cmp		cx, BYTE NO_ITEM_SELECTED
+	je		SHORT BootMenu_DisplayAndReturnSelection
 	jmp		BootMenu_ConvertMenuitemToDriveOrFunction
+
+
+;--------------------------------------------------------------------
+; Enters Boot Menu or submenu.
+;
+; BootMenu_Enter
+;	Parameters:
+;		Nothing
+;	Returns:
+;		CX:		Index of selected item or NO_ITEM_SELECTED
+;	Corrupts registers:
+;		BX, DI
+;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-.SetDriveTranslationForHotkey:
-	call	BootMenu_ConvertMenuitemToDriveOrFunction
-	call	DriveXlate_SetDriveToSwap
-	clc
+BootMenu_Enter:
+	mov		bx, BootMenuEvent_Handler
+	CALL_MENU_LIBRARY DisplayWithHandlerInBXandUserDataInDXAX
+	xchg	cx, ax
 	ret
 
 
 ;--------------------------------------------------------------------
 ; Returns number of menuitems in Boot Menu.
 ;
-; BootMenu_GetMenuitemCount
+; BootMenu_GetMenuitemCountToCX
 ;	Parameters:
 ;		DS:		RAMVARS segment
 ;	Returns:
@@ -56,7 +60,7 @@ ALIGN JUMP_ALIGN
 ;		AX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-BootMenu_GetMenuitemCount:
+BootMenu_GetMenuitemCountToCX:
 	call	RamVars_GetHardDiskCountFromBDAtoCX
 	xchg	ax, cx
 	call	FloppyDrive_GetCount
@@ -88,103 +92,21 @@ ALIGN JUMP_ALIGN
 
 
 ;--------------------------------------------------------------------
-; Enters Boot Menu or submenu.
-;
-; BootMenu_Enter
+; BootMenu_GetHeightToALwithItemCountInCL
 ;	Parameters:
-;		CX:		Number of menuitems in menu
-;		DS:SI:	User specific far pointer
-;		CS:DI:	Pointer to menu event handler function
+;		CL:		Number of menuitems
 ;	Returns:
-;		CX:		Index of last pointed Menuitem (not necessary selected with ENTER)
-;				FFFFh if cancelled with ESC
+;		AH:		Boot menu height
 ;	Corrupts registers:
-;		AX, BX, DX
+;		AL, CL, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-BootMenu_Enter:
-	call	BootMenu_GetSelectionTimeout
-	call	BootMenu_GetSize
-	MIN_U	ah, [cs:ROMVARS.bBootMnuH]		; Limit to max height
-	jmp		Menu_Enter
-
-;--------------------------------------------------------------------
-; Returns Boot Menu selection timeout in milliseconds.
-;
-; BootMenu_GetSelectionTimeout
-;	Parameters:
-;		Nothing
-;	Returns:
-;		DX:		Selection timeout in millisecs
-;	Corrupts registers:
-;		AX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-BootMenu_GetSelectionTimeout:
-	mov		ax, 1000			; Seconds to milliseconds
-	eMOVZX	dx, BYTE [cs:ROMVARS.bBootDelay]
-	mul		dx					; AX = seconds * milliseconds_per_second
-	xchg	ax, dx				; DX = Timeout in millisecs
+BootMenu_GetHeightToAHwithItemCountInCL:
+	add		cl, BOOT_MENU_HEIGHT_WITHOUT_ITEMS
+	CALL_DISPLAY_LIBRARY GetColumnsToALandRowsToAH
+	MIN_U	ah, cl
 	ret
 
-;--------------------------------------------------------------------
-; Returns Boot Menu size.
-;
-; BootMenu_GetSize
-;	Parameters:
-;		Nothing
-;	Returns:
-;		AL:		Menu width with borders included (characters)
-;		AH:		Menu height with borders included (characters)
-;		BL:		Title line count
-;		BH:		Info line count
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-BootMenu_GetSize:
-	mov		al, MENU_WIDTH_IN_CHARS
-	mov		ah, cl						; Copy menuitem count to AH
-	test	BYTE [cs:ROMVARS.wFlags], FLG_ROMVARS_DRVNFO
-	jz		SHORT .GetHeightWithoutInfoArea
-;.GetHeightWithInfoArea:
-	add		ah, MENU_HEIGHT_IN_CHARS_WITH_INFO
-	mov		bx, (MENU_INFO_LINE_CNT<<8) | MENU_TITLE_LINE_CNT
-	ret
-ALIGN JUMP_ALIGN
-.GetHeightWithoutInfoArea:
-	add		ah, MENU_HEIGHT_IN_CHARS_WITHOUT_INFO
-	mov		bx, MENU_TITLE_LINE_CNT
-	ret
-
-
-;--------------------------------------------------------------------
-; Checks if hotkey has been pressed on Boot Menu.
-; If it has been, it will be converted to menuitem index.
-;
-; BootMenu_CheckAndConvertHotkeyToMenuitem
-;	Parameters:
-;		CX:		Menuitem index (if no hotkey)
-;	Returns:
-;		CX:		Menuitem index
-;		CF:		Set if hotkey has been pressed
-;				Cleared if no hotkey selection
-;	Corrupts registers:
-;		AX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-BootMenu_CheckAndConvertHotkeyToMenuitem:
-	push	es
-	LOAD_BDA_SEGMENT_TO	es, ax				; Zero AX
-	xchg	al, [es:BOOTVARS.bMenuHotkey]	; Load and clear hotkey
-	test	al, al							; No hotkey? (clears CF)
-	jz		SHORT .Return
-	call	BootMenu_ConvertHotkeyToMenuitem
-	stc
-ALIGN JUMP_ALIGN
-.Return:
-	pop		es
-	ret
 
 ;--------------------------------------------------------------------
 ; Converts any hotkey to Boot Menu menuitem index.

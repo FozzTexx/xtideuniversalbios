@@ -1,4 +1,4 @@
-; Project name	:	IDE BIOS
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Functions for printing drive detection strings.
 
 ; Section containing code
@@ -13,14 +13,17 @@ SECTION .text
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, CX, DX, SI
+;		AX, SI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 DetectPrint_RomFoundAtSegment:
-	push	cs
-	ePUSH_T	ax, ROMVARS.szTitle
+	push	bp
+
 	mov		si, g_szRomAt
-	jmp		SHORT DetectPrint_4BytesPushedToStack
+	mov		bp, sp
+	ePUSH_T	ax, ROMVARS.szTitle			; Bios title string
+	push	cs							; BIOS segment
+	jmp		BootMenuPrint_FormatCSSIfromParamsInSSBP
 
 
 ;--------------------------------------------------------------------
@@ -33,7 +36,7 @@ DetectPrint_RomFoundAtSegment:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, CX, DX, SI
+;		AX, SI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 DetectPrint_StartingMasterDetect:
@@ -49,21 +52,23 @@ DetectPrint_StartingSlaveDetect:
 ;
 ; DetectPrint_StartingDriveDetect
 ;	Parameters:
-;		AX:		Offset to "Master" or "Slave" string
+;		CS:AX:	Ptr to "Master" or "Slave" string
 ;		CS:BP:	Ptr to IDEVARS
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, CX, DX, SI
+;		AX, SI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 DetectPrint_StartingDriveDetect:
-	push	WORD [cs:bp+IDEVARS.wPort]
-	push	ax
+	push	bp
+
+	mov		si, [cs:bp+IDEVARS.wPort]
+	mov		bp, sp
+	push	ax							; Push "Master" or "Slave"
+	push	si							; Push port number
 	mov		si, g_szDetect
-DetectPrint_4BytesPushedToStack:
-	mov		dh, 4						; 4 bytes pushed to stack
-	jmp		PrintString_JumpToFormat
+	jmp		BootMenuPrint_FormatCSSIfromParamsInSSBP
 
 
 ;--------------------------------------------------------------------
@@ -78,15 +83,26 @@ DetectPrint_4BytesPushedToStack:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, DX, SI
+;		AX, SI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 DetectPrint_DriveNameOrNotFound:
+	push	di
 	jc		SHORT .PrintDriveNotFound
+	push	bx
+
 	lea		si, [bx+BOOTNFO.szDrvName]
-	call	PrintString_FromES
-	jmp		Print_Newline
+	mov		bx, es
+	CALL_DISPLAY_LIBRARY PrintNullTerminatedStringFromBXSI
+	CALL_DISPLAY_LIBRARY PrintNewlineCharacters
+
+	pop		bx
+	pop		di
+	ret
+
 ALIGN JUMP_ALIGN
 .PrintDriveNotFound:
 	mov		si, g_szNotFound
-	jmp		PrintString_FromCS
+	call	PrintNullTerminatedStringFromCSSIandSetCF
+	pop		di
+	ret

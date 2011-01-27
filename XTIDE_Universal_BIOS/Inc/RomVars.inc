@@ -23,7 +23,7 @@ struc ROMVARS
 	.wFlags			resb	2	; Word for ROM flags
 	.bIdeCnt		resb	1	; Number of supported IDE controllers
 	.bBootDrv		resb	1	; Boot Menu default drive
-	.bBootMnuH		resb	1	; Boot Menu maximum height
+					resb	1	; (Was boot menu maximum height)
 	.bBootDelay		resb	1	; Boot Menu selection delay in seconds
 	.bBootLdrType	resb	1	; Boot Loader type
 	.bMinFddCnt		resb	1	; Minimum number of Floppy Drives

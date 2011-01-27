@@ -1,8 +1,4 @@
-; File name		:	HDrvSel.asm
-; Project name	:	IDE BIOS
-; Created date	:	25.2.2010
-; Last update	:	13.4.2010
-; Author		:	Tomi Tilli
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Functions for selecting Master or Slave drive.
 
 ; Section containing code
@@ -59,7 +55,6 @@ HDrvSel_SelectDriveAndSetControlByte:
 	out		dx, al							; Select drive
 
 	; Wait until drive is ready to accept commands
-	call	SoftDelay_BeforePollingStatusRegister
 	call	HStatus_WaitRdyDefTime
 	pop		cx
 	pop		dx

@@ -1,21 +1,17 @@
-; File name		:	BootMenu.inc
-; Project name	:	IDE BIOS
-; Created date	:	26.3.2010
-; Last update	:	26.3.2010
-; Author		:	Tomi Tilli
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Equates used in Boot Menu.
 %ifndef BOOTMENU_INC
 %define BOOTMENU_INC
 
 ; Boot menu sizes
-MENU_TITLE_LINE_CNT		EQU	3		; Number of title lines
-MENU_INFO_LINE_CNT		EQU	3		; Number of info lines
-MENU_WIDTH_IN_CHARS		EQU	38		; Menu width in characters
-MENU_HEIGHT_IN_CHARS_WITH_INFO		EQU	(MENU_TITLE_LINE_CNT + MENU_INFO_LINE_CNT + 4)
-MENU_HEIGHT_IN_CHARS_WITHOUT_INFO	EQU	(MENU_TITLE_LINE_CNT + 3)
+BOOT_MENU_TITLE_LINES			EQU	2	; Number of title lines
+BOOT_MENU_INFO_LINES			EQU	3	; Number of info lines
+BOOT_MENU_TITLE_AND_INFO_LINES	EQU	(BOOT_MENU_TITLE_LINES | (BOOT_MENU_INFO_LINES<<8))
+BOOT_MENU_WIDTH					EQU	40	; Menu width in characters
+BOOT_MENU_HEIGHT_WITHOUT_ITEMS	EQU	(BOOT_MENU_TITLE_LINES + BOOT_MENU_INFO_LINES + 4)
 
 ; Function IDs
-ID_BOOTFUNC_ROMBOOT		EQU	0		; ROM boot
+ID_BOOTFUNC_ROMBOOT				EQU	0	; ROM boot
 
 
 %endif ; BOOTMENU_INC
