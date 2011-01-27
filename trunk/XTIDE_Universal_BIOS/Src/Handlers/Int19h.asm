@@ -1,9 +1,4 @@
-; File name		:	Int19h.asm
-; Project name	:	IDE BIOS
-; Created date	:	3.8.2007
-; Last update	:	14.1.2011
-; Author		:	Tomi Tilli,
-;				:	Krister Nordvall (optimizations)
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Int 19h BIOS functions (Boot Strap Loader).
 
 ; Section containing code
@@ -11,49 +6,6 @@ SECTION .text
 
 B_READ_RETRY_TIMES	EQU	3	; Number of times to retry
 
-
-;--------------------------------------------------------------------
-; Int 19h software interrupt handler for late initialization.
-; Calls actual Int 19h after initialization is complete.
-;
-; Int19h_LateInitialization
-;	Parameters:
-;		Nothing
-;	Returns:
-;		Never returns
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-Int19h_LateInitialization:
-	call	Initialize_ShouldSkip			; Skip initialization?
-	jc		SHORT .SkipInitialization
-	call	Initialize_AndDetectDrives
-	int		INTV_BOOTSTRAP					; Call actual boot loader
-.SkipInitialization:
-	call	RamVars_Initialize				; RAMVARS must be initialized even for simple boot loader
-	; Fall to Int19h_SimpleBootLoader
-
-;--------------------------------------------------------------------
-; Simple boot loader.
-; Boot sequence is fixed to 00h, 80h and INT 18h.
-;
-; Int19h_SimpleBootLoader
-;	Parameters:
-;		Nothing
-;	Returns:
-;		Never returns
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-Int19h_SimpleBootLoader:
-	sti										; Enable interrupts
-	call	RamVars_GetSegmentToDS
-	xor		dx, dx
-	call	Int19h_TryToLoadBootSectorFromDL
-	jc		SHORT Int19h_JumpToBootSector
-	mov		dl, 80h
-	call	Int19h_TryToLoadBootSectorFromDL
-	jc		SHORT Int19h_JumpToBootSector
-	call	Int19h_BootFailure				; Should never return		
-	jmp		SHORT Int19h_SimpleBootLoader
 
 ;--------------------------------------------------------------------
 ; Boots if boot sector is successfully read from the drive.

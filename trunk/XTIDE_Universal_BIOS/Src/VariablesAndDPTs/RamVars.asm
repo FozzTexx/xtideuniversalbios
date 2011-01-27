@@ -1,8 +1,4 @@
-; File name		:	RamVars.asm
-; Project name	:	IDE BIOS
-; Created date	:	14.3.2010
-; Last update	:	23.8.2010
-; Author		:	Tomi Tilli
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Functions for accessings RAMVARS.
 
 ; Section containing code
@@ -18,12 +14,14 @@ SECTION .text
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, CX, DI, DS, ES
+;		AX, CX, DI, DS
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 RamVars_Initialize:
+	push	es
 	call	.StealMemoryForRAMVARS	; Get RAMVARS segment to DS even if no stealing
 	call	.ClearRamvarsFromDS
+	pop		es
 	jmp		DriveXlate_Reset
 
 ;--------------------------------------------------------------------

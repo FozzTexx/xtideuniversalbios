@@ -37,7 +37,6 @@ istruc ROMVARS
 	at	ROMVARS.wRomSign,	dw	0AA55h			; PC ROM signature
 	at	ROMVARS.bRomSize,	db	CNT_ROM_BLOCKS	; ROM size in 512B blocks
 	at	ROMVARS.rgbJump, 	jmp	Initialize_FromMainBiosRomSearch
-	at	ROMVARS.rgbDate,	db	"01/27/11"		; Build data (mm/dd/yy)
 	at	ROMVARS.rgbSign,	db	"XTIDE120"		; Signature for flash program
 	at	ROMVARS.szTitle
 		db	"-=XTIDE Universal BIOS"
@@ -48,17 +47,16 @@ istruc ROMVARS
 %else
 		db	" (XT)=-",NULL
 %endif
-	at	ROMVARS.szVersion,	db	"v1.2.0_wip (01/27/11)",NULL
+	at	ROMVARS.szVersion,	db	"v1.2.0_wip (01/27/11)",NULL	; mm/dd/yy
 
 ;---------------------------;
 ; AT Build default settings ;
 ;---------------------------;
 %ifdef USE_AT
-	at	ROMVARS.wFlags,			dw	FLG_ROMVARS_FULLMODE | FLG_ROMVARS_DRVXLAT | FLG_ROMVARS_DRVNFO | FLG_ROMVARS_MAXSIZE
+	at	ROMVARS.wFlags,			dw	FLG_ROMVARS_FULLMODE | FLG_ROMVARS_DRVXLAT | FLG_ROMVARS_MAXSIZE
 	at	ROMVARS.bIdeCnt,		db	3						; Number of supported controllers
 	at	ROMVARS.bBootDrv,		db	80h						; Boot Menu default drive
 	at	ROMVARS.bBootDelay,		db	30						; Boot Menu selection delay (secs)
-	at	ROMVARS.bBootLdrType,	db	BOOTLOADER_TYPE_MENU	; Boot loader type
 	at	ROMVARS.bMinFddCnt, 	db	0						; Do not force minimum number of floppy drives
 	at	ROMVARS.bStealSize,		db	1						; Steal 1kB from base memory
 
@@ -86,11 +84,10 @@ istruc ROMVARS
 ;-----------------------------------;
 ; XT and XT+ Build default settings ;
 ;-----------------------------------;
-	at	ROMVARS.wFlags,			dw	FLG_ROMVARS_LATE | FLG_ROMVARS_DRVXLAT | FLG_ROMVARS_ROMBOOT | FLG_ROMVARS_DRVNFO | FLG_ROMVARS_MAXSIZE
+	at	ROMVARS.wFlags,			dw	FLG_ROMVARS_DRVXLAT | FLG_ROMVARS_ROMBOOT | FLG_ROMVARS_MAXSIZE
 	at	ROMVARS.bIdeCnt,		db	1						; Number of supported controllers
 	at	ROMVARS.bBootDrv,		db	80h						; Boot Menu default drive
 	at	ROMVARS.bBootDelay,		db	30						; Boot Menu selection delay (secs)
-	at	ROMVARS.bBootLdrType,	db	BOOTLOADER_TYPE_MENU	; Boot loader type
 	at	ROMVARS.bMinFddCnt, 	db	1						; Assume at least 1 floppy drive present if autodetect fails
 	at	ROMVARS.bStealSize,		db	1						; Steal 1kB from base memory in full mode
 
@@ -142,8 +139,10 @@ iend
 
 ; Include .asm files (Interrupt handlers)
 %include "Int13h.asm"			; For Int 13h, Disk functions
-%include "Int18h.asm"			; For Int 18h, ROM Boot and Boot error
 %include "Int19h.asm"			; For Int 19h, Boot Loader
+%ifndef USE_AT
+	%include "Int19hLate.asm"	; For late initialization
+%endif
 %include "Int19hMenu.asm"		; For Int 19h, Boot Loader for Boot Menu
 %include "BootPrint.asm"		; For printing boot information
 
@@ -153,14 +152,12 @@ iend
 %include "AH2h_HRead.asm"		; Required by Int13h_Jump.asm
 %include "AH3h_HWrite.asm"		; Required by Int13h_Jump.asm
 %include "AH4h_HVerify.asm"		; Required by Int13h_Jump.asm
-%include "AH5h_HFormat.asm"		; Required by Int13h_Jump.asm
 %include "AH8h_HParams.asm"		; Required by Int13h_Jump.asm
 %include "AH9h_HInit.asm"		; Required by Int13h_Jump.asm
 %include "AHCh_HSeek.asm"		; Required by Int13h_Jump.asm
 %include "AHDh_HReset.asm"		; Required by Int13h_Jump.asm
 %include "AH10h_HReady.asm"		; Required by Int13h_Jump.asm
 %include "AH11h_HRecal.asm"		; Required by Int13h_Jump.asm
-%include "AH14h_HDiag.asm"		; Required by Int13h_Jump.asm
 %include "AH15h_HSize.asm"		; Required by Int13h_Jump.asm
 %include "AH23h_HFeatures.asm"	; Required by Int13h_Jump.asm
 %include "AH24h_HSetBlocks.asm"	; Required by Int13h_Jump.asm

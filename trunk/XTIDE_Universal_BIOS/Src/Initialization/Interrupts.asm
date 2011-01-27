@@ -1,4 +1,4 @@
-; Project name	:	IDE BIOS
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Functions for initializing the BIOS.
 
 ; Section containing code
@@ -65,28 +65,7 @@ Interrupts_InitializeInt13hAnd40h:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Interrupts_InitializeInt19h:
-	eMOVZX	bx, [cs:ROMVARS.bBootLdrType]	; Load boot loader type
-	mov		si, INTV_BOOTSTRAP				; 19h
-	xchg	bx, si							; SI=Loader type, BX=19h
-	jmp		[cs:si+.rgwSetupBootLoader]		; Jump to install selected loader
-ALIGN WORD_ALIGN
-.rgwSetupBootLoader:
-	dw		.SetupBootMenuLoader		; BOOTLOADER_TYPE_MENU
-	dw		.SetupSimpleLoader			; BOOTLOADER_TYPE_SIMPLE
-	dw		.SetupBootMenuLoader		; reserved
-	dw		.NoBootLoader				; BOOTLOADER_TYPE_NONE
-
-ALIGN JUMP_ALIGN
-.NoBootLoader:
-	test	BYTE [cs:ROMVARS.wFlags], FLG_ROMVARS_LATE
-	jnz		SHORT .SetupSimpleLoader	; Boot loader required for late initialization
-	ret
-ALIGN JUMP_ALIGN
-.SetupSimpleLoader:
-	mov		si, Int19h_SimpleBootLoader
-	jmp		Interrupts_InstallHandlerToVectorInBXFromCSSI
-ALIGN JUMP_ALIGN
-.SetupBootMenuLoader:
+	mov		bx, INTV_BOOTSTRAP
 	mov		si, Int19hMenu_BootLoader
 	jmp		Interrupts_InstallHandlerToVectorInBXFromCSSI
 
