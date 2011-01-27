@@ -81,6 +81,7 @@ ALIGN JUMP_ALIGN
 BootMenu_GetHeightToAHwithItemCountInCL:
 	add		cl, BOOT_MENU_HEIGHT_WITHOUT_ITEMS
 	CALL_DISPLAY_LIBRARY GetColumnsToALandRowsToAH
+	sub		ah, MENU_SCREEN_BOTTOM_LINES*2
 	MIN_U	ah, cl
 	ret
 

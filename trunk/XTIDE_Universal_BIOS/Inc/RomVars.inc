@@ -30,7 +30,6 @@ endstruc
 ; Bit defines for ROMVARS.wFlags
 FLG_ROMVARS_FULLMODE	EQU	(1<<0)	; Full operating mode (steals base RAM, supports EBIOS etc.)
 FLG_ROMVARS_DRVXLAT		EQU	(1<<2)	; Enable drive number translation
-FLG_ROMVARS_MAXSIZE		EQU	(1<<5)	; Maximize size by sacrificing compatibility with some old BIOSes
 
 
 ; Controller specific variables

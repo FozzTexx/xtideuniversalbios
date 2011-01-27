@@ -61,7 +61,6 @@ ALIGN JUMP_ALIGN
 	mov		WORD [si+MENUINIT.wTitleAndInfoLines], BOOT_MENU_TITLE_AND_INFO_LINES
 	mov		BYTE [si+MENUINIT.bWidth], BOOT_MENU_WIDTH
 	call	BootMenu_GetHeightToAHwithItemCountInCL
-	sub		ah, MENU_SCREEN_BOTTOM_LINES*2
 	mov		[si+MENUINIT.bHeight], ah
 	stc
 	ret
