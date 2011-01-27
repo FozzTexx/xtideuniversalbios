@@ -1,8 +1,4 @@
-; File name		:	BootPrint.asm
 ; Project name	:	IDE BIOS
-; Created date	:	19.3.2010
-; Last update	:	1.4.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for printing boot related strings.
 
 ; Section containing code
@@ -64,10 +60,7 @@ BootPrint_BootSectorLoaded:
 	ePUSH_T	ax, BootPrint_PopDxAndReturn	; Return address
 
 	ePUSH_T	ax, g_szFound
-	ePUSH_T	ax, g_szBootSector
-	mov		si, g_szSectRead
-	mov		dh, 4							; 4 bytes pushed to stack
-	jmp		PrintString_JumpToFormat
+	jmp		SHORT BootPrint_MsgCodeShared
 
 
 ;--------------------------------------------------------------------
@@ -84,6 +77,7 @@ BootPrint_BootSectorLoaded:
 ALIGN JUMP_ALIGN
 BootPrint_FirstSectorNotBootable:
 	ePUSH_T	ax, g_szNotFound
+BootPrint_MsgCodeShared:
 	ePUSH_T	ax, g_szBootSector
 	mov		si, g_szSectRead
 	mov		dh, 4				; 4 bytes pushed to stack
