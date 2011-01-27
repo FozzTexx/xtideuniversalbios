@@ -1,8 +1,4 @@
-; File name		:	AH8h_HParams.asm
-; Project name	:	IDE BIOS
-; Created date	:	27.9.2007
-; Last update	:	24.9.2010
-; Author		:	Tomi Tilli
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Int 13h function AH=8h, Read Disk Drive Parameters.
 
 ; Section containing code
@@ -72,31 +68,8 @@ ALIGN JUMP_ALIGN
 AH8h_GetDriveParameters:
 	call	FindDPT_ForDriveNumber
 	call	AccessDPT_GetLCHSfromPCHS	; AX=sectors, BX=cylinders, DX=heads
-	call	AH8h_ReserveCylinders
 	call	AH8h_PackReturnValues
 	xor		ax, ax						; Clear AH and CF
-	ret
-
-
-;--------------------------------------------------------------------
-; Reserves diagnostic cylinder if so configured.
-;
-; AH8h_ReserveCylinders
-;	Parameters:
-;		BX:		Total number of L-CHS cylinders available
-;		DS:DI:	Ptr to DPT
-;	Returns:
-;		BX:		Number of L-CHS cylinders available after reserving
-;	Corrupts registers:
-;		CX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-AH8h_ReserveCylinders:
-	test	BYTE [cs:ROMVARS.wFlags], FLG_ROMVARS_MAXSIZE
-	jnz		SHORT .Return
-	dec		bx							; Reserve diagnostic cylinder
-ALIGN JUMP_ALIGN
-.Return:
 	ret
 
 
