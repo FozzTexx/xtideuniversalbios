@@ -14,22 +14,22 @@ g_szNotFound:	db	"not found",CR,LF,NULL
 ; Boot loader strings
 g_szFloppyDrv:	db	"Floppy Drive",NULL
 g_szHardDrv:	db	" Hard Drive ",NULL
-g_szTryToBoot:	db	"Booting from %s %x",175,"%x ... ",NULL
+g_szTryToBoot:	db	"Booting from %s %x",ANGLE_QUOTE_RIGHT,"%x ... ",NULL
 g_szBootSector:	db	"Boot Sector",NULL
 g_szFound:		db	"found",NULL
 g_szSectRead:	db	"%s %s!",CR,LF,NULL
 g_szReadError:	db	"Error %x!",CR,LF,NULL
-g_sz18hCallback:db	"Boot menu callback via INT 18h",NULL
 
 ; Boot menu bottom of screen strings
 g_szFDD:		db	"FDD",NULL
 g_szHDD:		db	"HDD",NULL
-g_szBottomScrn:	db	"%c to %c boots from %s with %s mappings",CR,LF,NULL
+g_szRomBoot:	db	"ROM Boot",NULL
+g_szHotkey:		db	"%A%c%c%A%8s%a ",NULL
+
 
 ; Boot Menu menuitem strings
 g_szFDLetter:	db	"%s %c",NULL
 g_szforeignHD:	db	"Foreign Hard Disk",NULL
-g_szRomBoot:	db	"ROM Boot",NULL
 
 ; Boot Menu information strings
 g_szCapacity:	db	"Capacity : ",NULL
@@ -42,5 +42,5 @@ g_szPCHS:		db	"P-CHS",NULL
 g_szLBA28:		db	"LBA28",NULL
 g_szLBA48:		db	"LBA48",NULL
 g_szFddUnknown:	db	"%sUnknown",NULL
-g_szFddSizeOr:	db	"%s5",172,22h," or 3",171,22h," DD",NULL
-g_szFddSize:	db	"%s%c%c",22h,", %u kiB",NULL	; 3½", 1440 kiB
+g_szFddSizeOr:	db	"%s5",ONE_QUARTER,QUOTATION_MARK," or 3",ONE_HALF,QUOTATION_MARK," DD",NULL
+g_szFddSize:	db	"%s%c%c",QUOTATION_MARK,", %u kiB",NULL	; 3½", 1440 kiB

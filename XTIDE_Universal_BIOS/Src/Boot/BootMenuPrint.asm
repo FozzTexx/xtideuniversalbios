@@ -40,67 +40,6 @@ BootMenuPrint_Newline:
 
 
 ;--------------------------------------------------------------------
-; Prints Floppy Drive hotkey string.
-;
-; BootMenuPrint_FloppyHotkeyString
-;	Parameters:
-;		BL:		Number of floppy drives in system
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, SI
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-BootMenuPrint_FloppyHotkeyString:
-	test	bl, bl					; Any floppy drives?
-	jz		SHORT NoFloppyDrivesOrHardDisksToPrint
-	push	bp
-
-	mov		bp, sp
-	mov		al, 'A'
-	push	ax						; 'A'
-	dec		ax
-	add		al, bl
-	push	ax						; Last floppy drive letter
-	ePUSH_T	ax, g_szFDD
-	ePUSH_T	ax, g_szHDD
-	jmp		SHORT PrintHotkeyString
-
-;--------------------------------------------------------------------
-; Prints Hard Disk hotkey string.
-;
-; BootMenuPrint_FloppyHotkeyString
-;	Parameters:
-;		BH:		Number of hard disks in system
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, CX, SI
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-BootMenuPrint_HardDiskHotkeyString:
-	test	bh, bh					; Any hard disks?
-	jz		SHORT NoFloppyDrivesOrHardDisksToPrint
-	push	bp
-
-	mov		bp, sp
-	call	BootMenu_GetLetterForFirstHardDisk
-	push	cx						; First hard disk letter
-	dec		cx
-	add		cl, bh
-	push	cx						; Last hard disk letter
-	ePUSH_T	ax, g_szHDD
-	ePUSH_T	ax, g_szFDD
-	; Fall to PrintHotkeyString
-
-ALIGN JUMP_ALIGN
-PrintHotkeyString:
-	mov		si, g_szBottomScrn
-	jmp		BootMenuPrint_FormatCSSIfromParamsInSSBP
-NoFloppyDrivesOrHardDisksToPrint:
-	ret
-
-;--------------------------------------------------------------------
 ; BootMenuPrint_ClearScreen
 ;	Parameters:
 ;		Nothing
@@ -215,27 +154,6 @@ BootMenuPrint_HardDiskMenuitem:
 ALIGN JUMP_ALIGN
 .HardDiskMenuitemForForeignDrive:
 	mov		si, g_szforeignHD
-	jmp		PrintNullTerminatedStringFromCSSIandSetCF
-
-
-;--------------------------------------------------------------------
-; BootMenuPrint_FunctionMenuitem
-;	Parameters:
-;		DX:		Function ID
-;	Returns:
-;		CF:		Set if menu event was handled successfully
-;	Corrupts registers:
-;		AX, DX, SI, DI
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-BootMenuPrint_FunctionMenuitem:
-	test	dx, dx					; ID_BOOTFUNC_ROMBOOT
-	jz		SHORT .PrintRomBootMenuitem
-	ret
-
-ALIGN JUMP_ALIGN
-.PrintRomBootMenuitem:
-	mov		si, g_szRomBoot
 	jmp		PrintNullTerminatedStringFromCSSIandSetCF
 
 
@@ -478,15 +396,13 @@ BootMenuPrint_ClearInformationArea:
 
 
 ;--------------------------------------------------------------------
-; Prints information strings to the bottom of the screen.
-;
 ; BootMenuPrint_TheBottomOfScreen
 ;	Parameters:
 ;		DS:		RAMVARS segment
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, BX, CX, DX, SI
+;		AX, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenuPrint_TheBottomOfScreen:
@@ -494,51 +410,100 @@ BootMenuPrint_TheBottomOfScreen:
 	mov		bl, cl					; Floppy Drive count to BL
 	call	RamVars_GetHardDiskCountFromBDAtoCX
 	mov		bh, cl					; Hard Disk count to BH
-	call	BootMenuPrint_GetCoordinatesForBottomStrings
-	call	BootMenuPrint_SetCursorPosition
-	call	BootMenuPrint_FloppyHotkeyString
-	jmp		BootMenuPrint_HardDiskHotkeyString
-
+	; Fall to .MoveCursorToHotkeyStrings
 
 ;--------------------------------------------------------------------
-; Returns coordinates for bottom strings.
-;
-; BootMenuPrint_GetCoordinatesForBottomStrings
+; .MoveCursorToHotkeyStrings
 ;	Parameters:
-;		BL:		Number of floppy drives in system
-;		BH:		Number of hard disks in system
-;	Returns:
-;		DL:		Cursor X coordinate
-;		DH:		Cursor Y coordinate
-;	Corrupts registers:
 ;		Nothing
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-BootMenuPrint_GetCoordinatesForBottomStrings:
-	mov		dx, 1800h				; (0, 24)
-	cmp		dl, bl					; Set CF if any floppy drives
-	sbb		dh, dl					; Decrement Y-coordinate if necessary
-	cmp		dl, bh					; Set CF if any hard disks
-	sbb		dh, dl					; Decrement Y-coordinate if necessary
-	ret
-
-
-;--------------------------------------------------------------------
-; Sets cursor to wanted screen coordinates.
-;
-; BootMenuPrint_SetCursorPosition
-;	Parameters:
-;		DL:		Cursor X coordinate
-;		DH:		Cursor Y coordinate
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX
+;		AX, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-BootMenuPrint_SetCursorPosition:
-	push	di
-	mov		ax, dx
+.MoveCursorToHotkeyStrings:
+	CALL_DISPLAY_LIBRARY GetColumnsToALandRowsToAH
+	xor		al, al
+	dec		ah
 	CALL_DISPLAY_LIBRARY SetCursorCoordinatesFromAX
-	pop		di
-	ret
+	; Fall to .PrintHotkeyString
+
+;--------------------------------------------------------------------
+; .PrintHotkeyString
+;	Parameters:
+;		BL:		Floppy Drives
+;		BH:		Hard Drives
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, CX, DX, SI
+;--------------------------------------------------------------------
+.PrintHotkeyString:
+	; Display Library should not be called like this
+	mov		si, ATTRIBUTE_CHARS.cTitle
+	call	MenuAttribute_GetToAXfromTypeInSI
+	xchg	cx, ax
+	mov		si, ATTRIBUTE_CHARS.cHighlightedItem
+	call	MenuAttribute_GetToAXfromTypeInSI
+	xchg	dx, ax
+
+	test	bl, bl		; Any Floppy Drives?
+	jz		SHORT .SkipFloppyDriveHotkeys
+	mov		ax, 'A' | (ANGLE_QUOTE_RIGHT<<8)
+	mov		si, g_szFDD
+	call	PushHotkeyParamsAndFormat
+
+.SkipFloppyDriveHotkeys:
+	test	bh, bh		; Any Hard Drives?
+	jz		SHORT .SkipHardDriveHotkeys
+	call	BootMenu_GetLetterForFirstHardDiskToCL
+	mov		ch, ANGLE_QUOTE_RIGHT
+	xchg	ax, cx
+	mov		si, g_szHDD
+	call	PushHotkeyParamsAndFormat
+
+.SkipHardDriveHotkeys:
+	; Fall to .PrintRomBootHotkey
+
+;--------------------------------------------------------------------
+; .PrintRomBootHotkey
+;	Parameters:
+;		CX:		Key Attribute
+;		DX:		Description Attribute
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, SI
+;--------------------------------------------------------------------
+.PrintRomBootHotkey:
+	mov		ax, 'F' | ('8'<<8)		; F8
+	mov		si, g_szRomBoot
+	; Fall to PushHotkeyParamsAndFormat
+
+;--------------------------------------------------------------------
+; PushHotkeyParamsAndFormat
+;	Parameters:
+;		AL:		First character
+;		AH:		Second character
+;		CX:		Key Attribute
+;		DX:		Description Attribute
+;		CS:SI:	Description string
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, SI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+PushHotkeyParamsAndFormat:
+	push	bp
+	mov		bp, sp
+
+	push	cx			; Key attribute
+	push	ax			; First character
+	xchg	al, ah
+	push	ax			; Second character
+	push	dx			; Description attribute
+	push	si			; Description string
+	push	cx			; Key attribute for last space
+	mov		si, g_szHotkey
+	jmp		BootMenuPrint_FormatCSSIfromParamsInSSBP

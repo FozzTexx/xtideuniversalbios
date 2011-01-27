@@ -26,7 +26,7 @@ BootMenu_DisplayAndReturnSelection:
 	call	BootMenuPrint_ClearScreen
 	cmp		cx, BYTE NO_ITEM_SELECTED
 	je		SHORT BootMenu_DisplayAndReturnSelection
-	jmp		BootMenu_ConvertMenuitemToDriveOrFunction
+	jmp		SHORT BootMenu_ConvertMenuitemFromCXtoDriveInDX
 
 
 ;--------------------------------------------------------------------
@@ -65,29 +65,6 @@ BootMenu_GetMenuitemCountToCX:
 	xchg	ax, cx
 	call	FloppyDrive_GetCount
 	add		ax, cx
-	call	BootMenu_GetMenuFunctionCount
-	add		cx, ax
-	ret
-
-;--------------------------------------------------------------------
-; Returns number of functions displayed in Boot Menu.
-;
-; BootMenu_GetMenuFunctionCount
-;	Parameters:
-;		Nothing
-;	Returns:
-;		CX:		Number of boot menu functions
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-BootMenu_GetMenuFunctionCount:
-	xor		cx, cx
-	test	BYTE [cs:ROMVARS.wFlags], FLG_ROMVARS_ROMBOOT
-	jz		SHORT .DontIncludeRomBoot
-	inc		cx
-ALIGN JUMP_ALIGN
-.DontIncludeRomBoot:
 	ret
 
 
@@ -109,19 +86,17 @@ BootMenu_GetHeightToAHwithItemCountInCL:
 
 
 ;--------------------------------------------------------------------
-; Converts any hotkey to Boot Menu menuitem index.
-;
-; BootMenu_ConvertHotkeyToMenuitem
+; BootMenu_ConvertAsciiHotkeyFromALtoMenuitemInCX
 ;	Parameters:
-;		AX:		ASCII hotkey starting from upper case 'A'
+;		AL:		ASCII hotkey starting from upper case 'A'
 ;	Returns:
 ;		CX:		Menuitem index
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-BootMenu_ConvertHotkeyToMenuitem:
-	call	BootMenu_GetLetterForFirstHardDisk
+BootMenu_ConvertAsciiHotkeyFromALtoMenuitemInCX:
+	call	BootMenu_GetLetterForFirstHardDiskToCL
 	cmp		al, cl						; Letter is for Hard Disk?
 	jae		SHORT .StartFromHardDiskLetter
 	sub		al, 'A'						; Letter to Floppy Drive menuitem
@@ -138,7 +113,7 @@ ALIGN JUMP_ALIGN
 ; Returns letter for first hard disk. Usually it will be 'c' but it
 ; can be higher if more than two floppy drives are found.
 ;
-; BootMenu_GetLetterForFirstHardDisk
+; BootMenu_GetLetterForFirstHardDiskToCL
 ;	Parameters:
 ;		Nothing
 ;	Returns:
@@ -147,7 +122,7 @@ ALIGN JUMP_ALIGN
 ;		CH
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-BootMenu_GetLetterForFirstHardDisk:
+BootMenu_GetLetterForFirstHardDiskToCL:
 	call	FloppyDrive_GetCount
 	add		cl, 'A'
 	MAX_U	cl, 'C'
@@ -155,58 +130,24 @@ BootMenu_GetLetterForFirstHardDisk:
 
 
 ;--------------------------------------------------------------------
-; Converts selected menuitem index to drive number or function ID.
-;
-; BootMenu_ConvertMenuitemToDriveOrFunction
+; BootMenu_ConvertMenuitemFromCXtoDriveInDX
 ;	Parameters:
 ;		CX:		Index of menuitem selected from Boot Menu
 ;		DS:		RAMVARS segment
 ;	Returns:
-;		DX:		Drive number to be used for booting (if CF cleared)
-;				Function ID (if CF set)
-;		CF:		Cleared if drive selected
-;				Set if function selected
+;		DX:		Drive number to be used for booting
 ;	Corrupts registers:
-;		AX, CX
+;		CX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-BootMenu_ConvertMenuitemToDriveOrFunction:
+BootMenu_ConvertMenuitemFromCXtoDriveInDX:
 	mov		dx, cx					; Copy menuitem index to DX
 	call	FloppyDrive_GetCount
 	cmp		dx, cx					; Floppy drive?
 	jb		SHORT .ReturnFloppyDriveInDX
 	sub		dx, cx					; Remove floppy drives from index
-	call	RamVars_GetHardDiskCountFromBDAtoCX
-	cmp		dx, cx					; Hard disk?
-	jb		SHORT .ReturnHardDiskInDX
-	sub		dx, cx					; Remove hard disks from index
-	jmp		SHORT BootMenu_ConvertFunctionIndexToID
-ALIGN JUMP_ALIGN
-.ReturnHardDiskInDX:
 	or		dl, 80h
-ALIGN JUMP_ALIGN
 .ReturnFloppyDriveInDX:
-	clc
-	ret
-
-
-;--------------------------------------------------------------------
-; Converts selected menuitem index to drive number or function ID.
-;
-; BootMenu_ConvertFunctionIndexToID
-;	Parameters:
-;		CX:		Menuitem index
-;		DX:		Function index (Menuitem index - floppy count - HD count)
-;	Returns:
-;		DX:		Function ID
-;		CF:		Set to indicate function
-;	Corrupts registers:
-;		AX, CX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-BootMenu_ConvertFunctionIndexToID:
-	mov		dx, ID_BOOTFUNC_ROMBOOT
-	stc
 	ret
 
 

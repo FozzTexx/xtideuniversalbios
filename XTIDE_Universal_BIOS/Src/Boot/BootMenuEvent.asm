@@ -61,6 +61,7 @@ ALIGN JUMP_ALIGN
 	mov		WORD [si+MENUINIT.wTitleAndInfoLines], BOOT_MENU_TITLE_AND_INFO_LINES
 	mov		BYTE [si+MENUINIT.bWidth], BOOT_MENU_WIDTH
 	call	BootMenu_GetHeightToAHwithItemCountInCL
+	sub		ah, MENU_SCREEN_BOTTOM_LINES*2
 	mov		[si+MENUINIT.bHeight], ah
 	stc
 	ret
@@ -89,11 +90,8 @@ ALIGN JUMP_ALIGN
 	push	dx
 	call	RamVars_GetSegmentToDS
 	call	DriveXlate_Reset
-	call	BootMenu_ConvertMenuitemToDriveOrFunction
-	jc		SHORT .UpdatePreviousAndNewMenuitem	; Selection changed to a function
+	call	BootMenu_ConvertMenuitemFromCXtoDriveInDX
 	call	DriveXlate_SetDriveToSwap
-
-.UpdatePreviousAndNewMenuitem:
 	pop		ax		; Update previous item
 	CALL_MENU_LIBRARY RefreshItemFromAX
 	pop		ax		; Update new item
@@ -108,10 +106,14 @@ ALIGN JUMP_ALIGN
 ;	AH:			Keyboard library scan code for the key
 ALIGN JUMP_ALIGN
 .KeyStrokeInAX:
-	xor		ah, ah					; ASCII drive letter now in AX
-	call	BootMenu_ConvertHotkeyToMenuitem
+	cmp		ah, ROM_BOOT_HOTKEY_SCANCODE
+	jne		SHORT .CheckDriveHotkeys
+	int		INTV_BOOT_FAILURE		; ROM Boot, never returns
+ALIGN JUMP_ALIGN
+.CheckDriveHotkeys:
+	call	BootMenu_ConvertAsciiHotkeyFromALtoMenuitemInCX
 	cmp		cx, [bp+MENUINIT.wItems]
-	jae		SHORT .EventNotHandled	; Invalid key
+	jae		SHORT .EventCompleted	; Invalid key
 	xchg	ax, cx
 	CALL_MENU_LIBRARY HighlightItemFromAX
 	; Fall to .ItemSelectedFromCX
@@ -158,14 +160,10 @@ ALIGN JUMP_ALIGN
 	je		SHORT .EventCompleted
 
 	call	RamVars_GetSegmentToDS
-	call	BootMenu_ConvertMenuitemToDriveOrFunction
-	jc		SHORT .DrawFunction
+	call	BootMenu_ConvertMenuitemFromCXtoDriveInDX
 	test	dl, 80h					; Floppy drive?
 	jz		SHORT .DrawFloppyDrive
 	jmp		[cs:bx+ITEM_TYPE_REFRESH.HardDisk]
-ALIGN JUMP_ALIGN
-.DrawFunction:
-	jmp		[cs:bx+ITEM_TYPE_REFRESH.SpecialFunction]
 ALIGN JUMP_ALIGN
 .DrawFloppyDrive:
 	jmp		[cs:bx+ITEM_TYPE_REFRESH.FloppyDrive]
@@ -176,11 +174,9 @@ ALIGN WORD_ALIGN
 istruc ITEM_TYPE_REFRESH
 	at	ITEM_TYPE_REFRESH.HardDisk,			dw	BootMenuPrint_HardDiskMenuitem
 	at	ITEM_TYPE_REFRESH.FloppyDrive,		dw	BootMenuPrint_FloppyMenuitem
-	at	ITEM_TYPE_REFRESH.SpecialFunction, 	dw	BootMenuPrint_FunctionMenuitem
 iend
 .rgwInformationItemTypeRefresh:
 istruc ITEM_TYPE_REFRESH
 	at	ITEM_TYPE_REFRESH.HardDisk,			dw	BootMenuPrint_HardDiskMenuitemInformation
 	at	ITEM_TYPE_REFRESH.FloppyDrive,		dw	BootMenuPrint_FloppyMenuitemInformation
-	at	ITEM_TYPE_REFRESH.SpecialFunction, 	dw	BootMenuPrint_ClearInformationArea
 iend
