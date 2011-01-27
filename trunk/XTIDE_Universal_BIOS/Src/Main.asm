@@ -12,8 +12,8 @@
 ORG 000h						; Code start offset 0000h
 
 ; Included .inc files
-%include "emulate.inc"			; Must be included first!
-%include "macros.inc"			; For generic macros
+%include "AssemblyLibrary.inc"	; Assembly Library. Must be included first!
+%include "macros.inc"			; General purpose macros
 %include "BiosData.inc"			; For BIOS Data area equates
 %include "Interrupts.inc"		; For interrupt equates
 %include "ATA_ID.inc"			; For ATA Drive Information structs
@@ -37,18 +37,18 @@ istruc ROMVARS
 	at	ROMVARS.wRomSign,	dw	0AA55h			; PC ROM signature
 	at	ROMVARS.bRomSize,	db	CNT_ROM_BLOCKS	; ROM size in 512B blocks
 	at	ROMVARS.rgbJump, 	jmp	Initialize_FromMainBiosRomSearch
-	at	ROMVARS.rgbDate,	db	"11/28/10"		; Build data (mm/dd/yy)
-	at	ROMVARS.rgbSign,	db	"XTIDE110"		; Signature for flash program
+	at	ROMVARS.rgbDate,	db	"01/27/11"		; Build data (mm/dd/yy)
+	at	ROMVARS.rgbSign,	db	"XTIDE120"		; Signature for flash program
 	at	ROMVARS.szTitle
 		db	"-=XTIDE Universal BIOS"
 %ifdef USE_AT
-		db	" (AT)=-",STOP
+		db	" (AT)=-",NULL
 %elifdef USE_186
-		db	" (XT+)=-",STOP
+		db	" (XT+)=-",NULL
 %else
-		db	" (XT)=-",STOP
+		db	" (XT)=-",NULL
 %endif
-	at	ROMVARS.szVersion,	db	"v1.1.5 (11/28/10)",STOP
+	at	ROMVARS.szVersion,	db	"v1.2.0_wip (01/27/11)",NULL
 
 ;---------------------------;
 ; AT Build default settings ;
@@ -57,7 +57,6 @@ istruc ROMVARS
 	at	ROMVARS.wFlags,			dw	FLG_ROMVARS_FULLMODE | FLG_ROMVARS_DRVXLAT | FLG_ROMVARS_DRVNFO | FLG_ROMVARS_MAXSIZE
 	at	ROMVARS.bIdeCnt,		db	3						; Number of supported controllers
 	at	ROMVARS.bBootDrv,		db	80h						; Boot Menu default drive
-	at	ROMVARS.bBootMnuH,		db	20						; Boot Menu maximum height
 	at	ROMVARS.bBootDelay,		db	30						; Boot Menu selection delay (secs)
 	at	ROMVARS.bBootLdrType,	db	BOOTLOADER_TYPE_MENU	; Boot loader type
 	at	ROMVARS.bMinFddCnt, 	db	0						; Do not force minimum number of floppy drives
@@ -90,7 +89,6 @@ istruc ROMVARS
 	at	ROMVARS.wFlags,			dw	FLG_ROMVARS_LATE | FLG_ROMVARS_DRVXLAT | FLG_ROMVARS_ROMBOOT | FLG_ROMVARS_DRVNFO | FLG_ROMVARS_MAXSIZE
 	at	ROMVARS.bIdeCnt,		db	1						; Number of supported controllers
 	at	ROMVARS.bBootDrv,		db	80h						; Boot Menu default drive
-	at	ROMVARS.bBootMnuH,		db	20						; Boot Menu maximum height
 	at	ROMVARS.bBootDelay,		db	30						; Boot Menu selection delay (secs)
 	at	ROMVARS.bBootLdrType,	db	BOOTLOADER_TYPE_MENU	; Boot loader type
 	at	ROMVARS.bMinFddCnt, 	db	1						; Assume at least 1 floppy drive present if autodetect fails
@@ -107,14 +105,8 @@ iend
 
 
 ; Include .asm files (static data and libraries)
+%include "AssemblyLibrary.asm"
 %include "Strings.asm"			; For BIOS message strings
-%include "math.asm"				; For Math library
-%include "string.asm"			; For String library
-%include "print.asm"			; For Print library
-%include "keys.asm"				; For keyboard library (required by menu library)
-%include "menu.asm"				; For menu library
-%include "PrintString.asm"		; Customized printing for this BIOS
-%include "SoftDelay.asm"		; For software delay loops
 
 ; Include .asm files (Initialization and drive detection)
 %include "Initialize.asm"		; For BIOS initialization
@@ -177,4 +169,4 @@ iend
 
 
 ; Fill with zeroes until size is what we want
-times (CNT_ROM_BLOCKS*512)-($-$$) db 0
+;times (CNT_ROM_BLOCKS*512)-($-$$) db 0

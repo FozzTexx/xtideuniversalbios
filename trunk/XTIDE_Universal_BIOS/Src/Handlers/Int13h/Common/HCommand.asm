@@ -1,8 +1,4 @@
-; File name		:	HCommand.asm
-; Project name	:	IDE BIOS
-; Created date	:	28.3.2010
-; Last update	:	16.4.2010
-; Author		:	Tomi Tilli
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Functions for outputting IDE commands and parameters.
 
 ; Section containing code
@@ -112,4 +108,4 @@ HCommand_OutputSectorCountAndCommand:
 	xchg	al, ah						; AL=Command, AH=Sector count
 	out		dx, al
 	mov		al, ah						; Restore sector count to AL
-	jmp		SoftDelay_BeforePollingStatusRegister
+	ret

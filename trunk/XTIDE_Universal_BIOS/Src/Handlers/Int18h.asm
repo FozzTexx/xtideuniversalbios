@@ -1,8 +1,4 @@
-; File name		:	Int18h.asm
-; Project name	:	IDE BIOS
-; Created date	:	6.1.2010
-; Last update	:	25.3.2010
-; Author		:	Tomi Tilli
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Int 18h BIOS functions (ROM boot and Boot error).
 
 ; Section containing code
@@ -23,5 +19,5 @@ SECTION .text
 ALIGN JUMP_ALIGN
 Int18h_BootError:
 	mov		si, g_sz18hCallback
-	call	PrintString_FromCS		; No need to clean stack
+	call	PrintNullTerminatedStringFromCSSIandSetCF
 	jmp		Int19hMenu_Display		; Return to boot menu

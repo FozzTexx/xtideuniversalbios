@@ -1,8 +1,4 @@
-; File name		:	HStatus.asm
-; Project name	:	IDE BIOS
-; Created date	:	15.12.2009
-; Last update	:	23.8.2010
-; Author		:	Tomi Tilli
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	IDE Status Register polling functions.
 
 ; Section containing code
@@ -175,7 +171,7 @@ HStatus_WaitDrqBase:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 HStatus_PollBsyAndFlg:
-	call	SoftDelay_InitTimeout				; Initialize timeout counter
+	call	InitializeTimeoutWithTicksInCL		; Initialize timeout counter
 	in		al, dx								; Discard contents for first read
 												; (should read Alternate Status Register)
 ALIGN JUMP_ALIGN
@@ -187,7 +183,7 @@ ALIGN JUMP_ALIGN
 	jnz		SHORT GetErrorCodeFromPollingToAH	; If set, break loop
 ALIGN JUMP_ALIGN
 .UpdateTimeout:
-	call	SoftDelay_UpdTimeout				; Update timeout counter
+	call	SetCFifTimeout
 	jnc		SHORT .PollLoop						; Loop if time left (sets CF on timeout)
 	jmp		HError_ProcessTimeoutAfterPollingBSYandSomeOtherStatusBit
 
@@ -209,7 +205,7 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 HStatus_PollBsy:
-	call	SoftDelay_InitTimeout				; Initialize timeout counter
+	call	InitializeTimeoutWithTicksInCL		; Initialize timeout counter
 	in		al, dx								; Discard contents for first read
 												; (should read Alternate Status Register)
 ALIGN JUMP_ALIGN
@@ -217,8 +213,53 @@ ALIGN JUMP_ALIGN
 	in		al, dx								; Load IDE Status Reg
 	test	al, FLG_IDE_ST_BSY					; Controller busy?
 	jz		SHORT GetErrorCodeFromPollingToAH	;  If not, jump to check errors
-	call	SoftDelay_UpdTimeout				; Update timeout counter
+	call	SetCFifTimeout						; Update timeout counter
 	jnc		SHORT .PollLoop						; Loop if time left (sets CF on timeout)
 ALIGN JUMP_ALIGN
 GetErrorCodeFromPollingToAH:
 	jmp		HError_ProcessErrorsAfterPollingBSY
+
+
+;--------------------------------------------------------------------
+; InitializeTimeoutWithTicksInCL
+;	Parameters:
+;		CL:		Timeout value in system timer ticks
+;		DS:		Segment to RAMVARS
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		CX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+InitializeTimeoutWithTicksInCL:
+	push	bx
+	xchg	cx, ax
+
+	xor		ah, ah		; Timeout ticks now in AX
+	mov		bx, RAMVARS.wTimeoutCounter
+	call	TimerTicks_InitializeTimeoutFromAX
+
+	xchg	ax, cx		; Restore AX
+	pop		bx
+	ret
+
+;--------------------------------------------------------------------
+; SetCFifTimeout
+;	Parameters:
+;		DS:		Segment to RAMVARS
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		CX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+SetCFifTimeout:
+	push	bx
+	xchg	cx, ax
+
+	mov		bx, RAMVARS.wTimeoutCounter
+	call	TimerTicks_GetTimeoutTicksLeftToAXfromDSBX
+
+	xchg	ax, cx		; Restore AX
+	pop		bx
+	ret

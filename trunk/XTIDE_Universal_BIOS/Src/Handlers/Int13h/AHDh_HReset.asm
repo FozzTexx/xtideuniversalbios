@@ -1,9 +1,4 @@
-; File name		:	AHDh_HReset.asm
-; Project name	:	IDE BIOS
-; Created date	:	9.12.2007
-; Last update	:	14.1.2011
-; Author		:	Tomi Tilli,
-;				:	Krister Nordvall (optimizations)
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Int 13h function AH=Dh, Reset Hard Disk (Alternate reset).
 
 ; Section containing code
@@ -93,14 +88,14 @@ AHDh_ResetMasterAndSlave:
 	mov		al, [di+DPT.bDrvCtrl]		; Load value for ACR
 	or		al, FLG_IDE_CTRL_SRST		; Set Reset bit
 	call	HDrvSel_OutputDeviceControlByte
-	mov		cx, 5						; Delay at least 5us
-	call	SoftDelay_us
+	mov		ax, 5						; Delay at least 5us
+	call	Delay_MicrosecondsFromAX
 
 	; HSR1: Clear_wait
-	and		al, ~FLG_IDE_CTRL_SRST		; Clear Reset bit
+	mov		al, [di+DPT.bDrvCtrl]		; Load value for ACR
 	out		dx, al						; End Reset
-	mov		cx, 2000					; Delay at least 2ms
-	call	SoftDelay_us
+	mov		ax, 2000					; Delay at least 2ms
+	call	Delay_MicrosecondsFromAX
 
 	; HSR2: Check_status
 	mov		cl, B_TIMEOUT_RESET			; Reset timeout delay

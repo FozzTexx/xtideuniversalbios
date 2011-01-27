@@ -40,16 +40,29 @@ HEADERS += Src/Handlers/Int13h/
 HEADERS += Src/Handlers/Int13h/Common/
 HEADERS += Src/Initialization/
 HEADERS += Src/Libraries/
-HEADERS += Src/Libraries/menu/
 HEADERS += Src/VariablesAndDPTs/
+
+# Subdirectories where library files are:
+LIBS = ../Assembly_Library/Inc/
+LIBS += ../Assembly_Library/Src/
+LIBS += ../Assembly_Library/Src/Display/
+LIBS += ../Assembly_Library/Src/File/
+LIBS += ../Assembly_Library/Src/Keyboard/
+LIBS += ../Assembly_Library/Src/Menu/
+LIBS += ../Assembly_Library/Src/Menu/Dialog/
+LIBS += ../Assembly_Library/Src/String/
+LIBS += ../Assembly_Library/Src/Time/
+LIBS += ../Assembly_Library/Src/Util/
+LIBS += ../XTIDE_Universal_BIOS/Inc/
+HEADERS += $(LIBS)
 
 
 #################################################################
 # Assembler preprocessor defines.                               #
 #################################################################
-DEFINES =
-DEFINES_XT = 
-DEFINES_XTPLUS = USE_186
+DEFINES = INCLUDE_MENU_LIBRARY EXCLUDE_BIT_UTILS EXCLUDE_SORT_UTILS
+DEFINES_XT = ELIMINATE_CGA_SNOW
+DEFINES_XTPLUS = ELIMINATE_CGA_SNOW USE_186
 DEFINES_AT = USE_186 USE_286 USE_AT
 
 

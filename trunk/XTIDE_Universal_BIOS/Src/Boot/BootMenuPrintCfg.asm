@@ -1,8 +1,4 @@
-; File name		:	BootMenuPrintCfg.asm
-; Project name	:	IDE BIOS
-; Created date	:	28.3.2010
-; Last update	:	9.4.2010
-; Author		:	Tomi Tilli
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Functions for printing drive configuration
 ;					information on Boot Menu.
 
@@ -19,14 +15,14 @@ SECTION .text
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, BX, CX, DX, SI, ES
+;		AX, BX, CX, DX, SI, DI, ES
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenuPrintCfg_ForOurDrive:
 	call	BootMenuPrintCfg_HeaderAndChangeLine
 	call	BootMenuPrintCfg_GetPointers
 	call	BootMenuPrintCfg_PushAndFormatCfgString
-	jmp		BootMenuPrint_ClearOneInfoLine
+	jmp		BootMenuPrint_Newline
 
 
 ;--------------------------------------------------------------------
@@ -38,13 +34,13 @@ BootMenuPrintCfg_ForOurDrive:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, BX, DX
+;		AX, SI, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenuPrintCfg_HeaderAndChangeLine:
 	mov		si, g_szCfgHeader
-	call	PrintString_FromCS
-	jmp		BootMenuPrint_ClearOneInfoLine
+	call	PrintNullTerminatedStringFromCSSIandSetCF
+	jmp		BootMenuPrint_Newline
 
 
 ;--------------------------------------------------------------------
@@ -82,14 +78,44 @@ BootMenuPrintCfg_GetPointers:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, CX, DX, SI
+;		AX, DX, SI, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenuPrintCfg_PushAndFormatCfgString:
+	push	bp
+
+	mov		bp, sp
 	; Fall to first push below
 
 ;--------------------------------------------------------------------
-; BootMenuPrintCfg_PushResetStatus
+; PushAddressingMode
+;	Parameters:
+;		DS:DI:	Ptr to DPT
+;		ES:BX:	Ptr to BOOTNFO
+;		CS:SI:	Ptr to IDEVARS
+;	Returns:
+;		Nothing (jumps to next push below)
+;	Corrupts registers:
+;		AX, DX
+;--------------------------------------------------------------------
+PushAddressingMode:
+	mov		dx, bx				; Backup BX to DX
+	mov		bx, MASK_DPT_ADDR	; Load addressing mode mask
+	and		bl, [di+DPT.bFlags]	; Addressing mode now in BX
+	push	WORD [cs:bx+.rgszAddressingModeString]
+	mov		bx, dx
+	jmp		SHORT .NextPush
+ALIGN WORD_ALIGN
+.rgszAddressingModeString:
+	dw		g_szLCHS
+	dw		g_szPCHS
+	dw		g_szLBA28
+	dw		g_szLBA48
+ALIGN JUMP_ALIGN
+.NextPush:
+
+;--------------------------------------------------------------------
+; PushBlockMode
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT
 ;		ES:BX:	Ptr to BOOTNFO
@@ -99,12 +125,41 @@ BootMenuPrintCfg_PushAndFormatCfgString:
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
-BootMenuPrintCfg_PushResetStatus:
-	eMOVZX	ax, BYTE [di+DPT.bReset]
+PushBlockMode:
+	eMOVZX	ax, BYTE [di+DPT.bSetBlock]
 	push	ax
 
 ;--------------------------------------------------------------------
-; BootMenuPrintCfg_PushIRQ
+; PushBusType
+;	Parameters:
+;		DS:DI:	Ptr to DPT
+;		ES:BX:	Ptr to BOOTNFO
+;		CS:SI:	Ptr to IDEVARS
+;	Returns:
+;		Nothing (jumps to next push below)
+;	Corrupts registers:
+;		AX, DX
+;--------------------------------------------------------------------
+PushBusType:
+	xchg	ax, bx		; Store BX to AX
+	eMOVZX	bx, BYTE [cs:si+IDEVARS.bBusType]
+	mov		bx, [cs:bx+.rgwBusTypeValues]	; Char to BL, Int to BH	
+	eMOVZX	dx, bh
+	push	bx			; Push character
+	push	dx			; Push 8, 16 or 32
+	xchg	bx, ax		; Restore BX
+	jmp		SHORT .NextPush
+ALIGN WORD_ALIGN
+.rgwBusTypeValues:
+	db		'D', 8		; BUS_TYPE_8_DUAL
+	db		' ', 16		; BUS_TYPE_16
+	db		' ', 32		; BUS_TYPE_32
+	db		'S', 8		; BUS_TYPE_8_SINGLE
+ALIGN JUMP_ALIGN
+.NextPush:
+
+;--------------------------------------------------------------------
+; PushIRQ
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT
 ;		ES:BX:	Ptr to BOOTNFO
@@ -114,7 +169,7 @@ BootMenuPrintCfg_PushResetStatus:
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
-BootMenuPrintCfg_PushIRQ:
+PushIRQ:
 	mov		dl, ' '						; Load space to DL
 	mov		al, [cs:si+IDEVARS.bIRQ]
 	test	al, al						; Interrupts disabled?
@@ -133,40 +188,11 @@ ALIGN JUMP_ALIGN
 	xchg	ax, dx						; Space to AL, line to DL
 ALIGN JUMP_ALIGN
 .PushCharacters:
-	push	ax
 	push	dx
+	push	ax
 
 ;--------------------------------------------------------------------
-; BootMenuPrintCfg_PushBusType
-;	Parameters:
-;		DS:DI:	Ptr to DPT
-;		ES:BX:	Ptr to BOOTNFO
-;		CS:SI:	Ptr to IDEVARS
-;	Returns:
-;		Nothing (jumps to next push below)
-;	Corrupts registers:
-;		AX, DX
-;--------------------------------------------------------------------
-BootMenuPrintCfg_PushBusType:
-	xchg	ax, bx		; Store BX to AX
-	eMOVZX	bx, BYTE [cs:si+IDEVARS.bBusType]
-	mov		bx, [cs:bx+.rgwBusTypeValues]	; Char to BL, Int to BH	
-	eMOVZX	dx, bh
-	push	dx			; Push 8, 16 or 32
-	push	bx			; Push character
-	xchg	bx, ax		; Restore BX
-	jmp		SHORT .NextPush
-ALIGN WORD_ALIGN
-.rgwBusTypeValues:
-	db		'D', 8		; BUS_TYPE_8_DUAL
-	db		' ', 16		; BUS_TYPE_16
-	db		' ', 32		; BUS_TYPE_32
-	db		'S', 8		; BUS_TYPE_8_SINGLE
-ALIGN JUMP_ALIGN
-.NextPush:
-
-;--------------------------------------------------------------------
-; BootMenuPrintCfg_PushBlockMode
+; PushResetStatus
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT
 ;		ES:BX:	Ptr to BOOTNFO
@@ -176,36 +202,9 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
-BootMenuPrintCfg_PushBlockMode:
-	eMOVZX	ax, BYTE [di+DPT.bSetBlock]
+PushResetStatus:
+	eMOVZX	ax, BYTE [di+DPT.bReset]
 	push	ax
-
-;--------------------------------------------------------------------
-; BootMenuPrintCfg_PushAddressingMode
-;	Parameters:
-;		DS:DI:	Ptr to DPT
-;		ES:BX:	Ptr to BOOTNFO
-;		CS:SI:	Ptr to IDEVARS
-;	Returns:
-;		Nothing (jumps to next push below)
-;	Corrupts registers:
-;		AX, DX
-;--------------------------------------------------------------------
-BootMenuPrintCfg_PushAddressingMode:
-	mov		dx, bx				; Backup BX to DX
-	mov		bx, MASK_DPT_ADDR	; Load addressing mode mask
-	and		bl, [di+DPT.bFlags]	; Addressing mode now in BX
-	push	WORD [cs:bx+.rgszAddressingModeString]
-	mov		bx, dx
-	jmp		SHORT .NextPush
-ALIGN WORD_ALIGN
-.rgszAddressingModeString:
-	dw	g_szLCHS
-	dw	g_szPCHS
-	dw	g_szLBA28
-	dw	g_szLBA48
-ALIGN JUMP_ALIGN
-.NextPush:
 
 ;--------------------------------------------------------------------
 ; Prints formatted configuration string from parameters pushed to stack.
@@ -216,9 +215,8 @@ ALIGN JUMP_ALIGN
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, CX, DX, SI
+;		AX, SI, DI
 ;--------------------------------------------------------------------
 BootMenuPrintCfg_ValuesFromStack:
 	mov		si, g_szCfgFormat
-	mov		dh, 14						; 14 bytes pushed to stack
-	jmp		PrintString_JumpToFormat
+	jmp		PrintNullTerminatedStringFromCSSIandSetCF

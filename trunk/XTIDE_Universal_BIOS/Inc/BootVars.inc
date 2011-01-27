@@ -1,8 +1,4 @@
-; File name		:	BootVars.inc
-; Project name	:	IDE BIOS
-; Created date	:	23.3.2010
-; Last update	:	9.4.2010
-; Author		:	Tomi Tilli
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Defines for BOOTVARS struct used by boot menu
 ;					and drive initialization.
 %ifndef BOOTVARS_INC
@@ -25,8 +21,7 @@ struc BOOTVARS
 					resb	800h
 	.dwSys18h		resb	4		;  800h, System INT 18h handler (Diskless boot, Boot failure)
 	.dwPostStack	resb	4		;  804h, POST stack when entering INT 19h
-	.bMenuHotkey	resb	1		;  808h, Boot Menu hotkey, zero if none pressed
-					resb	3
+					resb	4
 	.rgBootNfo		resb	73F4h	;  80Ch, Array containing BOOTNFO structs
 	.rgbMnuStack:					; 7C00h and below, Boot Menu stack
 	.rgbAtaInfo:					; 7C00h, ATA Information for drive detection

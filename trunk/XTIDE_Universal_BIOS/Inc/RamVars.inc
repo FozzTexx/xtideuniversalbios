@@ -1,8 +1,4 @@
-; File name		:	RamVars.inc
-; Project name	:	IDE BIOS
-; Created date	:	23.3.2010
-; Last update	:	8.4.2010
-; Author		:	Tomi Tilli
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	RAMVARS struct containing BIOS variables stored in RAM.
 %ifndef RAMVARS_INC
 %define RAMVARS_INC
@@ -30,8 +26,7 @@ struc RAMVARS
 	.wIdeBase		resb	2	; Base port address for currently handled controller
 
 	.wI13hDS:
-	.bEndTime		resb	1	; Timeout ending time
-					resb	1	; Alignment
+	.wTimeoutCounter	resb	2
 
 	.wDrvCntAndFirst:
 	.bDrvCnt		resb	1	; Number of drives handled by this BIOS

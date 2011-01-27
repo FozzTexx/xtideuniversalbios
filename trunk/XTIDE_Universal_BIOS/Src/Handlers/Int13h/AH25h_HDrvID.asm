@@ -1,8 +1,4 @@
-; File name		:	AH25h_HDrvID.asm
-; Project name	:	IDE BIOS
-; Created date	:	24.10.2009
-; Last update	:	14.4.2010
-; Author		:	Tomi Tilli
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Int 13h function AH=25h, Get Drive Information.
 
 ; Section containing code
@@ -90,7 +86,6 @@ AH25h_GetDriveInfo:
 	; Output command
 	mov		al, HCMD_ID_DEV				; Load Identify Device command to AL
 	out		dx, al						; Output command
-	call	SoftDelay_BeforePollingStatusRegister
 	call	HStatus_WaitDrqDefTime		; Wait until ready to transfer (no IRQ!)
 	jc		SHORT .Return				; Return if error
 

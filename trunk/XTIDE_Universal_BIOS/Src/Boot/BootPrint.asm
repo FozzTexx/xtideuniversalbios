@@ -1,12 +1,10 @@
-; Project name	:	IDE BIOS
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Functions for printing boot related strings.
 
 ; Section containing code
 SECTION .text
 
 ;--------------------------------------------------------------------
-; Prints trying to boot string.
-;
 ; BootPrint_TryToBootFromDL
 ;	Parameters:
 ;		DL:		Drive to boot from (translated, 00h or 80h)
@@ -14,91 +12,78 @@ SECTION .text
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, CX, SI, DI
+;		AX, SI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootPrint_TryToBootFromDL:
-	push	dx
-	ePUSH_T	ax, BootPrint_PopDxAndReturn	; Return address
+	push	bp
+	mov		bp, sp
 
-	xor		dh, dh				; Translated drive number to DX
-	push	dx					; Push translated drive number
+	mov		ax, g_szHardDrv
+	test	dl, 80h
+	eCMOVZ	ax, g_szFloppyDrv
+	push	ax					; "Hard Drive" or "Floppy Drive"
+
 	call	DriveXlate_ToOrBack
 	push	dx					; Push untranslated drive number
-
-	mov		ax, g_szFloppyDrv	; Assume "Floppy Drive"
-	test	dl, 80h				; Hard Disk?
-	jz		SHORT .PushHardOrFloppy
-	add		ax, BYTE g_szHardDrv - g_szFloppyDrv
-.PushHardOrFloppy:
-	push	ax
+	call	DriveXlate_ToOrBack
+	push	dx					; Push translated drive number
 
 	mov		si, g_szTryToBoot
-	mov		dh, 6				; 6 bytes pushed to stack
-	jmp		PrintString_JumpToFormat
-
-ALIGN JUMP_ALIGN
-BootPrint_PopDxAndReturn:
-	pop		dx
-	ret
+	jmp		BootMenuPrint_FormatCSSIfromParamsInSSBP
 
 
 ;--------------------------------------------------------------------
-; Prints message that valid boot sector has been found.
-;
 ; BootPrint_BootSectorLoaded
 ;	Parameters:
 ;		Nothing
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, CX, SI
+;		AX, SI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootPrint_BootSectorLoaded:
-	push	dx
-	ePUSH_T	ax, BootPrint_PopDxAndReturn	; Return address
-
+	push	bp
+	mov		bp, sp
+	ePUSH_T	ax, g_szBootSector
 	ePUSH_T	ax, g_szFound
-	jmp		SHORT BootPrint_MsgCodeShared
-
+	jmp		SHORT PrintBootSectorResult
 
 ;--------------------------------------------------------------------
-; Prints message that first sector is not boot sector.
-;
 ; BootPrint_FirstSectorNotBootable
 ;	Parameters:
 ;		Nothing
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, CX, DX, SI
+;		AX, SI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootPrint_FirstSectorNotBootable:
-	ePUSH_T	ax, g_szNotFound
-BootPrint_MsgCodeShared:
+	push	bp
+	mov		bp, sp
 	ePUSH_T	ax, g_szBootSector
+	ePUSH_T	ax, g_szNotFound
+PrintBootSectorResult:
 	mov		si, g_szSectRead
-	mov		dh, 4				; 4 bytes pushed to stack
-	jmp		PrintString_JumpToFormat
+	jmp		BootMenuPrint_FormatCSSIfromParamsInSSBP
 
 
 ;--------------------------------------------------------------------
-; Prints error code for failed first sector read attempt.
-;
 ; BootPrint_FailedToLoadFirstSector
 ;	Parameters:
 ;		AH:		INT 13h error code
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, CX, DX, SI
+;		AX, CX, SI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootPrint_FailedToLoadFirstSector:
+	push	bp
+	mov		bp, sp
 	eMOVZX	cx, ah				; Error code to CX
 	push	cx					; Push INT 13h error code
 	mov		si, g_szReadError
-	mov		dh, 2				; 2 bytes pushed to stack
-	jmp		PrintString_JumpToFormat
+	jmp		BootMenuPrint_FormatCSSIfromParamsInSSBP
