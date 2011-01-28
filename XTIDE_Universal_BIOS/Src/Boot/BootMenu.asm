@@ -11,10 +11,7 @@ SECTION .text
 ;	Parameters:
 ;		DS:		RAMVARS segment
 ;	Returns:
-;		DX:		Untranslated drive number to be used for booting (if CF cleared)
-;				Function number (if CF set)
-;		CF:		Cleared if drive selected
-;				Set if function selected
+;		DX:		Untranslated drive number to be used for booting
 ;	Corrupts registers:
 ;		All General Purpose Registers
 ;--------------------------------------------------------------------
@@ -25,7 +22,7 @@ BootMenu_DisplayAndReturnSelection:
 	call	BootMenu_Enter			; Get selected menuitem index to CX
 	call	BootMenuPrint_ClearScreen
 	cmp		cx, BYTE NO_ITEM_SELECTED
-	je		SHORT BootMenu_DisplayAndReturnSelection
+	je		SHORT BootMenu_DisplayAndReturnSelection	; Clear screen and display menu
 	jmp		SHORT BootMenu_ConvertMenuitemFromCXtoDriveInDX
 
 

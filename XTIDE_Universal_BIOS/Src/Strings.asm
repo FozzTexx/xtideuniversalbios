@@ -12,10 +12,8 @@ g_szDetect:		db	"IDE %s at %x: ",NULL			; IDE Master at 1F0h:
 g_szNotFound:	db	"not found",CR,LF,NULL
 
 ; Boot loader strings
-g_szFloppyDrv:	db	"Floppy Drive",NULL
-g_szHardDrv:	db	" Hard Drive ",NULL
-g_szTryToBoot:	db	"Booting from %s %x",ANGLE_QUOTE_RIGHT,"%x ... ",NULL
-g_szBootSector:	db	"Boot Sector",NULL
+g_szTryToBoot:	db	"Booting from %s %x",ANGLE_QUOTE_RIGHT,"%x",CR,LF,NULL
+g_szBootSector:	db	"Boot sector",NULL
 g_szFound:		db	"found",NULL
 g_szSectRead:	db	"%s %s!",CR,LF,NULL
 g_szReadError:	db	"Error %x!",CR,LF,NULL
@@ -29,6 +27,7 @@ g_szHotkey:		db	"%A%c%c%A%8s%a ",NULL
 
 ; Boot Menu menuitem strings
 g_szFDLetter:	db	"%s %c",NULL
+g_szFloppyDrv:	db	"Floppy Drive",NULL
 g_szforeignHD:	db	"Foreign Hard Disk",NULL
 
 ; Boot Menu information strings
