@@ -18,25 +18,10 @@ SECTION .text
 ALIGN JUMP_ALIGN
 BootMenuPrint_TitleStrings:
 	mov		si, ROMVARS.szTitle
-	call	PrintNullTerminatedStringFromCSSIandSetCF
-	call	BootMenuPrint_Newline
-	mov		si, ROMVARS.szVersion
-	jmp		PrintNullTerminatedStringFromCSSIandSetCF
-
-
-;--------------------------------------------------------------------
-; BootMenuPrint_Newline
-;	Parameters:
-;		Nothing
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, DI
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-BootMenuPrint_Newline:
+	call	BootMenuPrint_NullTerminatedStringFromCSSIandSetCF
 	CALL_DISPLAY_LIBRARY PrintNewlineCharacters
-	ret
+	mov		si, ROMVARS.szVersion
+	jmp		BootMenuPrint_NullTerminatedStringFromCSSIandSetCF
 
 
 ;--------------------------------------------------------------------
@@ -46,42 +31,12 @@ BootMenuPrint_Newline:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-BootMenuPrint_ClearScreen:
-	push	di
-	mov		ax, ' ' | (MONO_NORMAL<<8)
-	CALL_DISPLAY_LIBRARY ClearScreenWithCharInALandAttrInAH
-	pop		di
-	ret
-
-
-;--------------------------------------------------------------------
-; Translates and prints drive number.
-;
-; BootMenuPrint_TranslatedDriveNumber
-;	Parameters:
-;		DL:		Untranslated drive number
-;		DS:		RAMVARS segment
-;	Returns:
-;		Nothing
-;	Corrupts registers:
 ;		AX, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-BootMenuPrint_TranslatedDriveNumber:
-	push	dx
-	push	bx
-
-	call	DriveXlate_ToOrBack
-	eMOVZX	ax, dl		; Drive number to AL
-	CALL_DISPLAY_LIBRARY PrintWordFromAXwithBaseInBX
-	mov		al, ' '		; Print space
-	CALL_DISPLAY_LIBRARY PrintCharacterFromAL
-
-	pop		bx
-	pop		dx
+BootMenuPrint_ClearScreen:
+	mov		ax, ' ' | (MONO_NORMAL<<8)
+	CALL_DISPLAY_LIBRARY ClearScreenWithCharInALandAttrInAH
 	ret
 
 
@@ -154,7 +109,7 @@ BootMenuPrint_HardDiskMenuitem:
 ALIGN JUMP_ALIGN
 .HardDiskMenuitemForForeignDrive:
 	mov		si, g_szforeignHD
-	jmp		PrintNullTerminatedStringFromCSSIandSetCF
+	jmp		BootMenuPrint_NullTerminatedStringFromCSSIandSetCF
 
 
 ;--------------------------------------------------------------------
@@ -364,7 +319,7 @@ ConvertSectorCountInBXDXAXtoSizeAndPushForFormat:
 
 
 ;--------------------------------------------------------------------
-; PrintNullTerminatedStringFromCSSIandSetCF
+; BootMenuPrint_NullTerminatedStringFromCSSIandSetCF
 ;	Parameters:
 ;		CS:SI:	Ptr to NULL terminated string to print
 ;	Returns:
@@ -373,7 +328,7 @@ ConvertSectorCountInBXDXAXtoSizeAndPushForFormat:
 ;		AX, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-PrintNullTerminatedStringFromCSSIandSetCF:
+BootMenuPrint_NullTerminatedStringFromCSSIandSetCF:
 	CALL_DISPLAY_LIBRARY PrintNullTerminatedStringFromCSSI
 	stc
 	ret

@@ -19,58 +19,14 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenuPrintCfg_ForOurDrive:
-	call	BootMenuPrintCfg_HeaderAndChangeLine
-	call	BootMenuPrintCfg_GetPointers
-	call	BootMenuPrintCfg_PushAndFormatCfgString
-	jmp		BootMenuPrint_Newline
-
-
-;--------------------------------------------------------------------
-; Prints configuration header and changes for printing values.
-;
-; BootMenuPrintCfg_HeaderAndChangeLine
-;	Parameters:
-;		Nothing
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, SI, DI
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-BootMenuPrintCfg_HeaderAndChangeLine:
 	mov		si, g_szCfgHeader
-	call	PrintNullTerminatedStringFromCSSIandSetCF
-	jmp		BootMenuPrint_Newline
+	call	BootMenuPrint_NullTerminatedStringFromCSSIandSetCF
+	call	BootMenuPrintCfg_GetPointers
+	; Fall to PushAndFormatCfgString
 
 
 ;--------------------------------------------------------------------
-; Return all necessary pointers to drive information structs.
-;
-; BootMenuPrintCfg_GetPointers
-;	Parameters:
-;		DS:DI:	Ptr to DPT
-;	Returns:
-;		DS:DI:	Ptr to DPT
-;		ES:BX:	Ptr to BOOTNFO
-;		CS:SI:	Ptr to IDEVARS
-;	Corrupts registers:
-;		AX, DL
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-BootMenuPrintCfg_GetPointers:
-	mov		dl, [di+DPT.bDrvNum]		; Load Drive number to DL
-	call	BootInfo_GetOffsetToBX		; ES:BX now points...
-	LOAD_BDA_SEGMENT_TO	es, ax			; ...to BOOTNFO
-	mov		al, [di+DPT.bIdeOff]
-	xchg	si, ax						; CS:SI now points to IDEVARS
-	ret
-
-
-;--------------------------------------------------------------------
-; Pushes all string formatting parameters and prints
-; formatted configuration string.
-;
-; BootMenuPrintCfg_PushAndFormatCfgString
+; PushAndFormatCfgString
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT
 ;		ES:BX:	Ptr to BOOTNFO
@@ -81,9 +37,8 @@ BootMenuPrintCfg_GetPointers:
 ;		AX, DX, SI, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-BootMenuPrintCfg_PushAndFormatCfgString:
+PushAndFormatCfgString:
 	push	bp
-
 	mov		bp, sp
 	; Fall to first push below
 
@@ -96,14 +51,14 @@ BootMenuPrintCfg_PushAndFormatCfgString:
 ;	Returns:
 ;		Nothing (jumps to next push below)
 ;	Corrupts registers:
-;		AX, DX
+;		AX
 ;--------------------------------------------------------------------
 PushAddressingMode:
-	mov		dx, bx				; Backup BX to DX
+	xchg	ax, bx
 	mov		bx, MASK_DPT_ADDR	; Load addressing mode mask
 	and		bl, [di+DPT.bFlags]	; Addressing mode now in BX
 	push	WORD [cs:bx+.rgszAddressingModeString]
-	mov		bx, dx
+	xchg	bx, ax
 	jmp		SHORT .NextPush
 ALIGN WORD_ALIGN
 .rgszAddressingModeString:
@@ -207,9 +162,7 @@ PushResetStatus:
 	push	ax
 
 ;--------------------------------------------------------------------
-; Prints formatted configuration string from parameters pushed to stack.
-;
-; BootMenuPrintCfg_ValuesFromStack
+; PrintValuesFromStack
 ;	Parameters:
 ;		Stack:	All formatting parameters
 ;	Returns:
@@ -217,6 +170,27 @@ PushResetStatus:
 ;	Corrupts registers:
 ;		AX, SI, DI
 ;--------------------------------------------------------------------
-BootMenuPrintCfg_ValuesFromStack:
+PrintValuesFromStack:
 	mov		si, g_szCfgFormat
-	jmp		PrintNullTerminatedStringFromCSSIandSetCF
+	jmp		BootMenuPrint_NullTerminatedStringFromCSSIandSetCF
+
+
+;--------------------------------------------------------------------
+; BootMenuPrintCfg_GetPointers
+;	Parameters:
+;		DS:DI:	Ptr to DPT
+;	Returns:
+;		DS:DI:	Ptr to DPT
+;		ES:BX:	Ptr to BOOTNFO
+;		CS:SI:	Ptr to IDEVARS
+;	Corrupts registers:
+;		AX, DL
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+BootMenuPrintCfg_GetPointers:
+	mov		dl, [di+DPT.bDrvNum]		; Load Drive number to DL
+	call	BootInfo_GetOffsetToBX		; ES:BX now points...
+	LOAD_BDA_SEGMENT_TO	es, ax			; ...to BOOTNFO
+	mov		al, [di+DPT.bIdeOff]
+	xchg	si, ax						; CS:SI now points to IDEVARS
+	ret
