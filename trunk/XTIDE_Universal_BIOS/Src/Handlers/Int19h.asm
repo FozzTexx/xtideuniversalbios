@@ -24,7 +24,7 @@ B_READ_RETRY_TIMES	EQU	3	; Number of times to retry
 ALIGN JUMP_ALIGN
 Int19h_TryToLoadBootSectorFromDL:
 	call	BootPrint_TryToBootFromDL
-	call	Int19h_LoadFirstSectorFromDL
+	call	LoadFirstSectorFromDriveDL
 	jc		SHORT .FailedToLoadFirstSector
 
 	test	dl, 80h
@@ -32,7 +32,8 @@ Int19h_TryToLoadBootSectorFromDL:
 	cmp		WORD [es:bx+510], 0AA55h		; Valid boot sector?
 	jne		SHORT .FirstHardDiskSectorNotBootable
 .AlwaysBootFromFloppyDriveForBooterGames:
-	call	BootPrint_BootSectorLoaded
+	mov		bx, g_szFound
+	call	BootPrint_BootSectorResultStringFromBX
 	stc
 	ret
 .FailedToLoadFirstSector:
@@ -40,14 +41,13 @@ Int19h_TryToLoadBootSectorFromDL:
 	clc
 	ret
 .FirstHardDiskSectorNotBootable:
-	call	BootPrint_FirstSectorNotBootable
+	mov		bx, g_szNotFound
+	call	BootPrint_BootSectorResultStringFromBX
 	clc
 	ret
 
 ;--------------------------------------------------------------------
-; Reads first sector (boot sector) from drive DL.
-;
-; Int19h_LoadFirstSectorFromDL
+; LoadFirstSectorFromDriveDL
 ;	Parameters:
 ;		DL:		Drive to boot from (translated, 00h or 80h)
 ;	Returns:
@@ -59,10 +59,10 @@ Int19h_TryToLoadBootSectorFromDL:
 ;		AL, CX, DH, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-Int19h_LoadFirstSectorFromDL:
+LoadFirstSectorFromDriveDL:
 	LOAD_BDA_SEGMENT_TO	es, bx				; ES:BX now points to...
 	mov		bx, BOOTVARS.rgbBootSect		; ...boot sector location
-	mov		di, B_READ_RETRY_TIMES			; Retry counter
+	mov		di, B_READ_RETRY_TIMES			; Initialize retry counter
 ALIGN JUMP_ALIGN
 .ReadRetryLoop:
 	call	.ResetBootDriveFromDL
@@ -89,9 +89,7 @@ ALIGN JUMP_ALIGN
 .ResetBootDriveFromDL:
 	xor		ax, ax							; AH=0h, Disk Controller Reset
 	test	dl, 80h							; Floppy drive?
-	jz		SHORT .ResetDriveFromDL			;  If so, jump to reset
-	mov		ah, 0Dh							; AH=Dh, Reset Hard Disk (Alternate reset)
-.ResetDriveFromDL:
+	eCMOVNZ	ah, 0Dh							; AH=Dh, Reset Hard Disk (Alternate reset)
 	int		INTV_DISK_FUNC
 	ret
 
@@ -153,21 +151,4 @@ Int19h_ClearSegmentsForBoot:
 	xor		ax, ax
 	mov		ds, ax
 	mov		es, ax
-	ret
-
-
-;--------------------------------------------------------------------
-; Calls INT 18h (ROM Basic or Boot Failure). Called after booting from
-; floppy drive or hard disk fails.
-;
-; Int19h_BootFailure
-;	Parameters:
-;		Nothing
-;	Returns:
-;		Should never return (but might)
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-Int19h_BootFailure:
-	call	Int19h_ClearSegmentsForBoot
-	int		INTV_BOOT_FAILURE
 	ret

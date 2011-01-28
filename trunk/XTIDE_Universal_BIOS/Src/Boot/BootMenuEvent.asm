@@ -107,7 +107,7 @@ ALIGN JUMP_ALIGN
 .KeyStrokeInAX:
 	cmp		ah, ROM_BOOT_HOTKEY_SCANCODE
 	jne		SHORT .CheckDriveHotkeys
-	int		INTV_BOOT_FAILURE		; ROM Boot, never returns
+	jmp		Int19hMenu_RomBoot
 ALIGN JUMP_ALIGN
 .CheckDriveHotkeys:
 	call	BootMenu_ConvertAsciiHotkeyFromALtoMenuitemInCX

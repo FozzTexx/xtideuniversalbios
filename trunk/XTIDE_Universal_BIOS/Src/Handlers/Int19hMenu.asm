@@ -52,58 +52,23 @@ Int19hMenu_Display:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Int19hMenu_ProcessMenuSelectionsUntilBootable:
-	call	Int19hMenu_GetDriveOrFunctionFromBootMenu
-	jc		SHORT Int19hMenu_ExecuteSelectedFunction
-	call	Int19h_TryToLoadBootSectorFromDL
-	jnc		SHORT Int19hMenu_ProcessMenuSelectionsUntilBootable	; Boot failure
-	call	BootVars_SwitchBackToPostStack
-	jmp		SHORT Int19h_JumpToBootSector
-
-
-;--------------------------------------------------------------------
-; Selects Floppy or Hard Disk Drive to boot from or some function.
-;
-; Int19hMenu_GetDriveOrFunctionFromBootMenu
-;	Parameters:
-;		DS:		RAMVARS segment
-;	Returns:
-;		DX:		Drive number (translated, 00h or 80h) or
-;				Function ID
-;		CF:		Cleared if drive selected
-;				Set if function selected
-;	Corrupts registers:
-;		All non segment regs
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-Int19hMenu_GetDriveOrFunctionFromBootMenu:
 	call	BootMenu_DisplayAndReturnSelection
-	jc		SHORT .ReturnFunction
 	call	DriveXlate_ToOrBack			; Translate drive number
-	clc
-ALIGN JUMP_ALIGN
-.ReturnFunction:
-	ret
+	call	Int19h_TryToLoadBootSectorFromDL
+	jnc		SHORT Int19hMenu_ProcessMenuSelectionsUntilBootable	; Boot failure, show menu again
+	call	BootVars_SwitchBackToPostStack
+	jmp		Int19h_JumpToBootSector
 
 
 ;--------------------------------------------------------------------
-; Executes any function (non-drive) selected from Boot Menu.
-;
-; Int19hMenu_ExecuteSelectedFunction
+; Int19hMenu_RomBoot
 ;	Parameters:
-;		DX:		Function ID (selected from Boot Menu)
 ;		DS:		RAMVARS segment
 ;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		All non segment regs
+;		Never returns
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-Int19hMenu_ExecuteSelectedFunction:
-	ePUSH_T	ax, Int19hMenu_ProcessMenuSelectionsUntilBootable
-	test	dx, dx						; 0, IDF_BOOTMNU_ROM
-	jz		SHORT .Int18hRomBoot
-	ret
-ALIGN JUMP_ALIGN
-.Int18hRomBoot:
+Int19hMenu_RomBoot:
 	call	BootVars_SwitchBackToPostStack
-	jmp		Int19h_BootFailure			; Never returns
+	call	Int19h_ClearSegmentsForBoot
+	int		INTV_BOOT_FAILURE		; Never returns

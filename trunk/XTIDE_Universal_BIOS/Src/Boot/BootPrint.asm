@@ -19,10 +19,10 @@ BootPrint_TryToBootFromDL:
 	push	bp
 	mov		bp, sp
 
-	mov		ax, g_szHardDrv
+	mov		ax, g_szHDD
 	test	dl, 80h
-	eCMOVZ	ax, g_szFloppyDrv
-	push	ax					; "Hard Drive" or "Floppy Drive"
+	eCMOVZ	ax, g_szFDD
+	push	ax
 
 	call	DriveXlate_ToOrBack
 	push	dx					; Push untranslated drive number
@@ -34,38 +34,20 @@ BootPrint_TryToBootFromDL:
 
 
 ;--------------------------------------------------------------------
-; BootPrint_BootSectorLoaded
+; BootPrint_BootSectorResultStringFromBX
 ;	Parameters:
-;		Nothing
+;		CS:BX:	Ptr to "found" or "not found"
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
 ;		AX, SI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-BootPrint_BootSectorLoaded:
+BootPrint_BootSectorResultStringFromBX:
 	push	bp
 	mov		bp, sp
 	ePUSH_T	ax, g_szBootSector
-	ePUSH_T	ax, g_szFound
-	jmp		SHORT PrintBootSectorResult
-
-;--------------------------------------------------------------------
-; BootPrint_FirstSectorNotBootable
-;	Parameters:
-;		Nothing
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, SI
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-BootPrint_FirstSectorNotBootable:
-	push	bp
-	mov		bp, sp
-	ePUSH_T	ax, g_szBootSector
-	ePUSH_T	ax, g_szNotFound
-PrintBootSectorResult:
+	push	bx			; "found" or "not found"
 	mov		si, g_szSectRead
 	jmp		BootMenuPrint_FormatCSSIfromParamsInSSBP
 
@@ -77,13 +59,13 @@ PrintBootSectorResult:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, CX, SI
+;		AX, BX, SI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootPrint_FailedToLoadFirstSector:
 	push	bp
 	mov		bp, sp
-	eMOVZX	cx, ah				; Error code to CX
-	push	cx					; Push INT 13h error code
+	eMOVZX	bx, ah
+	push	bx					; Push INT 13h error code
 	mov		si, g_szReadError
 	jmp		BootMenuPrint_FormatCSSIfromParamsInSSBP
