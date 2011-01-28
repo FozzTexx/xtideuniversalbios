@@ -21,43 +21,54 @@ Int19hMenu_BootLoader:
 	call	BootVars_StorePostStackPointer
 
 	; Install new INT 19h handler now that BOOTVARS has been initialized
-	mov		WORD [INTV_BOOTSTRAP*4], Int19hMenu_Display
+	mov		WORD [INTV_BOOTSTRAP*4], DisplayBootMenu
 	mov		WORD [INTV_BOOTSTRAP*4+2], cs
-	; Fall to Int19hMenu_Display
+	; Fall to DisplayBootMenu
 
 ;--------------------------------------------------------------------
-; Displays Boot Menu so user can select drive to boot from.
-;
-; Int19hMenu_Display
+; DisplayBootMenu
 ;	Parameters:
 ;		Nothing
 ;	Returns:
 ;		Never returns
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-Int19hMenu_Display:
-	sti									; Enable interrupts
+DisplayBootMenu:
 	call	BootVars_SwitchToBootMenuStack
 	call	RamVars_GetSegmentToDS
-	; Fall to Int19hMenu_ProcessMenuSelectionsUntilBootable
+	; Fall to .ProcessMenuSelectionsUntilBootable
 
 ;--------------------------------------------------------------------
-; Processes user menu selections until bootable drive is selected.
-;
-; Int19hMenu_ProcessMenuSelectionsUntilBootable
+; .ProcessMenuSelectionsUntilBootable
 ;	Parameters:
 ;		DS:		RAMVARS segment
 ;	Returns:
 ;		Never returns
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-Int19hMenu_ProcessMenuSelectionsUntilBootable:
+.ProcessMenuSelectionsUntilBootable:
 	call	BootMenu_DisplayAndReturnSelection
 	call	DriveXlate_ToOrBack			; Translate drive number
-	call	Int19h_TryToLoadBootSectorFromDL
-	jnc		SHORT Int19hMenu_ProcessMenuSelectionsUntilBootable	; Boot failure, show menu again
+	call	BootSector_TryToLoadFromDriveDL
+	jnc		SHORT .ProcessMenuSelectionsUntilBootable	; Boot failure, show menu again
 	call	BootVars_SwitchBackToPostStack
-	jmp		Int19h_JumpToBootSector
+	; Fall to JumpToBootSector
+
+;--------------------------------------------------------------------
+; JumpToBootSector
+;	Parameters:
+;		DL:		Drive to boot from (translated, 00h or 80h)
+;		ES:BX:	Ptr to boot sector
+;	Returns:
+;		Never returns
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+JumpToBootSector:
+	push	es								; Push boot sector segment
+	push	bx								; Push boot sector offset
+	call	ClearSegmentsForBoot
+	xor		dh, dh							; Device supported by INT 13h
+	retf
 
 
 ;--------------------------------------------------------------------
@@ -70,5 +81,22 @@ Int19hMenu_ProcessMenuSelectionsUntilBootable:
 ALIGN JUMP_ALIGN
 Int19hMenu_RomBoot:
 	call	BootVars_SwitchBackToPostStack
-	call	Int19h_ClearSegmentsForBoot
+	call	ClearSegmentsForBoot
 	int		INTV_BOOT_FAILURE		; Never returns
+
+
+;--------------------------------------------------------------------
+; ClearSegmentsForBoot
+;	Parameters:
+;		Nothing
+;	Returns:
+;		DS=ES:	Zero
+;	Corrupts registers:
+;		AX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+ClearSegmentsForBoot:
+	xor		ax, ax
+	mov		ds, ax
+	mov		es, ax
+	ret

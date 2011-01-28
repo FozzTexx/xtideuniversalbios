@@ -61,8 +61,6 @@ BootVars_SwitchBackToPostStack:
 	pop		ax							; Pop return address
 	cli									; Disable interrupts
 	LOAD_BDA_SEGMENT_TO	ss, sp
-;	eLSS	sp, ss:BOOTVARS.dwPostStack	; Expanded macro to remove
-										; unneeded CLI instruction
 %ifndef USE_386
 	mov		sp, [ss:BOOTVARS.dwPostStack]
 	mov		ss, [ss:BOOTVARS.dwPostStack+2]

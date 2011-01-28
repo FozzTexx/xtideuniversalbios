@@ -5,6 +5,9 @@
 %define BOOTVARS_INC
 
 
+BOOT_READ_RETRY_TIMES		EQU		3
+
+
 ; Boot Menu Information Table. These are generated for all XTIDE Universal
 ; BIOS drives. Available only until boot is successfull.
 LEN_BOOTNFO_DRV		EQU		26		; Bytes reserved for drive name

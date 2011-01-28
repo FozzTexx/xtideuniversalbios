@@ -34,7 +34,7 @@ g_szforeignHD:	db	"Foreign Hard Disk",NULL
 g_szCapacity:	db	"Capacity : ",NULL
 g_szSizeSingle:	db	"%s%u.%u %ciB",NULL
 g_szSizeDual:	db	"%s%u.%u %ciB / %u.%u %ciB",NULL
-g_szCfgHeader:	db	"Addr.",SINGLE_VERTICAL,"Block",SINGLE_VERTICAL,"Bus",  SINGLE_VERTICAL,"IRQ",  SINGLE_VERTICAL,"Reset",NULL
+g_szCfgHeader:	db	"Addr.",SINGLE_VERTICAL,"Block",SINGLE_VERTICAL,"Bus",  SINGLE_VERTICAL,"IRQ",  SINGLE_VERTICAL,"Reset",CR,LF,NULL
 g_szCfgFormat:	db	"%s"   ,SINGLE_VERTICAL,"%5u",  SINGLE_VERTICAL,"%c%2u",SINGLE_VERTICAL," %c%c",SINGLE_VERTICAL,"%5x",  NULL
 g_szLCHS:		db	"L-CHS",NULL
 g_szPCHS:		db	"P-CHS",NULL

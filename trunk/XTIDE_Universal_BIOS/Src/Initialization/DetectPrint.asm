@@ -103,6 +103,6 @@ DetectPrint_DriveNameOrNotFound:
 ALIGN JUMP_ALIGN
 .PrintDriveNotFound:
 	mov		si, g_szNotFound
-	call	PrintNullTerminatedStringFromCSSIandSetCF
+	call	BootMenuPrint_NullTerminatedStringFromCSSIandSetCF
 	pop		di
 	ret

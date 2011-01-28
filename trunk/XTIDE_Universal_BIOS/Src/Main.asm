@@ -123,6 +123,8 @@ iend
 %include "BootMenu.asm"			; For Boot Menu operations
 %include "BootMenuEvent.asm"	; For menu library event handling
 %include "FloppyDrive.asm"		; Floppy Drive related functions
+%include "BootSector.asm"		; For loading boot sector
+%include "BootPrint.asm"		; For printing boot information
 %include "BootMenuPrint.asm"	; For printing Boot Menu strings
 %include "BootMenuPrintCfg.asm"	; For printing hard disk configuration
 
@@ -139,12 +141,10 @@ iend
 
 ; Include .asm files (Interrupt handlers)
 %include "Int13h.asm"			; For Int 13h, Disk functions
-%include "Int19h.asm"			; For Int 19h, Boot Loader
 %ifndef USE_AT
 	%include "Int19hLate.asm"	; For late initialization
 %endif
 %include "Int19hMenu.asm"		; For Int 19h, Boot Loader for Boot Menu
-%include "BootPrint.asm"		; For printing boot information
 
 ; Include .asm files (Hard Disk BIOS functions)
 %include "AH0h_HReset.asm"		; Required by Int13h_Jump.asm
