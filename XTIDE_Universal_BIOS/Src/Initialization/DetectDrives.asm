@@ -44,11 +44,13 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 DetectDrives_WithIDEVARS:
 	push	cx
-	call	DetectPrint_StartingMasterDetect	; Print detection string
+	mov		ax, g_szMaster
+	call	DetectPrint_StartDetectWithMasterOrSlaveStringInAXandIdeVarsInCSBP
 	call	DetectDrives_DetectMasterDrive		; Detect and create DPT + BOOTNFO
 	call	DetectPrint_DriveNameOrNotFound		; Print found or not found string
 
-	call	DetectPrint_StartingSlaveDetect
+	mov		ax, g_szSlave
+	call	DetectPrint_StartDetectWithMasterOrSlaveStringInAXandIdeVarsInCSBP
 	call	DetectDrives_DetectSlaveDrive
 	call	DetectPrint_DriveNameOrNotFound
 	pop		cx

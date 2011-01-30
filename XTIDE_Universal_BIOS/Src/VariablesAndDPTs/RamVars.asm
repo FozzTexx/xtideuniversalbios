@@ -12,17 +12,13 @@ SECTION .text
 ;	Parameters:
 ;		Nothing
 ;	Returns:
-;		Nothing
+;		DS:		RAMVARS segment
 ;	Corrupts registers:
-;		AX, CX, DI, DS
+;		AX, CX, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 RamVars_Initialize:
 	push	es
-	call	.StealMemoryForRAMVARS	; Get RAMVARS segment to DS even if no stealing
-	call	.ClearRamvarsFromDS
-	pop		es
-	jmp		DriveXlate_Reset
+	; Fall to .StealMemoryForRAMVARS
 
 ;--------------------------------------------------------------------
 ; .StealMemoryForRAMVARS
@@ -33,39 +29,49 @@ RamVars_Initialize:
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 .StealMemoryForRAMVARS:
 	test	BYTE [cs:ROMVARS.wFlags], FLG_ROMVARS_FULLMODE
-	jz		SHORT RamVars_GetSegmentToDS
+	jz		SHORT .InitializeRamvars	; No need to steal RAM
 
-	LOAD_BDA_SEGMENT_TO	ds, ax		; Zero AX
+	LOAD_BDA_SEGMENT_TO	ds, ax			; Zero AX
 	mov		al, [cs:ROMVARS.bStealSize]
 	sub		[BDA.wBaseMem], ax
 	mov		ax, [BDA.wBaseMem]
-	eSHL_IM	ax, 6					; Segment to first stolen kB (*=40h)
+	eSHL_IM	ax, 6						; Segment to first stolen kB (*=40h)
 	mov		ds, ax
-	ret
+	mov		WORD [FULLRAMVARS.wSign], W_SIGN_FULLRAMVARS
+	; Fall to .InitializeRamvarsFromDS
 
 ;--------------------------------------------------------------------
-; .ClearRamvarsFromDS
+; .InitializeRamvars
+;	Parameters:
+;		Nothing
+;	Returns:
+;		DS:		RAMVARS segment
+;	Corrupts registers:
+;		AX, CX, DI, ES
+;--------------------------------------------------------------------
+.InitializeRamvars:
+	call	RamVars_GetSegmentToDS
+	mov		cx, RAMVARS_size
+	xor		di, di
+	push	ds
+	pop		es
+	call	Memory_ZeroESDIwithSizeInCX
+	; Fall to .InitializeDriveTranslationAndReturn
+
+;--------------------------------------------------------------------
+; .InitializeDriveTranslationAndReturn
 ;	Parameters:
 ;		DS:		RAMVARS segment
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, CX, DI, ES
+;		AX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-.ClearRamvarsFromDS:
-	call	FindDPT_PointToFirstDPT	; Get RAMVARS/FULLRAMVARS size to DI
-	mov		cx, di					; Copy byte count to CX
-	push	ds
+.InitializeDriveTranslationAndReturn:
 	pop		es
-	xor		di, di					; ES:DI now points to RAMVARS/FULLRAMVARS
-	xor		ax, ax					; Store zeroes
-	rep stosb
-	mov		WORD [FULLRAMVARS.wSign], W_SIGN_FULLRAMVARS
-	ret
+	jmp		DriveXlate_Reset
 
 
 ;--------------------------------------------------------------------

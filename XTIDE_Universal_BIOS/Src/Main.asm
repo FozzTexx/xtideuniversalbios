@@ -11,6 +11,7 @@
 
 ORG 000h						; Code start offset 0000h
 
+
 ; Included .inc files
 %include "AssemblyLibrary.inc"	; Assembly Library. Must be included first!
 %include "macros.inc"			; General purpose macros
@@ -20,7 +21,6 @@ ORG 000h						; Code start offset 0000h
 %include "IdeRegisters.inc"		; For ATA Registers, flags and commands
 %include "Int13h.inc"			; Equates for INT 13h functions
 %include "CustomDPT.inc"		; For Disk Parameter Table
-%include "CompatibleDPT.inc"	; For standard Disk Parameter Tables
 %include "RomVars.inc"			; For ROMVARS and IDEVARS structs
 %include "RamVars.inc"			; For RAMVARS struct
 %include "BootVars.inc"			; For BOOTVARS and BOOTNFO structs
@@ -47,7 +47,7 @@ istruc ROMVARS
 %else
 		db	" (XT)=-",NULL
 %endif
-	at	ROMVARS.szVersion,	db	"v1.2.0_wip (01/27/11)",NULL	; mm/dd/yy
+	at	ROMVARS.szVersion,	db	"v1.2.0_wip (",__DATE__,")",NULL
 
 ;---------------------------;
 ; AT Build default settings ;
@@ -112,7 +112,6 @@ iend
 %include "CreateDPT.asm"		; For creating DPTs
 %include "FindDPT.asm"			; For finding DPTs
 %include "AccessDPT.asm"		; For accessing DPTs
-%include "CompatibleDPT.asm"	; For creating compatible DPTs
 %include "BootInfo.asm"			; For creating BOOTNFO structs
 %include "AtaID.asm"			; For ATA Identify Device information
 %include "DetectDrives.asm"		; For detecting IDE drives

@@ -12,7 +12,7 @@ struc ROMVARS
 
 	.rgbSign		resb	8	; Signature for XTIDE Configurator Program
 	.szTitle		resb	31	; BIOS title string
-	.szVersion		resb	23	; BIOS version string
+	.szVersion		resb	25	; BIOS version string
 
 	.wFlags			resb	2	; Word for ROM flags
 	.bIdeCnt		resb	1	; Number of available IDE controllers
