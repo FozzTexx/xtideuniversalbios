@@ -16,7 +16,6 @@ SECTION .text
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 Initialize_FromMainBiosRomSearch:
 	pushf
 	push	es
@@ -52,7 +51,6 @@ Initialize_FromMainBiosRomSearch:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 Initialize_ShouldSkip:
 	sti										; Enable interrupts
 	test	BYTE [es:BDA.bKBFlgs1], (1<<2)	; Clear ZF if CTRL is held down
@@ -66,24 +64,43 @@ Initialize_ShouldSkip:
 ;	Parameters:
 ;		ES:		BDA Segment
 ;	Returns:
-;		Nothing
+;		DS:		RAMVARS segment
 ;	Corrupts registers:
-;		All, including segments
+;		All
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 Initialize_AndDetectDrives:
 	call	DetectPrint_RomFoundAtSegment
 	call	RamVars_Initialize
-	call	RamVars_GetSegmentToDS
 	call	Interrupts_InitializeInterruptVectors
 	call	DetectDrives_FromAllIDEControllers
-	call	CompatibleDPT_CreateForDrives80hAnd81h
+	; Fall to .StoreDptPointersToBDA
+
+;--------------------------------------------------------------------
+; .StoreDptPointersToBDA
+;	Parameters:
+;		DS:		RAMVARS segment
+;		ES:		BDA and interrupt vector segment (zero)
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		DX, DI
+;--------------------------------------------------------------------
+.StoreDptPointersToBDA:
+	mov		dl, 80h
+	call	FindDPT_ForDriveNumber	; DPT to DS:DI
+	jnc		SHORT .FindForDrive81h	; Store nothing if not our drive
+	mov		[es:INTV_HD0DPT*4], di
+	mov		[es:INTV_HD0DPT*4+2], ds
+.FindForDrive81h:
+	inc		dx
+	call	FindDPT_ForDriveNumber
+	jnc		SHORT .ResetDetectedDrives
+	mov		[es:INTV_HD1DPT*4], di
+	mov		[es:INTV_HD1DPT*4+2], ds
 	; Fall to .ResetDetectedDrives
 
 ;--------------------------------------------------------------------
-; Resets all hard disks.
-;
-; Initialize_ResetDetectedDrives
+; .ResetDetectedDrives
 ;	Parameters:
 ;		DS:		RAMVARS segment
 ;	Returns:
@@ -91,6 +108,5 @@ Initialize_AndDetectDrives:
 ;	Corrupts registers:
 ;		AX, BX, CX, DX, DI
 ;--------------------------------------------------------------------
-;ALIGN JUMP_ALIGN
 .ResetDetectedDrives:
 	jmp		AH0h_ResetHardDisksHandledByOurBIOS

@@ -40,8 +40,6 @@ endstruc
 struc FULLRAMVARS
 	.ramVars		resb	RAMVARS_size
 	.wSign			resb	2			; FULLRAMVARS signature for finding segment
-	.drv80hCompDPT	resb	COMPATIBLE_FDPT_size
-	.drv81hCompDPT	resb	COMPATIBLE_FDPT_size
 endstruc
 
 W_SIGN_FULLRAMVARS		EQU	"fR"		; FULLRAMVARS signature
