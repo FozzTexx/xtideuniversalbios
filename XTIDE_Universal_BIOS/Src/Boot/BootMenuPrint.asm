@@ -325,11 +325,13 @@ ConvertSectorCountInBXDXAXtoSizeAndPushForFormat:
 ;	Returns:
 ;		CF:		Set since menu event was handled successfully
 ;	Corrupts registers:
-;		AX, DI
+;		AX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenuPrint_NullTerminatedStringFromCSSIandSetCF:
+	push	di
 	CALL_DISPLAY_LIBRARY PrintNullTerminatedStringFromCSSI
+	pop		di
 	stc
 	ret
 
