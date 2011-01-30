@@ -45,22 +45,16 @@ DetectPrint_StartDetectWithMasterOrSlaveStringInAXandIdeVarsInCSBP:
 
 
 ;--------------------------------------------------------------------
-; Displays Detected Drive Name from BOOTVARS or
-; drive not found string if no drive was found.
-;
-; DetectPrint_DriveNameOrNotFound
+; DetectPrint_DriveNameFromBootnfoInESBX
 ;	Parameters:
 ;		ES:BX:	Ptr to BOOTNFO (if drive found)
-;		CF:		Cleared if drive found
-;				Set it drive not found
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
 ;		AX, SI
 ;--------------------------------------------------------------------
-DetectPrint_DriveNameOrNotFound:
+DetectPrint_DriveNameFromBootnfoInESBX:
 	push	di
-	jc		SHORT .PrintDriveNotFound
 	push	bx
 
 	lea		si, [bx+BOOTNFO.szDrvName]
@@ -72,8 +66,16 @@ DetectPrint_DriveNameOrNotFound:
 	pop		di
 	ret
 
-.PrintDriveNotFound:
+
+;--------------------------------------------------------------------
+; DetectPrint_DriveNotFound
+;	Parameters:
+;		Nothing
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, SI
+;--------------------------------------------------------------------
+DetectPrint_DriveNotFound:
 	mov		si, g_szNotFound
-	call	BootMenuPrint_NullTerminatedStringFromCSSIandSetCF
-	pop		di
-	ret
+	jmp		BootMenuPrint_NullTerminatedStringFromCSSIandSetCF
