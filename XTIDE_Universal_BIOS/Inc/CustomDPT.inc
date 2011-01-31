@@ -1,8 +1,4 @@
-; File name		:	CustomDPT.inc
-; Project name	:	IDE BIOS
-; Created date	:	23.3.2010
-; Last update	:	10.4.2010
-; Author		:	Tomi Tilli
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Defines for DPT structs containing custom
 ;					Disk Parameter Table used by this BIOS.
 %ifndef CUSTOMDPT_INC
@@ -14,6 +10,7 @@
 struc DPT
 	; General Disk Parameter Table related
 	.bSize		resb	1	; Size of DPT (with extensions) in bytes
+	.wDrvNumAndFlags:
 	.bDrvNum	resb	1	; Drive number
 	.bFlags		resb	1	; DPT and Drive related flags
 	.bReset		resb	1	; Drive reset status (for debugging)
@@ -25,6 +22,7 @@ struc DPT
 
 	; IDE related
 	.wPCyls		resb	2	; Number of P-CHS (IDE) Cylinders (1...16383)
+	.wHeadsAndSectors:
 	.bPHeads	resb	1	; Number of P-CHS (IDE) Heads (1...16)
 	.bPSect		resb	1	; Number of P-CHS (IDE) Sectors per Track (1...63)
 	.bDrvSel	resb	1	; Drive Selection byte for Device/Head Register

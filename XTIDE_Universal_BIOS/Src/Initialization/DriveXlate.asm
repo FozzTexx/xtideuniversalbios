@@ -1,8 +1,4 @@
-; File name		:	DriveXlate.asm
-; Project name	:	IDE BIOS
-; Created date	:	15.3.2010
-; Last update	:	24.8.2010
-; Author		:	Tomi Tilli
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Functions for swapping drive letters.
 
 ; Section containing code
@@ -99,13 +95,11 @@ DriveXlate_ToOrBack:
 ALIGN JUMP_ALIGN
 DriveXlate_SwapFloppyDriveOrHardDisk:
 	test	dl, 80h							; Hard disk?
-	jnz		SHORT DriveXlate_SwapHardDisk	; If so, jump to swap
-	; Fall to DriveXlate_SwapFloppyDrive
+	jnz		SHORT .SwapHardDisk	; If so, jump to swap
+	; Fall to .SwapFloppyDrive
 
 ;--------------------------------------------------------------------
-; Swaps Floppy Drive number.
-;
-; DriveXlate_SwapFloppyDrive
+; .SwapFloppyDrive
 ;	Parameters:
 ;		DL:		Drive number to be possibly swapped
 ;		DS:		RAMVARS segment
@@ -114,15 +108,12 @@ DriveXlate_SwapFloppyDriveOrHardDisk:
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
-;ALIGN JUMP_ALIGN
-DriveXlate_SwapFloppyDrive:
+.SwapFloppyDrive:
 	eMOVZX	ax, BYTE [RAMVARS.xlateVars+XLATEVARS.bFDSwap]
-	jmp		SHORT DriveXlate_SwapDrive
+	jmp		SHORT SwapDrive
 
 ;--------------------------------------------------------------------
-; Swaps Hard Disk number.
-;
-; DriveXlate_SwapHardDisk
+; .SwapHardDisk
 ;	Parameters:
 ;		DL:		Drive number to be possibly swapped
 ;		DS:		RAMVARS segment
@@ -132,15 +123,13 @@ DriveXlate_SwapFloppyDrive:
 ;		AX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-DriveXlate_SwapHardDisk:
+.SwapHardDisk:
 	mov		ah, 80h
 	mov		al, BYTE [RAMVARS.xlateVars+XLATEVARS.bHDSwap]
-	; Fall to DriveXlate_SwapDrive
+	; Fall to SwapDrive
 
 ;--------------------------------------------------------------------
-; Swaps Hard Disk or Floppy Drive number.
-;
-; DriveXlate_SwapDrive
+; SwapDrive
 ;	Parameters:
 ;		AL:		Drive number to swap to 00h/80h
 ;		AH:		00h/80h to be swapped to stored drive number
@@ -150,8 +139,7 @@ DriveXlate_SwapHardDisk:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-;ALIGN JUMP_ALIGN
-DriveXlate_SwapDrive:
+SwapDrive:
 	cmp		ah, dl				; Swap DL from 00h/80h to xxh?
 	je		SHORT .SwapToXXhInAL
 	cmp		al, dl				; Swap DL from xxh to 00h/80h?
@@ -200,40 +188,12 @@ DriveXlate_Reset:
 ALIGN JUMP_ALIGN
 DriveXlate_SetDriveToSwap:
 	test	dl, 80h				; Floppy drive?
-	jnz		SHORT DriveXlate_SetHardDiskToSwap
-	; Fall to DriveXlate_SetFloppyDriveToSwap
-
-;--------------------------------------------------------------------
-; Stores floppy drive to be swapped.
-;
-; DriveXlate_SetFloppyDriveToSwap
-;	Parameters:
-;		DL:		Drive to swap to 00h
-;		DS:		RAMVARS segment
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------	
-ALIGN JUMP_ALIGN
-DriveXlate_SetFloppyDriveToSwap:
+	jnz		SHORT .SetHardDiskToSwap
+.SetFloppyDriveToSwap:
 	mov		[RAMVARS.xlateVars+XLATEVARS.bFDSwap], dl
 	ret
-
-;--------------------------------------------------------------------
-; Stores hard disk to be swapped.
-;
-; DriveXlate_SetHardDiskToSwap
-;	Parameters:
-;		DL:		Drive to swap to 80h
-;		DS:		RAMVARS segment
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------	
 ALIGN JUMP_ALIGN
-DriveXlate_SetHardDiskToSwap:
+.SetHardDiskToSwap:
 	mov		[RAMVARS.xlateVars+XLATEVARS.bHDSwap], dl
 	ret
 

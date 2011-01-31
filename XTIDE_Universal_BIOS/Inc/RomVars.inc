@@ -53,9 +53,9 @@ BUS_TYPE_8_SINGLE		EQU	(3<<1)	; 8-bit transfers with single 8-bit data port
 struc DRVPARAMS
 	.wFlags			resb	2	; Drive flags
 	.wCylinders		resb	2	; User specified cylinders (1...16383)
-	.wSectAndHeads:
-	.bSect			resb	1	; User specified Sectors per track (1...63)
+	.wHeadsAndSectors:
 	.bHeads			resb	1	; User specified Heads (1...16)
+	.bSect			resb	1	; User specified Sectors per track (1...63)
 endstruc
 
 ; Bit defines for DRVPARAMS.wFlags

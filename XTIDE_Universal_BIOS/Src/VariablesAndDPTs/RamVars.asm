@@ -170,8 +170,6 @@ ALIGN JUMP_ALIGN
 
 
 ;--------------------------------------------------------------------
-; Increments hard disk count to RAMVARS.
-;
 ; RamVars_IncrementHardDiskCount
 ;	Parameters:
 ;		DL:		Drive number for new drive
@@ -181,13 +179,11 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 RamVars_IncrementHardDiskCount:
 	inc		BYTE [RAMVARS.bDrvCnt]		; Increment drive count to RAMVARS
 	cmp		BYTE [RAMVARS.bFirstDrv], 0	; First drive set?
 	ja		SHORT .Return				;  If so, return
 	mov		[RAMVARS.bFirstDrv], dl		; Store first drive number
-ALIGN JUMP_ALIGN
 .Return:
 	ret
 
@@ -241,12 +237,6 @@ RamVars_GetCountOfKnownDrivesToDL:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------	
-ALIGN JUMP_ALIGN
 RamVars_GetIdeControllerCountToCX:
-	mov		cx, 1					; Assume lite mode (one controller)
-	test	BYTE [cs:ROMVARS.wFlags], FLG_ROMVARS_FULLMODE
-	jz		SHORT .Return
-	mov		cl, [cs:ROMVARS.bIdeCnt]
-ALIGN JUMP_ALIGN, ret
-.Return:
+	eMOVZX	cx, BYTE [cs:ROMVARS.bIdeCnt]
 	ret
