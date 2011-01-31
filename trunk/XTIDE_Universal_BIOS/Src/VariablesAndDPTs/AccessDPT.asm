@@ -1,8 +1,4 @@
-; File name		:	AccessDPT.asm
-; Project name	:	IDE BIOS
-; Created date	:	16.3.2010
-; Last update	:	26.4.2010
-; Author		:	Tomi Tilli
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Functions for accessing DPT data.
 
 ; Section containing code

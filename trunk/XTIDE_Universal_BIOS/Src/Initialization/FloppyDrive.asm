@@ -17,11 +17,14 @@ SECTION .text
 ;	Corrupts registers:
 ;		BX, CX, DI
 ;--------------------------------------------------------------------
-;ALIGN JUMP_ALIGN
 FloppyDrive_IsInt40hInstalled:
 	cmp		WORD [es:INTV_FLOPPY_FUNC*4+2], 0C000h	; Any ROM segment?
 	jb		SHORT .Int40hHandlerIsNotInstalled
+%ifdef USE_AT
 	call	.VerifyInt40hHandlerSinceSomeBiosesSimplyReturnFromInt40h
+%else
+	clc		; INT 40h installed. No need to verify on XT systems.
+%endif
 .Int40hHandlerIsNotInstalled:
 	cmc
 	ret
@@ -36,7 +39,7 @@ FloppyDrive_IsInt40hInstalled:
 ;	Corrupts registers:
 ;		BX, CX, DI
 ;--------------------------------------------------------------------
-;ALIGN JUMP_ALIGN
+%ifdef USE_AT
 .VerifyInt40hHandlerSinceSomeBiosesSimplyReturnFromInt40h:
 	push	es
 	push	dx
@@ -44,9 +47,9 @@ FloppyDrive_IsInt40hInstalled:
 
 	call	.LoadInt40hVerifyParameters
 	int		INTV_DISK_FUNC
-	jc		SHORT .AH08hNotSupported	; AH=08h not supported on XTs but that doesn't
-	push	es							; matter since INT 40h does not need to be verified
-	push	di							; on XTs
+	jc		SHORT .Int40hIsInstalled	; Maybe there are not any floppy drives at all
+	push	es
+	push	di
 
 	call	.LoadInt40hVerifyParameters
 	int		INTV_FLOPPY_FUNC
@@ -57,10 +60,7 @@ FloppyDrive_IsInt40hInstalled:
 	jne		SHORT .Int40hNotInstalled
 	mov		dx, es
 	cmp		cx, dx						; Difference in segments?
-	jne		SHORT .Int40hNotInstalled
-.AH08hNotSupported:
-	clc
-	jmp		SHORT .Int40hIsInstalled
+	je		SHORT .Int40hIsInstalled
 .Int40hNotInstalled:
 	stc
 .Int40hIsInstalled:
@@ -80,13 +80,13 @@ FloppyDrive_IsInt40hInstalled:
 ;	Corrupts registers:
 ;		DH
 ;--------------------------------------------------------------------
-;ALIGN JUMP_ALIGN
 .LoadInt40hVerifyParameters:
 	mov		ah, 08h				; Get Drive Parameters
 	cwd							; Floppy drive 0
 	mov		di, dx
 	mov		es, dx				; ES:DI = 0000:0000h to guard against BIOS bugs
 	ret
+%endif
 
 
 ;--------------------------------------------------------------------
@@ -132,11 +132,11 @@ FloppyDrive_GetType:
 ALIGN JUMP_ALIGN
 FloppyDrive_GetCount:
 	push	es
+%ifdef USE_AT
 	call	FloppyDrive_GetCountFromBIOS
-	jnc		SHORT .CompareToUserMinimum
+%else
 	call	FloppyDrive_GetCountFromBDA
-ALIGN JUMP_ALIGN
-.CompareToUserMinimum:
+%endif
 	MAX_U	cl, [cs:ROMVARS.bMinFddCnt]
 	xor		ch, ch
 	pop		es
@@ -158,6 +158,7 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		CH, ES
 ;--------------------------------------------------------------------
+%ifdef USE_AT
 ALIGN JUMP_ALIGN
 FloppyDrive_GetCountFromBIOS:
 	push	di
@@ -175,6 +176,7 @@ FloppyDrive_GetCountFromBIOS:
 	pop		dx
 	pop		di
 	ret
+%endif
 
 
 ;--------------------------------------------------------------------
@@ -189,6 +191,7 @@ FloppyDrive_GetCountFromBIOS:
 ;	Corrupts registers:
 ;		CH, ES
 ;--------------------------------------------------------------------
+%ifndef USE_AT
 ALIGN JUMP_ALIGN
 FloppyDrive_GetCountFromBDA:
 	LOAD_BDA_SEGMENT_TO	es, cx
@@ -198,3 +201,4 @@ FloppyDrive_GetCountFromBDA:
 	eROL_IM	ch, 2							; EW low byte bits 7..6 to 1..0
 	add		cl, ch							; CL = Floppy Drive count
 	ret
+%endif
