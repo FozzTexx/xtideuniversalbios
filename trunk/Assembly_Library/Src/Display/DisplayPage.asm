@@ -1,8 +1,4 @@
-; File name		:	DisplayPage.asm
 ; Project name	:	Assembly Library
-; Created date	:	26.6.2010
-; Last update	:	3.7.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for managing display page.
 
 ; Section containing code
@@ -62,6 +58,5 @@ DisplayPage_SynchronizeToHardware:
 	je		SHORT .Return					; Same page, no need to synchronize
 	mov		ah, SELECT_ACTIVE_DISPLAY_PAGE
 	int		BIOS_VIDEO_INTERRUPT_10h
-ALIGN JUMP_ALIGN, ret
 .Return:
 	ret

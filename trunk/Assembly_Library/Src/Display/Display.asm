@@ -1,8 +1,4 @@
-; File name		:	Display.asm
 ; Project name	:	Assembly Library
-; Created date	:	2.7.2010
-; Last update	:	7.12.2010
-; Author		:	Tomi Tilli
 ; Description	:	Display Library functions for CALL_DISPLAY_LIBRARY macro
 ;					that users should use to make library call.
 
@@ -48,7 +44,7 @@ Display_FunctionFromDI:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 .FormatNullTerminatedStringFromCSSI:
-	pop		ax					; Discard return address to inside DisplayFunctionFromDI
+	pop		ax					; Discard return address to inside Display_FunctionFromDI
 	call	DisplayPrint_FormattedNullTerminatedStringFromCSSI
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fpCursorPosition], di
 

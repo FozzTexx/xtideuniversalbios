@@ -1,8 +1,4 @@
-; File name		:	DisplayCharOut.asm
 ; Project name	:	Assembly Library
-; Created date	:	26.6.2010
-; Last update	:	24.10.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for outputting characters to video memory.
 ;					These functions are meant to be called by Display_CharacterFromAL
 ;					and Display_RepeatCharacterFromAL using function pointer
@@ -53,28 +49,16 @@ DisplayCharOut_BiosTeletypeOutput:
 	push	ax
 	call	DisplayCursor_SynchronizeCoordinatesToHardware
 	pop		ax
-	call	.OutputCharacterWithBIOS
-	call	DisplayCursor_GetHardwareCoordinatesToAX
-	jmp		DisplayCursor_SetCoordinatesFromAX
 
-;--------------------------------------------------------------------
-; .OutputCharacterWithBIOS
-;	Parameters:
-;		AL:		Character to output
-;		DS:		BDA segment
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-.OutputCharacterWithBIOS:
+	; Output character with BIOS
 	push	bx
 	mov		ah, TELETYPE_OUTPUT
 	mov		bh, [VIDEO_BDA.bActivePage]
 	int		BIOS_VIDEO_INTERRUPT_10h
 	pop		bx
-	ret
+
+	call	DisplayCursor_GetHardwareCoordinatesToAX
+	jmp		DisplayCursor_SetCoordinatesFromAX
 
 
 ;--------------------------------------------------------------------

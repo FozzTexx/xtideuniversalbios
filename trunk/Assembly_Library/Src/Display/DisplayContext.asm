@@ -1,8 +1,4 @@
-; File name		:	DisplayContext.asm
 ; Project name	:	Assembly Library
-; Created date	:	25.6.2010
-; Last update	:	11.10.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for managing display context.
 
 ; Section containing code
@@ -19,13 +15,10 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 DisplayContext_Initialize:
-	call	.DetectAndSetDisplaySegment	; and .InitializeFlags
 	mov		WORD [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fnCharOut], DEFAULT_CHARACTER_OUTPUT
 	mov		WORD [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.wCursorShape], CURSOR_NORMAL
 	mov		BYTE [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bAttribute], SCREEN_BACKGROUND_ATTRIBUTE
-	xor		ax, ax
-	call	DisplayCursor_SetCoordinatesFromAX
-	jmp		DisplayContext_SynchronizeToHardware
+	; Fall to .DetectAndSetDisplaySegment
 
 ;--------------------------------------------------------------------
 ; .DetectAndSetDisplaySegment
@@ -39,11 +32,9 @@ DisplayContext_Initialize:
 .DetectAndSetDisplaySegment:
 	mov		ax, COLOR_TEXT_SEGMENT
 	cmp		BYTE [VIDEO_BDA.bMode], MDA_TEXT_MODE
-	jne		SHORT .StoreSegmentToDisplayContext
-	mov		ax, MONO_TEXT_SEGMENT
-.StoreSegmentToDisplayContext:
+	eCMOVE	ah, MONO_TEXT_SEGMENT >> 8
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fpCursorPosition+2], ax
-	; Fall to InitializeFlags
+	; Fall to .InitializeFlags
 
 ;--------------------------------------------------------------------
 ; .InitializeFlags
@@ -61,7 +52,36 @@ DisplayContext_Initialize:
 	or		dl, FLG_CONTEXT_CGA
 .DoNotSetCgaFlag:
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bFlags], dl
-	ret
+	; Fall to .InitializeCursor
+
+;--------------------------------------------------------------------
+; .InitializeCursor
+;	Parameters:
+;		DS:		BDA segment (zero)
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, DX
+;--------------------------------------------------------------------
+.InitializeCursor:
+	xor		ax, ax
+	call	DisplayCursor_SetCoordinatesFromAX
+	; Fall to DisplayContext_SynchronizeToHardware
+
+;--------------------------------------------------------------------
+; DisplayContext_SynchronizeToHardware
+;	Parameters:
+;		DS:		BDA segment (zero)
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, DX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+DisplayContext_SynchronizeToHardware:
+	call	DisplayPage_SynchronizeToHardware
+	call	DisplayCursor_SynchronizeShapeToHardware
+	jmp		DisplayCursor_SynchronizeCoordinatesToHardware
 
 
 ;--------------------------------------------------------------------
@@ -144,22 +164,6 @@ DisplayContext_PrepareOffScreenBufferInESBXwithLengthInCX:
 	mov		bx, di
 	pop		ds
 	ret
-
-
-;--------------------------------------------------------------------
-; DisplayContext_SynchronizeToHardware
-;	Parameters:
-;		DS:		BDA segment (zero)
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, DX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-DisplayContext_SynchronizeToHardware:
-	call	DisplayPage_SynchronizeToHardware
-	call	DisplayCursor_SynchronizeShapeToHardware
-	jmp		DisplayCursor_SynchronizeCoordinatesToHardware
 
 
 ;--------------------------------------------------------------------
