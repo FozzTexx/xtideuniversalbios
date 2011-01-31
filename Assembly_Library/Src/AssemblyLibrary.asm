@@ -11,9 +11,9 @@ SECTION .text
 	%include "DisplayCharOut.asm"
 	%include "DisplayContext.asm"
 	%include "DisplayCursor.asm"
-	%include "DisplayFormat.asm"
 	%include "DisplayPage.asm"
 	%include "DisplayPrint.asm"
+	%include "DisplayFormat.asm"
 %endif
 
 %ifdef INCLUDE_FILE_LIBRARY

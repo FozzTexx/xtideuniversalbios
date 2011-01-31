@@ -1,8 +1,4 @@
-; File name		:	DisplayFormat.asm
 ; Project name	:	Assembly Library
-; Created date	:	29.6.2010
-; Last update	:	8.10.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for displaying formatted strings.
 
 ; Section containing code
@@ -24,18 +20,13 @@ SECTION .text
 ALIGN JUMP_ALIGN
 DisplayFormat_ParseCharacters:
 	call	ReadCharacterAndTestForNull
-	jz		SHORT .QuitCharacterParsing
+	jz		SHORT ReturnFromFormat
 
 	ePUSH_T	cx, DisplayFormat_ParseCharacters	; Return address
 	xor		cx, cx								; Initial placeholder size
 	cmp		al, '%'								; Format specifier?
-	je		SHORT ParseFormatSpecifier
-	jmp		DisplayPrint_CharacterFromAL
-
-ALIGN JUMP_ALIGN
-.QuitCharacterParsing:
-	ret
-
+	jne		SHORT DisplayPrint_CharacterFromAL
+	; Fall to ParseFormatSpecifier
 
 ;--------------------------------------------------------------------
 ; ParseFormatSpecifier
@@ -52,21 +43,21 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		AX, BX, CX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 ParseFormatSpecifier:
 	call	ReadCharacterAndTestForNull
 	call	Char_IsDecimalDigitInAL
-	jc		SHORT .ParsePlaceholderSizeDigitFromALtoCX
+	jc		SHORT ParsePlaceholderSizeDigitFromALtoCX
 	call	GetFormatSpecifierParserToAX
 	call	ax				; Parser function
 	dec		bp
 	dec		bp				; SS:BP now points to next parameter
 	test	cx, cx
 	jnz		SHORT PrependOrAppendSpaces
+ReturnFromFormat:
 	ret
 
 ;--------------------------------------------------------------------
-; .ParsePlaceholderSizeDigitFromALtoCX
+; ParsePlaceholderSizeDigitFromALtoCX
 ;	Parameters:
 ;		AL:		Digit character from format string
 ;		CX:		Current placeholder size
@@ -78,7 +69,7 @@ ParseFormatSpecifier:
 ;		AX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-.ParsePlaceholderSizeDigitFromALtoCX:
+ParsePlaceholderSizeDigitFromALtoCX:
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fpCursorPosition], di
 	sub		al, '0'				; Digit '0'...'9' to integer 0...9
 	mov		ah, cl				; Previous number parameter to AH

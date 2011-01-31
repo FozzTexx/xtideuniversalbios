@@ -1,8 +1,4 @@
-; File name		:	DisplayCursor.asm
 ; Project name	:	Assembly Library
-; Created date	:	26.6.2010
-; Last update	:	15.7.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for managing display cursor.
 
 ; Section containing code
@@ -38,30 +34,14 @@ DisplayCursor_SetShapeFromAX:
 ALIGN JUMP_ALIGN
 DisplayCursor_SetCoordinatesFromAX:
 	xchg	dx, ax
-	call	.ConvertOffsetToAXfromCoordinatesInDX
-	add		ax, [VIDEO_BDA.wPageOffset]				; AX = Video RAM offset
-	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fpCursorPosition], ax
-	xchg	di, ax
-	ret
-
-;--------------------------------------------------------------------
-; .ConvertOffsetToAXfromCoordinatesInDX
-;	Parameters:
-;		DL:		Cursor column (X-coordinate)
-;		DH:		Cursor row (Y-coordinate)
-;		DS:		BDA segment (zero)
-;	Returns:
-;		AX:		Offset to cursor location in selected page
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-.ConvertOffsetToAXfromCoordinatesInDX:
 	mov		ax, [VIDEO_BDA.wColumns]		; Column count, 40 or 80
 	mul		dh								; AX = Column count * row index
-	add		al, dl							; Add column offset
-	adc		ah, 0
+	xor		dh, dh
+	add		ax, dx							; Add column offset
 	shl		ax, 1							; Convert to WORD offset
+	add		ax, [VIDEO_BDA.wPageOffset]		; AX = Video RAM offset
+	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fpCursorPosition], ax
+	xchg	di, ax
 	ret
 
 
@@ -144,7 +124,6 @@ DisplayCursor_SynchronizeShapeToHardware:
 	mov		ah, SET_TEXT_MODE_CURSOR_SHAPE
 	int		BIOS_VIDEO_INTERRUPT_10h
 	pop		cx
-ALIGN JUMP_ALIGN, ret
 .Return:
 	ret
 
@@ -174,7 +153,6 @@ DisplayCursor_SynchronizeCoordinatesToHardware:
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
-;ALIGN JUMP_ALIGN
 .SetHardwareCursorCoordinatesFromAX:
 	push	bx
 	xchg	dx, ax							; BIOS wants coordinates in DX

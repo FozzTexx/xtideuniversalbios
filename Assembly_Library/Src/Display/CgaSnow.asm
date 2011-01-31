@@ -1,8 +1,4 @@
-; File name		:	CgaSnow.asm
 ; Project name	:	Assembly Library
-; Created date	:	8.10.2010
-; Last update	:	12.10.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for preventing CGA snow.
 
 ; Section containing code

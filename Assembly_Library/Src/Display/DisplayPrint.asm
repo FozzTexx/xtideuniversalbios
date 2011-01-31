@@ -1,8 +1,4 @@
-; File name		:	Display.asm
 ; Project name	:	Assembly Library
-; Created date	:	26.6.2010
-; Last update	:	7.12.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for display output.
 
 ; Section containing code
