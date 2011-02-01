@@ -1,4 +1,4 @@
-; Project name	:	IDE BIOS
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Various floppy drive related functions that
 ;					Boot Menu uses.
 
@@ -19,13 +19,11 @@ SECTION .text
 ;--------------------------------------------------------------------
 FloppyDrive_IsInt40hInstalled:
 	cmp		WORD [es:INTV_FLOPPY_FUNC*4+2], 0C000h	; Any ROM segment?
+%ifdef USE_AT	; No need to verify on XT systems.
 	jb		SHORT .Int40hHandlerIsNotInstalled
-%ifdef USE_AT
 	call	.VerifyInt40hHandlerSinceSomeBiosesSimplyReturnFromInt40h
-%else
-	clc		; INT 40h installed. No need to verify on XT systems.
-%endif
 .Int40hHandlerIsNotInstalled:
+%endif
 	cmc
 	ret
 
