@@ -1,8 +1,4 @@
-; File name		:	MenuitemPrint.asm
 ; Project name	:	XTIDE Universal BIOS Configurator v2
-; Created date	:	5.10.2010
-; Last update	:	5.12.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for printing MENUITEM name and value.
 
 ; Section containing code
@@ -104,7 +100,7 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 .FormatValueStringFromItemInDSSItoBufferInSSBP:
 	push	es
-	call	Registers_CopySSBPtoESDI
+	Registers_CopySSBPtoESDI
 	mov		al, '['
 	stosb
 	call	[si+MENUITEM.fnFormatValue]

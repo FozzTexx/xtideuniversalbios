@@ -1,8 +1,4 @@
-; File name		:	Bit.asm
 ; Project name	:	Assembly Library
-; Created date	:	3.9.2010
-; Last update	:	3.9.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for bit handling.
 
 ; Section containing code
@@ -50,11 +46,11 @@ ALIGN JUMP_ALIGN
 .BitScanLoop:
 	shr		ax, 1
 	jz		SHORT .LastBitInCF
-	adc		cx, BYTE 0
+	adc		cl, ch
 	jmp		SHORT .BitScanLoop
 ALIGN JUMP_ALIGN
 .LastBitInCF:
-	adc		cx, BYTE 0
+	adc		cl, ch
 
 	pop		ax
 	ret

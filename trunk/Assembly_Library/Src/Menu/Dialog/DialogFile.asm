@@ -1,8 +1,4 @@
-; File name		:	DialogFile.asm
 ; Project name	:	Assembly Library
-; Created date	:	6.9.2010
-; Last update	:	18.11.2010
-; Author		:	Tomi Tilli
 ; Description	:	Displays file dialog.
 
 
@@ -48,7 +44,7 @@ FileEventHandler:
 ALIGN JUMP_ALIGN
 .ItemSelectedFromCX:
 	call	LoadItemStringBufferToESDI
-	call	Registers_CopyESDItoDSSI
+	Registers_CopyESDItoDSSI
 	call	ItemLineSplitter_GetLineToDSSIandLengthToCXfromStringInDSSIwithIndexInCX
 	jmp		ParseSelectionFromItemLineInDSSI
 
@@ -131,7 +127,7 @@ InitializeMenuinitFromSSBP:
 	call	SortDirectoryContentsStringFromESDIwithCountInCX
 	call	RemoveLastLFandTerminateESDIwithNull
 
-	call	Registers_CopySSBPtoDSSI
+	Registers_CopySSBPtoDSSI
 	xor		ax, ax
 	call	Dialog_EventInitializeMenuinitFromDSSIwithHighlightedItemInAX
 	call	GetInfoLinesToCXandDialogFlagsToAX
@@ -201,7 +197,7 @@ CreateStringFromCurrentDirectoryContentsToESDI:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 .ClearDLifInRootDirectory:
-	call	Registers_CopyESDItoDSSI
+	Registers_CopyESDItoDSSI
 	call	Directory_WriteCurrentPathToDSSI
 	mov		dl, [si]
 	ret
@@ -377,7 +373,7 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 SortDirectoryContentsStringFromESDIwithCountInCX:
-	call	Registers_CopyESDItoDSSI
+	Registers_CopyESDItoDSSI
 	call	.AddDirectoryContentsStringLengthToDI
 	mov		bx, .FileStringComparator
 	xchg	dx, cx
