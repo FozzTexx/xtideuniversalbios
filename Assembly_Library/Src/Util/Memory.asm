@@ -1,8 +1,4 @@
-; File name		:	Memory.asm
 ; Project name	:	Assembly Library
-; Created date	:	14.7.2010
-; Last update	:	24.10.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for memory access.
 
 ; Section containing code
@@ -25,7 +21,7 @@ SECTION .text
 	push	cx
 
 	shr		cx, 1			; Operate with WORDs for performance
-	jcxz	%%HandleRemainingByte
+	jz	%%HandleRemainingByte
 	%1		%2w
 %%HandleRemainingByte:
 	jnc		SHORT %%OperationCompleted
@@ -69,7 +65,7 @@ Memory_ZeroSSBPwithSizeInCX:
 	push	es
 	push	di
 	push	ax
-	call	Registers_CopySSBPtoESDI
+	Registers_CopySSBPtoESDI
 	call	Memory_ZeroESDIwithSizeInCX
 	pop		ax
 	pop		di

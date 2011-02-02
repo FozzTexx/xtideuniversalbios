@@ -1,8 +1,4 @@
-; File name		:	Registers.asm
 ; Project name	:	Assembly Library
-; Created date	:	24.10.2010
-; Last update	:	6.12.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for register operations.
 
 ;--------------------------------------------------------------------
@@ -89,33 +85,29 @@ Registers_ExchangeDSSIwithESDI:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-Registers_CopySSBPtoESDI:
+%macro Registers_CopySSBPtoESDI 0
 	push	ss
 	pop		es
 	mov		di, bp
-	ret
+%endmacro
 
-ALIGN JUMP_ALIGN
-Registers_CopySSBPtoDSSI:
+%macro Registers_CopySSBPtoDSSI 0
 	push	ss
 	pop		ds
 	mov		si, bp
-	ret
+%endmacro
 
-ALIGN JUMP_ALIGN
-Registers_CopyDSSItoESDI:
+%macro Registers_CopyDSSItoESDI 0
 	push	ds
 	pop		es
 	mov		di, si
-	ret
+%endmacro
 
-ALIGN JUMP_ALIGN
-Registers_CopyESDItoDSSI:
+%macro Registers_CopyESDItoDSSI 0
 	push	es
 	pop		ds
 	mov		si, di
-	ret
+%endmacro
 
 
 ;--------------------------------------------------------------------

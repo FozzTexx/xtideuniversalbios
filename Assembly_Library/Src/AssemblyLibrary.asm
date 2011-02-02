@@ -70,8 +70,8 @@ SECTION .text
 	%ifndef EXCLUDE_BIT_UTILS
 		%include "Bit.asm"
 	%endif
-	%include "Memory.asm"
 	%include "Registers.asm"
+	%include "Memory.asm"
 	%include "Size.asm"
 	%ifndef EXCLUDE_SORT_UTILS
 		%include "Sort.asm"

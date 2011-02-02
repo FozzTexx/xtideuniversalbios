@@ -1,8 +1,4 @@
-; File name		:	Menuitem.asm
 ; Project name	:	XTIDE Universal BIOS Configurator v2
-; Created date	:	5.10.2010
-; Last update	:	19.11.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for accessing MENUITEM structs.
 
 ; Section containing code
@@ -35,7 +31,7 @@ Menuitem_DisplayHelpMessageFromDSSI:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Menuitem_ActivateMultichoiseSelectionForMenuitemInDSSI:
-	call	Registers_CopyDSSItoESDI
+	Registers_CopyDSSItoESDI
 
 	mov		cx, DIALOG_INPUT_size
 	call	Memory_ReserveCXbytesFromStackToDSSI
@@ -48,7 +44,7 @@ Menuitem_ActivateMultichoiseSelectionForMenuitemInDSSI:
 
 	cmp		ax, BYTE NO_ITEM_SELECTED
 	je		SHORT .NothingToChange
-	call	Registers_CopyESDItoDSSI
+	Registers_CopyESDItoDSSI
 	call	Menuitem_StoreValueFromAXtoMenuitemInDSSI
 .NothingToChange:
 	add		sp, BYTE DIALOG_INPUT_size
@@ -66,7 +62,7 @@ Menuitem_ActivateMultichoiseSelectionForMenuitemInDSSI:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Menuitem_ActivateHexInputForMenuitemInDSSI:
-	call	Registers_CopyDSSItoESDI
+	Registers_CopyDSSItoESDI
 
 	mov		cx, WORD_DIALOG_IO_size
 	call	Memory_ReserveCXbytesFromStackToDSSI
@@ -85,7 +81,7 @@ Menuitem_ActivateHexInputForMenuitemInDSSI:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Menuitem_ActivateUnsignedInputForMenuitemInDSSI:
-	call	Registers_CopyDSSItoESDI
+	Registers_CopyDSSItoESDI
 
 	mov		cx, WORD_DIALOG_IO_size
 	call	Memory_ReserveCXbytesFromStackToDSSI
@@ -103,7 +99,7 @@ ContinueWordInput:
 	cmp		BYTE [si+WORD_DIALOG_IO.bUserCancellation], TRUE
 	je		SHORT .NothingToChange
 	mov		ax, [si+WORD_DIALOG_IO.wReturnWord]
-	call	Registers_CopyESDItoDSSI
+	Registers_CopyESDItoDSSI
 	call	Menuitem_StoreValueFromAXtoMenuitemInDSSI
 .NothingToChange:
 	add		sp, BYTE WORD_DIALOG_IO_size

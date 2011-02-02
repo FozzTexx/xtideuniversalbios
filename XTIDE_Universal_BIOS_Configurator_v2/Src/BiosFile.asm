@@ -1,8 +1,4 @@
-; File name		:	BiosFile.asm
 ; Project name	:	XTIDE Univeral BIOS Configurator v2
-; Created date	:	10.10.2010
-; Last update	:	6.12.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for loading and saving BIOS image file.
 
 ; Section containing code
@@ -104,7 +100,7 @@ ALIGN JUMP_ALIGN
 .StoreFileNameToCfgvarsFromESDI:
 	push	cx
 
-	call	Registers_CopyESDItoDSSI	; File name in DS:SI
+	Registers_CopyESDItoDSSI	; File name in DS:SI
 	push	cs
 	pop		es
 	mov		di, g_cfgVars+CFGVARS.szOpenedFile
@@ -160,7 +156,7 @@ BiosFile_SaveRamBufferToFileInDSSI:
 
 	call	Buffers_GenerateChecksum
 	call	Buffers_GetFileBufferToESDI
-	call	Registers_CopyESDItoDSSI
+	Registers_CopyESDItoDSSI
 	xor		dx, dx
 	mov		cx, [cs:g_cfgVars+CFGVARS.wImageSizeInWords]
 	shl		cx, 1
