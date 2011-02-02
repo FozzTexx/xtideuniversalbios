@@ -249,7 +249,10 @@ ALIGN JUMP_ALIGN
 .DrawScrollbarCharacter:
 	call	MenuBorders_AdjustDisplayContextForDrawingBorders
 	mov		ax, cx
-	call	MenuLocation_GetScrollbarCoordinatesToAXforItemInAX
+
+	call	MenuLocation_GetTextCoordinatesToAXforItemInAX
+	add		al, [bp+MENUINIT.bWidth]
+	sub		al, MENU_TEXT_COLUMN_OFFSET*2
 	CALL_DISPLAY_LIBRARY SetCursorCoordinatesFromAX
 
 	mov		di, cx

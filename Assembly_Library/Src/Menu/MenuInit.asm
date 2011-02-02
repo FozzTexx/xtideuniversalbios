@@ -1,8 +1,4 @@
-; File name		:	MenuInit.asm
 ; Project name	:	Assembly Library
-; Created date	:	13.7.2010
-; Last update	:	22.11.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for initializing menu system.
 
 ; Section containing code
@@ -24,9 +20,9 @@ MenuInit_DisplayMenuWithHandlerInBXandUserDataInDXAX:
 	push	ds
 	LOAD_BDA_SEGMENT_TO ds, cx
 	push	WORD [BDA.wVidCurShape]
-	eENTER_STRUCT MENU_size
+	mov		cl, MENU_size
+	eENTER_STRUCT cx
 
-	mov		cx, MENU_size
 	call	Memory_ZeroSSBPwithSizeInCX
 	call	MenuInit_EnterMenuWithHandlerInBXandUserDataInDXAX
 	mov		ax, [bp+MENUINIT.wHighlightedItem]
@@ -58,7 +54,7 @@ MenuInit_EnterMenuWithHandlerInBXandUserDataInDXAX:
 
 	mov		ax, CURSOR_HIDDEN
 	CALL_DISPLAY_LIBRARY SetCursorShapeFromAX
-	call	MenuEvent_InitializeMenuinit		; User initialization
+	call	MenuEvent_InitializeMenuinit	; User initialization
 	call	MenuInit_RefreshMenuWindow
 	jmp		MenuLoop_Enter
 

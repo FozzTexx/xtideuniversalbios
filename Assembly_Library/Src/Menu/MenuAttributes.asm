@@ -1,8 +1,4 @@
-; File name		:	MenuAttributes.asm
 ; Project name	:	Assembly Library
-; Created date	:	15.7.2010
-; Last update	:	9.8.2010
-; Author		:	Tomi Tilli
 ; Description	:	Finds suitable character attribute for
 ;					color, B/W and monochrome displays.
 

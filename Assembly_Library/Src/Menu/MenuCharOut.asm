@@ -1,8 +1,4 @@
-; File name		:	MenuCharOut.asm
 ; Project name	:	Assembly Library
-; Created date	:	15.7.2010
-; Last update	:	12.10.2010
-; Author		:	Tomi Tilli
 ; Description	:	Character out function for printing withing menu window.
 
 ; Section containing code

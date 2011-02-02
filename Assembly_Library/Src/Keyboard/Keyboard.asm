@@ -1,8 +1,4 @@
-; File name		:	Keyboard.asm
 ; Project name	:	Assembly Library
-; Created date	:	5.7.2010
-; Last update	:	24.10.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for managing keyboard.
 
 BUFFER_SIZE_FOR_WORD_INPUT		EQU		6	; 5 chars + NULL

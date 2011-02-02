@@ -1,8 +1,4 @@
-; File name		:	Menu.asm
 ; Project name	:	Assembly Library
-; Created date	:	3.8.2010
-; Last update	:	22.11.2010
-; Author		:	Tomi Tilli
 ; Description	:	Menu Library functions for CALL_MENU_LIBRARY macro
 ;					that users should use to make library call.
 

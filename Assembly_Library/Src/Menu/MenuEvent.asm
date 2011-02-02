@@ -1,8 +1,4 @@
-; File name		:	MenuEvent.asm
 ; Project name	:	Assembly Library
-; Created date	:	13.7.2010
-; Last update	:	12.10.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for initializing menu system.
 
 ; Section containing code
