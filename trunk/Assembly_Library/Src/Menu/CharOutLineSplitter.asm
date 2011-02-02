@@ -1,8 +1,4 @@
-; File name		:	CharOutLineSplitter.asm
 ; Project name	:	Assembly Library
-; Created date	:	11.10.2010
-; Last update	:	12.10.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for splitting menu lines during character output.
 
 ; Section containing code
@@ -19,33 +15,23 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 CharOutLineSplitter_PrepareForPrintingTextLines:
-	call	.GetLastTextLineColumnOffsetToDX
-	call	CharOutLineSplitter_GetFirstTextLineColumnOffsetToAX
-	mov		ah, dl			; AL = Text line first column, AH = Text line last column
+	; Get first text line column offset to DX
+	call	CharOutLineSplitter_GetFirstBorderLineColumnOffsetToAX
+	add		al, MENU_TEXT_COLUMN_OFFSET<<1
+	xchg	dx, ax
+
+	; Get last text line column offset to AX
+	call	MenuLocation_GetMaxTextLineLengthToAX
+	shl		ax, 1			; Characters to BYTEs
+	add		ax, dx
+
+	xchg	ax, dx			; AL = First text line column offset
+	mov		ah, dl			; AH = Last text line column offset
 	CALL_DISPLAY_LIBRARY SetCharacterOutputParameterFromAX
 	ret
 
-;--------------------------------------------------------------------
-; .GetLastTextLineColumnOffsetToDX
-;	Parameters:
-;		SS:BP:	Ptr to MENU
-;	Returns:
-;		DX:		Offset to last (allowed) character in text line
-;	Corrupts registers:
-;		AX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-.GetLastTextLineColumnOffsetToDX:
-	call	CharOutLineSplitter_GetFirstTextLineColumnOffsetToAX
-	xchg	dx, ax
-	call	MenuLocation_GetMaxTextLineLengthToAX
-	shl		ax, 1
-	add		dx, ax
-	ret
-
 
 ;--------------------------------------------------------------------
-; CharOutLineSplitter_GetFirstTextLineColumnOffsetToAX
 ; CharOutLineSplitter_GetFirstBorderLineColumnOffsetToAX
 ;	Parameters:
 ;		SS:BP:	Ptr to MENU
@@ -54,12 +40,6 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-CharOutLineSplitter_GetFirstTextLineColumnOffsetToAX:
-	call	CharOutLineSplitter_GetFirstBorderLineColumnOffsetToAX
-	add		al, MENU_TEXT_COLUMN_OFFSET<<1
-	ret
-
 ALIGN JUMP_ALIGN
 CharOutLineSplitter_GetFirstBorderLineColumnOffsetToAX:
 	call	MenuLocation_GetTitleBordersTopLeftCoordinatesToAX
@@ -110,20 +90,10 @@ CharOutLineSplitter_MovePartialWordToNewTextLine:
 	push	si
 	push	cx
 	push	ax
-
-	call	GetOffsetToPartialWordToSIandSizeToCX
-	call	MenuCharOut_PrintLFCRandAdjustOffsetForStartOfLine
-	jcxz	.NothingToMove
-	call	MovePartialWordFromPreviousLineInESSItoNewLineInESDIwithSizeInCX
-.NothingToMove:
-	pop		ax
-	pop		cx
-	pop		si
-	ret
-
+	; Fall to .GetOffsetToPartialWordToSIandSizeToCX
 
 ;--------------------------------------------------------------------
-; GetOffsetToPartialWordToSIandSizeToCX
+; .GetOffsetToPartialWordToSIandSizeToCX
 ;	Parameters:
 ;		ES:DI:	Ptr to space before border character
 ;	Returns:
@@ -132,8 +102,7 @@ CharOutLineSplitter_MovePartialWordToNewTextLine:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-GetOffsetToPartialWordToSIandSizeToCX:
+.GetOffsetToPartialWordToSIandSizeToCX:
 	xor		cx, cx
 	mov		si, di
 ALIGN JUMP_ALIGN
@@ -149,11 +118,24 @@ ALIGN JUMP_ALIGN
 	inc		si
 	inc		si			; SI now points one past space
 	shl		cx, 1		; Characters to bytes
-	ret
-
+	; Fall to .ChangeLine
 
 ;--------------------------------------------------------------------
-; MovePartialWordFromPreviousLineInESSItoNewLineInESDIwithSizeInCX
+; .ChangeLine
+;	Parameters:
+;		Nothing
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, DX
+;--------------------------------------------------------------------
+.ChangeLine:
+	call	MenuCharOut_PrintLFCRandAdjustOffsetForStartOfLine
+	jcxz	.ReturnFromMovePartialWordToNewTextLine
+	; Fall to .MovePartialWordFromPreviousLineInESSItoNewLineInESDIwithSizeInCX
+
+;--------------------------------------------------------------------
+; .MovePartialWordFromPreviousLineInESSItoNewLineInESDIwithSizeInCX
 ;	Parameters:
 ;		CX:		Number of BYTEs in partial word
 ;		DS:		BDA segment (zero)
@@ -164,8 +146,7 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		AX, CX, DX, SI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-MovePartialWordFromPreviousLineInESSItoNewLineInESDIwithSizeInCX:
+.MovePartialWordFromPreviousLineInESSItoNewLineInESDIwithSizeInCX:
 	push	si
 	push	cx
 	WAIT_RETRACE_IF_NECESSARY_THEN rep movsb
@@ -177,4 +158,9 @@ MovePartialWordFromPreviousLineInESSItoNewLineInESDIwithSizeInCX:
 	mov		al, ' '
 	call	DisplayPrint_RepeatCharacterFromALwithCountInCX
 	mov		di, si
+
+.ReturnFromMovePartialWordToNewTextLine:
+	pop		ax
+	pop		cx
+	pop		si
 	ret

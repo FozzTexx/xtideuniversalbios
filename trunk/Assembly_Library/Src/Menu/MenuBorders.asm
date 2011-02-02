@@ -1,8 +1,4 @@
-; File name		:	MenuBorders.asm
 ; Project name	:	Assembly Library
-; Created date	:	14.7.2010
-; Last update	:	9.12.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for drawing menu borders.
 
 ; Struct containing border characters for different types of menu window lines
@@ -55,6 +51,25 @@ MenuBorders_RedrawBottomBorderLine:
 
 
 ;--------------------------------------------------------------------
+; MenuBorders_RefreshItemBorders
+;	Parameters
+;		SS:BP:	Ptr to MENU
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, BX, CX, DX, SI, DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+MenuBorders_RefreshItemBorders:
+	call	MenuBorders_AdjustDisplayContextForDrawingBorders
+	call	MenuLocation_GetItemBordersTopLeftCoordinatesToAX
+	CALL_DISPLAY_LIBRARY SetCursorCoordinatesFromAX
+
+	call	MenuBorders_GetNumberOfMiddleCharactersToDX
+	jmp		SHORT RefreshItemBorders
+
+
+;--------------------------------------------------------------------
 ; MenuBorders_AdjustDisplayContextForDrawingBorders
 ;	Parameters
 ;		SS:BP:	Ptr to MENU
@@ -77,25 +92,6 @@ MenuBorders_AdjustDisplayContextForDrawingBorders:
 
 	mov		si, ATTRIBUTE_CHARS.cBordersAndBackground
 	jmp		MenuAttribute_SetToDisplayContextFromTypeInSI
-
-
-;--------------------------------------------------------------------
-; MenuBorders_RefreshItemBorders
-;	Parameters
-;		SS:BP:	Ptr to MENU
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, BX, CX, DX, SI, DI
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-MenuBorders_RefreshItemBorders:
-	call	MenuBorders_AdjustDisplayContextForDrawingBorders
-	call	MenuLocation_GetItemBordersTopLeftCoordinatesToAX
-	CALL_DISPLAY_LIBRARY SetCursorCoordinatesFromAX
-
-	call	MenuBorders_GetNumberOfMiddleCharactersToDX
-	jmp		SHORT RefreshItemBorders
 
 
 ;--------------------------------------------------------------------
@@ -160,14 +156,11 @@ ALIGN JUMP_ALIGN
 RefreshItemBorders:
 	call	DrawSeparationBorderLine
 	call	MenuScrollbars_GetMaxVisibleItemsOnPageToCX
-DrawTextBorderLinesByCXtimes:
-	mov		bx, DrawTextBorderLine
-	; Fall to DrawBorderLinesByCXtimes
+	; Fall to DrawTextBorderLinesByCXtimes
 
 ;--------------------------------------------------------------------
-; DrawBorderLinesByCXtimes
+; DrawTextBorderLinesByCXtimes
 ;	Parameters
-;		BX:		Offset to border drawing function
 ;		CX:		Number of border lines to draw
 ;		DX:		Number of times to repeat middle character
 ;		SS:BP:	Ptr to MENU
@@ -176,13 +169,13 @@ DrawTextBorderLinesByCXtimes:
 ;	Corrupts registers:
 ;		AX, CX, SI, DI
 ;--------------------------------------------------------------------
-DrawBorderLinesByCXtimes:
-	jcxz	.Return
+DrawTextBorderLinesByCXtimes:
+	jcxz	.NoBorderLinesToDraw
 ALIGN JUMP_ALIGN
 .DrawBordersWithFunctionInBX:
-	call	bx
+	call	DrawTextBorderLine
 	loop	.DrawBordersWithFunctionInBX
-.Return:
+.NoBorderLinesToDraw:
 	ret
 
 
@@ -227,8 +220,9 @@ DrawBottomBorderLine:
 
 ALIGN JUMP_ALIGN
 DrawBottomShadowLine:
-	mov		ax, 1		; Increment column
-	call	MenuLocation_MoveCursorByALcolumnsAndAHrows
+	CALL_DISPLAY_LIBRARY GetSoftwareCoordinatesToAX
+	inc		ax			; Move one column left
+	CALL_DISPLAY_LIBRARY SetCursorCoordinatesFromAX
 	inc		dx			; Increment repeat count...
 	inc		dx			; ...for both corner characters
 	call	PrintShadowCharactersByDXtimes
@@ -318,17 +312,16 @@ PrintShadowCharactersByDXtimes:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 PrintBorderCharactersFromCSSI:
-	cld
 	eSEG	cs
-	lodsb			; Load from [si+BORDER_CHARS.cLeft] to AL
+	lodsb			; Load from [cs:si+BORDER_CHARS.cLeft] to AL
 	call	MenuBorders_PrintSingleBorderCharacterFromAL
 
 	eSEG	cs
-	lodsb			; Load from [si+BORDER_CHARS.cMiddle] to AL
+	lodsb			; Load from [cs:si+BORDER_CHARS.cMiddle] to AL
 	call	MenuBorders_PrintMultipleBorderCharactersFromAL
 
 	eSEG	cs
-	lodsb			; Load from [si+BORDER_CHARS.cRight] to AL
+	lodsb			; Load from [cs:si+BORDER_CHARS.cRight] to AL
 	; Fall to MenuBorders_PrintSingleBorderCharacterFromAL
 
 ;--------------------------------------------------------------------
@@ -381,13 +374,16 @@ DrawTimeoutCounterString:
 ;	Corrupts registers:
 ;		AX, SI, DI
 ;--------------------------------------------------------------------
-;ALIGN JUMP_ALIGN
 .PrintTimeoutStringWithSecondsInAX:
-	push	bp
-
+	; Get attribute to AX
 	xchg	di, ax
+	mov		si, ATTRIBUTE_CHARS.cNormalTimeout
+	cmp		di, BYTE MENU_TIMEOUT_SECONDS_FOR_HURRY
+	eCMOVB	si, ATTRIBUTE_CHARS.cHurryTimeout
+	call	MenuAttribute_GetToAXfromTypeInSI
+
+	push	bp
 	mov		bp, sp
-	call	.GetTimeoutAttributeToAXfromSecondsInDI
 	mov		si, .szSelectionTimeout
 	push	ax			; Push attribute
 	push	di			; Push seconds
@@ -398,22 +394,6 @@ DrawTimeoutCounterString:
 	db		DOUBLE_BOTTOM_LEFT_CORNER
 	db		DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL
 	db		"%AAutoselection in %2u s",NULL
-
-;--------------------------------------------------------------------
-; .GetTimeoutAttributeToAXfromSecondsInDI
-;	Parameters
-;		DI:		Seconds to print
-;	Returns:
-;		AX:		Attribute byte for seconds
-;	Corrupts registers:
-;		SI
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-.GetTimeoutAttributeToAXfromSecondsInDI:
-	mov		si, ATTRIBUTE_CHARS.cNormalTimeout
-	cmp		di, BYTE MENU_TIMEOUT_SECONDS_FOR_HURRY
-	eCMOVB	si, ATTRIBUTE_CHARS.cHurryTimeout
-	jmp		MenuAttribute_GetToAXfromTypeInSI
 
 
 ; Lookup tables for border characters

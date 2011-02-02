@@ -1,8 +1,4 @@
-; File name		:	AssemblyLibrary.inc
 ; Project name	:	Assembly Library
-; Created date	:	2.7.2010
-; Last update	:	11.12.2010
-; Author		:	Tomi Tilli
 ; Description	:	Common defines for all library functions.
 %ifndef ASSEMBLY_LIBRARY_INC
 %define ASSEMBLY_LIBRARY_INC
@@ -15,6 +11,7 @@
 %include "Debug.inc"
 %include "DosFunctions.inc"
 %include "File.inc"
+%include "Macros.inc"
 %include "Math.inc"
 
 ; Library dependencies
