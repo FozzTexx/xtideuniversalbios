@@ -1,8 +1,4 @@
-; File name		:	MenuLoop.asm
 ; Project name	:	Assembly Library
-; Created date	:	22.7.2010
-; Last update	:	25.11.2010
-; Author		:	Tomi Tilli
 ; Description	:	Menu loop for waiting keystrokes.
 
 ; Section containing code
@@ -21,16 +17,15 @@ ALIGN JUMP_ALIGN
 MenuLoop_Enter:
 	call	KeystrokeProcessing
 	call	TimeoutProcessing
-	call	IdleTimeProcessing
+	call	MenuEvent_IdleProcessing	; User idle processing
 	test	BYTE [bp+MENU.bFlags], FLG_MENU_EXIT
 	jz		SHORT MenuLoop_Enter
 	ret
 
 
 ;--------------------------------------------------------------------
-; IdleTimeProcessing
-; TimeoutProcessing
 ; KeystrokeProcessing
+; TimeoutProcessing
 ;	Parameters
 ;		SS:BP:	Ptr to MENU
 ;	Returns:
@@ -39,21 +34,18 @@ MenuLoop_Enter:
 ;		All, except SS:BP
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-IdleTimeProcessing:
-	jmp		MenuEvent_IdleProcessing		; User idle processing
+KeystrokeProcessing:
+	call	Keyboard_GetKeystrokeToAX
+	jnz		SHORT ProcessKeystrokeFromAX
+NoKeystrokeToProcess:
+	ret
 
 ALIGN JUMP_ALIGN
 TimeoutProcessing:
 	call	MenuTime_UpdateSelectionTimeout
+	jnc		NoKeystrokeToProcess
 	mov		ah, MENU_KEY_ENTER				; Fake ENTER to select item
-	jc		SHORT ProcessKeystrokeFromAX	; Process faked ENTER
-	ret
-
-ALIGN JUMP_ALIGN
-KeystrokeProcessing:
-	call	Keyboard_GetKeystrokeToAX
-	jnz		SHORT ProcessKeystrokeFromAX
-	ret
+	; Fall to ProcessKeystrokeFromAX
 
 
 ;--------------------------------------------------------------------
@@ -73,11 +65,8 @@ ProcessKeystrokeFromAX:
 	call	MenuTime_StopSelectionTimeout
 	xchg	ax, cx
 	call	.ProcessMenuSystemKeystrokeFromAX
-	jc		SHORT .Return
+	jc		SHORT NoKeystrokeToProcess
 	jmp		MenuEvent_KeyStrokeInAX
-ALIGN JUMP_ALIGN, ret
-.Return:
-	ret
 
 ;--------------------------------------------------------------------
 ; .ProcessMenuSystemKeystrokeFromAX

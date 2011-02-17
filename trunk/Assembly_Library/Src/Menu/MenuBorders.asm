@@ -393,7 +393,7 @@ DrawTimeoutCounterString:
 .szSelectionTimeout:
 	db		DOUBLE_BOTTOM_LEFT_CORNER
 	db		DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL
-	db		"%AAutoselection in %2u s",NULL
+	db		"%ASelection in %2u s",NULL
 
 
 ; Lookup tables for border characters

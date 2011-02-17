@@ -13,6 +13,7 @@
 %include "File.inc"
 %include "Macros.inc"
 %include "Math.inc"
+%include "Registers.inc"
 
 ; Library dependencies
 %ifdef INCLUDE_MENU_DIALOGS
