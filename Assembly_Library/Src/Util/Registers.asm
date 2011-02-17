@@ -26,9 +26,9 @@ Registers_ExchangeDSSIwithESDI:
 
 ;--------------------------------------------------------------------
 ; Registers_CopySSBPtoESDI
-; Registers_CopySSBPtoDSSI (uncommented to save bytes)
-; Registers_CopyDSSItoESDI (uncommented to save bytes)
-; Registers_CopyESDItoDSSI (uncommented to save bytes)
+; Registers_CopySSBPtoDSSI
+; Registers_CopyDSSItoESDI
+; Registers_CopyESDItoDSSI
 ;	Parameters
 ;		Nothing
 ;	Returns:
@@ -41,24 +41,28 @@ Registers_CopySSBPtoESDI:
 	COPY_SSBP_TO_ESDI
 	ret
 
-;ALIGN JUMP_ALIGN
-;Registers_CopySSBPtoDSSI:
-;	COPY_SSBP_TO_DSSI
-;	ret
+%ifdef INCLUDE_MENU_DIALOGS
 
-;ALIGN JUMP_ALIGN
-;Registers_CopyDSSItoESDI:
-;	COPY_DSSI_TO_ESDI
-;	ret
+ALIGN JUMP_ALIGN
+Registers_CopySSBPtoDSSI:
+	COPY_SSBP_TO_DSSI
+	ret
 
-;ALIGN JUMP_ALIGN
-;Registers_CopyESDItoDSSI:
-;	COPY_ESDI_to_DSSI
-;	ret
+ALIGN JUMP_ALIGN
+Registers_CopyDSSItoESDI:
+	COPY_DSSI_TO_ESDI
+	ret
+
+ALIGN JUMP_ALIGN
+Registers_CopyESDItoDSSI:
+	COPY_ESDI_to_DSSI
+	ret
+
+%endif
 
 
 ;--------------------------------------------------------------------
-; Registers_SetZFifNullPointerInDSSI (uncommented to save bytes)
+; Registers_SetZFifNullPointerInDSSI (commented to save bytes)
 ;	Parameters
 ;		DS:SI:	Far pointer
 ;	Returns:

@@ -44,7 +44,7 @@ FileEventHandler:
 ALIGN JUMP_ALIGN
 .ItemSelectedFromCX:
 	call	LoadItemStringBufferToESDI
-	COPY_ESDI_to_DSSI
+	call	Registers_CopyESDItoDSSI
 	call	ItemLineSplitter_GetLineToDSSIandLengthToCXfromStringInDSSIwithIndexInCX
 	jmp		ParseSelectionFromItemLineInDSSI
 
@@ -127,7 +127,7 @@ InitializeMenuinitFromSSBP:
 	call	SortDirectoryContentsStringFromESDIwithCountInCX
 	call	RemoveLastLFandTerminateESDIwithNull
 
-	COPY_SSBP_TO_DSSI
+	call	Registers_CopySSBPtoDSSI
 	xor		ax, ax
 	call	Dialog_EventInitializeMenuinitFromDSSIwithHighlightedItemInAX
 	call	GetInfoLinesToCXandDialogFlagsToAX
@@ -197,7 +197,7 @@ CreateStringFromCurrentDirectoryContentsToESDI:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 .ClearDLifInRootDirectory:
-	COPY_ESDI_to_DSSI
+	call	Registers_CopyESDItoDSSI
 	call	Directory_WriteCurrentPathToDSSI
 	mov		dl, [si]
 	ret
@@ -373,7 +373,7 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 SortDirectoryContentsStringFromESDIwithCountInCX:
-	COPY_ESDI_to_DSSI
+	call	Registers_CopyESDItoDSSI
 	call	.AddDirectoryContentsStringLengthToDI
 	mov		bx, .FileStringComparator
 	xchg	dx, cx
