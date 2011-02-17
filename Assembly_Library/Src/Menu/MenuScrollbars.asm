@@ -1,8 +1,4 @@
-; File name		:	MenuScrollbars.asm
 ; Project name	:	Assembly Library
-; Created date	:	20.7.2010
-; Last update	:	9.12.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for drawing scroll bars over menu borders.
 
 ; Section containing code
@@ -184,7 +180,7 @@ ALIGN JUMP_ALIGN
 
 
 ;--------------------------------------------------------------------
-; .IsItemInCXonVisiblePage
+; MenuScrollbars_IsItemInCXonVisiblePage
 ;	Parameters
 ;		CX:		Item whose visibility is to be checked
 ;		SS:BP:	Ptr to MENU
@@ -196,9 +192,6 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MenuScrollbars_IsItemInCXonVisiblePage:
-	cmp		cx, [bp+MENUINIT.wItems]
-	jae		SHORT .ItemIsNotVisible
-
 	cmp		cx, [bp+MENU.wFirstVisibleItem]
 	jb		SHORT .ItemIsNotVisible
 
@@ -214,7 +207,7 @@ ALIGN JUMP_ALIGN
 
 
 ;--------------------------------------------------------------------
-; MenuLocation_GetLastVisibleItemOnPageToAX
+; MenuScrollbars_GetLastVisibleItemOnPageToAX
 ;	Parameters
 ;		SS:BP:	Ptr to MENU
 ;	Returns:

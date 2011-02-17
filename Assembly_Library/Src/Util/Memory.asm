@@ -65,7 +65,7 @@ Memory_ZeroSSBPwithSizeInCX:
 	push	es
 	push	di
 	push	ax
-	Registers_CopySSBPtoESDI
+	call	Registers_CopySSBPtoESDI
 	call	Memory_ZeroESDIwithSizeInCX
 	pop		ax
 	pop		di

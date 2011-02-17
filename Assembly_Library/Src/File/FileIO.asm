@@ -1,8 +1,4 @@
-; File name		:	FileIO.asm
 ; Project name	:	Assembly Library
-; Created date	:	1.9.2010
-; Last update	:	6.12.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for file access.
 
 ; Section containing code
@@ -174,7 +170,7 @@ SplitLargeReadOrWritesToSmallerBlocks:
 
 ALIGN JUMP_ALIGN
 .TransferNextBytes:
-	call	Registers_NormalizeDSSI
+	call	NormalizeDSSI
 	call	bp						; Transfer function
 	jc		SHORT .ErrorOccurredDuringTransfer
 	add		si, SPLIT_SIZE_FOR_LARGE_TRANSFERS
@@ -183,7 +179,7 @@ ALIGN JUMP_ALIGN
 .TransferRemainingBytes:
 	pop		cx						; CX = Bytes for last transfer
 	jcxz	.ReturnErrorCodeInAX	; No remaining bytes
-	call	Registers_NormalizeDSSI
+	call	NormalizeDSSI
 	call	bp
 .ReturnErrorCodeInAX:
 	pop		cx
@@ -194,6 +190,24 @@ ALIGN JUMP_ALIGN
 .ErrorOccurredDuringTransfer:
 	pop		cx						; Remove bytes for last transfer
 	jmp		SHORT .ReturnErrorCodeInAX
+
+;--------------------------------------------------------------------
+; NormalizeDSSI
+;	Parameters
+;		DS:SI:	Ptr to normalize
+;	Returns:
+;		DS:SI:	Normalized pointer
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+NormalizeDSSI:
+	push	dx
+	push	ax
+	NORMALIZE_FAR_POINTER ds, si, ax, dx
+	pop		ax
+	pop		dx
+	ret
 
 
 ;--------------------------------------------------------------------
