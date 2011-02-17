@@ -1,8 +1,4 @@
-; File name		:	TimerTicks.asm
 ; Project name	:	Assembly Library
-; Created date	:	24.7.2010
-; Last update	:	22.11.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for system timer related operations.
 
 ; System timer ticks 18.2 times per second = 54.9 ms / tick
@@ -26,6 +22,8 @@ SECTION .text
 ;	Corrupts registers:
 ;		CX
 ;--------------------------------------------------------------------
+%ifdef INCLUDE_MENU_DIALOGS
+
 ALIGN JUMP_ALIGN
 TimerTicks_GetHoursToAXfromTicksInDXAX:
 	mov		cx, TICKS_PER_HOUR
@@ -39,6 +37,8 @@ TimerTicks_GetMinutesToAXfromTicksInDX:
 	mov		cx, TICKS_PER_MINUTE
 	div		cx		; Divide DX:AX by CX, Minutes to AX, remainder ticks to DX
 	ret
+
+%endif
 
 ALIGN JUMP_ALIGN
 TimerTicks_GetSecondsToAXfromTicksInDX:
