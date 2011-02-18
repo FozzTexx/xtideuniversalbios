@@ -1,8 +1,4 @@
-; File name		:	ConfigurationMenu.asm
 ; Project name	:	XTIDE Universal BIOS Configurator v2
-; Created date	:	24.10.2010
-; Last update	:	18.11.2010
-; Author		:	Tomi Tilli
 ; Description	:	"Configure XTIDE Universal BIOS" menu structs and functions.
 
 ; Section containing initialized data
@@ -88,32 +84,32 @@ iend
 
 g_MenuitemConfigurationBootLoaderType:
 istruc MENUITEM
-	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiseSelectionForMenuitemInDSSI
+	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiceSelectionForMenuitemInDSSI
 	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromShiftedItemInDSSI
 	at	MENUITEM.szName,			dw	g_szItemCfgBootLoader
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoCfgBootLoader
 	at	MENUITEM.szHelp,			dw	g_szNfoCfgBootLoader
 	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE | FLG_MENUITEM_MODIFY_MENU | FLG_MENUITEM_BYTEVALUE
-	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOISE
+	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOICE
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	ROMVARS.bBootLdrType
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szItemCfgBootLoader
-	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoise,				dw	g_szMultichoiseCfgBootLoader
-	at	MENUITEM.itemValue + ITEM_VALUE.rgwChoiseToValueLookup,		dw	g_rgwChoiseToValueLookupForBootLoaderType
+	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoice,				dw	g_szMultichoiceCfgBootLoader
+	at	MENUITEM.itemValue + ITEM_VALUE.rgwChoiceToValueLookup,		dw	g_rgwChoiceToValueLookupForBootLoaderType
 	at	MENUITEM.itemValue + ITEM_VALUE.rgszValueToStringLookup,	dw	g_rgszValueToStringLookupForBootLoaderType
 iend
 
 g_MenuitemConfigurationFullOperatingMode:
 istruc MENUITEM
-	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiseSelectionForMenuitemInDSSI
+	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiceSelectionForMenuitemInDSSI
 	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromShiftedItemInDSSI
 	at	MENUITEM.szName,			dw	g_szItemCfgFullMode
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoCfgFullMode
 	at	MENUITEM.szHelp,			dw	g_szHelpCfgFullMode
 	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE | FLG_MENUITEM_MODIFY_MENU | FLG_MENUITEM_FLAGVALUE
-	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOISE
+	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOICE
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	ROMVARS.wFlags
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgCfgFullMode
-	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoise,				dw	g_szMultichoiseBooleanFlag
+	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoice,				dw	g_szMultichoiceBooleanFlag
 	at	MENUITEM.itemValue + ITEM_VALUE.rgszValueToStringLookup,	dw	g_rgszValueToStringLookupForFlagBooleans
 	at	MENUITEM.itemValue + ITEM_VALUE.wValueBitmask,				dw	FLG_ROMVARS_FULLMODE
 iend
@@ -149,7 +145,7 @@ istruc MENUITEM
 iend
 
 
-g_rgwChoiseToValueLookupForBootLoaderType:
+g_rgwChoiceToValueLookupForBootLoaderType:
 	dw	BOOTLOADER_TYPE_MENU
 	dw	BOOTLOADER_TYPE_SIMPLE
 	dw	BOOTLOADER_TYPE_NONE
@@ -158,7 +154,7 @@ g_rgszValueToStringLookupForBootLoaderType:
 	dw	g_szValueCfgBootLoaderAthenC
 	dw	g_szUnidentified
 	dw	g_szValueCfgBootLoaderSystem
-	
+
 
 ; Section containing code
 SECTION .text

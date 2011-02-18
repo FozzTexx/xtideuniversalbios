@@ -1,8 +1,4 @@
-; File name		:	FlashMenu.asm
 ; Project name	:	XTIDE Universal BIOS Configurator v2
-; Created date	:	19.11.2010
-; Last update	:	19.12.2010
-; Author		:	Tomi Tilli
 ; Description	:	"Flash EEPROM" menu structs and functions.
 
 ; Section containing initialized data
@@ -38,49 +34,49 @@ iend
 
 g_MenuitemFlashEepromType:
 istruc MENUITEM
-	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiseSelectionForMenuitemInDSSI
+	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiceSelectionForMenuitemInDSSI
 	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromShiftedItemInDSSI
 	at	MENUITEM.szName,			dw	g_szItemFlashEepromType
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoFlashEepromType
 	at	MENUITEM.szHelp,			dw	g_szNfoFlashEepromType
 	at	MENUITEM.bFlags,			db	FLG_MENUITEM_PROGRAMVAR | FLG_MENUITEM_BYTEVALUE | FLG_MENUITEM_VISIBLE
-	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOISE
+	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOICE
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	CFGVARS.bEepromType
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgFlashEepromType
-	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoise,				dw	g_szMultichoiseEepromType
-	at	MENUITEM.itemValue + ITEM_VALUE.rgwChoiseToValueLookup,		dw	g_rgwChoiseToValueLookupForEepromType
+	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoice,				dw	g_szMultichoiceEepromType
+	at	MENUITEM.itemValue + ITEM_VALUE.rgwChoiceToValueLookup,		dw	g_rgwChoiceToValueLookupForEepromType
 	at	MENUITEM.itemValue + ITEM_VALUE.rgszValueToStringLookup,	dw	g_rgszValueToStringLookupForEepromType
 iend
 
 g_MenuitemFlashSdpCommand:
 istruc MENUITEM
-	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiseSelectionForMenuitemInDSSI
+	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiceSelectionForMenuitemInDSSI
 	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromShiftedItemInDSSI
 	at	MENUITEM.szName,			dw	g_szItemFlashSDP
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoFlashSDP
 	at	MENUITEM.szHelp,			dw	g_szHelpFlashSDP
 	at	MENUITEM.bFlags,			db	FLG_MENUITEM_PROGRAMVAR | FLG_MENUITEM_BYTEVALUE | FLG_MENUITEM_VISIBLE
-	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOISE
+	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOICE
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	CFGVARS.bSdpCommand
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgFlashSDP
-	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoise,				dw	g_szMultichoiseSdpCommand
-	at	MENUITEM.itemValue + ITEM_VALUE.rgwChoiseToValueLookup,		dw	g_rgwChoiseToValueLookupForSdpCommand
+	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoice,				dw	g_szMultichoiceSdpCommand
+	at	MENUITEM.itemValue + ITEM_VALUE.rgwChoiceToValueLookup,		dw	g_rgwChoiceToValueLookupForSdpCommand
 	at	MENUITEM.itemValue + ITEM_VALUE.rgszValueToStringLookup,	dw	g_rgszValueToStringLookupForSdpCommand
 iend
 
 g_MenuitemFlashPageSize:
 istruc MENUITEM
-	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiseSelectionForMenuitemInDSSI
+	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiceSelectionForMenuitemInDSSI
 	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromShiftedItemInDSSI
 	at	MENUITEM.szName,			dw	g_szItemFlashPageSize
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoFlashPageSize
 	at	MENUITEM.szHelp,			dw	g_szHelpFlashPageSize
 	at	MENUITEM.bFlags,			db	FLG_MENUITEM_PROGRAMVAR | FLG_MENUITEM_BYTEVALUE | FLG_MENUITEM_VISIBLE
-	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOISE
+	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOICE
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	CFGVARS.bEepromPage
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgFlashPageSize
-	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoise,				dw	g_szMultichoisePageSize
-	at	MENUITEM.itemValue + ITEM_VALUE.rgwChoiseToValueLookup,		dw	g_rgwChoiseToValueLookupForPageSize
+	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoice,				dw	g_szMultichoicePageSize
+	at	MENUITEM.itemValue + ITEM_VALUE.rgwChoiceToValueLookup,		dw	g_rgwChoiceToValueLookupForPageSize
 	at	MENUITEM.itemValue + ITEM_VALUE.rgszValueToStringLookup,	dw	g_rgszValueToStringLookupForPageSize
 iend
 
@@ -101,21 +97,21 @@ iend
 
 g_MenuitemFlashGenerateChecksum:
 istruc MENUITEM
-	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiseSelectionForMenuitemInDSSI
+	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiceSelectionForMenuitemInDSSI
 	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromShiftedItemInDSSI
 	at	MENUITEM.szName,			dw	g_szItemFlashChecksum
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoFlashChecksum
 	at	MENUITEM.szHelp,			dw	g_szHelpFlashChecksum
 	at	MENUITEM.bFlags,			db	FLG_MENUITEM_PROGRAMVAR | FLG_MENUITEM_VISIBLE | FLG_MENUITEM_FLAGVALUE
-	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOISE
+	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOICE
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	CFGVARS.wFlags
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgFlashChecksum
-	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoise,				dw	g_szMultichoiseBooleanFlag
+	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoice,				dw	g_szMultichoiceBooleanFlag
 	at	MENUITEM.itemValue + ITEM_VALUE.rgszValueToStringLookup,	dw	g_rgszValueToStringLookupForFlagBooleans
 	at	MENUITEM.itemValue + ITEM_VALUE.wValueBitmask,				dw	FLG_CFGVARS_CHECKSUM
 iend
 
-g_rgwChoiseToValueLookupForEepromType:
+g_rgwChoiceToValueLookupForEepromType:
 	dw	EEPROM_TYPE.2816_2kiB
 	dw	EEPROM_TYPE.2864_8kiB
 	dw	EEPROM_TYPE.28256_32kiB
@@ -126,7 +122,7 @@ g_rgszValueToStringLookupForEepromType:
 	dw	g_szValueFlash28256
 	dw	g_szValueFlash28512
 
-g_rgwChoiseToValueLookupForSdpCommand:
+g_rgwChoiceToValueLookupForSdpCommand:
 	dw	SDP_COMMAND.none
 	dw	SDP_COMMAND.enable
 	dw	SDP_COMMAND.disable
@@ -135,7 +131,7 @@ g_rgszValueToStringLookupForSdpCommand:
 	dw	g_szValueFlashEnable
 	dw	g_szValueFlashDisable
 
-g_rgwChoiseToValueLookupForPageSize:
+g_rgwChoiceToValueLookupForPageSize:
 	dw	EEPROM_PAGE.1_byte
 	dw	EEPROM_PAGE.2_bytes
 	dw	EEPROM_PAGE.4_bytes

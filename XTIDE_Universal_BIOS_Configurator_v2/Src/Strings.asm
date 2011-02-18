@@ -1,10 +1,5 @@
-; File name		:	Strings.asm
 ; Project name	:	XTIDE Universal BIOS Configurator v2
-; Created date	:	5.10.2010
-; Last update	:	9.12.2010
-; Author		:	Tomi Tilli
 ; Description	:	All strings.
-
 
 ; Section containing initialized data
 SECTION .data
@@ -19,7 +14,7 @@ g_szSourceAndTypeSeparator:			db	" : ",NULL
 g_szUnidentified:					db	"Unidentified",NULL
 g_szUnsaved:						db	" ",SINGLE_LEFT_HORIZONTAL_TO_VERTICAL,
 									db	"Unsaved",SINGLE_RIGHT_HORIZONTAL_TO_VERTICAL, NULL
-									
+
 ; Item formatting
 g_szFormatItemWithoutValue:			db	"%c%s",NULL
 g_szFormatItemNameWithValue:		db	"%25s%-10S",NULL
@@ -27,7 +22,7 @@ g_szFormatItemNameWithValue:		db	"%25s%-10S",NULL
 
 g_szNo:								db	"No",NULL
 g_szYes:							db	"Yes",NULL
-g_szMultichoiseBooleanFlag:
+g_szMultichoiceBooleanFlag:
 									db	"No",LF
 									db	"Yes",NULL
 
@@ -107,7 +102,7 @@ g_szHelpCfgFullMode:	incbin	"Configuration_FullMode.txt"
 g_szHelpCfgStealSize:	incbin	"Configuration_StealSize.txt"
 						db	NULL
 
-g_szMultichoiseCfgBootLoader:
+g_szMultichoiceCfgBootLoader:
 						db	"Boot menu",LF
 						db	"Drive A then C",LF
 						db	"System boot loader",NULL
@@ -151,7 +146,7 @@ g_szHelpIdeEnIRQ:		incbin	"IDE_EnableInterrupt.txt"
 g_szHelpIdeIRQ:			incbin	"IDE_IRQ.txt"
 						db	NULL
 
-g_szMultichoiseCfgBusType:
+g_szMultichoiceCfgBusType:
 						db	"8-bit dual port (XTIDE)",LF
 						db	"8-bit single port",LF
 						db	"16-bit",LF
@@ -219,7 +214,7 @@ g_szHelpBootSwap:		incbin	"Bootmenu_SwapDrives.txt"
 g_szHelpBootRomBoot:	incbin	"Bootmenu_RomBoot.txt"
 						db	NULL
 
-g_szMultichoiseBootFloppyDrvs:
+g_szMultichoiceBootFloppyDrvs:
 						db	"Autodetect",LF
 						db	"1",LF
 						db	"2",LF
@@ -261,7 +256,7 @@ g_szHelpFlashPageSize:	incbin	"Flash_PageSize.txt"
 g_szHelpFlashChecksum:	incbin	"Flash_Checksum.txt"
 						db	NULL
 
-g_szMultichoiseEepromType:
+g_szMultichoiceEepromType:
 						db	"2816 (2 kiB)",LF
 						db	"2864 (8 kiB)",LF
 						db	"28256 (32 kiB)",LF
@@ -271,7 +266,7 @@ g_szValueFlash2864:		db	"2864",NULL
 g_szValueFlash28256:	db	"28256",NULL
 g_szValueFlash28512:	db	"28512",NULL
 
-g_szMultichoiseSdpCommand:
+g_szMultichoiceSdpCommand:
 						db	"None",LF
 						db	"Enable",LF
 						db	"Disable",NULL
@@ -279,7 +274,7 @@ g_szValueFlashNone:		db	"None",NULL
 g_szValueFlashEnable:	db	"Enable",NULL
 g_szValueFlashDisable:	db	"Disable",NULL
 
-g_szMultichoisePageSize:
+g_szMultichoicePageSize:
 						db	"1 byte",LF
 						db	"2 bytes",LF
 						db	"4 bytes",LF

@@ -1,8 +1,4 @@
-; File name		:	Dialogs.asm
 ; Project name	:	XTIDE Univeral BIOS Configurator v2
-; Created date	:	10.10.2010
-; Last update	:	2.12.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for displaying dialogs.
 
 ; Section containing code
@@ -128,7 +124,7 @@ Dialogs_DisplayQuitDialog:
 	call	Memory_ReserveCXbytesFromStackToDSSI
 	call	InitializeDialogInputFromDSSI
 	mov		WORD [si+DIALOG_INPUT.fszTitle], g_szDlgExitToDos
-	mov		WORD [si+DIALOG_INPUT.fszItems], g_szMultichoiseBooleanFlag
+	mov		WORD [si+DIALOG_INPUT.fszItems], g_szMultichoiceBooleanFlag
 	CALL_MENU_LIBRARY GetSelectionToAXwithInputInDSSI
 	add		sp, BYTE DIALOG_INPUT_size
 	cmp		ax, BYTE 1		; 1 = YES
@@ -145,7 +141,7 @@ Dialogs_DisplaySaveChangesDialog:
 	call	Memory_ReserveCXbytesFromStackToDSSI
 	call	InitializeDialogInputFromDSSI
 	mov		WORD [si+DIALOG_INPUT.fszTitle], g_szDlgSaveChanges
-	mov		WORD [si+DIALOG_INPUT.fszItems], g_szMultichoiseBooleanFlag
+	mov		WORD [si+DIALOG_INPUT.fszItems], g_szMultichoiceBooleanFlag
 	CALL_MENU_LIBRARY GetSelectionToAXwithInputInDSSI
 	add		sp, BYTE DIALOG_INPUT_size
 	cmp		ax, BYTE 1		; 1 = YES

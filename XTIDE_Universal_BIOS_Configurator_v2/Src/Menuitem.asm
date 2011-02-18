@@ -21,7 +21,7 @@ Menuitem_DisplayHelpMessageFromDSSI:
 
 
 ;--------------------------------------------------------------------
-; Menuitem_ActivateMultichoiseSelectionForMenuitemInDSSI
+; Menuitem_ActivateMultichoiceSelectionForMenuitemInDSSI
 ;	Parameters:
 ;		DS:SI:	Ptr to MENUITEM
 ;	Returns:
@@ -30,13 +30,13 @@ Menuitem_DisplayHelpMessageFromDSSI:
 ;		AX, BX, CX, SI, DI, ES
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-Menuitem_ActivateMultichoiseSelectionForMenuitemInDSSI:
+Menuitem_ActivateMultichoiceSelectionForMenuitemInDSSI:
 	call	Registers_CopyDSSItoESDI
 
 	mov		cx, DIALOG_INPUT_size
 	call	Memory_ReserveCXbytesFromStackToDSSI
 	call	InitializeDialogInputInDSSIfromMenuitemInESDI
-	mov		ax, [es:di+MENUITEM.itemValue + ITEM_VALUE.szMultichoise]
+	mov		ax, [es:di+MENUITEM.itemValue + ITEM_VALUE.szMultichoice]
 	mov		[si+DIALOG_INPUT.fszItems], ax
 	push	di
 	CALL_MENU_LIBRARY GetSelectionToAXwithInputInDSSI
@@ -132,7 +132,7 @@ InitializeDialogInputInDSSIfromMenuitemInESDI:
 ;--------------------------------------------------------------------
 ; Menuitem_StoreValueFromAXtoMenuitemInDSSI
 ;	Parameters:
-;		AX:		Value or multichoise selection to store
+;		AX:		Value or multichoice selection to store
 ;		DS:SI:	Ptr to MENUITEM
 ;		SS:BP:	Menu handle
 ;	Returns:
@@ -157,14 +157,14 @@ ALIGN WORD_ALIGN
 	dw		.InvalidItemType									; TYPE_MENUITEM_PAGEBACK
 	dw		.InvalidItemType									; TYPE_MENUITEM_PAGENEXT
 	dw		.InvalidItemType									; TYPE_MENUITEM_ACTION
-	dw		.StoreMultichoiseValueFromAXtoESDIwithItemInDSSI	; TYPE_MENUITEM_MULTICHOISE
+	dw		.StoreMultichoiceValueFromAXtoESDIwithItemInDSSI	; TYPE_MENUITEM_MULTICHOICE
 	dw		.StoreByteOrWordValueFromAXtoESDIwithItemInDSSI		; TYPE_MENUITEM_UNSIGNED
 	dw		.StoreByteOrWordValueFromAXtoESDIwithItemInDSSI		; TYPE_MENUITEM_HEX
 
 ;--------------------------------------------------------------------
-; .StoreMultichoiseValueFromAXtoESDIwithItemInDSSI
+; .StoreMultichoiceValueFromAXtoESDIwithItemInDSSI
 ;	Parameters:
-;		AX:		Multichoise selection (index)
+;		AX:		Multichoice selection (index)
 ;		DS:SI:	Ptr to MENUITEM
 ;		ES:DI:	Ptr to value variable
 ;		SS:BP:	Menu handle
@@ -174,9 +174,9 @@ ALIGN WORD_ALIGN
 ;		AX, BX, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-.StoreMultichoiseValueFromAXtoESDIwithItemInDSSI:
+.StoreMultichoiceValueFromAXtoESDIwithItemInDSSI:
 	test	BYTE [si+MENUITEM.bFlags], FLG_MENUITEM_FLAGVALUE
-	jz		SHORT .TranslateChoiseToValueUsingLookupTable
+	jz		SHORT .TranslateChoiceToValueUsingLookupTable
 
 	test	ax, ax			; Setting item flag?
 	mov		ax, [si+MENUITEM.itemValue+ITEM_VALUE.wValueBitmask]
@@ -190,9 +190,9 @@ ALIGN JUMP_ALIGN
 	jmp		SHORT .SetUnsavedChanges
 
 ALIGN JUMP_ALIGN
-.TranslateChoiseToValueUsingLookupTable:
+.TranslateChoiceToValueUsingLookupTable:
 	shl		ax, 1			; Shift for WORD lookup
-	add		ax, [si+MENUITEM.itemValue+ITEM_VALUE.rgwChoiseToValueLookup]
+	add		ax, [si+MENUITEM.itemValue+ITEM_VALUE.rgwChoiceToValueLookup]
 	xchg	bx, ax
 	mov		ax, [bx]		; Lookup complete
 	; Fall to .StoreByteOrWordValueFromAXtoESDIwithItemInDSSI

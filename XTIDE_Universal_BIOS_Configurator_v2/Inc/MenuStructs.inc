@@ -1,8 +1,4 @@
-; File name		:	MenuStructs.inc
 ; Project name	:	XTIDE Universal BIOS Configurator v2
-; Created date	:	5.10.2010
-; Last update	:	18.11.2010
-; Author		:	Tomi Tilli
 ; Description	:	Menu page and item structs.
 %ifndef MENU_STRUCTS_INC
 %define MENU_STRUCTS_INC
@@ -38,7 +34,7 @@ FLG_MENUITEM_PROGRAMVAR		EQU	(1<<4)	; Item is for configuring program, not BIOS
 TYPE_MENUITEM_PAGEBACK		EQU	(0<<1)	; Item returns to previous MENUPAGE
 TYPE_MENUITEM_PAGENEXT		EQU	(1<<1)	; Item changes to next MENUPAGE
 TYPE_MENUITEM_ACTION		EQU	(2<<1)	; Non-configurable item
-TYPE_MENUITEM_MULTICHOISE	EQU	(3<<1)	; Item with multiple predefined choises
+TYPE_MENUITEM_MULTICHOICE	EQU	(3<<1)	; Item with multiple predefined choices
 TYPE_MENUITEM_UNSIGNED		EQU	(4<<1)	; Menuitem with user inputted unsigned decimal value
 TYPE_MENUITEM_HEX			EQU	(5<<1)	; Menuitem with user inputted hexadecimal value
 
@@ -47,8 +43,8 @@ struc ITEM_VALUE
 	.wRomvarsValueOffset	resb	2	; ROMVARS offset to actual value to be configured
 	.szDialogTitle			resb	2	; Dialog title string
 
-	.szMultichoise			resb	2	; Multiple choises in one string
-	.rgwChoiseToValueLookup	resb	2	; Ptr to lookup table for translating selected choise to actual value
+	.szMultichoice			resb	2	; Multiple choices in one string
+	.rgwChoiceToValueLookup	resb	2	; Ptr to lookup table for translating selected choice to actual value
 	.rgszValueToStringLookup:			; Ptr to lookup table for translating value to string
 	.wMinValue				resb	2	; Minimum allowed integer value
 	.wMaxValue:
