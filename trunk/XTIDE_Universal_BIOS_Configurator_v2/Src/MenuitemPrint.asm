@@ -100,7 +100,7 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 .FormatValueStringFromItemInDSSItoBufferInSSBP:
 	push	es
-	Registers_CopySSBPtoESDI
+	call	Registers_CopySSBPtoESDI
 	mov		al, '['
 	stosb
 	call	[si+MENUITEM.fnFormatValue]

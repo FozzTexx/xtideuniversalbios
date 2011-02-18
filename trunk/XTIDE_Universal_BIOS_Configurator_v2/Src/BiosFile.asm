@@ -100,7 +100,7 @@ ALIGN JUMP_ALIGN
 .StoreFileNameToCfgvarsFromESDI:
 	push	cx
 
-	Registers_CopyESDItoDSSI	; File name in DS:SI
+	call	Registers_CopyESDItoDSSI	; File name in DS:SI
 	push	cs
 	pop		es
 	mov		di, g_cfgVars+CFGVARS.szOpenedFile
@@ -156,7 +156,7 @@ BiosFile_SaveRamBufferToFileInDSSI:
 
 	call	Buffers_GenerateChecksum
 	call	Buffers_GetFileBufferToESDI
-	Registers_CopyESDItoDSSI
+	call	Registers_CopyESDItoDSSI
 	xor		dx, dx
 	mov		cx, [cs:g_cfgVars+CFGVARS.wImageSizeInWords]
 	shl		cx, 1

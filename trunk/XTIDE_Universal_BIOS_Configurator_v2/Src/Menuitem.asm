@@ -31,7 +31,7 @@ Menuitem_DisplayHelpMessageFromDSSI:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Menuitem_ActivateMultichoiseSelectionForMenuitemInDSSI:
-	Registers_CopyDSSItoESDI
+	call	Registers_CopyDSSItoESDI
 
 	mov		cx, DIALOG_INPUT_size
 	call	Memory_ReserveCXbytesFromStackToDSSI
@@ -44,7 +44,7 @@ Menuitem_ActivateMultichoiseSelectionForMenuitemInDSSI:
 
 	cmp		ax, BYTE NO_ITEM_SELECTED
 	je		SHORT .NothingToChange
-	Registers_CopyESDItoDSSI
+	call	Registers_CopyESDItoDSSI
 	call	Menuitem_StoreValueFromAXtoMenuitemInDSSI
 .NothingToChange:
 	add		sp, BYTE DIALOG_INPUT_size
@@ -62,7 +62,7 @@ Menuitem_ActivateMultichoiseSelectionForMenuitemInDSSI:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Menuitem_ActivateHexInputForMenuitemInDSSI:
-	Registers_CopyDSSItoESDI
+	call	Registers_CopyDSSItoESDI
 
 	mov		cx, WORD_DIALOG_IO_size
 	call	Memory_ReserveCXbytesFromStackToDSSI
@@ -81,7 +81,7 @@ Menuitem_ActivateHexInputForMenuitemInDSSI:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Menuitem_ActivateUnsignedInputForMenuitemInDSSI:
-	Registers_CopyDSSItoESDI
+	call	Registers_CopyDSSItoESDI
 
 	mov		cx, WORD_DIALOG_IO_size
 	call	Memory_ReserveCXbytesFromStackToDSSI
@@ -99,7 +99,7 @@ ContinueWordInput:
 	cmp		BYTE [si+WORD_DIALOG_IO.bUserCancellation], TRUE
 	je		SHORT .NothingToChange
 	mov		ax, [si+WORD_DIALOG_IO.wReturnWord]
-	Registers_CopyESDItoDSSI
+	call	Registers_CopyESDItoDSSI
 	call	Menuitem_StoreValueFromAXtoMenuitemInDSSI
 .NothingToChange:
 	add		sp, BYTE WORD_DIALOG_IO_size
