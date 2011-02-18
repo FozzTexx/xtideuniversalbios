@@ -1,8 +1,4 @@
-; File name		:	MasterSlaveMenu.asm
 ; Project name	:	XTIDE Universal BIOS Configurator v2
-; Created date	:	3.11.2010
-; Last update	:	18.11.2010
-; Author		:	Tomi Tilli
 ; Description	:	"Master/Slave Drive" menu structs and functions.
 
 ; Section containing initialized data
@@ -28,32 +24,32 @@ iend
 
 g_MenuitemMasterSlaveBlockModeTransfers:
 istruc MENUITEM
-	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiseSelectionForMenuitemInDSSI
+	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiceSelectionForMenuitemInDSSI
 	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromShiftedItemInDSSI
 	at	MENUITEM.szName,			dw	g_szItemDrvBlockMode
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoDrvBlockMode
 	at	MENUITEM.szHelp,			dw	g_szHelpDrvBlockMode
 	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE | FLG_MENUITEM_FLAGVALUE
-	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOISE
+	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOICE
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	NULL
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgDrvBlockMode
-	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoise,				dw	g_szMultichoiseBooleanFlag
+	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoice,				dw	g_szMultichoiceBooleanFlag
 	at	MENUITEM.itemValue + ITEM_VALUE.rgszValueToStringLookup,	dw	g_rgszValueToStringLookupForFlagBooleans
 	at	MENUITEM.itemValue + ITEM_VALUE.wValueBitmask,				dw	FLG_DRVPARAMS_BLOCKMODE
 iend
 
 g_MenuitemMasterSlaveUserCHS:
 istruc MENUITEM
-	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiseSelectionForMenuitemInDSSI
+	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiceSelectionForMenuitemInDSSI
 	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromShiftedItemInDSSI
 	at	MENUITEM.szName,			dw	g_szItemDrvUserCHS
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoDrvUserCHS
 	at	MENUITEM.szHelp,			dw	g_szHelpDrvUserCHS
 	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE | FLG_MENUITEM_MODIFY_MENU | FLG_MENUITEM_FLAGVALUE
-	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOISE
+	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOICE
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	NULL
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgDrvUserCHS
-	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoise,				dw	g_szMultichoiseBooleanFlag
+	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoice,				dw	g_szMultichoiceBooleanFlag
 	at	MENUITEM.itemValue + ITEM_VALUE.rgszValueToStringLookup,	dw	g_rgszValueToStringLookupForFlagBooleans
 	at	MENUITEM.itemValue + ITEM_VALUE.wValueBitmask,				dw	FLG_DRVPARAMS_USERCHS
 iend

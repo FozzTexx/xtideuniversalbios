@@ -1,8 +1,4 @@
-; File name		:	BootMenuSettingsMenu.asm
 ; Project name	:	XTIDE Universal BIOS Configurator v2
-; Created date	:	18.11.2010
-; Last update	:	18.11.2010
-; Author		:	Tomi Tilli
 ; Description	:	"Boot Menu Settings" menu structs and functions.
 
 ; Section containing initialized data
@@ -43,33 +39,33 @@ iend
 
 g_MenuitemBootMnuStngsDisplayRomBoot:
 istruc MENUITEM
-	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiseSelectionForMenuitemInDSSI
+	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiceSelectionForMenuitemInDSSI
 	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromShiftedItemInDSSI
 	at	MENUITEM.szName,			dw	g_szItemBootRomBoot
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoBootRomBoot
 	at	MENUITEM.szHelp,			dw	g_szHelpBootRomBoot
 	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE | FLG_MENUITEM_FLAGVALUE
-	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOISE
+	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOICE
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	ROMVARS.wFlags
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgBootRomBoot
-	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoise,				dw	g_szMultichoiseBooleanFlag
+	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoice,				dw	g_szMultichoiceBooleanFlag
 	at	MENUITEM.itemValue + ITEM_VALUE.rgszValueToStringLookup,	dw	g_rgszValueToStringLookupForFlagBooleans
 	at	MENUITEM.itemValue + ITEM_VALUE.wValueBitmask,				dw	FLG_ROMVARS_ROMBOOT
 iend
 
 g_MenuitemBootMnuStngsFloppyDrives:
 istruc MENUITEM
-	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiseSelectionForMenuitemInDSSI
+	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiceSelectionForMenuitemInDSSI
 	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromUnshiftedItemInDSSI
 	at	MENUITEM.szName,			dw	g_szItemBootFloppyDrvs
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoBootFloppyDrvs
 	at	MENUITEM.szHelp,			dw	g_szHelpBootFloppyDrvs
 	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE | FLG_MENUITEM_BYTEVALUE
-	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOISE
+	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOICE
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	ROMVARS.bMinFddCnt
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgBootFloppyDrvs
-	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoise,				dw	g_szMultichoiseBootFloppyDrvs
-	at	MENUITEM.itemValue + ITEM_VALUE.rgwChoiseToValueLookup,		dw	g_rgwChoiseToValueLookupForFloppyDrives
+	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoice,				dw	g_szMultichoiceBootFloppyDrvs
+	at	MENUITEM.itemValue + ITEM_VALUE.rgwChoiceToValueLookup,		dw	g_rgwChoiceToValueLookupForFloppyDrives
 	at	MENUITEM.itemValue + ITEM_VALUE.rgszValueToStringLookup,	dw	g_rgszValueToStringLookupForFloppyDrives
 iend
 
@@ -90,21 +86,21 @@ iend
 
 g_MenuitemBootMnuStngsSwapBootDriveNumbers:
 istruc MENUITEM
-	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiseSelectionForMenuitemInDSSI
+	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiceSelectionForMenuitemInDSSI
 	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromShiftedItemInDSSI
 	at	MENUITEM.szName,			dw	g_szItemBootSwap
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoBootSwap
 	at	MENUITEM.szHelp,			dw	g_szHelpBootSwap
 	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE | FLG_MENUITEM_FLAGVALUE
-	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOISE
+	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOICE
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	ROMVARS.wFlags
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgBootSwap
-	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoise,				dw	g_szMultichoiseBooleanFlag
+	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoice,				dw	g_szMultichoiceBooleanFlag
 	at	MENUITEM.itemValue + ITEM_VALUE.rgszValueToStringLookup,	dw	g_rgszValueToStringLookupForFlagBooleans
 	at	MENUITEM.itemValue + ITEM_VALUE.wValueBitmask,				dw	FLG_ROMVARS_DRVXLAT
 iend
 
-g_rgwChoiseToValueLookupForFloppyDrives:	; (No translation)
+g_rgwChoiceToValueLookupForFloppyDrives:	; (No translation)
 	dw	0
 	dw	1
 	dw	2

@@ -1,8 +1,4 @@
-; File name		:	IdeControllerMenu.asm
 ; Project name	:	XTIDE Universal BIOS Configurator v2
-; Created date	:	2.11.2010
-; Last update	:	18.11.2010
-; Author		:	Tomi Tilli
 ; Description	:	"IDE Controller" menu structs and functions.
 
 ; Section containing initialized data
@@ -48,17 +44,17 @@ iend
 
 g_MenuitemIdeControllerBusType:
 istruc MENUITEM
-	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiseSelectionForMenuitemInDSSI
+	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiceSelectionForMenuitemInDSSI
 	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromShiftedItemInDSSI
 	at	MENUITEM.szName,			dw	g_szItemIdeBusType
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoIdeBusType
 	at	MENUITEM.szHelp,			dw	g_szNfoIdeBusType
 	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE | FLG_MENUITEM_BYTEVALUE
-	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOISE
+	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOICE
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	NULL
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgBusType
-	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoise,				dw	g_szMultichoiseCfgBusType
-	at	MENUITEM.itemValue + ITEM_VALUE.rgwChoiseToValueLookup,		dw	g_rgwChoiseToValueLookupForBusType
+	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoice,				dw	g_szMultichoiceCfgBusType
+	at	MENUITEM.itemValue + ITEM_VALUE.rgwChoiceToValueLookup,		dw	g_rgwChoiceToValueLookupForBusType
 	at	MENUITEM.itemValue + ITEM_VALUE.rgszValueToStringLookup,	dw	g_rgszValueToStringLookupForBusType
 iend
 
@@ -94,16 +90,16 @@ iend
 
 g_MenuitemIdeControllerEnableInterrupt:
 istruc MENUITEM
-	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiseSelectionForMenuitemInDSSI
+	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiceSelectionForMenuitemInDSSI
 	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromShiftedItemInDSSI
 	at	MENUITEM.szName,			dw	g_szItemIdeEnIRQ
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoIdeEnIRQ
 	at	MENUITEM.szHelp,			dw	g_szHelpIdeEnIRQ
 	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE | FLG_MENUITEM_MODIFY_MENU | FLG_MENUITEM_FLAGVALUE
-	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOISE
+	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOICE
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	NULL
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgIdeEnIRQ
-	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoise,				dw	g_szMultichoiseBooleanFlag
+	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoice,				dw	g_szMultichoiceBooleanFlag
 	at	MENUITEM.itemValue + ITEM_VALUE.rgszValueToStringLookup,	dw	g_rgszValueToStringLookupForFlagBooleans
 	at	MENUITEM.itemValue + ITEM_VALUE.wValueBitmask,				dw	15
 iend
@@ -123,7 +119,7 @@ istruc MENUITEM
 	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	15
 iend
 
-g_rgwChoiseToValueLookupForBusType:
+g_rgwChoiceToValueLookupForBusType:
 	dw	BUS_TYPE_8_DUAL
 	dw	BUS_TYPE_8_SINGLE
 	dw	BUS_TYPE_16

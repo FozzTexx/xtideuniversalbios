@@ -1,8 +1,4 @@
-; File name		:	MainMenu.asm
 ; Project name	:	XTIDE Universal BIOS Configurator v2
-; Created date	:	6.10.2010
-; Last update	:	9.12.2010
-; Author		:	Tomi Tilli
 ; Description	:	Main menu structs and functions.
 
 ; Section containing initialized data
@@ -88,8 +84,8 @@ istruc MENUITEM
 	at	MENUITEM.bType,				db	NULL
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	NULL
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	NULL
-	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoise,				dw	NULL
-	at	MENUITEM.itemValue + ITEM_VALUE.rgwChoiseToValueLookup,		dw	NULL
+	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoice,				dw	NULL
+	at	MENUITEM.itemValue + ITEM_VALUE.rgwChoiceToValueLookup,		dw	NULL
 	at	MENUITEM.itemValue + ITEM_VALUE.rgszValueToStringLookup,	dw	NULL
 	at	MENUITEM.itemValue + ITEM_VALUE.wMinValue,					dw	NULL
 	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	NULL
