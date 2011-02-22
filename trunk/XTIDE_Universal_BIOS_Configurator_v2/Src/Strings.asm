@@ -6,8 +6,8 @@ SECTION .data
 
 ; Menu title
 g_szProgramTitle:
-	db	"Configuration and Flashing program for XTIDE Universal BIOS v1.1.5.",LF,CR,NULL
-g_szXtideUniversalBiosSignature:	db	"XTIDE110",NULL
+	db	"Configuration and Flashing program for XTIDE Universal BIOS v1.2.0.",LF,CR,NULL
+g_szXtideUniversalBiosSignature:	db	"XTIDE120",NULL
 g_szBiosIsNotLoaded:				db	"BIOS is not loaded!",NULL
 g_szEEPROM:							db	"EEPROM",NULL
 g_szSourceAndTypeSeparator:			db	" : ",NULL
@@ -37,6 +37,7 @@ g_szErrorDialog:		db	"Error!",NULL
 g_szGenericDialogInfo:	db	"Press ENTER or ESC to close dialog.",NULL
 
 ; Flashing related strings
+g_szFlashTitle:			db	"Flashing EEPROM, please wait.",NULL
 g_szErrEepromTooSmall:	db	"Image is too large for selected EEPROM type!",NULL
 g_szErrEepromPolling:	db	"Timeout when polling EEPROM.",LF
 						db	"EEPROM was not flashed properly!",NULL
@@ -79,9 +80,7 @@ g_szItemCfgIde1:		db	"Primary IDE Controller",NULL
 g_szItemCfgIde2:		db	"Secondary IDE Controller",NULL
 g_szItemCfgIde3:		db	"Tertiary IDE Controller",NULL
 g_szItemCfgIde4:		db	"Quaternary IDE Controller",NULL
-g_szItemCfgIde5:		db	"Quinary IDE Controller",NULL
 g_szItemCfgBootMenu:	db	"Boot menu settings",NULL
-g_szItemCfgBootLoader:	db	"Boot loader type",NULL
 g_szItemCfgFullMode:	db	"Full operating mode",NULL
 g_szItemCfgStealSize:	db	"kiB to steal from RAM",NULL
 g_szItemCfgIdeCnt:		db	"IDE controllers",NULL
@@ -92,7 +91,6 @@ g_szDlgCfgIdeCnt:		db	"How many IDE controllers to manage (1...5)?",NULL
 
 g_szNfoCfgIde:			db	"IDE controller and drive configuration.",NULL
 g_szNfoCfgBootMenu:		db	"Boot menu configuration.",NULL
-g_szNfoCfgBootLoader:	db	"Boot loader selection for INT 19h.",NULL
 g_szNfoCfgFullMode:		db	"Full mode supports multiple controllers and has more features.",NULL
 g_szNfoCfgStealSize:	db	"How many kiB's to steal from Conventional memory for XTIDE Universal BIOS variables.",NULL
 g_szNfoCfgIdeCnt:		db	"Number of IDE controllers to manage.",NULL
@@ -101,15 +99,6 @@ g_szHelpCfgFullMode:	incbin	"Configuration_FullMode.txt"
 						db	NULL
 g_szHelpCfgStealSize:	incbin	"Configuration_StealSize.txt"
 						db	NULL
-
-g_szMultichoiceCfgBootLoader:
-						db	"Boot menu",LF
-						db	"Drive A then C",LF
-						db	"System boot loader",NULL
-
-g_szValueCfgBootLoaderMenu:		db	"Menu",NULL
-g_szValueCfgBootLoaderAthenC:	db	"A, C",NULL
-g_szValueCfgBootLoaderSystem:	db	"System",NULL
 
 
 ; Strings for IDE Controller menu
@@ -189,19 +178,16 @@ g_szItemBootTimeout:	db	"Selection timeout",NULL
 g_szItemBootDrive:		db	"Default boot drive",NULL
 g_szItemBootFloppyDrvs:	db	"Number of Floppy Drives",NULL
 g_szItemBootSwap:		db	"Swap boot drive numbers",NULL
-g_szItemBootRomBoot:	db	"Display ROM boot",NULL
 
 g_szDlgBootTimeout:		db	"Enter Boot Menu selection timeout in seconds (1...60, 0 disables timeout).",NULL
 g_szDlgBootDrive:		db	"Enter default drive number (0xh for Floppy Drives, 8xh for Hard Disks, FFh for ROM boot).",NULL
 g_szDlgBootFloppyDrvs:	db	"Enter number of Floppy Drives to display on boot menu.",NULL
 g_szDlgBootSwap:		db	"Enable drive number translation?",NULL
-g_szDlgBootRomBoot:		db	"Show ROM Boot option on boot menu?",NULL
 
 g_szNfoBootTimeout:		db	"Menu item selection timeout in seconds.",NULL
 g_szNfoBootDrive:		db	"Default drive on boot menu.",NULL
 g_szNfoBootFloppyDrvs:	db	"Number of Floppy Drives to display on boot menu.",NULL
 g_szNfoBootSwap:		db	"Drive Number Translation (swap first drive with selected).",NULL
-g_szNfoBootRomBoot:		db	"Show ROM Basic or ROM DOS boot option.",NULL
 
 g_szHelpBootTimeout:	incbin	"Bootmenu_Timeout.txt"
 						db	NULL
@@ -210,8 +196,6 @@ g_szHelpBootDrive:		incbin	"Bootmenu_DefaultDrive.txt"
 g_szHelpBootFloppyDrvs:	incbin	"Bootmenu_FloppyDrives.txt"
 						db	NULL
 g_szHelpBootSwap:		incbin	"Bootmenu_SwapDrives.txt"
-						db	NULL
-g_szHelpBootRomBoot:	incbin	"Bootmenu_RomBoot.txt"
 						db	NULL
 
 g_szMultichoiceBootFloppyDrvs:

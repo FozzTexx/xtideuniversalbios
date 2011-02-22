@@ -1,8 +1,4 @@
-; File name		:	Menupage.asm
 ; Project name	:	XTIDE Universal BIOS Configurator v2
-; Created date	:	5.10.2010
-; Last update	:	1.11.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for accessing MENUPAGE structs.
 
 ; Section containing code
@@ -31,14 +27,14 @@ Menupage_ChangeToNewMenupageInDSSI:
 
 
 ;--------------------------------------------------------------------
-; Menupage_SetActiveMenupageFromDSDI
+; SetActiveMenupageFromDSDI
 ;	Parameters:
 ;		DS:DI:	Ptr to MENUPAGE to set active
 ;		SS:BP:	Menu handle
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, DI
+;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Menupage_SetActiveMenupageFromDSDI:

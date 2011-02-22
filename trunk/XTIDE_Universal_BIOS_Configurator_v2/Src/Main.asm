@@ -1,8 +1,4 @@
-; File name		:	main.asm
 ; Project name	:	XTIDE Univeral BIOS Configurator v2
-; Created date	:	5.10.2010
-; Last update	:	7.12.2010
-; Author		:	Tomi Tilli
 ; Description	:	Program start and exit.			
 
 ; Include .inc files
