@@ -262,7 +262,7 @@ ALIGN JUMP_ALIGN
 	pop		di
 	pop		si
 	pop		bp
-	pop		di		; Skip SP
+	pop		bx		; Skip SP
 	pop		bx
 	pop		dx
 	pop		cx
