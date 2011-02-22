@@ -1,1 +1,0 @@
-Some old systems have BASIC or DOS in ROM. Since most systems don't have either, ROM Boot setting is disabled by default. Enable it if you have use for it.

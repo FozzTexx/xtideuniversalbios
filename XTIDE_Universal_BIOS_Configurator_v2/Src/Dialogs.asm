@@ -172,7 +172,7 @@ Dialogs_DisplayProgressDialogForFlashingWithDialogIoInDSSIandFlashvarsInDSBX:
 ALIGN JUMP_ALIGN
 .InitializeProgressDialogIoInDSSIwithFlashvarsInDSBX:
 	call	InitializeDialogInputFromDSSI
-	mov		WORD [si+DIALOG_INPUT.fszTitle], g_szEEPROM
+	mov		WORD [si+DIALOG_INPUT.fszTitle], g_szFlashTitle
 
 	xor		ax, ax
 	mov		[si+PROGRESS_DIALOG_IO.wCurrentProgressValue], ax

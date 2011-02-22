@@ -1,8 +1,4 @@
-; File name		:	MenuEvents.asm
 ; Project name	:	XTIDE Universal BIOS Configurator v2
-; Created date	:	5.10.2010
-; Last update	:	30.11.2010
-; Author		:	Tomi Tilli
 ; Description	:	Menu event handling.
 
 ; Section containing code
@@ -78,6 +74,7 @@ ALIGN JUMP_ALIGN
 	mov		WORD [si+MENUINIT.bWidth], MENU_WIDTH
 	CALL_DISPLAY_LIBRARY GetColumnsToALandRowsToAH
 	mov		[si+MENUINIT.bHeight], ah
+	call	MainMenu_EnterMenuOrModifyItemVisibility
 	stc
 	ret
 

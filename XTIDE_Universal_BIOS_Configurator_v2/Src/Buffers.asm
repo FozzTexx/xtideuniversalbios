@@ -1,8 +1,4 @@
-; File name		:	Buffers.asm
 ; Project name	:	XTIDE Universal BIOS Configurator v2
-; Created date	:	6.10.2010
-; Last update	:	6.12.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for accessing file and flash buffers.
 
 ; Section containing code

@@ -197,7 +197,7 @@ ALIGN JUMP_ALIGN
 	mov		bx, [cs:g_MenuitemIdeControllerEnableInterrupt+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset]
 	call	Buffers_GetRomvarsValueToAXfromOffsetInBX
 	mov		bx, g_MenuitemIdeControllerIdeIRQ
-	test	ax, ax
+	test	al, al
 	jz		SHORT .DisableMenuitemFromCSBX
 	; Fall to .EnableMenuitemFromCSBX
 

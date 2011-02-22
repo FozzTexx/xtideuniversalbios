@@ -62,40 +62,14 @@ istruc MENUITEM
 	at	MENUITEM.bType,				db	TYPE_MENUITEM_PAGENEXT
 iend
 
-g_MenuitemConfigurationQuinaryIdeController:
-istruc MENUITEM
-	at	MENUITEM.fnActivate,		dw	QuinaryIdeController
-	at	MENUITEM.szName,			dw	g_szItemCfgIde5
-	at	MENUITEM.szQuickInfo,		dw	g_szNfoCfgIde
-	at	MENUITEM.szHelp,			dw	g_szNfoCfgIde
-	at	MENUITEM.bFlags,			db	NULL
-	at	MENUITEM.bType,				db	TYPE_MENUITEM_PAGENEXT
-iend
-
 g_MenuitemConfigurationBootMenuSettings:
 istruc MENUITEM
 	at	MENUITEM.fnActivate,		dw	BootMenuSettingsMenu_EnterMenuOrModifyItemVisibility
 	at	MENUITEM.szName,			dw	g_szItemCfgBootMenu
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoCfgBootMenu
 	at	MENUITEM.szHelp,			dw	g_szNfoCfgBootMenu
-	at	MENUITEM.bFlags,			db	NULL
+	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE
 	at	MENUITEM.bType,				db	TYPE_MENUITEM_PAGENEXT
-iend
-
-g_MenuitemConfigurationBootLoaderType:
-istruc MENUITEM
-	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiceSelectionForMenuitemInDSSI
-	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromShiftedItemInDSSI
-	at	MENUITEM.szName,			dw	g_szItemCfgBootLoader
-	at	MENUITEM.szQuickInfo,		dw	g_szNfoCfgBootLoader
-	at	MENUITEM.szHelp,			dw	g_szNfoCfgBootLoader
-	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE | FLG_MENUITEM_MODIFY_MENU | FLG_MENUITEM_BYTEVALUE
-	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOICE
-	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	ROMVARS.bBootLdrType
-	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szItemCfgBootLoader
-	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoice,				dw	g_szMultichoiceCfgBootLoader
-	at	MENUITEM.itemValue + ITEM_VALUE.rgwChoiceToValueLookup,		dw	g_rgwChoiceToValueLookupForBootLoaderType
-	at	MENUITEM.itemValue + ITEM_VALUE.rgszValueToStringLookup,	dw	g_rgszValueToStringLookupForBootLoaderType
 iend
 
 g_MenuitemConfigurationFullOperatingMode:
@@ -141,19 +115,8 @@ istruc MENUITEM
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	ROMVARS.bIdeCnt
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgCfgIdeCnt
 	at	MENUITEM.itemValue + ITEM_VALUE.wMinValue,					dw	1
-	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	5
+	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	4
 iend
-
-
-g_rgwChoiceToValueLookupForBootLoaderType:
-	dw	BOOTLOADER_TYPE_MENU
-	dw	BOOTLOADER_TYPE_SIMPLE
-	dw	BOOTLOADER_TYPE_NONE
-g_rgszValueToStringLookupForBootLoaderType:
-	dw	g_szValueCfgBootLoaderMenu
-	dw	g_szValueCfgBootLoaderAthenC
-	dw	g_szUnidentified
-	dw	g_szValueCfgBootLoaderSystem
 
 
 ; Section containing code
@@ -174,7 +137,6 @@ ConfigurationMenu_EnterMenuOrModifyItemVisibility:
 	pop		ds
 	call	.DisableAllIdeControllerMenuitems
 	call	.EnableIdeControllerMenuitemsBasedOnConfiguration
-	call	.EnableOrDisableBootMenuSettings
 	call	.EnableOrDisableKiBtoStealFromRAM
 	call	.EnableOrDisableIdeControllerCount
 	mov		si, g_MenupageForConfigurationMenu
@@ -239,26 +201,6 @@ ALIGN JUMP_ALIGN
 	mov		cx, 1
 	ret
 
-
-;--------------------------------------------------------------------
-; .EnableOrDisableBootMenuSettings
-;	Parameters:
-;		SS:BP:	Menu handle
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, BX, CX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-.EnableOrDisableBootMenuSettings:
-	mov		bx, ROMVARS.bBootLdrType
-	call	Buffers_GetRomvarsValueToAXfromOffsetInBX
-	mov		bx, g_MenuitemConfigurationBootMenuSettings
-	cmp		ax, BYTE BOOTLOADER_TYPE_MENU
-	jne		SHORT .DisableMenuitemFromCSBX
-	jmp		SHORT .EnableMenuitemFromCSBX
-
-
 ;--------------------------------------------------------------------
 ; .EnableOrDisableKiBtoStealFromRAM
 ;	Parameters:
@@ -290,8 +232,11 @@ ALIGN JUMP_ALIGN
 	call	Buffers_GetRomvarsFlagsToAX
 	mov		bx, g_MenuitemConfigurationIdeControllers
 	test	ax, FLG_ROMVARS_FULLMODE
-	jz		SHORT .DisableMenuitemFromCSBX
-	jmp		SHORT .EnableMenuitemFromCSBX
+	jnz		SHORT .EnableMenuitemFromCSBX
+.LimitIdeControllerCountToOneForLiteMode:
+	call	Buffers_GetFileBufferToESDI
+	mov		BYTE [es:di+ROMVARS.bIdeCnt], 1
+	jmp		SHORT .DisableMenuitemFromCSBX
 
 ;--------------------------------------------------------------------
 ; .EnableMenuitemFromCSBX
@@ -342,11 +287,6 @@ TertiaryIdeController:
 ALIGN JUMP_ALIGN
 QuaternaryIdeController:
 	mov		bx, ROMVARS.ideVars3
-	jmp		SHORT DisplayIdeControllerMenu
-
-ALIGN JUMP_ALIGN
-QuinaryIdeController:
-	mov		bx, ROMVARS.ideVars4
 	; Fall to DisplayIdeControllerMenu
 
 ALIGN JUMP_ALIGN
