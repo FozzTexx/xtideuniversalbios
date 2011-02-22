@@ -14,7 +14,6 @@ ORG 000h						; Code start offset 0000h
 
 ; Included .inc files
 %include "AssemblyLibrary.inc"	; Assembly Library. Must be included first!
-%include "macros.inc"			; General purpose macros
 %include "BiosData.inc"			; For BIOS Data area equates
 %include "Interrupts.inc"		; For interrupt equates
 %include "ATA_ID.inc"			; For ATA Drive Information structs
