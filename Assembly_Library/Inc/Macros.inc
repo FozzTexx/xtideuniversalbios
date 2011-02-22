@@ -1,6 +1,8 @@
 ; Project name	:	Assembly Library
 ; Description	:	This is the place to put various generic macros.
 ;					Should be included immediately after emulate.inc
+%ifndef MACROS_INC
+%define MACROS_INC
 
 ;--------------------------------------------------------------------
 ; Skips the immediately following 2 byte instruction by using it
@@ -39,3 +41,36 @@
 		%error "Invalid parameter passed to SKIP2B"
 	%endif
 %endmacro
+
+
+;--------------------------------------------------------------------
+; eENTER_STRUCT
+;	Parameters:
+;		%1:		Number of bytes to reserve from stack
+;	Returns:
+;		SS:BP:	Ptr to beginning of struct reserved from stack
+;	Corrupts registers:
+;		FLAGS
+;--------------------------------------------------------------------
+%macro eENTER_STRUCT 1
+	push	bp
+	sub		sp, %1
+	mov		bp, sp
+%endmacro
+
+;--------------------------------------------------------------------
+; eLEAVE_STRUCT
+;	Parameters:
+;		%1:		Number of bytes reserved with eENTER_STRUCT
+;	Returns:
+;		BP:		What it was before eENTER_STRUCT
+;	Corrupts registers:
+;		FLAGS
+;--------------------------------------------------------------------
+%macro eLEAVE_STRUCT 1
+	add		sp, %1
+	pop		bp
+%endmacro
+
+
+%endif ; MACROS_INC

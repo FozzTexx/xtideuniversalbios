@@ -5,13 +5,13 @@
 
 ; Include .inc files
 %include "Emulate.inc"			; Must be included first!
+%include "Macros.inc"
 %include "BiosData.inc"
 %include "BiosFunctions.inc"
 %include "CgaSnow.inc"
 %include "Debug.inc"
 %include "DosFunctions.inc"
 %include "File.inc"
-%include "Macros.inc"
 %include "Math.inc"
 %include "Registers.inc"
 

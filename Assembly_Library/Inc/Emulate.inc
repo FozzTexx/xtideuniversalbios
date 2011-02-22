@@ -235,7 +235,7 @@ ALIGN JUMP_ALIGN
 	push	cx
 	push	dx
 	push	bx
-	; SP before first push should be pushed here
+	push	bx		; SP before first push should be pushed here
 	push	bp
 	push	si
 	push	di
@@ -262,7 +262,7 @@ ALIGN JUMP_ALIGN
 	pop		di
 	pop		si
 	pop		bp
-	; Old SP should be skipped here
+	pop		di		; Skip SP
 	pop		bx
 	pop		dx
 	pop		cx
@@ -317,36 +317,6 @@ ALIGN JUMP_ALIGN
 %else
 	leave
 %endif
-%endmacro
-
-
-;--------------------------------------------------------------------
-; eENTER_STRUCT
-;	Parameters:
-;		%1:		Number of bytes to reserve from stack
-;	Returns:
-;		SS:BP:	Ptr to beginning of struct reserved from stack
-;	Corrupts registers:
-;		FLAGS
-;--------------------------------------------------------------------
-%macro eENTER_STRUCT 1
-	push	bp
-	sub		sp, %1
-	mov		bp, sp
-%endmacro
-
-;--------------------------------------------------------------------
-; eLEAVE_STRUCT
-;	Parameters:
-;		%1:		Number of bytes reserved with eENTER_STRUCT
-;	Returns:
-;		BP:		What it was before eENTER_STRUCT
-;	Corrupts registers:
-;		FLAGS
-;--------------------------------------------------------------------
-%macro eLEAVE_STRUCT 1
-	add		sp, %1
-	pop		bp
 %endmacro
 
 
