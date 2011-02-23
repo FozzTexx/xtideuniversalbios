@@ -9,7 +9,7 @@ g_MenupageForConfigurationMenu:
 istruc MENUPAGE
 	at	MENUPAGE.fnEnter,			dw	ConfigurationMenu_EnterMenuOrModifyItemVisibility
 	at	MENUPAGE.fnBack,			dw	MainMenu_EnterMenuOrModifyItemVisibility
-	at	MENUPAGE.wMenuitems,		dw	11
+	at	MENUPAGE.wMenuitems,		dw	9
 iend
 
 g_MenuitemConfigurationBackToMainMenu:

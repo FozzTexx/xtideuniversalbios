@@ -9,7 +9,7 @@ g_MenupageForBootMenuSettingsMenu:
 istruc MENUPAGE
 	at	MENUPAGE.fnEnter,			dw	BootMenuSettingsMenu_EnterMenuOrModifyItemVisibility
 	at	MENUPAGE.fnBack,			dw	ConfigurationMenu_EnterMenuOrModifyItemVisibility
-	at	MENUPAGE.wMenuitems,		dw	6
+	at	MENUPAGE.wMenuitems,		dw	5
 iend
 
 g_MenuitemBootMnuStngsBackToConfigurationMenu:
