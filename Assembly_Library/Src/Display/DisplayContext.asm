@@ -64,8 +64,8 @@ DisplayContext_Initialize:
 ;		AX, DX
 ;--------------------------------------------------------------------
 .InitializeCursor:
-	xor		ax, ax
-	call	DisplayCursor_SetCoordinatesFromAX
+	call	DisplayCursor_GetHardwareCoordinatesToAX	; Coordinates before init
+	call	DisplayCursor_SetCoordinatesFromAX			; Cursor to Display Context
 	; Fall to DisplayContext_SynchronizeToHardware
 
 ;--------------------------------------------------------------------
