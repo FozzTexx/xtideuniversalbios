@@ -235,7 +235,7 @@ ALIGN JUMP_ALIGN
 	push	cx
 	push	dx
 	push	bx
-	push	bx		; SP before first push should be pushed here
+	push	sp
 	push	bp
 	push	si
 	push	di
@@ -262,7 +262,7 @@ ALIGN JUMP_ALIGN
 	pop		di
 	pop		si
 	pop		bp
-	pop		bx		; Skip SP
+	pop		ax		; Skip SP
 	pop		bx
 	pop		dx
 	pop		cx
