@@ -72,27 +72,6 @@ istruc MENUITEM
 	at	MENUITEM.bType,				db	TYPE_MENUITEM_PAGENEXT
 iend
 
-%if FALSE
-g_Menuitem:
-istruc MENUITEM
-	at	MENUITEM.fnActivate,		dw	NULL
-	at	MENUITEM.fnFormatValue,		dw	NULL
-	at	MENUITEM.szName,			dw	NULL
-	at	MENUITEM.szQuickInfo,		dw	NULL
-	at	MENUITEM.szHelp,			dw	NULL
-	at	MENUITEM.bFlags,			db	NULL
-	at	MENUITEM.bType,				db	NULL
-	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	NULL
-	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	NULL
-	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoice,				dw	NULL
-	at	MENUITEM.itemValue + ITEM_VALUE.rgwChoiceToValueLookup,		dw	NULL
-	at	MENUITEM.itemValue + ITEM_VALUE.rgszValueToStringLookup,	dw	NULL
-	at	MENUITEM.itemValue + ITEM_VALUE.wMinValue,					dw	NULL
-	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	NULL
-	at	MENUITEM.itemValue + ITEM_VALUE.wValueBitmask,				dw	NULL
-iend
-%endif
-
 
 ; Section containing code
 SECTION .text
