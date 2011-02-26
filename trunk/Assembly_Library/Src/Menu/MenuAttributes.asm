@@ -47,7 +47,7 @@ ALIGN JUMP_ALIGN
 MenuAttribute_GetToAXfromTypeInSI:
 	push	ds
 
-	LOAD_BDA_SEGMENT_TO	ds, ax
+	LOAD_BDA_SEGMENT_TO	ds, ax, !
 	mov		al, [VIDEO_BDA.bMode]		; Load BIOS display mode (0, 1, 2, 3 or 7)
 	cmp		al, 7
 	je		SHORT .LoadMonoAttribute
@@ -72,7 +72,6 @@ ALIGN JUMP_ALIGN
 
 	pop		ds
 	ret
-
 
 
 .rgcColorAttributes:

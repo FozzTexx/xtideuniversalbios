@@ -1,9 +1,4 @@
-; File name		:	AHCh_HSeek.asm
-; Project name	:	IDE BIOS
-; Created date	:	13.12.2007
-; Last update	:	14.1.2011
-; Author		:	Tomi Tilli,
-;				:	Krister Nordvall (optimizations)
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Int 13h function AH=Ch, Seek.
 
 ; Section containing code

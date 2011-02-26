@@ -1,4 +1,4 @@
-; Project name	:	IDE BIOS
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	PIO transfer functions.
 
 ; Structure containing variables for PIO transfer functions
@@ -12,30 +12,6 @@ endstruc
 
 ; Section containing code
 SECTION .text
-
-;--------------------------------------------------------------------
-; Normalizes far pointer to that offset overflows won't happen
-; when transferring data using PIO.
-;
-; HPIO_NORMALIZE_PTR
-;	Parameters:
-;		%1:%2:		Far pointer to normalize
-;		%3:			Scratch register
-;		%4:			Scratch register
-;	Returns:
-;		%1:%2:		Normalized far pointer
-;	Corrupts registers:
-;		%3, %4
-;--------------------------------------------------------------------
-%macro HPIO_NORMALIZE_PTR 4
-	mov		%4, %2				; Copy offset to scratch reg
-	and		%2, BYTE 0Fh		; Clear offset bits 15...4
-	eSHR_IM	%4, 4				; Divide offset by 16
-	mov		%3, %1				; Copy segment to scratch reg
-	add		%3, %4				; Add shifted offset to segment
-	mov		%1, %3				; Set normalized segment
-%endmacro
-
 
 ;--------------------------------------------------------------------
 ; Reads sectors from hard disk using PIO transfer mode.
@@ -109,12 +85,13 @@ HPIO_InitializePIOVARS:
 	mov		bx, [cs:bx+si]						; Load offset to transfer function
 	mov		[bp+PIOVARS.fnXfer], bx				; Store offset to transfer function
 	xchg	bx, ax
-	; Fall to HPIO_NormalizePtr
+	; Fall to HPIO_NormalizeDataPointer
 
 ;--------------------------------------------------------------------
-; Initializes PIOVARS members.
+; Normalizes far pointers so that offset overflows won't happen
+; when transferring data using PIO.
 ;
-; HPIO_InitializePIOVARS
+; HPIO_NormalizeDataPointer
 ;	Parameters:
 ;		ES:BX:	Ptr to source or destination data buffer
 ;	Returns:
@@ -124,7 +101,7 @@ HPIO_InitializePIOVARS:
 ;--------------------------------------------------------------------
 ;ALIGN JUMP_ALIGN
 HPIO_NormalizeDataPointer:
-	HPIO_NORMALIZE_PTR	es, bx, ax, cx
+	NORMALIZE_FAR_POINTER es, bx, ax, cx
 	ret
 
 

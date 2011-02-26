@@ -18,7 +18,7 @@ ALIGN JUMP_ALIGN
 MenuInit_DisplayMenuWithHandlerInBXandUserDataInDXAX:
 	push	es
 	push	ds
-	LOAD_BDA_SEGMENT_TO ds, cx
+	LOAD_BDA_SEGMENT_TO ds, cx, !
 	push	WORD [BDA.wVidCurShape]
 	mov		cl, MENU_size
 	eENTER_STRUCT cx
@@ -73,7 +73,7 @@ MenuInit_RefreshMenuWindow:
 	call	MenuBorders_RefreshAll			; Draw borders
 	call	MenuText_RefreshTitle			; Draw title strings
 	call	MenuText_RefreshAllItems		; Draw item strings
-	jmp		MenuText_RefreshInformation		; Draw information strings	
+	jmp		MenuText_RefreshInformation		; Draw information strings
 
 
 ;--------------------------------------------------------------------

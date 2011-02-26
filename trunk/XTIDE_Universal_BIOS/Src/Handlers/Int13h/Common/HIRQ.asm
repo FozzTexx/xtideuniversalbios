@@ -1,4 +1,4 @@
-; Project name	:	IDE BIOS
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Interrupt handling related functions.
 
 ; Section containing code
@@ -34,7 +34,7 @@ ALIGN JUMP_ALIGN
 .NotifyOperatingSystemAboutWaitingForIRQ:
 	push	ds
 
-	LOAD_BDA_SEGMENT_TO	ds, ax			; Zero AX
+	LOAD_BDA_SEGMENT_TO	ds, ax, !		; Zero AX
 	cli									; Disable interrupts
 	cmp		al, [BDA.bHDTaskFlg]		; Task flag already set?
 	jc		SHORT .ReturnFromWaitNotify	;  If so, skip OS notification
@@ -67,7 +67,7 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 HIRQ_ClearTaskFlag:
 	push	ds
-	LOAD_BDA_SEGMENT_TO	ds, ax		; Also zero AX
+	LOAD_BDA_SEGMENT_TO	ds, ax, !		; Also zero AX
 	mov		[BDA.bHDTaskFlg], al
 	pop		ds
 	ret
