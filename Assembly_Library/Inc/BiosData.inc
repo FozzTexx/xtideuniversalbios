@@ -1,8 +1,4 @@
-; File name		:	BiosData.inc
-; Project name	:	IDE BIOS
-; Created date	:	28.7.2007
-; Last update	:	23.3.2010
-; Author		:	Tomi Tilli
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Equates for BIOS Data Area.
 %ifndef BIOSDATA_INC
 %define BIOSDATA_INC
@@ -20,10 +16,10 @@ struc BDA
 	.wCOM4			resb	2		; 0:406h, Serial I/O Address, Port 4
 	.wLPT1			resb	2		; 0:408h, Parallel I/O Address, Port 1
 	.wLPT2			resb	2		; 0:40Ah, Parallel I/O Address, Port 2
-	.wLPT3			resb	2		; 0:40Ch, Parallel I/O Address, Port 3					
+	.wLPT3			resb	2		; 0:40Ch, Parallel I/O Address, Port 3
 	.wLPT4:							; 0:40Eh, Parallel I/O Address, Port 4 (PC/XT)
 	.wSegEBDA		resb	2		; 0:40Eh, Extended BIOS Data Area segment (AT+)
-	
+
 	.wEquipment		resb	2		; 0:410h, Equipment Word
 	.bTest			resb	1		; 0:412h, Manufacturing test
 	.wBaseMem		resb	2		; 0:413h, Base Memory Size in kB
@@ -35,10 +31,10 @@ struc BDA
 	.wKBHead		resb	2		; 0:41Ah, Keyboard, Head of buffer pointer
 	.wKBTail		resb	2		; 0:41Ch, Keyboard, Tail of buffer pointer
 	.rgwKBBuff		resb	32		; 0:41Eh, Keyboard, 16-word buffer
-	
+
 	.bFDRecal		resb	1		; 0:43Eh, Diskette, Recalibrate status
 	.bFDMotor		resb	1		; 0:43Fh, Diskette, Motor status
-	
+
 	.bFDMotTime		resb	1		; 0:440h, Diskette, Motor timeout counter
 	.bFDRetST		resb	1		; 0:441h, Diskette, Controller status return code
 	.rgbFDStatus	resb	7		; 0:442h, Diskette, Diskette and Disk Controller status bytes
@@ -46,9 +42,9 @@ struc BDA
 	.wVidColumns	resb	2		; 0:44Ah, Video, Number of columns
 	.wVidBpP		resb	2		; 0:44Ch, Video, Total number of bytes per page
 	.wVidPageOff	resb	2		; 0:44Eh, Video, Current page offset
-	
+
 	.rgwVidCurPos	resb	16		; 0:450h, Video, Cursor position, pages 0...7
-	
+
 	.wVidCurShape	resb	2		; 0:460h, Video, Cursor shape
 	.bVidPageIdx	resb	1		; 0:462h, Video, Active display page
 	.wVidPort		resb	2		; 0:463h, Video, I/O Port number base
@@ -61,13 +57,13 @@ struc BDA
 	.bCasLast:						; 0:46Bh, Cassette, Last value read
 	.bLastIRQ		resb	1		; 0:46Bh, Last interrupt that occurred (XT+)
 	.dwTimerTicks	resb	4		; 0:46Ch, Timer ticks count
-	
+
 	.bTimer24h		resb	1		; 0:470h, Timer ticks rollover flag
 	.bKBCtrlBrk		resb	1		; 0:471h, Keyboard, Ctrl+Break flag
 	.wBoot			resb	2		; 0:472h, Warm boot flag
 	.bHDLastSt		resb	1		; 0:474h, Hard Disk, Status of Last Operation (XT+)
 	.bHDCount		resb	1		; 0:475h, Hard Disk, Number of HDs Attached (XT+)
-	.bHDCtrl		resb	1		; 0:476h, Hard Disk, Control Byte (temp, XT+) 
+	.bHDCtrl		resb	1		; 0:476h, Hard Disk, Control Byte (temp, XT+)
 	.bHDPortOff		resb	1		; 0:477h, Hard Disk, Port Offset (XT)
 	.bLPT1Timeout	resb	1		; 0:478h, Parallel Printer 1, Timeout (XT+)
 	.bLPT2Timeout	resb	1		; 0:479h, Parallel Printer 2, Timeout (XT+)
@@ -77,7 +73,7 @@ struc BDA
 	.bCOM2Timeout	resb	1		; 0:47Dh, Serial 2, Timeout (XT+)
 	.bCOM3Timeout	resb	1		; 0:47Eh, Serial 3, Timeout (XT+)
 	.bCOM4Timeout	resb	1		; 0:47Fh, Serial 4, Timeout (XT+)
-	
+
 	.wKBPtrStart	resb	2		; 0:480h, Keyboard, Pointer to start of buffer (XT+)
 	.wKBPtrEnd		resb	2		; 0:482h, Keyboard, Pointer to end of buffer (XT+)
 	.bVidRows		resb	1		; 0:484h, Video, Number of rows (EGA+)
@@ -91,7 +87,7 @@ struc BDA
 	.bHDError		resb	1		; 0:48Dh, Hard Disk, Error Register (AT+)
 	.bHDTaskFlg		resb	1		; 0:48Eh, Hard Disk, Task Complete Flag (AT+)
 	.bFDCtrlInfo	resb	1		; 0:48Fh, Diskette, Controller information (AT+)
-	
+
 	.bFDMedia0		resb	1		; 0:490h, Diskette 0, Media state (AT+)
 	.bFDMedia1		resb	1		; 0:491h, Diskette 1, Media state (AT+)
 	.bFDOpStart0	resb	1		; 0:492h, Diskette 0, Operational starting state (AT+)
@@ -102,7 +98,7 @@ struc BDA
 	.bKBFlgs4		resb	1		; 0:497h, Keyboard, Status flags 4 (AT+)
 	.dwWaitPtr		resb	4		; 0:498h, User's wait flag pointer (AT+)
 	.dwWaitCnt		resb	4		; 0:49Ch, User's wait count (AT+)
-	
+
 	.bWaitFlg		resb	1		; 0:4A0h, Wait flag (AT+)
 	.rgbLAN			resb	7		; 0:4A1h, Local Area Network (AT+)
 	.dwVidPtr		resb	4		; 0:4A8h, Video, Parameter Control Block Pointer (EGA+)
@@ -132,18 +128,32 @@ endstruc
 ;--------------------------------------------------------------------
 ; Load BDA (Bios Data Area) segment to wanted segment register.
 ;
+; Use an exclamation point (!) as the third parameter when you want
+; to force the use of the register in the second parameter. This is
+; useful when that register needs to be zeroed in subsequent code or
+; when stack usage is undesirable (ie speed is critical).
+;
 ; LOAD_BDA_SEGMENT_TO
 ;	Parameters:
 ;		%1:		Destination Segment Register
 ;		%2:		Temporary WORD Register
+;		%3:		Can be ! or empty
 ;	Returns:
 ;		%1:		BDA segment (zero)
 ;	Corrupts registers:
 ;		%2
 ;--------------------------------------------------------------------
-%macro LOAD_BDA_SEGMENT_TO 2
+%macro LOAD_BDA_SEGMENT_TO 2-3
+%ifndef USE_186
 	xor		%2, %2
 	mov		%1, %2
+%elifidn %3, !
+	xor		%2, %2
+	mov		%1, %2
+%else
+	push	BYTE 0
+	pop		%1
+%endif
 %endmacro
 
 

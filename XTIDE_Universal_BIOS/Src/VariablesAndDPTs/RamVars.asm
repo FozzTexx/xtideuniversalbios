@@ -33,7 +33,7 @@ RamVars_Initialize:
 	test	BYTE [cs:ROMVARS.wFlags], FLG_ROMVARS_FULLMODE
 	jz		SHORT .InitializeRamvars	; No need to steal RAM
 
-	LOAD_BDA_SEGMENT_TO	ds, ax			; Zero AX
+	LOAD_BDA_SEGMENT_TO	ds, ax, !		; Zero AX
 	mov		al, [cs:ROMVARS.bStealSize]
 	sub		[BDA.wBaseMem], ax
 	mov		ax, [BDA.wBaseMem]
@@ -196,13 +196,13 @@ RamVars_IncrementHardDiskCount:
 ;		CX:		Total hard disk count
 ;	Corrupts registers:
 ;		Nothing
-;--------------------------------------------------------------------	
+;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 RamVars_GetHardDiskCountFromBDAtoCX:
 	push	es
 	push	dx
 
-	LOAD_BDA_SEGMENT_TO	es, cx			; Zero CX
+	LOAD_BDA_SEGMENT_TO	es, cx, !		; Zero CX
 	call	RamVars_GetCountOfKnownDrivesToDL
 	MAX_U	dl, [es:BDA.bHDCount]
 	mov		cl, dl
@@ -219,7 +219,7 @@ RamVars_GetHardDiskCountFromBDAtoCX:
 ;		DL:		Total hard disk count
 ;	Corrupts registers:
 ;		Nothing
-;--------------------------------------------------------------------	
+;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 RamVars_GetCountOfKnownDrivesToDL:
 	mov		dl, [RAMVARS.bFirstDrv]		; Number for our first drive
@@ -236,7 +236,7 @@ RamVars_GetCountOfKnownDrivesToDL:
 ;		CX:		Number of IDE controllers to handle
 ;	Corrupts registers:
 ;		Nothing
-;--------------------------------------------------------------------	
+;--------------------------------------------------------------------
 RamVars_GetIdeControllerCountToCX:
 	eMOVZX	cx, BYTE [cs:ROMVARS.bIdeCnt]
 	ret

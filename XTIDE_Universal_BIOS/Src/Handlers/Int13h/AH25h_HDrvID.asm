@@ -107,7 +107,7 @@ AH25h_GetDriveInfo:
 
 ;--------------------------------------------------------------------
 ; Returns timeout value for drive detection.
-; Long timeout is required for detecing first drive to make sure it is
+; Long timeout is required for detecting first drive to make sure it is
 ; ready after power-on (ATA specification says up to 31 seconds).
 ; Short timeout is used for additional drives to prevent long boot time
 ; when drive has failed or it is not present.
@@ -122,11 +122,10 @@ AH25h_GetDriveInfo:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH25h_GetDriveDetectionTimeoutValue:
+	mov		cl, B_TIMEOUT_RESET			; Load long timeout (assume first drive)
 	cmp		BYTE [RAMVARS.bDrvCnt], 0	; Detecting first drive?
-	je		SHORT .GetLongDelayForInitialDetection
+	je		SHORT .Return
 	mov		cl, B_TIMEOUT_DRVINFO		; Load short timeout
-	ret
-ALIGN JUMP_ALIGN
-.GetLongDelayForInitialDetection:
-	mov		cl, B_TIMEOUT_RESET			; Load long timeout
+ALIGN JUMP_ALIGN, ret	; This speed optimization may be unnecessary
+.Return:
 	ret

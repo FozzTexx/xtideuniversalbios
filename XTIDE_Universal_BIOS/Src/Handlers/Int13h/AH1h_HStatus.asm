@@ -1,8 +1,4 @@
-; File name		:	AH1h_HStatus.asm
-; Project name	:	IDE BIOS
-; Created date	:	27.9.2007
-; Last update	:	24.8.2010
-; Author		:	Tomi Tilli
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Int 13h function AH=1h, Read Disk Status.
 
 ; Section containing code
@@ -29,9 +25,9 @@ AH1h_HandlerForReadDiskStatus:
 	push	ds
 
 	LOAD_BDA_SEGMENT_TO	ds, di
-	xor		ah, ah					; Zero AH
-	cmp		ah, [BDA.bHDLastSt]		; Set CF if error code is non-zero
 	mov		ah, [BDA.bHDLastSt]		; Last error to AH
+	cmp		ah, 1					; Set CF if error code is zero
+	cmc								; Invert CF
 
 	pop		ds
 	jmp		Int13h_PopDiDsAndReturn

@@ -98,7 +98,7 @@ PushBlockMode:
 PushBusType:
 	xchg	ax, bx		; Store BX to AX
 	eMOVZX	bx, BYTE [cs:si+IDEVARS.bBusType]
-	mov		bx, [cs:bx+.rgwBusTypeValues]	; Char to BL, Int to BH	
+	mov		bx, [cs:bx+.rgwBusTypeValues]	; Char to BL, Int to BH
 	eMOVZX	dx, bh
 	push	bx			; Push character
 	push	dx			; Push 8, 16 or 32
@@ -190,7 +190,7 @@ ALIGN JUMP_ALIGN
 BootMenuPrintCfg_GetPointers:
 	mov		dl, [di+DPT.bDrvNum]		; Load Drive number to DL
 	call	BootInfo_GetOffsetToBX		; ES:BX now points...
-	LOAD_BDA_SEGMENT_TO	es, ax			; ...to BOOTNFO
+	LOAD_BDA_SEGMENT_TO	es, ax, !		; ...to BOOTNFO
 	mov		al, [di+DPT.bIdeOff]
 	xchg	si, ax						; CS:SI now points to IDEVARS
 	ret

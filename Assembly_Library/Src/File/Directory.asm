@@ -1,8 +1,4 @@
-; File name		:	Directory.asm
 ; Project name	:	Assembly Library
-; Created date	:	3.9.2010
-; Last update	:	6.9.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for accessing directories.
 
 
@@ -69,8 +65,8 @@ ALIGN JUMP_ALIGN
 Directory_WriteCurrentPathToDSSI:
 	push	dx
 
-	xor		dx, dx				; Default drive (00h)
-	mov		ah, GET_CURRENT_DIRECTORY
+	mov		ah, GET_CURRENT_DIRECTORY	; GET_CURRENT_DIRECTORY = 47h
+	cwd									; Default drive (00h)
 	int		DOS_INTERRUPT_21h
 
 	pop		dx
@@ -130,7 +126,7 @@ Directory_UpdateDTAForFirstMatchForDSSIwithAttributesInCX:
 ;--------------------------------------------------------------------
 ; Directory_UpdateDTAForNextMatchUsingPreviousParameters
 ;	Parameters:
-;		Nothing (Parameters from previous call to 
+;		Nothing (Parameters from previous call to
 ;				Directory_UpdateDTAForFirstMatchForDSSIwithAttributesInCX are used)
 ;	Returns:
 ;		AX:		Error code

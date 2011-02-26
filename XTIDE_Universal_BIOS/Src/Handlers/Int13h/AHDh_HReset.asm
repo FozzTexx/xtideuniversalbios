@@ -99,8 +99,7 @@ AHDh_ResetMasterAndSlave:
 
 	; HSR2: Check_status
 	mov		cl, B_TIMEOUT_RESET			; Reset timeout delay
-	mov		dx, [RAMVARS.wIdeBase]		; Load base port address
-	jmp		HStatus_WaitBsyBase
+	jmp		HStatus_WaitBsy
 
 
 ;--------------------------------------------------------------------
@@ -124,19 +123,16 @@ AHDh_InitializeMasterAndSlave:
 	jnc		SHORT .InitializeSlave		; Master drive not present
 	call	AH9h_InitializeDriveForUse
 	mov		cl, ah						; Copy error code to CL
-ALIGN JUMP_ALIGN
 .InitializeSlave:
 	pop		dx							; Restore base port address
 	call	FindDPT_ForIdeSlaveAtPort
 	jnc		SHORT .CombineErrors		; Slave drive not present
 	call	AH9h_InitializeDriveForUse
 	mov		ch, ah						; Copy error code to CH
-ALIGN JUMP_ALIGN
 .CombineErrors:
 	or		cl, ch						; OR error codes, clear CF
-	jnz		SHORT .ReturnError
-	ret
-.ReturnError:
+	jz		SHORT .Return
 	mov		ah, RET_HD_RESETFAIL		; Load Reset Failed error code
 	stc
+.Return:
 	ret
