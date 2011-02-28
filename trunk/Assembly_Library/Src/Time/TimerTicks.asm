@@ -68,7 +68,7 @@ ALIGN JUMP_ALIGN
 TimerTicks_InitializeTimeoutFromAX:
 	mov		[bx], ax					; Store timeout ticks
 	call	TimerTicks_ReadFromBdaToAX
-	add		[bx], ax					; Add latest time to timeout ticks
+	add		[bx], ax					; [bx] now contains end time for timeout
 	ret
 
 

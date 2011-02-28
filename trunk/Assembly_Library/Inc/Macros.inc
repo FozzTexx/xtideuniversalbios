@@ -44,6 +44,38 @@
 
 
 ;--------------------------------------------------------------------
+; Load BDA (Bios Data Area) segment to wanted segment register.
+;
+; Use an exclamation point (!) as the third parameter when you want
+; to force the use of the register in the second parameter. This is
+; useful when that register needs to be zeroed in subsequent code or
+; when stack usage is undesirable (ie speed is critical).
+;
+; LOAD_BDA_SEGMENT_TO
+;	Parameters:
+;		%1:		Destination Segment Register
+;		%2:		Temporary WORD Register
+;		%3:		Can be ! or empty
+;	Returns:
+;		%1:		BDA segment (zero)
+;	Corrupts registers:
+;		%2
+;--------------------------------------------------------------------
+%macro LOAD_BDA_SEGMENT_TO 2-3
+%ifndef USE_186
+	xor		%2, %2
+	mov		%1, %2
+%elifidn %3, !
+	xor		%2, %2
+	mov		%1, %2
+%else
+	push	BYTE 0
+	pop		%1
+%endif
+%endmacro
+
+
+;--------------------------------------------------------------------
 ; eENTER_STRUCT
 ;	Parameters:
 ;		%1:		Number of bytes to reserve from stack
