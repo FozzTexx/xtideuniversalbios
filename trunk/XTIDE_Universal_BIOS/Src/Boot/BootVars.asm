@@ -73,17 +73,14 @@ BootVars_SwitchToBootMenuStack:
 ALIGN JUMP_ALIGN
 BootVars_SwitchBackToPostStack:
 	pop		ax							; Pop return address
-%ifndef USE_186
-	cli									; Disable interrupts
-%endif
-	LOAD_BDA_SEGMENT_TO	ss, sp
 %ifndef USE_386
+	cli									; Disable interrupts
+	LOAD_BDA_SEGMENT_TO	ss, sp
 	mov		sp, [ss:BOOTVARS.dwPostStack]
 	mov		ss, [ss:BOOTVARS.dwPostStack+2]
-%else
-	lss		sp, [ss:BOOTVARS.dwPostStack]
-%endif
-%ifndef USE_186
 	sti									; Enable interrupts
+%else
+	LOAD_BDA_SEGMENT_TO	ss, sp
+	lss		sp, [ss:BOOTVARS.dwPostStack]
 %endif
 	jmp		ax
