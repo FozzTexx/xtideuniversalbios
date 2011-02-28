@@ -175,7 +175,8 @@ Buffers_GenerateChecksum:
 	push	es
 
 	call	Buffers_GetFileBufferToESDI
-	mov		cx, [cs:g_cfgVars+CFGVARS.wImageSizeInWords]
+	mov		ax, [cs:g_cfgVars+CFGVARS.wImageSizeInWords]
+	call	EEPROM_GetSmallestEepromSizeInWordsToCXforImageWithWordSizeInAX
 	shl		cx, 1			; Words to bytes
 	dec		cx				; Leave space for checksum byte
 	xor		ax, ax
