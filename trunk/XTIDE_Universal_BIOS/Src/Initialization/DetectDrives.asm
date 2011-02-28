@@ -67,15 +67,10 @@ DetectDrives_WithIDEVARS:
 ;--------------------------------------------------------------------
 StartDetectionWithDriveSelectByteInBHandStringInAX:
 	call	DetectPrint_StartDetectWithMasterOrSlaveStringInAXandIdeVarsInCSBP
-	call	ReadAtaInfoFromDrive	; Assume hard disk
-	jnc		SHORT CreateBiosTablesForHardDisk
-	;call	ReadAtapiInfoFromDrive	; Assume CD-ROM (not yet implemented)
-	;jnc	SHORT _CreateBiosTablesForCDROM
-	jmp		DetectPrint_DriveNotFound
-
+	; Fall to .ReadAtaInfoFromHardDisk
 
 ;--------------------------------------------------------------------
-; ReadAtaInfoFromDrive
+; .ReadAtaInfoFromHardDisk
 ;	Parameters:
 ;		BH:		Drive Select byte for Drive and Head Register
 ;		CS:BP:	Ptr to IDEVARS for the drive
@@ -88,13 +83,18 @@ StartDetectionWithDriveSelectByteInBHandStringInAX:
 ;	Corrupts registers:
 ;		AX, BL, CX, DX, DI
 ;--------------------------------------------------------------------
-ReadAtaInfoFromDrive:
+.ReadAtaInfoFromHardDisk:
 	mov		bl, [cs:bp+IDEVARS.bBusType]; Load BUS type
 	mov		dx, [cs:bp+IDEVARS.wPort]	; Load IDE Base Port address
 	mov		di, BOOTVARS.rgbAtaInfo		; ES:DI now points to ATA info location
 	call	AH25h_GetDriveInfo
-	mov		si, di						; ES:SI now points to ATA information
-	ret
+	jnc		SHORT CreateBiosTablesForHardDisk
+	; Fall to .ReadAtapiInfoFromDrive
+
+.ReadAtapiInfoFromDrive:				; Not yet implemented
+	;call	ReadAtapiInfoFromDrive		; Assume CD-ROM
+	;jnc	SHORT _CreateBiosTablesForCDROM
+	jmp		DetectPrint_DriveNotFound
 
 
 ;--------------------------------------------------------------------
@@ -102,7 +102,7 @@ ReadAtaInfoFromDrive:
 ;	Parameters:
 ;		BH:		Drive Select byte for Drive and Head Register
 ;		CS:BP:	Ptr to IDEVARS for the drive
-;		ES:SI	Ptr to ATA information for the drive
+;		ES:DI	Ptr to ATA information for the drive
 ;		DS:		RAMVARS segment
 ;		ES:		BDA/Bootnfo segment
 ;	Returns:
@@ -111,6 +111,7 @@ ReadAtaInfoFromDrive:
 ;		AX, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 CreateBiosTablesForHardDisk:
+	mov		si, di					; ES:SI now points to ATA information
 	call	CreateDPT_FromAtaInformation
 	jc		SHORT .InvalidAtaInfo
 	call	BootInfo_CreateForHardDisk

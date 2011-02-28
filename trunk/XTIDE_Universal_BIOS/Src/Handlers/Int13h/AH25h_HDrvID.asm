@@ -79,7 +79,12 @@ AH25h_GetDriveInfo:
 	mov		al, bh						; Drive Select byte to AL
 	out		dx, al						; Select Master or Slave drive
 	sub		dx, BYTE REG_IDE_DRVHD		; Back to IDE Base port
-	call	AH25h_GetDriveDetectionTimeoutValue
+
+	; Wait until ready to accept commands
+	xor		bh, bh						; BX now contains bus type
+	mov		cl, B_TIMEOUT_DRVINFO		; Load short timeout
+	cmp		[RAMVARS.bDrvCnt], bh		; Detecting first drive?
+	eCMOVE	cl, B_TIMEOUT_RESET			;  If so, load long timeout
 	call	HStatus_WaitRdy				; Wait until ready to accept commands
 	jc		SHORT .Return				; Return if error
 
@@ -91,41 +96,13 @@ AH25h_GetDriveInfo:
 
 	; Transfer data
 	sub		dx, BYTE REGR_IDE_ST		; DX to IDE Data Reg
-	xor		bh, bh						; BX now contains bus type
 	mov		cx, 256						; Transfer 256 words (single sector)
 	cld									; INSW to increment DI
 	call	[cs:bx+g_rgfnPioRead]		; Read ID sector
 	call	HStatus_WaitRdyDefTime		; Wait until drive ready
 
-	; Return
 .Return:
 	pop		bx
 	pop		dx
 	pop		di
-	ret
-
-
-;--------------------------------------------------------------------
-; Returns timeout value for drive detection.
-; Long timeout is required for detecting first drive to make sure it is
-; ready after power-on (ATA specification says up to 31 seconds).
-; Short timeout is used for additional drives to prevent long boot time
-; when drive has failed or it is not present.
-;
-; AH25h_GetDriveDetectionTimeoutValue
-;	Parameters:
-;		DS:		Segment to RAMVARS
-;	Returns:
-;		CL:		Timeout value
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-AH25h_GetDriveDetectionTimeoutValue:
-	mov		cl, B_TIMEOUT_RESET			; Load long timeout (assume first drive)
-	cmp		BYTE [RAMVARS.bDrvCnt], 0	; Detecting first drive?
-	je		SHORT .Return
-	mov		cl, B_TIMEOUT_DRVINFO		; Load short timeout
-ALIGN JUMP_ALIGN, ret	; This speed optimization may be unnecessary
-.Return:
 	ret

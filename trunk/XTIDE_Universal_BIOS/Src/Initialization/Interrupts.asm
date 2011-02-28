@@ -141,7 +141,8 @@ Interrupts_InitializeInterruptVectors:
 ;		BX
 ;--------------------------------------------------------------------
 Interrupts_InstallHandlerToVectorInBXFromCSSI:
-	eSHL_IM	bx, 2					; Shift for DWORD offset
+	shl		bx, 1
+	shl		bx, 1					; Shift for DWORD offset
 	mov		[es:bx], si				; Store offset
 	mov		[es:bx+2], cs			; Store segment
 	ret

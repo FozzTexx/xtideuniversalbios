@@ -12,7 +12,7 @@ SECTION .text
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, SI
+;		AX, SI, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootPrint_TryToBootFromDL:
@@ -40,7 +40,7 @@ BootPrint_TryToBootFromDL:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, SI
+;		AX, SI, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootPrint_BootSectorResultStringFromBX:
@@ -59,7 +59,7 @@ BootPrint_BootSectorResultStringFromBX:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, BX, SI
+;		AX, BX, SI, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootPrint_FailedToLoadFirstSector:
