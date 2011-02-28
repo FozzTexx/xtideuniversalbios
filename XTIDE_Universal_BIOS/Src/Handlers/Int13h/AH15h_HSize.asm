@@ -1,8 +1,4 @@
-; File name		:	AH15h_HSize.asm
-; Project name	:	IDE BIOS
-; Created date	:	28.9.2007
-; Last update	:	24.8.2010
-; Author		:	Tomi Tilli
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Int 13h function AH=15h, Read Disk Drive Size.
 
 ; Section containing code
@@ -35,12 +31,11 @@ AH15h_HandlerForReadDiskDriveSize:
 	push	bx
 	push	ax
 
-	call	HCapacity_GetSectorCountFromOurAH08h; Sector count to DX:AX
+	call	HCapacity_GetSectorCountFromOurAH08h; Sector count to DX:AX (clears CF)
 	mov		cx, dx								; HIWORD to CX
 	xchg	dx, ax								; LOWORD to DX
 
 	pop		ax
 	pop		bx
 	mov		ah, 3								; Type code = Hard disk
-	clc
 	jmp		Int13h_ReturnWithValueInDL

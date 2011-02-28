@@ -40,5 +40,5 @@ HCapacity_ConvertAH08hReturnValuesToSectorCount:
 	inc		ax				; AX=Head count
 	mul		bx				; AX=Head count * Sectors per track
 	mul		cx				; DX:AX = Total sector count
-	xor		bx, bx			; Zero BX for 48-bit sector count
+	xor		bx, bx			; Zero BX for 48-bit sector count (and clear CF)
 	ret
