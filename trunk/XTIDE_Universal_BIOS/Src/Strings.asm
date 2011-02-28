@@ -22,7 +22,7 @@ g_szReadError:	db	"Error %x!",CR,LF,NULL
 g_szFDD:		db	"FDD",NULL
 g_szHDD:		db	"HDD",NULL
 g_szRomBoot:	db	"ROM Boot",NULL
-g_szHotkey:		db	"%A%c%c%A%8s%a ",NULL
+g_szHotkey:		db	"%A%c%c%A%8s%A ",NULL
 
 
 ; Boot Menu menuitem strings

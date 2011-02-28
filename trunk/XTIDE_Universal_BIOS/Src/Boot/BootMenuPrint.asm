@@ -395,12 +395,10 @@ BootMenuPrint_TheBottomOfScreen:
 ;--------------------------------------------------------------------
 .PrintHotkeyString:
 	; Display Library should not be called like this
-	mov		si, ATTRIBUTE_CHARS.cTitle
-	call	MenuAttribute_GetToAXfromTypeInSI
-	xchg	cx, ax
 	mov		si, ATTRIBUTE_CHARS.cHighlightedItem
 	call	MenuAttribute_GetToAXfromTypeInSI
 	xchg	dx, ax
+	mov		cx, MONO_BRIGHT
 
 	test	bl, bl		; Any Floppy Drives?
 	jz		SHORT .SkipFloppyDriveHotkeys
@@ -411,6 +409,7 @@ BootMenuPrint_TheBottomOfScreen:
 .SkipFloppyDriveHotkeys:
 	test	bh, bh		; Any Hard Drives?
 	jz		SHORT .SkipHardDriveHotkeys
+	xchg	ax, cx		; Store Key Attribute
 	call	BootMenu_GetLetterForFirstHardDiskToCL
 	mov		ch, ANGLE_QUOTE_RIGHT
 	xchg	ax, cx
