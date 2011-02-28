@@ -17,8 +17,9 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Int19hMenu_BootLoader:
+	; Store POST stack pointer
 	LOAD_BDA_SEGMENT_TO	ds, ax
-	call	BootVars_StorePostStackPointer
+	STORE_POST_STACK_POINTER
 
 	; Install new INT 19h handler now that BOOTVARS has been initialized
 	mov		WORD [INTV_BOOTSTRAP*4], DisplayBootMenu
@@ -34,7 +35,8 @@ Int19hMenu_BootLoader:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 DisplayBootMenu:
-	call	BootVars_SwitchToBootMenuStack
+	SWITCH_TO_BOOT_MENU_STACK
+	CALL_DISPLAY_LIBRARY InitializeDisplayContext
 	call	RamVars_GetSegmentToDS
 	; Fall to .ProcessMenuSelectionsUntilBootable
 
@@ -51,7 +53,7 @@ ALIGN JUMP_ALIGN
 	call	DriveXlate_ToOrBack			; Translate drive number
 	call	BootSector_TryToLoadFromDriveDL
 	jnc		SHORT .ProcessMenuSelectionsUntilBootable	; Boot failure, show menu again
-	call	BootVars_SwitchBackToPostStack
+	SWITCH_BACK_TO_POST_STACK
 	; Fall to JumpToBootSector
 
 ;--------------------------------------------------------------------
@@ -67,7 +69,6 @@ JumpToBootSector:
 	push	es								; Push boot sector segment
 	push	bx								; Push boot sector offset
 	call	ClearSegmentsForBoot
-	xor		dh, dh							; Device supported by INT 13h
 	retf
 
 
@@ -80,7 +81,7 @@ JumpToBootSector:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Int19hMenu_RomBoot:
-	call	BootVars_SwitchBackToPostStack
+	SWITCH_BACK_TO_POST_STACK
 	call	ClearSegmentsForBoot
 	int		INTV_BOOT_FAILURE		; Never returns
 
@@ -90,13 +91,14 @@ Int19hMenu_RomBoot:
 ;	Parameters:
 ;		Nothing
 ;	Returns:
+;		DX:		Zero
 ;		DS=ES:	Zero
 ;	Corrupts registers:
-;		AX
+;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 ClearSegmentsForBoot:
-	xor		ax, ax
-	mov		ds, ax
-	mov		es, ax
+	xor		dx, dx					; Device supported by INT 13h
+	mov		ds, dx
+	mov		es, dx
 	ret

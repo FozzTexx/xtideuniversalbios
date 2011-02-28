@@ -66,8 +66,12 @@ BootInfo_CreateForHardDisk:
 	pop		ds
 	add		si, BYTE ATA1.strModel		; DS:SI now points drive name
 	lea		di, [bx+BOOTNFO.szDrvName]	; ES:DI now points to name destination
-	mov		cx, LEN_BOOTNFO_DRV
-	call	Memory_CopyCXbytesFromDSSItoESDI
+	mov		cx, LEN_BOOTNFO_DRV / 2		; Max number of WORDs allowed
+.CopyNextWord:
+	lodsw
+	xchg	al, ah						; Change endianness
+	stosw
+	loop	.CopyNextWord
 	xor		ax, ax
 	stosb								; Terminate with NULL
 

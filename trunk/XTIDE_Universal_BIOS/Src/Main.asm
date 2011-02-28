@@ -116,7 +116,6 @@ iend
 %include "DetectPrint.asm"		; For printing drive detection strings
 
 ; Include .asm files (boot menu)
-%include "BootVars.asm"			; For accessing BOOTVARS struct
 %include "BootMenu.asm"			; For Boot Menu operations
 %include "BootMenuEvent.asm"	; For menu library event handling
 %include "FloppyDrive.asm"		; Floppy Drive related functions
