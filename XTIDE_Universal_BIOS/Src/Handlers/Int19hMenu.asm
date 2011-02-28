@@ -5,9 +5,7 @@
 SECTION .text
 
 ;--------------------------------------------------------------------
-; Initial Boot Menu Loader.
-; Prepares BOOTVARS for displaying Boot Menu and accepting
-; callbacks from INT 18h and 19h.
+; Boot Menu Loader.
 ;
 ; Int19hMenu_BootLoader
 ;	Parameters:
@@ -20,21 +18,6 @@ Int19hMenu_BootLoader:
 	; Store POST stack pointer
 	LOAD_BDA_SEGMENT_TO	ds, ax
 	STORE_POST_STACK_POINTER
-
-	; Install new INT 19h handler now that BOOTVARS has been initialized
-	mov		WORD [INTV_BOOTSTRAP*4], DisplayBootMenu
-	mov		WORD [INTV_BOOTSTRAP*4+2], cs
-	; Fall to DisplayBootMenu
-
-;--------------------------------------------------------------------
-; DisplayBootMenu
-;	Parameters:
-;		Nothing
-;	Returns:
-;		Never returns
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-DisplayBootMenu:
 	SWITCH_TO_BOOT_MENU_STACK
 	CALL_DISPLAY_LIBRARY InitializeDisplayContext
 	call	RamVars_GetSegmentToDS
