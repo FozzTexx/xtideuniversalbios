@@ -385,8 +385,8 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 .RebootComputer:
 .ResetAT:
-	LOAD_BDA_SEGMENT_TO ds, ax
-	mov		[BDA.wBoot], ax			; Make sure soft reset flag is not set
+	LOAD_BDA_SEGMENT_TO ds, ax, !	; Force use of AX so we can
+	mov		[BDA.wBoot], ax			; make sure soft reset flag is not set
 	mov		al, 0FEh				; System reset (AT+ keyboard controller)
 	out		64h, al					; Reset computer (AT+)
 	mov		ax, 10
