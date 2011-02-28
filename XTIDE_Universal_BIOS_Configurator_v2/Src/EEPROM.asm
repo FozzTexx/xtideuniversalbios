@@ -1,7 +1,4 @@
-; File name		:	EEPROM.asm
 ; Project name	:	XTIDE Univeral BIOS Configurator v2
-; Created date	:	19.4.2010
-; Last update	:	9.12.2010
 ; Author		:	Tomi Tilli
 ; Description	:	Functions for managing EEPROM contents.
 
@@ -28,6 +25,37 @@ g_rgwEepromPageToSizeInBytes:
 
 ; Section containing code
 SECTION .text
+
+;--------------------------------------------------------------------
+; EEPROM_GetSmallestEepromSizeInWordsToCXforImageWithWordSizeInAX
+;	Parameters:
+;		AX:		Image size in WORDs
+;	Returns:
+;		CX:		Required EEPROM size in WORDs
+;		CF:		Set if EEPROM size found
+;				Cleared if no valid EEPROM found
+;	Corrupts registers:
+;		BX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+EEPROM_GetSmallestEepromSizeInWordsToCXforImageWithWordSizeInAX:
+	mov		bx, g_rgwEepromTypeToSizeInWords
+	mov		cx, NUMBER_OF_EEPROM_TYPES
+ALIGN JUMP_ALIGN
+.CheckNextEepromSize:
+	cmp		ax, [cs:bx]
+	jbe		SHORT .ReturnEepromSizeInAX
+	inc		bx
+	inc		bx
+	loop	.CheckNextEepromSize
+	clc		; None of the supported EEPROMs are large enough
+	ret
+ALIGN JUMP_ALIGN
+.ReturnEepromSizeInAX:
+	mov		cx, [cs:bx]
+	stc
+	ret
+
 
 ;--------------------------------------------------------------------
 ; EEPROM_LoadXtideUniversalBiosFromRomToRamBufferAndReturnSizeInDXCX

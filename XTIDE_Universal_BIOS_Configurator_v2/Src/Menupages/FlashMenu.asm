@@ -205,7 +205,7 @@ StartFlashing:
 ;	Parameters:
 ;		SS:BP:	Ptr to MENU
 ;	Returns:
-;		Nothing
+;		CF:		Set if EEPROM too small
 ;	Corrupts registers:
 ;		AX, BX, DX
 ;--------------------------------------------------------------------
@@ -385,6 +385,8 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 .RebootComputer:
 .ResetAT:
+	LOAD_BDA_SEGMENT_TO ds, ax
+	mov		[BDA.wBoot], ax			; Make sure soft reset flag is not set
 	mov		al, 0FEh				; System reset (AT+ keyboard controller)
 	out		64h, al					; Reset computer (AT+)
 	mov		ax, 10

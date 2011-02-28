@@ -204,7 +204,8 @@ LoadXtideUniversalBiosFromRom:
 	mov		ax, FLG_CFGVARS_ROMLOADED
 	call	Buffers_NewBiosWithSizeInDXCXandSourceInAXhasBeenLoadedForConfiguration
 	mov		dx, g_szDlgMainLoadROM
-	jmp		Dialogs_DisplayNotificationFromCSDX
+	call	Dialogs_DisplayNotificationFromCSDX
+	jmp		MainMenu_EnterMenuOrModifyItemVisibility
 
 
 ALIGN JUMP_ALIGN

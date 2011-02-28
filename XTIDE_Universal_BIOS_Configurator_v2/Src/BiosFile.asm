@@ -157,8 +157,9 @@ BiosFile_SaveRamBufferToFileInDSSI:
 	call	Buffers_GenerateChecksum
 	call	Buffers_GetFileBufferToESDI
 	call	Registers_CopyESDItoDSSI
+	mov		ax, [cs:g_cfgVars+CFGVARS.wImageSizeInWords]
+	call	EEPROM_GetSmallestEepromSizeInWordsToCXforImageWithWordSizeInAX
 	xor		dx, dx
-	mov		cx, [cs:g_cfgVars+CFGVARS.wImageSizeInWords]
 	shl		cx, 1
 	rcl		dx, 1			; WORDs to BYTEs
 	call	FileIO_WriteDXCXbytesFromDSSIusingHandleFromBX
