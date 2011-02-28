@@ -47,7 +47,7 @@ BootMenuPrint_ClearScreen:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, DX, SI
+;		AX, DX, SI, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenuPrint_FloppyMenuitem:
@@ -281,18 +281,16 @@ ALIGN JUMP_ALIGN
 ; BootMenuPrint_FormatCSSIfromParamsInSSBP
 ;	Parameters:
 ;		CS:SI:	Ptr to string to format
-;		SS:BP:	Ptr to format parameters
+;		BP:		SP before pushing parameters
 ;	Returns:
 ;		BP:		Popped from stack
 ;	Corrupts registers:
-;		AX
+;		AX, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenuPrint_FormatCSSIfromParamsInSSBP:
-	push	di
 	CALL_DISPLAY_LIBRARY FormatNullTerminatedStringFromCSSI
 	stc				; Successfull return from menu event
-	pop		di
 	pop		bp
 	ret
 
@@ -393,7 +391,7 @@ BootMenuPrint_TheBottomOfScreen:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, CX, DX, SI
+;		AX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 .PrintHotkeyString:
 	; Display Library should not be called like this
@@ -430,7 +428,7 @@ BootMenuPrint_TheBottomOfScreen:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, SI
+;		AX, SI, DI
 ;--------------------------------------------------------------------
 .PrintRomBootHotkey:
 	mov		ax, 'F' | ('8'<<8)		; F8
@@ -448,7 +446,7 @@ BootMenuPrint_TheBottomOfScreen:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, SI
+;		AX, SI, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 PushHotkeyParamsAndFormat:

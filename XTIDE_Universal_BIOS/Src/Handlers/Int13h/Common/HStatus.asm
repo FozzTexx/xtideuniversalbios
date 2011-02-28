@@ -248,7 +248,8 @@ InitializeTimeoutWithTicksInCL:
 ;	Parameters:
 ;		DS:		Segment to RAMVARS
 ;	Returns:
-;		Nothing
+;		CF:		Set if timeout
+;				Cleared if time left
 ;	Corrupts registers:
 ;		CX
 ;--------------------------------------------------------------------

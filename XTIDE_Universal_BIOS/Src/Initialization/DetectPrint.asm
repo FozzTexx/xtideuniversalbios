@@ -13,7 +13,7 @@ SECTION .text
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, SI
+;		AX, SI, DI
 ;--------------------------------------------------------------------
 DetectPrint_RomFoundAtSegment:
 	push	bp
@@ -32,7 +32,7 @@ DetectPrint_RomFoundAtSegment:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, SI
+;		AX, SI, DI
 ;--------------------------------------------------------------------
 DetectPrint_StartDetectWithMasterOrSlaveStringInAXandIdeVarsInCSBP:
 	push	bp
