@@ -48,37 +48,38 @@ BootMenu_Enter:
 ;--------------------------------------------------------------------
 ; Returns number of menuitems in Boot Menu.
 ;
-; BootMenu_GetMenuitemCountToCX
+; BootMenu_GetMenuitemCountToAX
 ;	Parameters:
 ;		DS:		RAMVARS segment
 ;	Returns:
-;		CX:		Number of boot menu items
+;		AX:		Number of boot menu items
 ;	Corrupts registers:
-;		AX
+;		CX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-BootMenu_GetMenuitemCountToCX:
+BootMenu_GetMenuitemCountToAX:
 	call	RamVars_GetHardDiskCountFromBDAtoCX
 	xchg	ax, cx
-	call	FloppyDrive_GetCount
+	call	FloppyDrive_GetCountToCX
 	add		ax, cx
 	ret
 
 
 ;--------------------------------------------------------------------
-; BootMenu_GetHeightToALwithItemCountInCL
+; BootMenu_GetHeightToAHwithItemCountInAL
 ;	Parameters:
-;		CL:		Number of menuitems
+;		AL:		Number of menuitems
 ;	Returns:
 ;		AH:		Boot menu height
 ;	Corrupts registers:
-;		AL, CL, DI
+;		AL, CX, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-BootMenu_GetHeightToAHwithItemCountInCL:
+BootMenu_GetHeightToAHwithItemCountInAL:
+	xchg	cx, ax
 	add		cl, BOOT_MENU_HEIGHT_WITHOUT_ITEMS
 	CALL_DISPLAY_LIBRARY GetColumnsToALandRowsToAH
-	sub		ah, MENU_SCREEN_BOTTOM_LINES*2
+	sub		ah, MENU_SCREEN_BOTTOM_LINES*2	; Leave space for bottom info
 	MIN_U	ah, cl
 	ret
 
@@ -103,7 +104,7 @@ BootMenu_ConvertAsciiHotkeyFromALtoMenuitemInCX:
 ALIGN JUMP_ALIGN
 .StartFromHardDiskLetter:
 	sub		al, cl						; Hard Disk index
-	call	FloppyDrive_GetCount
+	call	FloppyDrive_GetCountToCX
 	add		cx, ax						; Menuitem index
 	ret
 
@@ -121,7 +122,7 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenu_GetLetterForFirstHardDiskToCL:
-	call	FloppyDrive_GetCount
+	call	FloppyDrive_GetCountToCX
 	add		cl, 'A'
 	MAX_U	cl, 'C'
 	ret
@@ -140,7 +141,7 @@ BootMenu_GetLetterForFirstHardDiskToCL:
 ALIGN JUMP_ALIGN
 BootMenu_ConvertMenuitemFromCXtoDriveInDX:
 	mov		dx, cx					; Copy menuitem index to DX
-	call	FloppyDrive_GetCount
+	call	FloppyDrive_GetCountToCX
 	cmp		dx, cx					; Floppy drive?
 	jb		SHORT .ReturnFloppyDriveInDX
 	sub		dx, cx					; Remove floppy drives from index
@@ -150,29 +151,22 @@ BootMenu_ConvertMenuitemFromCXtoDriveInDX:
 
 
 ;--------------------------------------------------------------------
-; Converts Floppy or Hard Disk Drive number to menuitem index.
-; This function does not check does the drive really exists.
-;
-; BootMenu_ConvertDriveToMenuitem
+; BootMenu_GetMenuitemToDXforDriveInDL
 ;	Parameters:
 ;		DL:		Drive number
 ;	Returns:
-;		CX:		Menuitem index (assuming drive is available)
+;		DX:		Menuitem index (assuming drive is available)
 ;	Corrupts registers:
-;		AX
+;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-BootMenu_ConvertDriveToMenuitem:
-	test	dl, 80h					; Floppy drive?
-	jz		SHORT .ReturnFloppyMenuitem
-	call	FloppyDrive_GetCount
-	mov		ax, 7Fh					; Load mask to clear floppy bit
-	and		ax, dx					; AX = Hard Disk index
-	add		cx, ax					; Add hard disk index to floppy drive count
-	ret
-ALIGN JUMP_ALIGN
-.ReturnFloppyMenuitem:
-	eMOVZX	cx, dl					; Drive number and item index are equal
+BootMenu_GetMenuitemToDXforDriveInDL:
+	xor		dh, dh						; Drive number now in DX
+	test	dl, 80h
+	jz		SHORT .ReturnItemIndexInDX	; Return if floppy drive (HD bit not set)
+	call	FloppyDrive_GetCountToCX
+	add		dx, cx
+.ReturnItemIndexInDX:
 	ret
 
 
@@ -197,7 +191,7 @@ BootMenu_IsDriveInSystem:
 	or		cl, 80h								; Set Hard Disk bit to CX
 	jmp		SHORT .CompareDriveNumberToDriveCount
 .IsFloppyDriveIsInSystem:
-	call	FloppyDrive_GetCount				; Floppy Drive count to CX
+	call	FloppyDrive_GetCountToCX
 .CompareDriveNumberToDriveCount:
-	cmp		dl, cl
+	cmp		dl, cl								; Set CF when DL is smaller
 	ret

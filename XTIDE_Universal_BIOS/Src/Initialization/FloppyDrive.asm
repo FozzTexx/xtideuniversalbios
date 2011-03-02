@@ -119,7 +119,7 @@ FloppyDrive_GetType:
 ;--------------------------------------------------------------------
 ; Returns number of Floppy Drives in system.
 ;
-; FloppyDrive_GetCount
+; FloppyDrive_GetCountToCX
 ;	Parameters:
 ;		Nothing
 ;	Returns:
@@ -128,12 +128,12 @@ FloppyDrive_GetType:
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-FloppyDrive_GetCount:
+FloppyDrive_GetCountToCX:
 	push	es
 %ifdef USE_AT
-	call	FloppyDrive_GetCountFromBIOS
+	call	GetCountFromBIOS
 %else
-	call	FloppyDrive_GetCountFromBDA
+	call	GetCountFromBDA
 %endif
 	MAX_U	cl, [cs:ROMVARS.bMinFddCnt]
 	xor		ch, ch
@@ -146,7 +146,7 @@ FloppyDrive_GetCount:
 ; Does not work on most XT systems. Call FloppyDrive_GetCountFromBDA
 ; if this function fails.
 ;
-; FloppyDrive_GetCountFromBIOS
+; GetCountFromBIOS
 ;	Parameters:
 ;		Nothing
 ;	Returns:
@@ -158,7 +158,7 @@ FloppyDrive_GetCount:
 ;--------------------------------------------------------------------
 %ifdef USE_AT
 ALIGN JUMP_ALIGN
-FloppyDrive_GetCountFromBIOS:
+GetCountFromBIOS:
 	push	di
 	push	dx
 	push	bx
@@ -181,7 +181,7 @@ FloppyDrive_GetCountFromBIOS:
 ; Reads Floppy Drive Count (0...4) from BIOS Data Area.
 ; This function should be used only if FloppyDrive_GetCountFromBIOS fails.
 ;
-; FloppyDrive_GetCountFromBDA
+; GetCountFromBDA
 ;	Parameters:
 ;		Nothing
 ;	Returns:
@@ -191,7 +191,7 @@ FloppyDrive_GetCountFromBIOS:
 ;--------------------------------------------------------------------
 %ifndef USE_AT
 ALIGN JUMP_ALIGN
-FloppyDrive_GetCountFromBDA:
+GetCountFromBDA:
 	LOAD_BDA_SEGMENT_TO	es, cx
 	mov		cl, [es:BDA.wEquipment]			; Load Equipment WORD low byte
 	mov		ch, cl							; Copy it to CH
