@@ -361,7 +361,7 @@ BootMenuPrint_ClearInformationArea:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenuPrint_TheBottomOfScreen:
-	call	FloppyDrive_GetCount
+	call	FloppyDrive_GetCountToCX
 	mov		bl, cl					; Floppy Drive count to BL
 	call	RamVars_GetHardDiskCountFromBDAtoCX
 	mov		bh, cl					; Hard Disk count to BH

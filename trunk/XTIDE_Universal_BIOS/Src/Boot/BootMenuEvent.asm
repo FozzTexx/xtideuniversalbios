@@ -7,7 +7,6 @@ SECTION .text
 struc ITEM_TYPE_REFRESH
 	.HardDisk			resb	2
 	.FloppyDrive		resb	2
-	.SpecialFunction	resb	2
 endstruc
 
 
@@ -28,21 +27,20 @@ BootMenuEvent_Handler:
 	ja		SHORT .EventNotHandled
 	jmp		[bx+.rgfnEventSpecificHandlers]
 .EventNotHandled:
-.IdleProcessing:
 	clc
 	ret
 
 ALIGN WORD_ALIGN
 .rgfnEventSpecificHandlers:
-	dw		.InitializeMenuinitFromDSSI
-	dw		.EventCompleted
-	dw		.IdleProcessing
-	dw		.ItemHighlightedFromCX
-	dw		.ItemSelectedFromCX
-	dw		.KeyStrokeInAX
-	dw		BootMenuPrint_TitleStrings
-	dw		.RefreshInformation
-	dw		.RefreshItemFromCX
+	dw		.InitializeMenuinitFromDSSI	; MENUEVENT.InitializeMenuinitFromDSSI
+	dw		.EventCompleted				; MENUEVENT.ExitMenu
+	dw		.EventNotHandled			; MENUEVENT.IdleProcessing
+	dw		.ItemHighlightedFromCX		; MENUEVENT.ItemHighlightedFromCX
+	dw		.ItemSelectedFromCX			; MENUEVENT.ItemSelectedFromCX
+	dw		.KeyStrokeInAX				; MENUEVENT.KeyStrokeInAX
+	dw		BootMenuPrint_TitleStrings	; MENUEVENT.RefreshTitle
+	dw		.RefreshInformation			; MENUEVENT.RefreshInformation
+	dw		.RefreshItemFromCX			; MENUEVENT.RefreshItemFromCX
 
 
 ; Parameters:
@@ -54,13 +52,13 @@ ALIGN JUMP_ALIGN
 	push	ds
 	call	RamVars_GetSegmentToDS
 	call	.GetDefaultMenuitemToDX
-	call	BootMenu_GetMenuitemCountToCX
+	call	BootMenu_GetMenuitemCountToAX
 	pop		ds
-	mov		[si+MENUINIT.wItems], cx
+	mov		[si+MENUINIT.wItems], ax
 	mov		[si+MENUINIT.wHighlightedItem], dx
 	mov		WORD [si+MENUINIT.wTitleAndInfoLines], BOOT_MENU_TITLE_AND_INFO_LINES
 	mov		BYTE [si+MENUINIT.bWidth], BOOT_MENU_WIDTH
-	call	BootMenu_GetHeightToAHwithItemCountInCL
+	call	BootMenu_GetHeightToAHwithItemCountInAL
 	mov		[si+MENUINIT.bHeight], ah
 	stc
 	ret
@@ -71,9 +69,7 @@ ALIGN JUMP_ALIGN
 	call	BootMenu_IsDriveInSystem
 	jnc		SHORT .DoNotSetDefaultMenuitem
 	call	DriveXlate_SetDriveToSwap
-	call	BootMenu_ConvertDriveToMenuitem
-	mov		dx, cx
-	ret
+	jmp		BootMenu_GetMenuitemToDXforDriveInDL
 ALIGN JUMP_ALIGN
 .DoNotSetDefaultMenuitem:
 	xor		dx, dx						; Whatever appears first on boot menu
