@@ -87,7 +87,6 @@ BootMenuPrint_HardDiskMenuitem:
 ;	Corrupts registers:
 ;		AX, BX, SI, DI
 ;--------------------------------------------------------------------
-;ALIGN JUMP_ALIGN
 .HardDiskMenuitemForOurDrive:
 	call	BootInfo_GetOffsetToBX
 	lea		si, [bx+BOOTNFO.szDrvName]
@@ -223,8 +222,38 @@ ALIGN JUMP_ALIGN
 BootMenuPrint_HardDiskMenuitemInformation:
 	call	FindDPT_ForDriveNumber		; DS:DI to point DPT
 	jnc		SHORT .HardDiskMenuitemInfoForForeignDrive
-	call	.HardDiskMenuitemInfoSizeForOurDrive
-	jmp		BootMenuPrintCfg_ForOurDrive
+	; Fall to .HardDiskMenuitemInfoForOurDrive
+
+;--------------------------------------------------------------------
+; .HardDiskMenuitemInfoForOurDrive
+;	Parameters:
+;		DL:		Untranslated Hard Disk number
+;		DS:DI:	Ptr to DPT
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, BX, CX, DX, SI, DI, ES
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+.HardDiskMenuitemInfoForOurDrive:
+	push	di
+	ePUSH_T	ax, BootMenuPrintCfg_ForOurDrive	; Return from BootMenuPrint_FormatCSSIfromParamsInSSBP
+	push	bp
+	mov		bp, sp
+	ePUSH_T	ax, g_szCapacity
+
+	; Get and push L-CHS size
+	call	HCapacity_GetSectorCountFromOurAH08h
+	call	ConvertSectorCountInBXDXAXtoSizeAndPushForFormat
+
+	; Get and push total LBA size
+	mov		dl, [di+DPT.bDrvNum]
+	call	BootInfo_GetTotalSectorCount
+	call	ConvertSectorCountInBXDXAXtoSizeAndPushForFormat
+
+	mov		si, g_szSizeDual
+	jmp		SHORT BootMenuPrint_FormatCSSIfromParamsInSSBP
+
 
 ;--------------------------------------------------------------------
 ; .HardDiskMenuitemInfoForForeignDrive
@@ -247,33 +276,6 @@ ALIGN JUMP_ALIGN
 	call	ConvertSectorCountInBXDXAXtoSizeAndPushForFormat
 
 	mov		si, g_szSizeSingle
-	jmp		SHORT BootMenuPrint_FormatCSSIfromParamsInSSBP
-
-;--------------------------------------------------------------------
-; .HardDiskMenuitemInfoSizeForOurDrive
-;	Parameters:
-;		DL:		Untranslated Hard Disk number
-;		DS:DI:	Ptr to DPT
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, BX, CX, DX, SI, ES
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-.HardDiskMenuitemInfoSizeForOurDrive:
-	push	bp
-	mov		bp, sp
-	ePUSH_T	ax, g_szCapacity
-
-	; Get and push L-CHS size
-	call	HCapacity_GetSectorCountFromOurAH08h
-	call	ConvertSectorCountInBXDXAXtoSizeAndPushForFormat
-
-	; Get and push total LBA size
-	call	BootInfo_GetTotalSectorCount
-	call	ConvertSectorCountInBXDXAXtoSizeAndPushForFormat
-
-	mov		si, g_szSizeDual
 	; Fall to BootMenuPrint_FormatCSSIfromParamsInSSBP
 
 

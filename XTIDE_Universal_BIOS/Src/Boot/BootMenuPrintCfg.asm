@@ -11,7 +11,8 @@ SECTION .text
 ;
 ; BootMenuPrintCfg_ForOurDrive
 ;	Parameters:
-;		DS:DI:	Ptr to DPT
+;		DS:		Segment to DPT
+;		Stack:	Offset to DPT
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
@@ -19,6 +20,7 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenuPrintCfg_ForOurDrive:
+	pop		di
 	mov		si, g_szCfgHeader
 	call	BootMenuPrint_NullTerminatedStringFromCSSIandSetCF
 	call	BootMenuPrintCfg_GetPointers
@@ -36,7 +38,6 @@ BootMenuPrintCfg_ForOurDrive:
 ;	Corrupts registers:
 ;		AX, DX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 PushAndFormatCfgString:
 	push	bp
 	mov		bp, sp
@@ -172,7 +173,7 @@ PushResetStatus:
 ;--------------------------------------------------------------------
 PrintValuesFromStack:
 	mov		si, g_szCfgFormat
-	jmp		BootMenuPrint_NullTerminatedStringFromCSSIandSetCF
+	jmp		BootMenuPrint_FormatCSSIfromParamsInSSBP
 
 
 ;--------------------------------------------------------------------

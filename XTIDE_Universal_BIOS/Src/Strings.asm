@@ -5,18 +5,18 @@
 SECTION .text
 
 ; POST drive detection strings
-g_szRomAt:		db	"%s @ %x",CR,LF,NULL
+g_szRomAt:		db	"%s @ %x",LF,CR,NULL
 g_szMaster:		db	"Master",NULL
 g_szSlave:		db	"Slave ",NULL
 g_szDetect:		db	"IDE %s at %x: ",NULL			; IDE Master at 1F0h:
-g_szNotFound:	db	"not found",CR,LF,NULL
+g_szNotFound:	db	"not found",LF,CR,NULL
 
 ; Boot loader strings
-g_szTryToBoot:	db	"Booting from %s %x",ANGLE_QUOTE_RIGHT,"%x",CR,LF,NULL
+g_szTryToBoot:	db	"Booting from %s %x",ANGLE_QUOTE_RIGHT,"%x",LF,CR,NULL
 g_szBootSector:	db	"Boot sector",NULL
 g_szFound:		db	"found",NULL
-g_szSectRead:	db	"%s %s!",CR,LF,NULL
-g_szReadError:	db	"Error %x!",CR,LF,NULL
+g_szSectRead:	db	"%s %s!",LF,CR,NULL
+g_szReadError:	db	"Error %x!",LF,CR,NULL
 
 ; Boot menu bottom of screen strings
 g_szFDD:		db	"FDD",NULL
@@ -33,8 +33,8 @@ g_szforeignHD:	db	"Foreign Hard Disk",NULL
 ; Boot Menu information strings
 g_szCapacity:	db	"Capacity : ",NULL
 g_szSizeSingle:	db	"%s%u.%u %ciB",NULL
-g_szSizeDual:	db	"%s%u.%u %ciB / %u.%u %ciB",NULL
-g_szCfgHeader:	db	"Addr.",SINGLE_VERTICAL,"Block",SINGLE_VERTICAL,"Bus",  SINGLE_VERTICAL,"IRQ",  SINGLE_VERTICAL,"Reset",CR,LF,NULL
+g_szSizeDual:	db	"%s%u.%u %ciB / %u.%u %ciB",LF,CR,NULL
+g_szCfgHeader:	db	"Addr.",SINGLE_VERTICAL,"Block",SINGLE_VERTICAL,"Bus",  SINGLE_VERTICAL,"IRQ",  SINGLE_VERTICAL,"Reset",LF,CR,NULL
 g_szCfgFormat:	db	"%s"   ,SINGLE_VERTICAL,"%5u",  SINGLE_VERTICAL,"%c%2u",SINGLE_VERTICAL," %c%c",SINGLE_VERTICAL,"%5x",  NULL
 g_szLCHS:		db	"L-CHS",NULL
 g_szPCHS:		db	"P-CHS",NULL

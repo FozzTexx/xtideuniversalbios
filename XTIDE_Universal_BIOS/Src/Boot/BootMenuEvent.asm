@@ -23,9 +23,9 @@ endstruc
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenuEvent_Handler:
-	cmp		bx, MENUEVENT.RefreshItemFromCX	; Above last supported item?
+	cmp		bx, BYTE MENUEVENT.RefreshItemFromCX	; Above last supported item?
 	ja		SHORT .EventNotHandled
-	jmp		[bx+.rgfnEventSpecificHandlers]
+	jmp		[cs:bx+.rgfnEventSpecificHandlers]
 .EventNotHandled:
 	clc
 	ret
