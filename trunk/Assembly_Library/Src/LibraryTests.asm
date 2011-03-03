@@ -97,8 +97,7 @@ ALIGN JUMP_ALIGN
 	ret
 .szInfoTitle:
 	db		"Information line 1,",LF,CR,
-	db		"Information line 2. ",
-	db		"This comes (12) right after Information line 2.",NULL
+	db		"Information line 2. Auto splitter should split this very long line.",NULL
 
 ALIGN JUMP_ALIGN
 .RefreshItemFromCX:

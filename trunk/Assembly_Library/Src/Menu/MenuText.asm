@@ -1,8 +1,4 @@
-; File name		:	MenuText.asm
 ; Project name	:	Assembly Library
-; Created date	:	21.7.2010
-; Last update	:	9.12.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for drawing menu texts by the user.
 
 ; Section containing code
@@ -20,12 +16,14 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MenuText_ClearTitleArea:
+	CALL_DISPLAY_LIBRARY PushDisplayContext		; Save cursor coordinates
 	call	PrepareToDrawTitleArea
 	mov		cl, [bp+MENUINIT.bTitleLines]
 	jmp		SHORT ClearCLlinesOfText
 
 ALIGN JUMP_ALIGN
 MenuText_ClearInformationArea:
+	CALL_DISPLAY_LIBRARY PushDisplayContext		; Save cursor coordinates
 	call	MenuText_PrepareToDrawInformationArea
 	mov		cl, [bp+MENUINIT.bInfoLines]
 ClearCLlinesOfText:
@@ -35,6 +33,7 @@ ClearCLlinesOfText:
 	xchg	cx, ax
 	mov		al, ' '
 	CALL_DISPLAY_LIBRARY PrintRepeatedCharacterFromALwithCountInCX
+	CALL_DISPLAY_LIBRARY PopDisplayContext
 	ret
 
 
