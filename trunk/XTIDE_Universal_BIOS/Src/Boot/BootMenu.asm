@@ -35,7 +35,7 @@ BootMenu_DisplayAndReturnSelection:
 ;	Returns:
 ;		CX:		Index of selected item or NO_ITEM_SELECTED
 ;	Corrupts registers:
-;		BX, DI
+;		AX, BX, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenu_Enter:
@@ -165,6 +165,7 @@ BootMenu_GetMenuitemToDXforDriveInDL:
 	test	dl, 80h
 	jz		SHORT .ReturnItemIndexInDX	; Return if floppy drive (HD bit not set)
 	call	FloppyDrive_GetCountToCX
+	and		dl, ~80h					; Clear HD bit
 	add		dx, cx
 .ReturnItemIndexInDX:
 	ret
