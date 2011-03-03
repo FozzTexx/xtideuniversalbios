@@ -94,38 +94,12 @@ DriveXlate_ToOrBack:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 DriveXlate_SwapFloppyDriveOrHardDisk:
-	test	dl, 80h							; Hard disk?
-	jnz		SHORT .SwapHardDisk	; If so, jump to swap
-	; Fall to .SwapFloppyDrive
-
-;--------------------------------------------------------------------
-; .SwapFloppyDrive
-;	Parameters:
-;		DL:		Drive number to be possibly swapped
-;		DS:		RAMVARS segment
-;	Returns:
-;		DL:		Translated drive number
-;	Corrupts registers:
-;		AX
-;--------------------------------------------------------------------
-.SwapFloppyDrive:
-	eMOVZX	ax, BYTE [RAMVARS.xlateVars+XLATEVARS.bFDSwap]
-	jmp		SHORT SwapDrive
-
-;--------------------------------------------------------------------
-; .SwapHardDisk
-;	Parameters:
-;		DL:		Drive number to be possibly swapped
-;		DS:		RAMVARS segment
-;	Returns:
-;		DL:		Translated drive number
-;	Corrupts registers:
-;		AX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-.SwapHardDisk:
-	mov		ah, 80h
+	mov		ah, 80h					; Assume hard disk
 	mov		al, BYTE [RAMVARS.xlateVars+XLATEVARS.bHDSwap]
+	test	dl, ah					; Hard disk?
+	jnz		SHORT SwapDrive			; If so, jump to swap
+	mov		al, BYTE [RAMVARS.xlateVars+XLATEVARS.bFDSwap]
+	cbw
 	; Fall to SwapDrive
 
 ;--------------------------------------------------------------------
@@ -139,6 +113,7 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
 SwapDrive:
 	cmp		ah, dl				; Swap DL from 00h/80h to xxh?
 	je		SHORT .SwapToXXhInAL
