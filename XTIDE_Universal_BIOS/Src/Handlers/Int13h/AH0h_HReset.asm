@@ -1,9 +1,4 @@
-; File name		:	AH0h_HReset.asm
-; Project name	:	IDE BIOS
-; Created date	:	27.9.2007
-; Last update	:	13.1.2011
-; Author		:	Tomi Tilli,
-;				:	Krister Nordvall (optimizations)
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Int 13h function AH=0h, Disk Controller Reset.
 
 ; Section containing code
@@ -35,8 +30,8 @@ AH0h_HandlerForDiskControllerReset:
 
 	eMOVZX	bx, dl						; Copy requested drive to BL, zero BH to assume no errors
 	call	ResetFloppyDrivesWithInt40h
-	test	bl, 80h
-	jz		SHORT .SkipHardDiskReset
+	test	bl, bl
+	jns		SHORT .SkipHardDiskReset
 	call	ResetForeignHardDisks
 	call	AH0h_ResetHardDisksHandledByOurBIOS
 ALIGN JUMP_ALIGN
@@ -55,7 +50,7 @@ ALIGN JUMP_ALIGN
 ;		BH:		Error code from requested drive (if available)
 ;	Corrupts registers:
 ;		AX, DL, DI
-;--------------------------------------------------------------------	
+;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 ResetFloppyDrivesWithInt40h:
 	call	GetDriveNumberForForeignBiosesToDL
@@ -74,7 +69,7 @@ ResetFloppyDrivesWithInt40h:
 ;		BH:		Error code from requested drive (if available)
 ;	Corrupts registers:
 ;		AX, DL, DI
-;--------------------------------------------------------------------	
+;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 ResetForeignHardDisks:
 	call	GetDriveNumberForForeignBiosesToDL
@@ -93,7 +88,7 @@ ResetForeignHardDisks:
 ;				80h if our drive
 ;	Corrupts registers:
 ;		DI
-;--------------------------------------------------------------------	
+;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 GetDriveNumberForForeignBiosesToDL:
 	mov		dl, bl

@@ -22,8 +22,8 @@ BootSector_TryToLoadFromDriveDL:
 	call	LoadFirstSectorFromDriveDL
 	jc		SHORT .FailedToLoadFirstSector
 
-	test	dl, 80h
-	jz		SHORT .AlwaysBootFromFloppyDriveForBooterGames
+	test	dl, dl
+	jns		SHORT .AlwaysBootFromFloppyDriveForBooterGames
 	cmp		WORD [es:bx+510], 0AA55h		; Valid boot sector?
 	jne		SHORT .FirstHardDiskSectorNotBootable
 .AlwaysBootFromFloppyDriveForBooterGames:
@@ -83,8 +83,10 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 .ResetBootDriveFromDL:
 	xor		ax, ax							; AH=0h, Disk Controller Reset
-	test	dl, 80h							; Floppy drive?
-	eCMOVNZ	ah, 0Dh							; AH=Dh, Reset Hard Disk (Alternate reset)
+	test	dl, dl							; Floppy drive?
+	jns		SHORT .SkipAltReset
+	mov		ah, 0Dh							; AH=Dh, Reset Hard Disk (Alternate reset)
+.SkipAltReset:
 	int		INTV_DISK_FUNC
 	ret
 

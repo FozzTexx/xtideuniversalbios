@@ -129,8 +129,8 @@ RamVars_IsFunctionHandledByThisBIOS:
 	jz		SHORT .FunctionIsHandledByOurBIOS
 	cmp		ah, 08h			; Read Disk Drive Parameters?
 	jne		SHORT RamVars_IsDriveHandledByThisBIOS
-	test	dl, 80h			; We dot not handle floppy drives
-	jz		SHORT .FunctionIsNotHandledByOurBIOS
+	test	dl, dl			; We do not handle floppy drives
+	jns		SHORT .FunctionIsNotHandledByOurBIOS
 ALIGN JUMP_ALIGN
 .FunctionIsHandledByOurBIOS:
 	stc

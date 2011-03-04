@@ -156,8 +156,8 @@ ALIGN JUMP_ALIGN
 
 	call	RamVars_GetSegmentToDS
 	call	BootMenu_ConvertMenuitemFromCXtoDriveInDX
-	test	dl, 80h					; Floppy drive?
-	jz		SHORT .DrawFloppyDrive
+	test	dl, dl					; Floppy drive?
+	jns		SHORT .DrawFloppyDrive
 	jmp		[cs:bx+ITEM_TYPE_REFRESH.HardDisk]
 ALIGN JUMP_ALIGN
 .DrawFloppyDrive:

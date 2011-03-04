@@ -20,8 +20,10 @@ BootPrint_TryToBootFromDL:
 	mov		bp, sp
 
 	mov		ax, g_szHDD
-	test	dl, 80h
-	eCMOVZ	ax, g_szFDD
+	test	dl, dl
+	js		SHORT .NotFDD
+	mov		ax, g_szFDD
+.NotFDD:
 	push	ax
 
 	call	DriveXlate_ToOrBack
