@@ -25,11 +25,12 @@ MenuInit_DisplayMenuWithHandlerInBXandUserDataInDXAX:
 
 	call	Memory_ZeroSSBPwithSizeInCX
 	call	MenuInit_EnterMenuWithHandlerInBXandUserDataInDXAX
-	mov		ax, [bp+MENUINIT.wHighlightedItem]
+	mov		dx, [bp+MENUINIT.wHighlightedItem]
 
 	eLEAVE_STRUCT MENU_size
 	pop		ax
 	CALL_DISPLAY_LIBRARY SetCursorShapeFromAX
+	xchg	ax, dx			; Return highlighted item in AX
 	pop		ds
 	pop		es
 	ret
