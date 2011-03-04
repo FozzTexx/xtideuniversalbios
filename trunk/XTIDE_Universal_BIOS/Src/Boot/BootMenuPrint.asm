@@ -21,7 +21,25 @@ BootMenuPrint_TitleStrings:
 	call	BootMenuPrint_NullTerminatedStringFromCSSIandSetCF
 	CALL_DISPLAY_LIBRARY PrintNewlineCharacters
 	mov		si, ROMVARS.szVersion
-	jmp		BootMenuPrint_NullTerminatedStringFromCSSIandSetCF
+	; Fall through to BootMenuPrint_NullTerminatedStringFromCSSIandSetCF
+
+
+;--------------------------------------------------------------------
+; BootMenuPrint_NullTerminatedStringFromCSSIandSetCF
+;	Parameters:
+;		CS:SI:	Ptr to NULL terminated string to print
+;	Returns:
+;		CF:		Set since menu event was handled successfully
+;	Corrupts registers:
+;		AX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+BootMenuPrint_NullTerminatedStringFromCSSIandSetCF:
+	push	di
+	CALL_DISPLAY_LIBRARY PrintNullTerminatedStringFromCSSI
+	pop		di
+	stc
+	ret
 
 
 ;--------------------------------------------------------------------
@@ -52,7 +70,6 @@ BootMenuPrint_ClearScreen:
 ALIGN JUMP_ALIGN
 BootMenuPrint_FloppyMenuitem:
 	push	bp
-
 	mov		bp, sp
 	mov		si, g_szFDLetter
 	ePUSH_T	ax, g_szFloppyDrv
@@ -108,7 +125,7 @@ BootMenuPrint_HardDiskMenuitem:
 ALIGN JUMP_ALIGN
 .HardDiskMenuitemForForeignDrive:
 	mov		si, g_szforeignHD
-	jmp		BootMenuPrint_NullTerminatedStringFromCSSIandSetCF
+	jmp		SHORT BootMenuPrint_NullTerminatedStringFromCSSIandSetCF
 
 
 ;--------------------------------------------------------------------
@@ -176,7 +193,6 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 .PrintKnownFloppyType:
 	push	bp
-
 	mov		bp, sp
 	mov		si, g_szFddSize
 	ePUSH_T	ax, g_szCapacity
@@ -316,24 +332,6 @@ ConvertSectorCountInBXDXAXtoSizeAndPushForFormat:
 	push	cx		; Tenths
 	push	dx		; Magnitude character
 	jmp		si
-
-
-;--------------------------------------------------------------------
-; BootMenuPrint_NullTerminatedStringFromCSSIandSetCF
-;	Parameters:
-;		CS:SI:	Ptr to NULL terminated string to print
-;	Returns:
-;		CF:		Set since menu event was handled successfully
-;	Corrupts registers:
-;		AX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-BootMenuPrint_NullTerminatedStringFromCSSIandSetCF:
-	push	di
-	CALL_DISPLAY_LIBRARY PrintNullTerminatedStringFromCSSI
-	pop		di
-	stc
-	ret
 
 
 ;--------------------------------------------------------------------

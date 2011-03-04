@@ -72,13 +72,12 @@ BootInfo_CreateForHardDisk:
 	xchg	al, ah						; Change endianness
 	stosw
 	loop	.CopyNextWord
-	xor		ax, ax
+	xor		ax, ax						; Zero AX and clear CF
 	stosb								; Terminate with NULL
 
 	pop		di
 	pop		si
 	pop		ds
-	clc
 	ret
 
 
@@ -93,7 +92,7 @@ BootInfo_CreateForHardDisk:
 ;		BX:DX:AX:	48-bit sector count
 ;	Corrupts registers:
 ;		Nothing
-;--------------------------------------------------------------------	
+;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootInfo_GetTotalSectorCount:
 	push	ds

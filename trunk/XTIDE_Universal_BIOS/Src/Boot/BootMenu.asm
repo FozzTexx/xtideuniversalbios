@@ -23,7 +23,28 @@ BootMenu_DisplayAndReturnSelection:
 	call	BootMenuPrint_ClearScreen
 	cmp		cx, BYTE NO_ITEM_SELECTED
 	je		SHORT BootMenu_DisplayAndReturnSelection	; Clear screen and display menu
-	jmp		SHORT BootMenu_ConvertMenuitemFromCXtoDriveInDX
+	; Fall through to BootMenu_ConvertMenuitemFromCXtoDriveInDX
+
+;--------------------------------------------------------------------
+; BootMenu_ConvertMenuitemFromCXtoDriveInDX
+;	Parameters:
+;		CX:		Index of menuitem selected from Boot Menu
+;		DS:		RAMVARS segment
+;	Returns:
+;		DX:		Drive number to be used for booting
+;	Corrupts registers:
+;		CX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+BootMenu_ConvertMenuitemFromCXtoDriveInDX:
+	mov		dx, cx					; Copy menuitem index to DX
+	call	FloppyDrive_GetCountToCX
+	cmp		dx, cx					; Floppy drive?
+	jb		SHORT .ReturnFloppyDriveInDX
+	sub		dx, cx					; Remove floppy drives from index
+	or		dl, 80h
+.ReturnFloppyDriveInDX:
+	ret
 
 
 ;--------------------------------------------------------------------
@@ -76,8 +97,8 @@ BootMenu_GetMenuitemCountToAX:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenu_GetHeightToAHwithItemCountInAL:
+	add		al, BOOT_MENU_HEIGHT_WITHOUT_ITEMS
 	xchg	cx, ax
-	add		cl, BOOT_MENU_HEIGHT_WITHOUT_ITEMS
 	CALL_DISPLAY_LIBRARY GetColumnsToALandRowsToAH
 	sub		ah, MENU_SCREEN_BOTTOM_LINES*2	; Leave space for bottom info
 	MIN_U	ah, cl
@@ -108,6 +129,7 @@ ALIGN JUMP_ALIGN
 	add		cx, ax						; Menuitem index
 	ret
 
+
 ;--------------------------------------------------------------------
 ; Returns letter for first hard disk. Usually it will be 'c' but it
 ; can be higher if more than two floppy drives are found.
@@ -129,28 +151,6 @@ BootMenu_GetLetterForFirstHardDiskToCL:
 
 
 ;--------------------------------------------------------------------
-; BootMenu_ConvertMenuitemFromCXtoDriveInDX
-;	Parameters:
-;		CX:		Index of menuitem selected from Boot Menu
-;		DS:		RAMVARS segment
-;	Returns:
-;		DX:		Drive number to be used for booting
-;	Corrupts registers:
-;		CX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-BootMenu_ConvertMenuitemFromCXtoDriveInDX:
-	mov		dx, cx					; Copy menuitem index to DX
-	call	FloppyDrive_GetCountToCX
-	cmp		dx, cx					; Floppy drive?
-	jb		SHORT .ReturnFloppyDriveInDX
-	sub		dx, cx					; Remove floppy drives from index
-	or		dl, 80h
-.ReturnFloppyDriveInDX:
-	ret
-
-
-;--------------------------------------------------------------------
 ; BootMenu_GetMenuitemToDXforDriveInDL
 ;	Parameters:
 ;		DL:		Drive number
@@ -162,8 +162,8 @@ BootMenu_ConvertMenuitemFromCXtoDriveInDX:
 ALIGN JUMP_ALIGN
 BootMenu_GetMenuitemToDXforDriveInDL:
 	xor		dh, dh						; Drive number now in DX
-	test	dl, 80h
-	jz		SHORT .ReturnItemIndexInDX	; Return if floppy drive (HD bit not set)
+	test	dl, dl
+	jns		SHORT .ReturnItemIndexInDX	; Return if floppy drive (HD bit not set)
 	call	FloppyDrive_GetCountToCX
 	and		dl, ~80h					; Clear HD bit
 	add		dx, cx
@@ -186,8 +186,8 @@ BootMenu_GetMenuitemToDXforDriveInDL:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenu_IsDriveInSystem:
-	test	dl, 80h								; Floppy drive?
-	jz		SHORT .IsFloppyDriveIsInSystem
+	test	dl, dl								; Floppy drive?
+	jns		SHORT .IsFloppyDriveIsInSystem
 	call	RamVars_GetHardDiskCountFromBDAtoCX	; Hard Disk count to CX
 	or		cl, 80h								; Set Hard Disk bit to CX
 	jmp		SHORT .CompareDriveNumberToDriveCount

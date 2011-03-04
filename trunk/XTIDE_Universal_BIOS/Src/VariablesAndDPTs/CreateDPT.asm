@@ -231,9 +231,9 @@ CreateDPT_FromAtaInformation:
 .StoreDriveNumberAndUpdateDriveCount:
 	; Make sure that more drives can be accepted
 	mov		dl, [es:BDA.bHDCount]	; Load number of hard disks
-	test	dl, 80h					; Hard disks at maximum?
+	test	dl, dl					; Hard disks at maximum?
 	stc								; Assume error
-	jnz		SHORT .TooManyDrives	;  If so, return
+	js		SHORT .TooManyDrives	;  If so, return
 
 	; Store drive number to DPT
 	or		dl, 80h					; Set bit 7 since hard disk

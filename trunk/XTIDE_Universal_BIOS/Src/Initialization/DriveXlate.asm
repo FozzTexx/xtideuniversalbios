@@ -140,7 +140,7 @@ ALIGN JUMP_ALIGN
 ;		Nothing
 ;	Corrupts registers:
 ;		AX
-;--------------------------------------------------------------------	
+;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 DriveXlate_Reset:
 	mov		WORD [RAMVARS.xlateVars], 8000h	; .bFDSwap and .bHDSwap
@@ -159,11 +159,11 @@ DriveXlate_Reset:
 ;		Nothing
 ;	Corrupts registers:
 ;		Nothing
-;--------------------------------------------------------------------	
+;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 DriveXlate_SetDriveToSwap:
-	test	dl, 80h				; Floppy drive?
-	jnz		SHORT .SetHardDiskToSwap
+	test	dl, dl				; Floppy drive?
+	js		SHORT .SetHardDiskToSwap
 .SetFloppyDriveToSwap:
 	mov		[RAMVARS.xlateVars+XLATEVARS.bFDSwap], dl
 	ret
@@ -186,13 +186,13 @@ ALIGN JUMP_ALIGN
 ;				Cleared if only drive number parameter is returned in DL
 ;	Corrupts registers:
 ;		Nothing
-;--------------------------------------------------------------------	
+;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 DriveXlate_DoesFunctionReturnSomethingInDL:
 	cmp		ah, 08h			; AH=08h, Read Disk Drive Parameters?
 	je		SHORT DriveXlate_FunctionReturnsSomethingInDL
-	test	dl, 80h
-	jz		SHORT DriveXlate_DoesFloppyFunctionReturnSomethingInDL
+	test	dl, dl
+	jns		SHORT DriveXlate_DoesFloppyFunctionReturnSomethingInDL
 	; Fall to DriveXlate_DoesHardDiskFunctionReturnSomethingInDL
 
 ;--------------------------------------------------------------------
@@ -210,7 +210,7 @@ DriveXlate_DoesFunctionReturnSomethingInDL:
 ;				Cleared if only drive number parameter is returned in DL
 ;	Corrupts registers:
 ;		Nothing
-;--------------------------------------------------------------------	
+;--------------------------------------------------------------------
 ; ALIGN JUMP_ALIGN
 DriveXlate_DoesHardDiskFunctionReturnSomethingInDL:
 	cmp		ah, 15h			; AH=15h, Read Disk Drive Size?
