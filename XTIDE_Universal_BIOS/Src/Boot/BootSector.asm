@@ -27,8 +27,8 @@ BootSector_TryToLoadFromDriveDL:
 	cmp		WORD [es:bx+510], 0AA55h		; Valid boot sector?
 	jne		SHORT .FirstHardDiskSectorNotBootable
 .AlwaysBootFromFloppyDriveForBooterGames:
-	mov		bx, g_szFound
-	call	BootPrint_BootSectorResultStringFromBX
+	mov		ax, g_szFound
+	call	BootPrint_BootSectorResultStringFromAX
 	stc
 	ret
 .FailedToLoadFirstSector:
@@ -36,8 +36,8 @@ BootSector_TryToLoadFromDriveDL:
 	clc
 	ret
 .FirstHardDiskSectorNotBootable:
-	mov		bx, g_szNotFound
-	call	BootPrint_BootSectorResultStringFromBX
+	mov		ax, g_szNotFound
+	call	BootPrint_BootSectorResultStringFromAX
 	clc
 	ret
 
@@ -65,7 +65,6 @@ ALIGN JUMP_ALIGN
 	jnc		SHORT .Return
 	dec		di								; Decrement retry counter
 	jnz		SHORT .ReadRetryLoop			; Loop while retries left
-ALIGN JUMP_ALIGN
 .Return:
 	ret
 

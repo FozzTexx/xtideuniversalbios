@@ -23,10 +23,10 @@ BootMenu_DisplayAndReturnSelection:
 	call	BootMenuPrint_ClearScreen
 	cmp		cx, BYTE NO_ITEM_SELECTED
 	je		SHORT BootMenu_DisplayAndReturnSelection	; Clear screen and display menu
-	; Fall through to BootMenu_ConvertMenuitemFromCXtoDriveInDX
+	; Fall to BootMenu_GetDriveToDXforMenuitemInCX
 
 ;--------------------------------------------------------------------
-; BootMenu_ConvertMenuitemFromCXtoDriveInDX
+; BootMenu_GetDriveToDXforMenuitemInCX
 ;	Parameters:
 ;		CX:		Index of menuitem selected from Boot Menu
 ;		DS:		RAMVARS segment
@@ -36,7 +36,7 @@ BootMenu_DisplayAndReturnSelection:
 ;		CX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-BootMenu_ConvertMenuitemFromCXtoDriveInDX:
+BootMenu_GetDriveToDXforMenuitemInCX:
 	mov		dx, cx					; Copy menuitem index to DX
 	call	FloppyDrive_GetCountToCX
 	cmp		dx, cx					; Floppy drive?
@@ -106,27 +106,28 @@ BootMenu_GetHeightToAHwithItemCountInAL:
 
 
 ;--------------------------------------------------------------------
-; BootMenu_ConvertAsciiHotkeyFromALtoMenuitemInCX
+; BootMenu_GetMenuitemToAXforAsciiHotkeyInAL
 ;	Parameters:
-;		AL:		ASCII hotkey starting from upper case 'A'
+;		AL:		ASCII hotkey
 ;	Returns:
-;		CX:		Menuitem index
+;		AX:		Menuitem index
 ;	Corrupts registers:
-;		AX
+;		CX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-BootMenu_ConvertAsciiHotkeyFromALtoMenuitemInCX:
+BootMenu_GetMenuitemToAXforAsciiHotkeyInAL:
+	call	Char_ALtoUpperCaseLetter
 	call	BootMenu_GetLetterForFirstHardDiskToCL
+	xor		ah, ah
 	cmp		al, cl						; Letter is for Hard Disk?
 	jae		SHORT .StartFromHardDiskLetter
 	sub		al, 'A'						; Letter to Floppy Drive menuitem
-	xchg	ax, cx						; Menuitem index to CX
 	ret
 ALIGN JUMP_ALIGN
 .StartFromHardDiskLetter:
 	sub		al, cl						; Hard Disk index
 	call	FloppyDrive_GetCountToCX
-	add		cx, ax						; Menuitem index
+	add		ax, cx						; Menuitem index
 	ret
 
 
@@ -187,11 +188,11 @@ BootMenu_GetMenuitemToDXforDriveInDL:
 ALIGN JUMP_ALIGN
 BootMenu_IsDriveInSystem:
 	test	dl, dl								; Floppy drive?
-	jns		SHORT .IsFloppyDriveIsInSystem
+	jns		SHORT .IsFloppyDriveInSystem
 	call	RamVars_GetHardDiskCountFromBDAtoCX	; Hard Disk count to CX
 	or		cl, 80h								; Set Hard Disk bit to CX
 	jmp		SHORT .CompareDriveNumberToDriveCount
-.IsFloppyDriveIsInSystem:
+.IsFloppyDriveInSystem:
 	call	FloppyDrive_GetCountToCX
 .CompareDriveNumberToDriveCount:
 	cmp		dl, cl								; Set CF when DL is smaller

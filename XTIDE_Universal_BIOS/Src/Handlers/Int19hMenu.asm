@@ -19,7 +19,7 @@ Int19hMenu_BootLoader:
 	LOAD_BDA_SEGMENT_TO	ds, ax
 	STORE_POST_STACK_POINTER
 	SWITCH_TO_BOOT_MENU_STACK
-	CALL_DISPLAY_LIBRARY InitializeDisplayContext
+	call	BootMenuPrint_InitializeDisplayContext
 	call	RamVars_GetSegmentToDS
 	; Fall to .ProcessMenuSelectionsUntilBootable
 
@@ -33,7 +33,7 @@ Int19hMenu_BootLoader:
 ALIGN JUMP_ALIGN
 .ProcessMenuSelectionsUntilBootable:
 	call	BootMenu_DisplayAndReturnSelection
-	call	DriveXlate_ToOrBack			; Translate drive number
+	call	DriveXlate_ToOrBack							; Translate drive number
 	call	BootSector_TryToLoadFromDriveDL
 	jnc		SHORT .ProcessMenuSelectionsUntilBootable	; Boot failure, show menu again
 	SWITCH_BACK_TO_POST_STACK

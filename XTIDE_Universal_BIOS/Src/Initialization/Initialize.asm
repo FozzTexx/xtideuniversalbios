@@ -69,7 +69,7 @@ Initialize_ShouldSkip:
 ;		All
 ;--------------------------------------------------------------------
 Initialize_AndDetectDrives:
-	CALL_DISPLAY_LIBRARY InitializeDisplayContext
+	call	BootMenuPrint_InitializeDisplayContext
 	call	DetectPrint_RomFoundAtSegment
 	call	RamVars_Initialize
 	call	Interrupts_InitializeInterruptVectors
