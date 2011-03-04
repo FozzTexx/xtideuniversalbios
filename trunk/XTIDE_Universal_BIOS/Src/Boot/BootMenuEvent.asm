@@ -85,7 +85,7 @@ ALIGN JUMP_ALIGN
 	push	dx
 	call	RamVars_GetSegmentToDS
 	call	DriveXlate_Reset
-	call	BootMenu_ConvertMenuitemFromCXtoDriveInDX
+	call	BootMenu_GetDriveToDXforMenuitemInCX
 	call	DriveXlate_SetDriveToSwap
 	pop		ax		; Update previous item
 	CALL_MENU_LIBRARY RefreshItemFromAX
@@ -106,10 +106,9 @@ ALIGN JUMP_ALIGN
 	jmp		Int19hMenu_RomBoot
 ALIGN JUMP_ALIGN
 .CheckDriveHotkeys:
-	call	BootMenu_ConvertAsciiHotkeyFromALtoMenuitemInCX
-	cmp		cx, [bp+MENUINIT.wItems]
+	call	BootMenu_GetMenuitemToAXforAsciiHotkeyInAL
+	cmp		ax, [bp+MENUINIT.wItems]
 	jae		SHORT .EventCompleted	; Invalid key
-	xchg	ax, cx
 	CALL_MENU_LIBRARY HighlightItemFromAX
 	; Fall to .ItemSelectedFromCX
 
@@ -149,13 +148,12 @@ ALIGN JUMP_ALIGN
 ;	Returns:
 ;		CF:		set since event processed
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 .RefreshItemOrInformationWithJumpTableInCSBX:
 	cmp		cl, NO_ITEM_HIGHLIGHTED
 	je		SHORT .EventCompleted
 
 	call	RamVars_GetSegmentToDS
-	call	BootMenu_ConvertMenuitemFromCXtoDriveInDX
+	call	BootMenu_GetDriveToDXforMenuitemInCX
 	test	dl, dl					; Floppy drive?
 	jns		SHORT .DrawFloppyDrive
 	jmp		[cs:bx+ITEM_TYPE_REFRESH.HardDisk]

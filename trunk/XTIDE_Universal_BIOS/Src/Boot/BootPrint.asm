@@ -36,20 +36,20 @@ BootPrint_TryToBootFromDL:
 
 
 ;--------------------------------------------------------------------
-; BootPrint_BootSectorResultStringFromBX
+; BootPrint_BootSectorResultStringFromAX
 ;	Parameters:
-;		CS:BX:	Ptr to "found" or "not found"
+;		CS:AX:	Ptr to "found" or "not found"
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, SI, DI
+;		AX, CX, SI, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-BootPrint_BootSectorResultStringFromBX:
+BootPrint_BootSectorResultStringFromAX:
 	push	bp
 	mov		bp, sp
-	ePUSH_T	ax, g_szBootSector
-	push	bx			; "found" or "not found"
+	ePUSH_T	cx, g_szBootSector
+	push	ax			; "found" or "not found"
 	mov		si, g_szSectRead
 	jmp		BootMenuPrint_FormatCSSIfromParamsInSSBP
 
@@ -61,13 +61,13 @@ BootPrint_BootSectorResultStringFromBX:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, BX, SI, DI
+;		AX, CX, SI, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootPrint_FailedToLoadFirstSector:
 	push	bp
 	mov		bp, sp
-	eMOVZX	bx, ah
-	push	bx					; Push INT 13h error code
+	eMOVZX	cx, ah
+	push	cx					; Push INT 13h error code
 	mov		si, g_szReadError
 	jmp		BootMenuPrint_FormatCSSIfromParamsInSSBP

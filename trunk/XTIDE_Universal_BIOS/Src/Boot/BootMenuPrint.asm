@@ -5,6 +5,40 @@
 SECTION .text
 
 ;--------------------------------------------------------------------
+; BootMenuPrint_ClearScreen
+;	Parameters:
+;		Nothing
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+BootMenuPrint_ClearScreen:
+	call	BootMenuPrint_InitializeDisplayContext
+	xor		ax, ax
+	CALL_DISPLAY_LIBRARY SetCursorCoordinatesFromAX
+	mov		ax, ' ' | (MONO_NORMAL<<8)
+	CALL_DISPLAY_LIBRARY ClearScreenWithCharInALandAttrInAH
+	ret
+
+
+;--------------------------------------------------------------------
+; BootMenuPrint_InitializeDisplayContext
+;	Parameters:
+;		Nothing
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+BootMenuPrint_InitializeDisplayContext:
+	CALL_DISPLAY_LIBRARY InitializeDisplayContext
+	ret
+
+
+;--------------------------------------------------------------------
 ; Prints Boot Menu title strings.
 ;
 ; BootMenuPrint_TitleStrings
@@ -39,22 +73,6 @@ BootMenuPrint_NullTerminatedStringFromCSSIandSetCF:
 	CALL_DISPLAY_LIBRARY PrintNullTerminatedStringFromCSSI
 	pop		di
 	stc
-	ret
-
-
-;--------------------------------------------------------------------
-; BootMenuPrint_ClearScreen
-;	Parameters:
-;		Nothing
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, DI
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-BootMenuPrint_ClearScreen:
-	mov		ax, ' ' | (MONO_NORMAL<<8)
-	CALL_DISPLAY_LIBRARY ClearScreenWithCharInALandAttrInAH
 	ret
 
 
