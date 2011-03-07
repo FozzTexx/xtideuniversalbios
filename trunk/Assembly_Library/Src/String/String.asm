@@ -1,8 +1,4 @@
-; File name		:	String.asm
 ; Project name	:	Assembly Library
-; Created date	:	12.7.2010
-; Last update	:	24.10.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for handling characters.
 
 ; Section containing code

@@ -57,7 +57,9 @@ SECTION .text
 
 %ifdef INCLUDE_STRING_LIBRARY
 	%include "Char.asm"
-	%include "String.asm"
+	%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
+		%include "String.asm"
+	%endif
 	%include "StringProcess.asm"
 %endif
 
@@ -67,13 +69,13 @@ SECTION .text
 %endif
 
 %ifdef INCLUDE_UTIL_LIBRARY
-	%ifndef EXCLUDE_BIT_UTILS
+	%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 		%include "Bit.asm"
 	%endif
 	%include "Registers.asm"
 	%include "Memory.asm"
 	%include "Size.asm"
-	%ifndef EXCLUDE_SORT_UTILS
+	%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 		%include "Sort.asm"
 	%endif
 %endif

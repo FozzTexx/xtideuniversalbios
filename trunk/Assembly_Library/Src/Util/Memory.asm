@@ -44,10 +44,12 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN
 Memory_CopyCXbytesFromDSSItoESDI:
 	OPTIMIZE_STRING_OPERATION rep, movs
 	ret
+%endif
 
 
 ;--------------------------------------------------------------------

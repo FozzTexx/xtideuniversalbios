@@ -19,6 +19,7 @@ SECTION .text
 ;	Corrupts registers:
 ;		DX
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN
 Keyboard_ReadUserInputtedWordWhilePrinting:
 	push	ds
@@ -42,6 +43,7 @@ Keyboard_ReadUserInputtedWordWhilePrinting:
 	pop		si
 	pop		ds
 	ret
+%endif
 
 
 ;--------------------------------------------------------------------
@@ -67,6 +69,7 @@ Keyboard_ReadUserInputtedWordWhilePrinting:
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN
 Keyboard_ReadUserInputtedStringToESDIWhilePrinting:
 	push	di
@@ -176,6 +179,7 @@ ALIGN JUMP_ALIGN
 .EndCharacterInput:
 	xor		al, al								; Set ZF and clear CF
 	ret
+%endif ; EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 
 
 ;--------------------------------------------------------------------
@@ -187,6 +191,7 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN
 Keyboard_PrintBackspace:
 	mov		al, BS
@@ -195,6 +200,7 @@ Keyboard_PrintBackspace:
 	call	Keyboard_PrintInputtedCharacter
 	mov		al, BS
 	jmp		SHORT Keyboard_PrintInputtedCharacter
+%endif
 
 
 ;--------------------------------------------------------------------
@@ -206,10 +212,12 @@ Keyboard_PrintBackspace:
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN
 Keyboard_PlayBellForUnwantedKeystroke:
 	mov		al, BELL
 	; Fall to Keyboard_PrintInputtedCharacter
+%endif
 
 ;--------------------------------------------------------------------
 ; Keyboard_PrintInputtedCharacter
@@ -220,6 +228,7 @@ Keyboard_PlayBellForUnwantedKeystroke:
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN
 Keyboard_PrintInputtedCharacter:
 	push	di
@@ -227,6 +236,7 @@ Keyboard_PrintInputtedCharacter:
 	CALL_DISPLAY_LIBRARY SynchronizeDisplayContextToHardware	; Hardware cursor
 	pop		di
 	ret
+%endif
 
 
 ;--------------------------------------------------------------------
