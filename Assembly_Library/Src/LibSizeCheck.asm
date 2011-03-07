@@ -12,8 +12,6 @@
 ;%define INCLUDE_TIME_LIBRARY
 ;%define INCLUDE_UTIL_LIBRARY
 
-%define EXCLUDE_BIT_UTILS
-%define EXCLUDE_SORT_UTILS
 %include "AssemblyLibrary.inc"	; Assembly Library. Must be included first!
 
 

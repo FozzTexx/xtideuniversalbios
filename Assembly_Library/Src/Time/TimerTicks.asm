@@ -22,8 +22,7 @@ SECTION .text
 ;	Corrupts registers:
 ;		CX
 ;--------------------------------------------------------------------
-%ifdef INCLUDE_MENU_DIALOGS
-
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN
 TimerTicks_GetHoursToAXfromTicksInDXAX:
 	mov		cx, TICKS_PER_HOUR
@@ -37,7 +36,6 @@ TimerTicks_GetMinutesToAXfromTicksInDX:
 	mov		cx, TICKS_PER_MINUTE
 	div		cx		; Divide DX:AX by CX, Minutes to AX, remainder ticks to DX
 	ret
-
 %endif
 
 ALIGN JUMP_ALIGN
@@ -104,6 +102,7 @@ TimerTicks_GetTimeoutTicksLeftToAXfromDSBX:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN
 TimerTicks_GetElapsedToAXandResetDSBX:
 	call	TimerTicks_ReadFromBdaToAX
@@ -111,6 +110,7 @@ TimerTicks_GetElapsedToAXandResetDSBX:
 	sub		ax, [bx]
 	pop		WORD [bx]			; Latest time to [DS:BX]
 	ret
+%endif
 
 ;--------------------------------------------------------------------
 ; TimerTicks_GetElapsedToAXfromDSBX
@@ -121,11 +121,13 @@ TimerTicks_GetElapsedToAXandResetDSBX:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN
 TimerTicks_GetElapsedToAXfromDSBX:
 	call	TimerTicks_ReadFromBdaToAX
 	sub		ax, [bx]
 	ret
+%endif
 
 
 ;--------------------------------------------------------------------
