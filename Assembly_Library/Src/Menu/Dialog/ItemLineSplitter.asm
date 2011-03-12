@@ -1,8 +1,4 @@
-; File name		:	ItemLineSplitter.asm
 ; Project name	:	Assembly Library
-; Created date	:	12.10.2010
-; Last update	:	12.10.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for splitting strings to item lines.
 
 struc ITEM_LINE_SPLITTER
@@ -129,10 +125,9 @@ ALIGN JUMP_ALIGN
 	je		SHORT .WantedLineFound
 
 	inc		bx					; Increment line
-	xor		cx, cx				; Zero character counter
+	xor		cx, cx				; Zero character counter (and clear CF)
 	mov		si, di				; Start from complete word
 	mov		[bp+ITEM_LINE_SPLITTER.wStartOfLine], di
-	clc
 	ret
 
 ALIGN JUMP_ALIGN

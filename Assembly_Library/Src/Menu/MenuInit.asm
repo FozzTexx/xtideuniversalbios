@@ -56,8 +56,13 @@ MenuInit_EnterMenuWithHandlerInBXandUserDataInDXAX:
 	mov		ax, CURSOR_HIDDEN
 	CALL_DISPLAY_LIBRARY SetCursorShapeFromAX
 	call	MenuEvent_InitializeMenuinit	; User initialization
+%ifndef USE_186
 	call	MenuInit_RefreshMenuWindow
 	jmp		MenuLoop_Enter
+%else
+	push	MenuLoop_Enter
+	; Fall to MenuInit_RefreshMenuWindow
+%endif
 
 
 ;--------------------------------------------------------------------
@@ -116,10 +121,12 @@ MenuInit_HighlightItemFromAX:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN
 MenuInit_GetHighlightedItemToAX:
 	mov		ax, [bp+MENUINIT.wHighlightedItem]
 	ret
+%endif
 
 
 ;--------------------------------------------------------------------
@@ -134,6 +141,7 @@ MenuInit_GetHighlightedItemToAX:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN
 MenuInit_SetTitleHeightFromAL:
 	mov		[bp+MENUINIT.bTitleLines], al
@@ -148,6 +156,7 @@ ALIGN JUMP_ALIGN
 MenuInit_SetTotalItemsFromAX:
 	mov		[bp+MENUINIT.wItems], ax
 	ret
+%endif
 
 
 ;--------------------------------------------------------------------
@@ -161,6 +170,7 @@ MenuInit_SetTotalItemsFromAX:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN
 MenuInit_SetUserDataFromDSSI:
 	mov		[bp+MENU.dwUserData], si
@@ -171,3 +181,4 @@ ALIGN JUMP_ALIGN
 MenuInit_GetUserDataToDSSI:
 	lds		si, [bp+MENU.dwUserData]
 	ret
+%endif

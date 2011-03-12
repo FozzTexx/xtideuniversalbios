@@ -96,10 +96,10 @@ MenuTime_GetTimeoutSecondsLeftToAX:
 
 	xchg	dx, ax
 	call	TimerTicks_GetSecondsToAXfromTicksInDX
-	jmp		SHORT .PopRegistersAndReturn
+	SKIP2B	f	; cmp ax, <next instruction>
 .TimeoutHasOccurredSoMakeSureTicksAreNotBelowZero:
 	xor		ax, ax
-.PopRegistersAndReturn:
+
 	pop		bx
 	pop		cx
 	pop		dx

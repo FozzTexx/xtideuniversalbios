@@ -147,6 +147,7 @@ DisplayContext_Pop:
 ;	Corrupts registers:
 ;		AX, DI
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN
 DisplayContext_PrepareOffScreenBufferInESBXwithLengthInCX:
 	push	ds
@@ -164,6 +165,7 @@ DisplayContext_PrepareOffScreenBufferInESBXwithLengthInCX:
 	mov		bx, di
 	pop		ds
 	ret
+%endif
 
 
 ;--------------------------------------------------------------------
@@ -176,6 +178,7 @@ DisplayContext_PrepareOffScreenBufferInESBXwithLengthInCX:
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN
 DisplayContext_SetCharacterPointerFromBXAX:
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fpCursorPosition], ax
@@ -183,6 +186,7 @@ DisplayContext_SetCharacterPointerFromBXAX:
 	xchg	di, ax
 	mov		es, bx
 	ret
+%endif
 
 
 ;--------------------------------------------------------------------
@@ -194,11 +198,13 @@ DisplayContext_SetCharacterPointerFromBXAX:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN
 DisplayContext_GetCharacterPointerToBXAX:
 	mov		ax, [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fpCursorPosition]
 	mov		bx, [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fpCursorPosition+2]
 	ret
+%endif
 
 
 ;--------------------------------------------------------------------
@@ -260,11 +266,13 @@ DisplayContext_SetCharacterOutputParameterFromAX:
 ;		DX:		User parameter for Character Output function
 ;	Corrupts registers:
 ;		Nothing
-;--------------------------------------------------------------------	
+;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS	; This appears to be completely unused
 ALIGN JUMP_ALIGN
 DisplayContext_GetCharacterOutputParameterToDX:
 	mov		dx, [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.wCharOutParam]
 	ret
+%endif
 
 
 ;--------------------------------------------------------------------
@@ -276,7 +284,7 @@ DisplayContext_GetCharacterOutputParameterToDX:
 ;		AX:		Offset in characters from some character to another
 ;	Corrupts registers:
 ;		Nothing
-;--------------------------------------------------------------------	
+;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 DisplayContext_GetCharacterOffsetToAXfromByteOffsetInAX:
 	test	BYTE [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bFlags], FLG_CONTEXT_ATTRIBUTES
@@ -293,7 +301,7 @@ DisplayContext_GetCharacterOffsetToAXfromByteOffsetInAX:
 ;		AX:		Offset in bytes from some character to another
 ;	Corrupts registers:
 ;		Nothing
-;--------------------------------------------------------------------	
+;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 DisplayContext_GetByteOffsetToAXfromCharacterOffsetInAX:
 	test	BYTE [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bFlags], FLG_CONTEXT_ATTRIBUTES

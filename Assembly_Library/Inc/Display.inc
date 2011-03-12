@@ -36,7 +36,9 @@ struc DISPLAY_LIB
 	.PopDisplayContext:
 	.InitializeDisplayContext						resb	2
 
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 	.SetCharacterPointerFromBXAX					resb	2
+%endif
 	.SetCharOutputFunctionFromAXwithAttribFlagInBL	resb	2
 	.SetCharacterOutputParameterFromAX				resb	2
 	.SetCharacterAttributeFromAL					resb	2
@@ -45,7 +47,9 @@ struc DISPLAY_LIB
 	.SetNewPageFromAL								resb	2
 	.SynchronizeDisplayContextToHardware			resb	2
 
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 	.GetCharacterPointerToBXAX						resb	2
+%endif
 	.GetSoftwareCoordinatesToAX						resb	2
 	.GetColumnsToALandRowsToAH						resb	2
 

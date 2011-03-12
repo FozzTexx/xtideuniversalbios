@@ -20,7 +20,7 @@ MenuEvent_InitializeMenuinit:
 	push	ss
 	pop		ds
 	mov		si, bp
-	mov		bx, MENUEVENT.InitializeMenuinitFromDSSI
+	mov		bl, MENUEVENT.InitializeMenuinitFromDSSI
 	jmp		SHORT MenuEvent_SendFromBX
 
 
@@ -36,7 +36,7 @@ MenuEvent_InitializeMenuinit:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MenuEvent_ExitMenu:
-	mov		bx, MENUEVENT.ExitMenu
+	mov		bl, MENUEVENT.ExitMenu
 	jmp		SHORT MenuEvent_SendFromBX
 
 
@@ -52,7 +52,7 @@ MenuEvent_ExitMenu:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MenuEvent_IdleProcessing:
-	mov		bx, MENUEVENT.IdleProcessing
+	mov		bl, MENUEVENT.IdleProcessing
 	jmp		SHORT MenuEvent_SendFromBX
 
 
@@ -70,13 +70,11 @@ MenuEvent_IdleProcessing:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MenuEvent_RefreshTitle:
-	mov		bx, MENUEVENT.RefreshTitle
-	jmp		SHORT LoadHighlightedItemToCXandSendMessageFromBX
+	mov		bl, MENUEVENT.RefreshTitle
+	SKIP2B	cx	; mov cx, <next instruction>
 
-ALIGN JUMP_ALIGN
 MenuEvent_RefreshInformation:
-	mov		bx, MENUEVENT.RefreshInformation
-LoadHighlightedItemToCXandSendMessageFromBX:
+	mov		bl, MENUEVENT.RefreshInformation
 	mov		cx, [bp+MENUINIT.wHighlightedItem]
 	jmp		SHORT MenuEvent_SendFromBX
 
@@ -95,7 +93,7 @@ LoadHighlightedItemToCXandSendMessageFromBX:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MenuEvent_RefreshItemFromCX:
-	mov		bx, MENUEVENT.RefreshItemFromCX
+	mov		bl, MENUEVENT.RefreshItemFromCX
 	jmp		SHORT MenuEvent_SendFromBX
 
 
@@ -115,7 +113,7 @@ MenuEvent_HighlightItemFromCX:
 	xchg	dx, [bp+MENUINIT.wHighlightedItem]
 	push	dx
 
-	mov		bx, MENUEVENT.ItemHighlightedFromCX
+	mov		bl, MENUEVENT.ItemHighlightedFromCX
 	call	MenuEvent_SendFromBX
 
 	pop		ax
@@ -138,8 +136,8 @@ MenuEvent_HighlightItemFromCX:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MenuEvent_KeyStrokeInAX:
-	mov		bx, MENUEVENT.KeyStrokeInAX
-	jmp		SHORT MenuEvent_SendFromBX
+	mov		bl, MENUEVENT.KeyStrokeInAX
+	SKIP2B	dx	; mov dx, <next instruction>
 
 
 ;--------------------------------------------------------------------
@@ -153,16 +151,15 @@ MenuEvent_KeyStrokeInAX:
 ;	Corrupts registers:
 ;		AX, BX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 MenuEvent_ItemSelectedFromCX:
-	mov		bx, MENUEVENT.ItemSelectedFromCX
-	jmp		SHORT MenuEvent_SendFromBX
+	mov		bl, MENUEVENT.ItemSelectedFromCX
+	; Fall to MenuEvent_SendFromBX
 
 
 ;--------------------------------------------------------------------
 ; MenuEvent_SendFromBX
 ;	Parameters
-;		BX:					Menu event to send
+;		BL:					Menu event to send
 ;		SS:BP:				Ptr to MENU
 ;		Other registers:	Event specific parameters
 ;	Returns:
@@ -179,6 +176,7 @@ MenuEvent_SendFromBX:
 	push	di
 	push	si
 	push	cx
+	xor		bh, bh
 	call	[bp+MENU.fnEventHandler]
 	pop		cx
 	pop		si

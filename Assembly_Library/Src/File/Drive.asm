@@ -1,8 +1,4 @@
-; File name		:	Drive.asm
 ; Project name	:	Assembly Library
-; Created date	:	1.9.2010
-; Last update	:	3.9.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for accessing drives.
 
 
@@ -51,7 +47,7 @@ Drive_GetFlagsForAvailableDrivesToDXAX:
 	call	.GetNumberOfPotentiallyValidDriveLettersToCX
 	xor		bx, bx
 	xor		ax, ax				; Temporary use BX:AX for flags
-	xor		dx, dx				; Start from drive 0
+	cwd							; Start from drive 0
 	call	.CheckDriveValidityUntilCXisZero
 	mov		dx, bx				; Flags now in DX:AX
 
@@ -162,8 +158,8 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 Drive_GetDefaultToAL:
 	mov		ah, GET_CURRENT_DEFAULT_DRIVE
-	int		DOS_INTERRUPT_21h
-	ret
+	SKIP2B	f	; cmp ax, <next instruction>
+	; Fall to Drive_SetDefaultFromDL
 
 
 ;--------------------------------------------------------------------
@@ -175,9 +171,7 @@ Drive_GetDefaultToAL:
 ;	Corrupts registers:
 ;		AH
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 Drive_SetDefaultFromDL:
 	mov		ah, SELECT_DEFAULT_DRIVE
 	int		DOS_INTERRUPT_21h
 	ret
-	
