@@ -80,7 +80,9 @@ istruc DISPLAY_LIB
 	at	DISPLAY_LIB.GetColumnsToALandRowsToAH,						dw	DisplayPage_GetColumnsToALandRowsToAH
 
 	at	DISPLAY_LIB.FormatNullTerminatedStringFromCSSI,				dw	.FormatNullTerminatedStringFromCSSI
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 	at	DISPLAY_LIB.PrintSignedWordFromAXWithBaseInBX,				dw	DisplayPrint_SignedWordFromAXWithBaseInBX
+%endif
 	at	DISPLAY_LIB.PrintWordFromAXwithBaseInBX,					dw	DisplayPrint_WordFromAXWithBaseInBX
 	at	DISPLAY_LIB.PrintCharBufferFromBXSIwithLengthInCX,			dw	DisplayPrint_CharacterBufferFromBXSIwithLengthInCX
 	at	DISPLAY_LIB.PrintNullTerminatedStringFromBXSI,				dw	DisplayPrint_NullTerminatedStringFromBXSI
@@ -88,6 +90,8 @@ istruc DISPLAY_LIB
 	at	DISPLAY_LIB.PrintRepeatedCharacterFromALwithCountInCX,		dw	DisplayPrint_RepeatCharacterFromALwithCountInCX
 	at	DISPLAY_LIB.PrintCharacterFromAL,							dw	DisplayPrint_CharacterFromAL
 	at	DISPLAY_LIB.PrintNewlineCharacters,							dw	DisplayPrint_Newline
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 	at	DISPLAY_LIB.ClearAreaWithHeightInAHandWidthInAL,			dw	DisplayPrint_ClearAreaWithHeightInAHandWidthInAL
+%endif
 	at	DISPLAY_LIB.ClearScreenWithCharInALandAttrInAH,				dw	DisplayPrint_ClearScreenWithCharInALandAttributeInAH
 iend

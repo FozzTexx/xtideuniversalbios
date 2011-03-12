@@ -54,7 +54,9 @@ struc DISPLAY_LIB
 	.GetColumnsToALandRowsToAH						resb	2
 
 	.FormatNullTerminatedStringFromCSSI				resb	2
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 	.PrintSignedWordFromAXWithBaseInBX				resb	2
+%endif
 	.PrintWordFromAXwithBaseInBX					resb	2
 	.PrintCharBufferFromBXSIwithLengthInCX			resb	2
 	.PrintNullTerminatedStringFromBXSI				resb	2
@@ -62,7 +64,9 @@ struc DISPLAY_LIB
 	.PrintRepeatedCharacterFromALwithCountInCX		resb	2
 	.PrintCharacterFromAL							resb	2
 	.PrintNewlineCharacters							resb	2
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 	.ClearAreaWithHeightInAHandWidthInAL			resb	2
+%endif
 	.ClearScreenWithCharInALandAttrInAH				resb	2
 endstruc
 
