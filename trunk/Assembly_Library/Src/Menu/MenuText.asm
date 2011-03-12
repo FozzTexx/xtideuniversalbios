@@ -154,7 +154,7 @@ MenuText_AdjustDisplayContextForDrawingItemFromCX:
 	call	GetItemTextAttributeTypeToSIforItemInCX
 	call	MenuLocation_GetTextCoordinatesToAXforItemInAX
 	mov		dx, MenuCharOut_MenuTeletypeOutput
-	; Fall to AdjustDisplayContextForDrawingTextsAtCoordinatesInAXwithAttributeTypeInSI
+	; Fall to AdjustDisplayContextForDrawingTextsAtCoordsInAXwithAttrTypeInSIandCharOutFunctionInDX
 
 ;--------------------------------------------------------------------
 ; AdjustDisplayContextForDrawingTextsAtCoordsInAXwithAttrTypeInSIandCharOutFunctionInDX

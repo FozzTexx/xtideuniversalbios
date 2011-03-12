@@ -55,7 +55,7 @@ TimeoutProcessing:
 ;		AH:		BIOS scan code
 ;		SS:BP:	Ptr to MENU
 ;	Returns:
-;		Nothing	
+;		Nothing
 ;	Corrupts registers:
 ;		AX, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
@@ -91,8 +91,7 @@ ALIGN JUMP_ALIGN
 
 	test	BYTE [bp+MENU.bFlags], FLG_MENU_USER_HANDLES_SCROLLING
 	jz		SHORT MenuLoop_ProcessScrollingKeysFromAX
-	clc		; Clear CF since keystroke not processed
-	ret
+	ret		; Return with CF cleared since keystroke not processed
 
 ALIGN JUMP_ALIGN
 .LeaveMenuWithoutSelectingItem:

@@ -9,7 +9,7 @@ SECTION .text
 ;--------------------------------------------------------------------
 ; Reads user inputted word.
 ; Function returns when ENTER or ESC will be pressed.
-; 
+;
 ; Keyboard_ReadUserInputtedWordWhilePrinting
 ;	Parameters
 ;		BX:		Numeric base (10 or 16)
@@ -50,7 +50,7 @@ Keyboard_ReadUserInputtedWordWhilePrinting:
 ; Reads user inputted string to buffer. Character filter is
 ; supported to ignore unwanted characters.
 ; Function returns when ENTER or ESC will be pressed.
-; 
+;
 ; Keyboard_ReadUserInputtedStringToESDIWhilePrinting
 ;	Parameters:
 ;		CX:		Buffer size (with NULL)
@@ -248,11 +248,13 @@ Keyboard_PrintInputtedCharacter:
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS	; Only used when debugging
 ALIGN JUMP_ALIGN
 Keyboard_RemoveAllKeystrokesFromBuffer:
 	call	Keyboard_GetKeystrokeToAX
 	jnz		SHORT Keyboard_RemoveAllKeystrokesFromBuffer
 	ret
+%endif
 
 
 ;--------------------------------------------------------------------
@@ -270,18 +272,19 @@ Keyboard_RemoveAllKeystrokesFromBuffer:
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-Keyboard_GetKeystrokeToAX:
-	call	Keyboard_GetKeystrokeToAXandLeaveItToBuffer
-	jnz		SHORT Keyboard_GetKeystrokeToAXandWaitIfNecessary
-	ret	
-ALIGN JUMP_ALIGN
 Keyboard_GetKeystrokeToAXandLeaveItToBuffer:
 	mov		ah, CHECK_FOR_KEYSTROKE
 	int		BIOS_KEYBOARD_INTERRUPT_16h
 	ret
 ALIGN JUMP_ALIGN
+Keyboard_GetKeystrokeToAX:
+	call	Keyboard_GetKeystrokeToAXandLeaveItToBuffer
+	jz		SHORT Keyboard_GetKeystrokeToAXReturn
+	; Fall to Keyboard_GetKeystrokeToAXandWaitIfNecessary
+ALIGN JUMP_ALIGN
 Keyboard_GetKeystrokeToAXandWaitIfNecessary:
 	xor		ah, ah						; GET_KEYSTROKE
 	int		BIOS_KEYBOARD_INTERRUPT_16h
 	test	ax, ax						; Clear ZF
+Keyboard_GetKeystrokeToAXReturn:
 	ret

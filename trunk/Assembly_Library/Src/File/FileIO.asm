@@ -28,24 +28,6 @@ FileIO_OpenWithPathInDSSIandFileAccessInAL:
 
 
 ;--------------------------------------------------------------------
-; FileIO_CloseUsingHandleFromBX
-;	Parameters:
-;		BX:		File handle
-;	Returns:
-;		AX:		DOS error code if CF set
-;		CF:		Clear if file closed successfully
-;				Set if error
-;	Corrupts registers:
-;		AX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-FileIO_CloseUsingHandleFromBX:
-	mov		ah, CLOSE_FILE
-	int		DOS_INTERRUPT_21h
-	ret
-
-
-;--------------------------------------------------------------------
 ; FileIO_ReadDXCXbytesToDSSIusingHandleFromBX
 ;	Parameters:
 ;		BX:		File handle
@@ -69,7 +51,7 @@ FileIO_ReadDXCXbytesToDSSIusingHandleFromBX:
 ;--------------------------------------------------------------------
 ; File position is updated so next read will start where
 ; previous read stopped.
-; 
+;
 ; FileIO_ReadCXbytesToDSSIusingHandleFromBX
 ;	Parameters:
 ;		BX:		File handle
@@ -116,7 +98,7 @@ FileIO_WriteDXCXbytesFromDSSIusingHandleFromBX:
 ;--------------------------------------------------------------------
 ; File position is updated so next write will start where
 ; previous write stopped.
-; 
+;
 ; FileIO_WriteCXbytesFromDSSIusingHandleFromBX:
 ;	Parameters:
 ;		BX:		File handle
@@ -248,6 +230,24 @@ FileIO_GetFileSizeToDXAXusingHandleFromBXandResetFilePosition:
 
 
 ;--------------------------------------------------------------------
+; FileIO_CloseUsingHandleFromBX
+;	Parameters:
+;		BX:		File handle
+;	Returns:
+;		AX:		DOS error code if CF set
+;		CF:		Clear if file closed successfully
+;				Set if error
+;	Corrupts registers:
+;		AX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+FileIO_CloseUsingHandleFromBX:
+	mov		ah, CLOSE_FILE
+	SKIP2B	f	; cmp ax, <next instruction>
+	; Fall to FileIO_SeekFromOriginInALtoOffsetInDXAXusingHandleFromBX
+
+
+;--------------------------------------------------------------------
 ; FileIO_SeekFromOriginInALtoOffsetInDXAXusingHandleFromBX:
 ;	Parameters:
 ;		AL:		SEEK_FROM.(origin)
@@ -261,7 +261,6 @@ FileIO_GetFileSizeToDXAXusingHandleFromBXandResetFilePosition:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 FileIO_SeekFromOriginInALtoOffsetInDXAXusingHandleFromBX:
 	mov		ah, SET_CURRENT_FILE_POSITION
 	int		DOS_INTERRUPT_21h

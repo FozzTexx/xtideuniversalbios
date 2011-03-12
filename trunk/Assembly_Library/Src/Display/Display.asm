@@ -62,7 +62,9 @@ ALIGN WORD_ALIGN
 istruc DISPLAY_LIB
 	at	DISPLAY_LIB.InitializeDisplayContext,						dw	DisplayContext_Initialize
 
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 	at	DISPLAY_LIB.SetCharacterPointerFromBXAX,					dw	DisplayContext_SetCharacterPointerFromBXAX
+%endif
 	at	DISPLAY_LIB.SetCharOutputFunctionFromAXwithAttribFlagInBL,	dw	DisplayContext_SetCharOutputFunctionFromAXwithAttribFlagInBL
 	at	DISPLAY_LIB.SetCharacterOutputParameterFromAX,				dw	DisplayContext_SetCharacterOutputParameterFromAX
 	at	DISPLAY_LIB.SetCharacterAttributeFromAL,					dw	DisplayContext_SetCharacterAttributeFromAL
@@ -71,7 +73,9 @@ istruc DISPLAY_LIB
 	at	DISPLAY_LIB.SetNewPageFromAL,								dw	DisplayPage_SetFromAL
 	at	DISPLAY_LIB.SynchronizeDisplayContextToHardware,			dw	DisplayContext_SynchronizeToHardware
 
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 	at	DISPLAY_LIB.GetCharacterPointerToBXAX,						dw	DisplayContext_GetCharacterPointerToBXAX
+%endif
 	at	DISPLAY_LIB.GetSoftwareCoordinatesToAX,						dw	DisplayCursor_GetSoftwareCoordinatesToAX
 	at	DISPLAY_LIB.GetColumnsToALandRowsToAH,						dw	DisplayPage_GetColumnsToALandRowsToAH
 

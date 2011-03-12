@@ -58,7 +58,7 @@ ALIGN JUMP_ALIGN
 ;		AX:		Item line for last thumb character
 ;	Corrupts registers:
 ;		CX, DX
-;--------------------------------------------------------------------	
+;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 .GetLastThumbLineToAX:
 	call	MenuScrollbars_GetLastVisibleItemOnPageToAX
@@ -160,8 +160,8 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 .RotateItemInCX:
 	mov		dx, [bp+MENUINIT.wItems]
-	cmp		cx, BYTE 0
-	jl		SHORT .RotateNegativeItemInCX
+	test	cx, cx
+	js		SHORT .RotateNegativeItemInCX
 	cmp		cx, dx
 	jae		SHORT .RotatePositiveItemInCX
 	ret
@@ -192,17 +192,15 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MenuScrollbars_IsItemInCXonVisiblePage:
-	cmp		cx, [bp+MENU.wFirstVisibleItem]
-	jb		SHORT .ItemIsNotVisible
+	cmp		[bp+MENU.wFirstVisibleItem], cx
+	ja		SHORT .ItemIsNotVisible
 
 	call	MenuScrollbars_GetLastVisibleItemOnPageToAX
 	cmp		cx, ax
 	ja		SHORT .ItemIsNotVisible
 	stc		; Item is visible
-	ret
-ALIGN JUMP_ALIGN
+ALIGN JUMP_ALIGN, ret
 .ItemIsNotVisible:
-	clc
 	ret
 
 

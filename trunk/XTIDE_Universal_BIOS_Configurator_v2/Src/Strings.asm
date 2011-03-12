@@ -111,7 +111,7 @@ g_szItemIdeCtrlPort:	db	"Control block address",NULL
 g_szItemIdeEnIRQ:		db	"Enable interrupt",NULL
 g_szItemIdeIRQ:			db	"IRQ",NULL
 
-g_szDlgBusType:			db	"Select type of bus where Ide Controller is connected.",NULL
+g_szDlgBusType:			db	"Select type of bus where IDE Controller is connected.",NULL
 g_szDlgIdeCmdPort:		db	"Enter IDE command block (base port) address.",NULL
 g_szDlgIdeCtrlPort:		db	"Enter IDE control block address (usually command block + 200h).",NULL
 g_szDlgIdeEnIRQ:		db	"Enable interrupt?",NULL
