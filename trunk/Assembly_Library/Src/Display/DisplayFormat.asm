@@ -126,22 +126,36 @@ ALIGN JUMP_ALIGN
 	ret
 
 .rgcFormatCharToLookupIndex:
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 	db		"aAduxsSct-+%"
+%else
+	db		"Auxsc-"		; Required by XTIDE Universal BIOS
+%endif
 .rgcFormatCharToLookupIndexEnd:
 ALIGN WORD_ALIGN
 .rgfnFormatSpecifierParser:
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 	dw		a_FormatAttributeForNextCharacter
+%endif
 	dw		A_FormatAttributeForRemainingString
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 	dw		d_FormatSignedDecimalWord
+%endif
 	dw		u_FormatUnsignedDecimalWord
 	dw		x_FormatHexadecimalWord
 	dw		s_FormatStringFromSegmentCS
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 	dw		S_FormatStringFromFarPointer
+%endif
 	dw		c_FormatCharacter
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 	dw		t_FormatRepeatCharacter
+%endif
 	dw		PrepareToPrependParameterWithSpaces
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 	dw		PrepareToAppendSpacesAfterParameter
 	dw		percent_FormatPercent
+%endif
 
 
 ;--------------------------------------------------------------------
@@ -275,6 +289,7 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		AX, BX, DX
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN
 a_FormatAttributeForNextCharacter:
 	mov		bl, [bp]
@@ -288,6 +303,7 @@ a_FormatAttributeForNextCharacter:
 	pop		bx
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bAttribute], bl
 	ret
+%endif
 
 ALIGN JUMP_ALIGN
 A_FormatAttributeForRemainingString:
@@ -295,11 +311,13 @@ A_FormatAttributeForRemainingString:
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bAttribute], al
 	ret
 
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN
 d_FormatSignedDecimalWord:
 	mov		ax, [bp]
 	mov		bx, 10
 	jmp		DisplayPrint_SignedWordFromAXWithBaseInBX
+%endif
 
 ALIGN JUMP_ALIGN
 u_FormatUnsignedDecimalWord:
@@ -322,6 +340,7 @@ s_FormatStringFromSegmentCS:
 	mov		si, [bp]
 	ret
 
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN
 S_FormatStringFromFarPointer:
 	mov		bx, [bp-2]
@@ -331,12 +350,14 @@ S_FormatStringFromFarPointer:
 	dec		bp
 	dec		bp
 	ret
+%endif
 
 ALIGN JUMP_ALIGN
 c_FormatCharacter:
 	mov		al, [bp]
 	jmp		DisplayPrint_CharacterFromAL
 
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN
 t_FormatRepeatCharacter:
 	push	cx
@@ -352,6 +373,7 @@ ALIGN JUMP_ALIGN
 percent_FormatPercent:
 	mov		al, '%'
 	jmp		DisplayPrint_CharacterFromAL
+%endif
 
 ALIGN JUMP_ALIGN
 PrepareToPrependParameterWithSpaces:

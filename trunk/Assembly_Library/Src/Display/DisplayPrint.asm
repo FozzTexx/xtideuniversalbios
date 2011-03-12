@@ -75,6 +75,7 @@ DisplayPrint_FormattedNullTerminatedStringFromCSSI:
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN
 DisplayPrint_SignedWordFromAXWithBaseInBX:
 	test	ax, ax
@@ -86,6 +87,7 @@ DisplayPrint_SignedWordFromAXWithBaseInBX:
 	pop		ax
 	neg		ax
 	; Fall to DisplayPrint_WordFromAXWithBaseInBX
+%endif
 
 ;--------------------------------------------------------------------
 ; DisplayPrint_WordFromAXWithBaseInBX
@@ -259,6 +261,7 @@ DisplayPrint_ClearScreenWithCharInALandAttributeInAH:
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN
 DisplayPrint_ClearAreaWithHeightInAHandWidthInAL:
 	push	si
@@ -287,6 +290,7 @@ ALIGN JUMP_ALIGN
 	pop		cx
 	pop		si
 	ret
+%endif
 
 
 ;--------------------------------------------------------------------
