@@ -60,12 +60,12 @@ istruc MENUITEM
 	at	MENUITEM.szName,			dw	g_szItemBootTimeout
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoBootTimeout
 	at	MENUITEM.szHelp,			dw	g_szHelpBootTimeout
-	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE | FLG_MENUITEM_BYTEVALUE
+	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE
 	at	MENUITEM.bType,				db	TYPE_MENUITEM_UNSIGNED
-	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	ROMVARS.bBootDelay
+	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	ROMVARS.wBootTimeout
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgBootTimeout
 	at	MENUITEM.itemValue + ITEM_VALUE.wMinValue,					dw	0
-	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	60
+	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	1092
 iend
 
 g_MenuitemBootMnuStngsSwapBootDriveNumbers:

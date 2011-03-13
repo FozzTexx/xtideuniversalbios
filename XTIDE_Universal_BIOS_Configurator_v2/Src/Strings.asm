@@ -179,12 +179,12 @@ g_szItemBootDrive:		db	"Default boot drive",NULL
 g_szItemBootFloppyDrvs:	db	"Number of Floppy Drives",NULL
 g_szItemBootSwap:		db	"Swap boot drive numbers",NULL
 
-g_szDlgBootTimeout:		db	"Enter Boot Menu selection timeout in seconds (1...60, 0 disables timeout).",NULL
+g_szDlgBootTimeout:		db	"Enter Boot Menu selection timeout in BIOS timer ticks (1...1092, 0 disables timeout).",NULL
 g_szDlgBootDrive:		db	"Enter default drive number (0xh for Floppy Drives, 8xh for Hard Disks, FFh for ROM boot).",NULL
 g_szDlgBootFloppyDrvs:	db	"Enter number of Floppy Drives to display on boot menu.",NULL
 g_szDlgBootSwap:		db	"Enable drive number translation?",NULL
 
-g_szNfoBootTimeout:		db	"Menu item selection timeout in seconds.",NULL
+g_szNfoBootTimeout:		db	"Menu item selection timeout in BIOS timer ticks.",NULL
 g_szNfoBootDrive:		db	"Default drive on boot menu.",NULL
 g_szNfoBootFloppyDrvs:	db	"Number of Floppy Drives to display on boot menu.",NULL
 g_szNfoBootSwap:		db	"Drive Number Translation (swap first drive with selected).",NULL
