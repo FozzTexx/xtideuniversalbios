@@ -87,6 +87,7 @@ BootMenuPrint_NullTerminatedStringFromCSSIandSetCF:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenuPrint_FloppyMenuitem:
+	call	PrintDriveNumberAfterTranslationFromDL
 	push	bp
 	mov		bp, sp
 	mov		si, g_szFDLetter
@@ -108,6 +109,7 @@ BootMenuPrint_FloppyMenuitem:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenuPrint_HardDiskMenuitem:
+	call	PrintDriveNumberAfterTranslationFromDL
 	call	FindDPT_ForDriveNumber		; DS:DI to point DPT
 	jnc		SHORT .HardDiskMenuitemForForeignDrive
 	; Fall to .HardDiskMenuitemForOurDrive
@@ -144,6 +146,29 @@ ALIGN JUMP_ALIGN
 .HardDiskMenuitemForForeignDrive:
 	mov		si, g_szforeignHD
 	jmp		SHORT BootMenuPrint_NullTerminatedStringFromCSSIandSetCF
+
+
+;--------------------------------------------------------------------
+; PrintDriveNumberAfterTranslationFromDL
+;	Parameters:
+;		DL:		Untranslated Floppy Drive number
+;		DS:		RAMVARS segment
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+PrintDriveNumberAfterTranslationFromDL:
+	mov		ax, dx
+	call	DriveXlate_ToOrBack
+	xchg	dx, ax				; Restore DX, WORD to print in AL
+	xor		ah, ah
+	push	bp
+	mov		bp, sp
+	mov		si, g_szDriveNum
+	push	ax
+	jmp		BootMenuPrint_FormatCSSIfromParamsInSSBP
 
 
 ;--------------------------------------------------------------------
