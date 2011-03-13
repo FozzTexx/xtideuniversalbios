@@ -25,8 +25,8 @@ BiosFile_LoadFileFromDSSItoRamBuffer:
 
 	mov		ax, FLG_CFGVARS_FILELOADED
 	call	Buffers_NewBiosWithSizeInDXCXandSourceInAXhasBeenLoadedForConfiguration
-	call	DisplayFileLoadedSuccesfully
 	call	FileIO_CloseUsingHandleFromBX
+	call	DisplayFileLoadedSuccesfully
 	jmp		SHORT .Return
 
 .DisplayErrorMessage:
@@ -165,6 +165,7 @@ BiosFile_SaveRamBufferToFileInDSSI:
 	call	FileIO_WriteDXCXbytesFromDSSIusingHandleFromBX
 	jc		SHORT .DisplayErrorMessage
 
+	call	FileIO_CloseUsingHandleFromBX
 	call	Buffers_ClearUnsavedChanges
 	call	DisplayFileSavedSuccesfully
 	jmp		SHORT .Return
