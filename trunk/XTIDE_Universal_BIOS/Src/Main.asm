@@ -52,9 +52,9 @@ istruc ROMVARS
 ;---------------------------;
 %ifdef USE_AT
 	at	ROMVARS.wFlags,			dw	FLG_ROMVARS_FULLMODE | FLG_ROMVARS_DRVXLAT
+	at	ROMVARS.wBootTimeout,	dw	30 * TICKS_PER_SECOND	; Boot Menu selection timeout
 	at	ROMVARS.bIdeCnt,		db	3						; Number of supported controllers
 	at	ROMVARS.bBootDrv,		db	80h						; Boot Menu default drive
-	at	ROMVARS.bBootDelay,		db	30						; Boot Menu selection delay (secs)
 	at	ROMVARS.bMinFddCnt, 	db	0						; Do not force minimum number of floppy drives
 	at	ROMVARS.bStealSize,		db	1						; Steal 1kB from base memory
 
@@ -83,9 +83,9 @@ istruc ROMVARS
 ; XT and XT+ Build default settings ;
 ;-----------------------------------;
 	at	ROMVARS.wFlags,			dw	FLG_ROMVARS_DRVXLAT
+	at	ROMVARS.wBootTimeout,	dw	30 * TICKS_PER_SECOND	; Boot Menu selection timeout
 	at	ROMVARS.bIdeCnt,		db	1						; Number of supported controllers
 	at	ROMVARS.bBootDrv,		db	80h						; Boot Menu default drive
-	at	ROMVARS.bBootDelay,		db	30						; Boot Menu selection delay (secs)
 	at	ROMVARS.bMinFddCnt, 	db	1						; Assume at least 1 floppy drive present if autodetect fails
 	at	ROMVARS.bStealSize,		db	1						; Steal 1kB from base memory in full mode
 

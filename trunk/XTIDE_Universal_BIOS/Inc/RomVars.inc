@@ -15,9 +15,9 @@ struc ROMVARS
 	.szVersion		resb	25	; BIOS version string
 
 	.wFlags			resb	2	; Word for ROM flags
+	.wBootTimeout	resb	2	; Boot Menu selection timeout in system timer ticks
 	.bIdeCnt		resb	1	; Number of available IDE controllers
 	.bBootDrv		resb	1	; Boot Menu default drive
-	.bBootDelay		resb	1	; Boot Menu selection delay in seconds
 	.bMinFddCnt		resb	1	; Minimum number of Floppy Drives
 	.bStealSize		resb	1	; Number of 1kB blocks stolen from 640kB base RAM
 
