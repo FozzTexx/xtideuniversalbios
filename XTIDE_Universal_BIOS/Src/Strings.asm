@@ -26,6 +26,7 @@ g_szHotkey:		db	"%A%c%c%A%8s%A ",NULL
 
 
 ; Boot Menu menuitem strings
+g_szDriveNum:	db	"%x ",NULL
 g_szFDLetter:	db	"%s %c",NULL
 g_szFloppyDrv:	db	"Floppy Drive",NULL
 g_szforeignHD:	db	"Foreign Hard Disk",NULL

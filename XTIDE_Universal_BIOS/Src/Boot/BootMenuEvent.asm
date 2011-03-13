@@ -60,6 +60,9 @@ ALIGN JUMP_ALIGN
 	mov		BYTE [si+MENUINIT.bWidth], BOOT_MENU_WIDTH
 	call	BootMenu_GetHeightToAHwithItemCountInAL
 	mov		[si+MENUINIT.bHeight], ah
+	mov		al, TICKS_PER_SECOND
+	mul		BYTE [cs:ROMVARS.bBootDelay]
+	CALL_MENU_LIBRARY StartSelectionTimeoutWithTicksInAX
 	stc
 	ret
 
