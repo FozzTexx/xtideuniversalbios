@@ -44,14 +44,14 @@ EEPROM_GetSmallestEepromSizeInWordsToCXforImageWithWordSizeInAX:
 ALIGN JUMP_ALIGN
 .CheckNextEepromSize:
 	cmp		ax, [cs:bx]
-	jbe		SHORT .ReturnEepromSizeInAX
+	jbe		SHORT .ReturnEepromSizeInCX
 	inc		bx
 	inc		bx
 	loop	.CheckNextEepromSize
 	clc		; None of the supported EEPROMs are large enough
 	ret
 ALIGN JUMP_ALIGN
-.ReturnEepromSizeInAX:
+.ReturnEepromSizeInCX:
 	mov		cx, [cs:bx]
 	stc
 	ret
