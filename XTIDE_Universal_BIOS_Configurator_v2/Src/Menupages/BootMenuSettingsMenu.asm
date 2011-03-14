@@ -9,7 +9,7 @@ g_MenupageForBootMenuSettingsMenu:
 istruc MENUPAGE
 	at	MENUPAGE.fnEnter,			dw	BootMenuSettingsMenu_EnterMenuOrModifyItemVisibility
 	at	MENUPAGE.fnBack,			dw	ConfigurationMenu_EnterMenuOrModifyItemVisibility
-	at	MENUPAGE.wMenuitems,		dw	5
+	at	MENUPAGE.wMenuitems,		dw	6
 iend
 
 g_MenuitemBootMnuStngsBackToConfigurationMenu:
@@ -35,6 +35,22 @@ istruc MENUITEM
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgBootDrive
 	at	MENUITEM.itemValue + ITEM_VALUE.wMinValue,					dw	0
 	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	0FFh
+iend
+
+g_MenuitemBootMnuStngsDisplayMode:
+istruc MENUITEM
+	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiceSelectionForMenuitemInDSSI
+	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromUnshiftedItemInDSSI
+	at	MENUITEM.szName,			dw	g_szItemBootDispMode
+	at	MENUITEM.szQuickInfo,		dw	g_szNfoDispMode
+	at	MENUITEM.szHelp,			dw	g_szNfoDispMode
+	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE
+	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOICE
+	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	ROMVARS.wDisplayMode
+	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgBootDispMode
+	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoice,				dw	g_szMultichoiceBootDispMode
+	at	MENUITEM.itemValue + ITEM_VALUE.rgwChoiceToValueLookup,		dw	g_rgwChoiceToValueLookupForDisplayModes
+	at	MENUITEM.itemValue + ITEM_VALUE.rgszValueToStringLookup,	dw	g_rgszValueToStringLookupForDisplayModes
 iend
 
 g_MenuitemBootMnuStngsFloppyDrives:
@@ -83,6 +99,23 @@ istruc MENUITEM
 	at	MENUITEM.itemValue + ITEM_VALUE.rgszValueToStringLookup,	dw	g_rgszValueToStringLookupForFlagBooleans
 	at	MENUITEM.itemValue + ITEM_VALUE.wValueBitmask,				dw	FLG_ROMVARS_DRVXLAT
 iend
+
+g_rgwChoiceToValueLookupForDisplayModes:
+	dw	DEFAULT_TEXT_MODE
+	dw	CGA_TEXT_MODE_BW40
+	dw	CGA_TEXT_MODE_CO40
+	dw	CGA_TEXT_MODE_BW80
+	dw	CGA_TEXT_MODE_CO80
+	dw	MDA_TEXT_MODE
+g_rgszValueToStringLookupForDisplayModes:
+	dw	g_szValueBootDispModeBW40
+	dw	g_szValueBootDispModeCO40
+	dw	g_szValueBootDispModeBW80
+	dw	g_szValueBootDispModeCO80
+	dw	g_szValueBootDispModeDefault
+	dw	NULL
+	dw	NULL
+	dw	g_szValueBootDispModeMono
 
 g_rgwChoiceToValueLookupForFloppyDrives:	; (No translation)
 	dw	0

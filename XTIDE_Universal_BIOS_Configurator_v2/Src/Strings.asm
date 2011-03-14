@@ -176,16 +176,19 @@ g_szHelpDrvUserCHS:		incbin	"Drive_UserCHS.txt"
 ; Strings for boot menu settings menu
 g_szItemBootTimeout:	db	"Selection timeout",NULL
 g_szItemBootDrive:		db	"Default boot drive",NULL
+g_szItemBootDispMode:	db	"Display Mode",NULL
 g_szItemBootFloppyDrvs:	db	"Number of Floppy Drives",NULL
 g_szItemBootSwap:		db	"Swap boot drive numbers",NULL
 
 g_szDlgBootTimeout:		db	"Enter Boot Menu selection timeout in BIOS timer ticks (1...1092, 0 disables timeout).",NULL
 g_szDlgBootDrive:		db	"Enter default drive number (0xh for Floppy Drives, 8xh for Hard Disks, FFh for ROM boot).",NULL
-g_szDlgBootFloppyDrvs:	db	"Enter number of Floppy Drives to display on boot menu.",NULL
+g_szDlgBootDispMode:	db	"Select display mode for Boot Menu.",NULL
+g_szDlgBootFloppyDrvs:	db	"Select number of Floppy Drives to display on boot menu.",NULL
 g_szDlgBootSwap:		db	"Enable drive number translation?",NULL
 
 g_szNfoBootTimeout:		db	"Menu item selection timeout in BIOS timer ticks.",NULL
 g_szNfoBootDrive:		db	"Default drive on boot menu.",NULL
+g_szNfoDispMode:		db	"Display Mode for Boot Menu.",NULL
 g_szNfoBootFloppyDrvs:	db	"Number of Floppy Drives to display on boot menu.",NULL
 g_szNfoBootSwap:		db	"Drive Number Translation (swap first drive with selected).",NULL
 
@@ -198,12 +201,27 @@ g_szHelpBootFloppyDrvs:	incbin	"Bootmenu_FloppyDrives.txt"
 g_szHelpBootSwap:		incbin	"Bootmenu_SwapDrives.txt"
 						db	NULL
 
+g_szMultichoiceBootDispMode:
+						db	"Default",LF
+						db	"40x25 Black & White",LF
+						db	"40x25 Color",LF
+						db	"80x25 Black & White",LF
+						db	"80x25 Color",LF
+						db	"80x25 Monochrome",NULL
+
 g_szMultichoiceBootFloppyDrvs:
 						db	"Autodetect",LF
 						db	"1",LF
 						db	"2",LF
 						db	"3",LF
 						db	"4",NULL
+
+g_szValueBootDispModeDefault:	db	"Default",NULL
+g_szValueBootDispModeBW40:		db	"BW40",NULL
+g_szValueBootDispModeCO40:		db	"CO40",NULL
+g_szValueBootDispModeBW80:		db	"BW80",NULL
+g_szValueBootDispModeCO80:		db	"CO80",NULL
+g_szValueBootDispModeMono:		db	"Mono",NULL
 
 g_szValueBootFloppyDrvsAuto:	db	"Auto",NULL
 g_szValueBootFloppyDrvs1:		db	"1",NULL

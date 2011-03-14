@@ -82,6 +82,7 @@ Buffers_NewBiosWithSizeInDXCXandSourceInAXhasBeenLoadedForConfiguration:
 	or		WORD [cs:g_cfgVars+CFGVARS.wFlags], ax
 	shr		dx, 1
 	rcr		cx, 1
+	adc		cx, BYTE 0		; Round up to next WORD
 	mov		[cs:g_cfgVars+CFGVARS.wImageSizeInWords], cx
 	ret
 
