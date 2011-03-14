@@ -171,20 +171,20 @@ HStatus_WaitDrqBase:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 HStatus_PollBsyAndFlg:
-	call	InitializeTimeoutWithTicksInCL		; Initialize timeout counter
-	in		al, dx								; Discard contents for first read
-												; (should read Alternate Status Register)
+	call	HTimer_InitializeTimeoutWithTicksInCL	; Initialize timeout counter
+	in		al, dx									; Discard contents for first read
+													; (should read Alternate Status Register)
 ALIGN JUMP_ALIGN
 .PollLoop:
-	in		al, dx								; Load IDE Status Register
-	test	al, FLG_IDE_ST_BSY					; Controller busy?
-	jnz		SHORT .UpdateTimeout				;  If so, jump to timeout update
-	test	al, ah								; Test secondary flag
-	jnz		SHORT GetErrorCodeFromPollingToAH	; If set, break loop
+	in		al, dx									; Load IDE Status Register
+	test	al, FLG_IDE_ST_BSY						; Controller busy?
+	jnz		SHORT .UpdateTimeout					;  If so, jump to timeout update
+	test	al, ah									; Test secondary flag
+	jnz		SHORT GetErrorCodeFromPollingToAH		; If set, break loop
 ALIGN JUMP_ALIGN
 .UpdateTimeout:
-	call	SetCFifTimeout
-	jnc		SHORT .PollLoop						; Loop if time left (sets CF on timeout)
+	call	HTimer_SetCFifTimeout
+	jnc		SHORT .PollLoop							; Loop if time left (sets CF on timeout)
 	jmp		HError_ProcessTimeoutAfterPollingBSYandSomeOtherStatusBit
 
 ;--------------------------------------------------------------------
@@ -205,62 +205,16 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 HStatus_PollBsy:
-	call	InitializeTimeoutWithTicksInCL		; Initialize timeout counter
-	in		al, dx								; Discard contents for first read
-												; (should read Alternate Status Register)
+	call	HTimer_InitializeTimeoutWithTicksInCL	; Initialize timeout counter
+	in		al, dx									; Discard contents for first read
+													; (should read Alternate Status Register)
 ALIGN JUMP_ALIGN
 .PollLoop:
-	in		al, dx								; Load IDE Status Reg
-	test	al, FLG_IDE_ST_BSY					; Controller busy?
-	jz		SHORT GetErrorCodeFromPollingToAH	;  If not, jump to check errors
-	call	SetCFifTimeout						; Update timeout counter
-	jnc		SHORT .PollLoop						; Loop if time left (sets CF on timeout)
+	in		al, dx									; Load IDE Status Reg
+	test	al, FLG_IDE_ST_BSY						; Controller busy?
+	jz		SHORT GetErrorCodeFromPollingToAH		;  If not, jump to check errors
+	call	HTimer_SetCFifTimeout					; Update timeout counter
+	jnc		SHORT .PollLoop							; Loop if time left (sets CF on timeout)
 ALIGN JUMP_ALIGN
 GetErrorCodeFromPollingToAH:
 	jmp		HError_ProcessErrorsAfterPollingBSY
-
-
-;--------------------------------------------------------------------
-; InitializeTimeoutWithTicksInCL
-;	Parameters:
-;		CL:		Timeout value in system timer ticks
-;		DS:		Segment to RAMVARS
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		CX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-InitializeTimeoutWithTicksInCL:
-	push	bx
-	xchg	cx, ax
-
-	xor		ah, ah		; Timeout ticks now in AX
-	mov		bx, RAMVARS.wTimeoutCounter
-	call	TimerTicks_InitializeTimeoutFromAX
-
-	xchg	ax, cx		; Restore AX
-	pop		bx
-	ret
-
-;--------------------------------------------------------------------
-; SetCFifTimeout
-;	Parameters:
-;		DS:		Segment to RAMVARS
-;	Returns:
-;		CF:		Set if timeout
-;				Cleared if time left
-;	Corrupts registers:
-;		CX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-SetCFifTimeout:
-	push	bx
-	xchg	cx, ax
-
-	mov		bx, RAMVARS.wTimeoutCounter
-	call	TimerTicks_GetTimeoutTicksLeftToAXfromDSBX
-
-	xchg	ax, cx		; Restore AX
-	pop		bx
-	ret
