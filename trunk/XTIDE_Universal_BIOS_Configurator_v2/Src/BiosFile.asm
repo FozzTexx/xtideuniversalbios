@@ -150,18 +150,19 @@ BiosFile_SaveRamBufferToFileInDSSI:
 	push	es
 	push	ds
 
-	mov		al, FILE_ACCESS.WriteOnly
-	call	FileIO_OpenWithPathInDSSIandFileAccessInAL
-	jc		SHORT .DisplayErrorMessage
-
 	call	Buffers_GenerateChecksum
 	call	Buffers_GetFileBufferToESDI
-	call	Registers_CopyESDItoDSSI
 	mov		ax, [cs:g_cfgVars+CFGVARS.wImageSizeInWords]
 	call	EEPROM_GetSmallestEepromSizeInWordsToCXforImageWithWordSizeInAX
 	xor		dx, dx
 	shl		cx, 1
-	rcl		dx, 1			; WORDs to BYTEs
+	rcl		dx, 1			; WORDs to BYTEs	
+
+	mov		al, FILE_ACCESS.WriteOnly
+	call	FileIO_OpenWithPathInDSSIandFileAccessInAL
+	jc		SHORT .DisplayErrorMessage
+
+	call	Registers_CopyESDItoDSSI
 	call	FileIO_WriteDXCXbytesFromDSSIusingHandleFromBX
 	jc		SHORT .DisplayErrorMessage
 

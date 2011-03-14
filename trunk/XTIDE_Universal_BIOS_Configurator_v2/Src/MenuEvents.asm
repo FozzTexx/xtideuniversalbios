@@ -35,7 +35,7 @@ ALIGN JUMP_ALIGN
 MenuEventHandler:
 	cmp		bx, MENUEVENT.RefreshItemFromCX	; Above last supported item?
 	ja		SHORT .EventNotHandled
-	jmp		[bx+.rgfnEventSpecificHandlers]
+	jmp		[cs:bx+.rgfnEventSpecificHandlers]
 .EventNotHandled:
 .IdleProcessing:
 	clc
@@ -71,7 +71,7 @@ ALIGN JUMP_ALIGN
 	mov		WORD [si+MENUINIT.wItems], ax
 	mov		WORD [si+MENUINIT.bTitleLines], TITLE_LINES_IN_MENU
 	mov		WORD [si+MENUINIT.bInfoLines], INFO_LINES_IN_MENU
-	mov		WORD [si+MENUINIT.bWidth], MENU_WIDTH
+	mov		BYTE [si+MENUINIT.bWidth], MENU_WIDTH
 	CALL_DISPLAY_LIBRARY GetColumnsToALandRowsToAH
 	mov		[si+MENUINIT.bHeight], ah
 	call	MainMenu_EnterMenuOrModifyItemVisibility
