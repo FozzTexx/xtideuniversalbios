@@ -89,13 +89,13 @@ AHDh_ResetMasterAndSlave:
 	or		al, FLG_IDE_CTRL_SRST		; Set Reset bit
 	call	HDrvSel_OutputDeviceControlByte
 	mov		ax, 5						; Delay at least 5us
-	call	Delay_MicrosecondsFromAX
+	call	HTimer_MicrosecondsFromAX
 
 	; HSR1: Clear_wait
 	mov		al, [di+DPT.bDrvCtrl]		; Load value for ACR
 	out		dx, al						; End Reset
 	mov		ax, 2000					; Delay at least 2ms
-	call	Delay_MicrosecondsFromAX
+	call	HTimer_MicrosecondsFromAX
 
 	; HSR2: Check_status
 	mov		cl, B_TIMEOUT_RESET			; Reset timeout delay

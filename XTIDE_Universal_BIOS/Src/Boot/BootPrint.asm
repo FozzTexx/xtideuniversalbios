@@ -36,25 +36,6 @@ BootPrint_TryToBootFromDL:
 
 
 ;--------------------------------------------------------------------
-; BootPrint_BootSectorResultStringFromAX
-;	Parameters:
-;		CS:AX:	Ptr to "found" or "not found"
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, CX, SI, DI
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-BootPrint_BootSectorResultStringFromAX:
-	push	bp
-	mov		bp, sp
-	ePUSH_T	cx, g_szBootSector
-	push	ax			; "found" or "not found"
-	mov		si, g_szSectRead
-	jmp		BootMenuPrint_FormatCSSIfromParamsInSSBP
-
-
-;--------------------------------------------------------------------
 ; BootPrint_FailedToLoadFirstSector
 ;	Parameters:
 ;		AH:		INT 13h error code

@@ -14,7 +14,7 @@ SECTION .text
 ;		CF:		Set if boot sector loaded succesfully
 ;				Cleared if failed to load boot sector
 ;	Corrupts registers:
-;		AX, CX, DH, DI, (DL if failed to read boot sector)
+;		AX, CX, DH, SI, DI, (DL if failed to read boot sector)
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootSector_TryToLoadFromDriveDL:
@@ -27,8 +27,6 @@ BootSector_TryToLoadFromDriveDL:
 	cmp		WORD [es:bx+510], 0AA55h		; Valid boot sector?
 	jne		SHORT .FirstHardDiskSectorNotBootable
 .AlwaysBootFromFloppyDriveForBooterGames:
-	mov		ax, g_szFound
-	call	BootPrint_BootSectorResultStringFromAX
 	stc
 	ret
 .FailedToLoadFirstSector:
@@ -36,8 +34,8 @@ BootSector_TryToLoadFromDriveDL:
 	clc
 	ret
 .FirstHardDiskSectorNotBootable:
-	mov		ax, g_szNotFound
-	call	BootPrint_BootSectorResultStringFromAX
+	mov		si, g_szBootSectorNotFound
+	call	BootMenuPrint_NullTerminatedStringFromCSSIandSetCF
 	clc
 	ret
 

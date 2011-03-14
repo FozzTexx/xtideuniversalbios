@@ -19,8 +19,26 @@ Int19hMenu_BootLoader:
 	LOAD_BDA_SEGMENT_TO	ds, ax
 	STORE_POST_STACK_POINTER
 	SWITCH_TO_BOOT_MENU_STACK
-	call	BootMenuPrint_InitializeDisplayContext
 	call	RamVars_GetSegmentToDS
+	; Fall to .InitializeDisplayForBootMenu
+
+;--------------------------------------------------------------------
+; .InitializeDisplayForBootMenu
+;	Parameters:
+;		Nothing
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, DI
+;--------------------------------------------------------------------
+.InitializeDisplayForBootMenu:
+	; Change display mode if necessary
+	mov		ax, [cs:ROMVARS.wDisplayMode]	; AH 00h = Set Video Mode
+	cmp		al, DEFAULT_TEXT_MODE
+	je		SHORT .InitializeDisplayLibrary
+	int		BIOS_VIDEO_INTERRUPT_10h
+.InitializeDisplayLibrary:	
+	call	BootMenuPrint_InitializeDisplayContext
 	; Fall to .ProcessMenuSelectionsUntilBootable
 
 ;--------------------------------------------------------------------
