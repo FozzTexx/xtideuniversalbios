@@ -1,8 +1,4 @@
-; File name		:	Debug.inc
 ; Project name	:	Assembly Library
-; Created date	:	8.8.2010
-; Last update	:	29.9.2010
-; Author		:	Tomi Tilli
 ; Description	:	Debugging macros.
 %ifndef DEBUG_INC
 %define DEBUG_INC
@@ -27,7 +23,9 @@
 	mov		ax, %1
 	mov		bx, %2
 	CALL_DISPLAY_LIBRARY PrintWordFromAXwithBaseInBX
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 	call	Keyboard_RemoveAllKeystrokesFromBuffer
+%endif
 	call	Keyboard_GetKeystrokeToAXandWaitIfNecessary
 
 	pop		ax
@@ -53,7 +51,9 @@
 
 	mov		al, %1
 	CALL_DISPLAY_LIBRARY PrintCharacterFromAL
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 	call	Keyboard_RemoveAllKeystrokesFromBuffer
+%endif
 	call	Keyboard_GetKeystrokeToAXandWaitIfNecessary
 
 	pop		ax
@@ -94,11 +94,12 @@
 ;--------------------------------------------------------------------
 %macro WAIT_ANY_KEY_TO_CONTINUE 0
 	push	ax
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 	call	Keyboard_RemoveAllKeystrokesFromBuffer
+%endif
 	call	Keyboard_GetKeystrokeToAXandWaitIfNecessary
 	pop		ax
 %endmacro
-
 
 
 %endif ; DEBUG_INC
