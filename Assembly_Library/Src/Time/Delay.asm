@@ -1,8 +1,4 @@
-; File name		:	Delay.asm
 ; Project name	:	Assembly Library
-; Created date	:	24.7.2010
-; Last update	:	16.9.2010
-; Author		:	Tomi Tilli
 ; Description	:	Delay functions.
 
 ; Section containing code
