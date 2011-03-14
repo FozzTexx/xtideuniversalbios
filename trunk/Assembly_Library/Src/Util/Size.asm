@@ -42,14 +42,24 @@ ALIGN JUMP_ALIGN
 	jnz		SHORT Size_DivideSizeInBXDXAXby1024andIncrementMagnitudeInCX
 	cmp		ax, 10000				; 5 digits needed?
 	jae		SHORT Size_DivideSizeInBXDXAXby1024andIncrementMagnitudeInCX
-
 	add		sp, BYTE 2				; Clean return address from stack
-	call	Size_ConvertMagnitudeRemainderInSItoTenths
-	call	Size_GetMagnitudeCharacterToDLfromMagnitudeInCX
-	mov		cx, si
+	xchg	si, cx					; CX = Remainder (0...1023), SI = Magnitude
+
+	; Convert remainder to tenths
+	xchg	bx, ax					; Store AX
+	mov		ax, 10
+	mul		cx						; DX:AX = remainder * 10
+	eSHR_IM	ax, 10					; Divide AX by 1024
+	xchg	cx, ax					; CX = tenths
+	xchg	ax, bx
+
+	; Convert magnitude to character
+	mov		dl, [cs:si+.rgbMagnitudeToChar]
 
 	pop		si
 	ret
+.rgbMagnitudeToChar:	db	" kMGTP"
+
 
 ;--------------------------------------------------------------------
 ; Size_DivideSizeInBXDXAXby1024andIncrementMagnitudeInCX
@@ -97,43 +107,3 @@ Size_DivideBXDXAXbyTwo:
 	rcr		dx, 1					; ...to get disk size in...
 	rcr		ax, 1					; ...kiB
 	ret
-
-
-;--------------------------------------------------------------------
-; Size_ConvertMagnitudeRemainderInSItoTenths
-;	Parameters:
-;		SI:			Remainder from last magnitude division (0...1023)
-;	Returns:
-;		SI:			Tenths
-;	Corrupts registers:
-;		DX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-Size_ConvertMagnitudeRemainderInSItoTenths:
-	push	ax
-
-	mov		ax, 10
-	mul		si					; DX:AX = remainder * 10
-	eSHR_IM	ax, 10				; Divide AX by 1024
-	xchg	si, ax				; SI = tenths
-
-	pop		ax
-	ret
-
-
-;--------------------------------------------------------------------
-; Size_GetMagnitudeCharacterToDLfromMagnitudeInCX
-;	Parameters:
-;		CX:		Magnitude in BYTE_MULTIPLES
-;	Returns:
-;		DL:		Magnitude character
-;	Corrupts registers:
-;		BX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-Size_GetMagnitudeCharacterToDLfromMagnitudeInCX:
-	mov		bx, cx
-	mov		dl, [cs:bx+.rgbMagnitudeToChar]
-	ret
-ALIGN WORD_ALIGN
-.rgbMagnitudeToChar:	db	" kMGTP"
