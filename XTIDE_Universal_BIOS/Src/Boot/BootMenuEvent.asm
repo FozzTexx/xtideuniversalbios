@@ -84,14 +84,18 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 .ItemHighlightedFromCX:
 	push	cx
-	push	dx
 	call	RamVars_GetSegmentToDS
 	call	DriveXlate_Reset
 	call	BootMenu_GetDriveToDXforMenuitemInCX
 	call	DriveXlate_SetDriveToSwap
-	pop		ax		; Update previous item
+
+	xor		ax, ax	; Update first floppy drive (for translated drive number)
 	CALL_MENU_LIBRARY RefreshItemFromAX
-	pop		ax		; Update new item
+	mov		dl, 80h
+	call	BootMenu_GetMenuitemToDXforDriveInDL
+	xchg	ax, dx	; Update first hard disk (for translated drive number)
+	CALL_MENU_LIBRARY RefreshItemFromAX
+	pop		ax		; Update new item (for translated drive number)
 	CALL_MENU_LIBRARY RefreshItemFromAX
 	CALL_MENU_LIBRARY RefreshInformation
 	stc

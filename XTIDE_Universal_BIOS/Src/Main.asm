@@ -134,6 +134,7 @@ iend
 %include "HStatus.asm"			; For reading hard disk status
 %include "HDrvSel.asm"			; For selecting drive to access
 %include "HCommand.asm"			; For outputting command and parameters
+%include "HTimer.asm"			; For timeout and delay
 
 ; Include .asm files (Interrupt handlers)
 %include "Int13h.asm"			; For Int 13h, Disk functions
