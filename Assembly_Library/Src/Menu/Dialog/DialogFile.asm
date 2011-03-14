@@ -497,6 +497,8 @@ ParseSelectionFromItemLineInDSSI:
 	je		SHORT .ChangeToUpdir
 	call	Char_IsUpperCaseLetterInAL
 	jc		SHORT .ParseAndChangeToSubdirInDSSI
+	call	Char_IsDecimalDigitInAL
+	jc		SHORT .ParseAndChangeToSubdirInDSSI	; Assume subdir and check for errors
 	; Fall to .ParseAndSelectFileFromDSSI
 
 ;--------------------------------------------------------------------
@@ -549,6 +551,7 @@ ALIGN JUMP_ALIGN
 	mov		BYTE [si+12], NULL	; Terminate with NULL (unnecessary spaces do not matter)
 .ChangeDirectoryToDSSI:
 	call	Directory_ChangeToPathFromDSSI
+	jc		SHORT .ParseAndSelectFileFromDSSI	; Must have been a file starting with number
 	; Fall to RefreshFilesToDisplay
 
 ;--------------------------------------------------------------------
