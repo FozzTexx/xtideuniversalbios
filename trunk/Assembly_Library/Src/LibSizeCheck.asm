@@ -3,6 +3,7 @@
 ;					Builds wanted library functions to check their size.
 
 ; Include .inc files
+%define EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ;%define INCLUDE_DISPLAY_LIBRARY
 ;%define INCLUDE_FILE_LIBRARY
 ;%define INCLUDE_KEYBOARD_LIBRARY
