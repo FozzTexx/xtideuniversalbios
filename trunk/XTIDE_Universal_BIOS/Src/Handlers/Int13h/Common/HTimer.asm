@@ -44,7 +44,7 @@ HTimer_SetCFifTimeout:
 ; Delay is always at least one millisecond since
 ; RTC resolution is 977 microsecs.
 ;
-; Delay_MicrosecondsFromAX
+; HTimer_MicrosecondsFromAX
 ;	Parameters:
 ;		AX:		Number of microsecs to wait
 ;	Returns:
@@ -52,7 +52,7 @@ HTimer_SetCFifTimeout:
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
-Delay_MicrosecondsFromAX:
+HTimer_MicrosecondsFromAX:
 %ifndef USE_AT
 	mov		ax, 1
 	; Fall to Delay_TimerTicksFromAX
@@ -69,7 +69,7 @@ Delay_MicrosecondsFromAX:
 	pop		cx
 	pop		dx
 	mov		ax, 1							; Prepare to wait 1 timer tick
-	jc		SHORT Delay_TimerTicksFromAX	; Event Wait was unsupported or busy
+	jc		SHORT HTimer_TimerTicksFromAX	; Event Wait was unsupported or busy
 	ret
 %endif
 
@@ -78,7 +78,7 @@ Delay_MicrosecondsFromAX:
 ; First tick might take 0...54.9 ms and remaining ticks
 ; will occur at 54.9 ms intervals.
 ;
-; Delay_TimerTicksFromAX
+; HTimer_TimerTicksFromAX
 ;	Parameters:
 ;		AX:		Number of timer ticks to wait
 ;	Returns:
@@ -86,7 +86,7 @@ Delay_MicrosecondsFromAX:
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
-Delay_TimerTicksFromAX:
+HTimer_TimerTicksFromAX:
 	sti								; Make sure that interrupts are enabled
 	call	ReadTimeFromBdaToCX
 	add		ax, cx					; AX = end time

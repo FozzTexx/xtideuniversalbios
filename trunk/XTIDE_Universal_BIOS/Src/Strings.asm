@@ -9,14 +9,13 @@ g_szRomAt:		db	"%s @ %x",LF,CR,NULL
 g_szMaster:		db	"Master",NULL
 g_szSlave:		db	"Slave ",NULL
 g_szDetect:		db	"IDE %s at %x: ",NULL			; IDE Master at 1F0h:
-g_szNotFound:	db	"not found",LF,CR,NULL
+
 
 ; Boot loader strings
-g_szTryToBoot:	db	"Booting from %s %x",ANGLE_QUOTE_RIGHT,"%x",LF,CR,NULL
-g_szBootSector:	db	"Boot sector",NULL
-g_szFound:		db	"found",NULL
-g_szSectRead:	db	"%s %s!",LF,CR,NULL
-g_szReadError:	db	"Error %x!",LF,CR,NULL
+g_szTryToBoot:			db	"Booting from %s %x",ANGLE_QUOTE_RIGHT,"%x",LF,CR,NULL
+g_szBootSectorNotFound:	db	"Boot sector "
+g_szNotFound:			db	"not found",LF,CR,NULL
+g_szReadError:			db	"Error %x!",LF,CR,NULL
 
 ; Boot menu bottom of screen strings
 g_szFDD:		db	"FDD",NULL

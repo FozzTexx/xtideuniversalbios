@@ -52,6 +52,7 @@ istruc ROMVARS
 ;---------------------------;
 %ifdef USE_AT
 	at	ROMVARS.wFlags,			dw	FLG_ROMVARS_FULLMODE | FLG_ROMVARS_DRVXLAT
+	at	ROMVARS.wDisplayMode,	dw	DEFAULT_TEXT_MODE
 	at	ROMVARS.wBootTimeout,	dw	30 * TICKS_PER_SECOND	; Boot Menu selection timeout
 	at	ROMVARS.bIdeCnt,		db	3						; Number of supported controllers
 	at	ROMVARS.bBootDrv,		db	80h						; Boot Menu default drive
@@ -78,11 +79,19 @@ istruc ROMVARS
 	at	ROMVARS.ideVars2+IDEVARS.bIRQ,			db	0				; IRQ
 	at	ROMVARS.ideVars2+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	db	FLG_DRVPARAMS_BLOCKMODE
 	at	ROMVARS.ideVars2+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags,	db	FLG_DRVPARAMS_BLOCKMODE
+
+	at	ROMVARS.ideVars3+IDEVARS.wPort,			dw	168h			; Controller Command Block base port
+	at	ROMVARS.ideVars3+IDEVARS.wPortCtrl,		dw	368h			; Controller Control Block base port
+	at	ROMVARS.ideVars3+IDEVARS.bBusType,		db	BUS_TYPE_16		; Bus type
+	at	ROMVARS.ideVars3+IDEVARS.bIRQ,			db	0				; IRQ
+	at	ROMVARS.ideVars3+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	db	FLG_DRVPARAMS_BLOCKMODE
+	at	ROMVARS.ideVars3+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags,	db	FLG_DRVPARAMS_BLOCKMODE
 %else
 ;-----------------------------------;
 ; XT and XT+ Build default settings ;
 ;-----------------------------------;
 	at	ROMVARS.wFlags,			dw	FLG_ROMVARS_DRVXLAT
+	at	ROMVARS.wDisplayMode,	dw	DEFAULT_TEXT_MODE
 	at	ROMVARS.wBootTimeout,	dw	30 * TICKS_PER_SECOND	; Boot Menu selection timeout
 	at	ROMVARS.bIdeCnt,		db	1						; Number of supported controllers
 	at	ROMVARS.bBootDrv,		db	80h						; Boot Menu default drive
@@ -95,6 +104,15 @@ istruc ROMVARS
 	at	ROMVARS.ideVars0+IDEVARS.bIRQ,			db	0				; IRQ
 	at	ROMVARS.ideVars0+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	db	FLG_DRVPARAMS_BLOCKMODE
 	at	ROMVARS.ideVars0+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags,	db	FLG_DRVPARAMS_BLOCKMODE
+
+	at	ROMVARS.ideVars1+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	db	FLG_DRVPARAMS_BLOCKMODE
+	at	ROMVARS.ideVars1+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags,	db	FLG_DRVPARAMS_BLOCKMODE
+
+	at	ROMVARS.ideVars2+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	db	FLG_DRVPARAMS_BLOCKMODE
+	at	ROMVARS.ideVars2+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags,	db	FLG_DRVPARAMS_BLOCKMODE
+
+	at	ROMVARS.ideVars3+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	db	FLG_DRVPARAMS_BLOCKMODE
+	at	ROMVARS.ideVars3+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags,	db	FLG_DRVPARAMS_BLOCKMODE
 %endif
 iend
 
