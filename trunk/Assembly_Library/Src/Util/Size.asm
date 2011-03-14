@@ -31,32 +31,38 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Size_GetSizeToAXAndCharToDLfromBXDXAXwithMagnitudeInCX:
+%ifndef USE_186		; If 8086/8088
+	push	di
+%endif
 	push	si
 
 ALIGN JUMP_ALIGN
 .MagnitudeConversionLoop:
-	ePUSH_T	si, .MagnitudeConversionLoop
-	test	bx, bx					; Bits 32...47 in use?
+	ePUSH_T	di, .MagnitudeConversionLoop; DI corrupted only on 8086/8088 build
+	test	bx, bx						; Bits 32...47 in use?
 	jnz		SHORT Size_DivideSizeInBXDXAXby1024andIncrementMagnitudeInCX
-	test	dx, dx					; Bits 16...31 in use?
+	test	dx, dx						; Bits 16...31 in use?
 	jnz		SHORT Size_DivideSizeInBXDXAXby1024andIncrementMagnitudeInCX
-	cmp		ax, 10000				; 5 digits needed?
+	cmp		ax, 10000					; 5 digits needed?
 	jae		SHORT Size_DivideSizeInBXDXAXby1024andIncrementMagnitudeInCX
-	add		sp, BYTE 2				; Clean return address from stack
-	xchg	si, cx					; CX = Remainder (0...1023), SI = Magnitude
+	add		sp, BYTE 2					; Clean return address from stack
+	xchg	si, cx						; CX = Remainder (0...1023), SI = Magnitude
 
 	; Convert remainder to tenths
-	xchg	bx, ax					; Store AX
+	xchg	bx, ax						; Store AX
 	mov		ax, 10
-	mul		cx						; DX:AX = remainder * 10
-	eSHR_IM	ax, 10					; Divide AX by 1024
-	xchg	cx, ax					; CX = tenths
+	mul		cx							; DX:AX = remainder * 10
+	eSHR_IM	ax, 10						; Divide AX by 1024
+	xchg	cx, ax						; CX = tenths
 	xchg	ax, bx
 
 	; Convert magnitude to character
 	mov		dl, [cs:si+.rgbMagnitudeToChar]
 
 	pop		si
+%ifndef USE_186
+	pop		di
+%endif
 	ret
 .rgbMagnitudeToChar:	db	" kMGTP"
 
