@@ -1,8 +1,4 @@
-; File name		:	EEPROM.asm
 ; Project name	:	XTIDE Univeral BIOS Configurator
-; Created date	:	20.4.2010
-; Last update	:	21.4.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for loading and saving BIOS image file.
 
 ; Section containing code
@@ -153,20 +149,19 @@ BiosFile_Close:
 ;		CF:		Set if file was too large
 ;				Cleared if supported size
 ;	Corrupts registers:
-;		DX
+;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BiosFile_GetFileSizeToCX:
-	mov		cx, [si+DTA.dwFileSize]
-	mov		dx, [si+DTA.dwFileSize+2]
-	test	dx, dx						; More than 65535 bytes?
+	mov		cx, [si+DTA.dwFileSize+2]	; High word of file size to CX
+	test	cx, cx						; File larger than 65535 bytes? (clears CF)
+	mov		cx, [si+DTA.dwFileSize]		; Low word of file size to CX
 	jnz		SHORT .TooLargeFile
 	cmp		cx, MAX_EEPROM_SIZE			; Too large?
 	ja		SHORT .TooLargeFile
-	clc
-	ret
-.TooLargeFile:
 	stc
+.TooLargeFile:							; CF is always cleared when jumping to here
+	cmc									; So we invert it
 	ret
 
 

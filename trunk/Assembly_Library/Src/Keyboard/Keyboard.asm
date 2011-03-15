@@ -158,7 +158,7 @@ ALIGN JUMP_ALIGN
 	cmp		al, BS								; Backspace?
 	je		SHORT .Backspace
 	jcxz	.RejectCharacter
-	test	al, al								; Clear ZF and CF
+	clc											; Clear CF (ZF is already cleared)
 	ret
 
 .Backspace:

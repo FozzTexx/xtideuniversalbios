@@ -49,7 +49,7 @@ HEADERS += Src/Util/
 #################################################################
 # Assembler preprocessor defines.                               #
 #################################################################
-DEFINES = 
+DEFINES =
 DEFINES_XT = ELIMINATE_CGA_SNOW
 DEFINES_XTPLUS = USE_186 ELIMINATE_CGA_SNOW
 DEFINES_AT = USE_186 USE_286 USE_AT
@@ -68,7 +68,7 @@ DEFS_AT = $(DEFINES_AT:%=-D%)
 # Add -I in front of all header directories
 IHEADERS = $(HEADERS:%=-I%)
 
-# Path + target file to be build
+# Path + target file to be built
 TARGET = $(BUILD_DIR)/$(PROG)
 
 
@@ -106,19 +106,19 @@ ASFLAGS += -O9					# Optimize operands to their shortest forms
 
 # Make clean debug and release versions
 all: clean at xtplus xt
-	@echo All build!
+	@echo All done!
 
 at:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_AT) -l"$(TARGET)_at.lst" -o"$(TARGET)_at.$(EXTENSION)"
-	@echo AT version "$(TARGET)_at.$(EXTENSION)" build.
+	@echo AT version "$(TARGET)_at.$(EXTENSION)" built.
 
 xtplus:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XTPLUS) -l"$(TARGET)_xtp.lst" -o"$(TARGET)_xtp.$(EXTENSION)"
-	@echo XT plus version "$(TARGET)_xtp.$(EXTENSION)" build.
+	@echo XT plus version "$(TARGET)_xtp.$(EXTENSION)" built.
 
 xt:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XT) -l"$(TARGET)_xt.lst" -o"$(TARGET)_xt.$(EXTENSION)"
-	@echo XT version "$(TARGET)_xt.$(EXTENSION)" build.
+	@echo XT version "$(TARGET)_xt.$(EXTENSION)" built.
 
 clean:
 	@$(RM) $(BUILD_DIR)\*.*

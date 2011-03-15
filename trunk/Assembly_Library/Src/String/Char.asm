@@ -115,9 +115,7 @@ Char_ConvertIntegerToALfromDigitInALwithBaseInBX:
 
 	cmp		al, '9'					; Decimal digit
 	jbe		SHORT .ConvertToDecimalDigit
-	sub		al, 'a'-10				; Convert to hexadecimal integer
-	stc
-	ret
+	sub		al, 'a'-'0'-10			; Convert to hexadecimal integer
 ALIGN JUMP_ALIGN
 .ConvertToDecimalDigit:
 	sub		al, '0'					; Convert to decimal integer

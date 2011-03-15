@@ -157,15 +157,12 @@ RamVars_IsDriveHandledByThisBIOS:
 	add		al, ah								; One past last drive to AL
 	cmp		dl, al								; Above last supported?
 	jae		SHORT .DriveNotHandledByThisBIOS
-	cmp		dl, ah								; Below first supported?
-	jb		SHORT .DriveNotHandledByThisBIOS
-	xchg	ax, di
+	cmp		ah, dl								; Below first supported?
+	ja		SHORT .DriveNotHandledByThisBIOS
 	stc
-	ret
 ALIGN JUMP_ALIGN
 .DriveNotHandledByThisBIOS:
 	xchg	ax, di
-	clc
 	ret
 
 

@@ -1,8 +1,4 @@
-; File name		:	MenuPageItem.asm
 ; Project name	:	XTIDE Univeral BIOS Configurator
-; Created date	:	15.4.2010
-; Last update	:	1.5.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions to access MENUPAGEITEM structs.
 
 ; Section containing code
@@ -362,8 +358,8 @@ MainPageItem_ActivateSubmenuForGettingLookupValue:
 ALIGN JUMP_ALIGN
 MainPageItem_ActivateSubmenuForGettingLookupValueWithoutMarkingUnsaved:
 	call	MainPageItem_ActivateSubmenu
-	cmp		cx, BYTE 0
-	jl		SHORT .Return						; User cancellation
+	test	cx, cx								; Clears CF
+	js		SHORT .Return						; User cancellation
 	push	si
 	mov		si, [di+MENUPAGEITEM.pSubMenuPage]	; DS:SI points to value MENUPAGE
 	mov		bx, [si+MENUPAGE.prgbItemToVal]		; Load offset to lookup table
@@ -373,9 +369,7 @@ MainPageItem_ActivateSubmenuForGettingLookupValueWithoutMarkingUnsaved:
 	mov		[bx], al							; Store value
 	pop		si
 	stc											; Changes so redraw
-	ret
 .Return:
-	clc
 	ret
 
 

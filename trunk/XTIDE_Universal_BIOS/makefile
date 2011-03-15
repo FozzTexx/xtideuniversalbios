@@ -79,7 +79,7 @@ DEFS_AT = $(DEFINES_AT:%=-D%)
 # Add -I in front of all header directories
 IHEADERS = $(HEADERS:%=-I%)
 
-# Path + target file to be build
+# Path + target file to be built
 TARGET = $(BUILD_DIR)/$(PROG)
 
 
@@ -117,19 +117,19 @@ ASFLAGS += -O9					# Optimize operands to their shortest forms
 
 # Make clean debug and release versions
 all: clean at xtplus xt
-	@echo All build!
+	@echo All done!
 
 at:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_AT) -l"$(TARGET)_at.lst" -o"$(TARGET)_at.bin"
-	@echo AT version "$(TARGET)_at.bin" build.
+	@echo AT version "$(TARGET)_at.bin" built.
 
 xtplus:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XTPLUS) -l"$(TARGET)_xtp.lst" -o"$(TARGET)_xtp.bin"
-	@echo XT plus version "$(TARGET)_xtp.bin" build.
+	@echo XT plus version "$(TARGET)_xtp.bin" built.
 
 xt:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XT) -l"$(TARGET)_xt.lst" -o"$(TARGET)_xt.bin"
-	@echo XT version "$(TARGET)_xt.bin" build.
+	@echo XT version "$(TARGET)_xt.bin" built.
 
 clean:
 	@$(RM) $(BUILD_DIR)\*.*
