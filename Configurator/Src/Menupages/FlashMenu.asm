@@ -1,8 +1,4 @@
-; File name		:	FlashMenu.asm
 ; Project name	:	XTIDE Univeral BIOS Configurator
-; Created date	:	29.4.2010
-; Last update	:	2.5.2010
-; Author		:	Tomi Tilli
 ; Description	:	Flash menu.
 
 
@@ -142,9 +138,7 @@ FlashMenu_ActivatePageSize:
 	shl		ax, cl					; AX = 1, 2, 4, 8, 16, 32 or 64
 	mov		[g_cfgVars+CFGVARS.bPageSize], al
 	stc
-	ret
 .Cancel:
-	clc
 	ret
 
 
@@ -305,7 +299,7 @@ FlashMenu_UpdateProgressBarTitle:
 ;				Set if polling timeout
 ;	Corrupts registers:
 ;		AX, BX, CX, DX
-;--------------------------------------------------------------------	
+;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 FlashMenu_FlashAllPagesBeforeUpdate:
 	push	es

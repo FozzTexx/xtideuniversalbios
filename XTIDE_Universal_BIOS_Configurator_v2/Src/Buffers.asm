@@ -67,7 +67,7 @@ Buffers_IsXtideUniversalBiosSignatureInESDI:
 
 
 ;--------------------------------------------------------------------
-; Buffers_NewBiosWithSizeInCXandSourceInAXhasBeenLoadedForConfiguration
+; Buffers_NewBiosWithSizeInDXCXandSourceInAXhasBeenLoadedForConfiguration
 ;	Parameters:
 ;		AX:		EEPROM source (FLG_CFGVARS_FILELOADED or FLG_CFGVARS_ROMLOADED)
 ;		DX:CX:	EEPROM size in bytes

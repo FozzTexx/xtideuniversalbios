@@ -217,10 +217,8 @@ ALIGN JUMP_ALIGN
 	mov		dx, g_szErrEepromTooSmall
 	call	Dialogs_DisplayErrorFromCSDX
 	stc
-	ret
-ALIGN JUMP_ALIGN
+ALIGN JUMP_ALIGN, ret
 .ImageFitsInSelectedEeprom:
-	clc
 	ret
 
 ;--------------------------------------------------------------------

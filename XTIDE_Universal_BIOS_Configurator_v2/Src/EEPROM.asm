@@ -48,8 +48,7 @@ ALIGN JUMP_ALIGN
 	inc		bx
 	inc		bx
 	loop	.CheckNextEepromSize
-	clc		; None of the supported EEPROMs are large enough
-	ret
+	ret		; Return with CF cleared (none of the supported EEPROMs are large enough)
 ALIGN JUMP_ALIGN
 .ReturnEepromSizeInCX:
 	mov		cx, [cs:bx]

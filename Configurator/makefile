@@ -58,7 +58,7 @@ DEFS = $(DEFINES:%=-D%)
 IHEADERS = $(HEADERS:%=-I%)
 IHEADERS += -I.
 
-# Path + target file to be build
+# Path + target file to be built
 TARGET = $(BUILD_DIR)\$(PROG).com
 
 
@@ -92,13 +92,13 @@ ASFLAGS += -O9					# Optimize operands to their shortest forms
 # Build process. Actual work is done here. #
 ############################################
 
-.PHONY: all clean build
+.PHONY: all clean build release
 
 # Make clean debug and release versions
 all:
 	@$(MAKE) clean
 	@$(MAKE) build
-	@echo All build!
+	@echo All done!
 
 # Clean
 clean:
@@ -108,4 +108,9 @@ clean:
 # Build
 build:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) -l"$(BUILD_DIR)\$(PROG).lst" -o"$(TARGET)"
-	@echo "$(TARGET)" build.
+	@echo "$(TARGET)" built.
+
+release: build
+	@echo Compressing with UPX...
+	@upx -qq --8086 --ultra-brute $(TARGET)
+	@echo Done! $(TARGET) is ready for release.
