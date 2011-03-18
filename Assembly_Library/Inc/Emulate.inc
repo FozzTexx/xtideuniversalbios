@@ -144,6 +144,12 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+%macro eCMOVA 2
+	jbe		SHORT %%Return
+	mov		%1, %2
+%%Return:
+%endmacro
+
 %macro eCMOVC 2
 	jnc		SHORT %%Return
 	mov		%1, %2
