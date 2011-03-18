@@ -3,6 +3,89 @@
 %ifndef REGISTERS_INC
 %define REGISTERS_INC
 
+struc INTPACK
+%ifdef USE_386
+	.gs				resb	2
+	.fs				resb	2
+%endif
+	.es				resb	2
+	.ds				resb	2
+	.di				resb	2
+	.si				resb	2
+	.bp				resb	2
+	.sp				resb	2
+	.bx:
+	.bl				resb	1
+	.bh				resb	1
+	.dx:
+	.dl				resb	1
+	.dh				resb	1
+	.cx:
+	.cl				resb	1
+	.ch				resb	1
+	.ax:
+	.al				resb	1
+	.ah				resb	1
+	.ip				resb	2
+	.cs				resb	2
+	.flags			resb	2
+endstruc
+
+; 8086/8088 FLAGS
+FLG_FLAGS_CF		EQU (1<<0)
+FLG_FLAGS_PF		EQU (1<<2)
+FLG_FLAGS_AF		EQU (1<<4)
+FLG_FLAGS_ZF		EQU (1<<6)
+FLG_FLAGS_SF		EQU (1<<7)
+FLG_FLAGS_TF		EQU (1<<8)
+FLG_FLAGS_IF		EQU (1<<9)
+FLG_FLAGS_DF		EQU (1<<10)
+FLG_FLAGS_OF		EQU (1<<11)
+
+
+;--------------------------------------------------------------------
+; This macro must be the first thing to call on Interrupt Service Routine.
+;
+; SAVE_AND_GET_INTPACK_TO_SSBP
+;	Parameters
+;		Nothing
+;	Returns:
+;		SS:BP:	Points to INTPACK
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+%macro SAVE_AND_GET_INTPACK_TO_SSBP 0
+	ePUSHA
+	push	ds
+	push	es
+%ifdef USE_386
+	push	fs
+	push	gs
+%endif
+	mov		bp, sp
+%endmacro
+
+;--------------------------------------------------------------------
+; This macro must be the last thing to call on Interrupt Service Routine.
+;
+; RESTORE_INTPACK_FROM_SSBP
+;	Parameters
+;		SS:BP:	Ptr to INTPACK
+;	Returns:
+;		All Registers will be loaded from INTPACK
+;--------------------------------------------------------------------
+%macro RESTORE_INTPACK_FROM_SSBP 0
+%ifdef USE_386
+	pop		gs
+	pop		fs
+%endif
+	pop		es
+	pop		ds
+	ePOPA
+	iret
+%endmacro
+
+
 ;--------------------------------------------------------------------
 ; NORMALIZE_FAR_POINTER
 ;	Parameters:
