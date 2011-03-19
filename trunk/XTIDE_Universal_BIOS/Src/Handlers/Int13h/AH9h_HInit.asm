@@ -1,9 +1,4 @@
-; File name		:	AH9h_HInit.asm
-; Project name	:	IDE BIOS
-; Created date	:	9.12.2007
-; Last update	:	14.1.2011
-; Author		:	Tomi Tilli,
-;				:	Krister Nordvall (optimizations)
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Int 13h function AH=9h, Initialize Drive Parameters.
 
 ; Section containing code
@@ -14,28 +9,20 @@ SECTION .text
 ;
 ; AH9h_HandlerForInitializeDriveParameters
 ;	Parameters:
-;		AH:		Bios function 9h
-;		DL:		Drive number
-;	Parameters loaded by Int13h_Jump:
-;		DS:		RAMVARS segment
-;	Returns:
+;		DL:		Translated Drive number
+;		DS:DI:	Ptr to DPT (in RAMVARS segment)
+;		SS:BP:	Ptr to INTPACK
+;	Returns with INTPACK in SS:BP:
 ;		AH:		Int 13h return status
 ;		CF:		0 if succesfull, 1 if error
-;		IF:		1
-;	Corrupts registers:
-;		Flags
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH9h_HandlerForInitializeDriveParameters:
-	push	dx
-	push	cx
-	push	bx
-	push	ax
 %ifndef USE_186
 	call	AH9h_InitializeDriveForUse
-	jmp		Int13h_PopXRegsAndReturn
+	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 %else
-	push	Int13h_PopXRegsAndReturn
+	push	Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 	; Fall through to AH9h_InitializeDriveForUse
 %endif
 
@@ -45,22 +32,18 @@ AH9h_HandlerForInitializeDriveParameters:
 ;
 ; AH9h_InitializeDriveForUse
 ;	Parameters:
-;		DL:		Drive number
-;		DS:		RAMVARS segment
+;		DS:DI:	Ptr to DPT (in RAMVARS segment)
 ;	Returns:
-;		DS:DI:	Ptr to DPT
 ;		AH:		Int 13h return status
 ;		CF:		0 if succesfull, 1 if error
 ;	Corrupts registers:
-;		AL, BX
+;		AL, BX, DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH9h_InitializeDriveForUse:
-	push	dx
 	push	cx
 
 	; Try to select drive and wait until ready
-	call	FindDPT_ForDriveNumber
 	or		BYTE [di+DPT.bReset], MASK_RESET_ALL		; Everything uninitialized
 	call	HDrvSel_SelectDriveAndDisableIRQ
 	jc		SHORT .ReturnNotSuccessfull
@@ -75,21 +58,17 @@ AH9h_InitializeDriveForUse:
 ALIGN JUMP_ALIGN
 .RecalibrateDrive:
 	call	AH11h_RecalibrateDrive
-	mov		dl, [di+DPT.bDrvNum]		; Restore DL
 	jc		SHORT .InitializeBlockMode
 	and		BYTE [di+DPT.bReset], ~FLG_RESET_nRECALIBRATE
 
 	; Initialize block mode transfers
-ALIGN JUMP_ALIGN
 .InitializeBlockMode:
 	call	AH9h_InitializeBlockMode
-	;mov		dl, [di+DPT.bDrvNum]		; Restore DL
 	jc		SHORT .ReturnNotSuccessfull
-	and		BYTE [di+DPT.bReset], ~FLG_RESET_nSETBLOCK
+	and		BYTE [di+DPT.bReset], ~FLG_RESET_nSETBLOCK	; Keeps CF clear
 
 .ReturnNotSuccessfull:
 	pop		cx
-	pop		dx
 	ret
 
 
@@ -134,7 +113,6 @@ AH9h_InitializeDeviceParameters:
 ;
 ; AH9h_InitializeBlockMode
 ;	Parameters:
-;		DL:		Drive number
 ;		DS:DI:	Ptr to DPT
 ;	Returns:
 ;		AH:		BIOS Error code

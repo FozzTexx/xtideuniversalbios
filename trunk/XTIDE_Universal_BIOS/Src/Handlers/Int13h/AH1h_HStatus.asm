@@ -9,25 +9,16 @@ SECTION .text
 ;
 ; AH1h_HandlerForReadDiskStatus
 ;	Parameters:
-;		AH:		Bios function 1h
-;		DL:		Drive number (8xh)
-;	Parameters loaded by Int13h_Jump:
-;		DS:		RAMVARS segment
-;	Returns:
+;		DL:		Translated Drive number
+;		DS:DI:	Ptr to DPT (in RAMVARS segment)
+;		SS:BP:	Ptr to INTPACK
+;	Returns with INTPACK in SS:BP:
 ;		AH:		Int 13h floppy return status
 ;		CF:		0 if AH = RET_HD_SUCCESS, 1 otherwise (error)
-;		IF:		1
-;	Corrupts registers:
-;		Flags
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH1h_HandlerForReadDiskStatus:
-	push	ds
-
-	LOAD_BDA_SEGMENT_TO	ds, di
-	mov		ah, [BDA.bHDLastSt]		; Last error to AH
-	cmp		ah, 1					; Set CF if error code is zero
-	cmc								; Invert CF
-
-	pop		ds
-	jmp		Int13h_PopDiDsAndReturn
+	LOAD_BDA_SEGMENT_TO	ds, ax, !
+	xchg	ah, [BDA.bHDLastSt]		; Load and clear last error
+	call	HError_SetErrorCodeToIntpackInSSBPfromAH
+	jmp		Int13h_ReturnFromHandlerWithoutStoringErrorCode

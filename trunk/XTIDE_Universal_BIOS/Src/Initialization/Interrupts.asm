@@ -33,7 +33,7 @@ Interrupts_InitializeInterruptVectors:
 	mov		[RAMVARS.fpOldI13h], ax				; Store old INT 13h offset
 	mov		[RAMVARS.fpOldI13h+2], dx			; Store old INT 13h segment
 	mov		bx, INTV_DISK_FUNC					; INT 13h interrupt vector offset
-	mov		si, Int13h_DiskFunctions			; Interrupt handler offset
+	mov		si, Int13h_DiskFunctionsHandler		; Interrupt handler offset
 	call	Interrupts_InstallHandlerToVectorInBXFromCSSI
 
 	; Only store INT 13h handler to 40h if 40h is not already installed.

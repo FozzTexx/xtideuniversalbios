@@ -12,6 +12,7 @@ SECTION .text
 ;	Parameters:
 ;		DL:		Drive number
 ;		DS:		RAMVARS segment
+;		DS:DI:	Ptr to DPT (HCapacity_GetSectorCountFromOurAH08h)
 ;	Returns:
 ;		DX:AX:	Total sector count
 ;		BX:		Zero
@@ -20,19 +21,16 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 HCapacity_GetSectorCountFromForeignAH08h:
-	mov		ah, 08h			; Get Drive Parameters
+	mov		ah, GET_DRIVE_PARAMETERS
 	call	Int13h_CallPreviousInt13hHandler
-	jmp		SHORT HCapacity_ConvertAH08hReturnValuesToSectorCount
+	jmp		SHORT ConvertAH08hReturnValuesToSectorCount
 
 ALIGN JUMP_ALIGN
 HCapacity_GetSectorCountFromOurAH08h:
-	push	di
 	call	AH8h_GetDriveParameters
-	pop		di
-	; Fall to HCapacity_ConvertAH08hReturnValuesToSectorCount
+	; Fall to ConvertAH08hReturnValuesToSectorCount
 
-ALIGN JUMP_ALIGN
-HCapacity_ConvertAH08hReturnValuesToSectorCount:
+ConvertAH08hReturnValuesToSectorCount:
 	call	HAddress_ExtractLCHSFromBiosParams
 	xor		ax, ax			; Zero AX
 	inc		cx				; Max cylinder number to cylinder count

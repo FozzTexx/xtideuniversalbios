@@ -148,11 +148,11 @@ ALIGN JUMP_ALIGN
 ;		CF:		Set if drive is handled by this BIOS
 ;				Cleared if drive belongs to some other BIOS
 ;	Corrupts registers:
-;		DI
+;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 RamVars_IsDriveHandledByThisBIOS:
-	xchg	di, ax								; Backup AX
+	push	ax
 	mov		ax, [RAMVARS.wDrvCntAndFirst]		; Drive count to AL, First number to AH
 	add		al, ah								; One past last drive to AL
 	cmp		dl, al								; Above last supported?
@@ -160,9 +160,8 @@ RamVars_IsDriveHandledByThisBIOS:
 	cmp		ah, dl								; Below first supported?
 	ja		SHORT .DriveNotHandledByThisBIOS
 	stc
-ALIGN JUMP_ALIGN
 .DriveNotHandledByThisBIOS:
-	xchg	ax, di
+	pop		ax
 	ret
 
 

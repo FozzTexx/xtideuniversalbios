@@ -9,22 +9,20 @@ SECTION .text
 ;
 ; AHDh_HandlerForResetHardDisk
 ;	Parameters:
-;		AH:		Bios function Dh
-;		DL:		Drive number
-;	Returns:
+;		DL:		Translated Drive number
+;		DS:DI:	Ptr to DPT (in RAMVARS segment)
+;		SS:BP:	Ptr to INTPACK
+;	Returns with INTPACK in SS:BP:
 ;		AH:		Int 13h return status
 ;		CF:		0 if succesfull, 1 if error
-;		IF:		1
-;	Corrupts registers:
-;		Flags
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AHDh_HandlerForResetHardDisk:
 %ifndef USE_186
 	call	AHDh_ResetDrive
-	jmp		Int13h_PopDiDsAndReturn
+	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 %else
-	push	Int13h_PopDiDsAndReturn
+	push	Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 	; Fall through to AHDh_ResetDrive
 %endif
 
@@ -40,14 +38,12 @@ AHDh_HandlerForResetHardDisk:
 ;		AH:		Int 13h return status
 ;		CF:		0 if succesfull, 1 if error
 ;	Corrupts registers:
-;		DI
+;		AL, CX, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AHDh_ResetDrive:
 	push	dx
-	push	cx
 	push	bx
-	push	ax
 
 	call	FindDPT_ForDriveNumber		; DS:DI now points to DPT
 	call	Interrupts_UnmaskInterruptControllerForDriveInDSDI
@@ -59,10 +55,7 @@ AHDh_ResetDrive:
 	mov		dx, [RAMVARS.wIdeBase]		; Load base port address
 	call	AHDh_InitializeMasterAndSlave
 
-	pop		bx							; Pop old AX
-	mov		al, bl						; Restore AL
 	pop		bx
-	pop		cx
 	pop		dx
 	ret
 
@@ -89,13 +82,13 @@ AHDh_ResetMasterAndSlave:
 	or		al, FLG_IDE_CTRL_SRST		; Set Reset bit
 	call	HDrvSel_OutputDeviceControlByte
 	mov		ax, 5						; Delay at least 5us
-	call	HTimer_MicrosecondsFromAX
+	call	HTimer_DelayMicrosecondsFromAX
 
 	; HSR1: Clear_wait
 	mov		al, [di+DPT.bDrvCtrl]		; Load value for ACR
 	out		dx, al						; End Reset
 	mov		ax, 2000					; Delay at least 2ms
-	call	HTimer_MicrosecondsFromAX
+	call	HTimer_DelayMicrosecondsFromAX
 
 	; HSR2: Check_status
 	mov		cl, B_TIMEOUT_RESET			; Reset timeout delay

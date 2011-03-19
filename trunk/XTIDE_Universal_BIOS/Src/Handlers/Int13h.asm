@@ -5,85 +5,49 @@
 SECTION .text
 
 ;--------------------------------------------------------------------
-; Macro that prints drive and function number.
-; Used only for debugging.
-;
-; DEBUG_PRINT_DRIVE_AND_FUNCTION
-;	Parameters:
-;		AH:		INT 13h function number
-;		DL:		Drive number
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-%macro DEBUG_PRINT_DRIVE_AND_FUNCTION 0
-	push	dx
-	push	ax
-	mov		al, dl
-	call	Print_IntHexW
-	pop		ax
-	pop		dx
-%endmacro
-
-
-;--------------------------------------------------------------------
 ; Int 13h software interrupt handler.
 ; Jumps to specific function defined in AH.
 ;
-; Int13h_Jump
+; Note to developers: Do not make recursive INT 13h calls!
+;
+; Int13h_DiskFunctionsHandler
 ;	Parameters:
 ;		AH:		Bios function
 ;		DL:		Drive number
+;		Other:	Depends on function
 ;	Returns:
 ;		Depends on function
-;	Corrupts registers:
-;		Flags
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-Int13h_DiskFunctions:
-	; Save registers
+Int13h_DiskFunctionsHandler:
 	sti									; Enable interrupts
-	push	ds							; Store DS
-	push	di							; Store DI
+	SAVE_AND_GET_INTPACK_TO_SSBP
 
-	;DEBUG_PRINT_DRIVE_AND_FUNCTION
 	call	RamVars_GetSegmentToDS
-	call	DriveXlate_WhenEnteringInt13h
+	call	DriveXlate_ToOrBack
+	mov		[RAMVARS.xlateVars+XLATEVARS.bXlatedDrv], dl
 	call	RamVars_IsFunctionHandledByThisBIOS
 	jnc		SHORT Int13h_DirectCallToAnotherBios
-	;DEBUG_PRINT_DRIVE_AND_FUNCTION
+	call	FindDPT_ForDriveNumber		; DS:DI now points to DPT
 
 	; Jump to correct BIOS function
+JumpToBiosFunctionInAH:
 	cmp		ah, 25h						; Valid BIOS function?
 	ja		SHORT Int13h_UnsupportedFunction
-	mov		di, ax
-%ifndef USE_186	; This uses 9 bytes less and is about 5 cycles faster
-	mov		al, ah						; Copy bits in AH to AL and then
-	shl		al, 1						; shift them "back" 1 step
-	and		al, 7Eh						; AND them (clears the MSB)
-	cbw									; Clear AH using sign extension
-	xchg	di, ax						; and finally swap DI with AX
-%else
-	eSHR_IM	di, 7						; Shift function to DI...
-	and		di, BYTE 7Eh				; ...and prepare for word lookup
-%endif
-	jmp		[cs:di+g_rgw13hFuncJump]	; Jump to BIOS function
+	eMOVZX	bx, ah
+	shl		bx, 1
+	jmp		[cs:bx+g_rgw13hFuncJump]	; Jump to BIOS function
 
 
 ;--------------------------------------------------------------------
-; Directs call to another INT13h function whose pointer is
-; stored to RAMVARS.
-;
+; Int13h_UnsupportedFunction
 ; Int13h_DirectCallToAnotherBios
 ;	Parameters:
-;		AH:		Bios function
-;		DL:		Drive number
+;		DL:		Translated drive number
 ;		DS:		RAMVARS segment
-;		DI:		Corrupted
-;		Stack from top to down:
-;				Original DI
-;				Original DS
+;		SS:BP:	Ptr to INTPACK
+;		BX, DI:	Corrupted on Int13h_DiskFunctionsHandler
+;		Other:	Function specific INT 13h parameters 
 ;	Returns:
 ;		Depends on function
 ;	Corrupts registers:
@@ -92,125 +56,103 @@ Int13h_DiskFunctions:
 ALIGN JUMP_ALIGN
 Int13h_UnsupportedFunction:
 Int13h_DirectCallToAnotherBios:
-	; Temporarily store original DI and DS from stack to RAMVARS
-	pop		WORD [RAMVARS.wI13hDI]
-	pop		WORD [RAMVARS.wI13hDS]
+	call	ExchangeCurrentInt13hHandlerWithOldInt13hHandler
+	mov		bx, [bp+INTPACK.bx]
+	mov		di, [bp+INTPACK.di]
+	mov		ds, [bp+INTPACK.ds]
+	push	WORD [bp+INTPACK.flags]
+	popf
+	push	bp
+	mov		bp, [bp+INTPACK.bp]
+	int		BIOS_DISK_INTERRUPT_13h	; Can safely do as much recursion as it wants
 
-	; Special return processing required if target function
-	; returns something in DL
-	mov		di, Int13h_ReturnFromAnotherBiosWithValueInDL
-	call	DriveXlate_DoesFunctionReturnSomethingInDL
-	jc		SHORT .PushIretAddress
-	add		di, BYTE Int13h_ReturnFromAnotherBios - Int13h_ReturnFromAnotherBiosWithValueInDL
-.PushIretAddress:
-	pushf								; Push FLAGS to simulate INT
-	push	cs							; Push return segment
-	push	di							; Push return offset
+	; Store returned values to INTPACK
+	pop		bp	; Standard INT 13h functions never uses BP as return register
+%ifdef USE_386
+	mov		[bp+INTPACK.gs], gs
+	mov		[bp+INTPACK.fs], fs
+%endif
+	mov		[bp+INTPACK.es], es
+	mov		[bp+INTPACK.ds], ds
+	mov		[bp+INTPACK.di], di
+	mov		[bp+INTPACK.si], si
+	mov		[bp+INTPACK.bx], bx
+	mov		[bp+INTPACK.dh], dh
+	mov		[bp+INTPACK.cx], cx
+	mov		[bp+INTPACK.ax], ax
+	pushf
+	pop		WORD [bp+INTPACK.flags]
+	call	RamVars_GetSegmentToDS
+	cmp		dl, [RAMVARS.xlateVars+XLATEVARS.bXlatedDrv]
+	je		SHORT .ExchangeInt13hHandlers
+	mov		[bp+INTPACK.dl], dl		; Something is returned in DL
+ALIGN JUMP_ALIGN
+.ExchangeInt13hHandlers:
+	call	ExchangeCurrentInt13hHandlerWithOldInt13hHandler
+	; Fall to Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 
-	; "Return" to another INT 13h with original DI and DS
-	push	WORD [RAMVARS.fpOldI13h+2]	; Segment
-	push	WORD [RAMVARS.fpOldI13h]	; Offset
-	lds		di, [RAMVARS.dwI13DIDS]
-	cli									; Disable interrupts as INT would
-	retf
+
+;--------------------------------------------------------------------
+; Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
+; Int13h_ReturnFromHandlerWithoutStoringErrorCode
+;	Parameters:
+;		AH:		BIOS Error code
+;		SS:BP:	Ptr to INTPACK
+;	Returns:
+;		All registers are loaded from INTPACK
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH:
+	call	HError_SetErrorCodeToBdaAndToIntpackInSSBPfromAH
+Int13h_ReturnFromHandlerWithoutStoringErrorCode:
+	or		WORD [bp+INTPACK.flags], FLG_FLAGS_IF	; Return with interrupts enabled
+	mov		sp, bp									; Now we can exit anytime
+	RESTORE_INTPACK_FROM_SSBP
 
 
 ;--------------------------------------------------------------------
 ; Int13h_CallPreviousInt13hHandler
 ;	Parameters:
-;		AH:		Bios function
+;		AH:		INT 13h function to call
+;		DL:		Drive number
 ;		DS:		RAMVARS segment
-;		Other:	Depends on function to call
 ;	Returns:
-;		Depends on function to call
+;		Depends on function
 ;	Corrupts registers:
-;		Nothing
+;		BX, DI, ES
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Int13h_CallPreviousInt13hHandler:
-	pushf								; Push flags to simulate INT
-	cli									; Disable interrupts since INT does that
-	call	FAR [RAMVARS.fpOldI13h]
-	sti
+	push	di
+	call	ExchangeCurrentInt13hHandlerWithOldInt13hHandler
+	int		BIOS_DISK_INTERRUPT_13h
+	call	ExchangeCurrentInt13hHandlerWithOldInt13hHandler
+	pop		di
 	ret
 
 
 ;--------------------------------------------------------------------
-; Int13h_ReturnFromAnotherBiosWithValueInDL
-; Int13h_ReturnFromAnotherBios
+; ExchangeCurrentInt13hHandlerWithOldInt13hHandler
 ;	Parameters:
-;		AH:		Error code
-;		DL:		Drive number (only on Int13h_ReturnFromAnotherBios)
-;		CF:		Error status
-;	Returns:
-;		Depends on function
-;	Corrupts registers:
-;		Nothing (not even FLAGS)
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-Int13h_ReturnFromAnotherBiosWithValueInDL:
-	push	ds
-	push	di
-	pushf								; Store return flags
-	call	RamVars_GetSegmentToDS
-	call	DriveXlate_WhenLeavingInt13hWithReturnValueInDL
-	jmp		SHORT Int13h_Leave
-
-ALIGN JUMP_ALIGN
-Int13h_ReturnFromAnotherBios:
-	push	ds
-	push	di
-	pushf								; Store return flags
-	call	RamVars_GetSegmentToDS
-	call	DriveXlate_WhenLeavingInt13h
-	jmp		SHORT Int13h_Leave
-
-
-;--------------------------------------------------------------------
-; Returns from any BIOS function implemented by this BIOS.
-;
-; Int13h_ReturnWithValueInDL
-; Int13h_PopXRegsAndReturn
-; Int13h_PopDiDsAndReturn
-;	Parameters:
-;		DL:		Drive number (not Int13h_ReturnWithoutSwappingDrives)
 ;		DS:		RAMVARS segment
 ;	Returns:
-;		Depends on function
+;		Nothing
 ;	Corrupts registers:
-;		Nothing (not even FLAGS)
+;		DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-Int13h_ReturnWithValueInDL:
-	pushf
-	call	DriveXlate_WhenLeavingInt13hWithReturnValueInDL
-	jmp		SHORT Int13h_LeaveAfterStoringErrorCodeToBDA
+ExchangeCurrentInt13hHandlerWithOldInt13hHandler:
+	push	es
+	LOAD_BDA_SEGMENT_TO	es, di
+	mov		di, [RAMVARS.fpOldI13h]
+	xchg	di, [es:BIOS_DISK_INTERRUPT_13h*4]
+	mov		[RAMVARS.fpOldI13h], di
+	mov		di, [RAMVARS.fpOldI13h+2]
+	xchg	di, [es:BIOS_DISK_INTERRUPT_13h*4+2]
+	mov		[RAMVARS.fpOldI13h+2], di
+	pop		es
+	ret
 
-ALIGN JUMP_ALIGN
-Int13h_PopXRegsAndReturn:
-	pop		bx							; Pop old AX to BX
-	mov		al, bl						; Restore AL
-	pop		bx
-	pop		cx
-	pop		dx
-	; Fall to Int13h_PopDiDsAndReturn
-
-ALIGN JUMP_ALIGN
-Int13h_PopDiDsAndReturn:
-	pushf
-	call	DriveXlate_WhenLeavingInt13h
-	; Fall to Int13h_LeaveAfterStoringErrorCodeToBDA
-
-Int13h_LeaveAfterStoringErrorCodeToBDA:
-	LOAD_BDA_SEGMENT_TO	ds, di
-	mov		[BDA.bHDStatus], ah
-	; Fall to Int13h_Leave
-
-Int13h_Leave:
-	popf
-	pop		di
-	pop		ds
-	retf	2
 
 
 ; Jump table for correct BIOS function

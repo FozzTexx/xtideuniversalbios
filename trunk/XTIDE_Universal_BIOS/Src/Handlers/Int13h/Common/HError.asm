@@ -1,12 +1,11 @@
-; Project name	:	IDE BIOS
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Error checking functions for BIOS Hard disk functions.
 
 ; Section containing code
 SECTION .text
 
 ;--------------------------------------------------------------------
-; HError_ProcessTimeoutAfterPollingBSYandSomeOtherStatusBit
-; HError_ProcessErrorsAfterPollingBSY
+; HError_GetErrorCodeToAHforTimeoutWhenPolling
 ;	Parameters:
 ;		DS:		RAMVARS segment
 ;	Returns:
@@ -17,9 +16,8 @@ SECTION .text
 ;		AL
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-HError_ProcessTimeoutAfterPollingBSYandSomeOtherStatusBit:
-	call	HError_GetStatusAndErrorRegistersToAXandStoreThemToBDA
-	call	GetBiosErrorCodeToAHfromStatusAndErrorRegistersInAX
+HError_GetErrorCodeToAHforTimeoutWhenPolling:
+	call	HError_GetErrorCodeToAHafterPolling
 	jc		SHORT .ReturnErrorCodeInAH
 	mov		ah, RET_HD_TIMEOUT			; Force timeout since no actual error...
 	stc									; ...but wanted bit was never set
@@ -27,8 +25,19 @@ HError_ProcessTimeoutAfterPollingBSYandSomeOtherStatusBit:
 	ret
 
 
+;--------------------------------------------------------------------
+; HError_GetErrorCodeToAHafterPolling
+;	Parameters:
+;		DS:		RAMVARS segment
+;	Returns:
+;		AH:		BIOS error code
+;		CF:		Set if error
+;				Cleared if no error
+;	Corrupts registers:
+;		AL
+;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-HError_ProcessErrorsAfterPollingBSY:
+HError_GetErrorCodeToAHafterPolling:
 %ifndef USE_186
 	call	HError_GetStatusAndErrorRegistersToAXandStoreThemToBDA
 	jmp		SHORT GetBiosErrorCodeToAHfromStatusAndErrorRegistersInAX
@@ -130,3 +139,32 @@ ALIGN JUMP_ALIGN
 	db	RET_HD_UNCORRECC	; Bit6=UNC, Uncorrectable Data Error
 	db	RET_HD_BADSECTOR	; Bit7=BBK, Bad Block Detected
 	db	RET_HD_STATUSERR	; When Error Register is zero
+
+
+;--------------------------------------------------------------------
+; HError_SetErrorCodeToBdaAndToIntpackInSSBPfromAH
+; HError_SetErrorCodeToIntpackInSSBPfromAH
+;	Parameters:
+;		AH:		BIOS error code (00h = no error)
+;		SS:BP:	Ptr to INTPACK
+;	Returns:
+;		SS:BP:	Ptr to INTPACK with error condition set
+;	Corrupts registers:
+;		DS, DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+HError_SetErrorCodeToBdaAndToIntpackInSSBPfromAH:
+	; Store error code to BDA
+	LOAD_BDA_SEGMENT_TO	ds, di
+	mov		[BDA.bHDLastSt], ah
+
+	; Store error code to INTPACK
+HError_SetErrorCodeToIntpackInSSBPfromAH:
+	mov		[bp+INTPACK.ah], ah
+	test	ah, ah
+	jnz		SHORT .SetCFtoIntpack
+	and		BYTE [bp+INTPACK.flags], ~FLG_FLAGS_CF
+	ret
+.SetCFtoIntpack:
+	or		BYTE [bp+INTPACK.flags], FLG_FLAGS_CF
+	ret

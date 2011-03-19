@@ -5,6 +5,31 @@
 SECTION .text
 
 ;--------------------------------------------------------------------
+; Selects Master or Slave drive and disables interrupts. Interrupts should
+; be disabled for commands that do not transfer data.
+; This function returns after drive is ready to accept commands.
+;
+; HDrvSel_SelectDriveAndDisableIRQ
+;	Parameters:
+;		DS:DI:	Ptr to DPT
+;	Returns:
+;		AH:		BIOS Error code
+;		CF:		0 if drive selected successfully
+;				1 if any error
+;	Corrupts registers:
+;		AL
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+HDrvSel_SelectDriveAndDisableIRQ:
+	push	bx
+	mov		al, [di+DPT.bDrvCtrl]	; Load Device Control Byte
+	or		al, FLG_IDE_CTRL_nIEN	; Disable interrupts
+	call	HDrvSel_SelectDriveAndSetControlByte
+	pop		bx
+	ret
+
+
+;--------------------------------------------------------------------
 ; Selects Master or Slave drive for transferring data.
 ; This means that interrupts will be enabled if so configured in
 ; IDEVARS. This function returns after drive is ready to accept commands.
@@ -79,29 +104,4 @@ HDrvSel_OutputDeviceControlByte:
 	mov		dx, [cs:bx+IDEVARS.wPortCtrl]	; Load Control Block base address
 	add		dx, BYTE REGW_IDEC_CTRL			; Add offset to Device Control Register
 	out		dx, al							; Output Device Control byte
-	ret
-
-
-;--------------------------------------------------------------------
-; Selects Master or Slave drive and disables interrupts. Interrupts should
-; be disabled for commands that do not transfer data.
-; This function returns after drive is ready to accept commands.
-;
-; HDrvSel_SelectDriveAndDisableIRQ
-;	Parameters:
-;		DS:DI:	Ptr to DPT
-;	Returns:
-;		AH:		BIOS Error code
-;		CF:		0 if drive selected successfully
-;				1 if any error
-;	Corrupts registers:
-;		AL
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-HDrvSel_SelectDriveAndDisableIRQ:
-	push	bx
-	mov		al, [di+DPT.bDrvCtrl]	; Load Device Control Byte
-	or		al, FLG_IDE_CTRL_nIEN	; Disable interrupts
-	call	HDrvSel_SelectDriveAndSetControlByte
-	pop		bx
 	ret

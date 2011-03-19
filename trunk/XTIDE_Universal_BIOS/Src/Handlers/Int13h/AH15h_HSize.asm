@@ -9,11 +9,10 @@ SECTION .text
 ;
 ; AH15h_HandlerForReadDiskDriveSize
 ;	Parameters:
-;		AH:		Bios function 15h
-;		DL:		Drive number
-;	Parameters loaded by Int13h_Jump:
-;		DS:		RAMVARS segment
-;	Returns:
+;		DL:		Translated Drive number
+;		DS:DI:	Ptr to DPT (in RAMVARS segment)
+;		SS:BP:	Ptr to INTPACK
+;	Returns with INTPACK in SS:BP:
 ;		If succesfull:
 ;			AH:		3 (Hard disk accessible)
 ;			CX:DX:	Total number of sectors
@@ -22,20 +21,14 @@ SECTION .text
 ;			AH:		0 (Drive not present)
 ;			CX:DX:	0
 ;			CF:		1
-;		IF:		1
-;	Corrupts registers:
-;		Flags
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH15h_HandlerForReadDiskDriveSize:
-	push	bx
-	push	ax
+	call	HCapacity_GetSectorCountFromOurAH08h		; Sector count to DX:AX
+	mov		[bp+INTPACK.cx], dx							; HIWORD to CX
+	mov		[bp+INTPACK.dx], ax							; LOWORD to DX
 
-	call	HCapacity_GetSectorCountFromOurAH08h; Sector count to DX:AX (clears CF)
-	mov		cx, dx								; HIWORD to CX
-	xchg	dx, ax								; LOWORD to DX
-
-	pop		ax
-	pop		bx
-	mov		ah, 3								; Type code = Hard disk
-	jmp		Int13h_ReturnWithValueInDL
+	xor		ah, ah
+	call	HError_SetErrorCodeToIntpackInSSBPfromAH	; Store success to BDA and CF
+	mov		BYTE [bp+INTPACK.ah], 3						; Type code = Hard disk
+	jmp		Int13h_ReturnFromHandlerWithoutStoringErrorCode
