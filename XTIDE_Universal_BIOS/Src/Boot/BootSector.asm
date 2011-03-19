@@ -84,7 +84,7 @@ ALIGN JUMP_ALIGN
 	jns		SHORT .SkipAltReset
 	mov		ah, 0Dh							; AH=Dh, Reset Hard Disk (Alternate reset)
 .SkipAltReset:
-	int		INTV_DISK_FUNC
+	int		BIOS_DISK_INTERRUPT_13h
 	ret
 
 ;--------------------------------------------------------------------
@@ -105,5 +105,5 @@ ALIGN JUMP_ALIGN
 	mov		ax, 0201h						; Read 1 sector
 	mov		cx, 1							; Cylinder 0, Sector 1
 	xor		dh, dh							; Head 0
-	int		INTV_DISK_FUNC
+	int		BIOS_DISK_INTERRUPT_13h
 	ret

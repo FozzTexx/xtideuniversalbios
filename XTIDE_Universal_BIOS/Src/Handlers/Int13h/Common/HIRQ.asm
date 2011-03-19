@@ -7,7 +7,7 @@ SECTION .text
 ;--------------------------------------------------------------------
 ; HIRQ_WaitForIRQ
 ;	Parameters:
-;		DS:		RAMVARS segment
+;		DS:BX:	Ptr to DPT
 ;	Returns:
 ;		CF:		Set if wait done by operating system
 ;				Cleared if BIOS must perform task flag polling
@@ -35,12 +35,11 @@ ALIGN JUMP_ALIGN
 	push	ds
 
 	LOAD_BDA_SEGMENT_TO	ds, ax, !		; Zero AX
+	mov		ah, OS_HOOK_DEVICE_BUSY		; Hard disk busy (AX=9000h)
 	cli									; Disable interrupts
 	cmp		al, [BDA.bHDTaskFlg]		; Task flag already set?
 	jc		SHORT .ReturnFromWaitNotify	;  If so, skip OS notification
-
-	mov		ah, 90h						; Hard disk busy (AX=9000h)
-	int		INTV_SYSTEM_SERVICES		; OS hook, device busy
+	int		BIOS_SYSTEM_INTERRUPT_15h	; OS hook, device busy
 	jnc		SHORT .ReturnFromWaitNotify	; CF cleared, BIOS handles waiting
 
 	; Make sure that OS hooks are supported, otherwise the CF means unsupported function
@@ -105,8 +104,8 @@ AcknowledgeMasterInterruptController:
 	out		WPORT_8259MA_COMMAND, al	; Acknowledge Master 8259
 
 	; Issue Int 15h, function AX=9100h (Interrupt ready)
-	mov		ax, 9100h					; Interrupt ready, device 0 (HD)
-	int		INTV_SYSTEM_SERVICES
+	mov		ax, OS_HOOK_DEVICE_POST<<8	; Interrupt ready, device 0 (HD)
+	int		BIOS_SYSTEM_INTERRUPT_15h
 
 	pop		ax							; Restore AX
 	iret

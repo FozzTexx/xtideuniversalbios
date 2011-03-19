@@ -20,9 +20,9 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 HStatus_WaitIrqOrRdy:
-	call	HIRQ_WaitForIRQ
+	call	HIRQ_WaitForIRQ			; For OS hook (we still need error processing)
 	jnc		SHORT .PollRdySinceNoWaitingOnOsHook
-	jmp		HError_ProcessErrorsAfterPollingBSY
+	jmp		HError_GetErrorCodeToAHafterPolling
 
 ALIGN JUMP_ALIGN
 .PollRdySinceNoWaitingOnOsHook:
@@ -47,7 +47,7 @@ ALIGN JUMP_ALIGN
 HStatus_WaitIrqOrDrq:
 	call	HIRQ_WaitForIRQ
 	jnc		SHORT .PollDrqSinceNoWaitingOnOsHook
-	jmp		HError_ProcessErrorsAfterPollingBSY
+	jmp		HError_GetErrorCodeToAHafterPolling
 
 ALIGN JUMP_ALIGN
 .PollDrqSinceNoWaitingOnOsHook:
@@ -184,8 +184,8 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 .UpdateTimeout:
 	call	HTimer_SetCFifTimeout
-	jnc		SHORT .PollLoop							; Loop if time left (sets CF on timeout)
-	jmp		HError_ProcessTimeoutAfterPollingBSYandSomeOtherStatusBit
+	jnc		SHORT .PollLoop							; Loop if time left
+	jmp		HError_GetErrorCodeToAHforTimeoutWhenPolling
 
 ;--------------------------------------------------------------------
 ; IDE Status register polling.
@@ -217,4 +217,4 @@ ALIGN JUMP_ALIGN
 	jnc		SHORT .PollLoop							; Loop if time left (sets CF on timeout)
 ALIGN JUMP_ALIGN
 GetErrorCodeFromPollingToAH:
-	jmp		HError_ProcessErrorsAfterPollingBSY
+	jmp		HError_GetErrorCodeToAHafterPolling

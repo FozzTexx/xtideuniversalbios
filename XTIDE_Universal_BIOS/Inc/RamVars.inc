@@ -11,7 +11,7 @@ SEGMENT_RAMVARS_TOP_OF_INTERRUPT_VECTORS		EQU		30h
 struc XLATEVARS
 	.bFDSwap		resb	1	; Floppy Drive to swap to 00h and vice versa
 	.bHDSwap		resb	1	; Hard Drive to swap to 80h and vice versa
-	.bRecurCnt		resb	1	; INT 13h recursion counter for drive translation
+	.bXlatedDrv		resb	1	; Drive number after translation
 					resb	1	; For WORD alignment
 endstruc
 
@@ -19,18 +19,13 @@ endstruc
 ; Variables should be kept to minimum since they might be located
 ; at the top of interrupt vectors.
 struc RAMVARS
-	.fpOldI13h		resb	4	; Far pointer to old INT 13h handler
-
-	.dwI13DIDS:					; Temporary DI and DS storages when calling...
-	.wI13hDI:					; ...previous INT 13h handler
-	.wIdeBase		resb	2	; Base port address for currently handled controller
-
-	.wI13hDS:
+	.fpOldI13h			resb	4	; Far pointer to old INT 13h handler
+	.wIdeBase			resb	2	; Base port address for currently handled controller
 	.wTimeoutCounter	resb	2
 
 	.wDrvCntAndFirst:
-	.bDrvCnt		resb	1	; Number of drives handled by this BIOS
-	.bFirstDrv		resb	1	; Number of first drive for this BIOS
+	.bDrvCnt			resb	1	; Number of drives handled by this BIOS
+	.bFirstDrv			resb	1	; Number of first drive for this BIOS
 
 	; Variables for drive number translation
 	.xlateVars		resb	XLATEVARS_size
@@ -38,8 +33,8 @@ endstruc
 
 ; Full mode RAM variables.
 struc FULLRAMVARS
-	.ramVars		resb	RAMVARS_size
-	.wSign			resb	2			; FULLRAMVARS signature for finding segment
+	.ramVars			resb	RAMVARS_size
+	.wSign				resb	2		; FULLRAMVARS signature for finding segment
 endstruc
 
 W_SIGN_FULLRAMVARS		EQU	"fR"		; FULLRAMVARS signature

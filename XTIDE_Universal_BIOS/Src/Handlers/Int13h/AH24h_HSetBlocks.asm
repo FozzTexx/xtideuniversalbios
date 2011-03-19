@@ -1,9 +1,4 @@
-; File name		:	AH24h_HSetBlocks.asm
-; Project name	:	IDE BIOS
-; Created date	:	28.12.2009
-; Last update	:	14.1.2011
-; Author		:	Tomi Tilli,
-;				:	Krister Nordvall (optimizations)
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Int 13h function AH=24h, Set Multiple Blocks.
 
 ; Section containing code
@@ -14,29 +9,23 @@ SECTION .text
 ;
 ; AH24h_HandlerForSetMultipleBlocks
 ;	Parameters:
-;		AH:		Bios function 24h
+;		AL:		Same as in INTPACK
+;		DL:		Translated Drive number
+;		DS:DI:	Ptr to DPT (in RAMVARS segment)
+;		SS:BP:	Ptr to INTPACK
+;	Parameters on INTPACK in SS:BP:
 ;		AL:		Number of Sectors per Block (1, 2, 4, 8, 16, 32, 64 or 128)
-;		DL:		Drive number
-;	Parameters loaded by Int13h_Jump:
-;		DS:		RAMVARS segment
-;	Returns:
+;	Returns with INTPACK in SS:BP:
 ;		AH:		Int 13h return status
 ;		CF:		0 if succesfull, 1 if error
-;		IF:		1
-;	Corrupts registers:
-;		Flags
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH24h_HandlerForSetMultipleBlocks:
-	push	dx
-	push	cx
-	push	bx
-	push	ax
 %ifndef USE_186
 	call	AH24h_SetBlockSize
-	jmp		Int13h_PopXRegsAndReturn
+	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 %else
-	push	Int13h_PopXRegsAndReturn
+	push	Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 	; Fall through to AH24h_SetBlockSize
 %endif
 
@@ -47,22 +36,19 @@ AH24h_HandlerForSetMultipleBlocks:
 ; AH24h_SetBlockSize
 ;	Parameters:
 ;		AL:		Number of Sectors per Block (1, 2, 4, 8, 16, 32, 64 or 128)
-;		DL:		Drive number
-;		DS:		RAMVARS segment
+;		DS:DI:	Ptr to DPT (in RAMVARS segment)
 ;	Returns:
-;		DS:DI:	Ptr to DPT
 ;		AH:		Int 13h return status
 ;		CF:		0 if succesfull, 1 if error
 ;	Corrupts registers:
-;		AL, BX, CX, DX, DI
+;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH24h_SetBlockSize:
 	; Select Master or Slave and wait until ready
 	mov		bl, al								; Backup block size
-	call	FindDPT_ForDriveNumber				; DS:DI now points to DPT
 	call	HDrvSel_SelectDriveAndDisableIRQ	; Select drive and wait until ready
-	jc		SHORT .Return						; Return if error
+	jc		SHORT .ReturnWithErrorCodeInAH		; Return if error
 
 	; Output block size and command
 	mov		al, bl								; Restore block size to AL
@@ -79,5 +65,5 @@ AH24h_SetBlockSize:
 	ret
 .DisableBlockMode:
 	mov		BYTE [di+DPT.bSetBlock], 1			; Disable block mode
-.Return:
+.ReturnWithErrorCodeInAH:
 	ret

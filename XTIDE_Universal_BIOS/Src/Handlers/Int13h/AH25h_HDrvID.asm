@@ -9,33 +9,24 @@ SECTION .text
 ;
 ; AH25h_HandlerForGetDriveInformation
 ;	Parameters:
-;		AH:		Bios function 25h
-;		DL:		Drive number
+;		ES:		Same as in INTPACK
+;		DL:		Translated Drive number
+;		DS:DI:	Ptr to DPT (in RAMVARS segment)
+;		SS:BP:	Ptr to INTPACK
+;	Parameters on INTPACK in SS:BP:
 ;		ES:BX:	Ptr to buffer to receive 512-byte drive information
-;	Parameters loaded by Int13h_Jump:
-;		DS:		RAMVARS segment
-;	Returns:
-;		ES:BX:	Ptr to 512-byte buffer to receive drive Information
+;	Returns with INTPACK in SS:BP:
 ;		AH:		Int 13h return status
 ;		CF:		0 if succesfull, 1 if error
-;		IF:		1
-;	Corrupts registers:
-;		Flags
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH25h_HandlerForGetDriveInformation:
-	push	dx
-	push	cx
-	push	bx
-	push	ax
-	push	es
-
 	; Wait until previously selected drive is ready
-	call	FindDPT_ForDriveNumber		; DS:DI now points to DPT
 	call	HDrvSel_SelectDriveAndDisableIRQ
-	jc		SHORT .Return				; Return if error
+	jc		SHORT .ReturnWithErrorCodeInAH		; Return if error
 
 	; Get drive information
+	mov		bx, [bp+INTPACK.bx]
 	call	HPIO_NormalizeDataPointer
 	push	bx
 	mov		dx, [RAMVARS.wIdeBase]		; Load base port address
@@ -44,9 +35,8 @@ AH25h_HandlerForGetDriveInformation:
 	mov		bh, [di+DPT.bDrvSel]		; Load drive sel byte to BH
 	pop		di							; Pop buffer offset to DI
 	call	AH25h_GetDriveInfo			; Get drive information
-.Return:
-	pop		es
-	jmp		Int13h_PopXRegsAndReturn
+.ReturnWithErrorCodeInAH:
+	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 
 
 ;--------------------------------------------------------------------
@@ -86,13 +76,13 @@ AH25h_GetDriveInfo:
 	cmp		[RAMVARS.bDrvCnt], bh		; Detecting first drive?
 	eCMOVE	cl, B_TIMEOUT_RESET			;  If so, load long timeout
 	call	HStatus_WaitRdy				; Wait until ready to accept commands
-	jc		SHORT .Return				; Return if error
+	jc		SHORT .ReturnWithErrorCodeInAH
 
 	; Output command
 	mov		al, HCMD_ID_DEV				; Load Identify Device command to AL
 	out		dx, al						; Output command
 	call	HStatus_WaitDrqDefTime		; Wait until ready to transfer (no IRQ!)
-	jc		SHORT .Return				; Return if error
+	jc		SHORT .ReturnWithErrorCodeInAH
 
 	; Transfer data
 	sub		dx, BYTE REGR_IDE_ST		; DX to IDE Data Reg
@@ -101,7 +91,7 @@ AH25h_GetDriveInfo:
 	call	[cs:bx+g_rgfnPioRead]		; Read ID sector
 	call	HStatus_WaitRdyDefTime		; Wait until drive ready
 
-.Return:
+.ReturnWithErrorCodeInAH:
 	pop		bx
 	pop		dx
 	pop		di

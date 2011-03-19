@@ -9,37 +9,25 @@ SECTION .text
 ;
 ; AH0h_HandlerForDiskControllerReset
 ;	Parameters:
-;		AH:		Bios function 0h
-;		DL:		Drive number (ignored so all drives are reset)
+;		DL:		Translated Drive number (ignored so all drives are reset)
 ;				If bit 7 is set all hard disks and floppy disks reset.
-;	Parameters loaded by Int13h_Jump:
-;		DS:		RAMVARS segment
-;	Returns:
+;		DS:DI:	Ptr to DPT (in RAMVARS segment)
+;		SS:BP:	Ptr to INTPACK
+;	Returns with INTPACK in SS:BP:
 ;		AH:		Int 13h return status (from drive requested in DL)
 ;		CF:		0 if succesfull, 1 if error
-;		IF:		1
-;	Corrupts registers:
-;		Flags
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH0h_HandlerForDiskControllerReset:
-	push	dx
-	push	cx
-	push	bx
-	push	ax
-
 	eMOVZX	bx, dl						; Copy requested drive to BL, zero BH to assume no errors
 	call	ResetFloppyDrivesWithInt40h
 	test	bl, bl
 	jns		SHORT .SkipHardDiskReset
 	call	ResetForeignHardDisks
 	call	AH0h_ResetHardDisksHandledByOurBIOS
-ALIGN JUMP_ALIGN
 .SkipHardDiskReset:
-	mov		ah, bh						; Copy error code to AH
-	xor		al, al						; Zero AL...
-	cmp		al, bh						; ...and set CF if error
-	jmp		Int13h_PopXRegsAndReturn
+	mov		ah, bh
+	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 
 
 ;--------------------------------------------------------------------
@@ -56,7 +44,7 @@ ResetFloppyDrivesWithInt40h:
 	call	GetDriveNumberForForeignBiosesToDL
 	and		dl, 7Fh						; Clear hard disk bit
 	xor		ah, ah						; Disk Controller Reset
-	int		INTV_FLOPPY_FUNC
+	int		BIOS_DISKETTE_INTERRUPT_40h
 	jmp		SHORT BackupErrorCodeFromTheRequestedDriveToBH
 
 
@@ -95,7 +83,6 @@ GetDriveNumberForForeignBiosesToDL:
 	call	RamVars_IsDriveHandledByThisBIOS
 	jnc		SHORT .Return				; Return what was in BL unmodified
 	mov		dl, 80h
-ALIGN JUMP_ALIGN
 .Return:
 	ret
 
@@ -170,8 +157,5 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 BackupErrorCodeFromTheRequestedDriveToBH:
 	cmp		dl, bl				; Requested drive?
-	jne		SHORT .Return
-	mov		bh, ah
-ALIGN JUMP_ALIGN
-.Return:
+	eCMOVE	bh, ah
 	ret

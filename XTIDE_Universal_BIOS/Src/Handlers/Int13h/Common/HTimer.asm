@@ -44,7 +44,7 @@ HTimer_SetCFifTimeout:
 ; Delay is always at least one millisecond since
 ; RTC resolution is 977 microsecs.
 ;
-; HTimer_MicrosecondsFromAX
+; HTimer_DelayMicrosecondsFromAX
 ;	Parameters:
 ;		AX:		Number of microsecs to wait
 ;	Returns:
@@ -52,7 +52,7 @@ HTimer_SetCFifTimeout:
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
-HTimer_MicrosecondsFromAX:
+HTimer_DelayMicrosecondsFromAX:
 %ifndef USE_AT
 	mov		ax, 1
 	; Fall to Delay_TimerTicksFromAX
@@ -61,15 +61,15 @@ HTimer_MicrosecondsFromAX:
 	push	cx
 
 	xor		cx, cx
-	xchg	dx, ax							; Microsecs now in CX:DX
+	xchg	dx, ax						; Microsecs now in CX:DX
 	mov		ah, EVENT_WAIT
 	int		BIOS_SYSTEM_INTERRUPT_15h
-	sti										; XT BIOSes return with interrupt disabled
+	sti									; XT BIOSes return with interrupt disabled
 
 	pop		cx
 	pop		dx
-	mov		ax, 1							; Prepare to wait 1 timer tick
-	jc		SHORT HTimer_TimerTicksFromAX	; Event Wait was unsupported or busy
+	mov		ax, 1								; Prepare to wait 1 timer tick
+	jc		SHORT HTimer_DelayTimerTicksFromAX	; Event Wait was unsupported or busy
 	ret
 %endif
 
@@ -78,7 +78,7 @@ HTimer_MicrosecondsFromAX:
 ; First tick might take 0...54.9 ms and remaining ticks
 ; will occur at 54.9 ms intervals.
 ;
-; HTimer_TimerTicksFromAX
+; HTimer_DelayTimerTicksFromAX
 ;	Parameters:
 ;		AX:		Number of timer ticks to wait
 ;	Returns:
@@ -86,7 +86,7 @@ HTimer_MicrosecondsFromAX:
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
-HTimer_TimerTicksFromAX:
+HTimer_DelayTimerTicksFromAX:
 	sti								; Make sure that interrupts are enabled
 	call	ReadTimeFromBdaToCX
 	add		ax, cx					; AX = end time

@@ -1,9 +1,4 @@
-; File name		:	AH11h_HRecal.asm
-; Project name	:	IDE BIOS
-; Created date	:	28.9.2007
-; Last update	:	14.1.2011
-; Author		:	Tomi Tilli,
-;				:	Krister Nordvall (optimizations)
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Int 13h function AH=11h, Recalibrate.
 
 ; Section containing code
@@ -14,47 +9,34 @@ SECTION .text
 ;
 ; AH11h_HandlerForRecalibrate
 ;	Parameters:
-;		AH:		Bios function 11h
-;		DL:		Drive number
-;	Parameters loaded by Int13h_Jump:
-;		DS:		RAMVARS segment
-;	Returns:
+;		DL:		Translated Drive number
+;		DS:DI:	Ptr to DPT (in RAMVARS segment)
+;		SS:BP:	Ptr to INTPACK
+;	Returns with INTPACK in SS:BP:
 ;		AH:		BIOS Error code
 ;		CF:		0 if succesfull, 1 if error
-;		IF:		1
-;	Corrupts registers:
-;		Flags
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH11h_HandlerForRecalibrate:
-	push	dx
-	push	cx
-	push	bx
-	push	ax
 %ifndef USE_186
 	call	AH11h_RecalibrateDrive
-	jmp		Int13h_PopXRegsAndReturn
+	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 %else
-	push	Int13h_PopXRegsAndReturn
+	push	Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 	; Fall through to AH11h_RecalibrateDrive
 %endif
 
 
 ;--------------------------------------------------------------------
-; Int 13h function AH=11h, Recalibrate.
-;
 ; AH11h_HRecalibrate
 ;	Parameters:
-;		DL:		Drive number
-;		DS:		RAMVARS segment
+;		DS:DI:	Ptr to DPT (in RAMVARS segment)
 ;	Returns:
-;		DS:DI:	Ptr to DPT
 ;		AH:		BIOS Error code
 ;		CF:		0 if succesfull, 1 if error
 ;	Corrupts registers:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 AH11h_RecalibrateDrive:
 	; Recalibrate command is optional, vendor specific and not even
 	; supported on later ATA-standards. Let's do seek instead.

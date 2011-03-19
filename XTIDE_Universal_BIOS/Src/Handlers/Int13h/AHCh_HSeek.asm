@@ -9,61 +9,49 @@ SECTION .text
 ;
 ; AHCh_HandlerForSeek
 ;	Parameters:
-;		AH:		Bios function Ch
+;		CX, DH:	Same as in INTPACK
+;		DL:		Translated Drive number
+;		DS:DI:	Ptr to DPT (in RAMVARS segment)
+;		SS:BP:	Ptr to INTPACK
+;	Parameters on INTPACK in SS:BP:
 ;		CH:		Cylinder number, bits 7...0
 ;		CL:		Bits 7...6: Cylinder number bits 9 and 8
 ;				Bits 5...0:	Starting sector number (1...63)
 ;		DH:		Starting head number (0...255)
-;		DL:		Drive number
-;	Parameters loaded by Int13h_Jump:
-;		DS:		RAMVARS segment
-;	Returns:
+;	Returns with INTPACK in SS:BP:
 ;		AH:		BIOS Error code
 ;		CF:		0 if succesfull, 1 if error
-;		IF:		1
-;	Corrupts registers:
-;		Flags
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AHCh_HandlerForSeek:
-	push	dx
-	push	cx
-	push	bx
-	push	ax
 %ifndef USE_186
 	call	AHCh_SeekToCylinder
-	jmp		Int13h_PopXRegsAndReturn
+	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 %else
-	push	Int13h_PopXRegsAndReturn
+	push	Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 	; Fall through to AHCh_SeekToCylinder
 %endif
 
 
 ;--------------------------------------------------------------------
-; Seeks to a cylinder.
-;
 ; AHCh_SeekToCylinder
 ;	Parameters:
 ;		CH:		Cylinder number, bits 7...0
 ;		CL:		Bits 7...6: Cylinder number bits 9 and 8
 ;				Bits 5...0:	Starting sector number (1...63)
 ;		DH:		Starting head number (0...255)
-;		DL:		Drive Number
-;		DS:		RAMVARS segment
+;		DS:DI:	Ptr to DPT (in RAMVARS segment)
 ;	Returns:
-;		DS:DI:	Ptr to DPT
 ;		AH:		BIOS Error code
 ;		CF:		0 if succesfull, 1 if error
 ;	Corrupts registers:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 AHCh_SeekToCylinder:
-	call	FindDPT_ForDriveNumber		; DS:DI now points to DPT
 	mov		ax, HCMD_SEEK<<8			; Load cmd to AH, AL=zero sector cnt
 	call	HCommand_OutputCountAndLCHSandCommand
-	jc		SHORT .Return				; Return if error
+	jc		SHORT .ReturnWithErrorCodeInAH
 	mov		bx, di						; DS:BX now points to DPT
 	jmp		HStatus_WaitIrqOrRdy		; Wait for IRQ or RDY
-.Return:
+.ReturnWithErrorCodeInAH:
 	ret
