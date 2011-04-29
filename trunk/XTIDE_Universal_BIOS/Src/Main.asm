@@ -24,6 +24,7 @@ ORG 000h						; Code start offset 0000h
 %include "BootVars.inc"			; For BOOTVARS and BOOTNFO structs
 %include "BootMenu.inc"			; For Boot Menu
 %include "IDE_8bit.inc"			; For IDE 8-bit data port macros
+%include "DeviceIDE.inc"		; For IDE device equates
 
 
 ; Section containing code
@@ -54,36 +55,36 @@ istruc ROMVARS
 	at	ROMVARS.wFlags,			dw	FLG_ROMVARS_FULLMODE | FLG_ROMVARS_DRVXLAT
 	at	ROMVARS.wDisplayMode,	dw	DEFAULT_TEXT_MODE
 	at	ROMVARS.wBootTimeout,	dw	30 * TICKS_PER_SECOND	; Boot Menu selection timeout
-	at	ROMVARS.bIdeCnt,		db	3						; Number of supported controllers
+	at	ROMVARS.bIdeCnt,		db	4						; Number of supported controllers
 	at	ROMVARS.bBootDrv,		db	80h						; Boot Menu default drive
 	at	ROMVARS.bMinFddCnt, 	db	0						; Do not force minimum number of floppy drives
 	at	ROMVARS.bStealSize,		db	1						; Steal 1kB from base memory
 
 	at	ROMVARS.ideVars0+IDEVARS.wPort,			dw	1F0h			; Controller Command Block base port
 	at	ROMVARS.ideVars0+IDEVARS.wPortCtrl,		dw	3F0h			; Controller Control Block base port
-	at	ROMVARS.ideVars0+IDEVARS.bBusType,		db	BUS_TYPE_16		; Bus type
-	at	ROMVARS.ideVars0+IDEVARS.bIRQ,			db	14				; IRQ
+	at	ROMVARS.ideVars0+IDEVARS.bDevice,		db	DEVICE_16BIT_ATA
+	at	ROMVARS.ideVars0+IDEVARS.bIRQ,			db	14
 	at	ROMVARS.ideVars0+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	db	FLG_DRVPARAMS_BLOCKMODE
 	at	ROMVARS.ideVars0+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags,	db	FLG_DRVPARAMS_BLOCKMODE
 
 	at	ROMVARS.ideVars1+IDEVARS.wPort,			dw	170h			; Controller Command Block base port
 	at	ROMVARS.ideVars1+IDEVARS.wPortCtrl,		dw	370h			; Controller Control Block base port
-	at	ROMVARS.ideVars1+IDEVARS.bBusType,		db	BUS_TYPE_16		; Bus type
-	at	ROMVARS.ideVars1+IDEVARS.bIRQ,			db	15				; IRQ
+	at	ROMVARS.ideVars1+IDEVARS.bDevice,		db	DEVICE_16BIT_ATA
+	at	ROMVARS.ideVars1+IDEVARS.bIRQ,			db	15
 	at	ROMVARS.ideVars1+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	db	FLG_DRVPARAMS_BLOCKMODE
 	at	ROMVARS.ideVars1+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags,	db	FLG_DRVPARAMS_BLOCKMODE
 
 	at	ROMVARS.ideVars2+IDEVARS.wPort,			dw	300h			; Controller Command Block base port
 	at	ROMVARS.ideVars2+IDEVARS.wPortCtrl,		dw	308h			; Controller Control Block base port
-	at	ROMVARS.ideVars2+IDEVARS.bBusType,		db	BUS_TYPE_8_DUAL	; Bus type
-	at	ROMVARS.ideVars2+IDEVARS.bIRQ,			db	0				; IRQ
+	at	ROMVARS.ideVars2+IDEVARS.bDevice,		db	DEVICE_8BIT_DUAL_PORT_XTIDE
+	at	ROMVARS.ideVars2+IDEVARS.bIRQ,			db	0
 	at	ROMVARS.ideVars2+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	db	FLG_DRVPARAMS_BLOCKMODE
 	at	ROMVARS.ideVars2+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags,	db	FLG_DRVPARAMS_BLOCKMODE
 
 	at	ROMVARS.ideVars3+IDEVARS.wPort,			dw	168h			; Controller Command Block base port
 	at	ROMVARS.ideVars3+IDEVARS.wPortCtrl,		dw	368h			; Controller Control Block base port
-	at	ROMVARS.ideVars3+IDEVARS.bBusType,		db	BUS_TYPE_16		; Bus type
-	at	ROMVARS.ideVars3+IDEVARS.bIRQ,			db	0				; IRQ
+	at	ROMVARS.ideVars3+IDEVARS.bDevice,		db	DEVICE_16BIT_ATA
+	at	ROMVARS.ideVars3+IDEVARS.bIRQ,			db	0
 	at	ROMVARS.ideVars3+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	db	FLG_DRVPARAMS_BLOCKMODE
 	at	ROMVARS.ideVars3+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags,	db	FLG_DRVPARAMS_BLOCKMODE
 %else
@@ -100,7 +101,7 @@ istruc ROMVARS
 
 	at	ROMVARS.ideVars0+IDEVARS.wPort,			dw	300h			; Controller Command Block base port
 	at	ROMVARS.ideVars0+IDEVARS.wPortCtrl,		dw	308h			; Controller Control Block base port
-	at	ROMVARS.ideVars0+IDEVARS.bBusType,		db	BUS_TYPE_8_DUAL	; Bus type
+	at	ROMVARS.ideVars0+IDEVARS.bDevice,		db	DEVICE_8BIT_DUAL_PORT_XTIDE
 	at	ROMVARS.ideVars0+IDEVARS.bIRQ,			db	0				; IRQ
 	at	ROMVARS.ideVars0+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	db	FLG_DRVPARAMS_BLOCKMODE
 	at	ROMVARS.ideVars0+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags,	db	FLG_DRVPARAMS_BLOCKMODE
@@ -145,13 +146,6 @@ iend
 ; Include .asm files (general drive accessing)
 %include "DriveXlate.asm"		; For swapping drive numbers
 %include "HAddress.asm"			; For sector address translations
-%include "HCapacity.asm"		; For calculating drive capacity
-%include "HError.asm"			; For error checking
-%include "HPIO.asm"				; For PIO transfers
-%include "HIRQ.asm"				; For IRQ handling
-%include "HStatus.asm"			; For reading hard disk status
-%include "HDrvSel.asm"			; For selecting drive to access
-%include "HCommand.asm"			; For outputting command and parameters
 %include "HTimer.asm"			; For timeout and delay
 
 ; Include .asm files (Interrupt handlers)
@@ -177,7 +171,21 @@ iend
 %include "AH23h_HFeatures.asm"	; Required by Int13h_Jump.asm
 %include "AH24h_HSetBlocks.asm"	; Required by Int13h_Jump.asm
 %include "AH25h_HDrvID.asm"		; Required by Int13h_Jump.asm
+%include "Device.asm"
+%include "Idepack.asm"
 
+; IDE Device support
+%include "IdeCommand.asm"
+%include "IdeDPT.asm"
+%include "IdeIO.asm"
+%include "IdeIrq.asm"
+%include "IdeTransfer.asm"
+%include "IdeWait.asm"
+%include "IdeError.asm"			; Must be included after IdeWait.asm
+
+; Serial Port Device support
+%include "SerialCommand.asm"
+%include "SerialDPT.asm"
 
 
 ; Fill with zeroes until size is what we want

@@ -11,8 +11,8 @@ SECTION .text
 ;	Parameters:
 ;		DL:		Translated Drive number
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
-;		SS:BP:	Ptr to INTPACK
-;	Returns with INTPACK in SS:BP:
+;		SS:BP:	Ptr to IDEPACK
+;	Returns with INTPACK:
 ;		AH:		Int 13h return status
 ;		CF:		0 if succesfull, 1 if error
 ;--------------------------------------------------------------------
@@ -34,11 +34,12 @@ AHDh_HandlerForResetHardDisk:
 ;	Parameters:
 ;		DL:		Drive number
 ;		DS:		RAMVARS segment
+;		SS:BP:	Ptr to IDEPACK
 ;	Returns:
 ;		AH:		Int 13h return status
 ;		CF:		0 if succesfull, 1 if error
 ;	Corrupts registers:
-;		AL, CX, DI
+;		AL, CX, SI, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AHDh_ResetDrive:
@@ -47,13 +48,14 @@ AHDh_ResetDrive:
 
 	call	FindDPT_ForDriveNumber		; DS:DI now points to DPT
 	call	Interrupts_UnmaskInterruptControllerForDriveInDSDI
-	call	AHDh_ResetMasterAndSlave
+	call	Device_ResetMasterAndSlaveController
 	;jc		SHORT .ReturnError			; CF would be set if slave drive present without master
 										; (error register has special values after reset)
 
 	; Initialize Master and Slave drives
-	mov		dx, [RAMVARS.wIdeBase]		; Load base port address
-	call	AHDh_InitializeMasterAndSlave
+	eMOVZX	bx, BYTE [di+DPT.bIdevarsOffset]
+	mov		dx, [cs:bx+IDEVARS.wPort]
+	call	InitializeMasterAndSlaveDriveFromPortInDX
 
 	pop		bx
 	pop		dx
@@ -61,64 +63,28 @@ AHDh_ResetDrive:
 
 
 ;--------------------------------------------------------------------
-; Resets Master and Slave drives at wanted port.
-; Both IDE drives will be reset. It is not possible to reset
-; Master or Slave only.
-;
-; AHDh_ResetMasterAndSlave
-;	Parameters:
-;		DS:DI:	Ptr to DPT for Master or Slave drive
-;	Returns:
-;		CF:		0 if reset succesfull
-;				1 if any error
-;	Corrupts registers:
-;		AX, BX, CX, DX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-AHDh_ResetMasterAndSlave:
-	; Reset controller
-	; HSR0: Set_SRST
-	mov		al, [di+DPT.bDrvCtrl]		; Load value for ACR
-	or		al, FLG_IDE_CTRL_SRST		; Set Reset bit
-	call	HDrvSel_OutputDeviceControlByte
-	mov		ax, 5						; Delay at least 5us
-	call	HTimer_DelayMicrosecondsFromAX
-
-	; HSR1: Clear_wait
-	mov		al, [di+DPT.bDrvCtrl]		; Load value for ACR
-	out		dx, al						; End Reset
-	mov		ax, 2000					; Delay at least 2ms
-	call	HTimer_DelayMicrosecondsFromAX
-
-	; HSR2: Check_status
-	mov		cl, B_TIMEOUT_RESET			; Reset timeout delay
-	jmp		HStatus_WaitBsy
-
-
-;--------------------------------------------------------------------
-; Initializes Master and Slave drive.
-;
-; AHDh_InitializeMasterAndSlave
+; InitializeMasterAndSlaveDriveFromPortInDX
 ;	Parameters:
 ;		DX:		IDE Base Port address
+;		SS:BP:	Ptr to IDEPACK
 ;	Returns:
 ;		AH:		Error code
 ;		CF:		0 if initialization succesfull
 ;				1 if any error
 ;	Corrupts registers:
-;		AL, BX, CX, DX, DI
+;		AL, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-AHDh_InitializeMasterAndSlave:
+InitializeMasterAndSlaveDriveFromPortInDX:
 	push	dx							; Store base port address
 	xor		cx, cx						; Assume no errors
-	call	FindDPT_ForIdeMasterAtPort
+	call	FindDPT_ToDSDIForIdeMasterAtPortDX
 	jnc		SHORT .InitializeSlave		; Master drive not present
 	call	AH9h_InitializeDriveForUse
 	mov		cl, ah						; Copy error code to CL
 .InitializeSlave:
 	pop		dx							; Restore base port address
-	call	FindDPT_ForIdeSlaveAtPort
+	call	FindDPT_ToDSDIForIdeSlaveAtPortDX
 	jnc		SHORT .CombineErrors		; Slave drive not present
 	call	AH9h_InitializeDriveForUse
 	mov		ch, ah						; Copy error code to CH

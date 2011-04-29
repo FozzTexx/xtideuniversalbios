@@ -110,7 +110,7 @@ Interrupts_InitializeInterruptVectors:
 ;--------------------------------------------------------------------
 .InstallHighIrqHandler:
 	add		bx, BYTE INTV_IRQ8 - 8			; Interrupt vector number
-	mov		si, HIRQ_InterruptServiceRoutineForIrqs8to15
+	mov		si, IdeIrq_InterruptServiceRoutineForIrqs8to15
 	jmp		SHORT Interrupts_InstallHandlerToVectorInBXFromCSSI
 
 ;--------------------------------------------------------------------
@@ -125,7 +125,7 @@ Interrupts_InitializeInterruptVectors:
 ;--------------------------------------------------------------------
 .InstallLowIrqHandler:
 	add		bx, BYTE INTV_IRQ0				; Interrupt vector number
-	mov		si, HIRQ_InterruptServiceRoutineForIrqs2to7
+	mov		si, IdeIrq_InterruptServiceRoutineForIrqs2to7
 	; Fall to Interrupts_InstallHandlerToVectorInBXFromCSSI
 
 
@@ -157,7 +157,7 @@ Interrupts_InstallHandlerToVectorInBXFromCSSI:
 ;		AX, BX, DX
 ;--------------------------------------------------------------------
 Interrupts_UnmaskInterruptControllerForDriveInDSDI:
-	eMOVZX	bx, BYTE [di+DPT.bIdeOff]
+	eMOVZX	bx, BYTE [di+DPT.bIdevarsOffset]
 	mov		al, [cs:bx+IDEVARS.bIRQ]
 	test	al, al
 	jz		SHORT .Return	; Interrupts disabled

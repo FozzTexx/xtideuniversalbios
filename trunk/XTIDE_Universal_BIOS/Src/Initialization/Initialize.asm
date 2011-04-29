@@ -107,7 +107,10 @@ Initialize_AndDetectDrives:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, BX, CX, DX, DI
+;		All
 ;--------------------------------------------------------------------
 .ResetDetectedDrives:
-	jmp		AH0h_ResetHardDisksHandledByOurBIOS
+	call	Idepack_FakeToSSBP
+	call	AH0h_ResetHardDisksHandledByOurBIOS
+	add		sp, BYTE SIZE_OF_FAKE_IDEPACK
+	ret

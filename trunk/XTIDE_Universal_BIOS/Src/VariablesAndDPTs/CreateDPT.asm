@@ -24,7 +24,7 @@ SECTION .text
 ;		AX, BX, CX, DH
 ;--------------------------------------------------------------------
 CreateDPT_FromAtaInformation:
-	call	FindDPT_ForNewDrive		; Get new DPT to DS:DI
+	call	FindDPT_ForNewDriveToDSDI
 	; Fall to .InitializeDPT
 
 ;--------------------------------------------------------------------
@@ -34,23 +34,17 @@ CreateDPT_FromAtaInformation:
 ;		DS:DI:	Ptr to Disk Parameter Table
 ;		CS:BP:	Ptr to IDEVARS for the controller
 ;	Returns:
-;		AX:		Zero
-;	Corrupts registers:
 ;		Nothing
+;	Corrupts registers:
+;		AX
 ;--------------------------------------------------------------------
 .InitializeDPT:
-	xor		ax, ax
-	mov		BYTE [di+DPT.bSize], DPT_size
-	mov		[di+DPT.wDrvNumAndFlags], ax
-	mov		BYTE [di+DPT.bReset], MASK_RESET_ALL
-	mov		[di+DPT.bIdeOff], bp
-	mov		[di+DPT.bDrvSel], bh
-	; Fall to .StoreDriveControlByte
+	mov		[di+DPT.bIdevarsOffset], bp	; IDEVARS must start in first 256 bytes of ROM
+	; Fall to .StoreDriveSelectAndDriveControlByte
 
 ;--------------------------------------------------------------------
-; .StoreDriveControlByte
+; .StoreDriveSelectAndDriveControlByte
 ;	Parameters:
-;		AX:		Zero
 ;		BH:		Drive Select byte for Drive and Head Register
 ;		DS:DI:	Ptr to Disk Parameter Table
 ;		ES:SI:	Ptr to 512-byte ATA information read from the drive
@@ -60,22 +54,19 @@ CreateDPT_FromAtaInformation:
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
-.StoreDriveControlByte:
-	cmp		BYTE [cs:bp+IDEVARS.bIRQ], al	; Interrupts enabled?
-	jne		SHORT .CheckHeadCount
-	or		al, FLG_IDE_CTRL_nIEN			; Disable interrupts
-.CheckHeadCount:
-	cmp		BYTE [es:si+ATA1.wHeadCnt], 8	; 1...8 heads?
-	jbe		SHORT .StoreDrvCtrlByteToDPT
-	or		al, FLG_IDE_CTRL_O8H			; Over 8 heads (pre-ATA)
-.StoreDrvCtrlByteToDPT:
-	mov		[di+DPT.bDrvCtrl], al
+.StoreDriveSelectAndDriveControlByte:
+	mov		al, bh
+	and		ax, BYTE FLG_DRVNHEAD_DRV		; AL now has Master/Slave bit
+	cmp		[cs:bp+IDEVARS.bIRQ], ah		; Interrupts enabled?
+	jz		SHORT .StoreFlags				;  If not, do not set interrupt flag
+	or		al, FLG_DPT_ENABLE_IRQ
+.StoreFlags:
+	mov		[di+DPT.wFlags], ax
 	; Fall to .StorePCHS
 
 ;--------------------------------------------------------------------
 ; .StorePCHS
 ;	Parameters:
-;		AH:		Zero
 ;		BH:		Drive Select byte for Drive and Head Register
 ;		DS:DI:	Ptr to Disk Parameter Table
 ;		ES:SI:	Ptr to 512-byte ATA information read from the drive
@@ -98,11 +89,10 @@ CreateDPT_FromAtaInformation:
 	call	AccessDPT_GetPointerToDRVPARAMStoCSBX
 	mov		ax, [cs:bx+DRVPARAMS.wCylinders]
 	mov		bx, [cs:bx+DRVPARAMS.wHeadsAndSectors]
-	or		BYTE [di+DPT.bFlags], FLG_DPT_USERCHS
 
 .StorePCHStoDPT:
-	mov		[di+DPT.wPCyls], ax
-	mov		[di+DPT.wHeadsAndSectors], bx
+	mov		[di+DPT.wPchsCylinders], ax
+	mov		[di+DPT.wPchsHeadsAndSectors], bx
 	; Fall to .StoreLCHS
 
 ;--------------------------------------------------------------------
@@ -128,13 +118,11 @@ CreateDPT_FromAtaInformation:
 	shl		bx, 1						; Double heads
 	jmp		SHORT .ShiftLoop
 
-.LimitHeadsTo255:
-	test	bh, bh						; 256 heads?
-	jz		SHORT .StoreLCHStoDPT		;  If less, no correction needed
-	dec		bx							; Limit to 255 heads since DOS does not support 256 heads
-.StoreLCHStoDPT:
-	mov		[di+DPT.bShLtoP], cl
-	mov		[di+DPT.wLHeads], bx
+.LimitHeadsTo255:						; DOS does not support drives with 256 heads
+	rcr		bh, 1						; Set CF if 256 heads
+	sbb		bl, 0						; Decrement to 255 if 256 heads
+	or		[di+DPT.wFlags], cl
+	mov		[di+DPT.bLchsHeads], bl
 	; Fall to .StoreAddressing
 
 ;--------------------------------------------------------------------
@@ -145,24 +133,29 @@ CreateDPT_FromAtaInformation:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		Nothing
+;		AX, BX
 ;--------------------------------------------------------------------
 .StoreAddressing:
-	cmp		WORD [di+DPT.wPCyls], 1024		; L-CHS possible? (no translation needed)
-	jbe		SHORT .StoreBlockMode			;  If so, nothing needs to be changed
-	test	BYTE [di+DPT.bFlags], FLG_DPT_USERCHS
-	jnz		SHORT .StorePCHSaddressing		; Use user defined P-CHS
+	; Check if L-CHS addressing should be used
+	cmp		WORD [di+DPT.wPchsCylinders], 1024	; L-CHS possible? (no translation needed)
+	jbe		SHORT .StoreBlockMode				;  If so, nothing needs to be changed
+
+	; Check if P-CHS addressing should be used
+	mov		al, FLG_DRVPARAMS_USERCHS			; User specified CHS?
+	call	AccessDPT_TestIdeVarsFlagsForMasterOrSlaveDrive
+	jnz		SHORT .StorePCHSaddressing
 	test	WORD [es:si+ATA1.wCaps], A2_wCaps_LBA
-	jz		SHORT .StorePCHSaddressing		; Use P-CHS since LBA not supported
+	jz		SHORT .StorePCHSaddressing			; Use P-CHS since LBA not supported
+
+	; LBA needs to be used. Check if 48-bit LBA is supported
 	test	WORD [es:si+ATA6.wSetSup83], A6_wSetSup83_LBA48
-	jz		SHORT .StoreLBA28addressing		; Use LBA-28 since LBA-48 not supported
-	or		BYTE [di+DPT.bFlags], ADDR_DPT_LBA48<<1
+	jz		SHORT .StoreLBA28addressing			; Use LBA-28 since LBA-48 not supported
+	or		BYTE [di+DPT.wFlags], ADDRESSING_MODE_LBA48<<ADDRESSING_MODE_FIELD_POSITION
 .StoreLBA28addressing:
-	or		BYTE [di+DPT.bFlags], ADDR_DPT_LBA28<<1
-	or		BYTE [di+DPT.bDrvSel], FLG_IDE_DRVHD_LBA
+	or		BYTE [di+DPT.wFlags], ADDRESSING_MODE_LBA28<<ADDRESSING_MODE_FIELD_POSITION
 	jmp		SHORT .StoreBlockMode
 .StorePCHSaddressing:
-	or		BYTE [di+DPT.bFlags], ADDR_DPT_PCHS<<1
+	or		BYTE [di+DPT.wFlags], ADDRESSING_MODE_PCHS<<ADDRESSING_MODE_FIELD_POSITION
 	; Fall to .StoreBlockMode
 
 ;--------------------------------------------------------------------
@@ -173,46 +166,27 @@ CreateDPT_FromAtaInformation:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX
+;		Nothing
 ;--------------------------------------------------------------------
 .StoreBlockMode:
-	mov		al, 1						; Minimum block size is 1 sector
-	mov		ah, [es:si+ATA1.bBlckSize]	; Load max block size in sectors
-	mov		[di+DPT.wSetAndMaxBlock], ax
-	; Fall to .StoreEBIOSSupport
+	cmp		BYTE [es:si+ATA1.bBlckSize], 1	; Max block size in sectors
+	jbe		SHORT .BlockModeTransfersNotSupported
+	or		WORD [di+DPT.wFlags], FLG_DPT_BLOCK_MODE_SUPPORTED
+.BlockModeTransfersNotSupported:
+	; Fall to .StoreDeviceSpecificParameters
 
 ;--------------------------------------------------------------------
-; .StoreEBIOSSupport
+; .StoreDeviceSpecificParameters
 ;	Parameters:
 ;		DS:DI:	Ptr to Disk Parameter Table
 ;		ES:SI:	Ptr to 512-byte ATA information read from the drive
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, BX, DX
+;		AX, BX, CX, DX
 ;--------------------------------------------------------------------
-.StoreEBIOSSupport:
-	test	BYTE [cs:ROMVARS.wFlags], FLG_ROMVARS_FULLMODE
-	jz		SHORT .StoreDriveNumberAndUpdateDriveCount	; No EBIOS support since small DPTs needed
-
-	mov		bl, [di+DPT.bFlags]
-	and		bx, BYTE MASK_DPT_ADDR						; Addressing mode
-	jmp		[cs:bx+.rgwAddrJmp]							; Jump to handle addressing mode
-.rgwAddrJmp:
-	dw		.StoreDriveNumberAndUpdateDriveCount		; ADDR_DPT_LCHS
-	dw		.StoreDriveNumberAndUpdateDriveCount		; ADDR_DPT_PCHS
-	dw		.SupportForLBA28							; ADDR_DPT_LBA28
-	dw		.SupportForLBA48							; ADDR_DPT_LBA48
-
-.SupportForLBA28:
-	sub		BYTE [di+DPT.bSize], 2		; Only 4 bytes for sector count
-.SupportForLBA48:
-	add		BYTE [di+DPT.bSize], EBDPT_size - DPT_size
-	or		BYTE [di+DPT.bFlags], FLG_DPT_EBIOS
-	call	AtaID_GetTotalSectorCount
-	mov		[di+EBDPT.twCapacity], ax
-	mov		[di+EBDPT.twCapacity+2], dx
-	mov		[di+EBDPT.twCapacity+4], bx
+.StoreDeviceSpecificParameters:
+	call	Device_FinalizeDPT
 	; Fall to .StoreDriveNumberAndUpdateDriveCount
 
 ;--------------------------------------------------------------------
@@ -229,19 +203,15 @@ CreateDPT_FromAtaInformation:
 ;		Nothing
 ;--------------------------------------------------------------------
 .StoreDriveNumberAndUpdateDriveCount:
-	; Make sure that more drives can be accepted
-	mov		dl, [es:BDA.bHDCount]	; Load number of hard disks
-	test	dl, dl					; Hard disks at maximum?
-	stc								; Assume error
-	js		SHORT .TooManyDrives	;  If so, return
+	mov		dl, [es:BDA.bHDCount]
+	or		dl, 80h						; Set bit 7 since hard disk
 
-	; Store drive number to DPT
-	or		dl, 80h					; Set bit 7 since hard disk
-	mov		[di+DPT.bDrvNum], dl	; Store drive number
+	inc		BYTE [RAMVARS.bDrvCnt]		; Increment drive count to RAMVARS
+	inc		BYTE [es:BDA.bHDCount]		; Increment drive count to BDA
 
-	; Update BDA and RAMVARS
-	inc		BYTE [es:BDA.bHDCount]	; Increment drive count to BDA
-	call	RamVars_IncrementHardDiskCount
+	cmp		BYTE [RAMVARS.bFirstDrv], 0	; First drive set?
+	ja		SHORT .AllDone				;  If so, return
+	mov		[RAMVARS.bFirstDrv], dl		; Store first drive number
+.AllDone:
 	clc
-.TooManyDrives:
 	ret

@@ -21,7 +21,8 @@ SECTION .text
 ALIGN JUMP_ALIGN
 Int13h_DiskFunctionsHandler:
 	sti									; Enable interrupts
-	SAVE_AND_GET_INTPACK_TO_SSBP
+	cld									; String instructions to increment pointers
+	SAVE_AND_GET_INTPACK_WITH_EXTRA_WORDS_TO_SSBP EXTRA_WORDS_TO_RESERVE_FOR_INTPACK
 
 	call	RamVars_GetSegmentToDS
 	call	DriveXlate_ToOrBack
@@ -45,7 +46,7 @@ JumpToBiosFunctionInAH:
 ;	Parameters:
 ;		DL:		Translated drive number
 ;		DS:		RAMVARS segment
-;		SS:BP:	Ptr to INTPACK
+;		SS:BP:	Ptr to IDEPACK
 ;		BX, DI:	Corrupted on Int13h_DiskFunctionsHandler
 ;		Other:	Function specific INT 13h parameters 
 ;	Returns:
@@ -57,35 +58,35 @@ ALIGN JUMP_ALIGN
 Int13h_UnsupportedFunction:
 Int13h_DirectCallToAnotherBios:
 	call	ExchangeCurrentInt13hHandlerWithOldInt13hHandler
-	mov		bx, [bp+INTPACK.bx]
-	mov		di, [bp+INTPACK.di]
-	mov		ds, [bp+INTPACK.ds]
-	push	WORD [bp+INTPACK.flags]
+	mov		bx, [bp+IDEPACK.intpack+INTPACK.bx]
+	mov		di, [bp+IDEPACK.intpack+INTPACK.di]
+	mov		ds, [bp+IDEPACK.intpack+INTPACK.ds]
+	push	WORD [bp+IDEPACK.intpack+INTPACK.flags]
 	popf
 	push	bp
-	mov		bp, [bp+INTPACK.bp]
+	mov		bp, [bp+IDEPACK.intpack+INTPACK.bp]
 	int		BIOS_DISK_INTERRUPT_13h	; Can safely do as much recursion as it wants
 
 	; Store returned values to INTPACK
 	pop		bp	; Standard INT 13h functions never uses BP as return register
 %ifdef USE_386
-	mov		[bp+INTPACK.gs], gs
-	mov		[bp+INTPACK.fs], fs
+	mov		[bp+IDEPACK.intpack+INTPACK.gs], gs
+	mov		[bp+IDEPACK.intpack+INTPACK.fs], fs
 %endif
-	mov		[bp+INTPACK.es], es
-	mov		[bp+INTPACK.ds], ds
-	mov		[bp+INTPACK.di], di
-	mov		[bp+INTPACK.si], si
-	mov		[bp+INTPACK.bx], bx
-	mov		[bp+INTPACK.dh], dh
-	mov		[bp+INTPACK.cx], cx
-	mov		[bp+INTPACK.ax], ax
+	mov		[bp+IDEPACK.intpack+INTPACK.es], es
+	mov		[bp+IDEPACK.intpack+INTPACK.ds], ds
+	mov		[bp+IDEPACK.intpack+INTPACK.di], di
+	mov		[bp+IDEPACK.intpack+INTPACK.si], si
+	mov		[bp+IDEPACK.intpack+INTPACK.bx], bx
+	mov		[bp+IDEPACK.intpack+INTPACK.dh], dh
+	mov		[bp+IDEPACK.intpack+INTPACK.cx], cx
+	mov		[bp+IDEPACK.intpack+INTPACK.ax], ax
 	pushf
-	pop		WORD [bp+INTPACK.flags]
+	pop		WORD [bp+IDEPACK.intpack+INTPACK.flags]
 	call	RamVars_GetSegmentToDS
 	cmp		dl, [RAMVARS.xlateVars+XLATEVARS.bXlatedDrv]
 	je		SHORT .ExchangeInt13hHandlers
-	mov		[bp+INTPACK.dl], dl		; Something is returned in DL
+	mov		[bp+IDEPACK.intpack+INTPACK.dl], dl		; Something is returned in DL
 ALIGN JUMP_ALIGN
 .ExchangeInt13hHandlers:
 	call	ExchangeCurrentInt13hHandlerWithOldInt13hHandler
@@ -97,17 +98,17 @@ ALIGN JUMP_ALIGN
 ; Int13h_ReturnFromHandlerWithoutStoringErrorCode
 ;	Parameters:
 ;		AH:		BIOS Error code
-;		SS:BP:	Ptr to INTPACK
+;		SS:BP:	Ptr to IDEPACK
 ;	Returns:
 ;		All registers are loaded from INTPACK
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH:
-	call	HError_SetErrorCodeToBdaAndToIntpackInSSBPfromAH
+	call	Int13h_SetErrorCodeToBdaAndToIntpackInSSBPfromAH
 Int13h_ReturnFromHandlerWithoutStoringErrorCode:
-	or		WORD [bp+INTPACK.flags], FLG_FLAGS_IF	; Return with interrupts enabled
+	or		WORD [bp+IDEPACK.intpack+INTPACK.flags], FLG_FLAGS_IF	; Return with interrupts enabled
 	mov		sp, bp									; Now we can exit anytime
-	RESTORE_INTPACK_FROM_SSBP
+	RESTORE_INTPACK_WITH_EXTRA_WORDS_FROM_SSBP EXTRA_WORDS_TO_RESERVE_FOR_INTPACK
 
 
 ;--------------------------------------------------------------------
@@ -145,12 +146,43 @@ ExchangeCurrentInt13hHandlerWithOldInt13hHandler:
 	push	es
 	LOAD_BDA_SEGMENT_TO	es, di
 	mov		di, [RAMVARS.fpOldI13h]
+	cli
 	xchg	di, [es:BIOS_DISK_INTERRUPT_13h*4]
 	mov		[RAMVARS.fpOldI13h], di
 	mov		di, [RAMVARS.fpOldI13h+2]
 	xchg	di, [es:BIOS_DISK_INTERRUPT_13h*4+2]
 	mov		[RAMVARS.fpOldI13h+2], di
 	pop		es
+	sti
+	ret
+
+
+;--------------------------------------------------------------------
+; Int13h_SetErrorCodeToBdaAndToIntpackInSSBPfromAH
+; Int13h_SetErrorCodeToIntpackInSSBPfromAH
+;	Parameters:
+;		AH:		BIOS error code (00h = no error)
+;		SS:BP:	Ptr to IDEPACK
+;	Returns:
+;		SS:BP:	Ptr to IDEPACK with error condition set
+;	Corrupts registers:
+;		DS, DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+Int13h_SetErrorCodeToBdaAndToIntpackInSSBPfromAH:
+	; Store error code to BDA
+	LOAD_BDA_SEGMENT_TO	ds, di
+	mov		[BDA.bHDLastSt], ah
+
+	; Store error code to INTPACK
+Int13h_SetErrorCodeToIntpackInSSBPfromAH:
+	mov		[bp+IDEPACK.intpack+INTPACK.ah], ah
+	test	ah, ah
+	jnz		SHORT .SetCFtoIntpack
+	and		BYTE [bp+IDEPACK.intpack+INTPACK.flags], ~FLG_FLAGS_CF
+	ret
+.SetCFtoIntpack:
+	or		BYTE [bp+IDEPACK.intpack+INTPACK.flags], FLG_FLAGS_CF
 	ret
 
 
@@ -223,17 +255,21 @@ g_rgw13hFuncJump:
 ;	dw	Int13h_UnsupportedFunction						; 3Eh, 
 ;	dw	Int13h_UnsupportedFunction						; 3Fh, 
 ;	dw	Int13h_UnsupportedFunction						; 40h, 
-;	dw	Int13h_UnsupportedFunction						; 41h, Check if Extensions Present (EBIOS)
-;	dw	Int13h_UnsupportedFunction						; 42h, Extended Read Sectors (EBIOS)
-;	dw	Int13h_UnsupportedFunction						; 43h, Extended Write Sectors (EBIOS)
-;	dw	Int13h_UnsupportedFunction						; 44h, Extended Verify Sectors (EBIOS)
-;	dw	Int13h_UnsupportedFunction						; 45h, Lock and Unlock Drive (EBIOS)
-;	dw	Int13h_UnsupportedFunction						; 46h, Eject Media Request (EBIOS)
-;	dw	Int13h_UnsupportedFunction						; 47h, Extended Seek (EBIOS)
-;	dw	Int13h_UnsupportedFunction						; 48h, Get Extended Drive Parameters (EBIOS)
-;	dw	Int13h_UnsupportedFunction						; 49h, Get Extended Disk Change Status (EBIOS)
+;	dw	Int13h_UnsupportedFunction						; 41h, Check if Extensions Present (EBIOS)*
+;	dw	Int13h_UnsupportedFunction						; 42h, Extended Read Sectors (EBIOS)*
+;	dw	Int13h_UnsupportedFunction						; 43h, Extended Write Sectors (EBIOS)*
+;	dw	Int13h_UnsupportedFunction						; 44h, Extended Verify Sectors (EBIOS)*
+;	dw	Int13h_UnsupportedFunction						; 45h, Lock and Unlock Drive (EBIOS)***
+;	dw	Int13h_UnsupportedFunction						; 46h, Eject Media Request (EBIOS)***
+;	dw	Int13h_UnsupportedFunction						; 47h, Extended Seek (EBIOS)*
+;	dw	Int13h_UnsupportedFunction						; 48h, Get Extended Drive Parameters (EBIOS)*
+;	dw	Int13h_UnsupportedFunction						; 49h, Get Extended Disk Change Status (EBIOS)***
 ;	dw	Int13h_UnsupportedFunction						; 4Ah, Initiate Disk Emulation (Bootable CD-ROM)
 ;	dw	Int13h_UnsupportedFunction						; 4Bh, Terminate Disk Emulation (Bootable CD-ROM)
 ;	dw	Int13h_UnsupportedFunction						; 4Ch, Initiate Disk Emulation and Boot (Bootable CD-ROM)
 ;	dw	Int13h_UnsupportedFunction						; 4Dh, Return Boot Catalog (Bootable CD-ROM)
-;	dw	Int13h_UnsupportedFunction						; 4Eh, Set Hardware Configuration (EBIOS)
+;	dw	Int13h_UnsupportedFunction						; 4Eh, Set Hardware Configuration (EBIOS)**
+;
+;   * = Enhanced Drive Access Support (minimum required EBIOS functions)
+;  ** = Enhanced Disk Drive (EDD) Support
+; *** = Drive Locking and Ejecting Support

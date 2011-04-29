@@ -16,22 +16,21 @@ SECTION .text
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, BX, CX, DX, SI, DI, ES
+;		AX, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenuPrintCfg_ForOurDrive:
 	pop		di
 	mov		si, g_szCfgHeader
 	call	BootMenuPrint_NullTerminatedStringFromCSSIandSetCF
-	call	BootMenuPrintCfg_GetPointers
+	eMOVZX	ax, BYTE [di+DPT.bIdevarsOffset]
+	xchg	si, ax						; CS:SI now points to IDEVARS
 	; Fall to PushAndFormatCfgString
-
 
 ;--------------------------------------------------------------------
 ; PushAndFormatCfgString
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT
-;		ES:BX:	Ptr to BOOTNFO
 ;		CS:SI:	Ptr to IDEVARS
 ;	Returns:
 ;		Nothing
@@ -47,7 +46,6 @@ PushAndFormatCfgString:
 ; PushAddressingMode
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT
-;		ES:BX:	Ptr to BOOTNFO
 ;		CS:SI:	Ptr to IDEVARS
 ;	Returns:
 ;		Nothing (jumps to next push below)
@@ -55,26 +53,13 @@ PushAndFormatCfgString:
 ;		AX
 ;--------------------------------------------------------------------
 PushAddressingMode:
-	xchg	ax, bx
-	mov		bx, MASK_DPT_ADDR	; Load addressing mode mask
-	and		bl, [di+DPT.bFlags]	; Addressing mode now in BX
-	push	WORD [cs:bx+.rgszAddressingModeString]
-	xchg	bx, ax
-	jmp		SHORT .NextPush
-ALIGN WORD_ALIGN
-.rgszAddressingModeString:
-	dw		g_szLCHS
-	dw		g_szPCHS
-	dw		g_szLBA28
-	dw		g_szLBA48
-ALIGN JUMP_ALIGN
-.NextPush:
+	call	AccessDPT_GetAddressingModeForWordLookToBX
+	push	WORD [cs:bx+rgszAddressingModeString]
 
 ;--------------------------------------------------------------------
 ; PushBlockMode
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT
-;		ES:BX:	Ptr to BOOTNFO
 ;		CS:SI:	Ptr to IDEVARS
 ;	Returns:
 ;		Nothing (falls to next push below)
@@ -82,14 +67,17 @@ ALIGN JUMP_ALIGN
 ;		AX
 ;--------------------------------------------------------------------
 PushBlockMode:
-	eMOVZX	ax, BYTE [di+DPT.bSetBlock]
+	mov		ax, 1
+	test	WORD [di+DPT.wFlags], FLG_DPT_BLOCK_MODE_SUPPORTED
+	jz		SHORT .PushBlockSizeFromAX
+	mov		al, [di+DPT_ATA.bSetBlock]
+.PushBlockSizeFromAX:
 	push	ax
 
 ;--------------------------------------------------------------------
 ; PushBusType
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT
-;		ES:BX:	Ptr to BOOTNFO
 ;		CS:SI:	Ptr to IDEVARS
 ;	Returns:
 ;		Nothing (jumps to next push below)
@@ -98,27 +86,17 @@ PushBlockMode:
 ;--------------------------------------------------------------------
 PushBusType:
 	xchg	ax, bx		; Store BX to AX
-	eMOVZX	bx, BYTE [cs:si+IDEVARS.bBusType]
-	mov		bx, [cs:bx+.rgwBusTypeValues]	; Char to BL, Int to BH
+	eMOVZX	bx, BYTE [cs:si+IDEVARS.bDevice]
+	mov		bx, [cs:bx+rgwBusTypeValues]	; Char to BL, Int to BH
 	eMOVZX	dx, bh
 	push	bx			; Push character
-	push	dx			; Push 8, 16 or 32
+	push	dx			; Push 1, 8, 16 or 32
 	xchg	bx, ax		; Restore BX
-	jmp		SHORT .NextPush
-ALIGN WORD_ALIGN
-.rgwBusTypeValues:
-	db		'D', 8		; BUS_TYPE_8_DUAL
-	db		' ', 16		; BUS_TYPE_16
-	db		' ', 32		; BUS_TYPE_32
-	db		'S', 8		; BUS_TYPE_8_SINGLE
-ALIGN JUMP_ALIGN
-.NextPush:
 
 ;--------------------------------------------------------------------
 ; PushIRQ
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT
-;		ES:BX:	Ptr to BOOTNFO
 ;		CS:SI:	Ptr to IDEVARS
 ;	Returns:
 ;		Nothing (falls to next push below)
@@ -151,7 +129,6 @@ ALIGN JUMP_ALIGN
 ; PushResetStatus
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT
-;		ES:BX:	Ptr to BOOTNFO
 ;		CS:SI:	Ptr to IDEVARS
 ;	Returns:
 ;		Nothing (falls to next push below)
@@ -159,7 +136,8 @@ ALIGN JUMP_ALIGN
 ;		AX
 ;--------------------------------------------------------------------
 PushResetStatus:
-	eMOVZX	ax, BYTE [di+DPT.bReset]
+	mov		ax, [di+DPT.wFlags]
+	and		ax, MASK_DPT_RESET
 	push	ax
 
 ;--------------------------------------------------------------------
@@ -176,22 +154,17 @@ PrintValuesFromStack:
 	jmp		BootMenuPrint_FormatCSSIfromParamsInSSBP
 
 
-;--------------------------------------------------------------------
-; BootMenuPrintCfg_GetPointers
-;	Parameters:
-;		DS:DI:	Ptr to DPT
-;	Returns:
-;		DS:DI:	Ptr to DPT
-;		ES:BX:	Ptr to BOOTNFO
-;		CS:SI:	Ptr to IDEVARS
-;	Corrupts registers:
-;		AX, DL
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-BootMenuPrintCfg_GetPointers:
-	mov		dl, [di+DPT.bDrvNum]		; Load Drive number to DL
-	call	BootInfo_GetOffsetToBX		; ES:BX now points...
-	LOAD_BDA_SEGMENT_TO	es, ax, !		; ...to BOOTNFO
-	mov		al, [di+DPT.bIdeOff]
-	xchg	si, ax						; CS:SI now points to IDEVARS
-	ret
+ALIGN WORD_ALIGN
+rgszAddressingModeString:
+	dw		g_szLCHS
+	dw		g_szPCHS
+	dw		g_szLBA28
+	dw		g_szLBA48
+
+rgwBusTypeValues:
+	db		'D', 8		; DEVICE_8BIT_DUAL_PORT_XTIDE
+	db		'X', 8		; DEVICE_XTIDE_WITH_REVERSED_A3_AND_A0
+	db		'S', 8		; DEVICE_8BIT_SINGLE_PORT
+	db		' ', 16		; DEVICE_16BIT_ATA
+	db		' ', 32		; DEVICE_32BIT_ATA
+	db		' ', 1		; DEVICE_SERIAL_PORT

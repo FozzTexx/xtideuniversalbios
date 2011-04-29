@@ -11,8 +11,8 @@ SECTION .text
 ;	Parameters:
 ;		DL:		Translated Drive number
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
-;		SS:BP:	Ptr to INTPACK
-;	Returns with INTPACK in SS:BP:
+;		SS:BP:	Ptr to IDEREGS_AND_INTPACK
+;	Returns with INTPACK:
 ;		AH:		BIOS Error code
 ;		CF:		0 if succesfull, 1 if error
 ;--------------------------------------------------------------------
@@ -31,6 +31,7 @@ AH11h_HandlerForRecalibrate:
 ; AH11h_HRecalibrate
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
+;		SS:BP:	Ptr to IDEREGS_AND_INTPACK
 ;	Returns:
 ;		AH:		BIOS Error code
 ;		CF:		0 if succesfull, 1 if error

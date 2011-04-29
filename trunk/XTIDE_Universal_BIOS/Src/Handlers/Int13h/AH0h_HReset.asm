@@ -12,8 +12,8 @@ SECTION .text
 ;		DL:		Translated Drive number (ignored so all drives are reset)
 ;				If bit 7 is set all hard disks and floppy disks reset.
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
-;		SS:BP:	Ptr to INTPACK
-;	Returns with INTPACK in SS:BP:
+;		SS:BP:	Ptr to IDEPACK
+;	Returns with INTPACK:
 ;		AH:		Int 13h return status (from drive requested in DL)
 ;		CF:		0 if succesfull, 1 if error
 ;--------------------------------------------------------------------
@@ -88,21 +88,22 @@ GetDriveNumberForForeignBiosesToDL:
 
 
 ;--------------------------------------------------------------------
-; ResetHardDisksHandledByOurBIOS
+; AH0h_ResetHardDisksHandledByOurBIOS
 ;	Parameters:
 ;		BL:		Requested drive (DL when entering AH=00h)
 ;		DS:		RAMVARS segment
+;		SS:BP:	Ptr to IDEPACK
 ;	Returns:
 ;		BH:		Error code from requested drive (if available)
 ;	Corrupts registers:
-;		AX, CX, DX, DI
+;		AX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH0h_ResetHardDisksHandledByOurBIOS:
 	mov		dh, [RAMVARS.bDrvCnt]		; Load drive count to DH
 	test	dh, dh
 	jz		SHORT .AllDrivesReset		; Return if no drives
-	mov		dl, [RAMVARS.bFirstDrv]		; Load number of first our drive
+	mov		dl, [RAMVARS.bFirstDrv]		; Load number of our first drive
 	add		dh, dl						; DH = one past last drive to reset
 ALIGN JUMP_ALIGN
 .DriveResetLoop:
@@ -131,15 +132,39 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 .BackupErrorCodeFromMasterOrSlaveToBH:
 	call	BackupErrorCodeFromTheRequestedDriveToBH
-	mov		cx, [RAMVARS.wIdeBase]		; Load base port for resetted drive
-
+	call	GetBasePortToCX				; Load base port for resetted drive
+	push	cx
 	inc		dx							; DL to next drive
-	call	FindDPT_ForDriveNumber		; Get DPT to DS:DI, store port to RAMVARS
-	jnc		SHORT .NoMoreDrivesOrNoSlaveDrive
-	cmp		cx, [RAMVARS.wIdeBase]		; Next drive is from same controller?
+	call	GetBasePortToCX
+	pop		di
+	cmp		cx, di						; Next drive is from same controller?
 	je		SHORT BackupErrorCodeFromTheRequestedDriveToBH
 .NoMoreDrivesOrNoSlaveDrive:
 	dec		dx
+	ret
+
+;--------------------------------------------------------------------
+; GetBasePortToCX
+;	Parameters:
+;		DL:		Drive number
+;		DS:		RAMVARS segment
+;	Returns:
+;		CX:		Base port address
+;		CF:		Set if valid drive number
+;				Cleared if invalid drive number
+;	Corrupts registers:
+;		DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+GetBasePortToCX:
+	xchg	cx, bx
+	xor		bx, bx
+	call	FindDPT_ForDriveNumber
+	jnc		SHORT .DptNotFound
+	mov		bl, [di+DPT.bIdevarsOffset]
+	mov		bx, [cs:bx+IDEVARS.wPort]
+.DptNotFound:
+	xchg	bx, cx
 	ret
 
 

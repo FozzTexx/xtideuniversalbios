@@ -12,13 +12,13 @@ SECTION .text
 ;		CX, DH:	Same as in INTPACK
 ;		DL:		Translated Drive number
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
-;		SS:BP:	Ptr to INTPACK
-;	Parameters on INTPACK in SS:BP:
+;		SS:BP:	Ptr to IDEREGS_AND_INTPACK
+;	Parameters on INTPACK:
 ;		CH:		Cylinder number, bits 7...0
 ;		CL:		Bits 7...6: Cylinder number bits 9 and 8
 ;				Bits 5...0:	Starting sector number (1...63)
 ;		DH:		Starting head number (0...255)
-;	Returns with INTPACK in SS:BP:
+;	Returns with INTPACK:
 ;		AH:		BIOS Error code
 ;		CF:		0 if succesfull, 1 if error
 ;--------------------------------------------------------------------
@@ -32,7 +32,6 @@ AHCh_HandlerForSeek:
 	; Fall through to AHCh_SeekToCylinder
 %endif
 
-
 ;--------------------------------------------------------------------
 ; AHCh_SeekToCylinder
 ;	Parameters:
@@ -41,6 +40,7 @@ AHCh_HandlerForSeek:
 ;				Bits 5...0:	Starting sector number (1...63)
 ;		DH:		Starting head number (0...255)
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
+;		SS:BP:	Ptr to IDEREGS_AND_INTPACK
 ;	Returns:
 ;		AH:		BIOS Error code
 ;		CF:		0 if succesfull, 1 if error
@@ -48,10 +48,6 @@ AHCh_HandlerForSeek:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
 AHCh_SeekToCylinder:
-	mov		ax, HCMD_SEEK<<8			; Load cmd to AH, AL=zero sector cnt
-	call	HCommand_OutputCountAndLCHSandCommand
-	jc		SHORT .ReturnWithErrorCodeInAH
-	mov		bx, di						; DS:BX now points to DPT
-	jmp		HStatus_WaitIrqOrRdy		; Wait for IRQ or RDY
-.ReturnWithErrorCodeInAH:
-	ret
+	mov		ah, COMMAND_SEEK
+	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRQ, FLG_STATUS_DRDY)
+	jmp		Idepack_TranslateOldInt13hAddressAndIssueCommandFromAH

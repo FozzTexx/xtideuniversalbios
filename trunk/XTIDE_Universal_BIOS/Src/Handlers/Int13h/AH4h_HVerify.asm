@@ -25,13 +25,12 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH4h_HandlerForVerifyDiskSectors:
-	test	al, al						; Invalid sector count?
-	jz		SHORT AH2h_ZeroCntErr		;  If so, return with error
-
-	mov		ah, HCMD_VERIFY_SECT		; Load command to AH
-	call	HCommand_OutputCountAndLCHSandCommand
-	jc		SHORT .ReturnWithErrorCodeInAH
-	mov		bx, di						; DS:BX now points to DPT
-	call	HStatus_WaitIrqOrRdy		; Wait for IRQ or RDY
-.ReturnWithErrorCodeInAH:
+	mov		ah, COMMAND_WRITE_SECTORS
+	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRQ, FLG_STATUS_DRDY)
+%ifdef USE_186
+	push	Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
+	jmp		Idepack_TranslateOldInt13hAddressAndIssueCommandFromAH
+%else
+	call	Idepack_TranslateOldInt13hAddressAndIssueCommandFromAH
 	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
+%endif
