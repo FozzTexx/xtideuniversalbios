@@ -35,7 +35,7 @@ g_szCapacity:	db	"Capacity : ",NULL
 g_szSizeSingle:	db	"%s%u.%u %ciB",NULL
 g_szSizeDual:	db	"%s%4-u.%u %ciB / %4-u.%u %ciB",LF,CR,NULL
 g_szCfgHeader:	db	"Addr.",SINGLE_VERTICAL,"Block",SINGLE_VERTICAL,"Bus",  SINGLE_VERTICAL,"IRQ",  SINGLE_VERTICAL,"Reset",LF,CR,NULL
-g_szCfgFormat:	db	"%s"   ,SINGLE_VERTICAL,"%5-u",  SINGLE_VERTICAL,"%c%2u",SINGLE_VERTICAL," %c%c",SINGLE_VERTICAL,"%5-x",  NULL
+g_szCfgFormat:	db	"%s"   ,SINGLE_VERTICAL,"%5-u", SINGLE_VERTICAL,"%c%2u",SINGLE_VERTICAL," %c%c",SINGLE_VERTICAL,"%5-x",  NULL
 g_szLCHS:		db	"L-CHS",NULL
 g_szPCHS:		db	"P-CHS",NULL
 g_szLBA28:		db	"LBA28",NULL

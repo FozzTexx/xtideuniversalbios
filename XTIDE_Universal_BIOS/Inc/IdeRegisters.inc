@@ -1,86 +1,83 @@
-; File name		:	IdeRegisters.inc
-; Project name	:	IDE BIOS
-; Created date	:	23.3.2010
-; Last update	:	23.3.2010
-; Author		:	Tomi Tilli
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Equates for IDE registers, flags and commands.
 %ifndef IDEREGISTERS_INC
 %define IDEREGISTERS_INC
 
 ; IDE Register offsets from Command Block base port
-REG_IDE_DATA			EQU		0		; Data Register
-REGR_IDE_ERROR			EQU		1		; Error Register
-REGW_IDE_FEAT			EQU		1		; Features Register (ATA1+)
-;REGW_IDE_WRPC			EQU		1		; Write Precompensation Register (obsolete on ATA1+)
-REG_IDE_CNT				EQU		2		; Sector Count Register
-REG_IDE_SECT			EQU		3		; Sector Number Register (LBA 7...0)
-REG_IDE_LBA_LOW			EQU		3		; LBA Low Register
-REG_IDE_LOCYL			EQU		4		; Low Cylinder Register (LBA 15...8)
-REG_IDE_LBA_MID			EQU		4		; LBA Mid Register
-REG_IDE_HICYL			EQU		5		; High Cylinder Register (LBA 23...16)
-REG_IDE_LBA_HIGH		EQU		5		; LBA High Register
-REG_IDE_DRVHD			EQU		6		; Drive and Head Register (LBA 27...24)
-REGR_IDE_ST				EQU		7		; Status Register
-REGW_IDE_CMD			EQU		7		; Command Register
-REG_IDE_HIDATA			EQU		8		; XTIDE Data High Register (actually first Control Block reg)
+DATA_REGISTER					EQU		0
+ERROR_REGISTER_in				EQU		1		; Read only
+FEATURES_REGISTER_out			EQU		1		; Write only, ATA1+
+;WRITE_PRECOMPENSATION_out		EQU		1		; Write only, Obsolete on ATA1+
+SECTOR_COUNT_REGISTER			EQU		2
+SECTOR_NUMBER_REGISTER			EQU		3		; LBA Low Register
+LOW_CYLINDER_REGISTER			EQU		4		; LBA Middle Register
+HIGH_CYLINDER_REGISTER			EQU		5		; LBA High Register
+LBA_LOW_REGISTER				EQU		3		; LBA 7...0, LBA48 31...24
+LBA_MIDDLE_REGISTER				EQU		4		; LBA 15...8, LBA48 39...32
+LBA_HIGH_REGISTER				EQU		5		; LBA 23...16, LBA48 47...40
+DRIVE_AND_HEAD_SELECT_REGISTER	EQU		6		; LBA28 27...24
+STATUS_REGISTER_in				EQU		7		; Read only
+COMMAND_REGISTER_out			EQU		7		; Write only
+XTIDE_DATA_HIGH_REGISTER		EQU		8		; Non-standard (actually first Control Block reg)
 
 ; IDE Register offsets from Control Block base port
 ; (usually Command Block base port + 200h)
-REGR_IDEC_AST			EQU		6		; Alternate Status Register
-REGW_IDEC_CTRL			EQU		6		; Device Control Register
-;REGR_IDEC_ADDR			EQU		7		; Drive Address Register (obsolete on ATA2+)
+ALTERNATE_STATUS_REGISTER_in	EQU		6		; Read only
+DEVICE_CONTROL_REGISTER_out		EQU		6		; Write only
+;DRIVE_ADDRESS_REGISTER			EQU		7		; Obsolete on ATA2+
 
+; Bit mask for XTIDE mod with reversed A0 and A3 address lines
+MASK_A3_AND_A0_ADDRESS_LINES	EQU		((1<<3) | (1<<0))
 
 ; Bit definitions for IDE Error Register
-FLG_IDE_ERR_BBK			EQU		(1<<7)	; Bad Block Detected (reserved on ATA2+, command dependent on ATA4+)
-FLG_IDE_ERR_UNC			EQU		(1<<6)	; Uncorrectable Data Error (command dependent on ATA4+)
-FLG_IDE_ERR_MC			EQU		(1<<5)	; Media Changed (command dependent on ATA4+)
-FLG_IDE_ERR_IDNF		EQU		(1<<4)	; ID Not Found (command dependent on ATA4+)
-FLG_IDE_ERR_MCR			EQU		(1<<3)	; Media Change Request (command dependent on ATA4+)
-FLG_IDE_ERR_ABRT		EQU		(1<<2)	; Command Aborted
-FLG_IDE_ERR_TK0NF		EQU		(1<<1)	; Track 0 Not Found (command dependent on ATA4+)
-FLG_IDE_ERR_AMNF		EQU		(1<<0)	; Address Mark Not Found (command dependent on ATA4+)
+FLG_ERROR_BBK			EQU		(1<<7)	; Bad Block Detected (reserved on ATA2+, command dependent on ATA4+)
+FLG_ERROR_UNC			EQU		(1<<6)	; Uncorrectable Data Error (command dependent on ATA4+)
+FLG_ERROR_MC			EQU		(1<<5)	; Media Changed (command dependent on ATA4+)
+FLG_ERROR_IDNF			EQU		(1<<4)	; ID Not Found (command dependent on ATA4+)
+FLG_ERROR_MCR			EQU		(1<<3)	; Media Change Request (command dependent on ATA4+)
+FLG_ERROR_ABRT			EQU		(1<<2)	; Command Aborted
+FLG_ERROR_TK0NF			EQU		(1<<1)	; Track 0 Not Found (command dependent on ATA4+)
+FLG_ERROR_AMNF			EQU		(1<<0)	; Address Mark Not Found (command dependent on ATA4+)
 
 ; Bit definitions for IDE Drive and Head Select Register
-FLG_IDE_DRVHD_LBA		EQU		(1<<6)	; LBA Addressing enabled (instead of CHS)
-FLG_IDE_DRVHD_DRV		EQU		(1<<4)	; Drive Select (0=Master, 1=Slave)
-MASK_IDE_DRVHD_HEAD		EQU		0Fh		; Head select bits (bits 0...3)
-MASK_IDE_DRVHD_SET		EQU		0A0h	; Bits that must be set to 1 on ATA1 (reserved on ATA2+)
+FLG_DRVNHEAD_LBA		EQU		(1<<6)	; LBA Addressing enabled (instead of CHS)
+FLG_DRVNHEAD_DRV		EQU		(1<<4)	; Drive Select (0=Master, 1=Slave)
+MASK_DRVNHEAD_HEAD		EQU		0Fh		; Head select bits (bits 0...3)
+MASK_DRVNHEAD_SET		EQU		0A0h	; Bits that must be set to 1 on ATA1 (reserved on ATA2+)
 
 ; Bit definitions for IDE Status Register
-FLG_IDE_ST_BSY			EQU		(1<<7)	; Busy (other flags undefined when set)
-FLG_IDE_ST_DRDY			EQU		(1<<6)	; Device Ready
-FLG_IDE_ST_DF			EQU		(1<<5)	; Device Fault (command dependent on ATA4+)
-FLG_IDE_ST_DSC			EQU		(1<<4)	; Device Seek Complete (command dependent on ATA4+)
-FLG_IDE_ST_DRQ			EQU		(1<<3)	; Data Request
-FLG_IDE_ST_CORR			EQU		(1<<2)	; Corrected Data (obsolete on ATA4+)
-FLG_IDE_ST_IDX			EQU		(1<<1)	; Index (vendor specific on ATA2+, obsolete on ATA4+)
-FLG_IDE_ST_ERR			EQU		(1<<0)	; Error
+FLG_STATUS_BSY			EQU		(1<<7)	; Busy (other flags undefined when set)
+FLG_STATUS_DRDY			EQU		(1<<6)	; Device Ready
+FLG_STATUS_DF			EQU		(1<<5)	; Device Fault (command dependent on ATA4+)
+FLG_STATUS_DSC			EQU		(1<<4)	; Device Seek Complete (command dependent on ATA4+)
+FLG_STATUS_DRQ			EQU		(1<<3)	; Data Request
+FLG_STATUS_CORR			EQU		(1<<2)	; Corrected Data (obsolete on ATA4+)
+FLG_STATUS_IDX			EQU		(1<<1)	; Index (vendor specific on ATA2+, obsolete on ATA4+)
+FLG_STATUS_ERR			EQU		(1<<0)	; Error
 
 ; Bit definitions for IDE Device Control Register
 ; Bit 0 must be zero, unlisted bits are reserved.
-FLG_IDE_CTRL_O8H		EQU		(1<<3)	; Drive has more than 8 heads (pre-ATA only, 1 on ATA1, reserved on ATA2+)
-FLG_IDE_CTRL_SRST		EQU		(1<<2)	; Software Reset
-FLG_IDE_CTRL_nIEN		EQU		(1<<1)	; Negated Interrupt Enable (IRQ disabled when set)
-
+FLG_DEVCONTROL_HOB		EQU		(1<<7)	; High Order Byte (ATA6+)
+;FLG_DEVCONTROL_O8H		EQU		(1<<3)	; Drive has more than 8 heads (pre-ATA only, 1 on ATA1, reserved on ATA2+)
+FLG_DEVCONTROL_SRST		EQU		(1<<2)	; Software Reset
+FLG_DEVCONTROL_nIEN		EQU		(1<<1)	; Negated Interrupt Enable (IRQ disabled when set)
 
 ; Commands for IDE Controller
-;HCMD_RECALIBRATE		EQU		10h		; Recalibrate
-HCMD_READ_SECT			EQU		20h		; Read Sectors (with retries)
-HCMD_WRITE_SECT			EQU		30h		; Write Sectors (with retries)
-HCMD_VERIFY_SECT		EQU		40h		; Read Verify Sectors (with retries)
-;HCMD_FORMAT			EQU		50h		; Format track
-HCMD_SEEK				EQU		70h		; Seek
-;HCMD_DIAGNOSTIC		EQU		90h		; Execute Device Diagnostic
-HCMD_INIT_DEV			EQU		91h		; Initialize Device Parameters
-HCMD_READ_MUL			EQU		0C4h	; Read Multiple (=block)
-HCMD_WRITE_MUL			EQU		0C5h	; Write Multiple (=block)
-HCMD_SET_MUL			EQU		0C6h	; Set Multiple Mode (=block size)
-HCMD_ID_DEV				EQU		0ECh	; Identify Device
-HCMD_SET_FEAT			EQU		0EFh	; Set Features
-
-; Set Features subcommands
-HFEAT_SET_XFER_MODE		EQU		03h		; Set transfer mode based on value in Sector Count register
+COMMAND_READ_SECTORS					EQU		20h
+COMMAND_READ_SECTORS_EXT				EQU		24h		; LBA48
+COMMAND_WRITE_SECTORS					EQU		30h
+COMMAND_WRITE_SECTORS_EXT				EQU		34h		; LBA48
+COMMAND_VERIFY_SECTORS					EQU		40h
+COMMAND_VERIFY_SECTORS_EXT				EQU		42h		; LBA48
+COMMAND_SEEK							EQU		70h
+COMMAND_INITIALIZE_DEVICE_PARAMETERS	EQU		91h
+COMMAND_SET_MULTIPLE_MODE				EQU		0C6h	; Block mode
+COMMAND_READ_MULTIPLE					EQU		0C4h	; Block mode
+COMMAND_READ_MULTIPLE_EXT				EQU		29h		; LBA48, Block mode
+COMMAND_WRITE_MULTIPLE					EQU		0C5h	; Block mode
+COMMAND_WRITE_MULTIPLE_EXT				EQU		39h		; LBA48, Block mode
+COMMAND_IDENTIFY_DEVICE					EQU		0ECh
+COMMAND_SET_FEATURES					EQU		0EFh
 
 
 %endif ; IDEREGISTERS_INC

@@ -5,8 +5,59 @@
 SECTION .text
 
 ;--------------------------------------------------------------------
-; Returns L-CHS values from DPT.
-;
+; AccessDPT_GetDriveSelectByteToAL
+;	Parameters:
+;		DS:DI:	Ptr to Disk Parameter Table
+;	Returns:
+;		AL:		Drive Select Byte
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+AccessDPT_GetDriveSelectByteToAL:
+	mov		al, [di+DPT.wFlags]
+	and		al, FLG_DRVNHEAD_LBA | FLG_DRVNHEAD_DRV
+	or		al, MASK_DRVNHEAD_SET	; Bits set to 1 for old drives
+	ret
+
+
+;--------------------------------------------------------------------
+; AccessDPT_GetDeviceControlByteToAL
+;	Parameters:
+;		DS:DI:	Ptr to Disk Parameter Table
+;	Returns:
+;		AL:		Device Control Byte
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+AccessDPT_GetDeviceControlByteToAL:
+	xor		al, al
+	test	BYTE [di+DPT.wFlags], FLG_DPT_ENABLE_IRQ
+	jnz		SHORT .EnableDeviceIrq
+	or		al, FLG_DEVCONTROL_nIEN	; Disable IRQ
+.EnableDeviceIrq:
+	ret
+
+
+;--------------------------------------------------------------------
+; AccessDPT_GetAddressingModeForWordLookToBX
+;	Parameters:
+;		DS:DI:	Ptr to Disk Parameter Table
+;	Returns:
+;		BX:		Addressing Mode (L-CHS, P-CHS, LBA28, LBA48) shifted for WORD lookup
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+AccessDPT_GetAddressingModeForWordLookToBX:
+	mov		bl, [di+DPT.wFlags]
+	and		bx, BYTE MASK_DPT_ADDRESSING_MODE
+	eSHR_IM	bx, ADDRESSING_MODE_FIELD_POSITION-1
+	ret
+
+
+;--------------------------------------------------------------------
 ; AccessDPT_GetLCHSfromPCHS
 ;	Parameters:
 ;		DS:DI:	Ptr to Disk Parameter Table
@@ -20,18 +71,17 @@ SECTION .text
 ALIGN JUMP_ALIGN
 AccessDPT_GetLCHSfromPCHS:
 	xchg	ax, cx
-	mov		cl, [di+DPT.bShLtoP]		; Load shift count
-	mov		bx, [di+DPT.wPCyls]			; Load P-CHS cylinders
-	shr		bx, cl						; Shift to L-CHS cylinders
+	mov		cl, [di+DPT.wFlags]
+	and		cl, MASK_DPT_CHS_SHIFT_COUNT	; Load shift count
+	mov		bx, [di+DPT.wPchsCylinders]		; Load P-CHS cylinders
+	shr		bx, cl							; Shift to L-CHS cylinders
 	xchg	cx, ax
-	mov		dx, [di+DPT.wLHeads]		; Load L-CHS heads
-	eMOVZX	ax, BYTE [di+DPT.bPSect]	; Load Sectors per track
+	eMOVZX	dx, BYTE [di+DPT.bLchsHeads]	; Load L-CHS heads
+	eMOVZX	ax, BYTE [di+DPT.bPchsSectors]	; Load Sectors per track
 	ret
 
 
 ;--------------------------------------------------------------------
-; Tests IDEVARS flags for master or slave drive.
-;
 ; AccessDPT_TestIdeVarsFlagsForMasterOrSlaveDrive
 ;	Parameters:
 ;		AX:		Bitmask to test DRVPARAMS.wFlags
@@ -62,12 +112,10 @@ AccessDPT_TestIdeVarsFlagsForMasterOrSlaveDrive:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AccessDPT_GetPointerToDRVPARAMStoCSBX:
-	eMOVZX	bx, [di+DPT.bIdeOff]		; CS:BX points to IDEVARS
-	test	BYTE [di+DPT.bDrvSel], FLG_IDE_DRVHD_DRV
-	jnz		SHORT .ReturnPointerToSlaveDRVPARAMS
-	add		bx, BYTE IDEVARS.drvParamsMaster
-	ret
-ALIGN JUMP_ALIGN
-.ReturnPointerToSlaveDRVPARAMS:
-	add		bx, BYTE IDEVARS.drvParamsSlave
+	eMOVZX	bx, [di+DPT.bIdevarsOffset]			; CS:BX points to IDEVARS
+	add		bx, BYTE IDEVARS.drvParamsMaster	; CS:BX points to Master Drive DRVPARAMS
+	test	BYTE [di+DPT.wFlags], FLG_DPT_SLAVE
+	jz		SHORT .ReturnPointerToDRVPARAMS
+	add		bx, BYTE DRVPARAMS_size				; CS:BX points to Slave Drive DRVPARAMS
+.ReturnPointerToDRVPARAMS:
 	ret

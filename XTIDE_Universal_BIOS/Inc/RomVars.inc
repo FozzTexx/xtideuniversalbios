@@ -40,17 +40,19 @@ DEFAULT_TEXT_MODE		EQU	4
 struc IDEVARS
 	.wPort				resb	2	; IDE Base Port for Command Block (usual) Registers
 	.wPortCtrl			resb	2	; IDE Base Port for Control Block Registers
-	.bBusType			resb	1	; Bus type
+	.bDevice			resb	1	; Device type
 	.bIRQ				resb	1	; Interrupt Request Number
 	.drvParamsMaster	resb	DRVPARAMS_size
 	.drvParamsSlave		resb	DRVPARAMS_size
 endstruc
 
-; Bus types for IDEVARS.bBusType
-BUS_TYPE_8_DUAL			EQU	(0<<1)	; XTIDE transfers with two 8-bit data ports
-BUS_TYPE_16				EQU	(1<<1)	; Normal 16-bit AT-IDE transfers
-BUS_TYPE_32				EQU	(2<<1)	; 32-bit VLB and PCI transfers
-BUS_TYPE_8_SINGLE		EQU	(3<<1)	; 8-bit transfers with single 8-bit data port
+; Device types for IDEVARS.bDeviceType
+DEVICE_8BIT_DUAL_PORT_XTIDE				EQU	(0<<1)
+DEVICE_XTIDE_WITH_REVERSED_A3_AND_A0	EQU	(1<<1)
+DEVICE_8BIT_SINGLE_PORT					EQU	(2<<1)
+DEVICE_16BIT_ATA						EQU	(3<<1)
+DEVICE_32BIT_ATA						EQU	(4<<1)
+DEVICE_SERIAL_PORT						EQU	(5<<1)
 
 
 ; Master/Slave drive specific parameters

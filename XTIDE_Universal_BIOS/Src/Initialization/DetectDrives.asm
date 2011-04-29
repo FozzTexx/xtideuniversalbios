@@ -1,4 +1,4 @@
-; Project name	:	IDE BIOS
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Functions for detecting drive for the BIOS.
 
 ; Section containing code
@@ -42,11 +42,11 @@ DetectDrives_FromAllIDEControllers:
 DetectDrives_WithIDEVARS:
 	push	cx
 	mov		ax, g_szMaster
-	mov		bh, MASK_IDE_DRVHD_SET								; Select Master drive
+	mov		bh, MASK_DRVNHEAD_SET								; Select Master drive
 	call	StartDetectionWithDriveSelectByteInBHandStringInAX	; Detect and create DPT + BOOTNFO
 
 	mov		ax, g_szSlave
-	mov		bh, MASK_IDE_DRVHD_SET | FLG_IDE_DRVHD_DRV
+	mov		bh, MASK_DRVNHEAD_SET | FLG_DRVNHEAD_DRV
 	call	StartDetectionWithDriveSelectByteInBHandStringInAX
 	pop		cx
 	ret
@@ -77,17 +77,20 @@ StartDetectionWithDriveSelectByteInBHandStringInAX:
 ;		DS:		RAMVARS segment
 ;		ES:		Zero (BDA segment)
 ;	Returns:
-;		ES:SI	Ptr to ATA information (read with IDENTIFY DEVICE command)
 ;		CF:		Cleared if ATA-information read successfully
 ;				Set if any error
 ;	Corrupts registers:
-;		AX, BL, CX, DX, DI
+;		AX, BL, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 .ReadAtaInfoFromHardDisk:
-	mov		bl, [cs:bp+IDEVARS.bBusType]; Load BUS type
-	mov		dx, [cs:bp+IDEVARS.wPort]	; Load IDE Base Port address
-	mov		di, BOOTVARS.rgbAtaInfo		; ES:DI now points to ATA info location
-	call	AH25h_GetDriveInfo
+	mov		si, BOOTVARS.rgbAtaInfo		; ES:SI now points to ATA info location
+	push	es
+	push	si
+	push	bx
+	call	Device_IdentifyToBufferInESSIwithDriveSelectByteInBH
+	pop		bx
+	pop		si
+	pop		es
 	jnc		SHORT CreateBiosTablesForHardDisk
 	; Fall to .ReadAtapiInfoFromDrive
 
@@ -102,7 +105,7 @@ StartDetectionWithDriveSelectByteInBHandStringInAX:
 ;	Parameters:
 ;		BH:		Drive Select byte for Drive and Head Register
 ;		CS:BP:	Ptr to IDEVARS for the drive
-;		ES:DI	Ptr to ATA information for the drive
+;		ES:SI	Ptr to ATA information for the drive
 ;		DS:		RAMVARS segment
 ;		ES:		BDA/Bootnfo segment
 ;	Returns:
@@ -111,7 +114,6 @@ StartDetectionWithDriveSelectByteInBHandStringInAX:
 ;		AX, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 CreateBiosTablesForHardDisk:
-	mov		si, di					; ES:SI now points to ATA information
 	call	CreateDPT_FromAtaInformation
 	jc		SHORT .InvalidAtaInfo
 	call	BootInfo_CreateForHardDisk

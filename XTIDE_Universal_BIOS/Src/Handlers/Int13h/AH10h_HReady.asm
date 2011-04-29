@@ -11,13 +11,17 @@ SECTION .text
 ;	Parameters:
 ;		DL:		Translated Drive number
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
-;		SS:BP:	Ptr to INTPACK
-;	Returns with INTPACK in SS:BP:
+;		SS:BP:	Ptr to IDEREGS_AND_INTPACK
+;	Returns with INTPACK:
 ;		AH:		Int 13h return status
 ;		CF:		0 if succesfull, 1 if error
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH10h_HandlerForCheckDriveReady:
-	call	HStatus_WaitRdyDefTime
-	xor		ah, ah
+%ifdef USE_186
+	push	Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
+	jmp		Device_SelectDrive
+%else
+	call	Device_SelectDrive
 	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
+%endif

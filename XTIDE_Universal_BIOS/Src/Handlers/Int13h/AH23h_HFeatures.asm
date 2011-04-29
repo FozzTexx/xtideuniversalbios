@@ -13,20 +13,22 @@ SECTION .text
 ;		AL, CX:	Same as in INTPACK
 ;		DL:		Translated Drive number
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
-;		SS:BP:	Ptr to INTPACK
-;	Parameters on INTPACK in SS:BP:
+;		SS:BP:	Ptr to IDEPACK
+;	Parameters on INTPACK:
 ;		AL:		Feature Number (parameter to Features Register = subcommand)
-;	(Parameter registers are undocumented, there are specific for this BIOS):
-;		BH:		Parameter to Sector Count Register (subcommand specific)
-;		BL:		Parameter to Sector Number Register (subcommand specific)
-;		CL:		Parameter to Low Cylinder Register (subcommand specific)
-;		CH:		Parameter to High Cylinder Register (subcommand specific)
-;	Returns with INTPACK in SS:BP:
+;	(Parameter registers are undocumented, these are specific for this BIOS):
+;		BL:		Parameter to Sector Count Register (subcommand specific)
+;		BH:		Parameter to LBA Low / Sector Number Register (subcommand specific)
+;		CL:		Parameter to LBA Middle / Cylinder Low Register (subcommand specific)
+;		CH:		Parameter to LBA High / Cylinder High Register (subcommand specific)
+;	Returns with INTPACK:
 ;		AH:		Int 13h return status
 ;		CF:		0 if succesfull, 1 if error
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH23h_HandlerForSetControllerFeatures:
+	xchg	si, ax		; SI = Feature Number
+	mov		dx, [bp+IDEPACK.intpack+INTPACK.bx]
 %ifndef USE_186
 	call	AH23h_SetControllerFeatures
 	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
@@ -39,45 +41,21 @@ AH23h_HandlerForSetControllerFeatures:
 ;--------------------------------------------------------------------
 ; AH23h_SetControllerFeatures
 ;	Parameters:
-;		AL:		Feature Number (parameter to Features Register = subcommand)
-;		BH:		Parameter to Sector Count Register (subcommand specific)
-;		BL:		Parameter to Sector Number Register (subcommand specific)
-;		CL:		Parameter to Low Cylinder Register (subcommand specific)
-;		CH:		Parameter to High Cylinder Register (subcommand specific)
+;		DL:		Parameter to Sector Count Register (subcommand specific)
+;		DH:		Parameter to LBA Low / Sector Number Register (subcommand specific)
+;		CL:		Parameter to LBA Middle / Cylinder Low Register (subcommand specific)
+;		CH:		Parameter to LBA High / Cylinder High Register (subcommand specific)
+;		SI:		Feature Number (parameter to Features Register = subcommand)
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
+;		SS:BP:	Ptr to IDEPACK
 ;	Returns:
 ;		AH:		Int 13h return status
 ;		CF:		0 if succesfull, 1 if error
 ;	Corrupts registers:
-;		AX, BX, CX, DX, SI
+;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH23h_SetControllerFeatures:
-	; Backup AL and BH to SI
-	mov		ah, bh
-	xchg	si, ax
-
-	; Select Master or Slave and wait until ready
-	call	HDrvSel_SelectDriveAndDisableIRQ
-	jc		SHORT .ReturnWithErrorCodeInAH
-
-	; Output Feature Number
-	mov		ax, si						; Feature number to AL
-	mov		dx, [RAMVARS.wIdeBase]		; Load base port address
-	inc		dx							; REGW_IDE_FEAT
-	out		dx, al
-
-	; Output parameters to Sector Number Register and Cylinder Registers
-	xor		bh, bh						; Zero head number
-	dec		dx							; Back to base port address
-	call	HCommand_OutputTranslatedLCHSaddress
-
-	; Output parameter to Sector Count Register and command
-	xchg	ax, si						; Sector Count Reg param to AH
-	mov		al, ah						; Sector Count Reg param to AL
-	mov		ah, HCMD_SET_FEAT			; Load Set Features command to AH
-	call	HCommand_OutputSectorCountAndCommand
-
-	jmp		HStatus_WaitBsyDefTime		; Wait until drive ready
-.ReturnWithErrorCodeInAH:
-	ret
+	mov		al, COMMAND_SET_FEATURES
+	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_BSY, FLG_STATUS_BSY)
+	jmp		Idepack_StoreNonExtParametersAndIssueCommandFromAL

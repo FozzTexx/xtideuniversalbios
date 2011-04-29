@@ -11,8 +11,8 @@ SECTION .text
 ;	Parameters:
 ;		DL:		Translated Drive number
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
-;		SS:BP:	Ptr to INTPACK
-;	Returns with INTPACK in SS:BP:
+;		SS:BP:	Ptr to IDEPACK
+;	Returns with INTPACK:
 ;		AH:		Int 13h return status
 ;		CF:		0 if succesfull, 1 if error
 ;--------------------------------------------------------------------
@@ -33,6 +33,7 @@ AH9h_HandlerForInitializeDriveParameters:
 ; AH9h_InitializeDriveForUse
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
+;		SS:BP:	Ptr to IDEPACK
 ;	Returns:
 ;		AH:		Int 13h return status
 ;		CF:		0 if succesfull, 1 if error
@@ -44,28 +45,29 @@ AH9h_InitializeDriveForUse:
 	push	cx
 
 	; Try to select drive and wait until ready
-	or		BYTE [di+DPT.bReset], MASK_RESET_ALL		; Everything uninitialized
-	call	HDrvSel_SelectDriveAndDisableIRQ
+	or		WORD [di+DPT.wFlags], MASK_DPT_RESET		; Everything uninitialized
+	call	AccessDPT_GetDriveSelectByteToAL
+	mov		[bp+IDEPACK.bDrvAndHead], al
+	call	Device_SelectDrive
 	jc		SHORT .ReturnNotSuccessfull
-	and		BYTE [di+DPT.bReset], ~FLG_RESET_nDRDY		; Clear since success
+	and		WORD [di+DPT.wFlags], ~FLG_DPT_RESET_nDRDY	; Clear since success
 
 	; Initialize CHS parameters if LBA is not used
-	call	AH9h_InitializeDeviceParameters
+	call	InitializeDeviceParameters
 	jc		SHORT .RecalibrateDrive
-	and		BYTE [di+DPT.bReset], ~FLG_RESET_nINITPRMS
+	and		WORD [di+DPT.wFlags], ~FLG_DPT_RESET_nINITPRMS
 
 	; Recalibrate drive by seeking to cylinder 0
-ALIGN JUMP_ALIGN
 .RecalibrateDrive:
 	call	AH11h_RecalibrateDrive
 	jc		SHORT .InitializeBlockMode
-	and		BYTE [di+DPT.bReset], ~FLG_RESET_nRECALIBRATE
+	and		WORD [di+DPT.wFlags], ~FLG_DPT_RESET_nRECALIBRATE
 
 	; Initialize block mode transfers
 .InitializeBlockMode:
-	call	AH9h_InitializeBlockMode
+	call	InitializeBlockMode
 	jc		SHORT .ReturnNotSuccessfull
-	and		BYTE [di+DPT.bReset], ~FLG_RESET_nSETBLOCK	; Keeps CF clear
+	and		WORD [di+DPT.wFlags], ~FLG_DPT_RESET_nSETBLOCK	; Keeps CF clear
 
 .ReturnNotSuccessfull:
 	pop		cx
@@ -73,47 +75,10 @@ ALIGN JUMP_ALIGN
 
 
 ;--------------------------------------------------------------------
-; Sends Initialize Device Parameters command to IDE Hard Disk.
-; Initialization is used to initialize logical CHS parameters. Drives
-; may not support all CHS values.
-; This command is only supported by drives that supports CHS addressing.
-;
-; AH9h_InitializeDeviceParameters
+; InitializeDeviceParameters
 ;	Parameters:
-;		DS:DI:	Ptr to DPT
-;	Returns:
-;		AH:		BIOS Error code
-;		CF:		Cleared if succesfull
-;				Set if any error
-;	Corrupts registers:
-;		AL, BX, CX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-AH9h_InitializeDeviceParameters:
-	; No need to initialize CHS parameters if LBA mode enabled
-	test	BYTE [di+DPT.bDrvSel], FLG_IDE_DRVHD_LBA	; Clears CF
-	jnz		SHORT .Return
-
-	push	dx
-	mov		bh, [di+DPT.bPHeads]
-	dec		bh						; Max head number
-	mov		dx, [RAMVARS.wIdeBase]
-	call	HCommand_OutputTranslatedLCHSaddress
-	mov		ah, HCMD_INIT_DEV
-	mov		al, [di+DPT.bPSect]		; Sectors per track
-	call	HCommand_OutputSectorCountAndCommand
-	call	HStatus_WaitBsyDefTime	; Wait until drive ready (DRDY won't be set!)
-	pop		dx
-.Return:
-	ret
-
-
-;--------------------------------------------------------------------
-; Initializes block mode transfers.
-;
-; AH9h_InitializeBlockMode
-;	Parameters:
-;		DS:DI:	Ptr to DPT
+;		DS:DI:	Ptr to DPT (in RAMVARS segment)
+;		SS:BP:	Ptr to IDEPACK
 ;	Returns:
 ;		AH:		BIOS Error code
 ;		CF:		Cleared if succesfull
@@ -122,13 +87,37 @@ AH9h_InitializeDeviceParameters:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-AH9h_InitializeBlockMode:
-	mov		ax, FLG_DRVPARAMS_BLOCKMODE
-	call	AccessDPT_TestIdeVarsFlagsForMasterOrSlaveDrive
-	jz		SHORT .Return				; Block mode disabled (CF cleared)
-	eMOVZX	ax, BYTE [di+DPT.bMaxBlock]	; Load max block size, zero AH
-	test	al, al						; Block mode supported? (clears CF)
-	jz		SHORT .Return				;  If not, return
+InitializeDeviceParameters:
+	; No need to initialize CHS parameters if LBA mode enabled
+	test	BYTE [di+DPT.wFlags], FLG_DRVNHEAD_LBA	; Clear CF
+	jnz		SHORT ReturnSuccessSinceInitializationNotNeeded
+
+	; Initialize Locigal Sectors per Track and Max Head number
+	mov		ah, [di+DPT.bPchsHeads]
+	dec		ah							; Max Head number
+	mov		dl, [di+DPT.bPchsSectors]	; Sectors per Track
+	mov		al, COMMAND_INITIALIZE_DEVICE_PARAMETERS
+	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_BSY, FLG_STATUS_BSY)
+	jmp		Idepack_StoreNonExtParametersAndIssueCommandFromAL
+
+
+;--------------------------------------------------------------------
+; InitializeBlockMode
+;	Parameters:
+;		DS:DI:	Ptr to DPT (in RAMVARS segment)
+;	Returns:
+;		AH:		BIOS Error code
+;		CF:		Cleared if succesfull
+;				Set if any error
+;	Corrupts registers:
+;		AL, BX, CX, DX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+InitializeBlockMode:
+	test	WORD [di+DPT.wFlags], FLG_DPT_BLOCK_MODE_SUPPORTED	; Clear CF
+	jz		SHORT ReturnSuccessSinceInitializationNotNeeded
+
+	mov		al, [di+DPT_ATA.bMaxBlock]	; Load max block size, zero AH
 	jmp		AH24h_SetBlockSize
-.Return:
+ReturnSuccessSinceInitializationNotNeeded:
 	ret

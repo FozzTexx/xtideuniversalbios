@@ -5,9 +5,9 @@
 SECTION .text
 
 ;--------------------------------------------------------------------
-; HIRQ_WaitForIRQ
+; IdeIrq_WaitForIRQ
 ;	Parameters:
-;		DS:BX:	Ptr to DPT
+;		DS:DI:	Ptr to DPT (in RAMVARS segment)
 ;	Returns:
 ;		CF:		Set if wait done by operating system
 ;				Cleared if BIOS must perform task flag polling
@@ -15,10 +15,7 @@ SECTION .text
 ;		AX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-HIRQ_WaitForIRQ:
-	test	BYTE [bx+DPT.bDrvCtrl], FLG_IDE_CTRL_nIEN	; Clears CF
-	jz		SHORT .NotifyOperatingSystemAboutWaitingForIRQ
-	ret		; Go to poll status register
+IdeIrq_WaitForIRQ:
 
 ;--------------------------------------------------------------------
 ; .NotifyOperatingSystemAboutWaitingForIRQ
@@ -30,7 +27,6 @@ HIRQ_WaitForIRQ:
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 .NotifyOperatingSystemAboutWaitingForIRQ:
 	push	ds
 
@@ -53,18 +49,17 @@ ALIGN JUMP_ALIGN
 
 
 ;--------------------------------------------------------------------
-; Clears task (interrupt) flag from BIOS Data Area.
-;
-; HIRQ_ClearTaskFlag
+; IdeIrq_SetInServiceDPTandClearTaskFlag
 ;	Parameters:
-;		Nothing
+;		DS:DI:	Ptr to DPT (in RAMVARS segment)
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-HIRQ_ClearTaskFlag:
+IdeIrq_SetInServiceDPTandClearTaskFlag:
+	mov		[RAMVARS.pInServiceDPT], di
 	push	ds
 	LOAD_BDA_SEGMENT_TO	ds, ax, !		; Also zero AX
 	mov		[BDA.bHDTaskFlg], al
@@ -75,8 +70,8 @@ HIRQ_ClearTaskFlag:
 ;--------------------------------------------------------------------
 ; IDE Interrupt Service Routines.
 ;
-; HIRQ_InterruptServiceRoutineForIrqs2to7
-; HIRQ_InterruptServiceRoutineForIrqs8to15
+; IdeIrq_InterruptServiceRoutineForIrqs2to7
+; IdeIrq_InterruptServiceRoutineForIrqs8to15
 ;	Parameters:
 ;		Nothing
 ;	Returns:
@@ -85,18 +80,20 @@ HIRQ_ClearTaskFlag:
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-HIRQ_InterruptServiceRoutineForIrqs2to7:
+IdeIrq_InterruptServiceRoutineForIrqs2to7:
+	push	di
 	push	ax
-	call	AcknowledgeIdeInterruptAndStoreStatusAndErrorRegistersToBDA
+	call	AcknowledgeIdeInterruptAndSetTaskFlag
 
 	mov		al, CMD_END_OF_INTERRUPT
 	jmp		SHORT AcknowledgeMasterInterruptController
 
 
 ALIGN JUMP_ALIGN
-HIRQ_InterruptServiceRoutineForIrqs8to15:
+IdeIrq_InterruptServiceRoutineForIrqs8to15:
+	push	di
 	push	ax
-	call	AcknowledgeIdeInterruptAndStoreStatusAndErrorRegistersToBDA
+	call	AcknowledgeIdeInterruptAndSetTaskFlag
 
 	mov		al, CMD_END_OF_INTERRUPT	; Load EOI command to AL
 	out		WPORT_8259SL_COMMAND, al	; Acknowledge Slave 8259
@@ -107,15 +104,13 @@ AcknowledgeMasterInterruptController:
 	mov		ax, OS_HOOK_DEVICE_POST<<8	; Interrupt ready, device 0 (HD)
 	int		BIOS_SYSTEM_INTERRUPT_15h
 
-	pop		ax							; Restore AX
+	pop		ax
+	pop		di
 	iret
 
+
 ;--------------------------------------------------------------------
-; Acknowledges IDE interrupt by reading status register and
-; stores Status and Error Registers to BDA. Task flag in BDA will
-; also be set.
-;
-; AcknowledgeIdeInterruptAndStoreStatusAndErrorRegistersToBDA
+; AcknowledgeIdeInterruptAndSetTaskFlag
 ;	Parameters:
 ;		Nothing
 ;	Returns:
@@ -124,18 +119,22 @@ AcknowledgeMasterInterruptController:
 ;		AX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-AcknowledgeIdeInterruptAndStoreStatusAndErrorRegistersToBDA:
+AcknowledgeIdeInterruptAndSetTaskFlag:
 	push	ds
-	push	di
+	push	dx
+	push	bx
 
 	; Reading Status Register acknowledges IDE interrupt
 	call	RamVars_GetSegmentToDS
-	call	HError_GetStatusAndErrorRegistersToAXandStoreThemToBDA
+	mov		di, [RAMVARS.pInServiceDPT]		; DS:DI now points to DPT
+	mov		dl, STATUS_REGISTER_in
+	call	Device_InputToALfromIdeRegisterInDL
 
 	; Set Task Flag
 	LOAD_BDA_SEGMENT_TO	ds, ax
 	mov		BYTE [BDA.bHDTaskFlg], 0FFh		; Set task flag
 
-	pop		di
+	pop		bx
+	pop		dx
 	pop		ds
 	ret

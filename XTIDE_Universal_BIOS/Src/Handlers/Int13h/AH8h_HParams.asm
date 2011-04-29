@@ -11,8 +11,8 @@ SECTION .text
 ;	Parameters:
 ;		DL:		Translated Drive number
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
-;		SS:BP:	Ptr to INTPACK
-;	Returns with INTPACK in SS:BP:
+;		SS:BP:	Ptr to IDEPACK
+;	Returns with INTPACK:
 ;		CH:		Maximum cylinder number, bits 7...0
 ;		CL:		Bits 7...6: Cylinder number bits 9...8
 ;				Bits 5...0:	Maximum sector number (1...63)
@@ -33,8 +33,8 @@ AH8h_HandlerForReadDiskDriveParameters:
 	jc		SHORT .ReturnErrorFromPreviousInt13hHandler
 	call	RamVars_GetCountOfKnownDrivesToDL
 .ReturnAfterStoringValuesToIntpack:
-	mov		[bp+INTPACK.cx], cx
-	mov		[bp+INTPACK.dx], dx
+	mov		[bp+IDEPACK.intpack+INTPACK.cx], cx
+	mov		[bp+IDEPACK.intpack+INTPACK.dx], dx
 	xor		ah, ah
 .ReturnErrorFromPreviousInt13hHandler:
 	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH

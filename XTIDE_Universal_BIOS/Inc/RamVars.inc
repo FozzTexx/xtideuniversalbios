@@ -4,7 +4,7 @@
 %define RAMVARS_INC
 
 ; Segment when RAMVARS is stored to top of interrupt vectors.
-SEGMENT_RAMVARS_TOP_OF_INTERRUPT_VECTORS		EQU		30h
+LITE_MODE_RAMVARS_SEGMENT	EQU		30h
 
 
 ; Variables for translating drive numbers.
@@ -20,8 +20,9 @@ endstruc
 ; at the top of interrupt vectors.
 struc RAMVARS
 	.fpOldI13h			resb	4	; Far pointer to old INT 13h handler
-	.wIdeBase			resb	2	; Base port address for currently handled controller
 	.wTimeoutCounter	resb	2
+	.pInServiceDPT		resb	2	; Ptr to DPT for drive waiting for interrupt
+	.wSignature			resb	2	; Sign for finding stolen 1 kiB
 
 	.wDrvCntAndFirst:
 	.bDrvCnt			resb	1	; Number of drives handled by this BIOS
@@ -31,13 +32,39 @@ struc RAMVARS
 	.xlateVars		resb	XLATEVARS_size
 endstruc
 
-; Full mode RAM variables.
-struc FULLRAMVARS
-	.ramVars			resb	RAMVARS_size
-	.wSign				resb	2		; FULLRAMVARS signature for finding segment
+RAMVARS_SIGNATURE		EQU	"Xu"	; RAMVARS signature for .wSignature
+
+
+struc IDEPACK
+	.bDrvAndHead			resb	1	; LBA28 27...24
+	.bFeatures				resb	1
+
+	.wSectorCountAndLbaLow:
+	.bSectorCount			resb	1
+	.bSectorNumber:
+	.bLbaLow				resb	1	; LBA 7...0
+
+	.wCylinder:
+	.wLbaMiddleAndHigh:
+	.bLbaMiddle				resb	1	; LBA 15...8
+	.bLbaHigh				resb	1	; LBA 23...16
+
+	.bCommand				resb	1
+	.bDeviceControl			resb	1	; Offset 7 shared with PIOVARS
+
+	; Parameters for 48-bit LBA
+	.wSectorCountHighAndLbaLowExt:
+	.bSectorCountHighExt	resb	1	; LBA48 Sector Count 15...8
+	.bLbaLowExt				resb	1	; LBA48 31...24
+
+	.wLbaMiddleAndHighExt:
+	.bLbaMiddleExt			resb	1	; LBA48 39...32
+	.bLbaHighExt			resb	1	; LBA48 47...40
+
+	.intpack				resb	INTPACK_size
 endstruc
 
-W_SIGN_FULLRAMVARS		EQU	"fR"		; FULLRAMVARS signature
+EXTRA_WORDS_TO_RESERVE_FOR_INTPACK	EQU	((IDEPACK_size - INTPACK_size) / 2)
 
 
 %endif ; RAMVARS_INC

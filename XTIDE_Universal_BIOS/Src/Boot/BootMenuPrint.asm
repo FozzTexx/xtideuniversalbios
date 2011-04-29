@@ -110,7 +110,7 @@ BootMenuPrint_FloppyMenuitem:
 ALIGN JUMP_ALIGN
 BootMenuPrint_HardDiskMenuitem:
 	call	PrintDriveNumberAfterTranslationFromDL
-	call	FindDPT_ForDriveNumber		; DS:DI to point DPT
+	call	RamVars_IsDriveHandledByThisBIOS
 	jnc		SHORT .HardDiskMenuitemForForeignDrive
 	; Fall to .HardDiskMenuitemForOurDrive
 
@@ -279,8 +279,9 @@ ALIGN WORD_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenuPrint_HardDiskMenuitemInformation:
-	call	FindDPT_ForDriveNumber		; DS:DI to point DPT
+	call	RamVars_IsDriveHandledByThisBIOS
 	jnc		SHORT .HardDiskMenuitemInfoForForeignDrive
+	call	FindDPT_ForDriveNumber		; DS:DI to point DPT
 	; Fall to .HardDiskMenuitemInfoForOurDrive
 
 ;--------------------------------------------------------------------
@@ -302,11 +303,12 @@ ALIGN JUMP_ALIGN
 	ePUSH_T	ax, g_szCapacity
 
 	; Get and push L-CHS size
-	call	HCapacity_GetSectorCountFromOurAH08h
+	mov		[RAMVARS.wTimeoutCounter], dl		; Store drive number
+	call	AH15h_GetSectorCountToDXAX
 	call	ConvertSectorCountInBXDXAXtoSizeAndPushForFormat
 
 	; Get and push total LBA size
-	mov		dl, [di+DPT.bDrvNum]
+	mov		dl, [RAMVARS.wTimeoutCounter]		; Restore drive number
 	call	BootInfo_GetTotalSectorCount
 	call	ConvertSectorCountInBXDXAXtoSizeAndPushForFormat
 
@@ -331,7 +333,7 @@ ALIGN JUMP_ALIGN
 	ePUSH_T	ax, g_szCapacity
 
 	call	DriveXlate_ToOrBack
-	call	HCapacity_GetSectorCountFromForeignAH08h
+	call	AH15h_GetSectorCountFromForeignDriveToDXAX
 	call	ConvertSectorCountInBXDXAXtoSizeAndPushForFormat
 
 	mov		si, g_szSizeSingle

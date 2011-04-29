@@ -5,9 +5,9 @@
 SECTION .text
 
 ;--------------------------------------------------------------------
-; HTimer_InitializeTimeoutWithTicksInCL
+; HTimer_InitializeTimeoutWithTicksInCX
 ;	Parameters:
-;		CL:		Timeout value in system timer ticks
+;		CX:		Timeout value in system timer ticks
 ;		DS:		Segment to RAMVARS
 ;	Returns:
 ;		Nothing
@@ -15,8 +15,7 @@ SECTION .text
 ;		CX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-HTimer_InitializeTimeoutWithTicksInCL:
-	xor		ch, ch							; Timeout ticks now in CX
+HTimer_InitializeTimeoutWithTicksInCX:
 	mov		[RAMVARS.wTimeoutCounter], cx	; Store timeout ticks
 	call	ReadTimeFromBdaToCX
 	add		[RAMVARS.wTimeoutCounter], cx	; End time for timeout
@@ -54,7 +53,7 @@ HTimer_SetCFifTimeout:
 ;--------------------------------------------------------------------
 HTimer_DelayMicrosecondsFromAX:
 %ifndef USE_AT
-	mov		ax, 1
+	mov		ax, 2
 	; Fall to Delay_TimerTicksFromAX
 %else
 	push	dx

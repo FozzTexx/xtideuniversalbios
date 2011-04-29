@@ -1,8 +1,4 @@
-; File name		:	Int13h.inc
-; Project name	:	IDE BIOS
-; Created date	:	23.3.2010
-; Last update	:	29.7.2010
-; Author		:	Tomi Tilli
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	Equates used in INT 13h functions.
 %ifndef INT13H_INC
 %define INT13H_INC
@@ -39,16 +35,6 @@ RET_HD_STATUSERR		EQU		0E0h	; Status error without error
 RET_HD_SENSEFAIL		EQU		0FFh	; Sense operation failed
 
 
-; Timeout values for IDE controller timeout
-; 255 is the maximum value. Zero means immediate timeout.
-B_TIMEOUT_BSY			EQU		(1000/55)	; 1000 ms
-B_TIMEOUT_RDY			EQU		(1000/55)	; 1000 ms
-B_TIMEOUT_DRQ			EQU		255			;   14 s (some CF cards occasionally have long write delays)
-B_TIMEOUT_DRVINFO		EQU		(500/55)	;  500 ms
-B_TIMEOUT_RESET			EQU		255			;   14 s
-
-
-
 ; Floppy Drive types returned by INT 13h, AH=08h
 FLOPPY_TYPE_525_OR_35_DD	EQU	0
 FLOPPY_TYPE_525_DD			EQU	1
@@ -56,6 +42,11 @@ FLOPPY_TYPE_525_HD			EQU	2
 FLOPPY_TYPE_35_DD			EQU	3
 FLOPPY_TYPE_35_HD			EQU	4
 FLOPPY_TYPE_35_ED			EQU	6
+
+
+MAX_SUPPORTED_BLOCK_SIZE_IN_SECTORS		EQU		64
+
+%define TIMEOUT_AND_STATUS_TO_WAIT(timeout, status)		(((timeout)<<8) | (status))
 
 
 %endif ; INT13H_INC

@@ -39,8 +39,8 @@ RamVars_Initialize:
 	mov		ax, [BDA.wBaseMem]
 	eSHL_IM	ax, 6						; Segment to first stolen kB (*=40h)
 	mov		ds, ax
-	mov		WORD [FULLRAMVARS.wSign], W_SIGN_FULLRAMVARS
-	; Fall to .InitializeRamvarsFromDS
+	mov		WORD [RAMVARS.wSignature], RAMVARS_SIGNATURE
+	; Fall to .InitializeRamvars
 
 ;--------------------------------------------------------------------
 ; .InitializeRamvars
@@ -58,6 +58,7 @@ RamVars_Initialize:
 	push	ds
 	pop		es
 	call	Memory_ZeroESDIwithSizeInCX
+	mov		WORD [RAMVARS.wSignature], RAMVARS_SIGNATURE
 	; Fall to .InitializeDriveTranslationAndReturn
 
 ;--------------------------------------------------------------------
@@ -91,7 +92,7 @@ ALIGN JUMP_ALIGN
 RamVars_GetSegmentToDS:
 	test	BYTE [cs:ROMVARS.wFlags], FLG_ROMVARS_FULLMODE
 	jnz		SHORT .GetStolenSegmentToDS
-	mov		di, SEGMENT_RAMVARS_TOP_OF_INTERRUPT_VECTORS
+	mov		di, LITE_MODE_RAMVARS_SEGMENT
 	mov		ds, di
 	ret
 
@@ -104,7 +105,7 @@ ALIGN JUMP_ALIGN
 .LoopStolenKBs:
 	mov		ds, di					; EBDA segment to DS
 	add		di, BYTE 64				; DI to next stolen kB
-	cmp		WORD [FULLRAMVARS.wSign], W_SIGN_FULLRAMVARS
+	cmp		WORD [RAMVARS.wSignature], RAMVARS_SIGNATURE
 	jne		SHORT .LoopStolenKBs	; Loop until sign found (always found eventually)
 	ret
 
@@ -162,25 +163,6 @@ RamVars_IsDriveHandledByThisBIOS:
 	stc
 .DriveNotHandledByThisBIOS:
 	pop		ax
-	ret
-
-
-;--------------------------------------------------------------------
-; RamVars_IncrementHardDiskCount
-;	Parameters:
-;		DL:		Drive number for new drive
-;		DS:		RAMVARS segment
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-RamVars_IncrementHardDiskCount:
-	inc		BYTE [RAMVARS.bDrvCnt]		; Increment drive count to RAMVARS
-	cmp		BYTE [RAMVARS.bFirstDrv], 0	; First drive set?
-	ja		SHORT .Return				;  If so, return
-	mov		[RAMVARS.bFirstDrv], dl		; Store first drive number
-.Return:
 	ret
 
 
