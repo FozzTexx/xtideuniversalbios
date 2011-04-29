@@ -18,8 +18,8 @@
 ###########################################
 
 # Assembly source code file (*.asm):
-#SRC_ASM = Src/LibraryTests.asm
-SRC_ASM = Src/LibSizeCheck.asm
+SRC_ASM = Src/LibraryTests.asm
+#SRC_ASM = Src/LibSizeCheck.asm
 
 # Program executable file name without extension:
 PROG = test

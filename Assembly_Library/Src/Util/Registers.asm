@@ -60,6 +60,27 @@ Registers_CopyESDItoDSSI:
 
 
 ;--------------------------------------------------------------------
+; Registers_NormalizeESSI
+; Registers_NormalizeESDI
+;	Parameters
+;		DS:SI or ES:DI:	Ptr to normalize
+;	Returns:
+;		DS:SI or ES:DI:	Normalized pointer
+;	Corrupts registers:
+;		AX, CX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+Registers_NormalizeESSI:
+	NORMALIZE_FAR_POINTER es, si, ax, cx
+	ret
+
+ALIGN JUMP_ALIGN
+Registers_NormalizeESDI:
+	NORMALIZE_FAR_POINTER es, di, ax, cx
+	ret
+
+
+;--------------------------------------------------------------------
 ; Registers_SetZFifNullPointerInDSSI (commented to save bytes)
 ;	Parameters
 ;		DS:SI:	Far pointer
