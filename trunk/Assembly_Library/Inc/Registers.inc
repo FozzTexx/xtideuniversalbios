@@ -87,6 +87,54 @@ FLG_FLAGS_OF		EQU (1<<11)
 
 
 ;--------------------------------------------------------------------
+; This macro must be the first thing to call on Interrupt Service Routine.
+; Extra words will be initialized to zero.
+;
+; SAVE_AND_GET_INTPACK_WITH_EXTRA_WORDS_TO_SSBP
+;	Parameters
+;		%1:		Number of extra words to reserve before INTPACK
+;	Returns:
+;		SS:BP:	Points to INTPACK
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+%macro SAVE_AND_GET_INTPACK_WITH_EXTRA_WORDS_TO_SSBP 1
+	ePUSHA
+	push	ds
+	push	es
+%ifdef USE_386
+	push	fs
+	push	gs
+%endif
+	xor		bp, bp
+	times %1 push bp		; Initialize to zero
+	mov		bp, sp
+%endmacro
+
+;--------------------------------------------------------------------
+; This macro must be the last thing to call on Interrupt Service Routine.
+;
+; RESTORE_INTPACK_WITH_EXTRA_WORDS_FROM_SSBP
+;	Parameters
+;		%1:		Number of extra words in INTPACK
+;		SS:BP:	Ptr to INTPACK
+;	Returns:
+;		All Registers will be loaded from INTPACK
+;--------------------------------------------------------------------
+%macro RESTORE_INTPACK_WITH_EXTRA_WORDS_FROM_SSBP 1
+	add		sp, BYTE (%1)*2
+%ifdef USE_386
+	pop		gs
+	pop		fs
+%endif
+	pop		es
+	pop		ds
+	ePOPA
+	iret
+%endmacro
+
+
+;--------------------------------------------------------------------
 ; NORMALIZE_FAR_POINTER
 ;	Parameters:
 ;		%1:%2:		Far pointer to normalize
