@@ -46,7 +46,7 @@ FLG_FLAGS_OF		EQU (1<<11)
 ;--------------------------------------------------------------------
 ; This macro must be the first thing to call on Interrupt Service Routine.
 ;
-; SAVE_AND_GET_INTPACK_TO_SSBP
+; CREATE_INTPACK_TO_SSBP
 ;	Parameters
 ;		Nothing
 ;	Returns:
@@ -54,7 +54,7 @@ FLG_FLAGS_OF		EQU (1<<11)
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-%macro SAVE_AND_GET_INTPACK_TO_SSBP 0
+%macro CREATE_INTPACK_TO_SSBP 0
 	ePUSHA
 	push	ds
 	push	es
@@ -88,17 +88,16 @@ FLG_FLAGS_OF		EQU (1<<11)
 
 ;--------------------------------------------------------------------
 ; This macro must be the first thing to call on Interrupt Service Routine.
-; Extra words will be initialized to zero.
 ;
-; SAVE_AND_GET_INTPACK_WITH_EXTRA_WORDS_TO_SSBP
+; CREATE_FRAME_INTPACK_TO_SSBP
 ;	Parameters
-;		%1:		Number of extra words to reserve before INTPACK
+;		%1:		Number of extra bytes to reserve before INTPACK
 ;	Returns:
 ;		SS:BP:	Points to INTPACK
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-%macro SAVE_AND_GET_INTPACK_WITH_EXTRA_WORDS_TO_SSBP 1
+%macro CREATE_FRAME_INTPACK_TO_SSBP 1
 	ePUSHA
 	push	ds
 	push	es
@@ -106,23 +105,22 @@ FLG_FLAGS_OF		EQU (1<<11)
 	push	fs
 	push	gs
 %endif
-	xor		bp, bp
-	times %1 push bp		; Initialize to zero
+	sub		sp, BYTE %1
 	mov		bp, sp
 %endmacro
 
 ;--------------------------------------------------------------------
 ; This macro must be the last thing to call on Interrupt Service Routine.
 ;
-; RESTORE_INTPACK_WITH_EXTRA_WORDS_FROM_SSBP
+; RESTORE_FRAME_INTPACK_FROM_SSBP
 ;	Parameters
-;		%1:		Number of extra words in INTPACK
+;		%1:		Number of extra bytes in INTPACK
 ;		SS:BP:	Ptr to INTPACK
 ;	Returns:
 ;		All Registers will be loaded from INTPACK
 ;--------------------------------------------------------------------
-%macro RESTORE_INTPACK_WITH_EXTRA_WORDS_FROM_SSBP 1
-	add		sp, BYTE (%1)*2
+%macro RESTORE_FRAME_INTPACK_FROM_SSBP 1
+	add		sp, BYTE %1
 %ifdef USE_386
 	pop		gs
 	pop		fs
