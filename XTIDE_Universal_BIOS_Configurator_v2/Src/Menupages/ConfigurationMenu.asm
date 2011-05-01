@@ -233,9 +233,10 @@ ALIGN JUMP_ALIGN
 	mov		bx, g_MenuitemConfigurationIdeControllers
 	test	ax, FLG_ROMVARS_FULLMODE
 	jnz		SHORT .EnableMenuitemFromCSBX
-.LimitIdeControllerCountToOneForLiteMode:
+
+	; Limit controller count for lite mode
 	call	Buffers_GetFileBufferToESDI
-	mov		BYTE [es:di+ROMVARS.bIdeCnt], 1
+	mov		BYTE [es:di+ROMVARS.bIdeCnt], MAX_LITE_MODE_CONTROLLERS
 	jmp		SHORT .DisableMenuitemFromCSBX
 
 ;--------------------------------------------------------------------

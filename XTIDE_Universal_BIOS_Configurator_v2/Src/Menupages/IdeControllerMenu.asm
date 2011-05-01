@@ -42,20 +42,20 @@ istruc MENUITEM
 	at	MENUITEM.bType,				db	TYPE_MENUITEM_PAGENEXT
 iend
 
-g_MenuitemIdeControllerBusType:
+g_MenuitemIdeControllerDevice:
 istruc MENUITEM
 	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiceSelectionForMenuitemInDSSI
 	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromShiftedItemInDSSI
-	at	MENUITEM.szName,			dw	g_szItemIdeBusType
-	at	MENUITEM.szQuickInfo,		dw	g_szNfoIdeBusType
-	at	MENUITEM.szHelp,			dw	g_szNfoIdeBusType
+	at	MENUITEM.szName,			dw	g_szItemIdeDevice
+	at	MENUITEM.szQuickInfo,		dw	g_szNfoIdeDevice
+	at	MENUITEM.szHelp,			dw	g_szNfoIdeDevice
 	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE | FLG_MENUITEM_BYTEVALUE
 	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOICE
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	NULL
-	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgBusType
-	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoice,				dw	g_szMultichoiceCfgBusType
-	at	MENUITEM.itemValue + ITEM_VALUE.rgwChoiceToValueLookup,		dw	g_rgwChoiceToValueLookupForBusType
-	at	MENUITEM.itemValue + ITEM_VALUE.rgszValueToStringLookup,	dw	g_rgszValueToStringLookupForBusType
+	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgDevice
+	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoice,				dw	g_szMultichoiceCfgDevice
+	at	MENUITEM.itemValue + ITEM_VALUE.rgwChoiceToValueLookup,		dw	g_rgwChoiceToValueLookupForDevice
+	at	MENUITEM.itemValue + ITEM_VALUE.rgszValueToStringLookup,	dw	g_rgszValueToStringLookupForDevice
 iend
 
 g_MenuitemIdeControllerCommandBlockAddress:
@@ -119,16 +119,20 @@ istruc MENUITEM
 	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	15
 iend
 
-g_rgwChoiceToValueLookupForBusType:
-	dw	BUS_TYPE_8_DUAL
-	dw	BUS_TYPE_8_SINGLE
-	dw	BUS_TYPE_16
-	dw	BUS_TYPE_32
-g_rgszValueToStringLookupForBusType:
-	dw	g_szValueCfgBusTypeDual8b
-	dw	g_szValueCfgBusType16b
-	dw	g_szValueCfgBusType32b
-	dw	g_szValueCfgBusTypeSingle8b
+g_rgwChoiceToValueLookupForDevice:
+	dw	DEVICE_8BIT_DUAL_PORT_XTIDE
+	dw	DEVICE_XTIDE_WITH_REVERSED_A3_AND_A0
+	dw	DEVICE_8BIT_SINGLE_PORT
+	dw	DEVICE_16BIT_ATA
+	dw	DEVICE_32BIT_ATA
+	dw	DEVICE_SERIAL_PORT
+g_rgszValueToStringLookupForDevice:
+	dw	g_szValueCfgDeviceDual8b
+	dw	g_szValueCfgDeviceMod
+	dw	g_szValueCfgDeviceSingle8b
+	dw	g_szValueCfgDevice16b
+	dw	g_szValueCfgDevice32b
+	dw	g_szValueCfgDeviceSerial
 
 
 ; Section containing code
@@ -151,8 +155,8 @@ IdeControllerMenu_InitializeToIdevarsOffsetInBX:
 	lea		ax, [bx+IDEVARS.drvParamsSlave]
 	mov		[cs:g_MenuitemIdeControllerSlaveDrive+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset], ax
 
-	lea		ax, [bx+IDEVARS.bBusType]
-	mov		[cs:g_MenuitemIdeControllerBusType+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset], ax
+	lea		ax, [bx+IDEVARS.bDevice]
+	mov		[cs:g_MenuitemIdeControllerDevice+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset], ax
 
 	lea		ax, [bx+IDEVARS.wPort]
 	mov		[cs:g_MenuitemIdeControllerCommandBlockAddress+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset], ax
