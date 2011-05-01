@@ -81,9 +81,7 @@ IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 	call	Idepack_StoreNonExtParametersAndIssueCommandFromAL
 
 	; Clean stack and return
-	rcl		al, 1		; Store CF
-	add		sp, BYTE SIZE_OF_FAKE_IDEPACK
-	rcr		al, 1		; Restore CF
+	lea		sp, [bp+SIZE_OF_FAKE_IDEPACK]	; This assumes BP hasn't changed between Idepack_FakeToSSBP and here
 	pop		bp
 	ret
 
