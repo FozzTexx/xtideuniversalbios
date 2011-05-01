@@ -5,6 +5,7 @@
 
 ; Equates and defines
 MAX_ALLOWED_IDE_CONTROLLERS			EQU		4	; Maximum number of IDE controllers
+MAX_LITE_MODE_CONTROLLERS			EQU		2
 EEPROM_POLLING_TIMEOUT_TICKS		EQU		3	; 1 tick = 54.9 ms
 XTIDE_SIGNATURE_LENGTH				EQU		8	; XTIDE Universal BIOS signature string length
 NUMBER_OF_EEPROM_TYPES				EQU		4

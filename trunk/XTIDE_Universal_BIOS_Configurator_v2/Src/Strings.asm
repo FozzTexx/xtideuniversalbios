@@ -87,7 +87,7 @@ g_szItemCfgIdeCnt:		db	"IDE controllers",NULL
 
 g_szDlgCfgFullMode:		db	"Enable full operating mode?",NULL
 g_szDlgCfgStealSize:	db	"How many kiB of base memory to steal for XTIDE Universal BIOS variables (1...255)?",NULL
-g_szDlgCfgIdeCnt:		db	"How many IDE controllers to manage (1...5)?",NULL
+g_szDlgCfgIdeCnt:		db	"How many IDE controllers to manage (1...4)?",NULL
 
 g_szNfoCfgIde:			db	"IDE controller and drive configuration.",NULL
 g_szNfoCfgBootMenu:		db	"Boot menu configuration.",NULL
@@ -105,13 +105,13 @@ g_szHelpCfgStealSize:	incbin	"Configuration_StealSize.txt"
 g_szItemBackToCfgMenu:	db	"Back to Configuration Menu",NULL
 g_szItemIdeMaster:		db	"Master Drive",NULL
 g_szItemIdeSlave:		db	"Slave Drive",NULL
-g_szItemIdeBusType:		db	"Bus type",NULL
+g_szItemIdeDevice:		db	"Device type",NULL
 g_szItemIdeCmdPort:		db	"Base (cmd block) address",NULL
 g_szItemIdeCtrlPort:	db	"Control block address",NULL
 g_szItemIdeEnIRQ:		db	"Enable interrupt",NULL
 g_szItemIdeIRQ:			db	"IRQ",NULL
 
-g_szDlgBusType:			db	"Select type of bus where IDE Controller is connected.",NULL
+g_szDlgDevice:			db	"Select controller type.",NULL
 g_szDlgIdeCmdPort:		db	"Enter IDE command block (base port) address.",NULL
 g_szDlgIdeCtrlPort:		db	"Enter IDE control block address (usually command block + 200h).",NULL
 g_szDlgIdeEnIRQ:		db	"Enable interrupt?",NULL
@@ -120,7 +120,7 @@ g_szDlgIdeIRQ:			db	"Enter IRQ channel (2...7 for 8-bit controllers, 2...15 for 
 g_szNfoIdeBackToCfgMenu:db	"Back to XTIDE Universal BIOS Configuration Menu.",NULL
 g_szNfoIdeMaster:		db	"Settings for Master Drive.",NULL
 g_szNfoIdeSlave:		db	"Settings for Slave Drive.",NULL
-g_szNfoIdeBusType:		db	"Select controller bus type.",NULL
+g_szNfoIdeDevice:		db	"Select controller device type.",NULL
 g_szNfoIdeCmdPort:		db	"IDE Controller Command Block (base port) address.",NULL
 g_szNfoIdeCtrlPort:		db	"IDE Controller Control Block address. Usually Cmd Block + 200h.",NULL
 g_szNfoIdeEnIRQ:		db	"Interrupt or polling mode.",NULL
@@ -135,16 +135,20 @@ g_szHelpIdeEnIRQ:		incbin	"IDE_EnableInterrupt.txt"
 g_szHelpIdeIRQ:			incbin	"IDE_IRQ.txt"
 						db	NULL
 
-g_szMultichoiceCfgBusType:
+g_szMultichoiceCfgDevice:
 						db	"8-bit dual port (XTIDE)",LF
+						db	"XTIDE mod by Chuck(G)",LF
 						db	"8-bit single port",LF
-						db	"16-bit",LF
-						db	"32-bit generic",NULL
+						db	"16-bit standard IDE",LF
+						db	"32-bit generic IDE",LF
+						db	"Serial port virtual device",NULL
 
-g_szValueCfgBusTypeDual8b:		db	"2x8-bit",NULL
-g_szValueCfgBusTypeSingle8b:	db	"1x8-bit",NULL
-g_szValueCfgBusType16b:			db	"16-bit",NULL
-g_szValueCfgBusType32b:			db	"32-bit",NULL
+g_szValueCfgDeviceDual8b:	db	"XTIDE",NULL
+g_szValueCfgDeviceMod:		db	"Chuck(G)",NULL
+g_szValueCfgDeviceSingle8b:	db	"8-bit",NULL
+g_szValueCfgDevice16b:		db	"16-bit",NULL
+g_szValueCfgDevice32b:		db	"32-bit",NULL
+g_szValueCfgDeviceSerial:	db	"serial",NULL
 
 
 ; Strings for DRVPARAMS menu

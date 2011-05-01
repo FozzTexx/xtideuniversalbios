@@ -1,5 +1,5 @@
 ; Project name	:	XTIDE Univeral BIOS Configurator v2
-; Description	:	Program start and exit.			
+; Description	:	Program start and exit.
 
 ; Include .inc files
 %define INCLUDE_MENU_DIALOGS
