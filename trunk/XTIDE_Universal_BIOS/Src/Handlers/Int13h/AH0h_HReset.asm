@@ -160,10 +160,8 @@ GetBasePortToCX:
 	xchg	cx, bx
 	xor		bx, bx
 	call	FindDPT_ForDriveNumber
-	jnc		SHORT .DptNotFound
 	mov		bl, [di+DPT.bIdevarsOffset]
 	mov		bx, [cs:bx+IDEVARS.wPort]
-.DptNotFound:
 	xchg	bx, cx
 	ret
 

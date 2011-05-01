@@ -49,25 +49,6 @@ IdeIrq_WaitForIRQ:
 
 
 ;--------------------------------------------------------------------
-; IdeIrq_SetInServiceDPTandClearTaskFlag
-;	Parameters:
-;		DS:DI:	Ptr to DPT (in RAMVARS segment)
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-IdeIrq_SetInServiceDPTandClearTaskFlag:
-	mov		[RAMVARS.pInServiceDPT], di
-	push	ds
-	LOAD_BDA_SEGMENT_TO	ds, ax, !		; Also zero AX
-	mov		[BDA.bHDTaskFlg], al
-	pop		ds
-	ret
-
-
-;--------------------------------------------------------------------
 ; IDE Interrupt Service Routines.
 ;
 ; IdeIrq_InterruptServiceRoutineForIrqs2to7
@@ -85,7 +66,7 @@ IdeIrq_InterruptServiceRoutineForIrqs2to7:
 	push	ax
 	call	AcknowledgeIdeInterruptAndSetTaskFlag
 
-	mov		al, CMD_END_OF_INTERRUPT
+	mov		al, COMMAND_END_OF_INTERRUPT
 	jmp		SHORT AcknowledgeMasterInterruptController
 
 
@@ -95,10 +76,10 @@ IdeIrq_InterruptServiceRoutineForIrqs8to15:
 	push	ax
 	call	AcknowledgeIdeInterruptAndSetTaskFlag
 
-	mov		al, CMD_END_OF_INTERRUPT	; Load EOI command to AL
-	out		WPORT_8259SL_COMMAND, al	; Acknowledge Slave 8259
+	mov		al, COMMAND_END_OF_INTERRUPT
+	out		SLAVE_8259_COMMAND_out, al	; Acknowledge Slave 8259
 AcknowledgeMasterInterruptController:
-	out		WPORT_8259MA_COMMAND, al	; Acknowledge Master 8259
+	out		MASTER_8259_COMMAND_out, al	; Acknowledge Master 8259
 
 	; Issue Int 15h, function AX=9100h (Interrupt ready)
 	mov		ax, OS_HOOK_DEVICE_POST<<8	; Interrupt ready, device 0 (HD)
@@ -121,14 +102,18 @@ AcknowledgeMasterInterruptController:
 ALIGN JUMP_ALIGN
 AcknowledgeIdeInterruptAndSetTaskFlag:
 	push	ds
+	push	si
 	push	dx
 	push	bx
 
 	; Reading Status Register acknowledges IDE interrupt
 	call	RamVars_GetSegmentToDS
-	mov		di, [RAMVARS.pInServiceDPT]		; DS:DI now points to DPT
+	call	FindDPT_ToDSDIforInterruptInService
 	mov		dl, STATUS_REGISTER_in
 	call	Device_InputToALfromIdeRegisterInDL
+
+	; Clear Interrupt In-Service Flag from DPT
+	and		WORD [di+DPT.wFlags], ~FLG_DPT_INTERRUPT_IN_SERVICE
 
 	; Set Task Flag
 	LOAD_BDA_SEGMENT_TO	ds, ax
@@ -136,5 +121,6 @@ AcknowledgeIdeInterruptAndSetTaskFlag:
 
 	pop		bx
 	pop		dx
+	pop		si
 	pop		ds
 	ret

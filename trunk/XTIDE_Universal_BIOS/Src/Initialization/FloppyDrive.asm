@@ -18,7 +18,7 @@ SECTION .text
 ;		BX, CX, DI
 ;--------------------------------------------------------------------
 FloppyDrive_IsInt40hInstalled:
-	cmp		WORD [es:INTV_FLOPPY_FUNC*4+2], 0C000h	; Any ROM segment?
+	cmp		WORD [es:BIOS_DISKETTE_INTERRUPT_40h*4+2], 0C000h	; Any ROM segment?
 %ifdef USE_AT	; No need to verify on XT systems.
 	jb		SHORT .Int40hHandlerIsNotInstalled
 	call	.VerifyInt40hHandlerSinceSomeBiosesSimplyReturnFromInt40h
@@ -44,13 +44,13 @@ FloppyDrive_IsInt40hInstalled:
 	push	ax
 
 	call	.LoadInt40hVerifyParameters
-	int		INTV_DISK_FUNC
+	int		BIOS_DISK_INTERRUPT_13h
 	jc		SHORT .Int40hIsInstalled	; Maybe there are not any floppy drives at all
 	push	es
 	push	di
 
 	call	.LoadInt40hVerifyParameters
-	int		INTV_FLOPPY_FUNC
+	int		BIOS_DISKETTE_INTERRUPT_40h
 
 	pop		dx
 	pop		cx
@@ -112,7 +112,7 @@ ALIGN JUMP_ALIGN
 FloppyDrive_GetType:
 	mov		ah, 08h			; Get Drive Parameters
 	xor		bx, bx			; FLOPPY_TYPE_525_OR_35_DD when function not supported
-	int		INTV_FLOPPY_FUNC
+	int		BIOS_DISKETTE_INTERRUPT_40h
 	ret
 
 
@@ -166,7 +166,7 @@ GetCountFromBIOS:
 
 	mov		ah, 08h					; Get Drive Parameters
 	cwd								; Floppy Drive 00h
-	int		INTV_FLOPPY_FUNC
+	int		BIOS_DISKETTE_INTERRUPT_40h
 	mov		cl, dl					; Number of Floppy Drives to CL
 
 	pop		ax

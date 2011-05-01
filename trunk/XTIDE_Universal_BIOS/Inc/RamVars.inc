@@ -21,7 +21,6 @@ endstruc
 struc RAMVARS
 	.fpOldI13h			resb	4	; Far pointer to old INT 13h handler
 	.wTimeoutCounter	resb	2
-	.pInServiceDPT		resb	2	; Ptr to DPT for drive waiting for interrupt
 	.wSignature			resb	2	; Sign for finding stolen 1 kiB
 
 	.wDrvCntAndFirst:

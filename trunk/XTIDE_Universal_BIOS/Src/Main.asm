@@ -14,7 +14,7 @@ ORG 000h						; Code start offset 0000h
 
 ; Included .inc files
 %include "AssemblyLibrary.inc"	; Assembly Library. Must be included first!
-%include "Interrupts.inc"		; For interrupt equates
+%include "IntController.inc"	; For Interrupt Controller equates
 %include "ATA_ID.inc"			; For ATA Drive Information structs
 %include "IdeRegisters.inc"		; For ATA Registers, flags and commands
 %include "Int13h.inc"			; Equates for INT 13h functions

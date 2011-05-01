@@ -70,20 +70,20 @@ FindDPT_ForDriveNumber:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 FindDPT_ToDSDIForIdeMasterAtPortDX:
-	mov		si, FindDPT_IterateToMasterAtPortCallback
+	mov		si, IterateToMasterAtPortCallback
 	jmp		SHORT IterateAllDPTs
 
 ALIGN JUMP_ALIGN
 FindDPT_ToDSDIForIdeSlaveAtPortDX:
-	mov		si, FindDPT_IterateToSlaveAtPortCallback
+	mov		si, IterateToSlaveAtPortCallback
 	jmp		SHORT IterateAllDPTs
 
 ;--------------------------------------------------------------------
 ; Iteration callback for finding DPT using
 ; IDE base port for Master or Slave drive.
 ;
-; FindDPT_IterateToSlaveAtPortCallback
-; FindDPT_IterateToMasterAtPortCallback
+; IterateToSlaveAtPortCallback
+; IterateToMasterAtPortCallback
 ;	Parameters:
 ;		CH:		Drive number
 ;		DX:		IDE Base Port address
@@ -96,13 +96,13 @@ FindDPT_ToDSDIForIdeSlaveAtPortDX:
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-FindDPT_IterateToSlaveAtPortCallback:
+IterateToSlaveAtPortCallback:
 	test	BYTE [di+DPT.wFlags], FLG_DPT_SLAVE	; Clears CF
 	jnz		SHORT CompareBasePortAddress
 	ret		; Wrong DPT
 
 ALIGN JUMP_ALIGN
-FindDPT_IterateToMasterAtPortCallback:
+IterateToMasterAtPortCallback:
 	test	BYTE [di+DPT.wFlags], FLG_DPT_SLAVE
 	jnz		SHORT ReturnWrongDPT				; Return if slave drive
 
@@ -115,8 +115,42 @@ CompareBasePortAddress:
 	mov		dl, ch								; Return drive number in DL
 	stc											; Set CF since wanted DPT
 	ret
+
+
+;--------------------------------------------------------------------
+; FindDPT_ToDSDIforInterruptInService
+;	Parameters:
+;		DS:		RAMVARS segment
+;	Returns:
+;		DS:DI:	Ptr to DPT
+;		CF:		Set if wanted DPT found
+;				Cleared if DPT not found
+;	Corrupts registers:
+;		SI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+FindDPT_ToDSDIforInterruptInService:
+	mov		si, IterateToDptWithInterruptInServiceFlagSet
+	jmp		SHORT IterateAllDPTs
+
+;--------------------------------------------------------------------
+; IterateToDptWithInterruptInServiceFlagSet
+;	Parameters:
+;		DS:DI:	Ptr to DPT to examine
+;	Returns:
+;		CF:		Set if wanted DPT found
+;				Cleared if wrong DPT
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+IterateToDptWithInterruptInServiceFlagSet:
+	test	WORD [di+DPT.wFlags], FLG_DPT_INTERRUPT_IN_SERVICE
+	jz		SHORT ReturnWrongDPT
+	stc										; Set CF since wanted DPT
+	ret
 ReturnWrongDPT:
-	clc											; Clear CF since wrong DPT
+	clc										; Clear CF since wrong DPT
 	ret
 
 
@@ -125,13 +159,13 @@ ReturnWrongDPT:
 ;
 ; IterateAllDPTs
 ;	Parameters:
-;		BX,DX:	Parameters to callback function
-;		CS:SI:	Ptr to callback function
-;		DS:		RAMVARS segment
+;		AX,BX,DX:	Parameters to callback function
+;		CS:SI:		Ptr to callback function
+;		DS:			RAMVARS segment
 ;	Returns:
-;		DS:DI:	Ptr to wanted DPT (if found)
-;		CF:		Set if wanted DPT found
-;				Cleared if DPT not found
+;		DS:DI:		Ptr to wanted DPT (if found)
+;		CF:			Set if wanted DPT found
+;					Cleared if DPT not found
 ;	Corrupts registers:
 ;		Nothing unless corrupted by callback function
 ;--------------------------------------------------------------------
@@ -140,7 +174,7 @@ IterateAllDPTs:
 	push	cx
 	mov		cx, [RAMVARS.wDrvCntAndFirst]
 	jcxz	.AllDptsIterated			; Return if no drives
-	call	FindDPT_PointToFirstDPT		; Point DS:DI to first DPT
+	mov		di, RAMVARS_size			; Point DS:DI to first DPT
 ALIGN JUMP_ALIGN
 .LoopWhileDPTsLeft:
 	call	si							; Is wanted DPT?
@@ -153,21 +187,4 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 .AllDptsIterated:
 	pop		cx
-	ret
-
-
-;--------------------------------------------------------------------
-; Sets DI to point to first Disk Parameter Table.
-;
-; FindDPT_PointToFirstDPT
-;	Parameters:
-;		Nothing
-;	Returns:
-;		DI:		Offset to first DPT (even if unused)
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-FindDPT_PointToFirstDPT:
-	mov		di, RAMVARS_size
 	ret

@@ -75,7 +75,6 @@ Device_IdentifyToBufferInESSIwithDriveSelectByteInBH:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Device_OutputCommandWithParameters:
-	call	IdeIrq_SetInServiceDPTandClearTaskFlag
 	test	WORD [di+DPT.wFlags], FLG_DPT_SERIAL_DEVICE
 	jnz		SHORT .OutputCommandToSerialPort
 	jmp		IdeCommand_OutputWithParameters

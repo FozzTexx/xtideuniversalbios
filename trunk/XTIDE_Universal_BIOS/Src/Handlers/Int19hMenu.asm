@@ -84,7 +84,7 @@ ALIGN JUMP_ALIGN
 Int19hMenu_RomBoot:
 	SWITCH_BACK_TO_POST_STACK
 	call	ClearSegmentsForBoot
-	int		INTV_BOOT_FAILURE		; Never returns
+	int		BIOS_BOOT_FAILURE_INTERRUPT_18h	; Never returns
 
 
 ;--------------------------------------------------------------------

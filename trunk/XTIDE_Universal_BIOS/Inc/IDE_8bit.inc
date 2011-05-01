@@ -5,19 +5,19 @@
 %define IDE_8BIT_INC
 
 ;--------------------------------------------------------------------
-; Emulates INSW for XTIDE dual (8-bit) data port.
+; Emulates INSW for XTIDE.
 ;
-; eDUAL_BYTE_PORT_INSW
+; XTIDE_INSW
 ;	Parameters:
 ;		BX:		Bit mask for toggling XTIDE data low/high reg
-;		DX:		Port address (must be IDE Data Register)
+;		DX:		XTIDE Data Low Register address
 ;		ES:DI:	Ptr to destination buffer
 ;	Returns:
 ;		ES:DI:	Incremented/decremented for next word
 ;	Corrupts registers:
 ;		AL, FLAGS
 ;--------------------------------------------------------------------
-%macro eDUAL_BYTE_PORT_INSW 0
+%macro XTIDE_INSW 0
 %ifdef USE_186	; INS instruction available
 	insb						; Load low byte from port DX to [ES:DI]
 	xor		dx, bx				; IDE Data Reg to XTIDE Data High Reg
@@ -35,31 +35,62 @@
 
 
 ;--------------------------------------------------------------------
-; Emulates OUTSW for XTIDE dual (8-bit) data port.
+; Emulates OUTSW for XTIDE.
 ;
-; eDUAL_BYTE_PORT_OUTSW
+; XTIDE_OUTSW
 ;	Parameters:
 ;		BX:		Bit mask for toggling XTIDE data low/high reg
-;		DX:		Port address (must be IDE Data Register)
+;		DX:		XTIDE Data Low Register address
 ;		DS:SI:	Ptr to source buffer
 ;	Returns:
 ;		SI:		Incremented/decremented for next word
 ;	Corrupts registers:
 ;		AX, FLAGS
 ;--------------------------------------------------------------------
-%macro eDUAL_BYTE_PORT_OUTSW 0
+%macro XTIDE_OUTSW 0
 %ifdef USE_186	; OUTS instruction available
 	lodsb						; Load low byte from [DS:SI] to AL
 	xor		dx, bx				; IDE Data Reg to XTIDE Data High Reg
 	outsb						; Output high byte from [DS:SI]
-	xor		dx, bx				; IDE Data Reg to XTIDE Data Low Reg
+	xor		dx, bx				; XTIDE Data High Reg to Data Low Reg
 	out		dx, al				; Output low byte from AL
 %else	; If 8088/8086
 	lodsw						; Load word from [DS:SI]
 	xor		dx, bx				; IDE Data Reg to XTIDE Data High Reg
 	xchg	al, ah				; => AL=high byte, AH=low byte
 	out		dx, al				; Output high byte
-	xor		dx, bx				; XTIDE Data High Reg to IDE Data Reg
+	xor		dx, bx				; XTIDE Data High Reg to Data Low Reg
+	mov		al, ah				; Copy low byte to AL
+	out		dx, al				; Output low byte
+%endif
+%endmacro
+
+
+;--------------------------------------------------------------------
+; Emulates OUTSW for modified XTIDE.
+;
+; XTIDE_MOD_OUTSW
+;	Parameters:
+;		DX:		XTIDE Data Low Register address
+;		DS:SI:	Ptr to source buffer
+;	Returns:
+;		SI:		Incremented/decremented for next word
+;	Corrupts registers:
+;		AX, FLAGS
+;--------------------------------------------------------------------
+%macro XTIDE_MOD_OUTSW 0
+%ifdef USE_186	; OUTS instruction available
+	lodsb						; Load low byte from [DS:SI] to AL
+	inc		dx					; IDE Data Reg to XTIDE MOD Data High Reg
+	outsb						; Output high byte from [DS:SI]
+	dec		dx					; XTIDE Data High Reg to Data Low Reg
+	out		dx, al				; Output low byte from AL
+%else	; If 8088/8086
+	lodsw						; Load word from [DS:SI]
+	inc		dx					; IDE Data Reg to XTIDE MOD Data High Reg
+	xchg	al, ah				; => AL=high byte, AH=low byte
+	out		dx, al				; Output high byte
+	dec		dx					; XTIDE Data High Reg to Data Low Reg
 	mov		al, ah				; Copy low byte to AL
 	out		dx, al				; Output low byte
 %endif
