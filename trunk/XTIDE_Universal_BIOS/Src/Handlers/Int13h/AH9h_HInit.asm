@@ -92,7 +92,7 @@ InitializeDeviceParameters:
 	test	BYTE [di+DPT.wFlags], FLG_DRVNHEAD_LBA	; Clear CF
 	jnz		SHORT ReturnSuccessSinceInitializationNotNeeded
 
-	; Initialize Locigal Sectors per Track and Max Head number
+	; Initialize Logical Sectors per Track and Max Head number
 	mov		ah, [di+DPT.bPchsHeads]
 	dec		ah							; Max Head number
 	mov		dl, [di+DPT.bPchsSectors]	; Sectors per Track
