@@ -380,7 +380,7 @@ ALIGN JUMP_ALIGN
 WordWrite:
 	eSEG	es			; Source is ES segment
 	rep
-	db		6Fh			; OUTSW
+	db		6Fh			; OUTSW (we want this in XT build)
 	ret
 
 ALIGN JUMP_ALIGN

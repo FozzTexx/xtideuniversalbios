@@ -25,7 +25,8 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH4h_HandlerForVerifyDiskSectors:
-	mov		ah, COMMAND_WRITE_SECTORS
+	call	AH2h_ExitInt13hIfSectorCountInIntpackIsZero
+	mov		ah, COMMAND_VERIFY_SECTORS
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRQ, FLG_STATUS_DRDY)
 %ifdef USE_186
 	push	Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH

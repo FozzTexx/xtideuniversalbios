@@ -20,8 +20,9 @@ endstruc
 ; at the top of interrupt vectors.
 struc RAMVARS
 	.fpOldI13h			resb	4	; Far pointer to old INT 13h handler
-	.wTimeoutCounter	resb	2
 	.wSignature			resb	2	; Sign for finding stolen 1 kiB
+	.bTimeoutTicksLeft	resb	1
+	.bLastTimeoutUpdate	resb	1
 
 	.wDrvCntAndFirst:
 	.bDrvCnt			resb	1	; Number of drives handled by this BIOS
@@ -63,7 +64,7 @@ struc IDEPACK
 	.intpack				resb	INTPACK_size
 endstruc
 
-EXTRA_WORDS_TO_RESERVE_FOR_INTPACK	EQU	((IDEPACK_size - INTPACK_size) / 2)
+EXTRA_BYTES_FOR_INTPACK		EQU	(IDEPACK_size - INTPACK_size)
 
 
 %endif ; RAMVARS_INC

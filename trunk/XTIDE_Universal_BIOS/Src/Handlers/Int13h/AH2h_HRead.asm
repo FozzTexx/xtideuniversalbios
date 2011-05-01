@@ -14,7 +14,7 @@ SECTION .text
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
 ;		SS:BP:	Ptr to IDEPACK
 ;	Parameters on INTPACK:
-;		AL:		Number of sectors to read (1...255, 0=256)
+;		AL:		Number of sectors to read (1...255)
 ;		CH:		Cylinder number, bits 7...0
 ;		CL:		Bits 7...6: Cylinder number bits 9 and 8
 ;				Bits 5...0:	Starting sector number (1...63)
@@ -27,6 +27,7 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH2h_HandlerForReadDiskSectors:
+	call	AH2h_ExitInt13hIfSectorCountInIntpackIsZero
 	mov		ah, COMMAND_READ_SECTORS	; Load sector mode command
 	test	WORD [di+DPT.wFlags], FLG_DPT_BLOCK_MODE_SUPPORTED
 	eCMOVNZ	ah, COMMAND_READ_MULTIPLE	; Load block mode command
@@ -39,3 +40,24 @@ AH2h_HandlerForReadDiskSectors:
 	call	Idepack_TranslateOldInt13hAddressAndIssueCommandFromAH
 	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 %endif
+
+
+;--------------------------------------------------------------------
+; AH2h_ExitInt13hIfSectorCountInIntpackIsZero
+;	Parameters:
+;		SS:BP:	Ptr to IDEPACK
+;	Parameters on INTPACK:
+;		AL:		Number of sectors to transfer (1...255)
+;	Returns:
+;		Nothing (does not return if error)
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+AH2h_ExitInt13hIfSectorCountInIntpackIsZero:
+	cmp		BYTE [bp+IDEPACK.intpack+INTPACK.al], 0
+	je		SHORT .InvalidSectorCount
+	ret
+.InvalidSectorCount:
+	mov		ah, RET_HD_INVALID
+	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
