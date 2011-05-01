@@ -88,16 +88,18 @@ Initialize_AndDetectDrives:
 ;--------------------------------------------------------------------
 .StoreDptPointersToIntVectors:
 	mov		dl, 80h
-	call	FindDPT_ForDriveNumber	; DPT to DS:DI
+	call	RamVars_IsDriveHandledByThisBIOS
 	jnc		SHORT .FindForDrive81h	; Store nothing if not our drive
-	mov		[es:INTV_HD0DPT*4], di
-	mov		[es:INTV_HD0DPT*4+2], ds
+	call	FindDPT_ForDriveNumber	; DPT to DS:DI
+	mov		[es:HD0_DPT_POINTER_41h*4], di
+	mov		[es:HD0_DPT_POINTER_41h*4+2], ds
 .FindForDrive81h:
 	inc		dx
-	call	FindDPT_ForDriveNumber
+	call	RamVars_IsDriveHandledByThisBIOS
 	jnc		SHORT .ResetDetectedDrives
-	mov		[es:INTV_HD1DPT*4], di
-	mov		[es:INTV_HD1DPT*4+2], ds
+	call	FindDPT_ForDriveNumber
+	mov		[es:HD1_DPT_POINTER_46h*4], di
+	mov		[es:HD1_DPT_POINTER_46h*4+2], ds
 	; Fall to .ResetDetectedDrives
 
 ;--------------------------------------------------------------------

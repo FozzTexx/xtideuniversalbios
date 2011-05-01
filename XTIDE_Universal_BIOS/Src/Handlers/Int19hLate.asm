@@ -15,7 +15,7 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Int19hLate_InitializeInt19h:
-	mov		bx, INTV_BOOTSTRAP
+	mov		bx, BIOS_BOOT_LOADER_INTERRUPT_19h
 	mov		si, HandlerForLateInitialization
 	jmp		Interrupts_InstallHandlerToVectorInBXFromCSSI
 
@@ -30,10 +30,10 @@ Int19hLate_InitializeInt19h:
 ALIGN JUMP_ALIGN
 HandlerForLateInitialization:
 	LOAD_BDA_SEGMENT_TO	es, ax
-	call	Initialize_ShouldSkip		; Skip initialization?
+	call	Initialize_ShouldSkip			; Skip initialization?
 	jnz		SHORT .SkipInitialization
-	call	Initialize_AndDetectDrives	; Installs boot menu loader
-	int		INTV_BOOTSTRAP
+	call	Initialize_AndDetectDrives		; Installs boot menu loader
+	int		BIOS_BOOT_LOADER_INTERRUPT_19h
 .SkipInitialization:
-	call	RamVars_Initialize			; RAMVARS must be initialized even for simple boot loader
-	int		INTV_BOOTSTRAP				; Call default system boot loader
+	call	RamVars_Initialize				; RAMVARS must be initialized even for simple boot loader
+	int		BIOS_BOOT_LOADER_INTERRUPT_19h	; Call default system boot loader

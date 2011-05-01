@@ -28,11 +28,11 @@ Interrupts_InitializeInterruptVectors:
 ;		AX, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 .InitializeInt13hAnd40h:
-	mov		ax, [es:INTV_DISK_FUNC*4]			; Load old INT 13h offset
-	mov		dx, [es:INTV_DISK_FUNC*4+2]			; Load old INT 13h segment
+	mov		ax, [es:BIOS_DISK_INTERRUPT_13h*4]	; Load old INT 13h offset
+	mov		dx, [es:BIOS_DISK_INTERRUPT_13h*4+2]; Load old INT 13h segment
 	mov		[RAMVARS.fpOldI13h], ax				; Store old INT 13h offset
 	mov		[RAMVARS.fpOldI13h+2], dx			; Store old INT 13h segment
-	mov		bx, INTV_DISK_FUNC					; INT 13h interrupt vector offset
+	mov		bx, BIOS_DISK_INTERRUPT_13h			; INT 13h interrupt vector offset
 	mov		si, Int13h_DiskFunctionsHandler		; Interrupt handler offset
 	call	Interrupts_InstallHandlerToVectorInBXFromCSSI
 
@@ -41,8 +41,8 @@ Interrupts_InitializeInterruptVectors:
 	; 40h from 13h. That system locks to infinite loop if we copy 13h to 40h.
 	call	FloppyDrive_IsInt40hInstalled
 	jc		SHORT .InitializeInt19h
-	mov		[es:INTV_FLOPPY_FUNC*4], ax		; Store old INT 13h offset
-	mov		[es:INTV_FLOPPY_FUNC*4+2], dx	; Store old INT 13h segment
+	mov		[es:BIOS_DISKETTE_INTERRUPT_40h*4], ax		; Store old INT 13h offset
+	mov		[es:BIOS_DISKETTE_INTERRUPT_40h*4+2], dx	; Store old INT 13h segment
 	; Fall to .InitializeInt19h
 
 ;--------------------------------------------------------------------
@@ -56,7 +56,7 @@ Interrupts_InitializeInterruptVectors:
 ;		BX, SI
 ;--------------------------------------------------------------------
 .InitializeInt19h:
-	mov		bx, INTV_BOOTSTRAP
+	mov		bx, BIOS_BOOT_LOADER_INTERRUPT_19h
 	mov		si, Int19hMenu_BootLoader
 	call	Interrupts_InstallHandlerToVectorInBXFromCSSI
 	; Fall to .InitializeHardwareIrqHandlers
@@ -109,7 +109,7 @@ Interrupts_InitializeInterruptVectors:
 ;		BX, SI
 ;--------------------------------------------------------------------
 .InstallHighIrqHandler:
-	add		bx, BYTE INTV_IRQ8 - 8			; Interrupt vector number
+	add		bx, BYTE HARDWARE_IRQ_8_INTERRUPT_70h - 8	; Interrupt vector number
 	mov		si, IdeIrq_InterruptServiceRoutineForIrqs8to15
 	jmp		SHORT Interrupts_InstallHandlerToVectorInBXFromCSSI
 
@@ -124,7 +124,7 @@ Interrupts_InitializeInterruptVectors:
 ;		BX, SI
 ;--------------------------------------------------------------------
 .InstallLowIrqHandler:
-	add		bx, BYTE INTV_IRQ0				; Interrupt vector number
+	add		bx, BYTE HARDWARE_IRQ_0_INTERRUPT_08h		; Interrupt vector number
 	mov		si, IdeIrq_InterruptServiceRoutineForIrqs2to7
 	; Fall to Interrupts_InstallHandlerToVectorInBXFromCSSI
 
@@ -176,7 +176,7 @@ Interrupts_UnmaskInterruptControllerForDriveInDSDI:
 ;--------------------------------------------------------------------
 .UnmaskHighIrqController:
 	sub		al, 8				; Slave interrupt number
-	mov		dx, PORT_8259SL_IMR	; Load Slave Mask Register address
+	mov		dx, SLAVE_8259_IMR
 	call	.ClearBitFrom8259MaskRegister
 	mov		al, 2				; Master IRQ 2 to allow slave IRQs
 	; Fall to .UnmaskLowIrqController
@@ -191,7 +191,7 @@ Interrupts_UnmaskInterruptControllerForDriveInDSDI:
 ;		AX, DX
 ;--------------------------------------------------------------------
 .UnmaskLowIrqController:
-	mov		dx, PORT_8259MA_IMR	; Load Mask Register address
+	mov		dx, MASTER_8259_IMR
 	; Fall to .ClearBitFrom8259MaskRegister
 
 ;--------------------------------------------------------------------

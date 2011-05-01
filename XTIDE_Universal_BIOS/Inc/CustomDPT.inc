@@ -42,7 +42,7 @@ FLG_DPT_ENABLE_IRQ				EQU	(1<<7)
 FLG_DPT_REVERSED_A0_AND_A3		EQU	(1<<8)	; XTIDE mod, Address lines 0 and 3 reversed
 FLG_DPT_SERIAL_DEVICE			EQU	(1<<9)	; Serial Port Device
 FLG_DPT_BLOCK_MODE_SUPPORTED	EQU	(1<<10)	; Use block transfer commands
-
+FLG_DPT_INTERRUPT_IN_SERVICE	EQU	(1<<11)	; Set when waiting for IRQ
 FLG_DPT_RESET_nDRDY				EQU	(1<<12)	; Drive ready to accept commands
 FLG_DPT_RESET_nINITPRMS			EQU	(1<<13)	; Initialize Device Parameters successfull
 FLG_DPT_RESET_nRECALIBRATE		EQU	(1<<14)	; Recalibrate successfull

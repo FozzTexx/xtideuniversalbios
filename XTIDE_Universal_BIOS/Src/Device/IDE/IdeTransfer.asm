@@ -212,10 +212,11 @@ InitializePiovarsInSSBPwithSectorCountInAX:
 
 
 ;--------------------------------------------------------------------
-; DualByteRead		Dual port 8-bit XTIDE PIO read transfer
-; WordRead			Normal 16-bit IDE PIO read transfer
-; DWordRead			VLB/PCI 32-bit IDE PIO read transfer
-; SingleByteRead	Single port 8-bit PIO read transfer
+; DualByteReadForXtide		Dual port 8-bit XTIDE PIO read transfer
+; SingleByteRead			Single port 8-bit PIO read transfer
+; WordReadForXTIDEmod		8088/8086 compatible 16-bit IDE PIO read transfer
+; WordReadForXTplusAndAT	Normal 16-bit IDE PIO read transfer
+; DWordRead					VLB/PCI 32-bit IDE PIO read transfer
 ;	Parameters:
 ;		CX:		Block size in WORDs
 ;		DX:		IDE Data port address
@@ -226,43 +227,30 @@ InitializePiovarsInSSBPwithSectorCountInAX:
 ;		AX, BX, CX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-DualByteRead:
-	times 2	shr	cx, 1			; Loop unrolling
-	mov		bx, 8				; Bit mask for toggling data low/high reg
+DualByteReadForXtide:
+	times 2	shr	cx, 1	; Loop unrolling
+	mov		bx, 8		; Bit mask for toggling data low/high reg
 ALIGN JUMP_ALIGN
 .InswLoop:
-	eDUAL_BYTE_PORT_INSW
-	eDUAL_BYTE_PORT_INSW
-	eDUAL_BYTE_PORT_INSW
-	eDUAL_BYTE_PORT_INSW
+	XTIDE_INSW
+	XTIDE_INSW
+	XTIDE_INSW
+	XTIDE_INSW
 	loop	.InswLoop
 	ret
 
-ALIGN JUMP_ALIGN
-WordRead:
-	rep
-	db		6Dh			; INSW
-	ret
-
-ALIGN JUMP_ALIGN
-DWordRead:
-	shr		cx, 1		; WORD count to DWORD count
-	rep
-	db		66h			; Override operand size to 32-bit
-	db		6Dh			; INSW/INSD
-	ret
-
+;----
 ALIGN JUMP_ALIGN
 SingleByteRead:
 %ifdef USE_186	; INS instruction available
-	shl		cx, 1				; WORD count to BYTE count
+	shl		cx, 1		; WORD count to BYTE count
 	rep insb
 %else			; If 8088/8086
-	shr		cx, 1				; WORD count to DWORD count
+	shr		cx, 1		; WORD count to DWORD count
 ALIGN JUMP_ALIGN
 .InsdLoop:
 	in		al, dx
-	stosb						; Store to [ES:DI]
+	stosb				; Store to [ES:DI]
 	in		al, dx
 	stosb
 	in		al, dx
@@ -273,12 +261,48 @@ ALIGN JUMP_ALIGN
 %endif
 	ret
 
+;----
+%ifndef USE_186
+ALIGN JUMP_ALIGN
+WordReadForXTIDEmod:
+	times 2 shr	cx, 1	; WORD count to QWORD count
+ALIGN JUMP_ALIGN
+.ReadNextQword:
+	in		ax, dx		; Read 1st WORD
+	stosw				; Store 1st WORD to [ES:DI]
+	in		ax, dx
+	stosw				; 2nd
+	in		ax, dx
+	stosw				; 3rd
+	in		ax, dx
+	stosw				; 4th
+	loop	.ReadNextQword
+	ret
+%endif
+
+;----
+ALIGN JUMP_ALIGN
+WordReadForXTplusAndAT:
+	rep
+	db		6Dh			; INSW (we want this in XT build)
+	ret
+
+;----
+ALIGN JUMP_ALIGN
+DWordRead:
+	shr		cx, 1		; WORD count to DWORD count
+	rep
+	db		66h			; Override operand size to 32-bit
+	db		6Dh			; INSW/INSD
+	ret
+
 
 ;--------------------------------------------------------------------
-; DualByteWrite		Dual port 8-bit XTIDE PIO write transfer
-; WordWrite			Normal 16-bit IDE PIO write transfer
-; DWordWrite		VLB/PCI 32-bit IDE PIO write transfer
-; SingleByteWrite	Single port 8-bit PIO write transfer
+; DualByteWriteForXtide		Dual port 8-bit XTIDE PIO write transfer
+; SingleByteWrite			Single port 8-bit PIO write transfer
+; WordWriteForXTIDEmod		8088/8086 compatible 16-bit IDE PIO read transfer
+; WordWrite					Normal 16-bit IDE PIO write transfer
+; DWordWrite				VLB/PCI 32-bit IDE PIO write transfer
 ;	Parameters:
 ;		CX:		Block size in WORDs
 ;		DX:		IDE Data port address
@@ -289,24 +313,69 @@ ALIGN JUMP_ALIGN
 ;		AX, CX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-DualByteWrite:
+DualByteWriteForXtide:
 	push	ds
 	push	bx
-	times 2	shr	cx, 1			; Loop unrolling
-	mov		bx, 8				; Bit mask for toggling data low/high reg
-	push	es					; Copy ES...
-	pop		ds					; ...to DS
+	times 2	shr	cx, 1	; Loop unrolling
+	mov		bx, 8		; Bit mask for toggling data low/high reg
+	push	es			; Copy ES...
+	pop		ds			; ...to DS
 ALIGN JUMP_ALIGN
 .OutswLoop:
-	eDUAL_BYTE_PORT_OUTSW
-	eDUAL_BYTE_PORT_OUTSW
-	eDUAL_BYTE_PORT_OUTSW
-	eDUAL_BYTE_PORT_OUTSW
+	XTIDE_OUTSW
+	XTIDE_OUTSW
+	XTIDE_OUTSW
+	XTIDE_OUTSW
 	loop	.OutswLoop
 	pop		bx
 	pop		ds
 	ret
 
+;----
+ALIGN JUMP_ALIGN
+SingleByteWrite:
+%ifdef USE_186	; OUTS instruction available
+	shl		cx, 1		; WORD count to BYTE count
+	eSEG	es			; Source is ES segment
+	rep outsb
+%else			; If 8088/8086
+	shr		cx, 1		; WORD count to DWORD count
+	push	ds			; Store DS
+	push	es			; Copy ES...
+	pop		ds			; ...to DS
+ALIGN JUMP_ALIGN
+.OutsdLoop:
+	lodsb				; Load from [DS:SI] to AL
+	out		dx, al
+	lodsb
+	out		dx, al
+	lodsb
+	out		dx, al
+	lodsb
+	out		dx, al
+	loop	.OutsdLoop
+	pop		ds			; Restore DS
+%endif
+	ret
+
+;---
+ALIGN JUMP_ALIGN
+WordWriteForXTIDEmod:
+	push	ds
+	times 2	shr	cx, 1	; Loop unrolling
+	push	es			; Copy ES...
+	pop		ds			; ...to DS
+ALIGN JUMP_ALIGN
+.WriteNextQword:
+	XTIDE_MOD_OUTSW
+	XTIDE_MOD_OUTSW
+	XTIDE_MOD_OUTSW
+	XTIDE_MOD_OUTSW
+	loop	.WriteNextQword
+	pop		ds
+	ret
+
+;----
 ALIGN JUMP_ALIGN
 WordWrite:
 	eSEG	es			; Source is ES segment
@@ -323,44 +392,24 @@ DWordWrite:
 	db		6Fh			; OUTSW/OUTSD
 	ret
 
-ALIGN JUMP_ALIGN
-SingleByteWrite:
-%ifdef USE_186	; OUTS instruction available
-	shl		cx, 1				; WORD count to BYTE count
-	eSEG	es					; Source is ES segment
-	rep outsb
-%else			; If 8088/8086
-	shr		cx, 1				; WORD count to DWORD count
-	push	ds					; Store DS
-	push	es					; Copy ES...
-	pop		ds					; ...to DS
-ALIGN JUMP_ALIGN
-.OutsdLoop:
-	lodsb						; Load from [DS:SI] to AL
-	out		dx, al
-	lodsb
-	out		dx, al
-	lodsb
-	out		dx, al
-	lodsb
-	out		dx, al
-	loop	.OutsdLoop
-	pop		ds					; Restore DS
-%endif
-	ret
 
 
 ; Lookup tables to get transfer function based on bus type
 ALIGN WORD_ALIGN
 g_rgfnPioRead:
-	dw		DualByteRead		; DEVICE_8BIT_DUAL_PORT_XTIDE
-	dw		NULL				; DEVICE_XTIDE_WITH_REVERSED_A3_AND_A0
-	dw		SingleByteRead		; DEVICE_8BIT_SINGLE_PORT
-	dw		WordRead			; DEVICE_16BIT_ATA
-	dw		DWordRead			; DEVICE_32BIT_ATA
+	dw		DualByteReadForXtide	; DEVICE_8BIT_DUAL_PORT_XTIDE
+%ifdef USE_186
+	dw		WordReadForXTplusAndAT	; DEVICE_XTIDE_WITH_REVERSED_A3_AND_A0
+%else
+	dw		WordReadForXTIDEmod
+%endif
+	dw		SingleByteRead			; DEVICE_8BIT_SINGLE_PORT
+	dw		WordReadForXTplusAndAT	; DEVICE_16BIT_ATA
+	dw		DWordRead				; DEVICE_32BIT_ATA
+
 g_rgfnPioWrite:
-	dw		DualByteWrite		; DEVICE_8BIT_DUAL_PORT_XTIDE
-	dw		NULL				; DEVICE_XTIDE_WITH_REVERSED_A3_AND_A0
-	dw		SingleByteWrite		; DEVICE_8BIT_SINGLE_PORT
-	dw		WordWrite			; DEVICE_16BIT_ATA
-	dw		DWordWrite			; DEVICE_32BIT_ATA
+	dw		DualByteWriteForXtide	; DEVICE_8BIT_DUAL_PORT_XTIDE
+	dw		WordWriteForXTIDEmod	; DEVICE_XTIDE_WITH_REVERSED_A3_AND_A0
+	dw		SingleByteWrite			; DEVICE_8BIT_SINGLE_PORT
+	dw		WordWrite				; DEVICE_16BIT_ATA
+	dw		DWordWrite				; DEVICE_32BIT_ATA

@@ -113,6 +113,14 @@ IdeCommand_OutputWithParameters:
 	; Output Device Control Byte to enable or disable interrupts
 	mov		dl, DEVICE_CONTROL_REGISTER_out
 	mov		al, [bp+IDEPACK.bDeviceControl]
+	test	al, FLG_DEVCONTROL_nIEN
+	jnz		SHORT .DoNotSetInterruptInServiceFlag
+	or		WORD [di+DPT.wFlags], FLG_DPT_INTERRUPT_IN_SERVICE
+	push	ds
+	LOAD_BDA_SEGMENT_TO	ds, cx, !		; Also zero CX
+	mov		[BDA.bHDTaskFlg], al
+	pop		ds
+.DoNotSetInterruptInServiceFlag:
 	call	Device_OutputALtoIdeControlBlockRegisterInDL
 
 	; Output Feature Number
