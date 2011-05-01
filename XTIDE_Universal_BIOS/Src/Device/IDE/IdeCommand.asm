@@ -21,7 +21,7 @@ IdeCommand_ResetMasterAndSlaveController:
 	mov		dl, DEVICE_CONTROL_REGISTER_out
 	call	Device_OutputALtoIdeControlBlockRegisterInDL
 	mov		ax, HSR0_RESET_WAIT_US
-	call	HTimer_DelayMicrosecondsFromAX
+	call	Timer_DelayMicrosecondsFromAX
 
 	; HSR1: Clear_wait
 	call	AccessDPT_GetDeviceControlByteToAL
@@ -30,7 +30,7 @@ IdeCommand_ResetMasterAndSlaveController:
 	mov		dl, DEVICE_CONTROL_REGISTER_out
 	call	Device_OutputALtoIdeControlBlockRegisterInDL
 	mov		ax, HSR1_RESET_WAIT_US
-	call	HTimer_DelayMicrosecondsFromAX
+	call	Timer_DelayMicrosecondsFromAX
 
 	; HSR2: Check_status
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_MOTOR_STARTUP, FLG_STATUS_BSY)

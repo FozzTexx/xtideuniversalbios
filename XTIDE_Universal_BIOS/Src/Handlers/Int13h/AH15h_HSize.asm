@@ -58,7 +58,7 @@ AH15h_GetSectorCountToDXAX:
 	; Fall to ConvertAH08hReturnValuesToSectorCount
 
 ConvertAH08hReturnValuesToSectorCount:
-	call	HAddress_ExtractLCHSparametersFromOldInt13hAddress
+	call	Address_ExtractLCHSparametersFromOldInt13hAddress
 	xor		ax, ax			; Zero AX
 	inc		cx				; Max cylinder number to cylinder count
 	xchg	al, bh			; AX=Max head number, BX=Sectors per track

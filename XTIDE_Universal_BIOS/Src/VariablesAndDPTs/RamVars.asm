@@ -122,7 +122,7 @@ ALIGN JUMP_ALIGN
 ;		CF:		Set if function is handled by this BIOS
 ;				Cleared if function belongs to some other BIOS
 ;	Corrupts registers:
-;		DI
+;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 RamVars_IsFunctionHandledByThisBIOS:

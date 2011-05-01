@@ -26,7 +26,7 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH3h_HandlerForWriteDiskSectors:
-	; Prepare parameters
+	call	AH2h_ExitInt13hIfSectorCountInIntpackIsZero
 	mov		ah, COMMAND_WRITE_SECTORS	; Load sector mode command
 	test	WORD [di+DPT.wFlags], FLG_DPT_BLOCK_MODE_SUPPORTED
 	eCMOVNZ	ah, COMMAND_WRITE_MULTIPLE	; Load block mode command

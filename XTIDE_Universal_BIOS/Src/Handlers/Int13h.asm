@@ -22,7 +22,7 @@ ALIGN JUMP_ALIGN
 Int13h_DiskFunctionsHandler:
 	sti									; Enable interrupts
 	cld									; String instructions to increment pointers
-	SAVE_AND_GET_INTPACK_WITH_EXTRA_WORDS_TO_SSBP EXTRA_WORDS_TO_RESERVE_FOR_INTPACK
+	CREATE_FRAME_INTPACK_TO_SSBP	EXTRA_BYTES_FOR_INTPACK
 
 	call	RamVars_GetSegmentToDS
 	call	DriveXlate_ToOrBack
@@ -32,7 +32,6 @@ Int13h_DiskFunctionsHandler:
 	call	FindDPT_ForDriveNumber		; DS:DI now points to DPT
 
 	; Jump to correct BIOS function
-JumpToBiosFunctionInAH:
 	cmp		ah, 25h						; Valid BIOS function?
 	ja		SHORT Int13h_UnsupportedFunction
 	eMOVZX	bx, ah
@@ -108,7 +107,7 @@ Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH:
 Int13h_ReturnFromHandlerWithoutStoringErrorCode:
 	or		WORD [bp+IDEPACK.intpack+INTPACK.flags], FLG_FLAGS_IF	; Return with interrupts enabled
 	mov		sp, bp									; Now we can exit anytime
-	RESTORE_INTPACK_WITH_EXTRA_WORDS_FROM_SSBP EXTRA_WORDS_TO_RESERVE_FOR_INTPACK
+	RESTORE_FRAME_INTPACK_FROM_SSBP		EXTRA_BYTES_FOR_INTPACK
 
 
 ;--------------------------------------------------------------------

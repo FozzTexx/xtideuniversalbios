@@ -52,9 +52,9 @@ IdeWait_IRQorStatusFlagInBLwithTimeoutInBH:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
 IdeWait_PollStatusFlagInBLwithTimeoutInBH:
-	eMOVZX	cx, bh		; Timeout ticks now in CX
 	mov		ah, bl
-	call	HTimer_InitializeTimeoutWithTicksInCX
+	mov		cl, bh
+	call	Timer_InitializeTimeoutWithTicksInCL
 	and		ah, ~FLG_STATUS_BSY
 	jz		SHORT PollBsyOnly
 	; Fall to PollBsyAndFlgInAH
@@ -81,7 +81,7 @@ ALIGN JUMP_ALIGN
 	test	al, ah								; Test secondary flag
 	jnz		SHORT IdeError_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL
 .UpdateTimeout:
-	call	HTimer_SetCFifTimeout
+	call	Timer_SetCFifTimeout
 	jnc		SHORT .PollLoop						; Loop if time left
 	call	IdeError_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL
 	jc		SHORT .ReturnErrorCodeInAH
@@ -109,7 +109,7 @@ ALIGN JUMP_ALIGN
 	call	ReadIdeStatusRegisterToAL
 	test	al, FLG_STATUS_BSY					; Controller busy?
 	jz		SHORT IdeError_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL
-	call	HTimer_SetCFifTimeout				; Update timeout counter
+	call	Timer_SetCFifTimeout				; Update timeout counter
 	jnc		SHORT .PollLoop						; Loop if time left (sets CF on timeout)
 	jmp		SHORT IdeError_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL
 

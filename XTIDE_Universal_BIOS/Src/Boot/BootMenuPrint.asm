@@ -303,12 +303,12 @@ ALIGN JUMP_ALIGN
 	ePUSH_T	ax, g_szCapacity
 
 	; Get and push L-CHS size
-	mov		[RAMVARS.wTimeoutCounter], dl		; Store drive number
+	mov		[RAMVARS.bTimeoutTicksLeft], dl		; Store drive number
 	call	AH15h_GetSectorCountToDXAX
 	call	ConvertSectorCountInBXDXAXtoSizeAndPushForFormat
 
 	; Get and push total LBA size
-	mov		dl, [RAMVARS.wTimeoutCounter]		; Restore drive number
+	mov		dl, [RAMVARS.bTimeoutTicksLeft]		; Restore drive number
 	call	BootInfo_GetTotalSectorCount
 	call	ConvertSectorCountInBXDXAXtoSizeAndPushForFormat
 

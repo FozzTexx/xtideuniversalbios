@@ -118,11 +118,11 @@ istruc ROMVARS
 iend
 
 
-; Include .asm files (static data and libraries)
+; Libraries and data
 %include "AssemblyLibrary.asm"
 %include "Strings.asm"			; For BIOS message strings
 
-; Include .asm files (Initialization and drive detection)
+; Initialization and drive detection
 %include "Initialize.asm"		; For BIOS initialization
 %include "Interrupts.asm"		; For Interrupt initialization
 %include "RamVars.asm"			; For RAMVARS initialization and access
@@ -134,7 +134,7 @@ iend
 %include "DetectDrives.asm"		; For detecting IDE drives
 %include "DetectPrint.asm"		; For printing drive detection strings
 
-; Include .asm files (boot menu)
+; Boot menu
 %include "BootMenu.asm"			; For Boot Menu operations
 %include "BootMenuEvent.asm"	; For menu library event handling
 %include "FloppyDrive.asm"		; Floppy Drive related functions
@@ -143,19 +143,34 @@ iend
 %include "BootMenuPrint.asm"	; For printing Boot Menu strings
 %include "BootMenuPrintCfg.asm"	; For printing hard disk configuration
 
-; Include .asm files (general drive accessing)
-%include "DriveXlate.asm"		; For swapping drive numbers
-%include "HAddress.asm"			; For sector address translations
-%include "HTimer.asm"			; For timeout and delay
-
-; Include .asm files (Interrupt handlers)
-%include "Int13h.asm"			; For Int 13h, Disk functions
+; Boot loader
 %ifndef USE_AT
 	%include "Int19hLate.asm"	; For late initialization
 %endif
 %include "Int19hMenu.asm"		; For Int 19h, Boot Loader for Boot Menu
 
-; Include .asm files (Hard Disk BIOS functions)
+; For all device types
+%include "Device.asm"
+%include "Idepack.asm"
+%include "Timer.asm"			; For timeout and delay
+
+; IDE Device support
+%include "IdeCommand.asm"
+%include "IdeDPT.asm"
+%include "IdeIO.asm"
+%include "IdeIrq.asm"
+%include "IdeTransfer.asm"
+%include "IdeWait.asm"
+%include "IdeError.asm"			; Must be included after IdeWait.asm
+
+; Serial Port Device support
+%include "SerialCommand.asm"
+%include "SerialDPT.asm"
+
+; INT 13h Hard Disk BIOS functions
+%include "DriveXlate.asm"		; For swapping drive numbers
+%include "Address.asm"			; For sector address translations
+%include "Int13h.asm"			; For Int 13h, Disk functions
 %include "AH0h_HReset.asm"		; Required by Int13h_Jump.asm
 %include "AH1h_HStatus.asm"		; Required by Int13h_Jump.asm
 %include "AH2h_HRead.asm"		; Required by Int13h_Jump.asm
@@ -171,21 +186,6 @@ iend
 %include "AH23h_HFeatures.asm"	; Required by Int13h_Jump.asm
 %include "AH24h_HSetBlocks.asm"	; Required by Int13h_Jump.asm
 %include "AH25h_HDrvID.asm"		; Required by Int13h_Jump.asm
-%include "Device.asm"
-%include "Idepack.asm"
-
-; IDE Device support
-%include "IdeCommand.asm"
-%include "IdeDPT.asm"
-%include "IdeIO.asm"
-%include "IdeIrq.asm"
-%include "IdeTransfer.asm"
-%include "IdeWait.asm"
-%include "IdeError.asm"			; Must be included after IdeWait.asm
-
-; Serial Port Device support
-%include "SerialCommand.asm"
-%include "SerialDPT.asm"
 
 
 ; Fill with zeroes until size is what we want

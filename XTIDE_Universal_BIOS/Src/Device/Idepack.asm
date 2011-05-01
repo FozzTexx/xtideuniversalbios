@@ -49,7 +49,7 @@ Idepack_TranslateOldInt13hAddressAndIssueCommandFromAH:
 	mov		BYTE [bp+IDEPACK.bSectorCountHighExt], 0
 
 	push	bx
-	call	HAddress_OldInt13hAddressToIdeAddress
+	call	Address_OldInt13hAddressToIdeAddress
 	call	AccessDPT_GetDriveSelectByteToAL
 	or		al, bh			; AL now has Drive and Head Select Byte
 	mov		[bp+IDEPACK.bDrvAndHead], al
