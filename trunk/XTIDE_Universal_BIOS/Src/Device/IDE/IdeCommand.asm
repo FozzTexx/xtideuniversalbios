@@ -53,10 +53,9 @@ IdeCommand_ResetMasterAndSlaveController:
 IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 	; Create fake DPT to be able to use Device.asm functions
 	call	FindDPT_ForNewDriveToDSDI
-	xor		ax, ax
+	eMOVZX	ax, bh
 	cmp		BYTE [cs:bp+IDEVARS.bDevice], DEVICE_XTIDE_WITH_REVERSED_A3_AND_A0
-	eCMOVE	ax, FLG_DPT_REVERSED_A0_AND_A3
-	or		al, bh
+	eCMOVE	ah, FLGH_DPT_REVERSED_A0_AND_A3
 	mov		[di+DPT.wFlags], ax
 	mov		[di+DPT.bIdevarsOffset], bp
 	mov		BYTE [di+DPT_ATA.bSetBlock], 1	; Block = 1 sector
@@ -64,7 +63,7 @@ IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 	; Wait until drive motors have reached max speed
 	cmp		bp, BYTE ROMVARS.ideVars0
 	jne		SHORT .SkipLongWaitSinceDriveIsNotPrimaryMaster
-	test	bh, FLG_DRVNHEAD_DRV
+	test	al, FLG_DRVNHEAD_DRV
 	jnz		SHORT .SkipLongWaitSinceDriveIsNotPrimaryMaster
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_MOTOR_STARTUP, FLG_STATUS_BSY)
 	call	IdeWait_PollStatusFlagInBLwithTimeoutInBH
@@ -81,7 +80,7 @@ IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 	call	Idepack_StoreNonExtParametersAndIssueCommandFromAL
 
 	; Clean stack and return
-	lea		sp, [bp+SIZE_OF_FAKE_IDEPACK]	; This assumes BP hasn't changed between Idepack_FakeToSSBP and here
+	lea		sp, [bp+EXTRA_BYTES_FOR_INTPACK]	; This assumes BP hasn't changed between Idepack_FakeToSSBP and here
 	pop		bp
 	ret
 
@@ -102,23 +101,25 @@ IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 IdeCommand_OutputWithParameters:
-	push	bx							; Store status register bits to poll
+	push	bx						; Store status register bits to poll
 
 	; Select Master or Slave drive and output head number or LBA28 top bits
 	call	IdeCommand_SelectDrive
 	jc		SHORT .DriveNotReady
 
 	; Output Device Control Byte to enable or disable interrupts
-	mov		dl, DEVICE_CONTROL_REGISTER_out
 	mov		al, [bp+IDEPACK.bDeviceControl]
-	test	al, FLG_DEVCONTROL_nIEN
+	test	al, FLG_DEVCONTROL_nIEN	; Interrupts disabled?
 	jnz		SHORT .DoNotSetInterruptInServiceFlag
-	or		WORD [di+DPT.wFlags], FLG_DPT_INTERRUPT_IN_SERVICE
+
+	; Clear Task Flag and set Interrupt In-Service Flag
+	or		BYTE [di+DPT.bFlagsHigh], FLGH_DPT_INTERRUPT_IN_SERVICE
 	push	ds
-	LOAD_BDA_SEGMENT_TO	ds, cx, !		; Also zero CX
-	mov		[BDA.bHDTaskFlg], al
+	LOAD_BDA_SEGMENT_TO	ds, dx, !	; Also zero DX
+	mov		[BDA.bHDTaskFlg], dl
 	pop		ds
 .DoNotSetInterruptInServiceFlag:
+	mov		dl, DEVICE_CONTROL_REGISTER_out
 	call	Device_OutputALtoIdeControlBlockRegisterInDL
 
 	; Output Feature Number
@@ -142,9 +143,9 @@ IdeCommand_OutputWithParameters:
 	call	Device_OutputALtoIdeRegisterInDL
 
 	; Wait until command completed
-	pop		bx							; Pop status and timeout for polling
-	cmp		bl, FLG_STATUS_DRQ			; Data transfer started?
-	je		SHORT .StartDataTransfer
+	pop		bx						; Pop status and timeout for polling
+	cmp		bl, FLG_STATUS_DRQ		; Data transfer started?
+	je		SHORT IdeTransfer_StartWithCommandInAL
 	test	BYTE [bp+IDEPACK.bDeviceControl], FLG_DEVCONTROL_nIEN
 	jz		SHORT .WaitForIrqOrRdy
 	jmp		IdeWait_PollStatusFlagInBLwithTimeoutInBH
@@ -152,9 +153,6 @@ IdeCommand_OutputWithParameters:
 ALIGN JUMP_ALIGN
 .WaitForIrqOrRdy:
 	jmp		IdeWait_IRQorStatusFlagInBLwithTimeoutInBH
-ALIGN JUMP_ALIGN
-.StartDataTransfer:
-	jmp		IdeTransfer_StartWithCommandInAL
 
 .DriveNotReady:
 	pop		bx							; Clean stack
@@ -178,7 +176,7 @@ IdeCommand_SelectDrive:
 	; Wait until neither Master or Slave Drive is busy
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_BSY, FLG_STATUS_BSY)
 	cmp		BYTE [bp+IDEPACK.bCommand], COMMAND_IDENTIFY_DEVICE
-	eCMOVE	bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_IDENTIFY_DEVICE, FLG_STATUS_BSY)
+	eCMOVE	bh, TIMEOUT_IDENTIFY_DEVICE
 	call	IdeWait_PollStatusFlagInBLwithTimeoutInBH
 	jc		SHORT ReturnSinceTimeoutWhenPollingBusy
 
@@ -188,7 +186,7 @@ IdeCommand_SelectDrive:
 	call	Device_OutputALtoIdeRegisterInDL
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRDY, FLG_STATUS_DRDY)
 	cmp		BYTE [bp+IDEPACK.bCommand], COMMAND_IDENTIFY_DEVICE
-	eCMOVE	bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_IDENTIFY_DEVICE, FLG_STATUS_DRDY)
+	eCMOVE	bh, TIMEOUT_IDENTIFY_DEVICE
 	jmp		IdeWait_PollStatusFlagInBLwithTimeoutInBH
 
 

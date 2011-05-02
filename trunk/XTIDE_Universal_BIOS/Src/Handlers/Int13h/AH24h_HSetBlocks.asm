@@ -21,7 +21,7 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH24h_HandlerForSetMultipleBlocks:
-	test	WORD [di+DPT.wFlags], FLG_DPT_BLOCK_MODE_SUPPORTED
+	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_BLOCK_MODE_SUPPORTED
 	jnz		SHORT .TryToSetBlockMode
 	stc
 	mov		ah, RET_HD_INVALID

@@ -88,8 +88,8 @@ ConvertLCHStoPCHS:
 
 	; (LCylinder << n) + (LHead / PHeadCount)
 	mov		dx, cx					; Copy L-CHS Cylinder number to DX
-	mov		cl, [di+DPT.wFlags]		; Load shift count
-	and		cl, MASK_DPT_CHS_SHIFT_COUNT
+	mov		cl, [di+DPT.bFlagsLow]	; Load shift count
+	and		cl, MASKL_DPT_CHS_SHIFT_COUNT
 	shl		dx, cl					; DX = LCylinder << n
 	add		ax, dx					; AX = P-CHS Cylinder number
 	mov		cx, ax					; Copy P-CHS Cylinder number to CX

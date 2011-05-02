@@ -165,7 +165,7 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ; InitializePiovarsInSSBPwithSectorCountInAX
 ;	Parameters:
-;		AX:		Number of sectors to transfer (0=65536)
+;		AX:		Number of sectors to transfer (1...65535)
 ;		BX:		Offset to transfer function lookup table
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
 ;		SS:BP:	Ptr to PIOVARS
@@ -178,9 +178,7 @@ ALIGN JUMP_ALIGN
 InitializePiovarsInSSBPwithSectorCountInAX:
 	; Store number of blocks to transfer
 	eMOVZX	cx, BYTE [di+DPT_ATA.bSetBlock]		; Block size in sectors
-	xor		dx, dx
-	test	ax, ax
-	eCMOVZ	dl, 1		; DX:AX = Sectors to transfer (1...65536)
+	xor		dx, dx		; DX:AX = Sectors to transfer (1...65535)
 	div		cx			; AX = Full blocks to transfer
 	test	dx, dx
 	mov		dh, cl		; DH = Full block size if no partial blocks to transfer
@@ -196,7 +194,7 @@ InitializePiovarsInSSBPwithSectorCountInAX:
 	mov		[bp+PIOVARS.wBlockSize], cx
 
 	; Get transfer function based on bus type
-	xchg	ax, bx
+	xchg	ax, bx								; Lookup table offset to AX
 	eMOVZX	bx, BYTE [di+DPT.bIdevarsOffset]	; CS:BX now points to IDEVARS
 	mov		dx, [cs:bx+IDEVARS.wPort]			; Load IDE Data port address
 	mov		bl, [cs:bx+IDEVARS.bDevice]			; Load device type to BX

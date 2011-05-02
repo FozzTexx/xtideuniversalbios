@@ -113,7 +113,7 @@ AcknowledgeIdeInterruptAndSetTaskFlag:
 	call	Device_InputToALfromIdeRegisterInDL
 
 	; Clear Interrupt In-Service Flag from DPT
-	and		WORD [di+DPT.wFlags], ~FLG_DPT_INTERRUPT_IN_SERVICE
+	and		BYTE [di+DPT.bFlagsHigh], ~FLGH_DPT_INTERRUPT_IN_SERVICE
 
 	; Set Task Flag
 	LOAD_BDA_SEGMENT_TO	ds, ax

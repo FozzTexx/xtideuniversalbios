@@ -45,29 +45,29 @@ AH9h_InitializeDriveForUse:
 	push	cx
 
 	; Try to select drive and wait until ready
-	or		WORD [di+DPT.wFlags], MASK_DPT_RESET		; Everything uninitialized
+	or		BYTE [di+DPT.bFlagsHigh], MASKH_DPT_RESET		; Everything uninitialized
 	call	AccessDPT_GetDriveSelectByteToAL
 	mov		[bp+IDEPACK.bDrvAndHead], al
 	call	Device_SelectDrive
 	jc		SHORT .ReturnNotSuccessfull
-	and		WORD [di+DPT.wFlags], ~FLG_DPT_RESET_nDRDY	; Clear since success
+	and		BYTE [di+DPT.bFlagsHigh], ~FLGH_DPT_RESET_nDRDY	; Clear since success
 
 	; Initialize CHS parameters if LBA is not used
 	call	InitializeDeviceParameters
 	jc		SHORT .RecalibrateDrive
-	and		WORD [di+DPT.wFlags], ~FLG_DPT_RESET_nINITPRMS
+	and		BYTE [di+DPT.bFlagsHigh], ~FLGH_DPT_RESET_nINITPRMS
 
 	; Recalibrate drive by seeking to cylinder 0
 .RecalibrateDrive:
 	call	AH11h_RecalibrateDrive
 	jc		SHORT .InitializeBlockMode
-	and		WORD [di+DPT.wFlags], ~FLG_DPT_RESET_nRECALIBRATE
+	and		BYTE [di+DPT.bFlagsHigh], ~FLGH_DPT_RESET_nRECALIBRATE
 
 	; Initialize block mode transfers
 .InitializeBlockMode:
 	call	InitializeBlockMode
 	jc		SHORT .ReturnNotSuccessfull
-	and		WORD [di+DPT.wFlags], ~FLG_DPT_RESET_nSETBLOCK	; Keeps CF clear
+	and		BYTE [di+DPT.bFlagsHigh], ~FLGH_DPT_RESET_nSETBLOCK	; Keeps CF clear
 
 .ReturnNotSuccessfull:
 	pop		cx
@@ -89,7 +89,7 @@ AH9h_InitializeDriveForUse:
 ALIGN JUMP_ALIGN
 InitializeDeviceParameters:
 	; No need to initialize CHS parameters if LBA mode enabled
-	test	BYTE [di+DPT.wFlags], FLG_DRVNHEAD_LBA	; Clear CF
+	test	BYTE [di+DPT.bFlagsLow], FLG_DRVNHEAD_LBA	; Clear CF
 	jnz		SHORT ReturnSuccessSinceInitializationNotNeeded
 
 	; Initialize Logical Sectors per Track and Max Head number
@@ -114,7 +114,7 @@ InitializeDeviceParameters:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 InitializeBlockMode:
-	test	WORD [di+DPT.wFlags], FLG_DPT_BLOCK_MODE_SUPPORTED	; Clear CF
+	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_BLOCK_MODE_SUPPORTED	; Clear CF
 	jz		SHORT ReturnSuccessSinceInitializationNotNeeded
 
 	mov		al, [di+DPT_ATA.bMaxBlock]	; Load max block size, zero AH
