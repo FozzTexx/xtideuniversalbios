@@ -97,13 +97,13 @@ FindDPT_ToDSDIForIdeSlaveAtPortDX:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 IterateToSlaveAtPortCallback:
-	test	BYTE [di+DPT.wFlags], FLG_DPT_SLAVE	; Clears CF
+	test	BYTE [di+DPT.bFlagsLow], FLGL_DPT_SLAVE	; Clears CF
 	jnz		SHORT CompareBasePortAddress
 	ret		; Wrong DPT
 
 ALIGN JUMP_ALIGN
 IterateToMasterAtPortCallback:
-	test	BYTE [di+DPT.wFlags], FLG_DPT_SLAVE
+	test	BYTE [di+DPT.bFlagsLow], FLGL_DPT_SLAVE
 	jnz		SHORT ReturnWrongDPT				; Return if slave drive
 
 CompareBasePortAddress:
@@ -145,7 +145,7 @@ FindDPT_ToDSDIforInterruptInService:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 IterateToDptWithInterruptInServiceFlagSet:
-	test	WORD [di+DPT.wFlags], FLG_DPT_INTERRUPT_IN_SERVICE
+	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_INTERRUPT_IN_SERVICE
 	jz		SHORT ReturnWrongDPT
 	stc										; Set CF since wanted DPT
 	ret

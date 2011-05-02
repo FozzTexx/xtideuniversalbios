@@ -68,7 +68,7 @@ PushAddressingMode:
 ;--------------------------------------------------------------------
 PushBlockMode:
 	mov		ax, 1
-	test	WORD [di+DPT.wFlags], FLG_DPT_BLOCK_MODE_SUPPORTED
+	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_BLOCK_MODE_SUPPORTED
 	jz		SHORT .PushBlockSizeFromAX
 	mov		al, [di+DPT_ATA.bSetBlock]
 .PushBlockSizeFromAX:
@@ -136,8 +136,8 @@ ALIGN JUMP_ALIGN
 ;		AX
 ;--------------------------------------------------------------------
 PushResetStatus:
-	mov		ax, [di+DPT.wFlags]
-	and		ax, MASK_DPT_RESET
+	mov		al, [di+DPT.bFlagsHigh]
+	and		ax, MASKH_DPT_RESET
 	push	ax
 
 ;--------------------------------------------------------------------

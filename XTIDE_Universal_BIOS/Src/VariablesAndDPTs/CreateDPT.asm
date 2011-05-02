@@ -59,7 +59,7 @@ CreateDPT_FromAtaInformation:
 	and		ax, BYTE FLG_DRVNHEAD_DRV		; AL now has Master/Slave bit
 	cmp		[cs:bp+IDEVARS.bIRQ], ah		; Interrupts enabled?
 	jz		SHORT .StoreFlags				;  If not, do not set interrupt flag
-	or		al, FLG_DPT_ENABLE_IRQ
+	or		al, FLGL_DPT_ENABLE_IRQ
 .StoreFlags:
 	mov		[di+DPT.wFlags], ax
 	; Fall to .StorePCHS
@@ -171,7 +171,7 @@ CreateDPT_FromAtaInformation:
 .StoreBlockMode:
 	cmp		BYTE [es:si+ATA1.bBlckSize], 1	; Max block size in sectors
 	jbe		SHORT .BlockModeTransfersNotSupported
-	or		WORD [di+DPT.wFlags], FLG_DPT_BLOCK_MODE_SUPPORTED
+	or		BYTE [di+DPT.bFlagsHigh], FLGH_DPT_BLOCK_MODE_SUPPORTED
 .BlockModeTransfersNotSupported:
 	; Fall to .StoreDeviceSpecificParameters
 

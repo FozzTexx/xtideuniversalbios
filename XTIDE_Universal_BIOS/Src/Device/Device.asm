@@ -15,7 +15,7 @@ SECTION .text
 ;		AX, BX, CX, DX
 ;--------------------------------------------------------------------
 Device_FinalizeDPT:
-	test	WORD [di+DPT.wFlags], FLG_DPT_SERIAL_DEVICE
+	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE
 	jnz		SHORT ReturnSuccessForSerialPort
 	jmp		IdeDPT_Finalize
 .FinalizeDptForSerialPortDevice:
@@ -33,7 +33,7 @@ Device_FinalizeDPT:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
 Device_ResetMasterAndSlaveController:
-	test	WORD [di+DPT.wFlags], FLG_DPT_SERIAL_DEVICE
+	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE
 	jnz		SHORT ReturnSuccessForSerialPort
 	jmp		IdeCommand_ResetMasterAndSlaveController
 
@@ -75,7 +75,7 @@ Device_IdentifyToBufferInESSIwithDriveSelectByteInBH:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Device_OutputCommandWithParameters:
-	test	WORD [di+DPT.wFlags], FLG_DPT_SERIAL_DEVICE
+	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE
 	jnz		SHORT .OutputCommandToSerialPort
 	jmp		IdeCommand_OutputWithParameters
 ALIGN JUMP_ALIGN
@@ -96,7 +96,7 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Device_SelectDrive:
-	test	WORD [di+DPT.wFlags], FLG_DPT_SERIAL_DEVICE
+	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE
 	jnz		SHORT ReturnSuccessForSerialPort
 	jmp		IdeCommand_SelectDrive
 ReturnSuccessForSerialPort:
@@ -167,7 +167,7 @@ Device_InputToALfromIdeRegisterInDL:
 ;		BX, DX
 ;--------------------------------------------------------------------
 TranslateRegisterAddressInDLifNecessaryThenJumpToBX:
-	test	WORD [di+DPT.wFlags], FLG_DPT_REVERSED_A0_AND_A3
+	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_REVERSED_A0_AND_A3
 	jz		SHORT .JumpToIoFunctionInSI
 
 	; Exchange address lines A0 and A3 from DL

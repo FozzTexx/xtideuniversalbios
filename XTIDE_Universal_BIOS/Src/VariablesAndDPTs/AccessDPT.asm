@@ -33,7 +33,7 @@ AccessDPT_GetDriveSelectByteToAL:
 ALIGN JUMP_ALIGN
 AccessDPT_GetDeviceControlByteToAL:
 	xor		al, al
-	test	BYTE [di+DPT.wFlags], FLG_DPT_ENABLE_IRQ
+	test	BYTE [di+DPT.bFlagsLow], FLGL_DPT_ENABLE_IRQ
 	jnz		SHORT .EnableDeviceIrq
 	or		al, FLG_DEVCONTROL_nIEN	; Disable IRQ
 .EnableDeviceIrq:
@@ -51,8 +51,8 @@ AccessDPT_GetDeviceControlByteToAL:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AccessDPT_GetAddressingModeForWordLookToBX:
-	mov		bl, [di+DPT.wFlags]
-	and		bx, BYTE MASK_DPT_ADDRESSING_MODE
+	mov		bl, [di+DPT.bFlagsLow]
+	and		bx, BYTE MASKL_DPT_ADDRESSING_MODE
 	eSHR_IM	bx, ADDRESSING_MODE_FIELD_POSITION-1
 	ret
 
@@ -71,8 +71,8 @@ AccessDPT_GetAddressingModeForWordLookToBX:
 ALIGN JUMP_ALIGN
 AccessDPT_GetLCHSfromPCHS:
 	xchg	ax, cx
-	mov		cl, [di+DPT.wFlags]
-	and		cl, MASK_DPT_CHS_SHIFT_COUNT	; Load shift count
+	mov		cl, [di+DPT.bFlagsLow]
+	and		cl, MASKL_DPT_CHS_SHIFT_COUNT	; Load shift count
 	mov		bx, [di+DPT.wPchsCylinders]		; Load P-CHS cylinders
 	shr		bx, cl							; Shift to L-CHS cylinders
 	xchg	cx, ax
@@ -114,7 +114,7 @@ ALIGN JUMP_ALIGN
 AccessDPT_GetPointerToDRVPARAMStoCSBX:
 	eMOVZX	bx, [di+DPT.bIdevarsOffset]			; CS:BX points to IDEVARS
 	add		bx, BYTE IDEVARS.drvParamsMaster	; CS:BX points to Master Drive DRVPARAMS
-	test	BYTE [di+DPT.wFlags], FLG_DPT_SLAVE
+	test	BYTE [di+DPT.bFlagsLow], FLGL_DPT_SLAVE
 	jz		SHORT .ReturnPointerToDRVPARAMS
 	add		bx, BYTE DRVPARAMS_size				; CS:BX points to Slave Drive DRVPARAMS
 .ReturnPointerToDRVPARAMS:

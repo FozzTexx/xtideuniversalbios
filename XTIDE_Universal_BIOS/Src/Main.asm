@@ -156,10 +156,10 @@ iend
 
 ; IDE Device support
 %include "IdeCommand.asm"
+%include "IdeTransfer.asm"		; Must be included after IdeCommand.asm
 %include "IdeDPT.asm"
 %include "IdeIO.asm"
 %include "IdeIrq.asm"
-%include "IdeTransfer.asm"
 %include "IdeWait.asm"
 %include "IdeError.asm"			; Must be included after IdeWait.asm
 

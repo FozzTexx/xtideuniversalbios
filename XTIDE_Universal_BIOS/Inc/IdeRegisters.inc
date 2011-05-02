@@ -18,7 +18,7 @@ LBA_HIGH_REGISTER				EQU		5		; LBA 23...16, LBA48 47...40
 DRIVE_AND_HEAD_SELECT_REGISTER	EQU		6		; LBA28 27...24
 STATUS_REGISTER_in				EQU		7		; Read only
 COMMAND_REGISTER_out			EQU		7		; Write only
-XTIDE_DATA_HIGH_REGISTER		EQU		8		; Non-standard (actually first Control Block reg)
+;XTIDE_DATA_HIGH_REGISTER		EQU		8		; Non-standard (actually first Control Block reg)
 
 ; IDE Register offsets from Control Block base port
 ; (usually Command Block base port + 200h)
@@ -57,7 +57,7 @@ FLG_STATUS_ERR			EQU		(1<<0)	; Error
 
 ; Bit definitions for IDE Device Control Register
 ; Bit 0 must be zero, unlisted bits are reserved.
-FLG_DEVCONTROL_HOB		EQU		(1<<7)	; High Order Byte (ATA6+)
+;FLG_DEVCONTROL_HOB		EQU		(1<<7)	; High Order Byte (ATA6+)
 ;FLG_DEVCONTROL_O8H		EQU		(1<<3)	; Drive has more than 8 heads (pre-ATA only, 1 on ATA1, reserved on ATA2+)
 FLG_DEVCONTROL_SRST		EQU		(1<<2)	; Software Reset
 FLG_DEVCONTROL_nIEN		EQU		(1<<1)	; Negated Interrupt Enable (IRQ disabled when set)

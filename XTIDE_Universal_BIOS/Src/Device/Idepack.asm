@@ -1,8 +1,6 @@
 ; Project name	:	XTIDE Universal BIOS
 ; Description	:	Functions for managing IDEPACK struct.
 
-SIZE_OF_FAKE_IDEPACK		EQU		(IDEPACK_size - INTPACK_size)
-
 ; Section containing code
 SECTION .text
 
@@ -17,7 +15,7 @@ SECTION .text
 ;--------------------------------------------------------------------
 Idepack_FakeToSSBP:
 	pop		ax
-	sub		sp, BYTE SIZE_OF_FAKE_IDEPACK
+	sub		sp, BYTE EXTRA_BYTES_FOR_INTPACK
 	mov		bp, sp
 	jmp		ax
 

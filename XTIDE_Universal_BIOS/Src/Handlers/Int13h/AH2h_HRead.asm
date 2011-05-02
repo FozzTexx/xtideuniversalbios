@@ -27,9 +27,11 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH2h_HandlerForReadDiskSectors:
-	call	AH2h_ExitInt13hIfSectorCountInIntpackIsZero
+	cmp		BYTE [bp+IDEPACK.intpack+INTPACK.al], 0
+	je		SHORT AH2h_ExitInt13hSinceSectorCountInIntpackIsZero
+
 	mov		ah, COMMAND_READ_SECTORS	; Load sector mode command
-	test	WORD [di+DPT.wFlags], FLG_DPT_BLOCK_MODE_SUPPORTED
+	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_BLOCK_MODE_SUPPORTED
 	eCMOVNZ	ah, COMMAND_READ_MULTIPLE	; Load block mode command
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRQ, FLG_STATUS_DRQ)
 	mov		si, [bp+IDEPACK.intpack+INTPACK.bx]
@@ -43,21 +45,12 @@ AH2h_HandlerForReadDiskSectors:
 
 
 ;--------------------------------------------------------------------
-; AH2h_ExitInt13hIfSectorCountInIntpackIsZero
+; AH2h_ExitInt13hSinceSectorCountInIntpackIsZero
 ;	Parameters:
-;		SS:BP:	Ptr to IDEPACK
-;	Parameters on INTPACK:
-;		AL:		Number of sectors to transfer (1...255)
-;	Returns:
-;		Nothing (does not return if error)
-;	Corrupts registers:
 ;		Nothing
+;	Returns:
+;		Jumps to Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-AH2h_ExitInt13hIfSectorCountInIntpackIsZero:
-	cmp		BYTE [bp+IDEPACK.intpack+INTPACK.al], 0
-	je		SHORT .InvalidSectorCount
-	ret
-.InvalidSectorCount:
+AH2h_ExitInt13hSinceSectorCountInIntpackIsZero:
 	mov		ah, RET_HD_INVALID
 	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
