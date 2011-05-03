@@ -114,11 +114,13 @@ iend
 g_rgwChoiceToValueLookupForEepromType:
 	dw	EEPROM_TYPE.2816_2kiB
 	dw	EEPROM_TYPE.2864_8kiB
+	dw	EEPROM_TYPE.2864_8kiB_MOD
 	dw	EEPROM_TYPE.28256_32kiB
 	dw	EEPROM_TYPE.28512_64kiB
 g_rgszValueToStringLookupForEepromType:
 	dw	g_szValueFlash2816
 	dw	g_szValueFlash2864
+	dw	g_szValueFlash2864Mod
 	dw	g_szValueFlash28256
 	dw	g_szValueFlash28512
 
