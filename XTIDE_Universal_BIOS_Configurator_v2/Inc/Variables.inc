@@ -8,7 +8,7 @@ MAX_ALLOWED_IDE_CONTROLLERS			EQU		4	; Maximum number of IDE controllers
 MAX_LITE_MODE_CONTROLLERS			EQU		2
 EEPROM_POLLING_TIMEOUT_TICKS		EQU		3	; 1 tick = 54.9 ms
 XTIDE_SIGNATURE_LENGTH				EQU		8	; XTIDE Universal BIOS signature string length
-NUMBER_OF_EEPROM_TYPES				EQU		4
+NUMBER_OF_EEPROM_TYPES				EQU		5
 MAX_EEPROM_SIZE_IN_BYTES			EQU		65536
 
 
@@ -35,6 +35,7 @@ FLG_CFGVARS_CHECKSUM	EQU		(1<<3)	; Generate checksum byte
 struc EEPROM_TYPE
 	.2816_2kiB			resb	2
 	.2864_8kiB			resb	2
+	.2864_8kiB_MOD		resb	2	; Reversed A0 and A3 address lines
 	.28256_32kiB		resb	2
 	.28512_64kiB		resb	2
 endstruc

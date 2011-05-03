@@ -1,5 +1,4 @@
 ; Project name	:	XTIDE Univeral BIOS Configurator v2
-; Author		:	Tomi Tilli
 ; Description	:	Functions for managing EEPROM contents.
 
 ; Section containing initialized data
@@ -9,6 +8,7 @@ ALIGN WORD_ALIGN
 g_rgwEepromTypeToSizeInWords:
 	dw		(2<<10) / 2		; EEPROM_TYPE.2816_2kiB
 	dw		(8<<10) / 2
+	dw		(8<<10) / 2		; EEPROM_TYPE.2864_8kiB_MOD
 	dw		(32<<10) / 2
 	dw		(64<<10) / 2
 

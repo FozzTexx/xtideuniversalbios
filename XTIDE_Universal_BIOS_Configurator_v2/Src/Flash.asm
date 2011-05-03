@@ -99,16 +99,19 @@ ALIGN WORD_ALIGN
 .rgfnFlashWithoutSDP:		; SDP_COMMAND.none
 	dw		DoNotWriteAnySdpCommand					; EEPROM_TYPE.2816_2kiB
 	dw		DoNotWriteAnySdpCommand					; EEPROM_TYPE.2864_8kiB
+	dw		DoNotWriteAnySdpCommand					; EEPROM_TYPE.2864_8kiB_MOD
 	dw		DoNotWriteAnySdpCommand					; EEPROM_TYPE.28256_32kiB
 	dw		DoNotWriteAnySdpCommand					; EEPROM_TYPE.28512_64kiB
 .rgfnEnableSdpAndFlash:		; SDP_COMMAND.enable
 	dw		WriteSdpEnableCommandFor2816			; EEPROM_TYPE.2816_2kiB
 	dw		WriteSdpEnableCommandFor2864			; EEPROM_TYPE.2864_8kiB
+	dw		WriteSdpEnableCommandFor2864mod			; EEPROM_TYPE.2864_8kiB_MOD
 	dw		WriteSdpEnableCommandFor28256or28512	; EEPROM_TYPE.28256_32kiB
 	dw		WriteSdpEnableCommandFor28256or28512	; EEPROM_TYPE.28512_64kiB
 .rgfnDisableSdpAndFlash:	; SDP_COMMAND.disable
 	dw		WriteSdpDisableCommandFor2816			; EEPROM_TYPE.2816_2kiB
 	dw		WriteSdpDisableCommandFor2864			; EEPROM_TYPE.2864_8kiB
+	dw		WriteSdpDisableCommandFor2864mod		; EEPROM_TYPE.2864_8kiB_MOD
 	dw		WriteSdpDisableCommandFor28256or28512	; EEPROM_TYPE.28256_32kiB
 	dw		WriteSdpDisableCommandFor28256or28512	; EEPROM_TYPE.28512_64kiB
 
@@ -188,12 +191,17 @@ WriteSdpEnableCommandFor2816:
 ALIGN JUMP_ALIGN
 WriteSdpEnableCommandFor2864:
 	ENABLE_SDP 1555h, 0AAAh
-	jmp		SHORT ReturnFromSdpCommand
+	jmp		ReturnFromSdpCommand
+
+ALIGN JUMP_ALIGN
+WriteSdpEnableCommandFor2864mod:
+	ENABLE_SDP 155Ch, 0AA3h
+	jmp		ReturnFromSdpCommand
 
 ALIGN JUMP_ALIGN
 WriteSdpEnableCommandFor28256or28512:
 	ENABLE_SDP 5555h, 2AAAh
-	jmp		SHORT ReturnFromSdpCommand
+	jmp		ReturnFromSdpCommand
 
 
 ALIGN JUMP_ALIGN
@@ -204,6 +212,11 @@ WriteSdpDisableCommandFor2816:
 ALIGN JUMP_ALIGN
 WriteSdpDisableCommandFor2864:
 	DISABLE_SDP 1555h, 0AAAh
+	jmp		SHORT ReturnFromSdpCommand
+
+ALIGN JUMP_ALIGN
+WriteSdpDisableCommandFor2864mod:
+	DISABLE_SDP 155Ch, 0AA3h
 	jmp		SHORT ReturnFromSdpCommand
 
 ALIGN JUMP_ALIGN
