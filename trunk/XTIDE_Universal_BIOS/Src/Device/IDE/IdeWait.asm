@@ -126,4 +126,4 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 ReadIdeStatusRegisterToAL:
 	mov		dl, STATUS_REGISTER_in
-	jmp		Device_InputToALfromIdeRegisterInDL
+	jmp		IdeIO_InputToALfromIdeRegisterInDL

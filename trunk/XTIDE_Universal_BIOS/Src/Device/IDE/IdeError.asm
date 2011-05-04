@@ -20,7 +20,7 @@ ALIGN JUMP_ALIGN
 IdeError_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL:
 	mov		ah, al			; IDE Status Register to AH
 	mov		dl, ERROR_REGISTER_in
-	call	Device_InputToALfromIdeRegisterInDL
+	call	IdeIO_InputToALfromIdeRegisterInDL
 	xchg	al, ah			; Status Register now in AL, Error Register now in AH
 
 	; I don't think anything actually reads these from BDA

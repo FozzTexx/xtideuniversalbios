@@ -19,7 +19,7 @@ IdeCommand_ResetMasterAndSlaveController:
 	call	AccessDPT_GetDeviceControlByteToAL
 	or		al, FLG_DEVCONTROL_SRST | FLG_DEVCONTROL_nIEN	; Set Reset bit
 	mov		dl, DEVICE_CONTROL_REGISTER_out
-	call	Device_OutputALtoIdeControlBlockRegisterInDL
+	call	IdeIO_OutputALtoIdeControlBlockRegisterInDL
 	mov		ax, HSR0_RESET_WAIT_US
 	call	Timer_DelayMicrosecondsFromAX
 
@@ -28,7 +28,7 @@ IdeCommand_ResetMasterAndSlaveController:
 	or		al, FLG_DEVCONTROL_nIEN
 	and		al, ~FLG_DEVCONTROL_SRST						; Clear reset bit
 	mov		dl, DEVICE_CONTROL_REGISTER_out
-	call	Device_OutputALtoIdeControlBlockRegisterInDL
+	call	IdeIO_OutputALtoIdeControlBlockRegisterInDL
 	mov		ax, HSR1_RESET_WAIT_US
 	call	Timer_DelayMicrosecondsFromAX
 
@@ -54,11 +54,10 @@ IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 	; Create fake DPT to be able to use Device.asm functions
 	call	FindDPT_ForNewDriveToDSDI
 	eMOVZX	ax, bh
-	cmp		BYTE [cs:bp+IDEVARS.bDevice], DEVICE_XTIDE_WITH_REVERSED_A3_AND_A0
-	eCMOVE	ah, FLGH_DPT_REVERSED_A0_AND_A3
 	mov		[di+DPT.wFlags], ax
 	mov		[di+DPT.bIdevarsOffset], bp
 	mov		BYTE [di+DPT_ATA.bSetBlock], 1	; Block = 1 sector
+	call	IdeDPT_StoreReversedAddressLinesFlagIfNecessary
 
 	; Wait until drive motors have reached max speed
 	cmp		bp, BYTE ROMVARS.ideVars0
@@ -120,12 +119,12 @@ IdeCommand_OutputWithParameters:
 	pop		ds
 .DoNotSetInterruptInServiceFlag:
 	mov		dl, DEVICE_CONTROL_REGISTER_out
-	call	Device_OutputALtoIdeControlBlockRegisterInDL
+	call	IdeIO_OutputALtoIdeControlBlockRegisterInDL
 
 	; Output Feature Number
 	mov		dl, FEATURES_REGISTER_out
 	mov		al, [bp+IDEPACK.bFeatures]
-	call	Device_OutputALtoIdeRegisterInDL
+	call	IdeIO_OutputALtoIdeRegisterInDL
 
 	; Output Sector Address High (only used by LBA48)
 	mov		ax, [bp+IDEPACK.wSectorCountHighAndLbaLowExt]
@@ -140,7 +139,7 @@ IdeCommand_OutputWithParameters:
 	; Output command
 	mov		dl, COMMAND_REGISTER_out
 	mov		al, [bp+IDEPACK.bCommand]
-	call	Device_OutputALtoIdeRegisterInDL
+	call	IdeIO_OutputALtoIdeRegisterInDL
 
 	; Wait until command completed
 	pop		bx						; Pop status and timeout for polling
@@ -183,7 +182,7 @@ IdeCommand_SelectDrive:
 	; Select Master or Slave Drive
 	mov		dl, DRIVE_AND_HEAD_SELECT_REGISTER
 	mov		al, [bp+IDEPACK.bDrvAndHead]
-	call	Device_OutputALtoIdeRegisterInDL
+	call	IdeIO_OutputALtoIdeRegisterInDL
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRDY, FLG_STATUS_DRDY)
 	cmp		BYTE [bp+IDEPACK.bCommand], COMMAND_IDENTIFY_DEVICE
 	eCMOVE	bh, TIMEOUT_IDENTIFY_DEVICE
@@ -206,16 +205,16 @@ IdeCommand_SelectDrive:
 ALIGN JUMP_ALIGN
 OutputSectorCountAndAddress:
 	mov		dl, SECTOR_COUNT_REGISTER
-	call	Device_OutputALtoIdeRegisterInDL
+	call	IdeIO_OutputALtoIdeRegisterInDL
 
 	mov		al, ah
 	mov		dl, LBA_LOW_REGISTER
-	call	Device_OutputALtoIdeRegisterInDL
+	call	IdeIO_OutputALtoIdeRegisterInDL
 
 	mov		al, cl
 	mov		dl, LBA_MIDDLE_REGISTER
-	call	Device_OutputALtoIdeRegisterInDL
+	call	IdeIO_OutputALtoIdeRegisterInDL
 
 	mov		al, ch
 	mov		dl, LBA_HIGH_REGISTER
-	jmp		Device_OutputALtoIdeRegisterInDL
+	jmp		IdeIO_OutputALtoIdeRegisterInDL
