@@ -5,53 +5,88 @@
 SECTION .text
 
 ;--------------------------------------------------------------------
-; IdeIO_OutputALtoIdeRegisterInDX
+; IdeIO_OutputALtoIdeRegisterInDL
 ;	Parameters:
 ;		AL:		Byte to output
-;		DX:		IDE Register
-;		CS:BX:	Ptr to IDEVARS
+;		DL:		IDE Register
+;		DS:DI:	Ptr to DPT (in RAMVARS segment)
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		DX
+;		BX, DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-IdeIO_OutputALtoIdeRegisterInDX:
-	add		dx, [cs:bx+IDEVARS.wPort]
+IdeIO_OutputALtoIdeRegisterInDL:
+	mov		bx, IDEVARS.wPort
+	call	GetPortToDXandTranslateA0andA3ifNecessary
 	out		dx, al
 	ret
 
 
 ;--------------------------------------------------------------------
-; IdeIO_OutputALtoIdeControlBlockRegisterInDX
+; IdeIO_OutputALtoIdeControlBlockRegisterInDL
 ;	Parameters:
 ;		AL:		Byte to output
-;		DX:		IDE Control Block Register
-;		CS:BX:	Ptr to IDEVARS
+;		DL:		IDE Control Block Register
+;		DS:DI:	Ptr to DPT (in RAMVARS segment)
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		DX
+;		BX, DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-IdeIO_OutputALtoIdeControlBlockRegisterInDX:
-	add		dx, [cs:bx+IDEVARS.wPortCtrl]
+IdeIO_OutputALtoIdeControlBlockRegisterInDL:
+	mov		bx, IDEVARS.wPortCtrl
+	call	GetPortToDXandTranslateA0andA3ifNecessary
 	out		dx, al
 	ret
 
 
 ;--------------------------------------------------------------------
-; IdeIO_InputToALfromIdeRegisterInDX
+; IdeIO_InputToALfromIdeRegisterInDL
 ;	Parameters:
-;		DX:		IDE Register
-;		CS:BX:	Ptr to IDEVARS
+;		DL:		IDE Register
+;		DS:DI:	Ptr to DPT (in RAMVARS segment)
 ;	Returns:
 ;		AL:		Inputted byte
 ;	Corrupts registers:
-;		DX
+;		BX, DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-IdeIO_InputToALfromIdeRegisterInDX:
-	add		dx, [cs:bx+IDEVARS.wPort]
+IdeIO_InputToALfromIdeRegisterInDL:
+	mov		bx, IDEVARS.wPort
+	call	GetPortToDXandTranslateA0andA3ifNecessary
 	in		al, dx
+	ret
+
+
+;--------------------------------------------------------------------
+; GetPortToDXandTranslateA0andA3ifNecessary
+;	Parameters:
+;		BX:		Offset to port in IDEVARS (IDEVARS.wPort or IDEVARS.wPortCtrl)
+;		DL:		IDE Register
+;		DS:DI:	Ptr to DPT (in RAMVARS segment)
+;	Returns:
+;		DX:		Source/Destination Port
+;	Corrupts registers:
+;		BX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+GetPortToDXandTranslateA0andA3ifNecessary:
+	xor		dh, dh							; DX now has IDE register offset
+	add		bl, [di+DPT.bIdevarsOffset]		; CS:BX now points port address
+	add		dx, [cs:bx]
+	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_REVERSED_A0_AND_A3
+	jz		SHORT .ReturnPortInDX
+
+	; Exchange address lines A0 and A3 from DL
+	mov		bl, dl
+	mov		bh, MASK_A3_AND_A0_ADDRESS_LINES
+	and		bh, bl							; BH = 0, 1, 8 or 9, we can ignore 0 and 9
+	jz		SHORT .ReturnPortInDX			; Jump out since DH is 0
+	xor		bh, MASK_A3_AND_A0_ADDRESS_LINES
+	jz		SHORT .ReturnPortInDX			; Jump out since DH was 9
+	and		dl, ~MASK_A3_AND_A0_ADDRESS_LINES
+	or		dl, bh							; Address lines now reversed
+.ReturnPortInDX:
 	ret

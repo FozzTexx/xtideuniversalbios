@@ -102,6 +102,7 @@ CreateDPT_FromAtaInformation:
 ;		BL:		P-CHS heads
 ;		DS:DI:	Ptr to Disk Parameter Table
 ;		ES:SI:	Ptr to 512-byte ATA information read from the drive
+;		CS:BP:	Ptr to IDEVARS for the controller
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
@@ -130,6 +131,7 @@ CreateDPT_FromAtaInformation:
 ;	Parameters:
 ;		DS:DI:	Ptr to Disk Parameter Table
 ;		ES:SI:	Ptr to 512-byte ATA information read from the drive
+;		CS:BP:	Ptr to IDEVARS for the controller
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
@@ -163,6 +165,7 @@ CreateDPT_FromAtaInformation:
 ;	Parameters:
 ;		DS:DI:	Ptr to Disk Parameter Table
 ;		ES:SI:	Ptr to 512-byte ATA information read from the drive
+;		CS:BP:	Ptr to IDEVARS for the controller
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
@@ -180,6 +183,7 @@ CreateDPT_FromAtaInformation:
 ;	Parameters:
 ;		DS:DI:	Ptr to Disk Parameter Table
 ;		ES:SI:	Ptr to 512-byte ATA information read from the drive
+;		CS:BP:	Ptr to IDEVARS for the controller
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
@@ -194,6 +198,7 @@ CreateDPT_FromAtaInformation:
 ;	Parameters:
 ;		DS:DI:	Ptr to Disk Parameter Table
 ;		ES:SI:	Ptr to 512-byte ATA information read from the drive
+;		CS:BP:	Ptr to IDEVARS for the controller
 ;		ES:		BDA Segment
 ;	Returns:
 ;		DL:		Drive number for new drive

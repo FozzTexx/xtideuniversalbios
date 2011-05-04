@@ -9,6 +9,7 @@ SECTION .text
 ;	Parameters:
 ;		DS:DI:	Ptr to Disk Parameter Table
 ;		ES:SI:	Ptr to 512-byte ATA information read from the drive
+;		CS:BP:	Ptr to IDEVARS for the controller
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
@@ -101,87 +102,4 @@ Device_SelectDrive:
 	jmp		IdeCommand_SelectDrive
 ReturnSuccessForSerialPort:
 	xor		ax, ax
-	ret
-
-
-;--------------------------------------------------------------------
-; Device_OutputALtoIdeRegisterInDL
-;	Parameters:
-;		AL:		Byte to output
-;		DL:		IDE Register
-;		DS:DI:	Ptr to DPT (in RAMVARS segment)
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		BX, DX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-Device_OutputALtoIdeRegisterInDL:
-	mov		bx, IdeIO_OutputALtoIdeRegisterInDX
-	jmp		SHORT TranslateRegisterAddressInDLifNecessaryThenJumpToBX
-
-
-;--------------------------------------------------------------------
-; Device_OutputALtoIdeControlBlockRegisterInDL
-;	Parameters:
-;		AL:		Byte to output
-;		DL:		IDE Control Block Register
-;		DS:DI:	Ptr to DPT (in RAMVARS segment)
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		BX, DX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-Device_OutputALtoIdeControlBlockRegisterInDL:
-	mov		bx, IdeIO_OutputALtoIdeControlBlockRegisterInDX
-	jmp		SHORT TranslateRegisterAddressInDLifNecessaryThenJumpToBX
-
-
-;--------------------------------------------------------------------
-; Device_InputToALfromIdeRegisterInDL
-;	Parameters:
-;		DL:		IDE Register
-;		DS:DI:	Ptr to DPT (in RAMVARS segment)
-;	Returns:
-;		AL:		Inputted byte
-;	Corrupts registers:
-;		BX, DX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-Device_InputToALfromIdeRegisterInDL:
-	mov		bx, IdeIO_InputToALfromIdeRegisterInDX
-	; Fall to TranslateRegisterAddressInDLifNecessaryThenJumpToBX
-
-
-;--------------------------------------------------------------------
-; TranslateRegisterAddressInDLifNecessaryThenJumpToBX
-;	Parameters:
-;		AL:		Byte to output (if output function in BX)
-;		DL:		IDE Register
-;		BX:		I/O function to jump to
-;		DS:DI:	Ptr to DPT (in RAMVARS segment)
-;	Returns:
-;		AL:		Inputted byte (if input function in BX)
-;	Corrupts registers:
-;		BX, DX
-;--------------------------------------------------------------------
-TranslateRegisterAddressInDLifNecessaryThenJumpToBX:
-	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_REVERSED_A0_AND_A3
-	jz		SHORT .JumpToIoFunctionInSI
-
-	; Exchange address lines A0 and A3 from DL
-	mov		dh, MASK_A3_AND_A0_ADDRESS_LINES
-	and		dh, dl							; DH = 0, 1, 8 or 9, we can ignore 0 and 9
-	jz		SHORT .JumpToIoFunctionInSI		; Jump out since DH is 0
-	xor		dh, MASK_A3_AND_A0_ADDRESS_LINES
-	jz		SHORT .JumpToIoFunctionInSI		; Jump out since DH was 9
-	and		dl, ~MASK_A3_AND_A0_ADDRESS_LINES
-	or		dl, dh							; Address lines now reversed
-
-ALIGN JUMP_ALIGN
-.JumpToIoFunctionInSI:
-	push	bx
-	xor		dh, dh
-	eMOVZX	bx, BYTE [di+DPT.bIdevarsOffset]; CS:BX now points to IDEVARS
 	ret

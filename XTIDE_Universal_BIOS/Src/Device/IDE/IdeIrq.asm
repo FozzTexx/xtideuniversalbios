@@ -110,7 +110,7 @@ AcknowledgeIdeInterruptAndSetTaskFlag:
 	call	RamVars_GetSegmentToDS
 	call	FindDPT_ToDSDIforInterruptInService
 	mov		dl, STATUS_REGISTER_in
-	call	Device_InputToALfromIdeRegisterInDL
+	call	IdeIO_InputToALfromIdeRegisterInDL
 
 	; Clear Interrupt In-Service Flag from DPT
 	and		BYTE [di+DPT.bFlagsHigh], ~FLGH_DPT_INTERRUPT_IN_SERVICE
