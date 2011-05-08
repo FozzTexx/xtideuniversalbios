@@ -43,8 +43,8 @@ IdeIrq_WaitForIRQ:
 	jnz		SHORT .ReturnFromWaitNotify	; AH has error, BIOS must do the wait
 	stc									; Set CF since wait done by OS
 .ReturnFromWaitNotify:
-	pop		ds
 	sti									; Enable interrupts
+	pop		ds
 	ret
 
 

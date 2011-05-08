@@ -92,7 +92,7 @@ ConvertLCHStoPCHS:
 	and		cl, MASKL_DPT_CHS_SHIFT_COUNT
 	shl		dx, cl					; DX = LCylinder << n
 	add		ax, dx					; AX = P-CHS Cylinder number
-	mov		cx, ax					; Copy P-CHS Cylinder number to CX
+	xchg	cx, ax					; Move P-CHS Cylinder number to CX
 DoNotConvertLCHS:
 	ret
 

@@ -55,7 +55,7 @@ BootMenuPrint_TitleStrings:
 	call	BootMenuPrint_NullTerminatedStringFromCSSIandSetCF
 	CALL_DISPLAY_LIBRARY PrintNewlineCharacters
 	mov		si, ROMVARS.szVersion
-	; Fall through to BootMenuPrint_NullTerminatedStringFromCSSIandSetCF
+	; Fall to BootMenuPrint_NullTerminatedStringFromCSSIandSetCF
 
 
 ;--------------------------------------------------------------------
@@ -168,7 +168,7 @@ PrintDriveNumberAfterTranslationFromDL:
 	mov		bp, sp
 	mov		si, g_szDriveNum
 	push	ax
-	jmp		BootMenuPrint_FormatCSSIfromParamsInSSBP
+	jmp		SHORT BootMenuPrint_FormatCSSIfromParamsInSSBP
 
 
 ;--------------------------------------------------------------------
@@ -186,43 +186,13 @@ BootMenuPrint_FloppyMenuitemInformation:
 	call	BootMenuPrint_ClearInformationArea
 	call	FloppyDrive_GetType			; Get Floppy Drive type to BX
 	test	bx, bx						; Two possibilities? (FLOPPY_TYPE_525_OR_35_DD)
+	push	bp
+	mov		bp, sp
 	jz		SHORT .PrintXTFloppyType
 	cmp		bl, FLOPPY_TYPE_35_ED
 	ja		SHORT .PrintUnknownFloppyType
-	jmp		SHORT .PrintKnownFloppyType
+	; Fall to .PrintKnownFloppyType
 
-;--------------------------------------------------------------------
-; .PrintXTFloppyType
-;	Parameters:
-;		Nothing
-;	Returns:
-;		CF:		Set since menu event was handled successfully
-;	Corrupts registers:
-;		AX, SI, DI
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-.PrintXTFloppyType:
-	push	bp
-	mov		si, g_szFddSizeOr
-	jmp		SHORT .FormatXTorUnknownTypeFloppyDrive
-
-;--------------------------------------------------------------------
-; .PrintUnknownFloppyType
-;	Parameters:
-;		Nothing
-;	Returns:
-;		CF:		Set since menu event was handled successfully
-;	Corrupts registers:
-;		AX, SI, DI
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-.PrintUnknownFloppyType:
-	push	bp
-	mov		si, g_szFddUnknown
-.FormatXTorUnknownTypeFloppyDrive:
-	mov		bp, sp
-	ePUSH_T	ax, g_szCapacity
-	jmp		BootMenuPrint_FormatCSSIfromParamsInSSBP
 
 ;--------------------------------------------------------------------
 ; .PrintKnownFloppyType
@@ -235,34 +205,38 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 .PrintKnownFloppyType:
-	push	bp
-	mov		bp, sp
 	mov		si, g_szFddSize
 	ePUSH_T	ax, g_szCapacity
 	dec		bx						; Cannot be 0 (FLOPPY_TYPE_525_OR_35_DD)
 	shl		bx, 1					; Shift for WORD lookup
-	mov		ax, [cs:bx+.rgwPhysicalSize]
+	mov		ax, [cs:bx+FloppyTypes.rgwPhysicalSize]
 	push	ax						; '5' or '3'
 	mov		al, ah
 	push	ax						; '1/4' or '1/2'
-	push	WORD [cs:bx+.rgwCapacity]
+	push	WORD [cs:bx+FloppyTypes.rgwCapacity]
 	jmp		SHORT BootMenuPrint_FormatCSSIfromParamsInSSBP
 
-ALIGN WORD_ALIGN
-.rgwCapacity:
-	dw		360
-	dw		1200
-	dw		720
-	dw		1440
-	dw		2880
-	dw		2880
-.rgwPhysicalSize:
-	db		'5', 172	; 1, FLOPPY_TYPE_525_DD
-	db		'5', 172	; 2, FLOPPY_TYPE_525_HD
-	db		'3', 171	; 3, FLOPPY_TYPE_35_DD
-	db		'3', 171	; 4, FLOPPY_TYPE_35_HD
-	db		'3', 171	; 5, 3.5" ED on some BIOSes
-	db		'3', 171	; 6, FLOPPY_TYPE_35_ED
+
+;--------------------------------------------------------------------
+; .PrintXTFloppyType
+; .PrintUnknownFloppyType
+;	Parameters:
+;		Nothing
+;	Returns:
+;		CF:		Set since menu event was handled successfully
+;	Corrupts registers:
+;		AX, SI, DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+.PrintXTFloppyType:
+	mov		si, g_szFddSizeOr
+	jmp		SHORT .FormatXTorUnknownTypeFloppyDrive
+ALIGN JUMP_ALIGN
+.PrintUnknownFloppyType:
+	mov		si, g_szFddUnknown
+.FormatXTorUnknownTypeFloppyDrive:
+	ePUSH_T	ax, g_szCapacity
+	jmp		SHORT BootMenuPrint_FormatCSSIfromParamsInSSBP
 
 
 ;--------------------------------------------------------------------
@@ -505,4 +479,21 @@ PushHotkeyParamsAndFormat:
 	push	si			; Description string
 	push	cx			; Key attribute for last space
 	mov		si, g_szHotkey
-	jmp		BootMenuPrint_FormatCSSIfromParamsInSSBP
+	jmp		SHORT BootMenuPrint_FormatCSSIfromParamsInSSBP
+
+ALIGN WORD_ALIGN
+FloppyTypes:
+.rgwCapacity:
+	dw		360
+	dw		1200
+	dw		720
+	dw		1440
+	dw		2880
+	dw		2880
+.rgwPhysicalSize:
+	db		'5', 172	; 1, FLOPPY_TYPE_525_DD
+	db		'5', 172	; 2, FLOPPY_TYPE_525_HD
+	db		'3', 171	; 3, FLOPPY_TYPE_35_DD
+	db		'3', 171	; 4, FLOPPY_TYPE_35_HD
+	db		'3', 171	; 5, 3.5" ED on some BIOSes
+	db		'3', 171	; 6, FLOPPY_TYPE_35_ED

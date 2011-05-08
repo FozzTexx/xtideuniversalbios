@@ -38,15 +38,14 @@ FindDPT_ForNewDriveToDSDI:
 ALIGN JUMP_ALIGN
 FindDPT_ForDriveNumber:
 	push	dx
-	push	ax
+	xchg	di, ax	; Save the contents of AX in DI
 
 	mov		al, LARGEST_DPT_SIZE
 	sub		dl, [RAMVARS.bFirstDrv]
 	mul		dl
 	add		ax, BYTE RAMVARS_size
-	xchg	di, ax
 
-	pop		ax
+	xchg	di, ax	; Restore AX and put result in DI
 	pop		dx
 	ret
 
@@ -118,22 +117,6 @@ CompareBasePortAddress:
 
 
 ;--------------------------------------------------------------------
-; FindDPT_ToDSDIforInterruptInService
-;	Parameters:
-;		DS:		RAMVARS segment
-;	Returns:
-;		DS:DI:	Ptr to DPT
-;		CF:		Set if wanted DPT found
-;				Cleared if DPT not found
-;	Corrupts registers:
-;		SI
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-FindDPT_ToDSDIforInterruptInService:
-	mov		si, IterateToDptWithInterruptInServiceFlagSet
-	jmp		SHORT IterateAllDPTs
-
-;--------------------------------------------------------------------
 ; IterateToDptWithInterruptInServiceFlagSet
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT to examine
@@ -152,6 +135,23 @@ IterateToDptWithInterruptInServiceFlagSet:
 ReturnWrongDPT:
 	clc										; Clear CF since wrong DPT
 	ret
+
+
+;--------------------------------------------------------------------
+; FindDPT_ToDSDIforInterruptInService
+;	Parameters:
+;		DS:		RAMVARS segment
+;	Returns:
+;		DS:DI:	Ptr to DPT
+;		CF:		Set if wanted DPT found
+;				Cleared if DPT not found
+;	Corrupts registers:
+;		SI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+FindDPT_ToDSDIforInterruptInService:
+	mov		si, IterateToDptWithInterruptInServiceFlagSet
+	; Fall to IterateAllDPTs
 
 
 ;--------------------------------------------------------------------

@@ -222,7 +222,11 @@ InitializePiovarsInSSBPwithSectorCountInAX:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 DualByteReadForXtide:
+%ifdef USE_186
+	shr		cx, 2		; Smaller but slower on 186/286
+%else
 	times 2	shr	cx, 1	; Loop unrolling
+%endif
 	mov		bx, 8		; Bit mask for toggling data low/high reg
 ALIGN JUMP_ALIGN
 .InswLoop:
@@ -310,7 +314,11 @@ ALIGN JUMP_ALIGN
 DualByteWriteForXtide:
 	push	ds
 	push	bx
+%ifdef USE_186
+	shr		cx, 2		; Smaller but slower on 186/286
+%else
 	times 2	shr	cx, 1	; Loop unrolling
+%endif
 	mov		bx, 8		; Bit mask for toggling data low/high reg
 	push	es			; Copy ES...
 	pop		ds			; ...to DS
@@ -356,7 +364,11 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 WordWriteForXTIDEmod:
 	push	ds
+%ifdef USE_186
+	shr		cx, 2		; Smaller but slower on 186/286
+%else
 	times 2	shr	cx, 1	; Loop unrolling
+%endif
 	push	es			; Copy ES...
 	pop		ds			; ...to DS
 ALIGN JUMP_ALIGN
