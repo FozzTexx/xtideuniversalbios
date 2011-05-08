@@ -70,14 +70,15 @@ AccessDPT_GetAddressingModeForWordLookToBX:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AccessDPT_GetLCHSfromPCHS:
-	xchg	ax, cx
-	mov		cl, [di+DPT.bFlagsLow]
-	and		cl, MASKL_DPT_CHS_SHIFT_COUNT	; Load shift count
+	mov		al, [di+DPT.bFlagsLow]
+	and		al, MASKL_DPT_CHS_SHIFT_COUNT	; Load shift count
+	xchg	cx, ax
 	mov		bx, [di+DPT.wPchsCylinders]		; Load P-CHS cylinders
 	shr		bx, cl							; Shift to L-CHS cylinders
 	xchg	cx, ax
-	eMOVZX	dx, BYTE [di+DPT.bLchsHeads]	; Load L-CHS heads
 	eMOVZX	ax, BYTE [di+DPT.bPchsSectors]	; Load Sectors per track
+	cwd
+	mov		dl, [di+DPT.bLchsHeads]			; Load L-CHS heads
 	ret
 
 

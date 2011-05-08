@@ -47,7 +47,7 @@ Int13h_DiskFunctionsHandler:
 ;		DS:		RAMVARS segment
 ;		SS:BP:	Ptr to IDEPACK
 ;		BX, DI:	Corrupted on Int13h_DiskFunctionsHandler
-;		Other:	Function specific INT 13h parameters 
+;		Other:	Function specific INT 13h parameters
 ;	Returns:
 ;		Depends on function
 ;	Corrupts registers:
@@ -151,8 +151,8 @@ ExchangeCurrentInt13hHandlerWithOldInt13hHandler:
 	mov		di, [RAMVARS.fpOldI13h+2]
 	xchg	di, [es:BIOS_DISK_INTERRUPT_13h*4+2]
 	mov		[RAMVARS.fpOldI13h+2], di
-	pop		es
 	sti
+	pop		es
 	ret
 
 
@@ -185,7 +185,6 @@ Int13h_SetErrorCodeToIntpackInSSBPfromAH:
 	ret
 
 
-
 ; Jump table for correct BIOS function
 ALIGN WORD_ALIGN
 g_rgw13hFuncJump:
@@ -211,49 +210,49 @@ g_rgw13hFuncJump:
 	dw	Int13h_UnsupportedFunction						; 13h, Drive Diagnostic (XT)
 	dw	Int13h_UnsupportedFunction						; 14h, Controller Internal Diagnostic (All)
 	dw	AH15h_HandlerForReadDiskDriveSize				; 15h, Read Disk Drive Size (AT+)
-	dw	Int13h_UnsupportedFunction						; 16h, 
-	dw	Int13h_UnsupportedFunction						; 17h, 
-	dw	Int13h_UnsupportedFunction						; 18h, 
+	dw	Int13h_UnsupportedFunction						; 16h,
+	dw	Int13h_UnsupportedFunction						; 17h,
+	dw	Int13h_UnsupportedFunction						; 18h,
 	dw	Int13h_UnsupportedFunction						; 19h, Park Heads (PS/2)
 	dw	Int13h_UnsupportedFunction						; 1Ah, Format ESDI Drive (PS/2)
 	dw	Int13h_UnsupportedFunction						; 1Bh, Get ESDI Manufacturing Header (PS/2)
 	dw	Int13h_UnsupportedFunction						; 1Ch, ESDI Special Functions (PS/2)
-	dw	Int13h_UnsupportedFunction						; 1Dh, 
-	dw	Int13h_UnsupportedFunction						; 1Eh, 
-	dw	Int13h_UnsupportedFunction						; 1Fh, 
-	dw	Int13h_UnsupportedFunction						; 20h, 
+	dw	Int13h_UnsupportedFunction						; 1Dh,
+	dw	Int13h_UnsupportedFunction						; 1Eh,
+	dw	Int13h_UnsupportedFunction						; 1Fh,
+	dw	Int13h_UnsupportedFunction						; 20h,
 	dw	Int13h_UnsupportedFunction						; 21h, Read Disk Sectors, Multiple Blocks (PS/1)
 	dw	Int13h_UnsupportedFunction						; 22h, Write Disk Sectors, Multiple Blocks (PS/1)
 	dw	AH23h_HandlerForSetControllerFeatures			; 23h, Set Controller Features Register (PS/1)
 	dw	AH24h_HandlerForSetMultipleBlocks				; 24h, Set Multiple Blocks (PS/1)
 	dw	AH25h_HandlerForGetDriveInformation				; 25h, Get Drive Information (PS/1)
-;	dw	Int13h_UnsupportedFunction						; 26h, 
-;	dw	Int13h_UnsupportedFunction						; 27h, 
-;	dw	Int13h_UnsupportedFunction						; 28h, 
-;	dw	Int13h_UnsupportedFunction						; 29h, 
-;	dw	Int13h_UnsupportedFunction						; 2Ah, 
-;	dw	Int13h_UnsupportedFunction						; 2Bh, 
-;	dw	Int13h_UnsupportedFunction						; 2Ch, 
-;	dw	Int13h_UnsupportedFunction						; 2Dh, 
-;	dw	Int13h_UnsupportedFunction						; 2Eh, 
-;	dw	Int13h_UnsupportedFunction						; 2Fh, 
-;	dw	Int13h_UnsupportedFunction						; 30h, 
-;	dw	Int13h_UnsupportedFunction						; 31h, 
-;	dw	Int13h_UnsupportedFunction						; 32h, 
-;	dw	Int13h_UnsupportedFunction						; 33h, 
-;	dw	Int13h_UnsupportedFunction						; 34h, 
-;	dw	Int13h_UnsupportedFunction						; 35h, 
-;	dw	Int13h_UnsupportedFunction						; 36h, 
-;	dw	Int13h_UnsupportedFunction						; 37h, 
-;	dw	Int13h_UnsupportedFunction						; 38h, 
-;	dw	Int13h_UnsupportedFunction						; 39h, 
-;	dw	Int13h_UnsupportedFunction						; 3Ah, 
-;	dw	Int13h_UnsupportedFunction						; 3Bh, 
-;	dw	Int13h_UnsupportedFunction						; 3Ch, 
-;	dw	Int13h_UnsupportedFunction						; 3Dh, 
-;	dw	Int13h_UnsupportedFunction						; 3Eh, 
-;	dw	Int13h_UnsupportedFunction						; 3Fh, 
-;	dw	Int13h_UnsupportedFunction						; 40h, 
+;	dw	Int13h_UnsupportedFunction						; 26h,
+;	dw	Int13h_UnsupportedFunction						; 27h,
+;	dw	Int13h_UnsupportedFunction						; 28h,
+;	dw	Int13h_UnsupportedFunction						; 29h,
+;	dw	Int13h_UnsupportedFunction						; 2Ah,
+;	dw	Int13h_UnsupportedFunction						; 2Bh,
+;	dw	Int13h_UnsupportedFunction						; 2Ch,
+;	dw	Int13h_UnsupportedFunction						; 2Dh,
+;	dw	Int13h_UnsupportedFunction						; 2Eh,
+;	dw	Int13h_UnsupportedFunction						; 2Fh,
+;	dw	Int13h_UnsupportedFunction						; 30h,
+;	dw	Int13h_UnsupportedFunction						; 31h,
+;	dw	Int13h_UnsupportedFunction						; 32h,
+;	dw	Int13h_UnsupportedFunction						; 33h,
+;	dw	Int13h_UnsupportedFunction						; 34h,
+;	dw	Int13h_UnsupportedFunction						; 35h,
+;	dw	Int13h_UnsupportedFunction						; 36h,
+;	dw	Int13h_UnsupportedFunction						; 37h,
+;	dw	Int13h_UnsupportedFunction						; 38h,
+;	dw	Int13h_UnsupportedFunction						; 39h,
+;	dw	Int13h_UnsupportedFunction						; 3Ah,
+;	dw	Int13h_UnsupportedFunction						; 3Bh,
+;	dw	Int13h_UnsupportedFunction						; 3Ch,
+;	dw	Int13h_UnsupportedFunction						; 3Dh,
+;	dw	Int13h_UnsupportedFunction						; 3Eh,
+;	dw	Int13h_UnsupportedFunction						; 3Fh,
+;	dw	Int13h_UnsupportedFunction						; 40h,
 ;	dw	Int13h_UnsupportedFunction						; 41h, Check if Extensions Present (EBIOS)*
 ;	dw	Int13h_UnsupportedFunction						; 42h, Extended Read Sectors (EBIOS)*
 ;	dw	Int13h_UnsupportedFunction						; 43h, Extended Write Sectors (EBIOS)*

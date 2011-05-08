@@ -19,8 +19,8 @@ Device_FinalizeDPT:
 	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE
 	jnz		SHORT ReturnSuccessForSerialPort
 	jmp		IdeDPT_Finalize
-.FinalizeDptForSerialPortDevice:
-	jmp		SerialDPT_Finalize
+;.FinalizeDptForSerialPortDevice:	; Dead label
+;	jmp		SerialDPT_Finalize		; and code
 
 
 ;--------------------------------------------------------------------
