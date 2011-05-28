@@ -29,7 +29,7 @@ AHCh_HandlerForSeek:
 	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 %else
 	push	Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
-	; Fall through to AHCh_SeekToCylinder
+	; Fall to AHCh_SeekToCylinder
 %endif
 
 ;--------------------------------------------------------------------

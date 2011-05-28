@@ -59,8 +59,8 @@ SECTION .text
 	%include "Char.asm"
 	%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 		%include "String.asm"
+		%include "StringProcess.asm"
 	%endif
-	%include "StringProcess.asm"
 %endif
 
 %ifdef INCLUDE_TIME_LIBRARY

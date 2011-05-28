@@ -34,7 +34,7 @@ ALIGN JUMP_ALIGN
 	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 %else
 	push	Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
-	; Fall through to AH24h_SetBlockSize
+	; Fall to AH24h_SetBlockSize
 %endif
 
 

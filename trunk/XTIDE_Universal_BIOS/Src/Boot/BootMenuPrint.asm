@@ -203,7 +203,6 @@ BootMenuPrint_FloppyMenuitemInformation:
 ;	Corrupts registers:
 ;		AX, BX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 .PrintKnownFloppyType:
 	mov		si, g_szFddSize
 	ePUSH_T	ax, g_szCapacity
@@ -268,7 +267,6 @@ BootMenuPrint_HardDiskMenuitemInformation:
 ;	Corrupts registers:
 ;		AX, BX, CX, DX, SI, DI, ES
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 .HardDiskMenuitemInfoForOurDrive:
 	push	di
 	ePUSH_T	ax, BootMenuPrintCfg_ForOurDrive	; Return from BootMenuPrint_FormatCSSIfromParamsInSSBP

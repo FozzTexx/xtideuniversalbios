@@ -1,8 +1,4 @@
-; File name		:	Char.asm
 ; Project name	:	Assembly Library
-; Created date	:	28.6.2010
-; Last update	:	7.9.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for handling characters.
 
 ; Section containing code
@@ -17,13 +13,13 @@ SECTION .text
 ;		%3:		Last accepted value in range
 ;	Returns:
 ;		CF:		Set if character is range
-;				(Jumps to CharIsNotValid if before range)
+;				(Jumps to Char_CharIsNotValid if before range)
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
 %macro IS_BETWEEN_IMMEDIATES 3
 	cmp		%1, %2
-	jb		SHORT CharIsNotValid
+	jb		SHORT Char_CharIsNotValid
 	cmp		%1, (%3)+1				; Set CF if %1 is lesser
 %endmacro
 
@@ -53,10 +49,12 @@ Char_IsLowerCaseLetterInAL:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN
 Char_IsUpperCaseLetterInAL:
 	IS_BETWEEN_IMMEDIATES al, 'A', 'Z'
 	ret
+%endif
 
 ;--------------------------------------------------------------------
 ; Char_IsHexadecimalDigitInAL
@@ -69,6 +67,7 @@ Char_IsUpperCaseLetterInAL:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN
 Char_IsHexadecimalDigitInAL:
 	call	Char_IsDecimalDigitInAL
@@ -76,6 +75,7 @@ Char_IsHexadecimalDigitInAL:
 	call	Char_ALtoLowerCaseLetter
 	IS_BETWEEN_IMMEDIATES al, 'a', 'f'
 	ret
+%endif
 
 ;--------------------------------------------------------------------
 ; Char_IsDecimalDigitInAL
@@ -105,13 +105,14 @@ Char_IsDecimalDigitInAL:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN
 Char_ConvertIntegerToALfromDigitInALwithBaseInBX:
 	push	dx
 	call	Char_GetFilterFunctionToDXforNumericBaseInBX
 	call	dx						; Converts to lower case
 	pop		dx
-	jnc		SHORT CharIsNotValid
+	jnc		SHORT Char_CharIsNotValid
 
 	cmp		al, '9'					; Decimal digit
 	jbe		SHORT .ConvertToDecimalDigit
@@ -119,26 +120,29 @@ Char_ConvertIntegerToALfromDigitInALwithBaseInBX:
 ALIGN JUMP_ALIGN
 .ConvertToDecimalDigit:
 	sub		al, '0'					; Convert to decimal integer
-	; Fall to CharIsValid
+	; Fall to Char_CharIsValid
+%endif
 
 ;--------------------------------------------------------------------
-; CharIsValid
-; CharIsNotValid
+; Char_CharIsValid
+; Char_CharIsNotValid
 ;	Parameters:
 ;		Nothing
 ;	Returns:
-;		CF:		Set for CharIsValid
-;				Cleared for CharIsNotValid
+;		CF:		Set for Char_CharIsValid
+;				Cleared for Char_CharIsNotValid
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN
 Char_CharIsValid:
 	stc
 	ret
+%endif
 
 ALIGN JUMP_ALIGN
-CharIsNotValid:
+Char_CharIsNotValid:
 	clc
 	ret
 
@@ -152,6 +156,7 @@ CharIsNotValid:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN
 Char_ALtoLowerCaseLetter:
 	call	Char_IsUpperCaseLetterInAL	; Is upper case character?
@@ -159,6 +164,7 @@ Char_ALtoLowerCaseLetter:
 	add		al, 'a'-'A'					; Convert to lower case
 .Return:
 	ret
+%endif
 
 ;--------------------------------------------------------------------
 ; Char_ALtoUpperCaseLetter
@@ -187,11 +193,13 @@ Char_ALtoUpperCaseLetter:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN
 Char_GetFilterFunctionToDXforNumericBaseInBX:
 	mov		dx, Char_IsDecimalDigitInAL
 	cmp		bl, 10
 	je		SHORT .Return
-	sub		dx, BYTE Char_IsDecimalDigitInAL - Char_IsHexadecimalDigitInAL
+	mov		dx, Char_IsHexadecimalDigitInAL
 .Return:
 	ret
+%endif

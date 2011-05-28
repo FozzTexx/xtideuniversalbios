@@ -96,7 +96,7 @@ Interrupts_InitializeInterruptVectors:
 	jz		SHORT .Return	; IRQ not used
 	cmp		bl, 8
 	jb		SHORT .InstallLowIrqHandler
-	; Fall through to .InstallHighIrqHandler
+	; Fall to .InstallHighIrqHandler
 
 ;--------------------------------------------------------------------
 ; .InstallHighIrqHandler
@@ -163,7 +163,7 @@ Interrupts_UnmaskInterruptControllerForDriveInDSDI:
 	jz		SHORT .Return	; Interrupts disabled
 	cmp		al, 8
 	jb		SHORT .UnmaskLowIrqController
-	; Fall through to .UnmaskHighIrqController
+	; Fall to .UnmaskHighIrqController
 
 ;--------------------------------------------------------------------
 ; .UnmaskHighIrqController

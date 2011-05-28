@@ -1,8 +1,4 @@
-; File name		:	StringProcess.asm
 ; Project name	:	Assembly Library
-; Created date	:	12.10.2010
-; Last update	:	7.12.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for processing characters in a string.
 
 ; Section containing code
@@ -32,7 +28,7 @@ SECTION .text
 ;	Returns:
 ;		CX:		Number of characters processed
 ;		CF:		Clear if all characters processed
-;				Set if terminated by processing function				
+;				Set if terminated by processing function
 ;	Corrupts registers:
 ;		Nothing (processing function can corrupt BX,DI,ES)
 ;--------------------------------------------------------------------
@@ -90,7 +86,8 @@ StringProcess_ConvertToLowerCase:
 ALIGN JUMP_ALIGN
 StringProcess_ConvertToWordInDIWithBaseInBX:
 	call	Char_ConvertIntegerToALfromDigitInALwithBaseInBX
-	jnc		SHORT .InvalidCharacter
+	cmc
+	jc		SHORT .InvalidCharacter
 	push	dx
 
 	xor		ah, ah		; Digit converted to integer now in AX
@@ -98,12 +95,8 @@ StringProcess_ConvertToWordInDIWithBaseInBX:
 	mul		bx			; Old WORD *= base
 	jc		SHORT .Overflow
 	add		di, ax		; Add old WORD to new integer
-	jc		SHORT .Overflow
 
-	pop		dx
-	ret
 .Overflow:
 	pop		dx
 .InvalidCharacter:
-	stc					; Set CF to stop processing
 	ret

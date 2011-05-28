@@ -23,7 +23,7 @@ AHDh_HandlerForResetHardDisk:
 	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 %else
 	push	Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
-	; Fall through to AHDh_ResetDrive
+	; Fall to AHDh_ResetDrive
 %endif
 
 

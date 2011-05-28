@@ -202,8 +202,7 @@ CreateDPT_FromAtaInformation:
 ;		ES:		BDA Segment
 ;	Returns:
 ;		DL:		Drive number for new drive
-;		CF:		Cleared if DPT parameters stored successfully
-;				Set if any error
+;		CF:		Always cleared
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
@@ -217,6 +216,6 @@ CreateDPT_FromAtaInformation:
 	cmp		BYTE [RAMVARS.bFirstDrv], 0	; First drive set?
 	ja		SHORT .AllDone				;  If so, return
 	mov		[RAMVARS.bFirstDrv], dl		; Store first drive number
-.AllDone:
 	clc
+.AllDone:
 	ret

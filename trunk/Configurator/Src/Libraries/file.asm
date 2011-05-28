@@ -1,9 +1,5 @@
-; File name		:	file.asm
 ; Project name	:	File library
-; Created date	:	19.11.2009
-; Last update	:	24.11.2009
-; Author		:	Tomi Tilli
-; Description	:	ASM library for DOS file handling.	
+; Description	:	ASM library for DOS file handling.
 
 ;--------------- Equates -----------------------------
 
@@ -68,7 +64,7 @@ SECTION .text
 ;--------------------------------------------------------------------
 ; Returns pointer to error string.
 ; Pointer is always valid, even if error code is not.
-; 
+;
 ; File_GetErrStr
 ;	Parameters:
 ;		AX:		DOS File I/O error code
@@ -110,7 +106,7 @@ ALIGN WORD_ALIGN
 ;--------------------------------------------------------------------
 ; Opens file for reading and writing.
 ; File must be closed with File_Close when no longer needed.
-; 
+;
 ; File_Open
 ;	Parameters:
 ;		AL:		File access and sharing mode:
@@ -136,7 +132,7 @@ File_Open:
 
 ;--------------------------------------------------------------------
 ; Closes file.
-; 
+;
 ; File_Close
 ;	Parameters:
 ;		BX:		File handle
@@ -158,7 +154,7 @@ File_Close:
 ; Reads binary data from file.
 ; File position is updated so next read will start where
 ; previous read stopped.
-; 
+;
 ; File_Read
 ;	Parameters:
 ;		BX:		File handle
@@ -190,7 +186,7 @@ File_Read:
 ; Writes binary data to file.
 ; File position is updated so next write will start where
 ; previous write stopped.
-; 
+;
 ; File_Write
 ;	Parameters:
 ;		BX:		File handle
@@ -220,7 +216,7 @@ File_Write:
 
 ;--------------------------------------------------------------------
 ; Sets current file position to wanted offset.
-; 
+;
 ; File_SetFilePos
 ;	Parameters:
 ;		BX:		File handle
@@ -243,7 +239,7 @@ File_SetFilePos:
 
 ;--------------------------------------------------------------------
 ; Changes current default drive.
-; 
+;
 ; File_SetDrive
 ;	Parameters:
 ;		DL:		New default drive (00h=A:, 01h=B: ...)
@@ -262,7 +258,7 @@ File_SetDrive:
 ;--------------------------------------------------------------------
 ; Returns current default drive and number of
 ; potentially drive letters available.
-; 
+;
 ; File_GetDrive
 ;	Parameters:
 ;		Nothing
@@ -285,9 +281,9 @@ File_GetDrive:
 
 
 ;--------------------------------------------------------------------
-; Checks are the potentially valid drive letters returned by 
+; Checks are the potentially valid drive letters returned by
 ; File_SetDrive and File_GetDrive actually valid or not.
-; 
+;
 ; File_IsDrive
 ;	Parameters:
 ;		DL:		Drive number (00h=A:, 01h=B: ...)
@@ -314,7 +310,7 @@ File_IsDrive:
 
 ;--------------------------------------------------------------------
 ; Returns number of valid drive letters.
-; 
+;
 ; File_GetValidDrvCnt
 ;	Parameters:
 ;		Nothing
@@ -336,14 +332,14 @@ ALIGN JUMP_ALIGN
 	add		dh, al				; Increment valid count
 	inc		dx					; Increment drive number
 	loop	.LetterLoop			; Loop while drive letters left
-	eMOVZX	cx, dh				; Valid drv count to CX
+	mov		cl, dh				; Valid drv count to CX
 	ret
 
 
 ;--------------------------------------------------------------------
 ; Return device number for Nth valid drive.
 ; This function does not check if index in CX is valid.
-; 
+;
 ; File_GetNthValidDrv
 ;	Parameters:
 ;		CX:		Index of valid drive to look for
@@ -352,7 +348,7 @@ ALIGN JUMP_ALIGN
 ;		DX:		Drive device number (00h=A:, 01h=B: ...)
 ;	Corrupts registers:
 ;		CX
-;--------------------------------------------------------------------	
+;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 File_GetNthValidDrv:
 	inc		cx					; Index to count
@@ -370,7 +366,7 @@ ALIGN JUMP_ALIGN
 
 ;--------------------------------------------------------------------
 ; Changes current directory.
-; 
+;
 ; File_ChangeDir
 ;	Parameters:
 ;		DS:DX	Ptr to destination ASCIZ path name
@@ -390,7 +386,7 @@ File_ChangeDir:
 
 ;--------------------------------------------------------------------
 ; Finds files from wanted path using search wildcard characters.
-; 
+;
 ; File_FindAndCount
 ;	Parameters:
 ;		DS:DX	Ptr to ASCIZ path or file name (* and ? wildcards allowed)
@@ -418,7 +414,7 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ; Finds files from wanted path using search wildcard characters.
 ; Ptr to DTA is returned for wanted file.
-; 
+;
 ; File_GetDTA
 ;	Parameters:
 ;		CX:		Index for file whose DTA is to be returned
@@ -456,7 +452,7 @@ ALIGN JUMP_ALIGN
 
 ;--------------------------------------------------------------------
 ; Find first file or directory.
-; 
+;
 ; File_FindFirst
 ;	Parameters:
 ;		DS:DX	Ptr to ASCIZ path or file name (* and ? wildcards allowed)
@@ -481,7 +477,7 @@ File_FindFirst:
 ;--------------------------------------------------------------------
 ; Find next file or directory. File_FindFirst must always be called
 ; before calling File_FindNext.
-; 
+;
 ; File_FindNext
 ;	Parameters:
 ;		Nothing

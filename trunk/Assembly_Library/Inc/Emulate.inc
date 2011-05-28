@@ -375,7 +375,7 @@ ALIGN JUMP_ALIGN
 	%elifidni %1, gs
 		db	01100101b
 	%else
-		%error "Invalid segment overried passed to eSEG!"
+		%error "Invalid segment override passed to eSEG!"
 	%endif
 %endmacro
 
