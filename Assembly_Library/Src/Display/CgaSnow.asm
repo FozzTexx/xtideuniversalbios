@@ -30,8 +30,8 @@ ALIGN JUMP_ALIGN
 	ret
 
 
-; CGA snow preventing must be kept optional so unnecerrasy overhead
-; can be prevented when building program ment for non-CGA systems.
+; CGA snow prevention must be kept optional to avoid unnecessary
+; overhead when building programs meant for non-CGA systems.
 %ifdef ELIMINATE_CGA_SNOW
 
 ;--------------------------------------------------------------------
@@ -73,8 +73,8 @@ CgaSnow_Stosw:
 	xchg	ax, bx
 .StoswWithoutWaitSinceUnknownPort:
 	stosw
-	pop		bx
 	sti
+	pop		bx
 	ret
 
 

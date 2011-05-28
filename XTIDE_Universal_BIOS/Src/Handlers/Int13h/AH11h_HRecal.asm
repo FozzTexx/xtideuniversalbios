@@ -23,7 +23,7 @@ AH11h_HandlerForRecalibrate:
 	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 %else
 	push	Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
-	; Fall through to AH11h_RecalibrateDrive
+	; Fall to AH11h_RecalibrateDrive
 %endif
 
 

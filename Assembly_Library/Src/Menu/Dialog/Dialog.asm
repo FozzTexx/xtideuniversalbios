@@ -1,8 +1,4 @@
-; File name		:	Dialog.asm
 ; Project name	:	Assembly Library
-; Created date	:	6.8.2010
-; Last update	:	22.11.2010
-; Author		:	Tomi Tilli
 ; Description	:	Common functions for many dialogs.
 
 ; Section containing code
@@ -234,8 +230,37 @@ Dialog_RemoveFromScreenByRedrawingParentMenu:
 	call	.GetParentTitleBorderCoordinatesToDX
 	call	MenuLocation_GetTitleBordersTopLeftCoordinatesToAX
 	cmp		ah, dh		; Dialog taller than parent?
-	jb		SHORT .RedrawDialogAreaAndWholeParentWindow
-	jmp		SHORT .RedrawWholeParentWindow
+	jnb		SHORT .RedrawWholeParentWindow
+	; Fall to .RedrawDialogAreaAndWholeParentWindow
+
+;--------------------------------------------------------------------
+; .RedrawDialogAreaAndWholeParentWindow
+; .RedrawWholeParentWindow
+;	Parameters:
+;		SS:SI:	Ptr to parent MENU
+;		SS:BP:	Ptr to DIALOG
+;	Returns:
+;		Nothing
+;	Corrupts:
+;		AX, BX, CX, DX, SI, DI
+;--------------------------------------------------------------------
+.RedrawDialogAreaAndWholeParentWindow:
+	push	si
+	call	MenuBorders_AdjustDisplayContextForDrawingBorders
+	pop		si
+	mov		al, SCREEN_BACKGROUND_ATTRIBUTE
+	CALL_DISPLAY_LIBRARY SetCharacterAttributeFromAL
+	mov		ax, [bp+MENUINIT.wWidthAndHeight]
+	CALL_DISPLAY_LIBRARY ClearAreaWithHeightInAHandWidthInAL
+	; Fall to .RedrawWholeParentWindow
+
+ALIGN JUMP_ALIGN
+.RedrawWholeParentWindow:
+	push	bp
+	mov		bp, si
+	call	MenuInit_RefreshMenuWindow
+	pop		bp
+	ret
 
 ;--------------------------------------------------------------------
 ; .GetParentTitleBorderCoordinatesToDX
@@ -254,34 +279,4 @@ ALIGN JUMP_ALIGN
 	call	MenuLocation_GetTitleBordersTopLeftCoordinatesToAX
 	xchg	bp, si
 	xchg	dx, ax
-	ret
-
-;--------------------------------------------------------------------
-; .RedrawDialogAreaAndWholeParentWindow
-; .RedrawWholeParentWindow
-;	Parameters:
-;		SS:SI:	Ptr to parent MENU
-;		SS:BP:	Ptr to DIALOG
-;	Returns:
-;		Nothing
-;	Corrupts:
-;		AX, BX, CX, DX, SI, DI
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-.RedrawDialogAreaAndWholeParentWindow:
-	push	si
-	call	MenuBorders_AdjustDisplayContextForDrawingBorders
-	pop		si
-	mov		al, SCREEN_BACKGROUND_ATTRIBUTE
-	CALL_DISPLAY_LIBRARY SetCharacterAttributeFromAL
-	mov		ax, [bp+MENUINIT.wWidthAndHeight]
-	CALL_DISPLAY_LIBRARY ClearAreaWithHeightInAHandWidthInAL
-	; Fall to .RedrawWholeParentWindow
-
-ALIGN JUMP_ALIGN
-.RedrawWholeParentWindow:
-	push	bp
-	mov		bp, si
-	call	MenuInit_RefreshMenuWindow
-	pop		bp
 	ret

@@ -34,7 +34,7 @@ AH23h_HandlerForSetControllerFeatures:
 	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 %else
 	push	Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
-	; Fall through to AH23h_SetControllerFeatures
+	; Fall to AH23h_SetControllerFeatures
 %endif
 
 

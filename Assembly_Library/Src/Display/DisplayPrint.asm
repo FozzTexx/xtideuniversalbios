@@ -24,7 +24,7 @@ SECTION .text
 ;	When placing '-' after number, then spaces will be used for prepending.
 ;	For example %8-d would prepend integer with spaces so that at least
 ;	8 characters would be printed.
-; 
+;
 ; DisplayPrint_FormattedNullTerminatedStringFromCSSI
 ;	Parameters:
 ;		BP:		SP before pushing parameters
@@ -157,7 +157,7 @@ ALIGN JUMP_ALIGN
 	call	DisplayPrint_CharacterFromAL
 	loop	.PrintNextCharacter
 
-	LOAD_BDA_SEGMENT_TO	ds, dx
+	mov		ds, cx	; Restore DS to BDA. Not needed unless DisplayPrint_CharacterFromAL changes DS.
 	pop		cx
 	pop		si
 .NothingToPrintSinceZeroLength:

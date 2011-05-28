@@ -23,7 +23,7 @@ AH9h_HandlerForInitializeDriveParameters:
 	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 %else
 	push	Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
-	; Fall through to AH9h_InitializeDriveForUse
+	; Fall to AH9h_InitializeDriveForUse
 %endif
 
 
