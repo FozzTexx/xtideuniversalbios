@@ -44,8 +44,8 @@ FLGL_DPT_ENABLE_IRQ				EQU	(1<<7)
 
 ; Bit definitions for DPT.bFlagsHigh
 FLGH_DPT_REVERSED_A0_AND_A3		EQU	(1<<0)	; XTIDE mod, Address lines 0 and 3 reversed
-FLGH_DPT_SERIAL_DEVICE			EQU	(1<<1)	; Serial Port Device
-FLGH_DPT_BLOCK_MODE_SUPPORTED	EQU	(1<<2)	; Use block transfer commands
+FLGH_DPT_BLOCK_MODE_SUPPORTED	EQU	(1<<1)	; Use block transfer commands (must be bit 1!)
+FLGH_DPT_SERIAL_DEVICE			EQU	(1<<2)	; Serial Port Device
 FLGH_DPT_INTERRUPT_IN_SERVICE	EQU	(1<<3)	; Set when waiting for IRQ
 FLGH_DPT_RESET_nDRDY			EQU	(1<<4)	; Drive ready to accept commands
 FLGH_DPT_RESET_nINITPRMS		EQU	(1<<5)	; Initialize Device Parameters successfull
