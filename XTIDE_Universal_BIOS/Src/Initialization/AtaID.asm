@@ -24,7 +24,7 @@ AtaID_GetPCHS:
 
 
 ;--------------------------------------------------------------------
-; AtaID_GetTotalSectorCount
+; AtaID_GetTotalSectorCountToBXDXAXfromAtaInfoInESSI
 ;	Parameters:
 ;		ES:SI:	Ptr to 512-byte ATA information read from the drive
 ;	Returns:
@@ -32,7 +32,7 @@ AtaID_GetPCHS:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-AtaID_GetTotalSectorCount:
+AtaID_GetTotalSectorCountToBXDXAXfromAtaInfoInESSI:
 	push	ds
 
 	push	es

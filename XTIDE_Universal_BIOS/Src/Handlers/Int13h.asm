@@ -32,11 +32,24 @@ Int13h_DiskFunctionsHandler:
 	call	FindDPT_ForDriveNumber		; DS:DI now points to DPT
 
 	; Jump to correct BIOS function
-	cmp		ah, 25h						; Valid BIOS function?
-	ja		SHORT Int13h_UnsupportedFunction
 	eMOVZX	bx, ah
 	shl		bx, 1
+	cmp		ah, 25h						; Possible EBIOS function?
+	ja		SHORT .JumpToEbiosFunction
 	jmp		[cs:bx+g_rgw13hFuncJump]	; Jump to BIOS function
+
+	; Jump to correct EBIOS function
+ALIGN JUMP_ALIGN
+.JumpToEbiosFunction:
+	test	BYTE [cs:ROMVARS.wFlags], FLG_ROMVARS_FULLMODE	; Full mode?
+	jz		SHORT Int13h_UnsupportedFunction
+	test	BYTE [di+DPT.bFlagsLow], FLG_DRVNHEAD_LBA		; LBA supported?
+	jz		SHORT Int13h_UnsupportedFunction
+	cmp		ah, 48h						; Above last valid function?
+	ja		SHORT Int13h_UnsupportedFunction
+	sub		bx, 41h<<1					; BX = Offset to EBIOS jump table
+	jl		SHORT Int13h_UnsupportedFunction
+	jmp		[cs:bx+g_rgwEbiosFunctionJumpTable]
 
 
 ;--------------------------------------------------------------------
@@ -226,41 +239,16 @@ g_rgw13hFuncJump:
 	dw	AH23h_HandlerForSetControllerFeatures			; 23h, Set Controller Features Register (PS/1)
 	dw	AH24h_HandlerForSetMultipleBlocks				; 24h, Set Multiple Blocks (PS/1)
 	dw	AH25h_HandlerForGetDriveInformation				; 25h, Get Drive Information (PS/1)
-;	dw	Int13h_UnsupportedFunction						; 26h,
-;	dw	Int13h_UnsupportedFunction						; 27h,
-;	dw	Int13h_UnsupportedFunction						; 28h,
-;	dw	Int13h_UnsupportedFunction						; 29h,
-;	dw	Int13h_UnsupportedFunction						; 2Ah,
-;	dw	Int13h_UnsupportedFunction						; 2Bh,
-;	dw	Int13h_UnsupportedFunction						; 2Ch,
-;	dw	Int13h_UnsupportedFunction						; 2Dh,
-;	dw	Int13h_UnsupportedFunction						; 2Eh,
-;	dw	Int13h_UnsupportedFunction						; 2Fh,
-;	dw	Int13h_UnsupportedFunction						; 30h,
-;	dw	Int13h_UnsupportedFunction						; 31h,
-;	dw	Int13h_UnsupportedFunction						; 32h,
-;	dw	Int13h_UnsupportedFunction						; 33h,
-;	dw	Int13h_UnsupportedFunction						; 34h,
-;	dw	Int13h_UnsupportedFunction						; 35h,
-;	dw	Int13h_UnsupportedFunction						; 36h,
-;	dw	Int13h_UnsupportedFunction						; 37h,
-;	dw	Int13h_UnsupportedFunction						; 38h,
-;	dw	Int13h_UnsupportedFunction						; 39h,
-;	dw	Int13h_UnsupportedFunction						; 3Ah,
-;	dw	Int13h_UnsupportedFunction						; 3Bh,
-;	dw	Int13h_UnsupportedFunction						; 3Ch,
-;	dw	Int13h_UnsupportedFunction						; 3Dh,
-;	dw	Int13h_UnsupportedFunction						; 3Eh,
-;	dw	Int13h_UnsupportedFunction						; 3Fh,
-;	dw	Int13h_UnsupportedFunction						; 40h,
-;	dw	Int13h_UnsupportedFunction						; 41h, Check if Extensions Present (EBIOS)*
-;	dw	Int13h_UnsupportedFunction						; 42h, Extended Read Sectors (EBIOS)*
-;	dw	Int13h_UnsupportedFunction						; 43h, Extended Write Sectors (EBIOS)*
-;	dw	Int13h_UnsupportedFunction						; 44h, Extended Verify Sectors (EBIOS)*
-;	dw	Int13h_UnsupportedFunction						; 45h, Lock and Unlock Drive (EBIOS)***
-;	dw	Int13h_UnsupportedFunction						; 46h, Eject Media Request (EBIOS)***
-;	dw	Int13h_UnsupportedFunction						; 47h, Extended Seek (EBIOS)*
-;	dw	Int13h_UnsupportedFunction						; 48h, Get Extended Drive Parameters (EBIOS)*
+
+g_rgwEbiosFunctionJumpTable:
+	dw	AH41h_HandlerForCheckIfExtensionsPresent		; 41h, Check if Extensions Present (EBIOS)*
+	dw	AH42h_HandlerForExtendedReadSectors				; 42h, Extended Read Sectors (EBIOS)*
+	dw	AH43h_HandlerForExtendedWriteSectors			; 43h, Extended Write Sectors (EBIOS)*
+	dw	AH44h_HandlerForExtendedVerifySectors			; 44h, Extended Verify Sectors (EBIOS)*
+	dw	Int13h_UnsupportedFunction						; 45h, Lock and Unlock Drive (EBIOS)***
+	dw	Int13h_UnsupportedFunction						; 46h, Eject Media Request (EBIOS)***
+	dw	AH47h_HandlerForExtendedSeek					; 47h, Extended Seek (EBIOS)*
+	dw	AH48h_HandlerForGetExtendedDriveParameters		; 48h, Get Extended Drive Parameters (EBIOS)*
 ;	dw	Int13h_UnsupportedFunction						; 49h, Get Extended Disk Change Status (EBIOS)***
 ;	dw	Int13h_UnsupportedFunction						; 4Ah, Initiate Disk Emulation (Bootable CD-ROM)
 ;	dw	Int13h_UnsupportedFunction						; 4Bh, Terminate Disk Emulation (Bootable CD-ROM)

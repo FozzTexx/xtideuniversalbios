@@ -37,7 +37,7 @@ BootInfo_CreateForHardDisk:
 ;--------------------------------------------------------------------
 .StoreSectorCount:
 	push	bx
-	call	AtaID_GetTotalSectorCount		; Get to BX:DX:AX
+	call	AtaID_GetTotalSectorCountToBXDXAXfromAtaInfoInESSI
 	mov		cx, bx							; Now in CX:DX:AX
 	pop		bx
 	mov		[es:bx+BOOTNFO.twSectCnt], ax

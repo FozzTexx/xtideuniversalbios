@@ -21,14 +21,42 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH25h_HandlerForGetDriveInformation:
-	push	bp
-
 	mov		si, [bp+IDEPACK.intpack+INTPACK.bx]
+%ifdef USE_186
+	push	Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
+	; Fall to AH25h_GetDriveInformationToBufferInESSIfromDriveInDL
+%else
+	call	AH25h_GetDriveInformationToBufferInESSIfromDriveInDL
+	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
+%endif
+
+
+;--------------------------------------------------------------------
+; AH25h_GetDriveInformationToBufferInESSIfromDriveInDL
+;	Parameters:
+;		DL:		Translated Drive number
+;		DS:DI:	Ptr to DPT (in RAMVARS segment)
+;		ES:SI:	Ptr to buffer to receive 512-byte drive information
+;	Returns with INTPACK:
+;		AH:		Int 13h return status
+;		CF:		0 if succesfull, 1 if error
+;	Corrupts registers:
+;		AL, BX, CX, DX
+;--------------------------------------------------------------------
+AH25h_GetDriveInformationToBufferInESSIfromDriveInDL:
+	push	es
+	push	bp
+	push	di
+	push	si
+
 	call	AccessDPT_GetDriveSelectByteToAL
 	mov		bh, al
 	eMOVZX	ax, BYTE [di+DPT.bIdevarsOffset]
 	xchg	bp, ax
 	call	Device_IdentifyToBufferInESSIwithDriveSelectByteInBH
 
+	pop		si
+	pop		di
 	pop		bp
-	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
+	pop		es
+	ret
