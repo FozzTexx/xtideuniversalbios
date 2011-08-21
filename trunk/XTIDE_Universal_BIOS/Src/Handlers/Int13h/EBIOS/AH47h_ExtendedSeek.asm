@@ -24,7 +24,7 @@ AH47h_HandlerForExtendedSeek:
 	; Note that there is no Seek command for LBA48 addressing!
 	mov		es, [bp+IDEPACK.intpack+INTPACK.ds]	; ES:SI to point Disk Address Packet
 	cmp		BYTE [es:si+DAP.bSize], MINIMUM_DAP_SIZE
-	jb		SHORT .DapContentsNotValid
+	jb		SHORT AH42h_ReturnWithInvalidFunctionError
 
 	mov		ah, COMMAND_SEEK
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRQ, FLG_STATUS_DRDY)
@@ -35,6 +35,3 @@ AH47h_HandlerForExtendedSeek:
 	call	Idepack_ConvertDapToIdepackAndIssueCommandFromAH
 	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 %endif
-
-.DapContentsNotValid:
-	jmp		AH2h_ExitInt13hSinceSectorCountInIntpackIsZero

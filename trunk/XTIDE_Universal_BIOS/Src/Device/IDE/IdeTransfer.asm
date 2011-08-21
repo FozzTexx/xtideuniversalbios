@@ -4,12 +4,10 @@
 ; Structure containing variables for PIO transfer functions.
 ; This struct must not be larger than IDEPACK without INTPACK.
 struc PIOVARS
-	.wBlockLeftAndSectorsInLastBlock:
-	.bBlocksLeft			resb	1
-	.bSectorsInLastBlock:	resb	1
+	.wBlocksLeft			resb	2
 	.wBlockSize				resb	2	; Block size in WORDs (256...32768)
 	.wDataPort				resb	2
-							resb	1
+	.bSectorsInLastBlock:	resb	1
 							resb	1	; Offset 7 = IDEPACK.bDeviceControl
 	.fnXfer					resb	2	; Offset to transfer function
 endstruc
@@ -33,6 +31,8 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 IdeTransfer_StartWithCommandInAL:
+	mov		ah, [bp+IDEPACK.bSectorCountHighExt]
+
 	; Are we reading or writing?
 	test	al, 16	; Bit 4 is cleared on all the read commands but set on 3 of the 4 write commands
 	jnz		SHORT .PrepareToWriteDataFromESSI
@@ -41,26 +41,23 @@ IdeTransfer_StartWithCommandInAL:
 
 	; Prepare to read data to ESSI
 	mov		bx, g_rgfnPioRead
-	call	InitializePiovarsToSSBPfromIdepackInSSBP
+	mov		al, [bp+IDEPACK.bSectorCount]
+	call	InitializePiovarsInSSBPwithSectorCountInAX
 	xchg	si, di
-%ifdef USE_186
-	push	ReadFromDriveToESDI
-	jmp		Registers_NormalizeESDI
-%else
 	call	Registers_NormalizeESDI
-	jmp		SHORT ReadFromDriveToESDI
-%endif
+	jmp		SHORT ReadFromDrive
 
 ALIGN JUMP_ALIGN
 .PrepareToWriteDataFromESSI:
 	mov		bx, g_rgfnPioWrite
-	call	InitializePiovarsToSSBPfromIdepackInSSBP
+	mov		al, [bp+IDEPACK.bSectorCount]
+	call	InitializePiovarsInSSBPwithSectorCountInAX
 	call	Registers_NormalizeESSI
-	; Fall to WriteToDriveFromESSI
+	; Fall to WriteToDrive
 
 
 ;--------------------------------------------------------------------
-; WriteToDriveFromESSI
+; WriteToDrive
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
 ;		ES:SI:	Normalized ptr to buffer containing data
@@ -72,7 +69,7 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		AL, BX, CX, DX, SI, ES
 ;--------------------------------------------------------------------
-WriteToDriveFromESSI:
+WriteToDrive:
 	; Always poll when writing first block (IRQs are generated for following blocks)
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRQ, FLG_STATUS_DRQ)
 	call	IdeWait_PollStatusFlagInBLwithTimeoutInBH
@@ -80,10 +77,20 @@ WriteToDriveFromESSI:
 ALIGN JUMP_ALIGN
 .WriteNextBlock:
 	mov		dx, [bp+PIOVARS.wDataPort]
-	dec		BYTE [bp+PIOVARS.bBlocksLeft]		; Transferring last (possibly partial) block?
+	dec		WORD [bp+PIOVARS.wBlocksLeft]		; Transferring last (possibly partial) block?
 	jz		SHORT .XferLastBlock				;  If so, jump to transfer
 	mov		cx, [bp+PIOVARS.wBlockSize]			; Load block size in WORDs
 	call	[bp+PIOVARS.fnXfer]					; Transfer full block
+
+	; Normalize pointer when necessary
+	mov		ax, si
+	shr		ax, 1								; WORD offset
+	add		ax, [bp+PIOVARS.wBlockSize]
+	jns		SHORT .WaitUntilReadyToTransferNextBlock
+	call	Registers_NormalizeESSI
+
+ALIGN JUMP_ALIGN
+.WaitUntilReadyToTransferNextBlock:
 %ifdef USE_186
 	push	.WriteNextBlock
 	jmp		IdeWait_IRQorDRQ
@@ -109,7 +116,7 @@ ALIGN JUMP_ALIGN
 
 
 ;--------------------------------------------------------------------
-; ReadFromDriveToESDI
+; ReadFromDrive
 ;	Parameters:
 ;		ES:DI:	Normalized ptr to buffer to recieve data
 ;		DS:SI:	Ptr to DPT (in RAMVARS segment)
@@ -123,25 +130,33 @@ ALIGN JUMP_ALIGN
 ;		AL, BX, CX, DX, SI, ES
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-ReadFromDriveToESDI:
+ReadFromDrive:
 	; Wait until drive is ready to transfer
 	xchg	di, si								; DS:DI now points DPT
 	call	IdeWait_IRQorDRQ					; Wait until ready to transfer
-	jc		SHORT WriteToDriveFromESSI.ReturnWithTransferErrorInAH
+	jc		SHORT WriteToDrive.ReturnWithTransferErrorInAH
 	xchg	si, di								; ES:DI now points buffer
 
 	; Transfer full or last (possible partial) block
 	mov		dx, [bp+PIOVARS.wDataPort]
-	dec		BYTE [bp+PIOVARS.bBlocksLeft]
+	dec		WORD [bp+PIOVARS.wBlocksLeft]
 	jz		SHORT .XferLastBlock
 	mov		cx, [bp+PIOVARS.wBlockSize]			; Load block size in WORDs
-%ifdef USE_186
-	push	ReadFromDriveToESDI
-	jmp		[bp+PIOVARS.fnXfer]
-%else
 	call	[bp+PIOVARS.fnXfer]					; Transfer full block
-	jmp		SHORT ReadFromDriveToESDI					; Loop while blocks left
+
+	; Normalize pointer when necessary
+	mov		ax, di
+	shr		ax, 1								; WORD offset
+	add		ax, [bp+PIOVARS.wBlockSize]
+	jns		SHORT ReadFromDrive
+%ifdef USE_186
+	push	ReadFromDrive
+	jmp		Registers_NormalizeESDI
+%else
+	call	Registers_NormalizeESDI
+	jmp		SHORT ReadFromDrive					; Loop while blocks left
 %endif
+
 
 ALIGN JUMP_ALIGN
 .XferLastBlock:
@@ -154,29 +169,31 @@ ALIGN JUMP_ALIGN
 
 
 ;--------------------------------------------------------------------
-; InitializePiovarsToSSBPfromIdepackInSSBP
+; InitializePiovarsInSSBPwithSectorCountInAX
 ;	Parameters:
+;		AX:		Number of sectors to transfer (1...65535)
 ;		BX:		Offset to transfer function lookup table
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
-;		SS:BP:	Ptr to IDEPACK
-;	Returns:
 ;		SS:BP:	Ptr to PIOVARS
+;	Returns:
+;		Nothing
 ;	Corrupts registers:
 ;		AX, BX, CX, DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-InitializePiovarsToSSBPfromIdepackInSSBP:
+InitializePiovarsInSSBPwithSectorCountInAX:
 	; Store number of blocks to transfer
-	eMOVZX	cx, BYTE [di+DPT_ATA.bSetBlock]		; Block size in sectors, zero CH
-	eMOVZX	ax, BYTE [bp+IDEPACK.bSectorCount]	; AX = sectors to transfer (1...128)
-	div		cl			; AL = Full blocks to transfer
-	test	ah, ah		; AH = Sectors in partial block
+	eMOVZX	cx, BYTE [di+DPT_ATA.bSetBlock]		; Block size in sectors
+	xor		dx, dx		; DX:AX = Sectors to transfer (1...65535)
+	div		cx			; AX = Full blocks to transfer
+	test	dx, dx
+	mov		dh, cl		; DH = Full block size if no partial blocks to transfer
 	jz		SHORT .NoPartialBlocksToTransfer
-	inc		ax			; Add partial block to total block count
-	SKIP2B	dx			; Skip mov ah, cl
+	inc		ax			; Partial block
+	mov		dh, dl		; DH = Size of partial block in sectors
 .NoPartialBlocksToTransfer:
-	mov		ah, cl		; Full block size if no partial blocks to transfer
-	mov		[bp+PIOVARS.wBlockLeftAndSectorsInLastBlock], ax
+	mov		[bp+PIOVARS.wBlocksLeft], ax
+	mov		[bp+PIOVARS.bSectorsInLastBlock], dh
 
 	; Store block size in WORDs
 	xchg	ch, cl		; CX = Block size in WORDs
