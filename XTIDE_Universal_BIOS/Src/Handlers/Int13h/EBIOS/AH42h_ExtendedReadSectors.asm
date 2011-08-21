@@ -53,9 +53,10 @@ ALIGN JUMP_ALIGN
 AH42h_LoadDapToESSIandVerifyForTransfer:
 	mov		es, [bp+IDEPACK.intpack+INTPACK.ds]	; ES:SI to point Disk Address Packet
 	cmp		BYTE [es:si+DAP.bSize], MINIMUM_DAP_SIZE
-	jb		SHORT .DapContentsNotValid
+	jb		SHORT AH42h_ReturnWithInvalidFunctionError
 	cmp		WORD [es:si+DAP.wSectorCount], BYTE 0
-	jle		SHORT .DapContentsNotValid			; Must be 1...127
+	je		SHORT AH42h_ReturnWithInvalidFunctionError
 	ret
-.DapContentsNotValid:
-	jmp		AH2h_ExitInt13hSinceSectorCountInIntpackIsZero
+AH42h_ReturnWithInvalidFunctionError:
+	mov		ah, RET_HD_INVALID
+	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH

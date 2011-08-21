@@ -38,8 +38,9 @@ Idepack_FakeToSSBP:
 ALIGN JUMP_ALIGN
 Idepack_ConvertDapToIdepackAndIssueCommandFromAH:
 	mov		[bp+IDEPACK.bCommand], ah
-	mov		al, [es:si+DAP.wSectorCount]
+	mov		ax, [es:si+DAP.wSectorCount]
 	mov		[bp+IDEPACK.bSectorCount], al
+	mov		[bp+IDEPACK.bSectorCountHighExt], ah
 
 	mov		al, [es:si+DAP.qwLBA]		; LBA byte 0
 	mov		[bp+IDEPACK.bLbaLow], al
@@ -80,8 +81,11 @@ Idepack_ConvertDapToIdepackAndIssueCommandFromAH:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Idepack_TranslateOldInt13hAddressAndIssueCommandFromAH:
-	mov		[bp+IDEPACK.bSectorCount], al
 	mov		[bp+IDEPACK.bCommand], ah
+	test	al, al
+	eCSETZ	ah
+	mov		[bp+IDEPACK.bSectorCount], al
+	mov		[bp+IDEPACK.bSectorCountHighExt], ah
 
 	push	bx
 	call	Address_OldInt13hAddressToIdeAddress
@@ -124,6 +128,7 @@ Idepack_StoreNonExtParametersAndIssueCommandFromAL:
 	mov		[bp+IDEPACK.bCommand], al
 	mov		[bp+IDEPACK.wSectorCountAndLbaLow], dx
 	mov		[bp+IDEPACK.wLbaMiddleAndHigh], cx
+	mov		BYTE [bp+IDEPACK.bSectorCountHighExt], 0
 
 	; Drive and Head select byte
 	and		ah, MASK_DRVNHEAD_HEAD		; Keep head bits only

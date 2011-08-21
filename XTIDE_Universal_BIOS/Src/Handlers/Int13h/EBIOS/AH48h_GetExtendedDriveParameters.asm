@@ -33,46 +33,47 @@ AH48h_HandlerForGetExtendedDriveParameters:
 	; Get Drive ID and total sector count from it
 	call	AH25h_GetDriveInformationToBufferInESSI
 	jc		SHORT .ReturnWithError
-	call	AtaID_GetTotalSectorCountToBXDXAXfromAtaInfoInESSI
-	xchg	cx, ax		; Sector count now in BX:DX:CX
 
-	; Point ES:DI to Destination buffer
+	; Point DS:DI to Destination buffer
 	mov		di, [bp+IDEPACK.intpack+INTPACK.si]
-	mov		es, [bp+IDEPACK.intpack+INTPACK.ds]
+	mov		ds, [bp+IDEPACK.intpack+INTPACK.ds]
 	mov		ax, MINIMUM_EDRIVEINFO_SIZE
-	cmp		WORD [es:di+EDRIVE_INFO.wSize], ax
-	jb		SHORT .BufferTooSmall
+	cmp		WORD [di+EDRIVE_INFO.wSize], ax
+	jb		SHORT AH42h_ReturnWithInvalidFunctionError
 	je		SHORT .SkipEddConfigurationParameters
 
 	; We do not support EDD Configuration Parameters so set to FFFF:FFFFh
 	xor		ax, ax
 	dec		ax			; AX = FFFFh
-	mov		[es:di+EDRIVE_INFO.fpEDDparams], ax
-	mov		[es:di+EDRIVE_INFO.fpEDDparams+2], ax
+	mov		[di+EDRIVE_INFO.fpEDDparams], ax
+	mov		[di+EDRIVE_INFO.fpEDDparams+2], ax
 	mov		ax, EDRIVE_INFO_size
 
-	; Fill Extended Drive Information Table in ES:DI
+	; Fill Extended Drive Information Table in DS:DI
 .SkipEddConfigurationParameters:
-	stosw				; Store Extended Drive Information Table size
-	mov		al, FLG_DMA_BOUNDARY_ERRORS_HANDLED_BY_BIOS
-	stosw
-	add		di, BYTE 12	; Skip CHS parameters
-	xchg	ax, cx
-	stosw				; LBA WORD 0
-	xchg	ax, dx
-	stosw				; LBA WORD 1
-	xchg	ax, bx
-	stosw				; LBA WORD 2
-	xor		ax, ax
-	stosw				; LBA WORD 3 always zero since 48-bit address
-	mov		ah, 512>>8
-	stosw				; Always 512-byte sectors
+	mov		[di+EDRIVE_INFO.wSize], ax
+	mov		WORD [di+EDRIVE_INFO.wFlags], FLG_DMA_BOUNDARY_ERRORS_HANDLED_BY_BIOS | FLG_CHS_INFORMATION_IS_VALID
+
+	call	AtaID_GetPCHStoAXBLBHfromAtaInfoInESSI
+	xor		cx, cx
+	mov		[di+EDRIVE_INFO.dwCylinders], ax
+	mov		[di+EDRIVE_INFO.dwCylinders+2], cx
+	eMOVZX	ax, bl
+	mov		[di+EDRIVE_INFO.dwHeads], ax
+	mov		[di+EDRIVE_INFO.dwHeads+2], cx
+	mov		al, bh
+	mov		[di+EDRIVE_INFO.dwSectorsPerTrack], ax
+	mov		[di+EDRIVE_INFO.dwSectorsPerTrack+2], cx
+
+	call	AtaID_GetTotalSectorCountToBXDXAXfromAtaInfoInESSI
+	mov		[di+EDRIVE_INFO.qwTotalSectors], ax
+	mov		[di+EDRIVE_INFO.qwTotalSectors+2], dx
+	mov		[di+EDRIVE_INFO.qwTotalSectors+4], bx
+	mov		[di+EDRIVE_INFO.qwTotalSectors+6], cx
+
+	mov		WORD [di+EDRIVE_INFO.wSectorSize], 512
 
 	; Return with success
 	xor		ah, ah
-	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
-
-.BufferTooSmall:
-	mov		ah, RET_HD_INVALID
 .ReturnWithError:
 	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH

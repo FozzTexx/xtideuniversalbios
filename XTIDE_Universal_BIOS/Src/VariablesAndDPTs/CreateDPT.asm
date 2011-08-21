@@ -82,7 +82,7 @@ CreateDPT_FromAtaInformation:
 	mov		al, FLG_DRVPARAMS_USERCHS	; User specified CHS?
 	call	AccessDPT_TestIdeVarsFlagsForMasterOrSlaveDrive
 	jnz		SHORT .GetUserSpecifiedPCHS
-	call	AtaID_GetPCHS				; Get from ATA information
+	call	AtaID_GetPCHStoAXBLBHfromAtaInfoInESSI
 	jmp		SHORT .StorePCHStoDPT
 
 .GetUserSpecifiedPCHS:

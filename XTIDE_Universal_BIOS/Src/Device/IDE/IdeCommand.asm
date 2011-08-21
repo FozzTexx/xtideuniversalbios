@@ -127,8 +127,7 @@ IdeCommand_OutputWithParameters:
 	call	IdeIO_OutputALtoIdeRegisterInDL
 
 	; Output Sector Address High (only used by LBA48)
-	xor		ax, ax	; Sector Count High always zero since 127 sector limit
-	mov		ah, BYTE [bp+IDEPACK.bLbaLowExt]
+	mov		ax, [bp+IDEPACK.wSectorCountHighAndLbaLowExt]
 	mov		cx, [bp+IDEPACK.wLbaMiddleAndHighExt]
 	call	OutputSectorCountAndAddress
 

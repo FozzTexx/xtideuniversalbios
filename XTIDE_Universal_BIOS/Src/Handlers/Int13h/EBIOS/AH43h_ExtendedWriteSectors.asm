@@ -26,7 +26,7 @@ SECTION .text
 ALIGN JUMP_ALIGN
 AH43h_HandlerForExtendedWriteSectors:
 	cmp		BYTE [bp+IDEPACK.intpack+INTPACK.al], 2	; Verify requested?
-	jae		SHORT .WriteWithVerifyNotSupported
+	jae		SHORT AH42h_ReturnWithInvalidFunctionError
 
 	call	AH42h_LoadDapToESSIandVerifyForTransfer
 	call	CommandLookup_GetEbiosIndexToBX
@@ -39,6 +39,3 @@ AH43h_HandlerForExtendedWriteSectors:
 	call	Idepack_ConvertDapToIdepackAndIssueCommandFromAH
 	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 %endif
-
-.WriteWithVerifyNotSupported:
-	jmp		AH2h_ExitInt13hSinceSectorCountInIntpackIsZero

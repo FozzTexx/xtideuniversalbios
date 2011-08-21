@@ -6,7 +6,7 @@
 SECTION .text
 
 ;--------------------------------------------------------------------
-; AtaID_GetPCHS
+; AtaID_GetPCHStoAXBLBHfromAtaInfoInESSI
 ;	Parameters:
 ;		ES:SI:	Ptr to 512-byte ATA information read from the drive
 ;	Returns:
@@ -16,7 +16,7 @@ SECTION .text
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-AtaID_GetPCHS:
+AtaID_GetPCHStoAXBLBHfromAtaInfoInESSI:
 	mov		ax, [es:si+ATA1.wCylCnt]	; Cylinders (1...16383)
 	mov		bl, [es:si+ATA1.wHeadCnt]	; Heads (1...16)
 	mov		bh, [es:si+ATA1.wSPT]		; Sectors per Track (1...63)
