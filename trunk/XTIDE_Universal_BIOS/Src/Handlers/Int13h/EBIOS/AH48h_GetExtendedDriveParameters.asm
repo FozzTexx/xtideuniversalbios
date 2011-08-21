@@ -22,26 +22,38 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH48h_HandlerForGetExtendedDriveParameters:
-	; Get ATA Drive Information and total sector count from it
+	; Get our buffer to ES:SI
+	push	di
+	call	FindDPT_ForNewDriveToDSDI
+	lea		si, [di+LARGEST_DPT_SIZE]	; IdeCommand.asm required fake DPT
+	pop		di
 	push	ds
-	pop		es			; ES now points RAMVARS segment
-	mov		si, [cs:ROMVARS.bStealSize]
-	and		si, BYTE 7Fh
-	eSHL_IM	si, 10		; Kilobytes to bytes
-	sub		si, 512		; Subtract buffer size for offset in RAMVARS
-	call	AH25h_GetDriveInformationToBufferInESSIfromDriveInDL
+	pop		es
+
+	; Get Drive ID and total sector count from it
+	call	AH25h_GetDriveInformationToBufferInESSI
+	jc		SHORT .ReturnWithError
 	call	AtaID_GetTotalSectorCountToBXDXAXfromAtaInfoInESSI
-	xchg	cx, ax
+	xchg	cx, ax		; Sector count now in BX:DX:CX
 
 	; Point ES:DI to Destination buffer
 	mov		di, [bp+IDEPACK.intpack+INTPACK.si]
 	mov		es, [bp+IDEPACK.intpack+INTPACK.ds]
-	cmp		WORD [es:di+EDRIVE_INFO.wSize], MINIMUM_EDRIVEINFO_SIZE
+	mov		ax, MINIMUM_EDRIVEINFO_SIZE
+	cmp		WORD [es:di+EDRIVE_INFO.wSize], ax
 	jb		SHORT .BufferTooSmall
+	je		SHORT .SkipEddConfigurationParameters
+
+	; We do not support EDD Configuration Parameters so set to FFFF:FFFFh
+	xor		ax, ax
+	dec		ax			; AX = FFFFh
+	mov		[es:di+EDRIVE_INFO.fpEDDparams], ax
+	mov		[es:di+EDRIVE_INFO.fpEDDparams+2], ax
+	mov		ax, EDRIVE_INFO_size
 
 	; Fill Extended Drive Information Table in ES:DI
-	mov		ax, MINIMUM_EDRIVEINFO_SIZE
-	stosw
+.SkipEddConfigurationParameters:
+	stosw				; Store Extended Drive Information Table size
 	mov		al, FLG_DMA_BOUNDARY_ERRORS_HANDLED_BY_BIOS
 	stosw
 	add		di, BYTE 12	; Skip CHS parameters
@@ -62,4 +74,5 @@ AH48h_HandlerForGetExtendedDriveParameters:
 
 .BufferTooSmall:
 	mov		ah, RET_HD_INVALID
+.ReturnWithError:
 	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH

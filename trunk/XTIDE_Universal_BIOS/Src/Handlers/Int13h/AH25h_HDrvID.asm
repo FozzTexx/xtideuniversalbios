@@ -24,17 +24,16 @@ AH25h_HandlerForGetDriveInformation:
 	mov		si, [bp+IDEPACK.intpack+INTPACK.bx]
 %ifdef USE_186
 	push	Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
-	; Fall to AH25h_GetDriveInformationToBufferInESSIfromDriveInDL
+	; Fall to AH25h_GetDriveInformationToBufferInESSI
 %else
-	call	AH25h_GetDriveInformationToBufferInESSIfromDriveInDL
+	call	AH25h_GetDriveInformationToBufferInESSI
 	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 %endif
 
 
 ;--------------------------------------------------------------------
-; AH25h_GetDriveInformationToBufferInESSIfromDriveInDL
+; AH25h_GetDriveInformationToBufferInESSI
 ;	Parameters:
-;		DL:		Translated Drive number
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
 ;		ES:SI:	Ptr to buffer to receive 512-byte drive information
 ;	Returns with INTPACK:
@@ -43,7 +42,8 @@ AH25h_HandlerForGetDriveInformation:
 ;	Corrupts registers:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
-AH25h_GetDriveInformationToBufferInESSIfromDriveInDL:
+ALIGN JUMP_ALIGN
+AH25h_GetDriveInformationToBufferInESSI:
 	push	es
 	push	bp
 	push	di

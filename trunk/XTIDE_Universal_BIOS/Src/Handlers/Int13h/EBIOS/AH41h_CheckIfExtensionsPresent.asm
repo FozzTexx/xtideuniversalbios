@@ -16,7 +16,7 @@ SECTION .text
 ;		BX:		55AAh
 ;	Returns with INTPACK:
 ;		AH:		Major version of EBIOS extensions
-;		BX:		55AAh
+;		BX:		AA55h
 ;		CX:		Support bits
 ;		CF:		0 if succesfull, 1 if error
 ;--------------------------------------------------------------------
@@ -25,8 +25,9 @@ AH41h_HandlerForCheckIfExtensionsPresent:
 	cmp		WORD [bp+IDEPACK.intpack+INTPACK.bx], 55AAh
 	jne		SHORT .EbiosNotSupported
 
+	mov		BYTE [bp+IDEPACK.intpack+INTPACK.ah], EBIOS_VERSION
+	mov		WORD [bp+IDEPACK.intpack+INTPACK.bx], 0AA55h
 	mov		WORD [bp+IDEPACK.intpack+INTPACK.cx], ENHANCED_DRIVE_ACCESS_SUPPORT
-	mov		ah, EBIOS_VERSION
 	and		BYTE [bp+IDEPACK.intpack+INTPACK.flags], ~FLG_FLAGS_CF	; Return with CF cleared
 	jmp		Int13h_ReturnFromHandlerWithoutStoringErrorCode
 .EbiosNotSupported:
