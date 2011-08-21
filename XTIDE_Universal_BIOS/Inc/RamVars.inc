@@ -53,8 +53,7 @@ struc IDEPACK
 	.bDeviceControl			resb	1	; Offset 7 shared with PIOVARS
 
 	; Parameters for 48-bit LBA
-	.wSectorCountHighAndLbaLowExt:
-	.bSectorCountHighExt	resb	1	; LBA48 Sector Count 15...8
+							resb	1
 	.bLbaLowExt				resb	1	; LBA48 31...24
 
 	.wLbaMiddleAndHighExt:

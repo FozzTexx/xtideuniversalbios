@@ -54,7 +54,7 @@ AH42h_LoadDapToESSIandVerifyForTransfer:
 	mov		es, [bp+IDEPACK.intpack+INTPACK.ds]	; ES:SI to point Disk Address Packet
 	cmp		BYTE [es:si+DAP.bSize], MINIMUM_DAP_SIZE
 	jb		SHORT .DapContentsNotValid
-	cmp		BYTE [es:si+DAP.bSectorCount], 0
+	cmp		WORD [es:si+DAP.wSectorCount], BYTE 0
 	jle		SHORT .DapContentsNotValid			; Must be 1...127
 	ret
 .DapContentsNotValid:

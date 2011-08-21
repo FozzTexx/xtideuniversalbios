@@ -27,11 +27,10 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH2h_HandlerForReadDiskSectors:
-	cmp		BYTE [bp+IDEPACK.intpack+INTPACK.al], 0
+	cmp		al, 0
 	jle		SHORT AH2h_ExitInt13hSinceSectorCountInIntpackIsZero
 
-	xor		bx, bx
-	call	CommandLookup_OrOldInt13hIndexToBL
+	call	CommandLookup_GetOldInt13hIndexToBX
 	mov		ah, [cs:bx+g_rgbReadCommandLookup]
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRQ, FLG_STATUS_DRQ)
 	mov		si, [bp+IDEPACK.intpack+INTPACK.bx]
@@ -54,4 +53,3 @@ AH2h_HandlerForReadDiskSectors:
 AH2h_ExitInt13hSinceSectorCountInIntpackIsZero:
 	mov		ah, RET_HD_INVALID
 	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
-

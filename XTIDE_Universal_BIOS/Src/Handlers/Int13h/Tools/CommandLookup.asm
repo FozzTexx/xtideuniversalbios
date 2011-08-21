@@ -6,31 +6,41 @@ SECTION .text
 
 ;--------------------------------------------------------------------
 ; CommandLookup_GetEbiosIndexToBX
-; CommandLookup_OrOldInt13hIndexToBL
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT
 ;		ES:SI:	Ptr to DAP (Disk Address Packet)
 ;	Returns:
 ;		BX:		Index to command lookup table
 ;	Corrupts registers:
-;		AX
+;		AX, DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 CommandLookup_GetEbiosIndexToBX:
 	; LBA28 or LBA48 command
-	xor		bx, bx
-	mov		ax, [es:si+DAP.qwLBA+3]	; Load LBA48 bytes 3 and 4
-	and		al, ~0Fh				; Clear LBA28 bits 24...27
-	or		al, [es:si+DAP.qwLBA+5]
-	cmp		bx, ax					; Set CF if any of bits 28...47 set
-	rcl		bx, 1					; BX = 0 for LBA28, BX = 1 for LBA48
+	xor		dx, dx
+	mov		al, [es:si+DAP.qwLBA+3]	; Load LBA48 byte 3 (bits 24...31)
+	and		ax, 00F0h				; Clear LBA28 bits 24...27
+	or		ax, [es:si+DAP.qwLBA+4]	; Set bits from LBA bytes 4 and 5
+	cmp		dx, ax					; Set CF if any of bits 28...47 set
+	rcl		dx, 1					; DX = 0 for LBA28, DX = 1 for LBA48
+	call	CommandLookup_GetOldInt13hIndexToBX
+	or		bx, dx					; Set block mode / single sector bit
+	ret
 
-	; Block mode or single sector
+;--------------------------------------------------------------------
+; CommandLookup_GetOldInt13hIndexToBX
+;	Parameters:
+;		DS:DI:	Ptr to DPT
+;	Returns:
+;		BX:		Index to command lookup table
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-CommandLookup_OrOldInt13hIndexToBL:
-	mov		al, FLGH_DPT_BLOCK_MODE_SUPPORTED	; Bit 1
-	and		al, [di+DPT.bFlagsHigh]
-	or		bl, al					; BX = index to lookup table
+CommandLookup_GetOldInt13hIndexToBX:
+	; Block mode or single sector
+	mov		bl, [di+DPT.bFlagsHigh]
+	and		bx, BYTE FLGH_DPT_BLOCK_MODE_SUPPORTED	; Bit 1
 	ret
 
 
@@ -51,4 +61,3 @@ g_rgbVerifyCommandLookup:
 	db		COMMAND_VERIFY_SECTORS_EXT
 	db		COMMAND_VERIFY_SECTORS
 	db		COMMAND_VERIFY_SECTORS_EXT		
-

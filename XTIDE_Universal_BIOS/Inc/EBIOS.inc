@@ -21,7 +21,6 @@ struc EDRIVE_INFO
 	.dwSectorsPerTrack		resb	4	; 12, Number of sectors per track
 	.qwTotalSectors			resb	8	; 16, Total number of addressable sectors
 	.wSectorSize			resb	2	; 24, Number of bytes per sector
-
 	.fpEDDparams			resb	8	; 26, Optional pointer to Enhanced Disk Drive (EDD) configuration parameters
 endstruc
 

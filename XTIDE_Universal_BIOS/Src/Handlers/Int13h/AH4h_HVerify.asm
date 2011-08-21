@@ -25,7 +25,7 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH4h_HandlerForVerifyDiskSectors:
-	cmp		BYTE [bp+IDEPACK.intpack+INTPACK.al], 0
+	cmp		al, 0
 	jle		SHORT AH2h_ExitInt13hSinceSectorCountInIntpackIsZero
 
 	mov		ah, COMMAND_VERIFY_SECTORS
