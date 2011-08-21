@@ -183,6 +183,24 @@ ALIGN JUMP_ALIGN
 %endmacro
 
 
+;--------------------------------------------------------------------
+; Conditional Set.
+;
+; eCSETcc
+;	Parameters:
+;		%1:		Destination data
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		Flags
+;--------------------------------------------------------------------
+%macro eCSETZ 1
+	mov		%1, 0			; Clear while preserving flags
+	jnz		SHORT %%Return	; Nothing to set
+	inc		%1
+%%Return:
+%endmacro
+
 
 ;--------------------------------------------------------------------
 ; Moves byte with zero-extending to any Register.
