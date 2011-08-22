@@ -42,7 +42,7 @@ AH25h_HandlerForGetDriveInformation:
 ;	Corrupts registers:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+;ALIGN JUMP_ALIGN
 AH25h_GetDriveInformationToBufferInESSI:
 	push	es
 	push	bp

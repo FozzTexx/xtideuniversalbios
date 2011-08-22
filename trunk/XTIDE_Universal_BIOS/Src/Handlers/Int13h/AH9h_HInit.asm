@@ -40,7 +40,7 @@ AH9h_HandlerForInitializeDriveParameters:
 ;	Corrupts registers:
 ;		AL, BX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+;ALIGN JUMP_ALIGN
 AH9h_InitializeDriveForUse:
 	push	cx
 

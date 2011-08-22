@@ -1,9 +1,4 @@
-; File name		:	menudraw.asm
 ; Project name	:	Menu library
-; Created date	:	9.11.2009
-; Last update	:	4.1.2011
-; Author		:	Tomi Tilli,
-;				:	Krister Nordvall (optimizations)
 ; Description	:	ASM library to menu system.
 ;					Contains menu drawing functions.
 
@@ -163,7 +158,7 @@ MenuDraw_InfoNoBord:
 ;MenuDraw_AllItems:
 ;	call	MenuDraw_ItemBorders			; Draw borders to clear old strings
 ALIGN JUMP_ALIGN
-MenuDraw_AllItemsNoBord:	
+MenuDraw_AllItemsNoBord:
 	cmp		WORD [bp+MENUVARS.wItemCnt], 0	; Any items to draw?
 	jz		MenuDraw_NothingToDraw			;  If not, return
 	call	MenuCrsr_Point1stItem			; Set cursor position
@@ -357,7 +352,7 @@ MenuDraw_TopBorder:
 	mov		bx, (B_TL << 8) + B_H
 	mov		dh, B_TR
 	jmp		SHORT MenuDraw_BorderChars
-	
+
 ALIGN JUMP_ALIGN
 MenuDraw_StringBorder:
 	mov		bx, (B_V << 8) + ' '
@@ -446,7 +441,7 @@ MenuDraw_GetScrollChar:
 	eMOVZX	bx, BYTE [bp+MENUVARS.bVisCnt]	; Load visible menuitems to BX
 	cmp		ax, bx						; Need scroll bars?
 	jbe		.Return						;  If not, return
-	
+
 	; Calculate last menuitem index for thumb char on this line
 	push	bx							; Store number of visible menuitems
 	sub		bx, cx						; Calculate Line index
@@ -461,6 +456,6 @@ MenuDraw_GetScrollChar:
 	call	Menu_IsItemVisible			; Is thumb menuitem visible?
 	jc		.Return						;  If so, draw thumb
 	mov		dh, T_V						; Load track character
-ALIGN JUMP_ALIGN
+ALIGN JUMP_ALIGN, ret
 .Return:
 	ret

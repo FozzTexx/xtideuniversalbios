@@ -34,10 +34,8 @@ IdeTransfer_StartWithCommandInAL:
 	mov		ah, [bp+IDEPACK.bSectorCountHighExt]
 
 	; Are we reading or writing?
-	test	al, 16	; Bit 4 is cleared on all the read commands but set on 3 of the 4 write commands
-	jnz		SHORT .PrepareToWriteDataFromESSI
-	cmp		al, COMMAND_WRITE_MULTIPLE
-	je		SHORT .PrepareToWriteDataFromESSI
+	test	al, 11001b
+	jpo		SHORT .PrepareToWriteDataFromESSI
 
 	; Prepare to read data to ESSI
 	mov		bx, g_rgfnPioRead

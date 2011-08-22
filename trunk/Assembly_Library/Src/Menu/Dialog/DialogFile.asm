@@ -264,8 +264,7 @@ AppendFileFromDTAinDSSItoOffScreenBuffer:
 ALIGN JUMP_ALIGN
 .FilterCurrentDirectory:
 	cmp		WORD [si+DTA.szFile], CURRENTDIR_CHARACTERS
-	jne		SHORT .ReturnWithoutFiltering
-	add		sp, BYTE 2		; Remove return address from stack
+	je		SHORT .ReturnWithFiltering
 	ret
 
 ALIGN JUMP_ALIGN
@@ -274,6 +273,7 @@ ALIGN JUMP_ALIGN
 	jnz		SHORT .ReturnWithoutFiltering
 	cmp		WORD [si+DTA.szFile], UPDIR_CHARACTERS
 	jne		SHORT .ReturnWithoutFiltering
+.ReturnWithFiltering:
 	add		sp, BYTE 2		; Remove return address from stack
 ALIGN JUMP_ALIGN, ret
 .ReturnWithoutFiltering:
