@@ -41,7 +41,7 @@ AHDh_HandlerForResetHardDisk:
 ;	Corrupts registers:
 ;		AL, CX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+;ALIGN JUMP_ALIGN
 AHDh_ResetDrive:
 	push	dx
 	push	bx

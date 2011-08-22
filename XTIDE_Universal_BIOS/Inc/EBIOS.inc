@@ -9,7 +9,7 @@ EBIOS_VERSION						EQU	21h		; 21h = EDD version 1.1
 ; Support bits returned by INT 13h, AH=41h
 ENHANCED_DRIVE_ACCESS_SUPPORT		EQU	(1<<0)	; 41h, 42h, 43h 44h, 47h and 48h are available
 DRIVE_LOCKING_AND_EJECTING_SUPPORT	EQU	(1<<1)	; 41h, 45h, 46h, 48h, 49h are available and INT 15h, AH=52h
-ENHANDED_DISK_DRIVE_SUPPORT			EQU	(1<<2)	; 41h, 48h, 4Eh are available (EDD)
+ENHANCED_DISK_DRIVE_SUPPORT			EQU	(1<<2)	; 41h, 48h, 4Eh are available (EDD)
 
 
 ; Extended Drive Information returned by AH=48h

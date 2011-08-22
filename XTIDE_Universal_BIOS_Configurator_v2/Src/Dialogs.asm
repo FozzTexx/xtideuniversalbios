@@ -124,13 +124,7 @@ Dialogs_DisplayQuitDialog:
 	call	Memory_ReserveCXbytesFromStackToDSSI
 	call	InitializeDialogInputFromDSSI
 	mov		WORD [si+DIALOG_INPUT.fszTitle], g_szDlgExitToDos
-	mov		WORD [si+DIALOG_INPUT.fszItems], g_szMultichoiceBooleanFlag
-	CALL_MENU_LIBRARY GetSelectionToAXwithInputInDSSI
-	add		sp, BYTE DIALOG_INPUT_size
-	cmp		ax, BYTE 1		; 1 = YES
-
-	pop		ds
-	ret
+	jmp		Dialogs_DisplayQuitAndSaveChangesDialogsSharedEnding
 
 
 ALIGN JUMP_ALIGN
@@ -141,6 +135,7 @@ Dialogs_DisplaySaveChangesDialog:
 	call	Memory_ReserveCXbytesFromStackToDSSI
 	call	InitializeDialogInputFromDSSI
 	mov		WORD [si+DIALOG_INPUT.fszTitle], g_szDlgSaveChanges
+Dialogs_DisplayQuitAndSaveChangesDialogsSharedEnding:
 	mov		WORD [si+DIALOG_INPUT.fszItems], g_szMultichoiceBooleanFlag
 	CALL_MENU_LIBRARY GetSelectionToAXwithInputInDSSI
 	add		sp, BYTE DIALOG_INPUT_size
