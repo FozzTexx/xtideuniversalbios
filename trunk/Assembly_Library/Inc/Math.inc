@@ -1,8 +1,4 @@
-; File name		:	Math.inc
 ; Project name	:	Assembly Library
-; Created date	:	12.8.2010
-; Last update	:	12.8.2010
-; Author		:	Tomi Tilli
 ; Description	:	Math related macros.
 %ifndef MATH_INC
 %define MATH_INC
@@ -64,6 +60,27 @@ ALIGN JUMP_ALIGN
 	mov		%1, %2				; Copy %2 to %1
 ALIGN JUMP_ALIGN
 %%Return:
+%endmacro
+
+
+;--------------------------------------------------------------------
+; SHR_DXAX
+;	Parameters:
+;		%1:		Number of bits to shift
+;	Returns:
+;		DX:AX	Shifted value
+;	Corrupts registers:
+;		CX
+;--------------------------------------------------------------------
+%macro SHR_DXAX 1
+	%ifnidni %1, cx
+		mov		cx, %1
+	%endif
+ALIGN JUMP_ALIGN
+.ShiftNextBit:
+	shr		dx, 1
+	rcr		ax, 1
+	loop	.ShiftNextBit
 %endmacro
 
 

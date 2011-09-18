@@ -74,6 +74,7 @@ SECTION .text
 	%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 		%include "Bit.asm"
 	%endif
+	%include "Math.asm"
 	%include "Registers.asm"
 	%include "Memory.asm"
 	%include "Size.asm"
