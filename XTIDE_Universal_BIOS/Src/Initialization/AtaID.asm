@@ -9,20 +9,20 @@ SECTION .text
 ; LBA assist calculation:
 ; this is how to fit a big drive into INT13's skimpy size requirements,
 ; with a maximum of 8.4G available.
-; 
-; total LBAs (as obtained by words 60+61) 
+;
+; total LBAs (as obtained by words 60+61)
 ; divided by 63 (sectors per track) (save as value A)
 ; Sub 1 from A
-; divide A by 1024 + truncate. 
+; divide A by 1024 + truncate.
 ; == total number of heads to use.
 ; add 1
 ; this value must be either 16, 32, 64, 128, or 256 (round up)
 ; then take the value A above and divide by # of heads
-; to get the # of cylinders to use.  
+; to get the # of cylinders to use.
 ;
 ;
 ; so a LBA28 drive will have 268,435,456 as maximum LBAs
-; 
+;
 ; 10000000h / 63   = 410410h (total cylinders or tracks)
 ;   410410h / 1024 = 1041h, which is way more than 256 heads, but 256 is max.
 ;   410410h / 256  = 4104h cylinders
@@ -34,7 +34,7 @@ SECTION .text
 ; we're using the values from 60+61 here because we're topping out at 8.4G
 ; anyway, so there's no need to use the 48bit LBA values.
 ;
-; AtaID_GetLbaAssistedCHStoAXBLBH:
+; AtaID_GetLbaAssistedCHStoDXAXBLBH:
 ;	Parameters:
 ;		BX:DX:AX:	Total number of sectors
 ;	Returns:
