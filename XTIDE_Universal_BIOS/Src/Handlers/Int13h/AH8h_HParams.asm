@@ -57,7 +57,7 @@ AH8h_HandlerForReadDiskDriveParameters:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH8h_GetDriveParameters:
-	call	AccessDPT_GetLCHSfromPCHS	; AX=sectors, BX=cylinders, DX=heads
+	call	AccessDPT_GetLCHS		; AX=sectors, BX=cylinders, DX=heads
 	; Fall to .PackReturnValues
 
 ;--------------------------------------------------------------------
