@@ -82,7 +82,7 @@ ALIGN JUMP_ALIGN
 ConvertLCHStoPCHS:
 	; LHead / PHeadCount and LHead % PHeadCount
 	eMOVZX	ax, bh					; Copy L-CHS Head number to AX
-	div		BYTE [di+DPT.bPchsHeads]; AL = LHead / PHeadCount, AH = LHead % PHeadCount
+	div		BYTE [di+DPT.bHeads]	; AL = LHead / PHeadCount, AH = LHead % PHeadCount
 	mov		bh, ah					; Copy P-CHS Head number to BH
 	xor		ah, ah					; AX = LHead / PHeadCount
 
@@ -123,7 +123,7 @@ ALIGN JUMP_ALIGN
 ConvertLCHStoLBARegisterValues:
 	; cylToSeek*headsPerCyl (18-bit result)
 	mov		ax, cx					; Copy Cylinder number to AX
-	eMOVZX	dx, BYTE [di+DPT.bLchsHeads]
+	eMOVZX	dx, BYTE [di+DPT.bHeads]
 	mul		dx						; DX:AX = cylToSeek*headsPerCyl
 
 	; +=headToSeek (18-bit result)
@@ -132,7 +132,7 @@ ConvertLCHStoLBARegisterValues:
 	adc		dl, dh
 
 	; *=sectPerTrack (18-bit by 6-bit multiplication with 24-bit result)
-	eMOVZX	cx, BYTE [di+DPT.bPchsSectors]	; Load Sectors per Track
+	mov		cx, LBA_ASSIST_SPT		; Load Sectors per Track
 	xchg	ax, dx					; Hiword to AX, loword to DX
 	mul		cl						; AX = hiword * Sectors per Track
 	mov		bh, al					; Backup hiword * Sectors per Track

@@ -5,25 +5,23 @@
 %define CUSTOMDPT_INC
 
 ; Base DPT for all device types
-struc DPT	; 8 bytes
+struc DPT	; 10 bytes
 	; General Disk Parameter Table related
 	.wFlags:
 	.bFlagsLow					resb	1
 	.bFlagsHigh					resb	1
 	.bIdevarsOffset				resb	1	; Offset to IDEVARS for this drive
-
-	; L-CHS to P-CHS and L-CHS to LBA28 conversion related
-	.bLchsHeads					resb	1	; Number of L-CHS Heads (1...255)
+								resb	1
 
 	; IDE Drive related
-	.wPchsCylinders				resb	2	; Number of P-CHS (IDE) Cylinders (1...16383)
-	.wPchsHeadsAndSectors:
-	.bPchsHeads					resb	1	; Number of P-CHS (IDE) Heads (1...16)
-	.bPchsSectors				resb	1	; Number of P-CHS (IDE) Sectors per Track (1...63)
+	.dwCylinders				resb	4	; Number of Cylinders
+	.wHeadsAndSectors:
+	.bHeads						resb	1	; Number of Heads (1...255)
+	.bSectors					resb	1	; Number of Sectors per Track (1...63)
 endstruc
 
 ; DPT for ATA devices
-struc DPT_ATA	; 8 + 2 bytes = 10 bytes
+struc DPT_ATA	; 10 + 2 bytes = 12 bytes
 	.dpt						resb	DPT_size
 
 	; Block size is specified in sectors (1, 2, 4, 8, 16, 32 or 64).
@@ -59,6 +57,11 @@ ADDRESSING_MODE_LCHS			EQU		0	; L-CHS Addressing Mode (NORMAL in many other BIOS
 ADDRESSING_MODE_PCHS			EQU		1	; P-CHS Addressing Mode (LARGE in many other BIOSes)
 ADDRESSING_MODE_LBA28			EQU		2	; 28-bit LBA Addressing Mode
 ADDRESSING_MODE_LBA48			EQU		3	; 48-bit LBA Addressing Mode
+
+; Number of Sectors per Track is fixed to 63 for LBA assist calculation.
+; 1024 cylinders, 256 heads, 63 sectors = 8.4 GB limit (but DOS does not support more than 255 heads)
+MAX_LCHS_CYLINDERS				EQU		1024
+LBA_ASSIST_SPT					EQU		63
 
 
 %endif ; CUSTOMDPT_INC

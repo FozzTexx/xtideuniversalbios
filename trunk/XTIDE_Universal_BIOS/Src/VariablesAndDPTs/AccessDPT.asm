@@ -58,7 +58,7 @@ AccessDPT_GetAddressingModeForWordLookToBX:
 
 
 ;--------------------------------------------------------------------
-; AccessDPT_GetLCHSfromPCHS
+; AccessDPT_GetLCHS
 ;	Parameters:
 ;		DS:DI:	Ptr to Disk Parameter Table
 ;	Returns:
@@ -66,19 +66,55 @@ AccessDPT_GetAddressingModeForWordLookToBX:
 ;		BX:		Number of L-CHS cylinders
 ;		DX:		Number of L-CHS heads
 ;	Corrupts registers:
+;		CX
+;--------------------------------------------------------------------
+AccessDPT_GetLCHS:
+	; Load CHS from DPT
+	eMOVZX	ax, BYTE [di+DPT.bSectors]
+	mov		bx, [di+DPT.dwCylinders]
+	cwd
+	mov		dl, [di+DPT.bHeads]
+
+	; Only need to limit sectors for LBA assist
+	test	BYTE [di+DPT.bFlagsLow], FLG_DRVNHEAD_LBA
+	jnz		SHORT .ReturnLbaAssistedLCHS
+
+	; P-CHS to L-CHS translation when necessary
+	jmp		SHORT AccessDPT_ShiftPCHinBXDXtoLCH
+
+.ReturnLbaAssistedLCHS:
+	cmp		WORD [di+DPT.dwCylinders+2], BYTE 0
+	jz		SHORT .LimitCylindersTo1024
+	mov		bx, MAX_LCHS_CYLINDERS
+.LimitCylindersTo1024:
+	MIN_U	bx, MAX_LCHS_CYLINDERS
+	ret
+
+
+;--------------------------------------------------------------------
+; AccessDPT_ShiftPCHinBXDXtoLCH
+;	Parameters:
+;		BX:		P-CHS cylinders (1...16383)
+;		DX:		P-CHS heads (1...16)
+;	Returns:
+;		BX:		Number of L-CHS cylinders (1...1024)
+;		DX:		Number of L-CHS heads (1...255)
+;		CX:		Number of bits shifted
+;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-AccessDPT_GetLCHSfromPCHS:
-	mov		al, [di+DPT.bFlagsLow]
-	and		al, MASKL_DPT_CHS_SHIFT_COUNT	; Load shift count
-	xchg	cx, ax
-	mov		bx, [di+DPT.wPchsCylinders]		; Load P-CHS cylinders
-	shr		bx, cl							; Shift to L-CHS cylinders
-	xchg	cx, ax
-	eMOVZX	ax, BYTE [di+DPT.bPchsSectors]	; Load Sectors per track
-	cwd
-	mov		dl, [di+DPT.bLchsHeads]			; Load L-CHS heads
+AccessDPT_ShiftPCHinBXDXtoLCH:
+	xor		cx, cx
+.ShiftLoop:
+	cmp		bx, MAX_LCHS_CYLINDERS		; Need to shift?
+	jbe		SHORT .LimitHeadsTo255		;  If not, return
+	inc		cx							; Increment shift count
+	shr		bx, 1						; Halve cylinders
+	shl		dx, 1						; Double heads
+	jmp		SHORT .ShiftLoop
+.LimitHeadsTo255:						; DOS does not support drives with 256 heads
+	sub		dl, dh						; BH set only when 256 logical heads
+	xor		dh, dh
 	ret
 
 

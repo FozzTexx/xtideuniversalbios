@@ -62,68 +62,6 @@ CreateDPT_FromAtaInformation:
 	or		al, FLGL_DPT_ENABLE_IRQ
 .StoreFlags:
 	mov		[di+DPT.wFlags], ax
-	; Fall to .StorePCHS
-
-;--------------------------------------------------------------------
-; .StorePCHS
-;	Parameters:
-;		BH:		Drive Select byte for Drive and Head Register
-;		DS:DI:	Ptr to Disk Parameter Table
-;		ES:SI:	Ptr to 512-byte ATA information read from the drive
-;		CS:BP:	Ptr to IDEVARS for the controller
-;	Returns:
-;		AX:		P-CHS cylinders
-;		BL:		P-CHS heads
-;		BH:		P-CHS sectors
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-.StorePCHS:
-	mov		al, FLG_DRVPARAMS_USERCHS	; User specified CHS?
-	call	AccessDPT_TestIdeVarsFlagsForMasterOrSlaveDrive
-	jnz		SHORT .GetUserSpecifiedPCHS
-	call	AtaID_GetPCHStoAXBLBHfromAtaInfoInESSI
-	jmp		SHORT .StorePCHStoDPT
-
-.GetUserSpecifiedPCHS:
-	call	AccessDPT_GetPointerToDRVPARAMStoCSBX
-	mov		ax, [cs:bx+DRVPARAMS.wCylinders]
-	mov		bx, [cs:bx+DRVPARAMS.wHeadsAndSectors]
-
-.StorePCHStoDPT:
-	mov		[di+DPT.wPchsCylinders], ax
-	mov		[di+DPT.wPchsHeadsAndSectors], bx
-	; Fall to .StoreLCHS
-
-;--------------------------------------------------------------------
-; .StoreLCHS
-;	Parameters:
-;		AX:		P-CHS cylinders
-;		BL:		P-CHS heads
-;		DS:DI:	Ptr to Disk Parameter Table
-;		ES:SI:	Ptr to 512-byte ATA information read from the drive
-;		CS:BP:	Ptr to IDEVARS for the controller
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, BX, CX
-;--------------------------------------------------------------------
-.StoreLCHS:
-	xor		bh, bh						; BX = P-CHS Heads (1...16)
-	xor		cx, cx
-.ShiftLoop:
-	cmp		ax, 1024					; Need to shift?
-	jbe		SHORT .LimitHeadsTo255		;  If not, return
-	inc		cx							; Increment shift count
-	shr		ax, 1						; Halve cylinders
-	shl		bx, 1						; Double heads
-	jmp		SHORT .ShiftLoop
-
-.LimitHeadsTo255:						; DOS does not support drives with 256 heads
-	rcr		bh, 1						; Set CF if 256 heads
-	sbb		bl, 0						; Decrement to 255 if 256 heads
-	or		[di+DPT.wFlags], cl
-	mov		[di+DPT.bLchsHeads], bl
 	; Fall to .StoreAddressing
 
 ;--------------------------------------------------------------------
@@ -133,31 +71,75 @@ CreateDPT_FromAtaInformation:
 ;		ES:SI:	Ptr to 512-byte ATA information read from the drive
 ;		CS:BP:	Ptr to IDEVARS for the controller
 ;	Returns:
-;		Nothing
+;		DX:AX or AX:	Number of cylinders
+;		BH:				Number of sectors per track
+;		BL:				Number of heads
 ;	Corrupts registers:
-;		AX, BX
+;		CX, (DX)
 ;--------------------------------------------------------------------
 .StoreAddressing:
-	; Check if L-CHS addressing should be used
-	cmp		WORD [di+DPT.wPchsCylinders], 1024	; L-CHS possible? (no translation needed)
-	jbe		SHORT .StoreBlockMode				;  If so, nothing needs to be changed
-
-	; Check if P-CHS addressing should be used
-	mov		al, FLG_DRVPARAMS_USERCHS			; User specified CHS?
+	; Check if CHS defined in ROMVARS
+	mov		al, FLG_DRVPARAMS_USERCHS	; User specified CHS?
 	call	AccessDPT_TestIdeVarsFlagsForMasterOrSlaveDrive
-	jnz		SHORT .StorePCHSaddressing
-	test	WORD [es:si+ATA1.wCaps], A2_wCaps_LBA
-	jz		SHORT .StorePCHSaddressing			; Use P-CHS since LBA not supported
+	jnz		SHORT .StoreUserDefinedCHSaddressing
 
-	; LBA needs to be used. Check if 48-bit LBA is supported
-	test	WORD [es:si+ATA6.wSetSup83], A6_wSetSup83_LBA48
-	jz		SHORT .StoreLBA28addressing			; Use LBA-28 since LBA-48 not supported
-	or		BYTE [di+DPT.wFlags], ADDRESSING_MODE_LBA48<<ADDRESSING_MODE_FIELD_POSITION
+	; Check if LBA supported
+	call	AtaID_GetPCHStoAXBLBHfromAtaInfoInESSI
+	test	BYTE [es:si+ATA1.wCaps+1], A1_wCaps_LBA>>8
+	jz		SHORT .StoreCHSaddressing
+
+	; Check if 48-bit LBA supported
+	test	BYTE [es:si+ATA6.wSetSup83+1], A6_wSetSup83_LBA48>>8
+	jz		SHORT .StoreLBA28addressing
+	or		BYTE [di+DPT.bFlagsLow], ADDRESSING_MODE_LBA48<<ADDRESSING_MODE_FIELD_POSITION
 .StoreLBA28addressing:
-	or		BYTE [di+DPT.wFlags], ADDRESSING_MODE_LBA28<<ADDRESSING_MODE_FIELD_POSITION
-	jmp		SHORT .StoreBlockMode
-.StorePCHSaddressing:
-	or		BYTE [di+DPT.wFlags], ADDRESSING_MODE_PCHS<<ADDRESSING_MODE_FIELD_POSITION
+	or		BYTE [di+DPT.bFlagsLow], ADDRESSING_MODE_LBA28<<ADDRESSING_MODE_FIELD_POSITION
+	call	AtaID_GetTotalSectorCountToBXDXAXfromAtaInfoInESSI
+	call	AtaID_GetLbaAssistedCHStoDXAXBLBH
+	jmp		SHORT .StoreChsFromDXAXBX
+
+	; Check if P-CHS to L-CHS translation required
+.StoreUserDefinedCHSaddressing:
+	call	AccessDPT_GetPointerToDRVPARAMStoCSBX
+	mov		ax, [cs:bx+DRVPARAMS.wCylinders]
+	mov		bx, [cs:bx+DRVPARAMS.wHeadsAndSectors]
+.StoreCHSaddressing:
+	cmp		ax, MAX_LCHS_CYLINDERS
+	jbe		SHORT .StoreChsFromAXBX		; No translation required
+
+	; We need to get number of bits to shift for translation
+	push	bx
+	push	ax
+	eMOVZX	dx, bl						; Heads now in DX
+	xchg	bx, ax						; Sectors now in BX
+	call	AccessDPT_ShiftPCHinBXDXtoLCH
+	or		cl, ADDRESSING_MODE_PCHS<<ADDRESSING_MODE_FIELD_POSITION
+	or		[di+DPT.bFlagsLow], cl		; Store bits to shift
+	pop		ax
+	pop		bx
+	; Fall to .StoreChsFromAXBX
+
+;--------------------------------------------------------------------
+; .StoreChsFromAXBX
+; .StoreChsFromDXAXBX
+;	Parameters:
+;		DX:AX or AX:	Number of cylinders
+;		BH:		Number of sectors per track
+;		BL:		Number of heads
+;		DS:DI:	Ptr to Disk Parameter Table
+;		ES:SI:	Ptr to 512-byte ATA information read from the drive
+;		CS:BP:	Ptr to IDEVARS for the controller
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		DX
+;--------------------------------------------------------------------
+.StoreChsFromAXBX:
+	xor		dx, dx
+.StoreChsFromDXAXBX:
+	mov		[di+DPT.dwCylinders], ax
+	mov		[di+DPT.dwCylinders+2], dx
+	mov		[di+DPT.wHeadsAndSectors], bx
 	; Fall to .StoreBlockMode
 
 ;--------------------------------------------------------------------

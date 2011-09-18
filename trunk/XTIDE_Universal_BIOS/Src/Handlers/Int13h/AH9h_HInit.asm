@@ -93,9 +93,9 @@ InitializeDeviceParameters:
 	jnz		SHORT ReturnSuccessSinceInitializationNotNeeded
 
 	; Initialize Logical Sectors per Track and Max Head number
-	mov		ah, [di+DPT.bPchsHeads]
+	mov		ah, [di+DPT.bHeads]
 	dec		ah							; Max Head number
-	mov		dl, [di+DPT.bPchsSectors]	; Sectors per Track
+	mov		dl, [di+DPT.bSectors]		; Sectors per Track
 	mov		al, COMMAND_INITIALIZE_DEVICE_PARAMETERS
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_BSY, FLG_STATUS_BSY)
 	jmp		Idepack_StoreNonExtParametersAndIssueCommandFromAL
