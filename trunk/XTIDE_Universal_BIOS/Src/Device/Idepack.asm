@@ -19,7 +19,11 @@ Idepack_FakeToSSBP:
 	mov		bp, sp
 	jmp		ax
 
-
+%ifdef MODULE_EBIOS
+;;; 
+;;; TODO: This code may be dead, even with EBIOS enabled?
+;;;
+		
 ;--------------------------------------------------------------------
 ; Idepack_ConvertDapToIdepackAndIssueCommandFromAH
 ;	Parameters:
@@ -57,7 +61,7 @@ Idepack_ConvertDapToIdepackAndIssueCommandFromAH:
 	mov		[bp+IDEPACK.bDrvAndHead], al
 	les		si, [es:si+DAP.dwMemoryAddress]
 	jmp		SHORT GetDeviceControlByteToIdepackAndStartTransfer
-
+%endif
 
 ;--------------------------------------------------------------------
 ; Idepack_TranslateOldInt13hAddressAndIssueCommandFromAH

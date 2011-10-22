@@ -35,9 +35,14 @@ Int13h_DiskFunctionsHandler:
 	eMOVZX	bx, ah
 	shl		bx, 1
 	cmp		ah, 25h						; Possible EBIOS function?
+%ifdef MODULE_EBIOS
 	ja		SHORT .JumpToEbiosFunction
+%else
+	ja		SHORT Int13h_UnsupportedFunction
+%endif
 	jmp		[cs:bx+g_rgw13hFuncJump]	; Jump to BIOS function
 
+%ifdef MODULE_EBIOS
 	; Jump to correct EBIOS function
 ALIGN JUMP_ALIGN
 .JumpToEbiosFunction:
@@ -50,7 +55,7 @@ ALIGN JUMP_ALIGN
 	sub		bx, 41h<<1					; BX = Offset to eINT 13h jump table
 	jl		SHORT Int13h_UnsupportedFunction
 	jmp		[cs:bx+g_rgwEbiosFunctionJumpTable]
-
+%endif
 
 ;--------------------------------------------------------------------
 ; Int13h_UnsupportedFunction
@@ -240,6 +245,7 @@ g_rgw13hFuncJump:
 	dw	AH24h_HandlerForSetMultipleBlocks				; 24h, Set Multiple Blocks (PS/1)
 	dw	AH25h_HandlerForGetDriveInformation				; 25h, Get Drive Information (PS/1)
 
+%ifdef MODULE_EBIOS
 g_rgwEbiosFunctionJumpTable:
 	dw	AH41h_HandlerForCheckIfExtensionsPresent		; 41h, Check if Extensions Present (EBIOS)*
 	dw	AH42h_HandlerForExtendedReadSectors				; 42h, Extended Read Sectors (EBIOS)*
@@ -259,3 +265,4 @@ g_rgwEbiosFunctionJumpTable:
 ;   * = Enhanced Drive Access Support (minimum required EBIOS functions)
 ;  ** = Enhanced Disk Drive (EDD) Support
 ; *** = Drive Locking and Ejecting Support
+%endif
