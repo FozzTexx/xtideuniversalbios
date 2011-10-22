@@ -23,7 +23,7 @@ Display_FunctionFromDI:
 
 	cld
 	LOAD_BDA_SEGMENT_TO	ds, dx
-	mov		dx, [cs:di+.rgfnDisplayLibraryFunctions]
+	mov		dx, di
 	les		di, [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fpCursorPosition]
 	call	dx
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fpCursorPosition], di
@@ -34,7 +34,7 @@ Display_FunctionFromDI:
 	ret
 
 ;--------------------------------------------------------------------
-; .FormatNullTerminatedStringFromCSSI
+; Display_FormatNullTerminatedStringFromCSSI
 ;	Parameters:
 ;		Same as DisplayPrint_FormattedNullTerminatedStringFromCSSI
 ;	Returns:
@@ -43,7 +43,7 @@ Display_FunctionFromDI:
 ;		AX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-.FormatNullTerminatedStringFromCSSI:
+Display_FormatNullTerminatedStringFromCSSI:
 	pop		ax					; Discard return address to inside Display_FunctionFromDI
 	call	DisplayPrint_FormattedNullTerminatedStringFromCSSI
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fpCursorPosition], di
@@ -56,42 +56,39 @@ ALIGN JUMP_ALIGN
 	mov		sp, bp				; Clean stack variables
 	jmp		ax
 
-
-ALIGN WORD_ALIGN
-.rgfnDisplayLibraryFunctions:
-istruc DISPLAY_LIB
-	at	DISPLAY_LIB.InitializeDisplayContext,						dw	DisplayContext_Initialize
+		
+%define InitializeDisplayContext						DisplayContext_Initialize
 
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-	at	DISPLAY_LIB.SetCharacterPointerFromBXAX,					dw	DisplayContext_SetCharacterPointerFromBXAX
+%define SetCharacterPointerFromBXAX						DisplayContext_SetCharacterPointerFromBXAX
 %endif
-	at	DISPLAY_LIB.SetCharOutputFunctionFromAXwithAttribFlagInBL,	dw	DisplayContext_SetCharOutputFunctionFromAXwithAttribFlagInBL
-	at	DISPLAY_LIB.SetCharacterOutputParameterFromAX,				dw	DisplayContext_SetCharacterOutputParameterFromAX
-	at	DISPLAY_LIB.SetCharacterAttributeFromAL,					dw	DisplayContext_SetCharacterAttributeFromAL
-	at	DISPLAY_LIB.SetCursorShapeFromAX,							dw	DisplayCursor_SetShapeFromAX
-	at	DISPLAY_LIB.SetCursorCoordinatesFromAX,						dw	DisplayCursor_SetCoordinatesFromAX
-	at	DISPLAY_LIB.SetNewPageFromAL,								dw	DisplayPage_SetFromAL
-	at	DISPLAY_LIB.SynchronizeDisplayContextToHardware,			dw	DisplayContext_SynchronizeToHardware
+%define SetCharOutputFunctionFromAXwithAttribFlagInBL	DisplayContext_SetCharOutputFunctionFromAXwithAttribFlagInBL
+%define SetCharacterOutputParameterFromAX				DisplayContext_SetCharacterOutputParameterFromAX
+%define SetCharacterAttributeFromAL						DisplayContext_SetCharacterAttributeFromAL
+%define SetCursorShapeFromAX							DisplayCursor_SetShapeFromAX
+%define SetCursorCoordinatesFromAX						DisplayCursor_SetCoordinatesFromAX
+%define SetNewPageFromAL								DisplayPage_SetFromAL
+%define SynchronizeDisplayContextToHardware				DisplayContext_SynchronizeToHardware
 
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-	at	DISPLAY_LIB.GetCharacterPointerToBXAX,						dw	DisplayContext_GetCharacterPointerToBXAX
+%define GetCharacterPointerToBXAX						DisplayContext_GetCharacterPointerToBXAX
 %endif
-	at	DISPLAY_LIB.GetSoftwareCoordinatesToAX,						dw	DisplayCursor_GetSoftwareCoordinatesToAX
-	at	DISPLAY_LIB.GetColumnsToALandRowsToAH,						dw	DisplayPage_GetColumnsToALandRowsToAH
+%define GetSoftwareCoordinatesToAX						DisplayCursor_GetSoftwareCoordinatesToAX
+%define GetColumnsToALandRowsToAH						DisplayPage_GetColumnsToALandRowsToAH
 
-	at	DISPLAY_LIB.FormatNullTerminatedStringFromCSSI,				dw	.FormatNullTerminatedStringFromCSSI
+%define FormatNullTerminatedStringFromCSSI				Display_FormatNullTerminatedStringFromCSSI
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-	at	DISPLAY_LIB.PrintSignedWordFromAXWithBaseInBX,				dw	DisplayPrint_SignedWordFromAXWithBaseInBX
+%define PrintSignedWordFromAXWithBaseInBX				DisplayPrint_SignedWordFromAXWithBaseInBX
 %endif
-	at	DISPLAY_LIB.PrintWordFromAXwithBaseInBX,					dw	DisplayPrint_WordFromAXWithBaseInBX
-	at	DISPLAY_LIB.PrintCharBufferFromBXSIwithLengthInCX,			dw	DisplayPrint_CharacterBufferFromBXSIwithLengthInCX
-	at	DISPLAY_LIB.PrintNullTerminatedStringFromBXSI,				dw	DisplayPrint_NullTerminatedStringFromBXSI
-	at	DISPLAY_LIB.PrintNullTerminatedStringFromCSSI,				dw	DisplayPrint_NullTerminatedStringFromCSSI
-	at	DISPLAY_LIB.PrintRepeatedCharacterFromALwithCountInCX,		dw	DisplayPrint_RepeatCharacterFromALwithCountInCX
-	at	DISPLAY_LIB.PrintCharacterFromAL,							dw	DisplayPrint_CharacterFromAL
-	at	DISPLAY_LIB.PrintNewlineCharacters,							dw	DisplayPrint_Newline
+%define PrintWordFromAXwithBaseInBX						DisplayPrint_WordFromAXWithBaseInBX
+%define PrintCharBufferFromBXSIwithLengthInCX			DisplayPrint_CharacterBufferFromBXSIwithLengthInCX
+%define PrintNullTerminatedStringFromBXSI				DisplayPrint_NullTerminatedStringFromBXSI
+%define PrintNullTerminatedStringFromCSSI				DisplayPrint_NullTerminatedStringFromCSSI
+%define PrintRepeatedCharacterFromALwithCountInCX		DisplayPrint_RepeatCharacterFromALwithCountInCX
+%define PrintCharacterFromAL							DisplayPrint_CharacterFromAL
+%define PrintNewlineCharacters							DisplayPrint_Newline
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-	at	DISPLAY_LIB.ClearAreaWithHeightInAHandWidthInAL,			dw	DisplayPrint_ClearAreaWithHeightInAHandWidthInAL
+%define ClearAreaWithHeightInAHandWidthInAL				DisplayPrint_ClearAreaWithHeightInAHandWidthInAL
 %endif
-	at	DISPLAY_LIB.ClearScreenWithCharInALandAttrInAH,				dw	DisplayPrint_ClearScreenWithCharInALandAttributeInAH
-iend
+%define ClearScreenWithCharInALandAttrInAH				DisplayPrint_ClearScreenWithCharInALandAttributeInAH
+

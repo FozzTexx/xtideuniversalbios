@@ -24,11 +24,15 @@
 	%elifidn %1, PrepareOffScreenBufferInESBXwithLengthInCX
 		call	DisplayContext_PrepareOffScreenBufferInESBXwithLengthInCX
 	%else
-		mov		di, DISPLAY_LIB.%1
+		mov		di, %1
 		call	Display_FunctionFromDI
 	%endif
 %endmacro
 
+%if 0
+;;;
+;;; struc no longer needed with direct calls to functions
+;;;
 
 ; Display library functions
 struc DISPLAY_LIB
@@ -69,6 +73,7 @@ struc DISPLAY_LIB
 %endif
 	.ClearScreenWithCharInALandAttrInAH				resb	2
 endstruc
+%endif
 
 ; Attribute flags for DISPLAY_LIB.SetCharacterOutputFunctionFromAXwithAttributeFlagInDL
 ATTRIBUTES_NOT_USED							EQU		0
