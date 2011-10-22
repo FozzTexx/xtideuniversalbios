@@ -64,7 +64,7 @@ HEADERS += $(LIBS)
 #################################################################
 # Assembler preprocessor defines.                               #
 #################################################################
-DEFINES = INCLUDE_MENU_LIBRARY EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
+DEFINES = INCLUDE_MENU_LIBRARY EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS MODULE_EBIOS
 DEFINES_XT = ELIMINATE_CGA_SNOW
 DEFINES_XTPLUS = ELIMINATE_CGA_SNOW USE_186
 DEFINES_AT = USE_186 USE_286 USE_AT

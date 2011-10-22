@@ -4,6 +4,7 @@
 ; Section containing code
 SECTION .text
 
+%ifdef MODULE_EBIOS
 ;--------------------------------------------------------------------
 ; CommandLookup_GetEbiosIndexToBX
 ;	Parameters:
@@ -26,7 +27,8 @@ CommandLookup_GetEbiosIndexToBX:
 	call	CommandLookup_GetOldInt13hIndexToBX
 	or		bx, dx					; Set block mode / single sector bit
 	ret
-
+%endif
+		
 ;--------------------------------------------------------------------
 ; CommandLookup_GetOldInt13hIndexToBX
 ;	Parameters:
