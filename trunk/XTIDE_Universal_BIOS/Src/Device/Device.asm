@@ -16,12 +16,15 @@ SECTION .text
 ;		AX, BX, CX, DX
 ;--------------------------------------------------------------------
 Device_FinalizeDPT:
+%ifdef MODULE_SERIAL
 	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE
-	jnz		SHORT ReturnSuccessForSerialPort
+	jnz		SHORT .FinalizeDptForSerialPortDevice
+%endif
 	jmp		IdeDPT_Finalize
-;.FinalizeDptForSerialPortDevice:	; Dead label
-;	jmp		SerialDPT_Finalize		; and code
-
+%ifdef MODULE_SERIAL
+.FinalizeDptForSerialPortDevice:
+	jmp		SerialDPT_Finalize		
+%endif
 
 ;--------------------------------------------------------------------
 ; Device_ResetMasterAndSlaveController
@@ -34,8 +37,10 @@ Device_FinalizeDPT:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
 Device_ResetMasterAndSlaveController:
+%ifdef MODULE_SERIAL
 	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE
 	jnz		SHORT ReturnSuccessForSerialPort
+%endif
 	jmp		IdeCommand_ResetMasterAndSlaveController
 
 
@@ -53,12 +58,15 @@ Device_ResetMasterAndSlaveController:
 ;		AL, BL, CX, DX, SI, DI, ES
 ;--------------------------------------------------------------------
 Device_IdentifyToBufferInESSIwithDriveSelectByteInBH:
+%ifdef MODULE_SERIAL
 	cmp		BYTE [cs:bp+IDEVARS.bDevice], DEVICE_SERIAL_PORT
 	je		SHORT .IdentifyDriveFromSerialPort
+%endif
 	jmp		IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH
+%ifdef MODULE_SERIAL
 .IdentifyDriveFromSerialPort:
 	jmp		SerialCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH
-
+%endif
 
 ;--------------------------------------------------------------------
 ; Device_OutputCommandWithParameters
@@ -76,13 +84,16 @@ Device_IdentifyToBufferInESSIwithDriveSelectByteInBH:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Device_OutputCommandWithParameters:
+%ifdef MODULE_SERIAL
 	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE
 	jnz		SHORT .OutputCommandToSerialPort
+%endif
 	jmp		IdeCommand_OutputWithParameters
+%ifdef MODULE_SERIAL
 ALIGN JUMP_ALIGN
 .OutputCommandToSerialPort:
 	jmp		SerialCommand_OutputWithParameters
-
+%endif
 
 ;--------------------------------------------------------------------
 ; Device_SelectDrive
@@ -97,9 +108,13 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Device_SelectDrive:
+%ifdef MODULE_SERIAL
 	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE
 	jnz		SHORT ReturnSuccessForSerialPort
+%endif
 	jmp		IdeCommand_SelectDrive
+%ifdef MODULE_SERIAL
 ReturnSuccessForSerialPort:
 	xor		ax, ax
 	ret
+%endif

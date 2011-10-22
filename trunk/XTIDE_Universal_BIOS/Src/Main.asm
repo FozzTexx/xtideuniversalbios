@@ -53,7 +53,7 @@ istruc ROMVARS
 ; AT Build default settings ;
 ;---------------------------;
 %ifdef USE_AT
-	at	ROMVARS.wFlags,			dw	FLG_ROMVARS_FULLMODE | FLG_ROMVARS_DRVXLAT
+	at	ROMVARS.wFlags,			dw	FLG_ROMVARS_FULLMODE | FLG_ROMVARS_DRVXLAT | FLG_ROMVARS_MODULE_SERIAL
 	at	ROMVARS.wDisplayMode,	dw	DEFAULT_TEXT_MODE
 	at	ROMVARS.wBootTimeout,	dw	30 * TICKS_PER_SECOND	; Boot Menu selection timeout
 	at	ROMVARS.bIdeCnt,		db	4						; Number of supported controllers
@@ -88,11 +88,17 @@ istruc ROMVARS
 	at	ROMVARS.ideVars3+IDEVARS.bIRQ,			db	0
 	at	ROMVARS.ideVars3+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	db	FLG_DRVPARAMS_BLOCKMODE
 	at	ROMVARS.ideVars3+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags,	db	FLG_DRVPARAMS_BLOCKMODE
+
+%ifdef MODULE_SERIAL
+	at	ROMVARS.ideVarsSerialAuto+IDEVARS.bDevice,		db	DEVICE_SERIAL_PORT
+	at	ROMVARS.ideVarsSerialAuto+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	db	FLG_DRVPARAMS_BLOCKMODE
+	at	ROMVARS.ideVarsSerialAuto+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags,	db	FLG_DRVPARAMS_BLOCKMODE		
+%endif			
 %else
 ;-----------------------------------;
 ; XT and XT+ Build default settings ;
 ;-----------------------------------;
-	at	ROMVARS.wFlags,			dw	FLG_ROMVARS_DRVXLAT
+	at	ROMVARS.wFlags,			dw	FLG_ROMVARS_DRVXLAT | FLG_ROMVARS_MODULE_SERIAL
 	at	ROMVARS.wDisplayMode,	dw	DEFAULT_TEXT_MODE
 	at	ROMVARS.wBootTimeout,	dw	30 * TICKS_PER_SECOND	; Boot Menu selection timeout
 	at	ROMVARS.bIdeCnt,		db	1						; Number of supported controllers
@@ -115,6 +121,12 @@ istruc ROMVARS
 
 	at	ROMVARS.ideVars3+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	db	FLG_DRVPARAMS_BLOCKMODE
 	at	ROMVARS.ideVars3+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags,	db	FLG_DRVPARAMS_BLOCKMODE
+
+%ifdef MODULE_SERIAL
+	at	ROMVARS.ideVarsSerialAuto+IDEVARS.bDevice,		db	DEVICE_SERIAL_PORT
+	at	ROMVARS.ideVarsSerialAuto+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	db	FLG_DRVPARAMS_BLOCKMODE
+	at	ROMVARS.ideVarsSerialAuto+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags,	db	FLG_DRVPARAMS_BLOCKMODE		
+%endif	
 %endif
 iend
 
@@ -164,9 +176,11 @@ iend
 %include "IdeWait.asm"
 %include "IdeError.asm"			; Must be included after IdeWait.asm
 
+%ifdef MODULE_SERIAL		
 ; Serial Port Device support
 %include "SerialCommand.asm"
 %include "SerialDPT.asm"
+%endif
 
 ; INT 13h Hard Disk BIOS functions
 %include "DriveXlate.asm"		; For swapping drive numbers
