@@ -47,10 +47,15 @@
 		call	MenuTime_SetSelectionTimeoutValueFromAX
 
 	%else
-		mov		di, MENU_LIB.%1
+		mov		di, %1
 		call	Menu_FunctionFromDI
 	%endif
 %endmacro
+
+%if 0
+;;;
+;;; struc no longer needed with direct call to function
+;;;
 
 ; Menu library functions
 struc MENU_LIB
@@ -88,7 +93,7 @@ struc MENU_LIB
 	.GetDriveWithIoInDSSI							resb	2
 %endif
 endstruc
-
+%endif
 
 ; Menu initialization parameters
 struc MENUINIT

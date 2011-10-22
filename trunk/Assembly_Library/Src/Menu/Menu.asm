@@ -22,7 +22,7 @@ Menu_FunctionFromDI:
 	push	dx
 	push	cx
 	push	bx
-	call	[cs:di+.rgfnMenuLibraryFunctions]
+	call	di
 	pop		bx
 	pop		cx
 	pop		dx
@@ -30,39 +30,36 @@ Menu_FunctionFromDI:
 	ret
 
 
-ALIGN WORD_ALIGN
-.rgfnMenuLibraryFunctions:
-istruc MENU_LIB
-	at	MENU_LIB.DisplayWithHandlerInBXandUserDataInDXAX,	dw	MenuInit_DisplayMenuWithHandlerInBXandUserDataInDXAX
-	;at	MENU_LIB.Close,							dw	MenuInit_CloseMenuWindow				; Special case in CALL_MENU_LIBRARY
-	at	MENU_LIB.RefreshWindow,					dw	MenuInit_RefreshMenuWindow
+%define DisplayWithHandlerInBXandUserDataInDXAX		MenuInit_DisplayMenuWithHandlerInBXandUserDataInDXAX
+;%define Close										MenuInit_CloseMenuWindow				; Special case in CALL_MENU_LIBRARY
+%define RefreshWindow						MenuInit_RefreshMenuWindow
 
-	;at	MENU_LIB.SetUserDataFromDSSI,			dw	MenuInit_SetUserDataFromDSSI			; Special case in CALL_MENU_LIBRARY
-	;at	MENU_LIB.GetUserDataToDSSI,				dw	MenuInit_GetUserDataToDSSI				; Special case in CALL_MENU_LIBRARY
+;%define SetUserDataFromDSSI				MenuInit_SetUserDataFromDSSI			; Special case in CALL_MENU_LIBRARY
+;%define GetUserDataToDSSI					MenuInit_GetUserDataToDSSI				; Special case in CALL_MENU_LIBRARY
 
-	;at	MENU_LIB.SetTitleHeightFromAL,			dw	MenuInit_SetTitleHeightFromAL			; Special case in CALL_MENU_LIBRARY
-	at	MENU_LIB.ClearTitleArea,				dw	MenuText_ClearTitleArea
-	at	MENU_LIB.RefreshTitle,					dw	MenuText_RefreshTitle
+;%define SetTitleHeightFromAL				MenuInit_SetTitleHeightFromAL			; Special case in CALL_MENU_LIBRARY
+%define ClearTitleArea						MenuText_ClearTitleArea
+%define RefreshTitle						MenuText_RefreshTitle
 
-	at	MENU_LIB.HighlightItemFromAX,			dw	MenuInit_HighlightItemFromAX
-	;at	MENU_LIB.SetTotalItemsFromAX,			dw	MenuInit_SetTotalItemsFromAX			; Special case in CALL_MENU_LIBRARY
-	at	MENU_LIB.RefreshItemFromAX,				dw	MenuText_RefreshItemFromAX
+%define HighlightItemFromAX					MenuInit_HighlightItemFromAX
+;%define SetTotalItemsFromAX				MenuInit_SetTotalItemsFromAX			; Special case in CALL_MENU_LIBRARY
+%define RefreshItemFromAX					MenuText_RefreshItemFromAX
 
-	;at	MENU_LIB.SetInformationHeightFromAL,	dw	MenuInit_SetInformationHeightFromAL		; Special case in CALL_MENU_LIBRARY
-	at	MENU_LIB.ClearInformationArea,			dw	MenuText_ClearInformationArea
-	at	MENU_LIB.RefreshInformation,			dw	MenuText_RefreshInformation
+;%define SetInformationHeightFromAL						MenuInit_SetInformationHeightFromAL		; Special case in CALL_MENU_LIBRARY
+%define ClearInformationArea							MenuText_ClearInformationArea
+%define RefreshInformation								MenuText_RefreshInformation
 
-	at	MENU_LIB.StartSelectionTimeoutWithTicksInAX,	dw	MenuTime_StartSelectionTimeoutWithTicksInAX
+%define StartSelectionTimeoutWithTicksInAX				MenuTime_StartSelectionTimeoutWithTicksInAX
 
 %ifdef INCLUDE_MENU_DIALOGS
-	at	MENU_LIB.StartProgressTaskWithIoInDSSIandParamInDXAX,	dw	DialogProgress_StartProgressTaskWithIoInDSSIandParamInDXAX
-	at	MENU_LIB.SetProgressValueFromAX,						dw	DialogProgress_SetProgressValueFromAX
+%define StartProgressTaskWithIoInDSSIandParamInDXAX		DialogProgress_StartProgressTaskWithIoInDSSIandParamInDXAX
+%define SetProgressValueFromAX							DialogProgress_SetProgressValueFromAX
 
-	at	MENU_LIB.DisplayMessageWithInputInDSSI,					dw	DialogMessage_DisplayMessageWithInputInDSSI
-	at	MENU_LIB.GetSelectionToAXwithInputInDSSI,				dw	DialogSelection_GetSelectionToAXwithInputInDSSI
-	at	MENU_LIB.GetWordWithIoInDSSI,							dw	DialogWord_GetWordWithIoInDSSI
-	at	MENU_LIB.GetStringWithIoInDSSI,							dw	DialogString_GetStringWithIoInDSSI
-	at	MENU_LIB.GetFileNameWithIoInDSSI,						dw	DialogFile_GetFileNameWithIoInDSSI
-	at	MENU_LIB.GetDriveWithIoInDSSI,							dw	DialogDrive_GetDriveWithIoInDSSI
+%define DisplayMessageWithInputInDSSI					DialogMessage_DisplayMessageWithInputInDSSI
+%define GetSelectionToAXwithInputInDSSI					DialogSelection_GetSelectionToAXwithInputInDSSI
+%define GetWordWithIoInDSSI								DialogWord_GetWordWithIoInDSSI
+%define GetStringWithIoInDSSI							DialogString_GetStringWithIoInDSSI
+%define GetFileNameWithIoInDSSI							DialogFile_GetFileNameWithIoInDSSI
+%define GetDriveWithIoInDSSI							DialogDrive_GetDriveWithIoInDSSI
 %endif
-iend
+
