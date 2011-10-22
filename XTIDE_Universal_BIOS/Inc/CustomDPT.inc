@@ -11,7 +11,11 @@ struc DPT	; 10 bytes
 	.bFlagsLow					resb	1
 	.bFlagsHigh					resb	1
 	.bIdevarsOffset				resb	1	; Offset to IDEVARS for this drive
-								resb	1
+%ifdef MODULE_SERIAL
+	.bSerialPortAndBaud			resb	1	; Packed I/O port and baud rate for serial drives
+%else
+								resb	1	; without serial port support, alignment byte
+%endif
 
 	; IDE Drive related
 	.dwCylinders				resb	4	; Number of Cylinders
@@ -43,7 +47,9 @@ FLGL_DPT_ENABLE_IRQ				EQU	(1<<7)
 ; Bit definitions for DPT.bFlagsHigh
 FLGH_DPT_REVERSED_A0_AND_A3		EQU	(1<<0)	; XTIDE mod, Address lines 0 and 3 reversed
 FLGH_DPT_BLOCK_MODE_SUPPORTED	EQU	(1<<1)	; Use block transfer commands (must be bit 1!)
+%ifdef MODULE_SERIAL
 FLGH_DPT_SERIAL_DEVICE			EQU	(1<<2)	; Serial Port Device
+%endif
 FLGH_DPT_INTERRUPT_IN_SERVICE	EQU	(1<<3)	; Set when waiting for IRQ
 FLGH_DPT_RESET_nDRDY			EQU	(1<<4)	; Drive ready to accept commands
 FLGH_DPT_RESET_nINITPRMS		EQU	(1<<5)	; Initialize Device Parameters successfull

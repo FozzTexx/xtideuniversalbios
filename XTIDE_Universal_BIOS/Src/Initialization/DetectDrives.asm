@@ -20,11 +20,18 @@ DetectDrives_FromAllIDEControllers:
 	call	RamVars_GetIdeControllerCountToCX
 	mov		bp, ROMVARS.ideVars0			; CS:BP now points to first IDEVARS
 .DriveDetectLoop:
-	call	DetectDrives_WithIDEVARS		; Detect Master and Slave
+	call	.DetectDrives_WithIDEVARS		; Detect Master and Slave
 	add		bp, BYTE IDEVARS_size			; Point to next IDEVARS
 	loop	.DriveDetectLoop
-	ret
 
+%ifdef MODULE_SERIAL
+	test	BYTE [es:BDA.bKBFlgs1], (1<<2)
+;; 	jz		.done
+	mov		bp, ROMVARS.ideVarsAutoSerial
+;;; fall-through		
+%else
+	ret
+%endif
 
 ;--------------------------------------------------------------------
 ; Detects IDE hard disks by using information from IDEVARS.
@@ -39,7 +46,7 @@ DetectDrives_FromAllIDEControllers:
 ;	Corrupts registers:
 ;		AX, BX, DX, SI, DI
 ;--------------------------------------------------------------------
-DetectDrives_WithIDEVARS:
+.DetectDrives_WithIDEVARS:
 	push	cx
 	mov		ax, g_szMaster
 	mov		bh, MASK_DRVNHEAD_SET								; Select Master drive
@@ -49,9 +56,10 @@ DetectDrives_WithIDEVARS:
 	mov		bh, MASK_DRVNHEAD_SET | FLG_DRVNHEAD_DRV
 	call	StartDetectionWithDriveSelectByteInBHandStringInAX
 	pop		cx
+.done:	
 	ret
 
-
+		
 ;--------------------------------------------------------------------
 ; StartDetectionWithDriveSelectByteInBHandStringInAX
 ;	Parameters:

@@ -62,6 +62,14 @@ CreateDPT_FromAtaInformation:
 	or		al, FLGL_DPT_ENABLE_IRQ
 .StoreFlags:
 	mov		[di+DPT.wFlags], ax
+
+%ifdef MODULE_SERIAL
+	cmp		byte [cs:bp+IDEVARS.bDevice], DEVICE_SERIAL_PORT
+	jnz		.around
+	or		byte [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE
+.around:				
+%endif		
+
 	; Fall to .StoreAddressing
 
 ;--------------------------------------------------------------------

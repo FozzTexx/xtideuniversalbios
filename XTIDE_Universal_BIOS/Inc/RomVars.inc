@@ -26,11 +26,18 @@ struc ROMVARS
 	.ideVars1		resb	IDEVARS_size
 	.ideVars2		resb	IDEVARS_size
 	.ideVars3		resb	IDEVARS_size
+
+	.ideVarsSerialAuto	resb	IDEVARS_size
 endstruc
 
 ; Bit defines for ROMVARS.wFlags
 FLG_ROMVARS_FULLMODE	EQU	(1<<0)	; Full operating mode (steals base RAM, supports EBIOS etc.)
 FLG_ROMVARS_DRVXLAT		EQU	(1<<2)	; Enable drive number translation
+%ifdef MODULE_SERIAL
+FLG_ROMVARS_MODULE_SERIAL	EQU (1<<3)
+%else
+FLG_ROMVARS_MODULE_SERIAL   EQU 0
+%endif
 
 ; Boot Menu Display Modes (see Assembly Library Display.inc for standard modes)
 DEFAULT_TEXT_MODE		EQU	4
@@ -46,14 +53,15 @@ struc IDEVARS
 	.drvParamsSlave		resb	DRVPARAMS_size
 endstruc
 
-; Device types for IDEVARS.bDeviceType
+; Device types for IDEVARS.bDevice
 DEVICE_8BIT_DUAL_PORT_XTIDE				EQU	(0<<1)
 DEVICE_XTIDE_WITH_REVERSED_A3_AND_A0	EQU	(1<<1)
 DEVICE_8BIT_SINGLE_PORT					EQU	(2<<1)
 DEVICE_16BIT_ATA						EQU	(3<<1)
 DEVICE_32BIT_ATA						EQU	(4<<1)
+%ifdef MODULE_SERIAL
 DEVICE_SERIAL_PORT						EQU	(5<<1)
-
+%endif
 
 ; Master/Slave drive specific parameters
 struc DRVPARAMS
