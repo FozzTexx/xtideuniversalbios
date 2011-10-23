@@ -68,9 +68,7 @@ DEVICE_XTIDE_WITH_REVERSED_A3_AND_A0	EQU	(1<<1)
 DEVICE_8BIT_SINGLE_PORT					EQU	(2<<1)
 DEVICE_16BIT_ATA						EQU	(3<<1)
 DEVICE_32BIT_ATA						EQU	(4<<1)
-%ifdef MODULE_SERIAL
 DEVICE_SERIAL_PORT						EQU	(5<<1)
-%endif
 
 ; Master/Slave drive specific parameters
 struc DRVPARAMS
