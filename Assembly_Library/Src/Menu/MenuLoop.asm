@@ -44,7 +44,7 @@ ALIGN JUMP_ALIGN
 TimeoutProcessing:
 	call	MenuTime_UpdateSelectionTimeout
 	jnc		NoKeystrokeToProcess
-	mov		ah, MENU_KEY_ENTER				; Fake ENTER to select item
+	mov		al, CR	; Fake ENTER to select item
 	; Fall to ProcessKeystrokeFromAX
 
 
@@ -84,9 +84,9 @@ ProcessKeystrokeFromAX:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 .ProcessMenuSystemKeystrokeFromAX:
-	cmp		ah, MENU_KEY_ESC
+	cmp		al, ESC
 	je		SHORT .LeaveMenuWithoutSelectingItem
-	cmp		ah, MENU_KEY_ENTER
+	cmp		al, CR
 	je		SHORT .SelectItem
 
 	test	BYTE [bp+MENU.bFlags], FLG_MENU_USER_HANDLES_SCROLLING
@@ -127,20 +127,22 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MenuLoop_ProcessScrollingKeysFromAX:
-	cmp		ah, MENU_KEY_PGUP
+	xchg	ah, al
+	cmp		al, MENU_KEY_PGUP
 	je		SHORT .ChangeToPreviousPage
-	cmp		ah, MENU_KEY_PGDN
+	cmp		al, MENU_KEY_PGDN
 	je		SHORT .ChangeToNextPage
-	cmp		ah, MENU_KEY_HOME
+	cmp		al, MENU_KEY_HOME
 	je		SHORT .SelectFirstItem
-	cmp		ah, MENU_KEY_END
+	cmp		al, MENU_KEY_END
 	je		SHORT .SelectLastItem
 
-	cmp		ah, MENU_KEY_UP
+	cmp		al, MENU_KEY_UP
 	je		SHORT .DecrementSelectedItem
-	cmp		ah, MENU_KEY_DOWN
+	cmp		al, MENU_KEY_DOWN
 	je		SHORT .IncrementSelectedItem
 	clc		; Clear CF since keystroke not processed
+	xchg	ah, al
 	ret
 
 ALIGN JUMP_ALIGN
@@ -169,18 +171,17 @@ ALIGN JUMP_ALIGN
 	; Fall to .SelectLastItem
 ALIGN JUMP_ALIGN
 .SelectLastItem:
+	stc
 	mov		ax, [bp+MENUINIT.wItems]
-	sub		ax, [bp+MENUINIT.wHighlightedItem]
-	dec		ax
+	sbb		ax, [bp+MENUINIT.wHighlightedItem]
 	jmp		SHORT .MoveHighlightedItemByAX
 
 ALIGN JUMP_ALIGN
 .DecrementSelectedItem:
 	mov		ax, -1
-	jmp		SHORT .MoveHighlightedItemByAX
-ALIGN JUMP_ALIGN
+	SKIP2B	cx	; mov cx, <next instruction>
 .IncrementSelectedItem:
-	mov		ax, 1
+	mov		al, 1	; AH is already 0
 ALIGN JUMP_ALIGN
 .MoveHighlightedItemByAX:
 	call	MenuScrollbars_MoveHighlightedItemByAX

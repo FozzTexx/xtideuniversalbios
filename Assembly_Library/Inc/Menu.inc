@@ -1,8 +1,4 @@
-; File name		:	Menu.inc
 ; Project name	:	Assembly Library
-; Created date	:	13.7.2010
-; Last update	:	22.11.2010
-; Author		:	Tomi Tilli
 ; Description	:	Defines for Menu library.
 %ifndef MENU_INC
 %define MENU_INC
@@ -145,8 +141,8 @@ NO_TIMEOUT_USED						EQU		0
 
 
 ; Keyboard keys (scan codes) used by menu library
-MENU_KEY_ENTER		EQU		1Ch
-MENU_KEY_ESC		EQU		01h
+;MENU_KEY_ENTER		EQU		1Ch
+;MENU_KEY_ESC		EQU		01h
 MENU_KEY_UP			EQU		48h
 MENU_KEY_DOWN		EQU		50h
 MENU_KEY_PGUP		EQU		49h
