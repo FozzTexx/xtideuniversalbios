@@ -35,18 +35,8 @@ endstruc
 ; Bit defines for ROMVARS.wFlags
 FLG_ROMVARS_FULLMODE	EQU	(1<<0)	; Full operating mode (steals base RAM, supports EBIOS etc.)
 FLG_ROMVARS_DRVXLAT		EQU	(1<<2)	; Enable drive number translation
-
-%ifdef MODULE_SERIAL
 FLG_ROMVARS_MODULE_SERIAL	EQU (1<<3)
-%else
-FLG_ROMVARS_MODULE_SERIAL   EQU 0
-%endif
-
-%ifdef MODULE_EBIOS
 FLG_ROMVARS_MODULE_EBIOS	EQU (1<<4)
-%else
-FLG_ROMVARS_MODULE_EBIOS    EQU 0
-%endif
 
 ; Boot Menu Display Modes (see Assembly Library Display.inc for standard modes)
 DEFAULT_TEXT_MODE		EQU	4

@@ -51,11 +51,25 @@ istruc ROMVARS
 %endif
 	at	ROMVARS.szVersion,	db	"v1.2.0_wip (",__DATE__,")",NULL
 
+;;; For OR'ing into wFlags below
+;;; 
+%ifdef MODULE_SERIAL
+MAIN_FLG_MODULE_SERIAL  equ   FLG_ROMVARS_MODULE_SERIAL
+%else
+MAIN_FLG_MODULE_SERIAL  equ   0
+%endif
+
+%ifdef MODULE_EBIOS
+MAIN_FLG_MODULE_EBIOS   equ   FLG_ROMVARS_MODULE_EBIOS
+%else
+MAIN_FLG_MODULE_EBIOS   equ   0
+%endif
+
 ;---------------------------;
 ; AT Build default settings ;
 ;---------------------------;
 %ifdef USE_AT
-	at	ROMVARS.wFlags,			dw	FLG_ROMVARS_FULLMODE | FLG_ROMVARS_DRVXLAT | FLG_ROMVARS_MODULE_SERIAL | FLG_ROMVARS_MODULE_EBIOS
+	at	ROMVARS.wFlags,			dw	FLG_ROMVARS_FULLMODE | FLG_ROMVARS_DRVXLAT | MAIN_FLG_MODULE_SERIAL | MAIN_FLG_MODULE_EBIOS
 	at	ROMVARS.wDisplayMode,	dw	DEFAULT_TEXT_MODE
 	at	ROMVARS.wBootTimeout,	dw	30 * TICKS_PER_SECOND	; Boot Menu selection timeout
 	at	ROMVARS.bIdeCnt,		db	4						; Number of supported controllers
@@ -100,7 +114,7 @@ istruc ROMVARS
 ;-----------------------------------;
 ; XT and XT+ Build default settings ;
 ;-----------------------------------;
-	at	ROMVARS.wFlags,			dw	FLG_ROMVARS_DRVXLAT | FLG_ROMVARS_MODULE_SERIAL | FLG_ROMVARS_MODULE_EBIOS		
+	at	ROMVARS.wFlags,			dw	FLG_ROMVARS_DRVXLAT | MAIN_FLG_MODULE_SERIAL | MAIN_FLG_MODULE_EBIOS
 	at	ROMVARS.wDisplayMode,	dw	DEFAULT_TEXT_MODE
 	at	ROMVARS.wBootTimeout,	dw	30 * TICKS_PER_SECOND	; Boot Menu selection timeout
 	at	ROMVARS.bIdeCnt,		db	1						; Number of supported controllers

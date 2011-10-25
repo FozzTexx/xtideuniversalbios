@@ -34,10 +34,13 @@ endstruc
 
 RAMVARS_SIGNATURE		EQU	"Xu"	; RAMVARS signature for .wSignature
 
-
+;
+; IDEPACK NOTE: The first six bytes of this structure are directly put on the 
+; wire for MODULE_SERIAL, please do not change the order or insert other members.
+;
 struc IDEPACK
-	.bDrvAndHead			resb	1	; LBA28 27...24
 	.bFeatures				resb	1
+	.bDrvAndHead			resb	1	; LBA28 27...24
 
 	.wSectorCountAndLbaLow:
 	.bSectorCount			resb	1
