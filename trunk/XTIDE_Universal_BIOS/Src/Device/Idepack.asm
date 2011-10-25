@@ -20,10 +20,6 @@ Idepack_FakeToSSBP:
 	jmp		ax
 
 %ifdef MODULE_EBIOS
-;;; 
-;;; TODO: This code may be dead, even with EBIOS enabled?
-;;;
-		
 ;--------------------------------------------------------------------
 ; Idepack_ConvertDapToIdepackAndIssueCommandFromAH
 ;	Parameters:
