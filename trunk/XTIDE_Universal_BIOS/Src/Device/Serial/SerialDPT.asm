@@ -15,3 +15,9 @@ SECTION .text
 ;		AX, BX, CX, DX
 ;--------------------------------------------------------------------
 SerialDPT_Finalize:
+		or		byte [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE
+		mov		al, byte [es:si+SerialCommand_IdentifyDevice_PackedPortAndBaud]
+		mov		byte [ds:di+DPT.bSerialPortAndBaud], al
+		ret
+
+

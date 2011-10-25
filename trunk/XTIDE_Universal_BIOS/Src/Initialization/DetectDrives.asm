@@ -25,9 +25,9 @@ DetectDrives_FromAllIDEControllers:
 	loop	.DriveDetectLoop
 
 %ifdef MODULE_SERIAL
-	test	BYTE [es:BDA.bKBFlgs1], (1<<2)
-;; 	jz		.done
-	mov		bp, ROMVARS.ideVarsAutoSerial
+	test	BYTE [es:BDA.bKBFlgs1], 8       ; alt key depressed
+ 	jz		.done
+	mov		bp, ROMVARS.ideVarsSerialAuto
 ;;; fall-through		
 %else
 	ret
