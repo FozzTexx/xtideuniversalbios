@@ -36,17 +36,21 @@ MenuScrollbars_AreScrollbarsNeeded:
 ALIGN JUMP_ALIGN
 MenuScrollbars_GetScrollCharacterToALForLineInDI:
 	call	MenuScrollbars_GetMaxVisibleItemsOnPageToCX
-	call	.GetFirstThumbLineToAX
+	; Get first thumb line to AX
+	mov		ax, [bp+MENU.wFirstVisibleItem]
+	call	.CalculateFirstOrLastThumbLineToAX
+
 	cmp		di, ax				; Before first thumb line?
 	jb		SHORT .ReturnTrackCharacter
 	call	.GetLastThumbLineToAX
-	cmp		di, ax				; After last thumb line?
-	ja		SHORT .ReturnTrackCharacter
-	mov		al, SCROLL_THUMB_CHARACTER
-	ret
+	cmp		ax, di				; After last thumb line?
 ALIGN JUMP_ALIGN
 .ReturnTrackCharacter:
 	mov		al, SCROLL_TRACK_CHARACTER
+	jb		SHORT .Return
+	mov		al, SCROLL_THUMB_CHARACTER
+ALIGN JUMP_ALIGN, ret
+.Return:
 	ret
 
 ;--------------------------------------------------------------------
@@ -62,11 +66,12 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 .GetLastThumbLineToAX:
 	call	MenuScrollbars_GetLastVisibleItemOnPageToAX
-	jmp		SHORT .CalculateFirstOrLastThumbLineToAX
+	; Fall to .CalculateFirstOrLastThumbLineToAX
 
 ;--------------------------------------------------------------------
-; .GetFirstThumbLineToAX
+; .CalculateFirstOrLastThumbLineToAX
 ;	Parameters
+;		AX:		Index of first or last visible item on page
 ;		CX:		Max visible items on page
 ;		SS:BP:	Ptr to MENU
 ;	Returns:
@@ -75,8 +80,6 @@ ALIGN JUMP_ALIGN
 ;		CX, DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-.GetFirstThumbLineToAX:
-	mov		ax, [bp+MENU.wFirstVisibleItem]
 .CalculateFirstOrLastThumbLineToAX:
 	mul		cx
 	div		WORD [bp+MENUINIT.wItems]
@@ -97,7 +100,28 @@ ALIGN JUMP_ALIGN
 MenuScrollbars_MoveHighlightedItemByAX:
 	mov		cx, [bp+MENUINIT.wHighlightedItem]
 	add		cx, ax
-	call	.RotateItemInCX
+	; Fall to .RotateItemInCX
+
+;--------------------------------------------------------------------
+; .RotateItemInCX
+;	Parameters
+;		CX:		Possibly under of overflown item to be rotated
+;		SS:BP:	Ptr to MENU
+;	Returns:
+;		CX:		Valid item index
+;	Corrupts registers:
+;		DX
+;--------------------------------------------------------------------
+;.RotateItemInCX:
+	mov		dx, [bp+MENUINIT.wItems]
+	test	cx, cx
+	js		SHORT .RotateNegativeItemInCX
+	sub		cx, dx
+	jae		SHORT .ScrollPageForNewItemInCX
+
+ALIGN JUMP_ALIGN
+.RotateNegativeItemInCX:
+	add		cx, dx
 	; Fall to .ScrollPageForNewItemInCX
 
 ;--------------------------------------------------------------------
@@ -110,73 +134,39 @@ MenuScrollbars_MoveHighlightedItemByAX:
 ;	Corrupts registers:
 ;		AX, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
 .ScrollPageForNewItemInCX:
 	call	MenuScrollbars_IsItemInCXonVisiblePage
 	jc		SHORT .HighlightNewItemOnCX
 
 	mov		dx, [bp+MENU.wFirstVisibleItem]
 	sub		dx, [bp+MENUINIT.wHighlightedItem]
+
+	; Get MaxFirstVisibleItem to AX
+	push	cx
+	call	MenuScrollbars_GetMaxVisibleItemsOnPageToCX
+	mov		ax, [bp+MENUINIT.wItems]
+	sub		ax, cx
+	pop		cx
+
 	add		dx, cx
-	MAX_S	dx, 0
-	call	.GetMaxFirstVisibleItemToAX
-	MIN_U	ax, dx
+	jns		.DXisPositive
+	cwd		; This won't work if MaxFirstVisibleItem > 32767
+
+ALIGN JUMP_ALIGN
+.DXisPositive:
+	cmp		ax, dx
+	jb		.AXisLessThanDX
+	xchg	dx, ax
+
+ALIGN JUMP_ALIGN
+.AXisLessThanDX:
 	mov		[bp+MENU.wFirstVisibleItem], ax
 	call	MenuText_RefreshAllItems
 
 ALIGN JUMP_ALIGN
 .HighlightNewItemOnCX:
 	jmp		MenuEvent_HighlightItemFromCX
-
-;--------------------------------------------------------------------
-; .GetMaxFirstVisibleItemToAX
-;	Parameters
-;		SS:BP:	Ptr to MENU
-;	Returns:
-;		AX:		Max first visible item
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-.GetMaxFirstVisibleItemToAX:
-	push	cx
-
-	call	MenuScrollbars_GetMaxVisibleItemsOnPageToCX
-	mov		ax, [bp+MENUINIT.wItems]
-	sub		ax, cx
-
-	pop		cx
-	ret
-
-;--------------------------------------------------------------------
-; .RotateItemInCX
-;	Parameters
-;		CX:		Possibly under of overflown item to be rotated
-;		SS:BP:	Ptr to MENU
-;	Returns:
-;		CX:		Valid item index
-;	Corrupts registers:
-;		DX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-.RotateItemInCX:
-	mov		dx, [bp+MENUINIT.wItems]
-	test	cx, cx
-	js		SHORT .RotateNegativeItemInCX
-	cmp		cx, dx
-	jae		SHORT .RotatePositiveItemInCX
-	ret
-
-ALIGN JUMP_ALIGN
-.RotatePositiveItemInCX:
-	sub		cx, dx
-	;jae	SHORT .RotatePositiveItemInCX	; Not needed by scrolling
-	ret
-
-ALIGN JUMP_ALIGN
-.RotateNegativeItemInCX:
-	add		cx, dx
-	;js		SHORT .RotateNegativeItemInCX	; Not needed by scrolling
-	ret
 
 
 ;--------------------------------------------------------------------
@@ -215,14 +205,11 @@ ALIGN JUMP_ALIGN, ret
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MenuScrollbars_GetLastVisibleItemOnPageToAX:
-	push	cx
-
+	xchg	cx, ax
 	call	MenuScrollbars_GetActualVisibleItemsOnPageToCX
 	xchg	ax, cx
 	dec		ax
 	add		ax, [bp+MENU.wFirstVisibleItem]
-
-	pop		cx
 	ret
 
 
@@ -238,7 +225,11 @@ MenuScrollbars_GetLastVisibleItemOnPageToAX:
 ALIGN JUMP_ALIGN
 MenuScrollbars_GetActualVisibleItemsOnPageToCX:
 	call	MenuScrollbars_GetMaxVisibleItemsOnPageToCX
-	MIN_U	cx, [bp+MENUINIT.wItems]
+	cmp		cx, [bp+MENUINIT.wItems]
+	jb		SHORT .Return
+	mov		cx, [bp+MENUINIT.wItems]
+ALIGN JUMP_ALIGN, ret
+.Return:
 	ret
 
 

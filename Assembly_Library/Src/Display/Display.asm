@@ -56,39 +56,39 @@ Display_FormatNullTerminatedStringFromCSSI:
 	mov		sp, bp				; Clean stack variables
 	jmp		ax
 
-		
-%define InitializeDisplayContext						DisplayContext_Initialize
+
+	%define InitializeDisplayContext						DisplayContext_Initialize
 
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-%define SetCharacterPointerFromBXAX						DisplayContext_SetCharacterPointerFromBXAX
+	%define SetCharacterPointerFromBXAX						DisplayContext_SetCharacterPointerFromBXAX
 %endif
-%define SetCharOutputFunctionFromAXwithAttribFlagInBL	DisplayContext_SetCharOutputFunctionFromAXwithAttribFlagInBL
-%define SetCharacterOutputParameterFromAX				DisplayContext_SetCharacterOutputParameterFromAX
-%define SetCharacterAttributeFromAL						DisplayContext_SetCharacterAttributeFromAL
-%define SetCursorShapeFromAX							DisplayCursor_SetShapeFromAX
-%define SetCursorCoordinatesFromAX						DisplayCursor_SetCoordinatesFromAX
-%define SetNewPageFromAL								DisplayPage_SetFromAL
-%define SynchronizeDisplayContextToHardware				DisplayContext_SynchronizeToHardware
+	%define SetCharOutputFunctionFromAXwithAttribFlagInBL	DisplayContext_SetCharOutputFunctionFromAXwithAttribFlagInBL
+	%define SetCharacterOutputParameterFromAX				DisplayContext_SetCharacterOutputParameterFromAX
+	%define SetCharacterAttributeFromAL						DisplayContext_SetCharacterAttributeFromAL
+	%define SetCursorShapeFromAX							DisplayCursor_SetShapeFromAX
+	%define SetCursorCoordinatesFromAX						DisplayCursor_SetCoordinatesFromAX
+	%define SetNewPageFromAL								DisplayPage_SetFromAL
+	%define SynchronizeDisplayContextToHardware				DisplayContext_SynchronizeToHardware
 
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-%define GetCharacterPointerToBXAX						DisplayContext_GetCharacterPointerToBXAX
+	%define GetCharacterPointerToBXAX						DisplayContext_GetCharacterPointerToBXAX
 %endif
-%define GetSoftwareCoordinatesToAX						DisplayCursor_GetSoftwareCoordinatesToAX
-%define GetColumnsToALandRowsToAH						DisplayPage_GetColumnsToALandRowsToAH
+	%define GetSoftwareCoordinatesToAX						DisplayCursor_GetSoftwareCoordinatesToAX
+	%define GetColumnsToALandRowsToAH						DisplayPage_GetColumnsToALandRowsToAH
 
-%define FormatNullTerminatedStringFromCSSI				Display_FormatNullTerminatedStringFromCSSI
+	%define FormatNullTerminatedStringFromCSSI				Display_FormatNullTerminatedStringFromCSSI
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-%define PrintSignedWordFromAXWithBaseInBX				DisplayPrint_SignedWordFromAXWithBaseInBX
+	%define PrintSignedWordFromAXWithBaseInBX				DisplayPrint_SignedWordFromAXWithBaseInBX
 %endif
-%define PrintWordFromAXwithBaseInBX						DisplayPrint_WordFromAXWithBaseInBX
-%define PrintCharBufferFromBXSIwithLengthInCX			DisplayPrint_CharacterBufferFromBXSIwithLengthInCX
-%define PrintNullTerminatedStringFromBXSI				DisplayPrint_NullTerminatedStringFromBXSI
-%define PrintNullTerminatedStringFromCSSI				DisplayPrint_NullTerminatedStringFromCSSI
-%define PrintRepeatedCharacterFromALwithCountInCX		DisplayPrint_RepeatCharacterFromALwithCountInCX
-%define PrintCharacterFromAL							DisplayPrint_CharacterFromAL
-%define PrintNewlineCharacters							DisplayPrint_Newline
+	%define PrintWordFromAXwithBaseInBX						DisplayPrint_WordFromAXWithBaseInBX
+	%define PrintCharBufferFromBXSIwithLengthInCX			DisplayPrint_CharacterBufferFromBXSIwithLengthInCX
+	%define PrintNullTerminatedStringFromBXSI				DisplayPrint_NullTerminatedStringFromBXSI
+	%define PrintNullTerminatedStringFromCSSI				DisplayPrint_NullTerminatedStringFromCSSI
+	%define PrintRepeatedCharacterFromALwithCountInCX		DisplayPrint_RepeatCharacterFromALwithCountInCX
+	%define PrintCharacterFromAL							DisplayPrint_CharacterFromAL
+	%define PrintNewlineCharacters							DisplayPrint_Newline
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-%define ClearAreaWithHeightInAHandWidthInAL				DisplayPrint_ClearAreaWithHeightInAHandWidthInAL
+	%define ClearAreaWithHeightInAHandWidthInAL				DisplayPrint_ClearAreaWithHeightInAHandWidthInAL
 %endif
-%define ClearScreenWithCharInALandAttrInAH				DisplayPrint_ClearScreenWithCharInALandAttributeInAH
+	%define ClearScreenWithCharInALandAttrInAH				DisplayPrint_ClearScreenWithCharInALandAttributeInAH
 

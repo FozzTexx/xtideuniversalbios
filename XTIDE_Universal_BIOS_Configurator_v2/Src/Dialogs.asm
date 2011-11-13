@@ -158,14 +158,7 @@ Dialogs_DisplayQuitAndSaveChangesDialogsSharedEnding:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Dialogs_DisplayProgressDialogForFlashingWithDialogIoInDSSIandFlashvarsInDSBX:
-	call	.InitializeProgressDialogIoInDSSIwithFlashvarsInDSBX
-	mov		dx, ds
-	mov		ax, bx
-	CALL_MENU_LIBRARY StartProgressTaskWithIoInDSSIandParamInDXAX
-	ret
-
-ALIGN JUMP_ALIGN
-.InitializeProgressDialogIoInDSSIwithFlashvarsInDSBX:
+	; Initialize progress dialog I/O in DS:SI with flashvars in DS:BX
 	call	InitializeDialogInputFromDSSI
 	mov		WORD [si+DIALOG_INPUT.fszTitle], g_szFlashTitle
 
@@ -176,6 +169,11 @@ ALIGN JUMP_ALIGN
 	mov		[si+PROGRESS_DIALOG_IO.wMinProgressValue], ax
 	mov		WORD [si+PROGRESS_DIALOG_IO.fnTaskWithParamInDSSI], Flash_EepromWithFlashvarsInDSSI
 	mov		[si+PROGRESS_DIALOG_IO.fnTaskWithParamInDSSI+2], cs
+	; Init done
+
+	mov		dx, ds
+	mov		ax, bx
+	CALL_MENU_LIBRARY StartProgressTaskWithIoInDSSIandParamInDXAX
 	ret
 
 

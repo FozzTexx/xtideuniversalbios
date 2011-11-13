@@ -15,16 +15,18 @@ SECTION .text
 ;	Corrupts registers:
 ;		AX, BX, CX, DX
 ;--------------------------------------------------------------------
-Device_FinalizeDPT:
 %ifdef MODULE_SERIAL
+Device_FinalizeDPT:
 	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE
 	jnz		SHORT .FinalizeDptForSerialPortDevice
-%endif
 	jmp		IdeDPT_Finalize
-%ifdef MODULE_SERIAL
+
 .FinalizeDptForSerialPortDevice:
-	jmp		SerialDPT_Finalize		
+	jmp		SerialDPT_Finalize
+%else
+	Device_FinalizeDPT EQU IdeDPT_Finalize
 %endif
+
 
 ;--------------------------------------------------------------------
 ; Device_ResetMasterAndSlaveController
@@ -36,12 +38,14 @@ Device_FinalizeDPT:
 ;	Corrupts registers:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
-Device_ResetMasterAndSlaveController:
 %ifdef MODULE_SERIAL
+Device_ResetMasterAndSlaveController:
 	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE
 	jnz		SHORT ReturnSuccessForSerialPort
-%endif
 	jmp		IdeCommand_ResetMasterAndSlaveController
+%else
+	Device_ResetMasterAndSlaveController EQU IdeCommand_ResetMasterAndSlaveController
+%endif
 
 
 ;--------------------------------------------------------------------
@@ -57,16 +61,18 @@ Device_ResetMasterAndSlaveController:
 ;	Corrupts registers:
 ;		AL, BL, CX, DX, SI, DI, ES
 ;--------------------------------------------------------------------
-Device_IdentifyToBufferInESSIwithDriveSelectByteInBH:
 %ifdef MODULE_SERIAL
+Device_IdentifyToBufferInESSIwithDriveSelectByteInBH:
 	cmp		BYTE [cs:bp+IDEVARS.bDevice], DEVICE_SERIAL_PORT
 	je		SHORT .IdentifyDriveFromSerialPort
-%endif
 	jmp		IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH
-%ifdef MODULE_SERIAL
+
 .IdentifyDriveFromSerialPort:
 	jmp		SerialCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH
+%else
+	Device_IdentifyToBufferInESSIwithDriveSelectByteInBH EQU IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH
 %endif
+
 
 ;--------------------------------------------------------------------
 ; Device_OutputCommandWithParameters
@@ -82,18 +88,20 @@ Device_IdentifyToBufferInESSIwithDriveSelectByteInBH:
 ;	Corrupts registers:
 ;		AL, BX, CX, DX, (ES:SI for data transfer commands)
 ;--------------------------------------------------------------------
+%ifdef MODULE_SERIAL
 ALIGN JUMP_ALIGN
 Device_OutputCommandWithParameters:
-%ifdef MODULE_SERIAL
 	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE
 	jnz		SHORT .OutputCommandToSerialPort
-%endif
 	jmp		IdeCommand_OutputWithParameters
-%ifdef MODULE_SERIAL
+
 ALIGN JUMP_ALIGN
 .OutputCommandToSerialPort:
 	jmp		SerialCommand_OutputWithParameters
+%else
+	Device_OutputCommandWithParameters EQU IdeCommand_OutputWithParameters
 %endif
+
 
 ;--------------------------------------------------------------------
 ; Device_SelectDrive
@@ -106,15 +114,17 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
+%ifdef MODULE_SERIAL
 ALIGN JUMP_ALIGN
 Device_SelectDrive:
-%ifdef MODULE_SERIAL
 	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE
 	jnz		SHORT ReturnSuccessForSerialPort
-%endif
 	jmp		IdeCommand_SelectDrive
-%ifdef MODULE_SERIAL
+
 ReturnSuccessForSerialPort:
 	xor		ax, ax
 	ret
+%else
+	Device_SelectDrive EQU IdeCommand_SelectDrive
 %endif
+

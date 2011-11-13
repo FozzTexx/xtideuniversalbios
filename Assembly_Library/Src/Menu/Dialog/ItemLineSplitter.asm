@@ -114,10 +114,9 @@ ProcessCharacterFromStringToSplit:
 
 ALIGN JUMP_ALIGN
 .CheckLineLength:
-	cmp		cx, [bp+ITEM_LINE_SPLITTER.wMaxTextLineLength]
-	ja		SHORT .ChangeToNextLine
-	clc
-	ret
+	cmp		[bp+ITEM_LINE_SPLITTER.wMaxTextLineLength], cx
+	jb		SHORT .ChangeToNextLine
+	ret		; With CF cleared
 
 ALIGN JUMP_ALIGN
 .ChangeToNextLine:

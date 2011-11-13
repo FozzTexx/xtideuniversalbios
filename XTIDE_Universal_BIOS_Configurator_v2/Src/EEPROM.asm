@@ -168,7 +168,7 @@ ALIGN JUMP_ALIGN
 	mov		es, bx					; Possible ROM segment to ES
 	call	Buffers_IsXtideUniversalBiosSignatureInESDI
 	je		SHORT .RomFound
-	add		bx, 200h				; Increment by 8kB
+	add		bh, 2					; Increment by 8kB
 	jnc		SHORT .SegmentLoop		; Loop until segment overflows
 	clc
 	jmp		SHORT .ReturnWithoutUpdatingCF

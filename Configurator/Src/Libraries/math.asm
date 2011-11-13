@@ -1,10 +1,5 @@
-; File name		:	math.asm
 ; Project name	:	Math library
-; Created date	:	7.10.2009
-; Last update	:	4.1.2011
-; Author		:	Tomi Tilli,
-;				:	Krister Nordvall (optimizations)
-; Description	:	ASM library to for math related functions.		
+; Description	:	ASM library for math related functions.
 
 ;--------------- Equates -----------------------------
 
@@ -26,7 +21,7 @@ SECTION .text
 
 ;--------------------------------------------------------------------
 ; Macro to select lesser of two unsigned operands.
-; 
+;
 ; MIN_U
 ;	Parameters:
 ;		%1:		Operand 1
@@ -47,7 +42,7 @@ ALIGN JUMP_ALIGN
 
 ;--------------------------------------------------------------------
 ; Macro to select greater of two unsigned operands.
-; 
+;
 ; MAX_U
 ;	Parameters:
 ;		%1:		Operand 1
@@ -68,7 +63,7 @@ ALIGN JUMP_ALIGN
 
 ;--------------------------------------------------------------------
 ; Macro to select lesser and greater of two unsigned operands.
-; 
+;
 ; MINMAX_U
 ;	Parameters:
 ;		%1:		Operand 1
@@ -81,7 +76,7 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 %macro MINMAX_U 2
 	cmp		%1, %2				; Is %1 smaller?
-	jbe		%%Return			;  If so, return
+	jb		%%Return			;  If so, return
 	xchg	%1, %2				; Exchange operands
 ALIGN JUMP_ALIGN
 %%Return:
@@ -92,7 +87,7 @@ ALIGN JUMP_ALIGN
 ; DWORD * WORD multiplication.
 ; Multiplies unsigned 32-bit integer by unsigned 16-bit integer.
 ; Result is unsigned 32-bit integer, so overflow is possible.
-; 
+;
 ; Math_MulDWbyW
 ;	Parameters:
 ;		DX:AX:	32-bit unsigned integer to multiply
@@ -129,7 +124,7 @@ ALIGN JUMP_ALIGN
 
 ;--------------------------------------------------------------------
 ; Divide a 32-bit unsigned integer so that quotient can be 32-bit.
-; 
+;
 ; Math_DivDWbyW
 ;	Parameters:
 ;		DX:AX:	32-bit unsigned divident
@@ -156,7 +151,7 @@ Math_DivDWbyW:
 
 ;--------------------------------------------------------------------
 ; Converts remainder to tenths.
-; 
+;
 ; Math_RemToTenths
 ;	Parameters:
 ;		BX:		16-bit unsigned remainder

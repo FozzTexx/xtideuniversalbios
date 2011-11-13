@@ -149,8 +149,6 @@ Menuitem_StoreValueFromAXtoMenuitemInDSSI:
 	call	GetConfigurationBufferToESDIforMenuitemInDSSI
 	add		di, [si+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset]
 	jmp		[cs:bx+.rgfnJumpToStoreValueBasedOnItemType]
-.InvalidItemType:
-	ret
 
 ALIGN WORD_ALIGN
 .rgfnJumpToStoreValueBasedOnItemType:
@@ -241,6 +239,7 @@ ALIGN JUMP_ALIGN
 	CALL_MENU_LIBRARY RefreshTitle
 	CALL_MENU_LIBRARY GetHighlightedItemToAX
 	CALL_MENU_LIBRARY RefreshItemFromAX
+.InvalidItemType:
 	ret
 
 ALIGN JUMP_ALIGN
@@ -267,15 +266,6 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Menuitem_GetValueToAXfromMenuitemInDSSI:
-	call	.GetMenuitemValueToAX
-	test	BYTE [si+MENUITEM.bFlags], FLG_MENUITEM_BYTEVALUE
-	jnz		SHORT .ConvertWordToByteValue
-	test	BYTE [si+MENUITEM.bFlags], FLG_MENUITEM_FLAGVALUE
-	jnz		SHORT .ConvertWordToFlagValue
-	ret
-
-ALIGN JUMP_ALIGN
-.GetMenuitemValueToAX:
 	push	es
 	push	di
 	call	GetConfigurationBufferToESDIforMenuitemInDSSI
@@ -283,22 +273,21 @@ ALIGN JUMP_ALIGN
 	mov		ax, [es:di]
 	pop		di
 	pop		es
-	ret
 
+	test	BYTE [si+MENUITEM.bFlags], FLG_MENUITEM_BYTEVALUE
+	jnz		SHORT .ConvertWordToByteValue
+	test	BYTE [si+MENUITEM.bFlags], FLG_MENUITEM_FLAGVALUE
+	jz		SHORT .Return
+
+	test	ax, [si+MENUITEM.itemValue+ITEM_VALUE.wValueBitmask]
+	mov		ax, TRUE<<1		; Shift for lookup
+	jnz		SHORT .Return
+	xor		ax, ax
 ALIGN JUMP_ALIGN
 .ConvertWordToByteValue:
 	xor		ah, ah
-	ret
-
-ALIGN JUMP_ALIGN
-.ConvertWordToFlagValue:
-	test	ax, [si+MENUITEM.itemValue+ITEM_VALUE.wValueBitmask]
-	jnz		SHORT .ReturnTrue
-	xor		ax, ax
-	ret
-ALIGN JUMP_ALIGN
-.ReturnTrue:
-	mov		ax, TRUE<<1		; Shift for lookup
+ALIGN JUMP_ALIGN, ret
+.Return:
 	ret
 
 

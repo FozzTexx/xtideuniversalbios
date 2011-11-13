@@ -42,7 +42,7 @@ ALIGN JUMP_ALIGN
 ;		%1:		Operand 1
 ;		%2:		Operand 2
 ;	Returns:
-;		%1:		Lesser operand
+;		%1:		Greater operand
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------

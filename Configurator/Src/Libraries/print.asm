@@ -1,9 +1,4 @@
-; File name		:	print.asm
 ; Project name	:	Print library
-; Created date	:	6.10.2009
-; Last update	:	4.1.2011
-; Author		:	Tomi Tilli,
-;				:	Krister Nordvall (optimizations)
 ; Description	:	ASM library for character and string
 ;					printing related functions.
 
@@ -94,7 +89,7 @@ SECTION .text
 
 ;--------------------------------------------------------------------
 ; Debugging macro that prints wanted character and newline.
-; 
+;
 ; PRINT_DBG_CH
 ;	Parameters:
 ;		%1:		Character to print
@@ -140,7 +135,7 @@ SECTION .text
 ;	after integer so that at least 8 characters would be printed.
 ;
 ;	NOTE! Caller must clean the stack variables!
-; 
+;
 ; Print_Format
 ;	Parameters:
 ;		DL:			Min length character (usually space)
@@ -340,7 +335,7 @@ ALIGN JUMP_ALIGN
 
 ;--------------------------------------------------------------------
 ; Prints newline character to change line.
-; 
+;
 ; Print_Newline
 ;	Parameters:
 ;		Nothing
@@ -362,11 +357,11 @@ Print_Newline:
 	pop		ax
 	ret
 %endif
-	
+
 
 ;--------------------------------------------------------------------
 ; Prints wanted number of characters.
-; 
+;
 ; Print_CharBuffer
 ;	Parameters:
 ;		CX:		Number of characters to print
@@ -403,7 +398,7 @@ ALIGN JUMP_ALIGN
 
 ;--------------------------------------------------------------------
 ; Repeats wanted character.
-; 
+;
 ; Print_Repeat
 ;	Parameters:
 ;		CX:		Number of times to repeat character
@@ -428,7 +423,7 @@ ALIGN JUMP_ALIGN
 
 ;--------------------------------------------------------------------
 ; Prints boolean value.
-; 
+;
 ; Print_Bool
 ;	Parameters:
 ;		AX:		Boolean value (0=FALSE, non-zero=TRUE)
@@ -454,7 +449,7 @@ ALIGN JUMP_ALIGN
 
 ;--------------------------------------------------------------------
 ; Prints signed or unsigned 16-bit integer.
-; 
+;
 ; Print_IntSW	Prints signed 16-bit word
 ; Print_IntUW	Prints unsigned 16-bit word
 ;	Parameters:
@@ -505,8 +500,8 @@ ALIGN JUMP_ALIGN
 	add		dx, '0'				; Digit to character
 	PRINT_CHAR					; Print character
 	inc		di					; Increment chars printed
-	test	cx, cx				; Characters left
-	jnz		.PrintLoop			;  If so, loop
+	inc		cx					; Characters left
+	loop	.PrintLoop			;  If so, loop
 	mov		dx, di				; Copy chars printed to DX
 	pop		cx
 	pop		bx
@@ -517,7 +512,7 @@ ALIGN JUMP_ALIGN
 
 ;--------------------------------------------------------------------
 ; Prints unsigned 32-bit integer.
-; 
+;
 ; Print_IntUDW
 ;	Parameters:
 ;		DX:AX:	32-bit unsigned integer to print
@@ -551,8 +546,8 @@ ALIGN JUMP_ALIGN
 	add		dx, '0'				; Digit to character
 	PRINT_CHAR					; Print character
 	inc		di					; Increment chars printed
-	test	cx, cx				; Characters left
-	jnz		.PrintLoop			;  If so, loop
+	inc		cx					; Characters left
+	loop	.PrintLoop			;  If so, loop
 	mov		dx, di				; Copy characters printed to DX
 	pop		cx
 	pop		bx
@@ -564,7 +559,7 @@ ALIGN JUMP_ALIGN
 
 ;--------------------------------------------------------------------
 ; Prints 8-bit byte as hexadecimal string.
-; 
+;
 ; Print_IntHexB
 ;	Parameters:
 ;		AL:		8-bit BYTE to print
@@ -592,7 +587,7 @@ Print_IntHexB:
 
 ;--------------------------------------------------------------------
 ; Prints 16-bit word as hexadecimal string.
-; 
+;
 ; Print_IntHexW
 ;	Parameters:
 ;		AX:		16-bit WORD to print
@@ -620,7 +615,7 @@ Print_IntHexW:
 
 ;--------------------------------------------------------------------
 ; Prints 32-bit dword as hexadecimal string.
-; 
+;
 ; Print_IntHexDW
 ;	Parameters:
 ;		DX:AX:	32-bit DWORD to print
@@ -657,7 +652,7 @@ Print_IntHexDW:
 
 ;--------------------------------------------------------------------
 ; Prints hexadecimal character for every nybble for WORD.
-; 
+;
 ; Print_HexString
 ;	Parameters:
 ;		AX:		16-bit WORD to print

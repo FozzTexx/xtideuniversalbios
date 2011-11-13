@@ -124,5 +124,5 @@ BootInfo_GetOffsetToBX:
 	sub		bl, [RAMVARS.bFirstDrv]		; Drive number to index
 	mul		bl							; AX = Offset inside BOOTNFO array
 	add		ax, BOOTVARS.rgBootNfo		; Add offset to BOOTNFO array
-	xchg	bx, ax						; Copy result to BX
+	xchg	bx, ax						; Move result to BX
 	ret

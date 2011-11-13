@@ -51,8 +51,8 @@ ParseFormatSpecifier:
 	call	ax				; Parser function
 	dec		bp
 	dec		bp				; SS:BP now points to next parameter
-	test	cx, cx
-	jnz		SHORT PrependOrAppendSpaces
+	inc		cx
+	loop	PrependOrAppendSpaces
 ReturnFromFormat:
 	ret
 

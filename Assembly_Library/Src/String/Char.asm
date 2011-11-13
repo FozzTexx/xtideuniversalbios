@@ -160,10 +160,7 @@ Char_CharIsNotValid:
 ALIGN JUMP_ALIGN
 Char_ALtoLowerCaseLetter:
 	call	Char_IsUpperCaseLetterInAL	; Is upper case character?
-	jnc		SHORT .Return				;  If not, return
-	add		al, 'a'-'A'					; Convert to lower case
-.Return:
-	ret
+	jmp		SHORT Char_ALtoUpperCaseLetter.CheckCF
 %endif
 
 ;--------------------------------------------------------------------
@@ -178,11 +175,23 @@ Char_ALtoLowerCaseLetter:
 ALIGN JUMP_ALIGN
 Char_ALtoUpperCaseLetter:
 	call	Char_IsLowerCaseLetterInAL	; Is lower case character?
-	jnc		SHORT .Return				;  If not, return
-	sub		al, 'a'-'A'					; Convert to upper case
+.CheckCF:
+	jnc		SHORT Char_ChangeCaseInAL.Return
+	; Fall to Char_ChangeCaseInAL
+
+;--------------------------------------------------------------------
+; Char_ChangeCaseInAL
+;	Parameters:
+;		AL:		Character to convert (must be A-Z or a-z)
+;	Returns:
+;		AL:		Character converted
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+Char_ChangeCaseInAL:
+	xor		al, 32
 .Return:
 	ret
-
 
 ;--------------------------------------------------------------------
 ; Char_GetFilterFunctionToDXforNumericBaseInBX

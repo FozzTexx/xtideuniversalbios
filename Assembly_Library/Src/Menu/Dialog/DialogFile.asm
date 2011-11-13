@@ -264,7 +264,7 @@ AppendFileFromDTAinDSSItoOffScreenBuffer:
 ALIGN JUMP_ALIGN
 .FilterCurrentDirectory:
 	cmp		WORD [si+DTA.szFile], CURRENTDIR_CHARACTERS
-	je		SHORT .ReturnWithFiltering
+	je		SHORT .DoFilter
 	ret
 
 ALIGN JUMP_ALIGN
@@ -273,7 +273,7 @@ ALIGN JUMP_ALIGN
 	jnz		SHORT .ReturnWithoutFiltering
 	cmp		WORD [si+DTA.szFile], UPDIR_CHARACTERS
 	jne		SHORT .ReturnWithoutFiltering
-.ReturnWithFiltering:
+.DoFilter:
 	add		sp, BYTE 2		; Remove return address from stack
 ALIGN JUMP_ALIGN, ret
 .ReturnWithoutFiltering:
@@ -374,18 +374,17 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 SortDirectoryContentsStringFromESDIwithCountInCX:
 	call	Registers_CopyESDItoDSSI
-	call	.AddDirectoryContentsStringLengthToDI
-	mov		bx, .FileStringComparator
-	xchg	dx, cx
-	mov		cx, FILE_STRING_LENGTH
-	jmp		Sort_ItemsFromDSSIwithCountInDXsizeInCXandComparatorInBX
 
-ALIGN JUMP_ALIGN
-.AddDirectoryContentsStringLengthToDI:
+	; Add directory contents string length to DI
 	mov		ax, FILE_STRING_LENGTH
+	push	ax
 	mul		cx
 	add		di, ax
-	ret
+
+	mov		dx, cx
+	pop		cx
+	mov		bx, .FileStringComparator
+	jmp		Sort_ItemsFromDSSIwithCountInDXsizeInCXandComparatorInBX
 
 ;--------------------------------------------------------------------
 ; .FileStringComparator
@@ -394,7 +393,7 @@ ALIGN JUMP_ALIGN
 ;		DS:SI:	Ptr to first item to compare
 ;		ES:DI:	Ptr to second item to compare
 ;	Returns:
-;		FLAGS:	Signed comparition between first and second item
+;		FLAGS:	Signed comparison between first and second item
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------

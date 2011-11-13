@@ -65,11 +65,9 @@ CreateDPT_FromAtaInformation:
 
 %ifdef MODULE_SERIAL
 	cmp		byte [cs:bp+IDEVARS.bDevice], DEVICE_SERIAL_PORT
-	jnz		.around
+	jnz		.StoreAddressing
 	or		byte [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE
-.around:				
-%endif		
-
+%endif
 	; Fall to .StoreAddressing
 
 ;--------------------------------------------------------------------
@@ -116,15 +114,14 @@ CreateDPT_FromAtaInformation:
 	jbe		SHORT .StoreChsFromAXBX		; No translation required
 
 	; We need to get number of bits to shift for translation
-	push	bx
 	push	ax
 	eMOVZX	dx, bl						; Heads now in DX
-	xchg	bx, ax						; Sectors now in BX
-	call	AccessDPT_ShiftPCHinBXDXtoLCH
+	xchg	bx, ax						; Cylinders now in BX
+	call	AccessDPT_ShiftPCHinBXDXtoLCH	; Leaves AX untouched
+	xchg	bx, ax						; Restore HeadsAndSectors to BX
 	or		cl, ADDRESSING_MODE_PCHS<<ADDRESSING_MODE_FIELD_POSITION
 	or		[di+DPT.bFlagsLow], cl		; Store bits to shift
 	pop		ax
-	pop		bx
 	; Fall to .StoreChsFromAXBX
 
 ;--------------------------------------------------------------------

@@ -286,8 +286,7 @@ MenuDraw_InfoBorders:
 	eMOVZX	cx, BYTE [bp+MENUVARS.bInfoH]	; Load number of info strings
 	test	BYTE [bp+MENUVARS.bFlags], FLG_MNU_HIDENFO	; Information hidden?
 	jnz		SHORT .JumpToBottomBorder
-	test	cx, cx							; Any info strings?
-	jz		SHORT MenuDraw_BottomBorder
+	jcxz	MenuDraw_BottomBorder			; Any info strings?
 	push	cx
 	call	MenuDraw_MiddleBorder			; Draw middle border
 	call	MenuDraw_NewlineBrdr			; Change line

@@ -52,8 +52,8 @@ ALIGN JUMP_ALIGN
 	jz		SHORT Int13h_UnsupportedFunction	; No eINT 13h for CHS drives
 	cmp		ah, 48h
 	ja		SHORT Int13h_UnsupportedFunction
-	sub		bx, 41h<<1					; BX = Offset to eINT 13h jump table
-	jl		SHORT Int13h_UnsupportedFunction
+	sub		bl, 41h<<1					; BX = Offset to eINT 13h jump table
+	jb		SHORT Int13h_UnsupportedFunction
 	jmp		[cs:bx+g_rgwEbiosFunctionJumpTable]
 %endif
 
@@ -168,8 +168,8 @@ ExchangeCurrentInt13hHandlerWithOldInt13hHandler:
 	mov		[RAMVARS.fpOldI13h], di
 	mov		di, [RAMVARS.fpOldI13h+2]
 	xchg	di, [es:BIOS_DISK_INTERRUPT_13h*4+2]
-	mov		[RAMVARS.fpOldI13h+2], di
 	sti
+	mov		[RAMVARS.fpOldI13h+2], di
 	pop		es
 	ret
 

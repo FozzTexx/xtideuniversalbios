@@ -103,21 +103,17 @@ CharOutLineSplitter_MovePartialWordToNewTextLine:
 ;		Nothing
 ;--------------------------------------------------------------------
 .GetOffsetToPartialWordToSIandSizeToCX:
-	xor		cx, cx
+	mov		cx, di
 	mov		si, di
 ALIGN JUMP_ALIGN
 .ScanNextCharacter:		; Space will always be found since one comes after border
 	dec		si
 	dec		si
 	cmp		BYTE [es:si], ' '
-	je		SHORT .PartialWordFound
-	inc		cx
-	jmp		SHORT .ScanNextCharacter
-ALIGN JUMP_ALIGN
-.PartialWordFound:
+	jne		SHORT .ScanNextCharacter
 	inc		si
 	inc		si			; SI now points one past space
-	shl		cx, 1		; Characters to bytes
+	sub		cx, si
 	; Fall to .ChangeLine
 
 ;--------------------------------------------------------------------

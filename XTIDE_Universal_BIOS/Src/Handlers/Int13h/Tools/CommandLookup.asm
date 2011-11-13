@@ -4,7 +4,6 @@
 ; Section containing code
 SECTION .text
 
-%ifdef MODULE_EBIOS
 ;--------------------------------------------------------------------
 ; CommandLookup_GetEbiosIndexToBX
 ;	Parameters:
@@ -15,6 +14,7 @@ SECTION .text
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
+%ifdef MODULE_EBIOS
 ALIGN JUMP_ALIGN
 CommandLookup_GetEbiosIndexToBX:
 	; LBA28 or LBA48 command
@@ -28,7 +28,7 @@ CommandLookup_GetEbiosIndexToBX:
 	or		bx, dx					; Set block mode / single sector bit
 	ret
 %endif
-		
+
 ;--------------------------------------------------------------------
 ; CommandLookup_GetOldInt13hIndexToBX
 ;	Parameters:
@@ -62,4 +62,5 @@ g_rgbVerifyCommandLookup:
 	db		COMMAND_VERIFY_SECTORS
 	db		COMMAND_VERIFY_SECTORS_EXT
 	db		COMMAND_VERIFY_SECTORS
-	db		COMMAND_VERIFY_SECTORS_EXT		
+	db		COMMAND_VERIFY_SECTORS_EXT
+

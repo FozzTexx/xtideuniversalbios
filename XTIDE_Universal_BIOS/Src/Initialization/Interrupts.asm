@@ -28,10 +28,12 @@ Interrupts_InitializeInterruptVectors:
 ;		AX, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 .InitializeInt13hAnd40h:
+	mov		ax, [es:BIOS_DISK_INTERRUPT_13h*4+2]; Load old INT 13h segment
+	mov		[RAMVARS.fpOldI13h+2], ax			; Store old INT 13h segment
+	xchg	dx, ax
 	mov		ax, [es:BIOS_DISK_INTERRUPT_13h*4]	; Load old INT 13h offset
-	mov		dx, [es:BIOS_DISK_INTERRUPT_13h*4+2]; Load old INT 13h segment
 	mov		[RAMVARS.fpOldI13h], ax				; Store old INT 13h offset
-	mov		[RAMVARS.fpOldI13h+2], dx			; Store old INT 13h segment
+
 	mov		bx, BIOS_DISK_INTERRUPT_13h			; INT 13h interrupt vector offset
 	mov		si, Int13h_DiskFunctionsHandler		; Interrupt handler offset
 	call	Interrupts_InstallHandlerToVectorInBXFromCSSI

@@ -134,11 +134,10 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 .KeyStrokeInAX:
 	cmp		ah, KEY_DISPLAY_ITEM_HELP
-	je		SHORT .DisplayHelp
-	jmp		SHORT .EventNotHandled
+	jne		SHORT .EventNotHandled
 
-ALIGN JUMP_ALIGN
-.DisplayHelp:
+;ALIGN JUMP_ALIGN
+;.DisplayHelp:
 	call	Menupage_GetActiveMenupageToDSDI
 	CALL_MENU_LIBRARY GetHighlightedItemToAX
 	xchg	cx, ax

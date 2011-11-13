@@ -84,11 +84,12 @@ PushBlockMode:
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
-PushBusType:
+;PushBusType:
+	cwd					; Clear DX using sign extension
 	xchg	ax, bx		; Store BX to AX
 	eMOVZX	bx, BYTE [cs:si+IDEVARS.bDevice]
 	mov		bx, [cs:bx+rgwBusTypeValues]	; Char to BL, Int to BH
-	eMOVZX	dx, bh
+	mov		dl, bh
 	push	bx			; Push character
 	push	dx			; Push 1, 8, 16 or 32
 	xchg	bx, ax		; Restore BX

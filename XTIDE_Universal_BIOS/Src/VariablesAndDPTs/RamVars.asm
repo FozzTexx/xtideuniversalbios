@@ -92,8 +92,13 @@ ALIGN JUMP_ALIGN
 RamVars_GetSegmentToDS:
 	test	BYTE [cs:ROMVARS.wFlags], FLG_ROMVARS_FULLMODE
 	jnz		SHORT .GetStolenSegmentToDS
+%ifndef USE_186
 	mov		di, LITE_MODE_RAMVARS_SEGMENT
 	mov		ds, di
+%else
+	push	LITE_MODE_RAMVARS_SEGMENT
+	pop		ds
+%endif
 	ret
 
 ALIGN JUMP_ALIGN
@@ -182,8 +187,8 @@ RamVars_GetHardDiskCountFromBDAtoCX:
 
 	LOAD_BDA_SEGMENT_TO	es, cx, !		; Zero CX
 	call	RamVars_GetCountOfKnownDrivesToDL
-	MAX_U	dl, [es:BDA.bHDCount]
-	mov		cl, dl
+	mov		cl, [es:BDA.bHDCount]
+	MAX_U	cl, dl
 
 	pop		dx
 	pop		es

@@ -166,6 +166,7 @@ FindDPT_ToDSDIforInterruptInService:
 ;		DS:DI:		Ptr to wanted DPT (if found)
 ;		CF:			Set if wanted DPT found
 ;					Cleared if DPT not found
+;					Unchanged if no drives
 ;	Corrupts registers:
 ;		Nothing unless corrupted by callback function
 ;--------------------------------------------------------------------

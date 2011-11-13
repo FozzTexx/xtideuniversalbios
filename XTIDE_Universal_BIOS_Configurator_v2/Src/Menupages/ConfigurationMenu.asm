@@ -167,7 +167,7 @@ ALIGN JUMP_ALIGN
 .EnableIdeControllerMenuitemsBasedOnConfiguration:
 	call	.GetIdeControllerCountToCX
 	dec		cx			; Primary always enabled
-	jcxz	.PrimaryControllerAlreadyEnabled
+	jz		.PrimaryControllerAlreadyEnabled
 	mov		bx, g_MenuitemConfigurationSecondaryIdeController
 ALIGN JUMP_ALIGN
 .EnableNextIdeControllerMenuitem:
@@ -190,15 +190,15 @@ ALIGN JUMP_ALIGN
 .GetIdeControllerCountToCX:
 	call	Buffers_GetRomvarsFlagsToAX
 	test	ax, FLG_ROMVARS_FULLMODE
+	mov		al, 1	; Assume lite mode
 	jz		SHORT .AllowOnlyOneIdeControllerInLiteMode
 
 	mov		bx, ROMVARS.bIdeCnt
 	call	Buffers_GetRomvarsValueToAXfromOffsetInBX
-	eMOVZX	cx, al
-	ret
 ALIGN JUMP_ALIGN
 .AllowOnlyOneIdeControllerInLiteMode:
-	mov		cx, 1
+	cbw		; A maximum of 127 controllers should be sufficient
+	xchg	cx, ax
 	ret
 
 ;--------------------------------------------------------------------

@@ -126,6 +126,7 @@ Dialog_EventInitializeMenuinitFromDSSIwithHighlightedItemInAX:
 	stc
 	ret
 
+
 ;--------------------------------------------------------------------
 ; .GetWidthBasedOnParentMenuToAL
 ;	Parameters:
@@ -140,8 +141,13 @@ ALIGN JUMP_ALIGN
 	mov		bx, [bp+DIALOG.pParentMenu]
 	mov		al, [ss:bx+MENUINIT.bWidth]
 	sub		al, DIALOG_DELTA_WIDTH_FROM_PARENT
-	MIN_U	al, DIALOG_MAX_WIDTH
+	cmp		al, DIALOG_MAX_WIDTH
+	jb		.ALlessThanDIALOG_MAX_WIDTH
+	mov		al, DIALOG_MAX_WIDTH
+ALIGN JUMP_ALIGN, ret
+.ALlessThanDIALOG_MAX_WIDTH:
 	ret
+
 
 ;--------------------------------------------------------------------
 ; .GetHeightToAH
@@ -160,8 +166,16 @@ ALIGN JUMP_ALIGN
 	add		ah, [bp+MENUINIT.wItems]
 	add		ah, [bp+MENUINIT.bInfoLines]
 	add		ah, BYTE MENU_VERTICAL_BORDER_LINES
-	MIN_U	ah, bh
-	MIN_U	ah, DIALOG_MAX_HEIGHT
+	cmp		ah, bh
+	jb		.AHlessThanBH
+	xchg	bx, ax
+ALIGN JUMP_ALIGN
+.AHlessThanBH:
+	cmp		ah, DIALOG_MAX_HEIGHT
+	jb		.AHlessThanDIALOG_MAX_HEIGHT
+	mov		ah, DIALOG_MAX_HEIGHT
+ALIGN JUMP_ALIGN, ret
+.AHlessThanDIALOG_MAX_HEIGHT:
 	ret
 
 
