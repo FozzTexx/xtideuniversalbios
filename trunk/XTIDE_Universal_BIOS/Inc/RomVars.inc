@@ -4,28 +4,28 @@
 %ifndef ROMVARS_INC
 %define ROMVARS_INC
 
-; ROM Variables. There are written to ROM image before flashing.
+; ROM Variables. Written to the ROM image before flashing.
 struc ROMVARS
-	.wRomSign		resb	2	; ROM Signature (AA55h)
-	.bRomSize		resb	1	; ROM size in 512 byte blocks
-	.rgbJump		resb	3	; First instruction to ROM init (jmp)
+	.wRomSign			resb	2	; ROM Signature (AA55h)
+	.bRomSize			resb	1	; ROM size in 512 byte blocks
+	.rgbJump			resb	3	; First instruction to ROM init (jmp)
 
-	.rgbSign		resb	8	; Signature for XTIDE Configurator Program
-	.szTitle		resb	31	; BIOS title string
-	.szVersion		resb	25	; BIOS version string
+	.rgbSign			resb	8	; Signature for XTIDE Configurator Program
+	.szTitle			resb	31	; BIOS title string
+	.szVersion			resb	25	; BIOS version string
 
-	.wFlags			resb	2	; Word for ROM flags
-	.wDisplayMode	resb	2	; Display mode for boot menu
-	.wBootTimeout	resb	2	; Boot Menu selection timeout in system timer ticks
-	.bIdeCnt		resb	1	; Number of available IDE controllers
-	.bBootDrv		resb	1	; Boot Menu default drive
-	.bMinFddCnt		resb	1	; Minimum number of Floppy Drives
-	.bStealSize		resb	1	; Number of 1kB blocks stolen from 640kB base RAM
+	.wFlags				resb	2	; Word for ROM flags
+	.wDisplayMode		resb	2	; Display mode for boot menu
+	.wBootTimeout		resb	2	; Boot Menu selection timeout in system timer ticks
+	.bIdeCnt			resb	1	; Number of available IDE controllers
+	.bBootDrv			resb	1	; Boot Menu default drive
+	.bMinFddCnt			resb	1	; Minimum number of Floppy Drives
+	.bStealSize			resb	1	; Number of 1kB blocks stolen from 640kB base RAM
 
-	.ideVars0		resb	IDEVARS_size
-	.ideVars1		resb	IDEVARS_size
-	.ideVars2		resb	IDEVARS_size
-	.ideVars3		resb	IDEVARS_size
+	.ideVars0			resb	IDEVARS_size
+	.ideVars1			resb	IDEVARS_size
+	.ideVars2			resb	IDEVARS_size
+	.ideVars3			resb	IDEVARS_size
 
 %ifdef MODULE_SERIAL
 	.ideVarsSerialAuto	resb	IDEVARS_size
@@ -33,8 +33,8 @@ struc ROMVARS
 endstruc
 
 ; Bit defines for ROMVARS.wFlags
-FLG_ROMVARS_FULLMODE	EQU	(1<<0)	; Full operating mode (steals base RAM, supports EBIOS etc.)
-FLG_ROMVARS_DRVXLAT		EQU	(1<<2)	; Enable drive number translation
+FLG_ROMVARS_FULLMODE		EQU	(1<<0)	; Full operating mode (steals base RAM, supports EBIOS etc.)
+FLG_ROMVARS_DRVXLAT			EQU	(1<<2)	; Enable drive number translation
 FLG_ROMVARS_MODULE_SERIAL	EQU (1<<3)
 FLG_ROMVARS_MODULE_EBIOS	EQU (1<<4)
 

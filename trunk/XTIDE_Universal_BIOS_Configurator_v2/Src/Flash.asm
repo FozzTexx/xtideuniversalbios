@@ -1,8 +1,4 @@
-; File name		:	Flash.asm
 ; Project name	:	XTIDE Universal BIOS Configurator v2
-; Created date	:	1.12.2010
-; Last update	:	3.12.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for flashing the EEPROM.
 
 ; Section containing code
@@ -36,7 +32,11 @@ ALIGN JUMP_ALIGN
 	add		[bp+FLASHVARS.fpNextDestinationPage], ax
 
 	loop	.FlashNextPage
+%if FLASH_RESULT.success = 0	; Just in case this should ever change
+	mov		[bp+FLASHVARS.flashResult], cl
+%else
 	mov		BYTE [bp+FLASHVARS.flashResult], FLASH_RESULT.success
+%endif
 	ret
 
 .PollingError:

@@ -64,9 +64,9 @@ MenuPageItem_PrintCommonInfoLines:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MenuPageItem_DisplayHelpDialog:
-	mov		di, [di+MENUPAGEITEM.szHelp]	; ES:DI now points to help string
 	push	cs
 	pop		es
+	mov		di, [di+MENUPAGEITEM.szHelp]	; ES:DI now points to help string
 	mov		bl, WIDTH_DLG					; Dialog width
 	jmp		Menu_ShowMsgDlg
 

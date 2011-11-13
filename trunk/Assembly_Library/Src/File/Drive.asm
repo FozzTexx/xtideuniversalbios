@@ -71,7 +71,11 @@ ALIGN JUMP_ALIGN
 	xchg	dx, ax			; Default drive to DL
 	call	Drive_SetDefaultFromDL
 	eMOVZX	cx, al			; Number of potentially valid drive letters available
-	MIN_U	cx, 32
+	cmp		cl, 32
+	jb		SHORT .Return
+	mov		cl, 32
+ALIGN JUMP_ALIGN, ret
+.Return:
 	ret
 
 ;--------------------------------------------------------------------

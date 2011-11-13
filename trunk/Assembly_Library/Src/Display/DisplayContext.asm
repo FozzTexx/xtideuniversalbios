@@ -267,12 +267,12 @@ DisplayContext_SetCharacterOutputParameterFromAX:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-;%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS	; This appears to be completely unused
-;ALIGN JUMP_ALIGN
-;DisplayContext_GetCharacterOutputParameterToDX:
-;	mov		dx, [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.wCharOutParam]
-;	ret
-;%endif
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS OR EXCLUDE_FROM_XTIDECFG	; This is currently unused (dead code)
+ALIGN JUMP_ALIGN
+DisplayContext_GetCharacterOutputParameterToDX:
+	mov		dx, [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.wCharOutParam]
+	ret
+%endif
 
 
 ;--------------------------------------------------------------------

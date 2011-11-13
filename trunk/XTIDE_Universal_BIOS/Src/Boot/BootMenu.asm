@@ -101,7 +101,11 @@ BootMenu_GetHeightToAHwithItemCountInAL:
 	xchg	cx, ax
 	CALL_DISPLAY_LIBRARY GetColumnsToALandRowsToAH
 	sub		ah, MENU_SCREEN_BOTTOM_LINES*2	; Leave space for bottom info
-	MIN_U	ah, cl
+	cmp		ah, cl
+	jb		SHORT .Return
+	mov		ah, cl
+ALIGN JUMP_ALIGN, ret
+.Return:
 	ret
 
 
@@ -147,7 +151,11 @@ ALIGN JUMP_ALIGN
 BootMenu_GetLetterForFirstHardDiskToCL:
 	call	FloppyDrive_GetCountToCX
 	add		cl, 'A'
-	MAX_U	cl, 'C'
+	cmp		cl, 'C'
+	ja		.Return
+	mov		cl, 'C'
+ALIGN JUMP_ALIGN, ret
+.Return:
 	ret
 
 

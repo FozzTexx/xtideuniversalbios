@@ -135,9 +135,10 @@ FloppyDrive_GetCountToCX:
 %else
 	call	GetCountFromBDA
 %endif
-	MAX_U	cl, [cs:ROMVARS.bMinFddCnt]
-	xor		ch, ch
+	mov		ch, [cs:ROMVARS.bMinFddCnt]
+	MAX_U	cl, ch
 	pop		es
+	xor		ch, ch
 	ret
 
 

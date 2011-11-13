@@ -54,22 +54,20 @@ SwapFloppyDriveOrHardDisk:
 ;	Returns:
 ;		DL:		Translated drive number
 ;	Corrupts registers:
-;		Nothing
+;		AL
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 SwapDrive:
 	cmp		ah, dl				; Swap DL from 00h/80h to xxh?
 	je		SHORT .SwapToXXhInAL
 	cmp		al, dl				; Swap DL from xxh to 00h/80h?
-	je		SHORT .SwapTo00hOr80hInAH
-	ret
-ALIGN JUMP_ALIGN
-.SwapTo00hOr80hInAH:
-	mov		dl, ah
-	ret
+	jne		SHORT .Return
+	mov		al, ah
 ALIGN JUMP_ALIGN
 .SwapToXXhInAL:
 	mov		dl, al
+ALIGN JUMP_ALIGN, ret
+.Return:
 	ret
 
 
@@ -82,7 +80,7 @@ ALIGN JUMP_ALIGN
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX
+;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 DriveXlate_Reset:

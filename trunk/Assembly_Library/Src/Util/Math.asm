@@ -16,8 +16,9 @@ SECTION .text
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDECFG	; Not used in XTIDECFG
 ALIGN JUMP_ALIGN
-Math_DivQWatSSBPbyCX:		; This procedure is included but not used in XTIDECFG
+Math_DivQWatSSBPbyCX:
 	xor		dx, dx
 	mov		ax, [bp+6]		; Load highest divident WORD to DX:AX
 	div		cx
@@ -35,6 +36,7 @@ Math_DivQWatSSBPbyCX:		; This procedure is included but not used in XTIDECFG
 	div		cx
 	mov		[bp], ax
 	ret
+%endif
 
 
 ;--------------------------------------------------------------------
@@ -48,9 +50,9 @@ Math_DivQWatSSBPbyCX:		; This procedure is included but not used in XTIDECFG
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS OR EXCLUDE_FROM_XTIDECFG
 ALIGN JUMP_ALIGN
-Math_DivDXAXbyCX:			; This procedure is included but not used in XTIDECFG
+Math_DivDXAXbyCX:	; This is currently unused (dead code)
 	xor		bx, bx
 	xchg	bx, ax
 	xchg	dx, ax

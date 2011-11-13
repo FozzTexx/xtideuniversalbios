@@ -6,9 +6,11 @@ SECTION .text
 
 ;--------------------------------------------------------------------
 ; IdeIO_OutputALtoIdeRegisterInDL
+; IdeIO_OutputALtoIdeControlBlockRegisterInDL
 ;	Parameters:
 ;		AL:		Byte to output
-;		DL:		IDE Register
+;		DL:		IDE Register				(IdeIO_OutputALtoIdeRegisterInDL)
+;				IDE Control Block Register	(IdeIO_OutputALtoIdeControlBlockRegisterInDL)
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
 ;	Returns:
 ;		Nothing
@@ -17,26 +19,12 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 IdeIO_OutputALtoIdeRegisterInDL:
-	mov		bx, IDEVARS.wPort
-	call	GetPortToDXandTranslateA0andA3ifNecessary
-	out		dx, al
-	ret
+	mov		bl, IDEVARS.wPort
+	SKIP2B	f	; cmp ax, <next instruction>
+	; Fall to IdeIO_OutputALtoIdeControlBlockRegisterInDL
 
-
-;--------------------------------------------------------------------
-; IdeIO_OutputALtoIdeControlBlockRegisterInDL
-;	Parameters:
-;		AL:		Byte to output
-;		DL:		IDE Control Block Register
-;		DS:DI:	Ptr to DPT (in RAMVARS segment)
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		BX, DX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 IdeIO_OutputALtoIdeControlBlockRegisterInDL:
-	mov		bx, IDEVARS.wPortCtrl
+	mov		bl, IDEVARS.wPortCtrl
 	call	GetPortToDXandTranslateA0andA3ifNecessary
 	out		dx, al
 	ret
@@ -54,7 +42,7 @@ IdeIO_OutputALtoIdeControlBlockRegisterInDL:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 IdeIO_InputToALfromIdeRegisterInDL:
-	mov		bx, IDEVARS.wPort
+	mov		bl, IDEVARS.wPort
 	call	GetPortToDXandTranslateA0andA3ifNecessary
 	in		al, dx
 	ret
@@ -63,7 +51,7 @@ IdeIO_InputToALfromIdeRegisterInDL:
 ;--------------------------------------------------------------------
 ; GetPortToDXandTranslateA0andA3ifNecessary
 ;	Parameters:
-;		BX:		Offset to port in IDEVARS (IDEVARS.wPort or IDEVARS.wPortCtrl)
+;		BL:		Offset to port in IDEVARS (IDEVARS.wPort or IDEVARS.wPortCtrl)
 ;		DL:		IDE Register
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
 ;	Returns:
@@ -73,6 +61,7 @@ IdeIO_InputToALfromIdeRegisterInDL:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 GetPortToDXandTranslateA0andA3ifNecessary:
+	xor		bh, bh
 	xor		dh, dh							; DX now has IDE register offset
 	add		bl, [di+DPT.bIdevarsOffset]		; CS:BX now points port address
 	add		dx, [cs:bx]

@@ -30,36 +30,36 @@ Menu_FunctionFromDI:
 	ret
 
 
-%define DisplayWithHandlerInBXandUserDataInDXAX		MenuInit_DisplayMenuWithHandlerInBXandUserDataInDXAX
-;%define Close										MenuInit_CloseMenuWindow				; Special case in CALL_MENU_LIBRARY
-%define RefreshWindow						MenuInit_RefreshMenuWindow
+	%define DisplayWithHandlerInBXandUserDataInDXAX			MenuInit_DisplayMenuWithHandlerInBXandUserDataInDXAX
+	;%define Close											MenuInit_CloseMenuWindow				; Special case in CALL_MENU_LIBRARY
+	%define RefreshWindow									MenuInit_RefreshMenuWindow
 
-;%define SetUserDataFromDSSI				MenuInit_SetUserDataFromDSSI			; Special case in CALL_MENU_LIBRARY
-;%define GetUserDataToDSSI					MenuInit_GetUserDataToDSSI				; Special case in CALL_MENU_LIBRARY
+	;%define SetUserDataFromDSSI							MenuInit_SetUserDataFromDSSI			; Special case in CALL_MENU_LIBRARY
+	;%define GetUserDataToDSSI								MenuInit_GetUserDataToDSSI				; Special case in CALL_MENU_LIBRARY
 
-;%define SetTitleHeightFromAL				MenuInit_SetTitleHeightFromAL			; Special case in CALL_MENU_LIBRARY
-%define ClearTitleArea						MenuText_ClearTitleArea
-%define RefreshTitle						MenuText_RefreshTitle
+	;%define SetTitleHeightFromAL							MenuInit_SetTitleHeightFromAL			; Special case in CALL_MENU_LIBRARY
+	%define ClearTitleArea									MenuText_ClearTitleArea
+	%define RefreshTitle									MenuText_RefreshTitle
 
-%define HighlightItemFromAX					MenuInit_HighlightItemFromAX
-;%define SetTotalItemsFromAX				MenuInit_SetTotalItemsFromAX			; Special case in CALL_MENU_LIBRARY
-%define RefreshItemFromAX					MenuText_RefreshItemFromAX
+	%define HighlightItemFromAX								MenuInit_HighlightItemFromAX
+	;%define SetTotalItemsFromAX							MenuInit_SetTotalItemsFromAX			; Special case in CALL_MENU_LIBRARY
+	%define RefreshItemFromAX								MenuText_RefreshItemFromAX
 
-;%define SetInformationHeightFromAL						MenuInit_SetInformationHeightFromAL		; Special case in CALL_MENU_LIBRARY
-%define ClearInformationArea							MenuText_ClearInformationArea
-%define RefreshInformation								MenuText_RefreshInformation
+	;%define SetInformationHeightFromAL						MenuInit_SetInformationHeightFromAL		; Special case in CALL_MENU_LIBRARY
+	%define ClearInformationArea							MenuText_ClearInformationArea
+	%define RefreshInformation								MenuText_RefreshInformation
 
-%define StartSelectionTimeoutWithTicksInAX				MenuTime_StartSelectionTimeoutWithTicksInAX
+	%define StartSelectionTimeoutWithTicksInAX				MenuTime_StartSelectionTimeoutWithTicksInAX
 
 %ifdef INCLUDE_MENU_DIALOGS
-%define StartProgressTaskWithIoInDSSIandParamInDXAX		DialogProgress_StartProgressTaskWithIoInDSSIandParamInDXAX
-%define SetProgressValueFromAX							DialogProgress_SetProgressValueFromAX
+	%define StartProgressTaskWithIoInDSSIandParamInDXAX		DialogProgress_StartProgressTaskWithIoInDSSIandParamInDXAX
+	%define SetProgressValueFromAX							DialogProgress_SetProgressValueFromAX
 
-%define DisplayMessageWithInputInDSSI					DialogMessage_DisplayMessageWithInputInDSSI
-%define GetSelectionToAXwithInputInDSSI					DialogSelection_GetSelectionToAXwithInputInDSSI
-%define GetWordWithIoInDSSI								DialogWord_GetWordWithIoInDSSI
-%define GetStringWithIoInDSSI							DialogString_GetStringWithIoInDSSI
-%define GetFileNameWithIoInDSSI							DialogFile_GetFileNameWithIoInDSSI
-%define GetDriveWithIoInDSSI							DialogDrive_GetDriveWithIoInDSSI
+	%define DisplayMessageWithInputInDSSI					DialogMessage_DisplayMessageWithInputInDSSI
+	%define GetSelectionToAXwithInputInDSSI					DialogSelection_GetSelectionToAXwithInputInDSSI
+	%define GetWordWithIoInDSSI								DialogWord_GetWordWithIoInDSSI
+	%define GetStringWithIoInDSSI							DialogString_GetStringWithIoInDSSI
+	%define GetFileNameWithIoInDSSI							DialogFile_GetFileNameWithIoInDSSI
+	%define GetDriveWithIoInDSSI							DialogDrive_GetDriveWithIoInDSSI
 %endif
 

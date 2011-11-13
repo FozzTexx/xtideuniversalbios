@@ -19,7 +19,7 @@ Idepack_FakeToSSBP:
 	mov		bp, sp
 	jmp		ax
 
-%ifdef MODULE_EBIOS
+
 ;--------------------------------------------------------------------
 ; Idepack_ConvertDapToIdepackAndIssueCommandFromAH
 ;	Parameters:
@@ -35,6 +35,7 @@ Idepack_FakeToSSBP:
 ;	Corrupts registers:
 ;		AL, BX, CX, DX, SI, ES
 ;--------------------------------------------------------------------
+%ifdef MODULE_EBIOS
 ALIGN JUMP_ALIGN
 Idepack_ConvertDapToIdepackAndIssueCommandFromAH:
 	mov		[bp+IDEPACK.bCommand], ah
@@ -59,6 +60,7 @@ Idepack_ConvertDapToIdepackAndIssueCommandFromAH:
 	jmp		SHORT GetDeviceControlByteToIdepackAndStartTransfer
 %endif
 
+
 ;--------------------------------------------------------------------
 ; Idepack_TranslateOldInt13hAddressAndIssueCommandFromAH
 ;	Parameters:
@@ -82,8 +84,12 @@ Idepack_ConvertDapToIdepackAndIssueCommandFromAH:
 ALIGN JUMP_ALIGN
 Idepack_TranslateOldInt13hAddressAndIssueCommandFromAH:
 	mov		[bp+IDEPACK.bCommand], ah
-	test	al, al
-	eCSETZ	ah
+
+	xor		ah, ah
+	cmp		ah, al
+	cmc
+	adc		ah, ah
+
 	mov		[bp+IDEPACK.bSectorCount], al
 	mov		[bp+IDEPACK.bSectorCountHighExt], ah
 
@@ -99,7 +105,7 @@ Idepack_TranslateOldInt13hAddressAndIssueCommandFromAH:
 GetDeviceControlByteToIdepackAndStartTransfer:
 	call	AccessDPT_GetDeviceControlByteToAL
 	mov		[bp+IDEPACK.bDeviceControl], al
-	jmp		Device_OutputCommandWithParameters	
+	jmp		Device_OutputCommandWithParameters
 
 
 ;--------------------------------------------------------------------

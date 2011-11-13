@@ -370,8 +370,8 @@ FlashMenu_GetPointersToPageToFlash:
 ALIGN JUMP_ALIGN
 FlashMenu_CalculateCompletionPercentage:
 	cmp		WORD [si+FLASHVARS.wPagesLeft], 0
-	je		SHORT .FlashComplete
 	mov		ax, 100
+	je		SHORT .FlashComplete
 	mul		WORD [si+FLASHVARS.wPagesLeft]
 	div		WORD [si+FLASHVARS.wTotalPages]		; AX = Percentage left to write
 	mov		ah, 100
@@ -381,7 +381,6 @@ FlashMenu_CalculateCompletionPercentage:
 	ret
 ALIGN JUMP_ALIGN
 .FlashComplete:
-	mov		ax, 100
 	stc
 	ret
 

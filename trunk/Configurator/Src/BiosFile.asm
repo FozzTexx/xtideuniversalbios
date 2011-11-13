@@ -28,9 +28,10 @@ BiosFile_SaveUnsavedChanges:
 	jz		SHORT .Return
 
 	; Ask if user wants to save
-	mov		ax, cs
-	mov		ds, ax
-	mov		es, ax
+	push	cs
+	pop		ds
+	push	cs
+	pop		es
 	call	BiosFile_DoesUserWantToSaveChanges
 	jnc		SHORT .Return
 

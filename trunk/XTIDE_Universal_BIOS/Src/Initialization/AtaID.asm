@@ -120,7 +120,9 @@ AtaID_GetPCHStoAXBLBHfromAtaInfoInESSI:
 ;		Nothing
 ;--------------------------------------------------------------------
 AtaID_GetTotalSectorCountToBXDXAXfromAtaInfoInESSI:
-	call	Registers_ExchangeDSSIwithESDI	; ATA info now in DSDI
+	mov		bx, Registers_ExchangeDSSIwithESDI
+	call	bx	; ATA info now in DS:DI
+	push	bx	; We will return via Registers_ExchangeDSSIwithESDI
 	xor		bx, bx
 	test	BYTE [di+ATA1.wCaps+1], A1_wCaps_LBA>>8
 	jz		SHORT .GetChsSectorCount
@@ -132,7 +134,7 @@ AtaID_GetTotalSectorCountToBXDXAXfromAtaInfoInESSI:
 ; .GetChsSectorCount
 ;	Parameters:
 ;		BX:		Zero
-;		DS:SI:	Ptr to 512-byte ATA information read from the drive
+;		DS:DI:	Ptr to 512-byte ATA information read from the drive
 ;	Returns:
 ;		BX:DX:AX:	48-bit sector count
 ;	Corrupts registers:
@@ -144,16 +146,15 @@ AtaID_GetTotalSectorCountToBXDXAXfromAtaInfoInESSI:
 	mov		ax, [di+ATA6.qwLBACnt]
 	mov		dx, [di+ATA6.qwLBACnt+2]
 	mov		bx, [di+ATA6.qwLBACnt+4]
-	jmp		SHORT .ExchangePtrAndReturn
+	ret
 
 .GetLba28SectorCount:
 	mov		ax, [di+ATA1.dwLBACnt]
 	mov		dx, [di+ATA1.dwLBACnt+2]
-	jmp		SHORT .ExchangePtrAndReturn
+	ret
 
 .GetChsSectorCount:
 	mov		al, [di+ATA1.wSPT]		; AL=Sectors per track
 	mul		BYTE [di+ATA1.wHeadCnt]	; AX=Sectors per track * number of heads
 	mul		WORD [di+ATA1.wCylCnt]	; DX:AX=Sectors per track * number of heads * number of cylinders
-.ExchangePtrAndReturn:
-	jmp		Registers_ExchangeDSSIwithESDI
+	ret

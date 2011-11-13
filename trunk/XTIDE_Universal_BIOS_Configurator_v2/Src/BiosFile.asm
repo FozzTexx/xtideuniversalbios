@@ -91,13 +91,9 @@ ALIGN JUMP_ALIGN
 	call	Buffers_GetFileBufferToESDI
 	call	Registers_ExchangeDSSIwithESDI
 	call	FileIO_ReadDXCXbytesToDSSIusingHandleFromBX
-	jnc		SHORT .StoreFileNameToCfgvarsFromESDI
+	jc		SHORT .ReturnError
 
-	pop		es
-	ret
-
-ALIGN JUMP_ALIGN
-.StoreFileNameToCfgvarsFromESDI:
+	; Store filename to Cfgvars from ESDI
 	push	cx
 
 	call	Registers_CopyESDItoDSSI	; File name in DS:SI
@@ -106,10 +102,12 @@ ALIGN JUMP_ALIGN
 	mov		di, g_cfgVars+CFGVARS.szOpenedFile
 	cld
 	call	String_CopyDSSItoESDIandGetLengthToCX
+	clc
 
 	pop		cx
+ALIGN JUMP_ALIGN
+.ReturnError:
 	pop		es
-	clc
 	ret
 
 
@@ -156,7 +154,7 @@ BiosFile_SaveRamBufferToFileInDSSI:
 	call	EEPROM_GetSmallestEepromSizeInWordsToCXforImageWithWordSizeInAX
 	xor		dx, dx
 	shl		cx, 1
-	rcl		dx, 1			; WORDs to BYTEs	
+	rcl		dx, 1			; WORDs to BYTEs
 
 	mov		al, FILE_ACCESS.WriteOnly
 	call	FileIO_OpenWithPathInDSSIandFileAccessInAL

@@ -58,7 +58,7 @@ Timer_SetCFifTimeout:
 Timer_DelayMicrosecondsFromAX:
 %ifndef USE_AT
 	mov		ax, 2
-	; Fall to Delay_TimerTicksFromAX
+	; Fall to Timer_DelayTimerTicksFromAX
 %else
 	push	dx
 	push	cx
@@ -67,7 +67,7 @@ Timer_DelayMicrosecondsFromAX:
 	xchg	dx, ax						; Microsecs now in CX:DX
 	mov		ah, EVENT_WAIT
 	int		BIOS_SYSTEM_INTERRUPT_15h
-	sti									; XT BIOSes return with interrupt disabled
+	sti									; XT BIOSes return with interrupts disabled. TODO: Maybe we can remove this since it's in an AT-only block?
 
 	pop		cx
 	pop		dx

@@ -1,8 +1,4 @@
-; File name		:	DialogProgress.asm
 ; Project name	:	Assembly Library
-; Created date	:	15.8.2010
-; Last update	:	10.12.2010
-; Author		:	Tomi Tilli
 ; Description	:	Displays progress bar dialog and starts progress task.
 
 ; Section containing code
@@ -40,10 +36,12 @@ DialogProgress_SetProgressValueFromAX:
 
 	lds		si, [bp+DIALOG.fpDialogIO]
 	mov		bx, [si+PROGRESS_DIALOG_IO.wMaxProgressValue]
-	MIN_U	ax, bx
-	cmp		ax, bx	; Make sure that last progress character is shown
-	je		SHORT .UpdateProgressBar
-
+	cmp		ax, bx
+	jb		SHORT .AXlessThanBX
+	mov		ax, bx
+	jmp		SHORT .UpdateProgressBar
+ALIGN JUMP_ALIGN
+.AXlessThanBX:
 	mov		bx, ax
 	sub		bx, [si+PROGRESS_DIALOG_IO.wCurrentProgressValue]
 	cmp		bx, [si+PROGRESS_DIALOG_IO.wProgressPerCharacter]
@@ -171,38 +169,22 @@ CalculateProgressNeededBeforeUpdatingCharacter:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 DrawProgressBarFromDialogIoInDSSI:
-	call	.GetFullCharsToCXandEmptyCharsToDXwithDialogIoInDSSI
-
-	mov		al, PROGRESS_COMPLETE_CHARACTER
-	call	.RepeatProgressCharacterCXtimesFromAL
-
-	mov		cx, dx
-	mov		al, PROGRESS_INCOMPLETE_CHARACTER
-	jmp		SHORT .RepeatProgressCharacterCXtimesFromAL
-
-;--------------------------------------------------------------------
-; .GetFullCharsToCXandEmptyCharsToDXwithDialogIoInDSSI
-;	Parameters:
-;		DS:SI:	Ptr to PROGRESS_DIALOG_IO
-;		SS:BP:	Ptr to DIALOG
-;	Returns:
-;		CX:		Number of full progress bar characters
-;		DX:		Number of empty progress bar characters
-;	Corrupts:
-;		AX, BX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-.GetFullCharsToCXandEmptyCharsToDXwithDialogIoInDSSI:
+	; Get full chars to CX and empty chars to DX
 	call	MenuLocation_GetMaxTextLineLengthToAX
 	mov		cx, ax
 	mul		WORD [si+PROGRESS_DIALOG_IO.wCurrentProgressValue]
 	call	GetProgressLengthToBXfromProgressDialogIoInDSSI
 	div		bx
 	xchg	cx, ax		; AX = Text line length, CX = Number of full chars
-
 	sub		ax, cx
 	xchg	dx, ax		; DX = Number of empty chars
-	ret
+
+	mov		al, PROGRESS_COMPLETE_CHARACTER
+	call	.RepeatProgressCharacterCXtimesFromAL
+
+	mov		cx, dx
+	mov		al, PROGRESS_INCOMPLETE_CHARACTER
+	; Fall to .RepeatProgressCharacterCXtimesFromAL
 
 ;--------------------------------------------------------------------
 ; .RepeatProgressCharacterCXtimesFromAL
@@ -238,7 +220,7 @@ GetProgressLengthToBXfromProgressDialogIoInDSSI:
 	sub		bx, [si+PROGRESS_DIALOG_IO.wMinProgressValue]
 	ret
 
-	
+
 ;--------------------------------------------------------------------
 ; DrawTimeElapsedFromDX
 ;	Parameters:
@@ -285,10 +267,10 @@ DrawTimeLeftFromProgressDialogIoInDSSIwithTimeElapsedInDX:
 	mul		dx			; Progress left * elapsed time
 
 	sub		cx, [si+PROGRESS_DIALOG_IO.wMinProgressValue]
-	jcxz	.PreventDivisionByZero
+	jz		SHORT .PreventDivisionByZero
 	div		cx			; AX = Estimated ticks left
 	xchg	dx, ax
-	jmp		SHORT FormatTicksFromDX
+	SKIP2B	f	; cmp ax, <next instruction>
 .PreventDivisionByZero:
 	xor		dx, dx
 	; Fall to FormatTicksFromDX

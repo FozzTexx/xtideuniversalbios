@@ -1,9 +1,5 @@
-; File name		:	menumsg.asm
 ; Project name	:	Menu library
-; Created date	:	13.11.2009
-; Last update	:	10.1.2010
-; Author		:	Tomi Tilli
-; Description	:	ASM library to menu system.
+; Description	:	ASM library for menu system.
 ;					Contains functions for displaying messages.
 
 ;--------------- Equates -----------------------------
@@ -155,8 +151,7 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MenuMsg_GetTokenForLine:
-	test	cx, cx				; Line 0 wanted?
-	jz		.GetFirst			;  If so, just get token length
+	jcxz	.GetFirst			; Line 0 wanted? If so, just get token length
 	push	bp
 	push	si
 
@@ -217,7 +212,7 @@ MenuMsg_WriteLine:
 	call	MenuMsg_GetTokenForLine			; Get ptr to first token, length to AX
 	jnc		.EndOfString					; Return if no tokens
 	eMOVZX	dx, BYTE [bp+MENUVARS.bWidth]	; Menu width
-	sub		dl, SIZE_MSG_HBRDR				; To line length 
+	sub		dl, SIZE_MSG_HBRDR				; To line length
 	mov		bl, ' '							; Space character
 ALIGN JUMP_ALIGN
 .PrintToken:

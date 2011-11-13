@@ -77,17 +77,19 @@ AccessDPT_GetLCHS:
 
 	; Only need to limit sectors for LBA assist
 	test	BYTE [di+DPT.bFlagsLow], FLG_DRVNHEAD_LBA
-	jnz		SHORT .ReturnLbaAssistedLCHS
+	jz		SHORT AccessDPT_ShiftPCHinBXDXtoLCH
 
-	; P-CHS to L-CHS translation when necessary
-	jmp		SHORT AccessDPT_ShiftPCHinBXDXtoLCH
-
-.ReturnLbaAssistedLCHS:
 	cmp		WORD [di+DPT.dwCylinders+2], BYTE 0
-	jz		SHORT .LimitCylindersTo1024
+	jnz		SHORT .Return_MAX_LCHS_CYLINDERS
+
+	; Limit cylinders to 1024
+	cmp		bx, MAX_LCHS_CYLINDERS
+	jb		SHORT .Return
+ALIGN JUMP_ALIGN
+.Return_MAX_LCHS_CYLINDERS:
 	mov		bx, MAX_LCHS_CYLINDERS
-.LimitCylindersTo1024:
-	MIN_U	bx, MAX_LCHS_CYLINDERS
+ALIGN JUMP_ALIGN, ret
+.Return:
 	ret
 
 
@@ -113,7 +115,7 @@ AccessDPT_ShiftPCHinBXDXtoLCH:
 	shl		dx, 1						; Double heads
 	jmp		SHORT .ShiftLoop
 .LimitHeadsTo255:						; DOS does not support drives with 256 heads
-	sub		dl, dh						; BH set only when 256 logical heads
+	sub		dl, dh						; DH set only when 256 logical heads
 	xor		dh, dh
 	ret
 

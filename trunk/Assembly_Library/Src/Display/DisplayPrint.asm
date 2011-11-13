@@ -157,7 +157,7 @@ ALIGN JUMP_ALIGN
 	call	DisplayPrint_CharacterFromAL
 	loop	.PrintNextCharacter
 
-	mov		ds, cx	; Restore DS to BDA. Not needed unless DisplayPrint_CharacterFromAL changes DS.
+	;mov		ds, cx	; Restore DS to BDA. Not needed unless DisplayPrint_CharacterFromAL changes DS.
 	pop		cx
 	pop		si
 .NothingToPrintSinceZeroLength:
@@ -303,7 +303,7 @@ ALIGN JUMP_ALIGN
 ;	Returns:
 ;		DI:		Updated offset to video RAM
 ;	Corrupts registers:
-;		AX, DX
+;		DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 DisplayPrint_RepeatCharacterFromALwithCountInCX:
