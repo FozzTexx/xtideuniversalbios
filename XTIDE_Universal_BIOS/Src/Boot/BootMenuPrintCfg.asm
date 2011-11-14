@@ -54,8 +54,26 @@ PushAndFormatCfgString:
 ;--------------------------------------------------------------------
 PushAddressingMode:
 	call	AccessDPT_GetAddressingModeForWordLookToBX
-	push	WORD [cs:bx+rgszAddressingModeString]
-
+	mov		al,g_szAddressingModes_Displacement
+	mul		bl
+	add		ax,g_szAddressingModes
+	push	ax
+;
+; Ensure that addressing modes are correctly spaced in memory
+;
+%if g_szLCHS <> g_szAddressingModes
+%error "g_szAddressingModes Displacement Incorrect 1"
+%endif
+%if g_szPCHS <> g_szLCHS + g_szAddressingModes_Displacement
+%error "g_szAddressingModes Displacement Incorrect 2"
+%endif
+%if g_szLBA28 <> g_szPCHS + g_szAddressingModes_Displacement		
+%error "g_szAddressingModes Displacement Incorrect 3"
+%endif
+%if g_szLBA48 <> g_szLBA28 + g_szAddressingModes_Displacement		
+%error "g_szAddressingModes Displacement Incorrect 4"
+%endif				
+		
 ;--------------------------------------------------------------------
 ; PushBlockMode
 ;	Parameters:
@@ -85,15 +103,34 @@ PushBlockMode:
 ;		AX, DX
 ;--------------------------------------------------------------------
 ;PushBusType:
-	cwd					; Clear DX using sign extension
-	xchg	ax, bx		; Store BX to AX
-	eMOVZX	bx, BYTE [cs:si+IDEVARS.bDevice]
-	mov		bx, [cs:bx+rgwBusTypeValues]	; Char to BL, Int to BH
-	mov		dl, bh
-	push	bx			; Push character
-	push	dx			; Push 1, 8, 16 or 32
-	xchg	bx, ax		; Restore BX
+	mov		al,g_szBusTypeValues_Displacement
+	mul		BYTE [cs:si+IDEVARS.bDevice]
+	shr		ax,1
+	add		ax,g_szBusTypeValues
+	push	ax	
 
+;
+; Ensure that bus type strings are correctly spaced in memory
+;
+%if g_szBusTypeValues_8Dual <> g_szBusTypeValues
+%error "g_szBusTypeValues Displacement Incorrect 1"
+%endif
+%if g_szBusTypeValues_8Reversed <> g_szBusTypeValues + g_szBusTypeValues_Displacement
+%error "g_szBusTypeValues Displacement Incorrect 2"		
+%endif
+%if g_szBusTypeValues_8Single <> g_szBusTypeValues_8Reversed + g_szBusTypeValues_Displacement
+%error "g_szBusTypeValues Displacement Incorrect 3"				
+%endif
+%if g_szBusTypeValues_16 <> g_szBusTypeValues_8Single + g_szBusTypeValues_Displacement		
+%error "g_szBusTypeValues Displacement Incorrect 4"				
+%endif
+%if g_szBusTypeValues_32 <> g_szBusTypeValues_16 + g_szBusTypeValues_Displacement
+%error "g_szBusTypeValues Displacement Incorrect 5"				
+%endif
+%if g_szBusTypeValues_Serial <> g_szBusTypeValues_32 + g_szBusTypeValues_Displacement
+%error "g_szBusTypeValues Displacement Incorrect 6"				
+%endif				
+				
 ;--------------------------------------------------------------------
 ; PushIRQ
 ;	Parameters:
@@ -154,18 +191,3 @@ PrintValuesFromStack:
 	mov		si, g_szCfgFormat
 	jmp		BootMenuPrint_FormatCSSIfromParamsInSSBP
 
-
-ALIGN WORD_ALIGN
-rgszAddressingModeString:
-	dw		g_szLCHS
-	dw		g_szPCHS
-	dw		g_szLBA28
-	dw		g_szLBA48
-
-rgwBusTypeValues:
-	db		'D', 8		; DEVICE_8BIT_DUAL_PORT_XTIDE
-	db		'X', 8		; DEVICE_XTIDE_WITH_REVERSED_A3_AND_A0
-	db		'S', 8		; DEVICE_8BIT_SINGLE_PORT
-	db		' ', 16		; DEVICE_16BIT_ATA
-	db		' ', 32		; DEVICE_32BIT_ATA
-	db		' ', 1		; DEVICE_SERIAL_PORT

@@ -185,12 +185,19 @@ ALIGN JUMP_ALIGN
 BootMenuPrint_FloppyMenuitemInformation:
 	call	BootMenuPrint_ClearInformationArea
 	call	FloppyDrive_GetType			; Get Floppy Drive type to BX
-	test	bx, bx						; Two possibilities? (FLOPPY_TYPE_525_OR_35_DD)
+
 	push	bp
 	mov		bp, sp
-	jz		SHORT .PrintXTFloppyType
+	ePUSH_T	ax, g_szCapacity
+		
+	mov		si, g_szFddSizeOr	        ; .PrintXTFloppyType
+	test	bx, bx						; Two possibilities? (FLOPPY_TYPE_525_OR_35_DD)		
+	jz		SHORT .output
+
+	mov		si, g_szFddUnknown	        ; .PrintUnknownFloppyType
 	cmp		bl, FLOPPY_TYPE_35_ED
-	ja		SHORT .PrintUnknownFloppyType
+	ja		SHORT .output
+		
 	; Fall to .PrintKnownFloppyType
 
 
@@ -202,42 +209,51 @@ BootMenuPrint_FloppyMenuitemInformation:
 ;		CF:		Set since menu event was handled successfully
 ;	Corrupts registers:
 ;		AX, BX, SI, DI
+; 
+; Floppy Drive Types:
+;
+;   0  Handled above 
+;   1  FLOPPY_TYPE_525_DD          5 1/4   360K
+;   2  FLOPPY_TYPE_525_HD          5 1/4   1.2M
+;   3  FLOPPY_TYPE_35_DD           3 1/2   720K
+;   4  FLOPPY_TYPE_35_HD           3 1/2   1.44M
+;   5  3.5" ED on some BIOSes      3 1/2   2.88M
+;   6  FLOPPY_TYPE_35_ED		   3 1/2   2.88M
+;   >6 Unknwon, handled above
+; 
 ;--------------------------------------------------------------------
 .PrintKnownFloppyType:
 	mov		si, g_szFddSize
-	ePUSH_T	ax, g_szCapacity
-	dec		bx						; Cannot be 0 (FLOPPY_TYPE_525_OR_35_DD)
-	shl		bx, 1					; Shift for WORD lookup
-	mov		ax, [cs:bx+FloppyTypes.rgwPhysicalSize]
-	push	ax						; '5' or '3'
-	mov		al, ah
-	push	ax						; '1/4' or '1/2'
-	push	WORD [cs:bx+FloppyTypes.rgwCapacity]
+		
+	mov		ax, g_szFddThreeHalf
+	cmp		bl, FLOPPY_TYPE_525_HD
+	ja		.ThreeHalf
+	add		ax, g_szFddThreeFive_Displacement
+.ThreeHalf:		
+	push	ax						; "5 1/4" or "3 1/2"
+
+	mov		al,FloppyTypes.rgbCapacityMultiplier
+	mul		byte [cs:bx+FloppyTypes.rgbCapacity - 1]    ; -1 since 0 is handled above and not in the table
+	push	ax
+
+ALIGN JUMP_ALIGN		
+.output:		
 	jmp		SHORT BootMenuPrint_FormatCSSIfromParamsInSSBP
+		
+FloppyTypes:
+.rgbCapacityMultiplier equ 20	        ; Multiplier to reduce word sized values to byte size
+.rgbCapacity:
+	db		360   / FloppyTypes.rgbCapacityMultiplier    ;  type 1
+	db		1200  / FloppyTypes.rgbCapacityMultiplier    ;  type 2
+	db		720   / FloppyTypes.rgbCapacityMultiplier    ;  type 3
+	db		1440  / FloppyTypes.rgbCapacityMultiplier    ;  type 4
+	db		2880  / FloppyTypes.rgbCapacityMultiplier    ;  type 5
+	db		2880  / FloppyTypes.rgbCapacityMultiplier    ;  type 6
 
-
-;--------------------------------------------------------------------
-; .PrintXTFloppyType
-; .PrintUnknownFloppyType
-;	Parameters:
-;		Nothing
-;	Returns:
-;		CF:		Set since menu event was handled successfully
-;	Corrupts registers:
-;		AX, SI, DI
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-.PrintXTFloppyType:
-	mov		si, g_szFddSizeOr
-	jmp		SHORT .FormatXTorUnknownTypeFloppyDrive
-ALIGN JUMP_ALIGN
-.PrintUnknownFloppyType:
-	mov		si, g_szFddUnknown
-.FormatXTorUnknownTypeFloppyDrive:
-	ePUSH_T	ax, g_szCapacity
-	jmp		SHORT BootMenuPrint_FormatCSSIfromParamsInSSBP
-
-
+%if g_szFddFiveQuarter <> g_szFddThreeHalf+g_szFddThreeFive_Displacement
+%error "FddThreeFive_Displacement incorrect"
+%endif
+				
 ;--------------------------------------------------------------------
 ; Prints Hard Disk Menuitem information strings.
 ;
@@ -479,19 +495,4 @@ PushHotkeyParamsAndFormat:
 	mov		si, g_szHotkey
 	jmp		SHORT BootMenuPrint_FormatCSSIfromParamsInSSBP
 
-ALIGN WORD_ALIGN
-FloppyTypes:
-.rgwCapacity:
-	dw		360
-	dw		1200
-	dw		720
-	dw		1440
-	dw		2880
-	dw		2880
-.rgwPhysicalSize:
-	db		'5', 172	; 1, FLOPPY_TYPE_525_DD
-	db		'5', 172	; 2, FLOPPY_TYPE_525_HD
-	db		'3', 171	; 3, FLOPPY_TYPE_35_DD
-	db		'3', 171	; 4, FLOPPY_TYPE_35_HD
-	db		'3', 171	; 5, 3.5" ED on some BIOSes
-	db		'3', 171	; 6, FLOPPY_TYPE_35_ED
+

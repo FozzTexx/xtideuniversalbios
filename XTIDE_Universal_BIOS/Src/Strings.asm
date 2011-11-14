@@ -35,11 +35,31 @@ g_szCapacity:	db	"Capacity : ",NULL
 g_szSizeSingle:	db	"%s%u.%u %ciB",NULL
 g_szSizeDual:	db	"%s%4-u.%u %ciB / %4-u.%u %ciB",LF,CR,NULL
 g_szCfgHeader:	db	"Addr.",SINGLE_VERTICAL,"Block",SINGLE_VERTICAL,"Bus",  SINGLE_VERTICAL,"IRQ",  SINGLE_VERTICAL,"Reset",LF,CR,NULL
-g_szCfgFormat:	db	"%s"   ,SINGLE_VERTICAL,"%5-u", SINGLE_VERTICAL,"%c%2u",SINGLE_VERTICAL," %c%c",SINGLE_VERTICAL,"%5-x",  NULL
+g_szCfgFormat:	db	"%s"   ,SINGLE_VERTICAL,"%5-u", SINGLE_VERTICAL,"%s",SINGLE_VERTICAL," %c%c",SINGLE_VERTICAL,"%5-x",  NULL
+		
+g_szAddressingModes:					
 g_szLCHS:		db	"L-CHS",NULL
 g_szPCHS:		db	"P-CHS",NULL
 g_szLBA28:		db	"LBA28",NULL
 g_szLBA48:		db	"LBA48",NULL
+g_szAddressingModes_Displacement equ 6
+		
 g_szFddUnknown:	db	"%sUnknown",NULL
 g_szFddSizeOr:	db	"%s5",ONE_QUARTER,QUOTATION_MARK," or 3",ONE_HALF,QUOTATION_MARK," DD",NULL
-g_szFddSize:	db	"%s%c%c",QUOTATION_MARK,", %u kiB",NULL	; 3½", 1440 kiB
+g_szFddSize:	db	"%s%s",QUOTATION_MARK,", %u kiB",NULL	; 3½", 1440 kiB
+
+g_szFddThreeHalf:		db  "3",ONE_HALF,NULL
+g_szFddFiveQuarter:		db  "5",ONE_QUARTER,NULL		
+g_szFddThreeFive_Displacement equ 3
+
+g_szBusTypeValues:		
+g_szBusTypeValues_8Dual:		db		"D8 ",NULL
+g_szBusTypeValues_8Reversed:	db		"X8 ",NULL
+g_szBusTypeValues_8Single:		db		"S8 ",NULL
+g_szBusTypeValues_16:			db		" 16",NULL
+g_szBusTypeValues_32:			db		" 32",NULL
+g_szBusTypeValues_Serial:		db		"SER",NULL
+g_szBusTypeValues_Displacement equ 4
+		
+g_szSelectionTimeout:	db		DOUBLE_BOTTOM_LEFT_CORNER,DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL,"%ASelection in %2u s",NULL
+
