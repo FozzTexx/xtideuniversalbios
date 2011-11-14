@@ -384,17 +384,12 @@ DrawTimeoutCounterString:
 
 	push	bp
 	mov		bp, sp
-	mov		si, .szSelectionTimeout
+	mov		si, g_szSelectionTimeout
 	push	ax			; Push attribute
 	push	di			; Push seconds
 	CALL_DISPLAY_LIBRARY FormatNullTerminatedStringFromCSSI
 	pop		bp
 	ret
-.szSelectionTimeout:
-	db		DOUBLE_BOTTOM_LEFT_CORNER
-	db		DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL
-	db		"%ASelection in %2u s",NULL
-
 
 ; Lookup tables for border characters
 g_rgbTopBorderCharacters:
