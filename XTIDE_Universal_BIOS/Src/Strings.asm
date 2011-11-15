@@ -1,6 +1,10 @@
 ; Project name	:	XTIDE Universal BIOS
 ; Description	:	Strings and equates for BIOS messages.
 
+%ifdef MODULE_STRINGS_COMPRESSED_PRECOMPRESS
+%include "Display.inc"
+%endif
+
 ; Section containing code
 SECTION .text
 
@@ -18,10 +22,10 @@ g_szNotFound:			db	"not found",LF,CR,NULL
 g_szReadError:			db	"Error %x!",LF,CR,NULL
 
 ; Boot menu bottom of screen strings
-g_szFDD:		db	"FDD",NULL
-g_szHDD:		db	"HDD",NULL
+g_szFDD:		db	"FDD     ",NULL
+g_szHDD:		db	"HDD     ",NULL
 g_szRomBoot:	db	"ROM Boot",NULL
-g_szHotkey:		db	"%A%c%c%A%8s%A ",NULL
+g_szHotkey:		db	"%A%c%c%A%s%A ",NULL
 
 
 ; Boot Menu menuitem strings
@@ -33,7 +37,7 @@ g_szforeignHD:	db	"Foreign Hard Disk",NULL
 ; Boot Menu information strings
 g_szCapacity:	db	"Capacity : ",NULL
 g_szSizeSingle:	db	"%s%u.%u %ciB",NULL
-g_szSizeDual:	db	"%s%4-u.%u %ciB / %4-u.%u %ciB",LF,CR,NULL
+g_szSizeDual:	db	"%s%5-u.%u %ciB /%5-u.%u %ciB",LF,CR,NULL
 g_szCfgHeader:	db	"Addr.",SINGLE_VERTICAL,"Block",SINGLE_VERTICAL,"Bus",  SINGLE_VERTICAL,"IRQ",  SINGLE_VERTICAL,"Reset",LF,CR,NULL
 g_szCfgFormat:	db	"%s"   ,SINGLE_VERTICAL,"%5-u", SINGLE_VERTICAL,"%s",SINGLE_VERTICAL," %2-I",SINGLE_VERTICAL,"%5-x",  NULL
 		
@@ -97,6 +101,6 @@ g_szBusTypeValues_Displacement equ (g_szBusTypeValues_8Reversed - g_szBusTypeVal
 %error "g_szBusTypeValues Displacement Incorrect 6"				
 %endif				
 		
-g_szSelectionTimeout:	db		DOUBLE_BOTTOM_LEFT_CORNER,DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL,"%ASelection in %2u s",NULL
+g_szSelectionTimeout:	db		DOUBLE_BOTTOM_LEFT_CORNER,DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL,"%ASelection in %2-u s",NULL
 
 g_szDashForZero:		db		"- ",NULL

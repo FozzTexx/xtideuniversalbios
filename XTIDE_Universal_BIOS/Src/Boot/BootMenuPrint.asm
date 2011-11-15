@@ -65,16 +65,19 @@ BootMenuPrint_TitleStrings:
 ;	Returns:
 ;		CF:		Set since menu event was handled successfully
 ;	Corrupts registers:
-;		AX
+;		AX, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenuPrint_NullTerminatedStringFromCSSIandSetCF:
-	push	di
-	CALL_DISPLAY_LIBRARY PrintNullTerminatedStringFromCSSI
-	pop		di
-	stc
-	ret
-
+;
+; We send all CSSI strings through the Format routine for the case of
+; compressed strings, but this doesn't hurt in the non-compressed case either
+; (perhaps a little slower, but shouldn't be noticeable to the user)
+; and results in smaller code size.
+;
+	push	bp
+	mov		bp,sp
+	jmp		BootMenuPrint_FormatCSSIfromParamsInSSBP
 
 ;--------------------------------------------------------------------
 ; BootMenuPrint_FloppyMenuitem
@@ -228,7 +231,12 @@ BootMenuPrint_FloppyMenuitemInformation:
 	mov		ax, g_szFddThreeHalf
 	cmp		bl, FLOPPY_TYPE_525_HD
 	ja		.ThreeHalf
+%if g_szFddThreeFive_Displacement = 2 		
+	inc		ax						; compressed string case
+	inc		ax
+%else
 	add		ax, g_szFddThreeFive_Displacement
+%endif
 .ThreeHalf:		
 	push	ax						; "5 1/4" or "3 1/2"
 

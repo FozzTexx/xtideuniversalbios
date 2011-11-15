@@ -12,8 +12,12 @@ SECTION .text
 	%include "DisplayContext.asm"
 	%include "DisplayCursor.asm"
 	%include "DisplayPage.asm"
-	%include "DisplayPrint.asm"
-	%include "DisplayFormat.asm"
+	%include "DisplayPrint.asm"					; must come before DisplayFormat/DisplayFormatCompressed			
+%ifdef MODULE_STRINGS_COMPRESSED
+	%include "DisplayFormatCompressed.asm"
+%else
+	%include "DisplayFormat.asm"		
+%endif
 %endif
 
 %ifdef INCLUDE_FILE_LIBRARY

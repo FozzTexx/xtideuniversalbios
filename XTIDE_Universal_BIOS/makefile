@@ -64,7 +64,7 @@ HEADERS += $(LIBS)
 #################################################################
 # Assembler preprocessor defines.                               #
 #################################################################
-DEFINES = INCLUDE_MENU_LIBRARY EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS MODULE_EBIOS MODULE_SERIAL
+DEFINES = INCLUDE_MENU_LIBRARY EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS MODULE_EBIOS MODULE_SERIAL MODULE_STRINGS_COMPRESSED
 DEFINES_XT = ELIMINATE_CGA_SNOW
 DEFINES_XTPLUS = ELIMINATE_CGA_SNOW USE_186
 DEFINES_AT = USE_186 USE_286 USE_AT
@@ -138,3 +138,9 @@ xt:
 clean:
 	@$(RM) $(BUILD_DIR)\*.*
 	@echo Deleted "(*.*)" from "$(BUILD_DIR)/"
+
+src\StringsCompressed.asm:	src\Strings.asm src\StringsCompress.pl
+	$(AS) src\Strings.asm $(ASFLAGS) $(DEFS_XT) -DMODULE_STRINGS_COMPRESSED_PRECOMPRESS -o build\Strings.bin -l build\StringsPrecompress.lst
+	perl src\StringsCompress.pl < build\StringsPrecompress.lst > src\StringsCompressed.asm
+
+$(SRC_ASM):		src\StringsCompressed.asm
