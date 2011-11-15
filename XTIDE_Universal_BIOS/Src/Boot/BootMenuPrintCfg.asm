@@ -58,21 +58,6 @@ PushAddressingMode:
 	mul		bl
 	add		ax,g_szAddressingModes
 	push	ax
-;
-; Ensure that addressing modes are correctly spaced in memory
-;
-%if g_szLCHS <> g_szAddressingModes
-%error "g_szAddressingModes Displacement Incorrect 1"
-%endif
-%if g_szPCHS <> g_szLCHS + g_szAddressingModes_Displacement
-%error "g_szAddressingModes Displacement Incorrect 2"
-%endif
-%if g_szLBA28 <> g_szPCHS + g_szAddressingModes_Displacement		
-%error "g_szAddressingModes Displacement Incorrect 3"
-%endif
-%if g_szLBA48 <> g_szLBA28 + g_szAddressingModes_Displacement		
-%error "g_szAddressingModes Displacement Incorrect 4"
-%endif				
 		
 ;--------------------------------------------------------------------
 ; PushBlockMode
@@ -108,28 +93,6 @@ PushBlockMode:
 	shr		ax,1
 	add		ax,g_szBusTypeValues
 	push	ax	
-
-;
-; Ensure that bus type strings are correctly spaced in memory
-;
-%if g_szBusTypeValues_8Dual <> g_szBusTypeValues
-%error "g_szBusTypeValues Displacement Incorrect 1"
-%endif
-%if g_szBusTypeValues_8Reversed <> g_szBusTypeValues + g_szBusTypeValues_Displacement
-%error "g_szBusTypeValues Displacement Incorrect 2"		
-%endif
-%if g_szBusTypeValues_8Single <> g_szBusTypeValues_8Reversed + g_szBusTypeValues_Displacement
-%error "g_szBusTypeValues Displacement Incorrect 3"				
-%endif
-%if g_szBusTypeValues_16 <> g_szBusTypeValues_8Single + g_szBusTypeValues_Displacement		
-%error "g_szBusTypeValues Displacement Incorrect 4"				
-%endif
-%if g_szBusTypeValues_32 <> g_szBusTypeValues_16 + g_szBusTypeValues_Displacement
-%error "g_szBusTypeValues Displacement Incorrect 5"				
-%endif
-%if g_szBusTypeValues_Serial <> g_szBusTypeValues_32 + g_szBusTypeValues_Displacement
-%error "g_szBusTypeValues Displacement Incorrect 6"				
-%endif				
 				
 ;--------------------------------------------------------------------
 ; PushIRQ
