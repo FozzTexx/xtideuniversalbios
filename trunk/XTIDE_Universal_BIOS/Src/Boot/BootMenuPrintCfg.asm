@@ -142,25 +142,7 @@ PushBlockMode:
 ;		AX, DX
 ;--------------------------------------------------------------------
 PushIRQ:
-	mov		dl, ' '						; Load space to DL
-	mov		al, [cs:si+IDEVARS.bIRQ]
-	test	al, al						; Interrupts disabled?
-	jz		SHORT .PushIrqDisabled
-	add		al, '0'						; Digit to ASCII
-	cmp		al, '9'						; Only one digit needed?
-	jbe		SHORT .PushCharacters
-
-	; Two digits needed
-	sub		al, 10						; Limit to single digit ASCII
-	mov		dl, '1'						; Load '1 to DX
-	jmp		SHORT .PushCharacters
-ALIGN JUMP_ALIGN
-.PushIrqDisabled:
-	mov		al, '-'						; Load line to AL
-	xchg	ax, dx						; Space to AL, line to DL
-ALIGN JUMP_ALIGN
-.PushCharacters:
-	push	dx
+	eMOVZX	ax, BYTE [cs:si+IDEVARS.bIRQ]
 	push	ax
 
 ;--------------------------------------------------------------------
