@@ -20,7 +20,7 @@ MenuEvent_InitializeMenuinit:
 	push	ss
 	pop		ds
 	mov		si, bp
-	mov		bl, MENUEVENT.InitializeMenuinitFromDSSI
+	mov		bl, MENUEVENT_InitializeMenuinitFromDSSI
 	jmp		SHORT MenuEvent_SendFromBX
 
 
@@ -36,7 +36,7 @@ MenuEvent_InitializeMenuinit:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MenuEvent_ExitMenu:
-	mov		bl, MENUEVENT.ExitMenu
+	mov		bl, MENUEVENT_ExitMenu
 	jmp		SHORT MenuEvent_SendFromBX
 
 
@@ -52,7 +52,7 @@ MenuEvent_ExitMenu:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MenuEvent_IdleProcessing:
-	mov		bl, MENUEVENT.IdleProcessing
+	mov		bl, MENUEVENT_IdleProcessing
 	jmp		SHORT MenuEvent_SendFromBX
 
 
@@ -70,11 +70,11 @@ MenuEvent_IdleProcessing:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MenuEvent_RefreshTitle:
-	mov		bl, MENUEVENT.RefreshTitle
+	mov		bl, MENUEVENT_RefreshTitle
 	SKIP2B	cx	; mov cx, <next instruction>
 
 MenuEvent_RefreshInformation:
-	mov		bl, MENUEVENT.RefreshInformation
+	mov		bl, MENUEVENT_RefreshInformation
 	mov		cx, [bp+MENUINIT.wHighlightedItem]
 	jmp		SHORT MenuEvent_SendFromBX
 
@@ -93,7 +93,7 @@ MenuEvent_RefreshInformation:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MenuEvent_RefreshItemFromCX:
-	mov		bl, MENUEVENT.RefreshItemFromCX
+	mov		bl, MENUEVENT_RefreshItemFromCX
 	jmp		SHORT MenuEvent_SendFromBX
 
 
@@ -113,7 +113,7 @@ MenuEvent_HighlightItemFromCX:
 	xchg	dx, [bp+MENUINIT.wHighlightedItem]
 	push	dx
 
-	mov		bl, MENUEVENT.ItemHighlightedFromCX
+	mov		bl, MENUEVENT_ItemHighlightedFromCX
 	call	MenuEvent_SendFromBX
 
 	pop		ax
@@ -136,7 +136,7 @@ MenuEvent_HighlightItemFromCX:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MenuEvent_KeyStrokeInAX:
-	mov		bl, MENUEVENT.KeyStrokeInAX
+	mov		bl, MENUEVENT_KeyStrokeInAX
 	SKIP2B	dx	; mov dx, <next instruction>
 
 
@@ -152,7 +152,7 @@ MenuEvent_KeyStrokeInAX:
 ;		AX, BX, DX
 ;--------------------------------------------------------------------
 MenuEvent_ItemSelectedFromCX:
-	mov		bl, MENUEVENT.ItemSelectedFromCX
+	mov		bl, MENUEVENT_ItemSelectedFromCX
 	; Fall to MenuEvent_SendFromBX
 
 

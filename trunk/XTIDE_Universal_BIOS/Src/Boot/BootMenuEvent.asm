@@ -23,13 +23,38 @@ endstruc
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenuEvent_Handler:
+		
+%ifdef MENUEVENT_INLINE_OFFSETS
+		
+	add		bx, BootMenuEvent_Handler
+	jmp		bx
+		
+%else
+		
 	cmp		bx, BYTE MENUEVENT.RefreshItemFromCX	; Above last supported item?
 	ja		SHORT .EventNotHandled
 	jmp		[cs:bx+.rgfnEventSpecificHandlers]
+		
+%endif
+		
 .EventNotHandled:
 	clc
 	ret
 
+%ifdef MENUEVENT_INLINE_OFFSETS
+		
+MENUEVENT_InitializeMenuinitFromDSSI equ  (BootMenuEvent_Handler.InitializeMenuinitFromDSSI - BootMenuEvent_Handler)
+MENUEVENT_ExitMenu equ  (BootMenuEvent_Handler.EventCompleted - BootMenuEvent_Handler)
+MENUEVENT_IdleProcessing equ (BootMenuEvent_Handler.EventNotHandled - BootMenuEvent_Handler)
+MENUEVENT_ItemHighlightedFromCX equ (BootMenuEvent_Handler.ItemHighlightedFromCX - BootMenuEvent_Handler)
+MENUEVENT_ItemSelectedFromCX equ (BootMenuEvent_Handler.ItemSelectedFromCX - BootMenuEvent_Handler)
+MENUEVENT_KeyStrokeInAX equ (BootMenuEvent_Handler.KeyStrokeInAX - BootMenuEvent_Handler)
+MENUEVENT_RefreshTitle equ (BootMenuPrint_TitleStrings - BootMenuEvent_Handler)
+MENUEVENT_RefreshInformation equ (BootMenuEvent_Handler.RefreshInformation - BootMenuEvent_Handler)
+MENUEVENT_RefreshItemFromCX equ (BootMenuEvent_Handler.RefreshItemFromCX - BootMenuEvent_Handler)
+
+%else
+		
 ALIGN WORD_ALIGN
 .rgfnEventSpecificHandlers:
 	dw		.InitializeMenuinitFromDSSI	; MENUEVENT.InitializeMenuinitFromDSSI
@@ -41,6 +66,8 @@ ALIGN WORD_ALIGN
 	dw		BootMenuPrint_TitleStrings	; MENUEVENT.RefreshTitle
 	dw		.RefreshInformation			; MENUEVENT.RefreshInformation
 	dw		.RefreshItemFromCX			; MENUEVENT.RefreshItemFromCX
+		
+%endif
 
 
 ; Parameters:

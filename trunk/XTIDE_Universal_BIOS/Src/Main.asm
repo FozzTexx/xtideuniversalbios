@@ -14,7 +14,8 @@
 
 ORG 000h						; Code start offset 0000h
 
-
+%define MENUEVENT_INLINE_OFFSETS    ; Only one menu required, save space and inline offsets
+		
 	; Included .inc files
 	%include "AssemblyLibrary.inc"	; Assembly Library. Must be included first!
 	%include "IntController.inc"	; For Interrupt Controller equates
@@ -149,7 +150,6 @@ istruc ROMVARS
 %endif
 iend
 
-
 	; Libraries and data
 	%include "AssemblyLibrary.asm"
 	%include "Strings.asm"			; For BIOS message strings
@@ -169,10 +169,10 @@ iend
 	; Boot menu
 	%include "BootMenu.asm"			; For Boot Menu operations
 	%include "BootMenuEvent.asm"	; For menu library event handling
+	%include "BootMenuPrint.asm"	; For printing Boot Menu strings (needs to come after BootMenuEvent.asm)
 	%include "FloppyDrive.asm"		; Floppy Drive related functions
 	%include "BootSector.asm"		; For loading boot sector
 	%include "BootPrint.asm"		; For printing boot information
-	%include "BootMenuPrint.asm"	; For printing Boot Menu strings
 	%include "BootMenuPrintCfg.asm"	; For printing hard disk configuration
 
 	; Boot loader
