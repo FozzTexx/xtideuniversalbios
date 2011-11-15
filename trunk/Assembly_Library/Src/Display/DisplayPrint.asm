@@ -4,6 +4,7 @@
 ; Section containing code
 SECTION .text
 
+				
 ;--------------------------------------------------------------------
 ; Supports following formatting types:
 ;	%a		Specifies attribute for next character
@@ -60,6 +61,7 @@ DisplayPrint_FormattedNullTerminatedStringFromCSSI:
 	pop		cx
 	pop		si
 	pop		bp
+
 	ret
 
 
@@ -101,6 +103,9 @@ DisplayPrint_SignedWordFromAXWithBaseInBX:
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
+		
+%ifndef MODULE_STRINGS_COMPRESSED
+		
 ALIGN JUMP_ALIGN
 DisplayPrint_WordFromAXWithBaseInBX:
 	push	cx
@@ -129,6 +134,8 @@ ALIGN JUMP_ALIGN
 	pop		cx
 	ret
 .rgcDigitToCharacter:	db	"0123456789ABCDEF"
+
+%endif	; MODULE_STRINGS_COMPRESSED
 
 
 ;--------------------------------------------------------------------
@@ -164,58 +171,6 @@ ALIGN JUMP_ALIGN
 	ret
 
 
-;--------------------------------------------------------------------
-; DisplayPrint_NullTerminatedStringFromCSSI
-;	Parameters:
-;		CS:SI:	Ptr to NULL terminated string
-;		DS:		BDA segment (zero)
-;		ES:DI:	Ptr to cursor location in video RAM
-;	Returns:
-;		DI:		Updated offset to video RAM
-;	Corrupts registers:
-;		AX, DX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-DisplayPrint_NullTerminatedStringFromCSSI:
-	push	bx
-	mov		bx, cs
-	call	DisplayPrint_NullTerminatedStringFromBXSI
-	pop		bx
-	ret
-
-
-;--------------------------------------------------------------------
-; DisplayPrint_NullTerminatedStringFromBXSI
-;	Parameters:
-;		DS:		BDA segment (zero)
-;		BX:SI:	Ptr to NULL terminated string
-;		ES:DI:	Ptr to cursor location in video RAM
-;	Returns:
-;		DI:		Updated offset to video RAM
-;	Corrupts registers:
-;		AX, DX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-DisplayPrint_NullTerminatedStringFromBXSI:
-	push	si
-	push	cx
-
-	xor		cx, cx
-ALIGN JUMP_ALIGN
-.PrintNextCharacter:
-	mov		ds, bx				; String segment to DS
-	lodsb
-	mov		ds, cx				; BDA segment to DS
-	test	al, al				; NULL?
-	jz		SHORT .EndOfString
-	call	DisplayPrint_CharacterFromAL
-	jmp		SHORT .PrintNextCharacter
-
-ALIGN JUMP_ALIGN
-.EndOfString:
-	pop		cx
-	pop		si
-	ret
 
 
 ;--------------------------------------------------------------------
@@ -319,8 +274,43 @@ ALIGN JUMP_ALIGN
 
 	pop		cx
 .NothingToRepeat:
+
 	ret
 
+;--------------------------------------------------------------------
+; DisplayPrint_NullTerminatedStringFromCSSI
+;	Parameters:
+;		CS:SI:	Ptr to NULL terminated string
+;		DS:		BDA segment (zero)
+;		ES:DI:	Ptr to cursor location in video RAM
+;	Returns:
+;		DI:		Updated offset to video RAM
+;	Corrupts registers:
+;		AX, DX
+;--------------------------------------------------------------------
+
+%ifndef MODULE_STRINGS_COMPRESSED
+;;;
+;;; Take care when using this routine with compressed strings (which is why it is disabled).
+;;; All strings in CSSI should go through the DisplayFormatCompressed code to be decoded.
+;;; 
+ALIGN JUMP_ALIGN
+DisplayPrint_NullTerminatedStringFromCSSI:
+	push	bx
+	mov		bx, cs
+	call	DisplayPrint_NullTerminatedStringFromBXSI
+	pop		bx
+
+	ret
+%endif
+
+		
+
+
+;;;
+;;; Note that the following routines need to be at the bottom of this file
+;;; to accomodate short jumps from the next file (DisplayFormat/DisplayFormatCompressed)
+;;; 
 
 ;--------------------------------------------------------------------
 ; DisplayPrint_Newline
@@ -332,7 +322,15 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
+%ifdef MODULE_STRINGS_COMPRESSED
 ALIGN JUMP_ALIGN
+DisplayPrint_Newline_FormatAdjustBP:
+	inc		bp					; we didn't need a parameter after all, readjust BP 
+	inc		bp
+;;; fall-through
+%endif
+
+ALIGN JUMP_ALIGN		
 DisplayPrint_Newline:
 	mov		al, LF
 	call	DisplayPrint_CharacterFromAL
@@ -343,6 +341,7 @@ DisplayPrint_Newline:
 ; DisplayPrint_CharacterFromAL
 ;	Parameters:
 ;		AL:		Character to display
+;               Zero value is ignored (no characer is printed)
 ;		DS:		BDA segment (zero)
 ;		ES:DI:	Ptr to cursor location in video RAM
 ;	Returns:
@@ -352,5 +351,47 @@ DisplayPrint_Newline:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 DisplayPrint_CharacterFromAL:
+%ifdef MODULE_STRINGS_COMPRESSED
+	test	al,al
+	jz		DisplayPrint_Ret
+%endif
 	mov		ah, [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bAttribute]
 	jmp		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fnCharOut]
+
+		
+;--------------------------------------------------------------------
+; DisplayPrint_NullTerminatedStringFromBXSI
+;	Parameters:
+;		DS:		BDA segment (zero)
+;		BX:SI:	Ptr to NULL terminated string
+;		ES:DI:	Ptr to cursor location in video RAM
+;	Returns:
+;		DI:		Updated offset to video RAM
+;	Corrupts registers:
+;		AX, DX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+DisplayPrint_NullTerminatedStringFromBXSI:
+	push	si
+	push	cx
+
+	xor		cx, cx
+ALIGN JUMP_ALIGN
+.PrintNextCharacter:
+	mov		ds, bx				; String segment to DS
+	lodsb
+	mov		ds, cx				; BDA segment to DS
+	test	al, al				; NULL?
+	jz		SHORT .EndOfString
+	call	DisplayPrint_CharacterFromAL
+	jmp		SHORT .PrintNextCharacter
+
+ALIGN JUMP_ALIGN
+.EndOfString:
+	pop		cx
+	pop		si
+		
+DisplayPrint_Ret:				; random ret to jump to 				
+	ret
+
+

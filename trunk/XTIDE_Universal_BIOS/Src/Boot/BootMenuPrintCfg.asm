@@ -20,9 +20,9 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenuPrintCfg_ForOurDrive:
-	pop		di
 	mov		si, g_szCfgHeader
 	call	BootMenuPrint_NullTerminatedStringFromCSSIandSetCF
+	pop		di
 	eMOVZX	ax, BYTE [di+DPT.bIdevarsOffset]
 	xchg	si, ax						; CS:SI now points to IDEVARS
 	; Fall to PushAndFormatCfgString
@@ -90,7 +90,9 @@ PushBlockMode:
 ;PushBusType:
 	mov		al,g_szBusTypeValues_Displacement
 	mul		BYTE [cs:si+IDEVARS.bDevice]
-	shr		ax,1
+		
+	shr		ax,1			; divide by 2 since IDEVARS.bDevice is multiplied by 2
+		
 	add		ax,g_szBusTypeValues
 	push	ax	
 				

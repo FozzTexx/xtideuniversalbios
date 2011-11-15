@@ -152,7 +152,11 @@ iend
 
 	; Libraries and data
 	%include "AssemblyLibrary.asm"
+%ifdef MODULE_STRINGS_COMPRESSED
+	%include "StringsCompressed.asm"
+%else
 	%include "Strings.asm"			; For BIOS message strings
+%endif
 
 	; Initialization and drive detection
 	%include "Initialize.asm"		; For BIOS initialization

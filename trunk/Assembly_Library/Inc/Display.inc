@@ -3,6 +3,7 @@
 %ifndef DISPLAY_INC
 %define DISPLAY_INC
 
+%ifndef MODULE_STRINGS_COMPRESSED_PRECOMPRESS
 ;--------------------------------------------------------------------
 ; Display Library users need to use this macro since it will provide
 ; compatibility with future library versions.
@@ -196,6 +197,7 @@ MONO_TEXT_SEGMENT			EQU		0B000h	; Text mode 7 (MDA, Hercules)
 OFFSET_TO_CGA_STATUS_REGISTER	EQU		6	; Base port 3D4h + 6 = 3DAh
 CGA_STATUS_REGISTER				EQU		3DAh
 
+%endif ; MODULE_STRINGS_COMPRESS_PRECOMPRESS
 
 ; Control characters for teletype output
 NULL						EQU		00h
