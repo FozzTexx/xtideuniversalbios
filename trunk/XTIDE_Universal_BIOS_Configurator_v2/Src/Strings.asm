@@ -297,3 +297,7 @@ g_szValueFlash8bytes:	db	"8 bytes",NULL
 g_szValueFlash16bytes:	db	"16 bytes",NULL
 g_szValueFlash32bytes:	db	"32 bytes",NULL
 g_szValueFlash64bytes:	db	"64 bytes",NULL
+
+g_szSelectionTimeout:	db		DOUBLE_BOTTOM_LEFT_CORNER,DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL,"%ASelection in %2u s",NULL
+
+g_szDashForZero:		db		"- ",NULL

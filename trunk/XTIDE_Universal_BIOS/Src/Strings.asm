@@ -42,7 +42,22 @@ g_szLCHS:		db	"L-CHS",NULL
 g_szPCHS:		db	"P-CHS",NULL
 g_szLBA28:		db	"LBA28",NULL
 g_szLBA48:		db	"LBA48",NULL
-g_szAddressingModes_Displacement equ 6
+g_szAddressingModes_Displacement equ (g_szPCHS - g_szAddressingModes)
+;
+; Ensure that addressing modes are correctly spaced in memory
+;
+%if g_szLCHS <> g_szAddressingModes
+%error "g_szAddressingModes Displacement Incorrect 1"
+%endif
+%if g_szPCHS <> g_szLCHS + g_szAddressingModes_Displacement
+%error "g_szAddressingModes Displacement Incorrect 2"
+%endif
+%if g_szLBA28 <> g_szPCHS + g_szAddressingModes_Displacement		
+%error "g_szAddressingModes Displacement Incorrect 3"
+%endif
+%if g_szLBA48 <> g_szLBA28 + g_szAddressingModes_Displacement		
+%error "g_szAddressingModes Displacement Incorrect 4"
+%endif				
 		
 g_szFddUnknown:	db	"%sUnknown",NULL
 g_szFddSizeOr:	db	"%s5",ONE_QUARTER,QUOTATION_MARK," or 3",ONE_HALF,QUOTATION_MARK," DD",NULL
@@ -50,7 +65,7 @@ g_szFddSize:	db	"%s%s",QUOTATION_MARK,", %u kiB",NULL	; 3½", 1440 kiB
 
 g_szFddThreeHalf:		db  "3",ONE_HALF,NULL
 g_szFddFiveQuarter:		db  "5",ONE_QUARTER,NULL		
-g_szFddThreeFive_Displacement equ 3
+g_szFddThreeFive_Displacement equ (g_szFddFiveQuarter - g_szFddThreeHalf)
 
 g_szBusTypeValues:		
 g_szBusTypeValues_8Dual:		db		"D8 ",NULL
@@ -59,7 +74,28 @@ g_szBusTypeValues_8Single:		db		"S8 ",NULL
 g_szBusTypeValues_16:			db		" 16",NULL
 g_szBusTypeValues_32:			db		" 32",NULL
 g_szBusTypeValues_Serial:		db		"SER",NULL
-g_szBusTypeValues_Displacement equ 4
+g_szBusTypeValues_Displacement equ (g_szBusTypeValues_8Reversed - g_szBusTypeValues)
+;
+; Ensure that bus type strings are correctly spaced in memory
+;
+%if g_szBusTypeValues_8Dual <> g_szBusTypeValues
+%error "g_szBusTypeValues Displacement Incorrect 1"
+%endif
+%if g_szBusTypeValues_8Reversed <> g_szBusTypeValues + g_szBusTypeValues_Displacement
+%error "g_szBusTypeValues Displacement Incorrect 2"		
+%endif
+%if g_szBusTypeValues_8Single <> g_szBusTypeValues_8Reversed + g_szBusTypeValues_Displacement
+%error "g_szBusTypeValues Displacement Incorrect 3"				
+%endif
+%if g_szBusTypeValues_16 <> g_szBusTypeValues_8Single + g_szBusTypeValues_Displacement		
+%error "g_szBusTypeValues Displacement Incorrect 4"				
+%endif
+%if g_szBusTypeValues_32 <> g_szBusTypeValues_16 + g_szBusTypeValues_Displacement
+%error "g_szBusTypeValues Displacement Incorrect 5"				
+%endif
+%if g_szBusTypeValues_Serial <> g_szBusTypeValues_32 + g_szBusTypeValues_Displacement
+%error "g_szBusTypeValues Displacement Incorrect 6"				
+%endif				
 		
 g_szSelectionTimeout:	db		DOUBLE_BOTTOM_LEFT_CORNER,DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL,"%ASelection in %2u s",NULL
 
