@@ -127,9 +127,9 @@ ALIGN JUMP_ALIGN
 
 .rgcFormatCharToLookupIndex:
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-	db		"aAduxsSct-+%"
+	db		"aIAduxsSct-+%"
 %else
-	db		"Auxsc-"		; Required by XTIDE Universal BIOS
+	db		"IAuxsc-"		; Required by XTIDE Universal BIOS
 %endif
 .rgcFormatCharToLookupIndexEnd:
 ALIGN WORD_ALIGN
@@ -137,6 +137,7 @@ ALIGN WORD_ALIGN
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 	dw		a_FormatAttributeForNextCharacter
 %endif
+	dw		I_FormatDashForZero
 	dw		A_FormatAttributeForRemainingString
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 	dw		d_FormatSignedDecimalWord
@@ -319,7 +320,7 @@ d_FormatSignedDecimalWord:
 	jmp		DisplayPrint_SignedWordFromAXWithBaseInBX
 %endif
 
-ALIGN JUMP_ALIGN
+ALIGN JUMP_ALIGN		
 u_FormatUnsignedDecimalWord:
 	mov		ax, [bp]
 	mov		bx, 10
@@ -333,6 +334,14 @@ x_FormatHexadecimalWord:
 	mov		al, 'h'
 	jmp		DisplayPrint_CharacterFromAL
 
+ALIGN JUMP_ALIGN
+I_FormatDashForZero:
+	mov		ax, [bp]
+	test	ax,ax
+	jnz		u_FormatUnsignedDecimalWord		
+	mov		[bp], word g_szDashForZero
+;;; fall-through
+		
 ALIGN JUMP_ALIGN
 s_FormatStringFromSegmentCS:
 	xchg	si, [bp]
