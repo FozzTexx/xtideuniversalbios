@@ -169,15 +169,16 @@ iend
 	%include "AtaID.asm"			; For ATA Identify Device information
 	%include "DetectDrives.asm"		; For detecting IDE drives
 	%include "DetectPrint.asm"		; For printing drive detection strings
-
+		
 	; Boot menu
 	%include "BootMenu.asm"			; For Boot Menu operations
 	%include "BootMenuEvent.asm"	; For menu library event handling
-	%include "BootMenuPrint.asm"	; For printing Boot Menu strings (needs to come after BootMenuEvent.asm)
-	%include "FloppyDrive.asm"		; Floppy Drive related functions
-	%include "BootSector.asm"		; For loading boot sector
+									; NOTE: BootMenuPrint needs to come immediately after BootMenuEvent
+	%include "BootMenuPrint.asm"	; For printing Boot Menu strings 
 	%include "BootPrint.asm"		; For printing boot information
 	%include "BootMenuPrintCfg.asm"	; For printing hard disk configuration
+	%include "FloppyDrive.asm"		; Floppy Drive related functions
+	%include "BootSector.asm"		; For loading boot sector
 
 	; Boot loader
 %ifndef USE_AT
@@ -186,18 +187,18 @@ iend
 	%include "Int19hMenu.asm"		; For Int 19h, Boot Loader for Boot Menu
 
 	; For all device types
-	%include "Device.asm"
 	%include "Idepack.asm"
+	%include "Device.asm"
 	%include "Timer.asm"			; For timeout and delay
 
 	; IDE Device support
 	%include "IdeCommand.asm"
 	%include "IdeTransfer.asm"		; Must be included after IdeCommand.asm
+	%include "IdeWait.asm"
+	%include "IdeError.asm"			; Must be included after IdeWait.asm		
 	%include "IdeDPT.asm"
 	%include "IdeIO.asm"
 	%include "IdeIrq.asm"
-	%include "IdeWait.asm"
-	%include "IdeError.asm"			; Must be included after IdeWait.asm
 
 %ifdef MODULE_SERIAL				; Serial Port Device support
 	%include "SerialCommand.asm"

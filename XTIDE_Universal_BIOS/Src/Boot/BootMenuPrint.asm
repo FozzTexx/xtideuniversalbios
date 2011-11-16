@@ -21,7 +21,7 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenuPrint_FloppyMenuitem:
-	js		BootMenuPrint_FloppyMenuitemInformation
+	js		short BootMenuPrint_FloppyMenuitemInformation
 	call	PrintDriveNumberAfterTranslationFromDL
 	push	bp
 	mov		bp, sp
@@ -29,44 +29,32 @@ BootMenuPrint_FloppyMenuitem:
 	ePUSH_T	ax, g_szFloppyDrv
 	add		dl, 'A'
 	push	dx					; Drive letter
-	jmp		BootMenuPrint_FormatCSSIfromParamsInSSBP
+	jmp		short BootMenuPrint_FormatCSSIfromParamsInSSBP
 
 %if BootMenuPrint_FloppyMenuitem <> BootMenuEvent_FallThroughToFloppyMenuitem
 %error "BootMenuPrint.asm must follow BootMenuEvent.asm, and BootMenuPrint_FloppyMenuitem must be the first routine in BootMenuPrint.asm"
 %endif
+
 		
 ;--------------------------------------------------------------------
-; BootMenuPrint_ClearScreen
+; ConvertSectorCountInBXDXAXtoSizeAndPushForFormat
 ;	Parameters:
-;		Nothing
+;		BX:DX:AX:	Sector count
 ;	Returns:
-;		Nothing
+;		Size in stack
 ;	Corrupts registers:
-;		AX, DI
+;		AX, BX, CX, DX, SI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-BootMenuPrint_ClearScreen:
-	call	BootMenuPrint_InitializeDisplayContext
-	xor		ax, ax
-	CALL_DISPLAY_LIBRARY SetCursorCoordinatesFromAX
-	mov		ax, ' ' | (MONO_NORMAL<<8)
-	CALL_DISPLAY_LIBRARY ClearScreenWithCharInALandAttrInAH
-	ret
-
-
-;--------------------------------------------------------------------
-; BootMenuPrint_InitializeDisplayContext
-;	Parameters:
-;		Nothing
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, DI
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-BootMenuPrint_InitializeDisplayContext:
-	CALL_DISPLAY_LIBRARY InitializeDisplayContext
-	ret
+ConvertSectorCountInBXDXAXtoSizeAndPushForFormat:
+	pop		si		; Pop return address
+	call	Size_ConvertSectorCountInBXDXAXtoKiB
+	mov		cx, BYTE_MULTIPLES.kiB
+	call	Size_GetSizeToAXAndCharToDLfromBXDXAXwithMagnitudeInCX
+	push	ax		; Size in magnitude
+	push	cx		; Tenths
+	push	dx		; Magnitude character
+	jmp		si
 
 
 ;--------------------------------------------------------------------
@@ -108,8 +96,9 @@ BootMenuPrint_NullTerminatedStringFromCSSIandSetCF:
 ;
 	push	bp
 	mov		bp,sp
-	jmp		BootMenuPrint_FormatCSSIfromParamsInSSBP
+	jmp		short BootMenuPrint_FormatCSSIfromParamsInSSBP
 
+		
 ;--------------------------------------------------------------------
 ; BootMenuPrint_HardDiskMenuitem
 ;	Parameters:
@@ -123,7 +112,7 @@ BootMenuPrint_NullTerminatedStringFromCSSIandSetCF:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenuPrint_HardDiskMenuitem:
-	js		BootMenuPrint_HardDiskMenuitemInformation
+	js		short BootMenuPrint_HardDiskMenuitemInformation
 	call	PrintDriveNumberAfterTranslationFromDL
 	call	RamVars_IsDriveHandledByThisBIOS
 	jnc		SHORT .HardDiskMenuitemForForeignDrive
@@ -164,29 +153,6 @@ ALIGN JUMP_ALIGN
 
 
 ;--------------------------------------------------------------------
-; PrintDriveNumberAfterTranslationFromDL
-;	Parameters:
-;		DL:		Untranslated Floppy Drive number
-;		DS:		RAMVARS segment
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, DI
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-PrintDriveNumberAfterTranslationFromDL:
-	mov		ax, dx
-	call	DriveXlate_ToOrBack
-	xchg	dx, ax				; Restore DX, WORD to print in AL
-	xor		ah, ah
-	push	bp
-	mov		bp, sp
-	mov		si, g_szDriveNum
-	push	ax
-	jmp		SHORT BootMenuPrint_FormatCSSIfromParamsInSSBP
-
-
-;--------------------------------------------------------------------
 ; BootMenuPrint_FloppyMenuitemInformation
 ;	Parameters:
 ;		DL:		Untranslated Floppy Drive number
@@ -196,6 +162,21 @@ PrintDriveNumberAfterTranslationFromDL:
 ;	Corrupts registers:
 ;		AX, BX, CX, DX, SI, DI, ES
 ;--------------------------------------------------------------------
+
+FloppyTypes:
+.rgbCapacityMultiplier equ 20	        ; Multiplier to reduce word sized values to byte size
+.rgbCapacity:
+	db		360   / FloppyTypes.rgbCapacityMultiplier    ;  type 1
+	db		1200  / FloppyTypes.rgbCapacityMultiplier    ;  type 2
+	db		720   / FloppyTypes.rgbCapacityMultiplier    ;  type 3
+	db		1440  / FloppyTypes.rgbCapacityMultiplier    ;  type 4
+	db		2880  / FloppyTypes.rgbCapacityMultiplier    ;  type 5
+	db		2880  / FloppyTypes.rgbCapacityMultiplier    ;  type 6
+
+%if g_szFddFiveQuarter <> g_szFddThreeHalf+g_szFddThreeFive_Displacement
+%error "FddThreeFive_Displacement incorrect"
+%endif
+		
 ALIGN JUMP_ALIGN
 BootMenuPrint_FloppyMenuitemInformation:
 	call	BootMenuPrint_ClearInformationArea
@@ -257,23 +238,27 @@ BootMenuPrint_FloppyMenuitemInformation:
 	push	ax
 
 ALIGN JUMP_ALIGN		
-.output:		
-	jmp		SHORT BootMenuPrint_FormatCSSIfromParamsInSSBP
-		
-FloppyTypes:
-.rgbCapacityMultiplier equ 20	        ; Multiplier to reduce word sized values to byte size
-.rgbCapacity:
-	db		360   / FloppyTypes.rgbCapacityMultiplier    ;  type 1
-	db		1200  / FloppyTypes.rgbCapacityMultiplier    ;  type 2
-	db		720   / FloppyTypes.rgbCapacityMultiplier    ;  type 3
-	db		1440  / FloppyTypes.rgbCapacityMultiplier    ;  type 4
-	db		2880  / FloppyTypes.rgbCapacityMultiplier    ;  type 5
-	db		2880  / FloppyTypes.rgbCapacityMultiplier    ;  type 6
+.output:
+;;; fall-through
 
-%if g_szFddFiveQuarter <> g_szFddThreeHalf+g_szFddThreeFive_Displacement
-%error "FddThreeFive_Displacement incorrect"
-%endif
-				
+;--------------------------------------------------------------------
+; BootMenuPrint_FormatCSSIfromParamsInSSBP
+;	Parameters:
+;		CS:SI:	Ptr to string to format
+;		BP:		SP before pushing parameters
+;	Returns:
+;		BP:		Popped from stack
+;	Corrupts registers:
+;		AX, DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+BootMenuPrint_FormatCSSIfromParamsInSSBP:
+	CALL_DISPLAY_LIBRARY FormatNullTerminatedStringFromCSSI
+	stc				; Successfull return from menu event
+	pop		bp
+	ret		
+
+		
 ;--------------------------------------------------------------------
 ; Prints Hard Disk Menuitem information strings.
 ;
@@ -345,48 +330,9 @@ ALIGN JUMP_ALIGN
 	call	ConvertSectorCountInBXDXAXtoSizeAndPushForFormat
 
 	mov		si, g_szSizeSingle
-	; Fall to BootMenuPrint_FormatCSSIfromParamsInSSBP
+ 	jmp		SHORT BootMenuPrint_FormatCSSIfromParamsInSSBP
 
-
-;--------------------------------------------------------------------
-; BootMenuPrint_FormatCSSIfromParamsInSSBP
-;	Parameters:
-;		CS:SI:	Ptr to string to format
-;		BP:		SP before pushing parameters
-;	Returns:
-;		BP:		Popped from stack
-;	Corrupts registers:
-;		AX, DI
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-BootMenuPrint_FormatCSSIfromParamsInSSBP:
-	CALL_DISPLAY_LIBRARY FormatNullTerminatedStringFromCSSI
-	stc				; Successfull return from menu event
-	pop		bp
-	ret
-
-
-;--------------------------------------------------------------------
-; ConvertSectorCountInBXDXAXtoSizeAndPushForFormat
-;	Parameters:
-;		BX:DX:AX:	Sector count
-;	Returns:
-;		Size in stack
-;	Corrupts registers:
-;		AX, BX, CX, DX, SI
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-ConvertSectorCountInBXDXAXtoSizeAndPushForFormat:
-	pop		si		; Pop return address
-	call	Size_ConvertSectorCountInBXDXAXtoKiB
-	mov		cx, BYTE_MULTIPLES.kiB
-	call	Size_GetSizeToAXAndCharToDLfromBXDXAXwithMagnitudeInCX
-	push	ax		; Size in magnitude
-	push	cx		; Tenths
-	push	dx		; Magnitude character
-	jmp		si
-
-
+		
 ;--------------------------------------------------------------------
 ; BootMenuPrint_ClearInformationArea
 ;	Parameters:
@@ -401,6 +347,50 @@ BootMenuPrint_ClearInformationArea:
 	CALL_MENU_LIBRARY ClearInformationArea
 	stc
 	ret
+
+		
+;--------------------------------------------------------------------
+; BootMenuPrint_ClearScreen
+;	Parameters:
+;		Nothing
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+BootMenuPrint_ClearScreen:
+	call	BootMenuPrint_InitializeDisplayContext
+	xor		ax, ax
+	CALL_DISPLAY_LIBRARY SetCursorCoordinatesFromAX
+	mov		ax, ' ' | (MONO_NORMAL<<8)
+	CALL_DISPLAY_LIBRARY ClearScreenWithCharInALandAttrInAH
+	ret
+
+		
+;--------------------------------------------------------------------
+; PrintDriveNumberAfterTranslationFromDL
+;	Parameters:
+;		DL:		Untranslated Floppy Drive number
+;		DS:		RAMVARS segment
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+PrintDriveNumberAfterTranslationFromDL:
+	mov		ax, dx
+	call	DriveXlate_ToOrBack
+	xchg	dx, ax				; Restore DX, WORD to print in AL
+	xor		ah, ah
+	push	bp
+	mov		bp, sp
+	mov		si, g_szDriveNum
+	push	ax
+		
+BootMenuPrint_FormatCSSIfromParamsInSSBP_Relay:	
+	jmp		SHORT BootMenuPrint_FormatCSSIfromParamsInSSBP
 
 
 ;--------------------------------------------------------------------
@@ -513,6 +503,25 @@ PushHotkeyParamsAndFormat:
 	push	si			; Description string
 	push	cx			; Key attribute for last space
 	mov		si, g_szHotkey
-	jmp		SHORT BootMenuPrint_FormatCSSIfromParamsInSSBP
+	jmp		SHORT BootMenuPrint_FormatCSSIfromParamsInSSBP_Relay
 
 
+;--------------------------------------------------------------------
+; BootMenuPrint_InitializeDisplayContext
+;	Parameters:
+;		Nothing
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+BootMenuPrint_InitializeDisplayContext:
+	CALL_DISPLAY_LIBRARY InitializeDisplayContext
+	ret
+
+
+		
+
+
+		

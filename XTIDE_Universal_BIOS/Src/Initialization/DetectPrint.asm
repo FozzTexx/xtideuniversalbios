@@ -21,6 +21,8 @@ DetectPrint_RomFoundAtSegment:
 	mov		si, g_szRomAt
 	ePUSH_T	ax, ROMVARS.szTitle			; Bios title string
 	push	cs							; BIOS segment
+		
+DetectPrint_BootMenuPrint_FormatCSSIfromParamsInSSBP_Relay:		
 	jmp		BootMenuPrint_FormatCSSIfromParamsInSSBP
 
 
@@ -41,7 +43,7 @@ DetectPrint_StartDetectWithMasterOrSlaveStringInAXandIdeVarsInCSBP:
 	mov		bp, sp
 	push	ax							; Push "Master" or "Slave"
 	push	di							; Push port number
-	jmp		BootMenuPrint_FormatCSSIfromParamsInSSBP
+	jmp		DetectPrint_BootMenuPrint_FormatCSSIfromParamsInSSBP_Relay
 
 
 ;--------------------------------------------------------------------
