@@ -41,19 +41,20 @@ AccessDPT_GetDeviceControlByteToAL:
 
 
 ;--------------------------------------------------------------------
-; AccessDPT_GetAddressingModeForWordLookToBX
+; AccessDPT_GetAddressingModeToAXZF
 ;	Parameters:
 ;		DS:DI:	Ptr to Disk Parameter Table
 ;	Returns:
-;		BX:		Addressing Mode (L-CHS, P-CHS, LBA28, LBA48) shifted for WORD lookup
+;		AX:		Addressing Mode (L-CHS, P-CHS, LBA28, LBA48)
+;       ZF:		Set if AX=0
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-AccessDPT_GetAddressingModeForWordLookToBX:
-	mov		bl, [di+DPT.bFlagsLow]
-	and		bx, BYTE MASKL_DPT_ADDRESSING_MODE
-	eSHR_IM	bx, ADDRESSING_MODE_FIELD_POSITION-1
+AccessDPT_GetAddressingModeToAXZF:
+	mov		al, [di+DPT.bFlagsLow]
+	and		ax, BYTE MASKL_DPT_ADDRESSING_MODE 
+	eSHR_IM	ax, ADDRESSING_MODE_FIELD_POSITION
 	ret
 
 
