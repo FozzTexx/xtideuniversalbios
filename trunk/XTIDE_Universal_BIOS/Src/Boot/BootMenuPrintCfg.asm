@@ -136,5 +136,5 @@ PushResetStatus:
 ;--------------------------------------------------------------------
 PrintValuesFromStack:
 	mov		si, g_szCfgFormat
-	jmp		BootMenuPrint_FormatCSSIfromParamsInSSBP
+	jmp		BootPrint_BootMenuPrint_FormatCSSIfromParamsInSSBP_Relay
 

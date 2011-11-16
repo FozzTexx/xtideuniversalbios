@@ -5,6 +5,27 @@
 SECTION .text
 
 ;--------------------------------------------------------------------
+; BootPrint_FailedToLoadFirstSector
+;	Parameters:
+;		AH:		INT 13h error code
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, CX, SI, DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+BootPrint_FailedToLoadFirstSector:
+	push	bp
+	mov		bp, sp
+	eMOVZX	cx, ah
+	push	cx					; Push INT 13h error code
+	mov		si, g_szReadError
+		
+BootPrint_BootMenuPrint_FormatCSSIfromParamsInSSBP_Relay:		
+	jmp		short BootMenuPrint_FormatCSSIfromParamsInSSBP_Relay
+		
+
+;--------------------------------------------------------------------
 ; BootPrint_TryToBootFromDL
 ;	Parameters:
 ;		DL:		Drive to boot from (translated, 00h or 80h)
@@ -32,23 +53,7 @@ BootPrint_TryToBootFromDL:
 	push	dx					; Push translated drive number
 
 	mov		si, g_szTryToBoot
-	jmp		BootMenuPrint_FormatCSSIfromParamsInSSBP
+	jmp		short BootPrint_BootMenuPrint_FormatCSSIfromParamsInSSBP_Relay		
 
 
-;--------------------------------------------------------------------
-; BootPrint_FailedToLoadFirstSector
-;	Parameters:
-;		AH:		INT 13h error code
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, CX, SI, DI
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-BootPrint_FailedToLoadFirstSector:
-	push	bp
-	mov		bp, sp
-	eMOVZX	cx, ah
-	push	cx					; Push INT 13h error code
-	mov		si, g_szReadError
-	jmp		BootMenuPrint_FormatCSSIfromParamsInSSBP
+
