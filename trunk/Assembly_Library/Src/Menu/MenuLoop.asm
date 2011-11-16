@@ -17,7 +17,9 @@ ALIGN JUMP_ALIGN
 MenuLoop_Enter:
 	call	KeystrokeProcessing
 	call	TimeoutProcessing
+%ifdef MENUEVENT_IDLEPROCESSING_ENABLE
 	call	MenuEvent_IdleProcessing	; User idle processing
+%endif
 	test	BYTE [bp+MENU.bFlags], FLG_MENU_EXIT
 	jz		SHORT MenuLoop_Enter
 	ret

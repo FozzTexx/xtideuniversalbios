@@ -40,6 +40,7 @@ MenuEvent_ExitMenu:
 	jmp		SHORT MenuEvent_SendFromBX
 
 
+%ifdef MENUEVENT_IDLEPROCESSING_ENABLE
 ;--------------------------------------------------------------------
 ; MenuEvent_IdleProcessing
 ;	Parameters
@@ -54,7 +55,7 @@ ALIGN JUMP_ALIGN
 MenuEvent_IdleProcessing:
 	mov		bl, MENUEVENT_IdleProcessing
 	jmp		SHORT MenuEvent_SendFromBX
-
+%endif
 
 ;--------------------------------------------------------------------
 ; MenuEvent_RefreshTitle

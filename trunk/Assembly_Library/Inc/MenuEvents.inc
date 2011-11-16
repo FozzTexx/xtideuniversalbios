@@ -50,6 +50,7 @@ struc MENUEVENT
 
 	; Parameters:
 	;	None
+	; See the definition of MENUEVENT_IDLEPROCESSING_ENABLE below.
 	.IdleProcessing					resb	2
 %define MENUEVENT_IdleProcessing MENUEVENT.IdleProcessing
 
@@ -86,5 +87,10 @@ struc MENUEVENT
 endstruc
 
 %endif ; MENUEVENTS_INLINE_OFFSETS
+
+; 
+; If user level idle processing is desired, %define this symbol and .IdleProcessing will be called.
+;
+;%define MENUEVENT_IDLEPROCESSING_ENABLE
 
 %endif ; MENUEVENTS_INC

@@ -29,6 +29,7 @@ DetectPrint_RomFoundAtSegment:
 ;	Parameters:
 ;		CS:AX:	Ptr to "Master" or "Slave" string
 ;		CS:BP:	Ptr to IDEVARS
+;       SI:		Ptr to template string 
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
@@ -36,11 +37,10 @@ DetectPrint_RomFoundAtSegment:
 ;--------------------------------------------------------------------
 DetectPrint_StartDetectWithMasterOrSlaveStringInAXandIdeVarsInCSBP:
 	push	bp
-	mov		si, [cs:bp+IDEVARS.wPort]
+	mov		di, [cs:bp+IDEVARS.wPort]
 	mov		bp, sp
 	push	ax							; Push "Master" or "Slave"
-	push	si							; Push port number
-	mov		si, g_szDetect
+	push	di							; Push port number
 	jmp		BootMenuPrint_FormatCSSIfromParamsInSSBP
 
 
