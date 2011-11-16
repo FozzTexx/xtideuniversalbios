@@ -4,12 +4,6 @@
 ; Section containing code
 SECTION .text
 
-struc ITEM_TYPE_REFRESH
-	.HardDisk			resb	2
-	.FloppyDrive		resb	2
-endstruc
-
-
 ;--------------------------------------------------------------------
 ; BootMenuEvent_Handler
 ;	Common parameters for all events:
@@ -28,32 +22,29 @@ BootMenuEvent_Handler:
 		
 	add		bx, BootMenuEvent_Handler
 	jmp		bx
-		
-%else
-		
-	cmp		bx, BYTE MENUEVENT.RefreshItemFromCX	; Above last supported item?
-	ja		SHORT .EventNotHandled
-	jmp		[cs:bx+.rgfnEventSpecificHandlers]
-		
-%endif
-		
-.EventNotHandled:
-	clc
-	ret
 
-%ifdef MENUEVENT_INLINE_OFFSETS
-		
 MENUEVENT_InitializeMenuinitFromDSSI equ  (BootMenuEvent_Handler.InitializeMenuinitFromDSSI - BootMenuEvent_Handler)
 MENUEVENT_ExitMenu equ  (BootMenuEvent_Handler.EventCompleted - BootMenuEvent_Handler)
-MENUEVENT_IdleProcessing equ (BootMenuEvent_Handler.EventNotHandled - BootMenuEvent_Handler)
 MENUEVENT_ItemHighlightedFromCX equ (BootMenuEvent_Handler.ItemHighlightedFromCX - BootMenuEvent_Handler)
 MENUEVENT_ItemSelectedFromCX equ (BootMenuEvent_Handler.ItemSelectedFromCX - BootMenuEvent_Handler)
 MENUEVENT_KeyStrokeInAX equ (BootMenuEvent_Handler.KeyStrokeInAX - BootMenuEvent_Handler)
 MENUEVENT_RefreshTitle equ (BootMenuPrint_TitleStrings - BootMenuEvent_Handler)
 MENUEVENT_RefreshInformation equ (BootMenuEvent_Handler.RefreshInformation - BootMenuEvent_Handler)
 MENUEVENT_RefreshItemFromCX equ (BootMenuEvent_Handler.RefreshItemFromCX - BootMenuEvent_Handler)
-
+; 
+; Note that there is no entry for MENUEVENT_IdleProcessing.  If MENUEVENT_IDLEPROCESSING_ENABLE is not %defined, 
+; then the entry point will not be called (saving memory on this end and at the CALL point).
+;
+		
 %else
+		
+	cmp		bx, BYTE MENUEVENT.RefreshItemFromCX	; Above last supported item?
+	ja		SHORT .EventNotHandled
+	jmp		[cs:bx+.rgfnEventSpecificHandlers]
+
+.EventNotHandled:
+	clc
+	ret
 		
 ALIGN WORD_ALIGN
 .rgfnEventSpecificHandlers:
@@ -161,16 +152,15 @@ ALIGN JUMP_ALIGN
 ;	Cursor has been positioned to the beginning of item line
 ALIGN JUMP_ALIGN
 .RefreshItemFromCX:
-	mov		bx, .rgwItemTypeRefresh
-	jmp		SHORT .RefreshItemOrInformationWithJumpTableInCSBX
-
-
+	mov		bl,00h
+	SKIP2B  dx		; dx corrupted below by BootMenu_GetDriveToDXforMenuitemInCX
+	; Fall to .RefreshInformation
+		
 ; Parameters:
 ;	CX:			Index of highlighted item
 ;	Cursor has been positioned to the beginning of first line
-ALIGN JUMP_ALIGN
 .RefreshInformation:
-	mov		bx, .rgwInformationItemTypeRefresh
+	mov		bl,040h
 	; Fall to .RefreshItemOrInformationWithJumpTableInCSBX
 
 ;--------------------------------------------------------------------
@@ -187,22 +177,14 @@ ALIGN JUMP_ALIGN
 
 	call	RamVars_GetSegmentToDS
 	call	BootMenu_GetDriveToDXforMenuitemInCX
-	test	dl, dl					; Floppy drive?
-	jns		SHORT .DrawFloppyDrive
-	jmp		[cs:bx+ITEM_TYPE_REFRESH.HardDisk]
+	or		bl,dl
+	shl		bl,1
+	jc		SHORT BootMenuPrint_HardDiskMenuitem
+		
+;;; 
+;;; Fall-through (to BootMenuPrint_FloppyMenuitem)
+;;; (checked at assembler time with the code after BootMenuPrint_FloppyMenuitem)
+;;;
 ALIGN JUMP_ALIGN
-.DrawFloppyDrive:
-	jmp		[cs:bx+ITEM_TYPE_REFRESH.FloppyDrive]
+BootMenuEvent_FallThroughToFloppyMenuitem:	
 
-; Jump tables for .RefreshItemOrInformationWithJumpTableInCSBX
-ALIGN WORD_ALIGN
-.rgwItemTypeRefresh:
-istruc ITEM_TYPE_REFRESH
-	at	ITEM_TYPE_REFRESH.HardDisk,			dw	BootMenuPrint_HardDiskMenuitem
-	at	ITEM_TYPE_REFRESH.FloppyDrive,		dw	BootMenuPrint_FloppyMenuitem
-iend
-.rgwInformationItemTypeRefresh:
-istruc ITEM_TYPE_REFRESH
-	at	ITEM_TYPE_REFRESH.HardDisk,			dw	BootMenuPrint_HardDiskMenuitemInformation
-	at	ITEM_TYPE_REFRESH.FloppyDrive,		dw	BootMenuPrint_FloppyMenuitemInformation
-iend

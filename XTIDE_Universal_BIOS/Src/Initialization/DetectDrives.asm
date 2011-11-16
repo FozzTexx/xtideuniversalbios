@@ -20,6 +20,7 @@ DetectDrives_FromAllIDEControllers:
 	call	RamVars_GetIdeControllerCountToCX
 	mov		bp, ROMVARS.ideVars0			; CS:BP now points to first IDEVARS
 .DriveDetectLoop:
+	mov		si,g_szDetect
 	call	.DetectDrives_WithIDEVARS		; Detect Master and Slave
 	add		bp, BYTE IDEVARS_size			; Point to next IDEVARS
 	loop	.DriveDetectLoop
@@ -28,6 +29,7 @@ DetectDrives_FromAllIDEControllers:
 	test	BYTE [es:BDA.bKBFlgs1], 8       ; alt key depressed
  	jz		.done
 	mov		bp, ROMVARS.ideVarsSerialAuto
+	mov		si,g_szSerial
 ;;; fall-through		
 %else
 	ret
@@ -41,6 +43,7 @@ DetectDrives_FromAllIDEControllers:
 ;		CS:BP:		Ptr to IDEVARS
 ;		DS:			RAMVARS segment
 ;		ES:			Zero (BDA segment)
+;       SI:		    Ptr to template string
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
@@ -48,10 +51,13 @@ DetectDrives_FromAllIDEControllers:
 ;--------------------------------------------------------------------
 .DetectDrives_WithIDEVARS:
 	push	cx
+		
+	push	si
 	mov		ax, g_szMaster
 	mov		bh, MASK_DRVNHEAD_SET								; Select Master drive
 	call	StartDetectionWithDriveSelectByteInBHandStringInAX	; Detect and create DPT + BOOTNFO
-
+	pop		si
+		
 	mov		ax, g_szSlave
 	mov		bh, MASK_DRVNHEAD_SET | FLG_DRVNHEAD_DRV
 	call	StartDetectionWithDriveSelectByteInBHandStringInAX

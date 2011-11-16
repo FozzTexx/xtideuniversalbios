@@ -4,6 +4,36 @@
 ; Section containing code
 SECTION .text
 
+;;;
+;;; Fall-through from BootMenuEvent.asm!
+;;; BootMenuPrint_FloppyMenuitem must be the first routine in this file
+;;; (checked at assembler time with the code after BootMenuPrint_FloppyMenuitem)
+;;;
+;--------------------------------------------------------------------
+; BootMenuPrint_FloppyMenuitem
+;	Parameters:
+;		DL:		Untranslated Floppy Drive number
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, DX, SI, DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+BootMenuPrint_FloppyMenuitem:
+	js		BootMenuPrint_FloppyMenuitemInformation
+	call	PrintDriveNumberAfterTranslationFromDL
+	push	bp
+	mov		bp, sp
+	mov		si, g_szFDLetter
+	ePUSH_T	ax, g_szFloppyDrv
+	add		dl, 'A'
+	push	dx					; Drive letter
+	jmp		BootMenuPrint_FormatCSSIfromParamsInSSBP
+
+%if BootMenuPrint_FloppyMenuitem <> BootMenuEvent_FallThroughToFloppyMenuitem
+%error "BootMenuPrint.asm must follow BootMenuEvent.asm, and BootMenuPrint_FloppyMenuitem must be the first routine in BootMenuPrint.asm"
+%endif
+		
 ;--------------------------------------------------------------------
 ; BootMenuPrint_ClearScreen
 ;	Parameters:
@@ -80,27 +110,6 @@ BootMenuPrint_NullTerminatedStringFromCSSIandSetCF:
 	jmp		BootMenuPrint_FormatCSSIfromParamsInSSBP
 
 ;--------------------------------------------------------------------
-; BootMenuPrint_FloppyMenuitem
-;	Parameters:
-;		DL:		Untranslated Floppy Drive number
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, DX, SI, DI
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-BootMenuPrint_FloppyMenuitem:
-	call	PrintDriveNumberAfterTranslationFromDL
-	push	bp
-	mov		bp, sp
-	mov		si, g_szFDLetter
-	ePUSH_T	ax, g_szFloppyDrv
-	add		dl, 'A'
-	push	dx					; Drive letter
-	jmp		BootMenuPrint_FormatCSSIfromParamsInSSBP
-
-
-;--------------------------------------------------------------------
 ; BootMenuPrint_HardDiskMenuitem
 ;	Parameters:
 ;		DL:		Untranslated Hard Disk number
@@ -112,6 +121,7 @@ BootMenuPrint_FloppyMenuitem:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenuPrint_HardDiskMenuitem:
+	js		BootMenuPrint_HardDiskMenuitemInformation
 	call	PrintDriveNumberAfterTranslationFromDL
 	call	RamVars_IsDriveHandledByThisBIOS
 	jnc		SHORT .HardDiskMenuitemForForeignDrive

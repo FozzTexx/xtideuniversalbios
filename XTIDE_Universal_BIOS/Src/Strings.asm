@@ -13,7 +13,7 @@ g_szRomAt:		db	"%s @ %x",LF,CR,NULL
 g_szMaster:		db	"Master",NULL
 g_szSlave:		db	"Slave ",NULL
 g_szDetect:		db	"IDE %s at %x: ",NULL			; IDE Master at 1F0h:
-
+g_szSerial:		db	"Serial Port %s: ",NULL
 
 ; Boot loader strings
 g_szTryToBoot:			db	"Booting from %s %x",ANGLE_QUOTE_RIGHT,"%x",LF,CR,NULL
