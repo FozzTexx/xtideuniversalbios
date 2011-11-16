@@ -50,11 +50,11 @@ PushAndFormatCfgString:
 ;	Returns:
 ;		Nothing (jumps to next push below)
 ;	Corrupts registers:
-;		AX
+;		AX, BX
 ;--------------------------------------------------------------------
 PushAddressingMode:
-	call	AccessDPT_GetAddressingModeForWordLookToBX
-	mov		al,g_szAddressingModes_Displacement
+	call	AccessDPT_GetAddressingModeToAXZF
+	mov		bl,g_szAddressingModes_Displacement
 	mul		bl
 	add		ax,g_szAddressingModes
 	push	ax

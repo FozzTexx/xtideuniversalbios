@@ -4,37 +4,6 @@
 ; Section containing code
 SECTION .text
 
-; Jump table for conversion functions
-ALIGN WORD_ALIGN
-g_rgfnAddressTranslation:
-	dw		DoNotConvertLCHS					; 0, ADDR_DPT_LCHS
-	dw		ConvertLCHStoPCHS					; 1, ADDR_DPT_PCHS
-	dw		ConvertLCHStoLBARegisterValues		; 2, ADDR_DPT_LBA28
-	dw		ConvertLCHStoLBARegisterValues		; 3, ADDR_DPT_LBA48
-
-
-;--------------------------------------------------------------------
-; Address_OldInt13hAddressToIdeAddress
-;	Parameters:
-;		CH:		Cylinder number, bits 7...0
-;		CL:		Bits 7...6: Cylinder number bits 9 and 8
-;				Bits 5...0:	Starting sector number (1...63)
-;		DH:		Starting head number (0...255)
-;		DS:DI:	Ptr to DPT
-;	Returns:
-;		BL:		LBA Low Register / Sector Number Register (LBA 7...0)
-;		CL:		LBA Mid Register / Low Cylinder Register (LBA 15...8)
-;		CH:		LBA High Register / High Cylinder Register (LBA 23...16)
-;		BH:		Drive and Head Register (LBA 27...24)
-;	Corrupts registers:
-;		AX, DX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-Address_OldInt13hAddressToIdeAddress:
-	call	AccessDPT_GetAddressingModeForWordLookToBX
-	push	WORD [cs:bx+g_rgfnAddressTranslation]		; Push return address
-	; Fall to Address_ExtractLCHSparametersFromOldInt13hAddress
-
 ;---------------------------------------------------------------------
 ; Address_ExtractLCHSparametersFromOldInt13hAddress
 ;	Parameters:
@@ -49,6 +18,7 @@ Address_OldInt13hAddressToIdeAddress:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
 Address_ExtractLCHSparametersFromOldInt13hAddress:
 	mov		bl, cl				; Copy sector number...
 	and		bl, 3Fh				; ...and limit to 1...63
@@ -96,7 +66,31 @@ ConvertLCHStoPCHS:
 DoNotConvertLCHS:
 	ret
 
-
+;--------------------------------------------------------------------
+; Address_OldInt13hAddressToIdeAddress
+;	Parameters:
+;		CH:		Cylinder number, bits 7...0
+;		CL:		Bits 7...6: Cylinder number bits 9 and 8
+;				Bits 5...0:	Starting sector number (1...63)
+;		DH:		Starting head number (0...255)
+;		DS:DI:	Ptr to DPT
+;	Returns:
+;		BL:		LBA Low Register / Sector Number Register (LBA 7...0)
+;		CL:		LBA Mid Register / Low Cylinder Register (LBA 15...8)
+;		CH:		LBA High Register / High Cylinder Register (LBA 23...16)
+;		BH:		Drive and Head Register (LBA 27...24)
+;	Corrupts registers:
+;		AX, DX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+Address_OldInt13hAddressToIdeAddress:
+	call	Address_ExtractLCHSparametersFromOldInt13hAddress
+	call	AccessDPT_GetAddressingModeToAXZF
+	jz		DoNotConvertLCHS	; 0, ADDR_DPT_LCHS
+	dec		ax
+	jz		ConvertLCHStoPCHS	; 1, ADDR_DPT_PCHS
+;; Fall-through                 ; 2, ADDR_DPT_LBA28 and 3, ADDR_DPT_LBA48
+		
 ;---------------------------------------------------------------------
 ; Converts LCHS parameters to 28-bit LBA address.
 ; Only 24-bits are used since LHCS to LBA28 conversion has 8.4GB limit.
