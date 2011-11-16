@@ -13,6 +13,7 @@ SECTION .text
 ; BootMenuPrint_FloppyMenuitem
 ;	Parameters:
 ;		DL:		Untranslated Floppy Drive number
+;       SF:		set for Information, clear for Item
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
@@ -114,6 +115,7 @@ BootMenuPrint_NullTerminatedStringFromCSSIandSetCF:
 ;	Parameters:
 ;		DL:		Untranslated Hard Disk number
 ;		DS:		RAMVARS segment
+;       SF:		set for Information, clear for Item		
 ;	Returns:
 ;		CF:		Set since menu event handled
 ;	Corrupts registers:

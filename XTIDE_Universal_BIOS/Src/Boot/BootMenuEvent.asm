@@ -152,15 +152,16 @@ ALIGN JUMP_ALIGN
 ;	Cursor has been positioned to the beginning of item line
 ALIGN JUMP_ALIGN
 .RefreshItemFromCX:
-	mov		bl,00h
-	SKIP2B  dx		; dx corrupted below by BootMenu_GetDriveToDXforMenuitemInCX
+	mov		bl,00h		; will result in SF being clear in .RefreshItemOrInformation...
+	SKIP2B  dx			; dx corrupted below by BootMenu_GetDriveToDXforMenuitemInCX
 	; Fall to .RefreshInformation
 		
 ; Parameters:
 ;	CX:			Index of highlighted item
 ;	Cursor has been positioned to the beginning of first line
+; NO ALIGN - in the shadow of SKIP2B
 .RefreshInformation:
-	mov		bl,040h
+	mov		bl,040h		;  will result in SF being set in .RefreshItemOrInformation...
 	; Fall to .RefreshItemOrInformationWithJumpTableInCSBX
 
 ;--------------------------------------------------------------------
@@ -177,8 +178,8 @@ ALIGN JUMP_ALIGN
 
 	call	RamVars_GetSegmentToDS
 	call	BootMenu_GetDriveToDXforMenuitemInCX
-	or		bl,dl
-	shl		bl,1
+	or		bl,dl				;  or drive number with bit from .RefreshItemFromCX or .RefreshInformation
+	shl		bl,1				;  drive letter high order bit to CF, Item/Information bit to SF
 	jc		SHORT BootMenuPrint_HardDiskMenuitem
 		
 ;;; 
