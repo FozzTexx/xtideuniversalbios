@@ -84,19 +84,23 @@ DoNotConvertLCHS:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Address_OldInt13hAddressToIdeAddress:
-	call	Address_ExtractLCHSparametersFromOldInt13hAddress
+		call	Address_ExtractLCHSparametersFromOldInt13hAddress
+			
+		CustomDPT_GetUnshiftedAddressModeToALZF
 		
-	CustomDPT_GetUnshiftedAddressModeToALZF
-	jz		DoNotConvertLCHS	; 0, ADDR_DPT_LCHS
+;;; 0: ADDR_DPT_LCHS		
+		jz		DoNotConvertLCHS	
 		
-	;; 
-	;; Since we are only checking for zero, we can do our math in the high order bits,
-	;; in this case effectively subtracting 1 from the address mode.
-	;; 
-	sub		al,(1<<ADDRESSING_MODE_FIELD_POSITION)
-	jz		ConvertLCHStoPCHS	; 1, ADDR_DPT_PCHS
-		
-;; Fall-through                 ; 2, ADDR_DPT_LBA28 and 3, ADDR_DPT_LBA48
+;;; 1: ADDR_DPT_PCHS
+		; 
+		; Since we are only checking for zero, we can do our math in the high order bits,
+		; in this case effectively subtracting 1 from the address mode.
+		;
+		sub		al,(1<<ADDRESSING_MODE_FIELD_POSITION)
+		jz		ConvertLCHStoPCHS	
+
+;;; 2: ADDR_DPT_LBA28 and 3: ADDR_DPT_LBA48				
+		; Fall through to ConvertLCHStoLBARegisterValues  
 		
 ;---------------------------------------------------------------------
 ; Converts LCHS parameters to 28-bit LBA address.

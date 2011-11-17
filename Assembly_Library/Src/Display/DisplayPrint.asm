@@ -150,6 +150,7 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS		
 ALIGN JUMP_ALIGN
 DisplayPrint_CharacterBufferFromBXSIwithLengthInCX:
 	jcxz	.NothingToPrintSinceZeroLength
@@ -169,6 +170,7 @@ ALIGN JUMP_ALIGN
 	pop		si
 .NothingToPrintSinceZeroLength:
 	ret
+%endif
 
 
 
@@ -327,7 +329,7 @@ ALIGN JUMP_ALIGN
 DisplayPrint_Newline_FormatAdjustBP:
 	inc		bp					; we didn't need a parameter after all, readjust BP 
 	inc		bp
-;;; fall-through
+	; fall through to DisplayPrint_Newline
 %endif
 
 ALIGN JUMP_ALIGN		

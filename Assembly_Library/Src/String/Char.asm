@@ -87,11 +87,12 @@ Char_IsHexadecimalDigitInAL:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN
 Char_IsDecimalDigitInAL:
 	IS_BETWEEN_IMMEDIATES al, '0', '9'
 	ret
-
+%endif
 
 ;--------------------------------------------------------------------
 ; Char_ConvertIntegerToALfromDigitInALwithBaseInBX

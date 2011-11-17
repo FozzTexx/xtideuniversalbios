@@ -69,7 +69,7 @@ SECTION .text
 %define DisplayFormatCompressed_Format_nl DisplayPrint_Newline_FormatAdjustBP
 %define DisplayFormatCompressed_Format_s DisplayFormat_ParseCharacters_FromAX
 
-DisplayFormatCompressed_Format_A:	
+DisplayFormatCompressed_Format_A:
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bAttribute], al
 DisplayFormatCompressed_ret:			; jump target for other routines who need a "ret"
 	ret
@@ -85,11 +85,11 @@ DisplayFormatCompressed_Format_2_I:
 	mov		si,g_szDashForZero			; preload dash string in case we jump
 	test	ax,ax						; if parameter equals zero, emit dash string instead
 	jz		DisplayFormat_ParseCharacters
-;;; fall through
+	; fall through
 		
 DisplayFormatCompressed_Format_2_u:
 	mov		bh,2						; only two characters (instead of the default 5)
-;;; fall through
+	; fall through
 		
 DisplayFormatCompressed_Format_u:
 DisplayFormatCompressed_Format_5_u:
@@ -149,11 +149,11 @@ DisplayFormatCompressed_Format_5_u:
 ;		AX, BX, CX, DX, BP
 ;--------------------------------------------------------------------		
 
-DisplayFormatCompressed_BaseFormatOffset:	
+DisplayFormatCompressed_BaseFormatOffset:
 		
-DisplayFormat_ParseCharacters_FromAX:	
+DisplayFormat_ParseCharacters_FromAX:
 	mov		si,ax
-;;; Fall-through
+	; fall through to DisplayFormat_ParseCharacters
 
 ALIGN JUMP_ALIGN		
 DisplayFormat_ParseCharacters:	

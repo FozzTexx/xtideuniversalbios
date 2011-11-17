@@ -181,6 +181,7 @@ ALIGN JUMP_ALIGN
 	or		bl,dl				;  or drive number with bit from .RefreshItemFromCX or .RefreshInformation
 	shl		bl,1				;  drive letter high order bit to CF, Item/Information bit to SF
 	jc		SHORT BootMenuPrint_HardDiskMenuitem
+	; fall through to BootMenuEvent_FallThroughToFloppyMenuitem
 		
 ;;; 
 ;;; Fall-through (to BootMenuPrint_FloppyMenuitem)
@@ -188,4 +189,4 @@ ALIGN JUMP_ALIGN
 ;;;
 ALIGN JUMP_ALIGN
 BootMenuEvent_FallThroughToFloppyMenuitem:	
-
+	; fall through to BootMenuPrint_FloppyMenuitem

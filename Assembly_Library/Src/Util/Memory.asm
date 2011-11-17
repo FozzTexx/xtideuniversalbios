@@ -115,6 +115,7 @@ Memory_StoreCXbytesFromAccumToESDI:
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN
 Memory_ReserveCXbytesFromStackToDSSI:
 	pop		ax
@@ -123,3 +124,4 @@ Memory_ReserveCXbytesFromStackToDSSI:
 	sub		sp, cx
 	mov		si, sp
 	jmp		ax
+%endif

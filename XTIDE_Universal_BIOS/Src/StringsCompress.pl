@@ -202,12 +202,14 @@ print "\n";
 # 
 # Ensure that branch targets are within reach
 #
+print "%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS\n";
 for( $t = $format_begin; $format_index[$t]; $t++ )
 {
 	print "%if DisplayFormatCompressed_BaseFormatOffset < $format_index[$t] || DisplayFormatCompressed_BaseFormatOffset - $format_index[$t] > 255\n";
 	print "%error \"".$format_index[$t]." is out of range of DisplayFormatCompressed_BaseFormatOffset\"\n";
 	print "%endif\n";
 }
+print "%endif\n";
 
 #--------------------------------------------------------------------------------
 #
