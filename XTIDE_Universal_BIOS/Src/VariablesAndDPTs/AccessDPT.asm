@@ -39,25 +39,7 @@ AccessDPT_GetDeviceControlByteToAL:
 .EnableDeviceIrq:
 	ret
 
-
-;--------------------------------------------------------------------
-; AccessDPT_GetAddressingModeToAXZF
-;	Parameters:
-;		DS:DI:	Ptr to Disk Parameter Table
-;	Returns:
-;		AX:		Addressing Mode (L-CHS, P-CHS, LBA28, LBA48)
-;       ZF:		Set if AX=0
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-AccessDPT_GetAddressingModeToAXZF:
-	mov		al, [di+DPT.bFlagsLow]
-	and		ax, BYTE MASKL_DPT_ADDRESSING_MODE 
-	eSHR_IM	ax, ADDRESSING_MODE_FIELD_POSITION
-	ret
-
-
+		
 ;--------------------------------------------------------------------
 ; AccessDPT_GetLCHS
 ;	Parameters:
@@ -120,25 +102,7 @@ AccessDPT_ShiftPCHinBXDXtoLCH:
 	xor		dh, dh
 	ret
 
-
-;--------------------------------------------------------------------
-; AccessDPT_TestIdeVarsFlagsForMasterOrSlaveDrive
-;	Parameters:
-;		AX:		Bitmask to test DRVPARAMS.wFlags
-;		DS:DI:	Ptr to Disk Parameter Table
-;	Returns:
-;		ZF:		Set if tested bit was zero
-;				Cleared if tested bit was non-zero
-;		CF:		0
-;	Corrupts registers:
-;		BX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-AccessDPT_TestIdeVarsFlagsForMasterOrSlaveDrive:
-	call	AccessDPT_GetPointerToDRVPARAMStoCSBX
-	test	[cs:bx+DRVPARAMS.wFlags], ax
-	ret
-
+		
 ;--------------------------------------------------------------------
 ; Returns pointer to DRVPARAMS for master or slave drive.
 ;

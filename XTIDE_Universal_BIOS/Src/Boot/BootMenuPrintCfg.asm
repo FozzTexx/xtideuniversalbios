@@ -53,9 +53,15 @@ PushAndFormatCfgString:
 ;		AX, BX
 ;--------------------------------------------------------------------
 PushAddressingMode:
-	call	AccessDPT_GetAddressingModeToAXZF
-	mov		bl,g_szAddressingModes_Displacement
+	CustomDPT_GetUnshiftedAddressModeToALZF
+	;; 
+	;; This multiply both shifts the addressing mode bits down to low order bits, and 
+	;; at the same time multiplies by the size of the string displacement.  The result is in AH,
+	;; with AL clear, and so we exchange AL and AH after the multiply for the final result.
+	;; 
+	mov		bl,(1<<(8-ADDRESSING_MODE_FIELD_POSITION)) * g_szAddressingModes_Displacement
 	mul		bl
+	xchg	al,ah
 	add		ax,g_szAddressingModes
 	push	ax
 		

@@ -85,8 +85,8 @@ CreateDPT_FromAtaInformation:
 ;--------------------------------------------------------------------
 .StoreAddressing:
 	; Check if CHS defined in ROMVARS
-	mov		al, FLG_DRVPARAMS_USERCHS	; User specified CHS?
-	call	AccessDPT_TestIdeVarsFlagsForMasterOrSlaveDrive
+	call	AccessDPT_GetPointerToDRVPARAMStoCSBX
+	test	byte [cs:bx+DRVPARAMS.wFlags], FLG_DRVPARAMS_USERCHS    ; User specified CHS?
 	jnz		SHORT .StoreUserDefinedCHSaddressing
 
 	; Check if LBA supported
