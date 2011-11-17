@@ -85,10 +85,17 @@ DoNotConvertLCHS:
 ALIGN JUMP_ALIGN
 Address_OldInt13hAddressToIdeAddress:
 	call	Address_ExtractLCHSparametersFromOldInt13hAddress
-	call	AccessDPT_GetAddressingModeToAXZF
+		
+	CustomDPT_GetUnshiftedAddressModeToALZF
 	jz		DoNotConvertLCHS	; 0, ADDR_DPT_LCHS
-	dec		ax
+		
+	;; 
+	;; Since we are only checking for zero, we can do our math in the high order bits,
+	;; in this case effectively subtracting 1 from the address mode.
+	;; 
+	sub		al,(1<<ADDRESSING_MODE_FIELD_POSITION)
 	jz		ConvertLCHStoPCHS	; 1, ADDR_DPT_PCHS
+		
 ;; Fall-through                 ; 2, ADDR_DPT_LBA28 and 3, ADDR_DPT_LBA48
 		
 ;---------------------------------------------------------------------
