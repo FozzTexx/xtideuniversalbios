@@ -16,7 +16,7 @@ SECTION .text
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-Initialize_FromMainBiosRomSearch:
+Initialize_FromMainBiosRomSearch:             ; unused entrypoint ok
 	pushf
 	push	es
 	push	ds

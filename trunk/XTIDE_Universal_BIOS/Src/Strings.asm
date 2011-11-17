@@ -50,6 +50,7 @@ g_szAddressingModes_Displacement equ (g_szPCHS - g_szAddressingModes)
 ;
 ; Ensure that addressing modes are correctly spaced in memory
 ;
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS		
 %if g_szLCHS <> g_szAddressingModes
 %error "g_szAddressingModes Displacement Incorrect 1"
 %endif
@@ -61,7 +62,8 @@ g_szAddressingModes_Displacement equ (g_szPCHS - g_szAddressingModes)
 %endif
 %if g_szLBA48 <> g_szLBA28 + g_szAddressingModes_Displacement		
 %error "g_szAddressingModes Displacement Incorrect 4"
-%endif				
+%endif
+%endif		
 		
 g_szFddUnknown:	db	"%sUnknown",NULL
 g_szFddSizeOr:	db	"%s5",ONE_QUARTER,QUOTATION_MARK," or 3",ONE_HALF,QUOTATION_MARK," DD",NULL
@@ -82,6 +84,7 @@ g_szBusTypeValues_Displacement equ (g_szBusTypeValues_8Reversed - g_szBusTypeVal
 ;
 ; Ensure that bus type strings are correctly spaced in memory
 ;
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS				
 %if g_szBusTypeValues_8Dual <> g_szBusTypeValues
 %error "g_szBusTypeValues Displacement Incorrect 1"
 %endif
@@ -99,7 +102,8 @@ g_szBusTypeValues_Displacement equ (g_szBusTypeValues_8Reversed - g_szBusTypeVal
 %endif
 %if g_szBusTypeValues_Serial <> g_szBusTypeValues_32 + g_szBusTypeValues_Displacement
 %error "g_szBusTypeValues Displacement Incorrect 6"				
-%endif				
+%endif
+%endif
 		
 g_szSelectionTimeout:	db		DOUBLE_BOTTOM_LEFT_CORNER,DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL,"%ASelection in %2-u s",NULL
 

@@ -144,3 +144,8 @@ src\StringsCompressed.asm:	src\Strings.asm src\StringsCompress.pl
 	perl src\StringsCompress.pl < build\StringsPrecompress.lst > src\StringsCompressed.asm
 
 $(SRC_ASM):		src\StringsCompressed.asm
+
+xt_unused:  xt
+	$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XT) -o"$(TARGET)_xt_unused.asm" -E -DCHECK_FOR_UNUSED_ENTRYPOINTS
+	perl ..\tools\unused.pl $(TARGET)_xt.lst $(TARGET)_xt_unused.asm
+

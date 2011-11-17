@@ -31,10 +31,11 @@ BootMenuPrint_FloppyMenuitem:
 	push	dx					; Drive letter
 	jmp		short BootMenuPrint_FormatCSSIfromParamsInSSBP
 
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
 %if BootMenuPrint_FloppyMenuitem <> BootMenuEvent_FallThroughToFloppyMenuitem
 %error "BootMenuPrint.asm must follow BootMenuEvent.asm, and BootMenuPrint_FloppyMenuitem must be the first routine in BootMenuPrint.asm"
 %endif
-
+%endif
 		
 ;--------------------------------------------------------------------
 ; ConvertSectorCountInBXDXAXtoSizeAndPushForFormat
@@ -173,8 +174,10 @@ FloppyTypes:
 	db		2880  / FloppyTypes.rgbCapacityMultiplier    ;  type 5
 	db		2880  / FloppyTypes.rgbCapacityMultiplier    ;  type 6
 
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
 %if g_szFddFiveQuarter <> g_szFddThreeHalf+g_szFddThreeFive_Displacement
 %error "FddThreeFive_Displacement incorrect"
+%endif
 %endif
 		
 ALIGN JUMP_ALIGN
@@ -224,11 +227,13 @@ BootMenuPrint_FloppyMenuitemInformation:
 	mov		ax, g_szFddThreeHalf
 	cmp		bl, FLOPPY_TYPE_525_HD
 	ja		.ThreeHalf
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
 %if g_szFddThreeFive_Displacement = 2 		
 	inc		ax						; compressed string case
 	inc		ax
 %else
 	add		ax, g_szFddThreeFive_Displacement
+%endif
 %endif
 .ThreeHalf:		
 	push	ax						; "5 1/4" or "3 1/2"

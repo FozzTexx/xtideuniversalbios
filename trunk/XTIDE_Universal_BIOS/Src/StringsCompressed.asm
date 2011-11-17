@@ -136,6 +136,7 @@ g_szAddressingModes_Displacement equ (g_szPCHS - g_szAddressingModes)
 ;
 ; Ensure that addressing modes are correctly spaced in memory
 ;
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS		
 %if g_szLCHS <> g_szAddressingModes
 %error "g_szAddressingModes Displacement Incorrect 1"
 %endif
@@ -147,7 +148,8 @@ g_szAddressingModes_Displacement equ (g_szPCHS - g_szAddressingModes)
 %endif
 %if g_szLBA48 <> g_szLBA28 + g_szAddressingModes_Displacement		
 %error "g_szAddressingModes Displacement Incorrect 4"
-%endif				
+%endif
+%endif		
 
 g_szFddUnknown:	; db	"%sUnknown",NULL
                	; db	 25h,  73h,  55h,  6eh,  6bh,  6eh,  6fh,  77h,  6eh,  00h    ; uncompressed
@@ -201,6 +203,7 @@ g_szBusTypeValues_Displacement equ (g_szBusTypeValues_8Reversed - g_szBusTypeVal
 ;
 ; Ensure that bus type strings are correctly spaced in memory
 ;
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS				
 %if g_szBusTypeValues_8Dual <> g_szBusTypeValues
 %error "g_szBusTypeValues Displacement Incorrect 1"
 %endif
@@ -218,7 +221,8 @@ g_szBusTypeValues_Displacement equ (g_szBusTypeValues_8Reversed - g_szBusTypeVal
 %endif
 %if g_szBusTypeValues_Serial <> g_szBusTypeValues_32 + g_szBusTypeValues_Displacement
 %error "g_szBusTypeValues Displacement Incorrect 6"				
-%endif				
+%endif
+%endif
 
 g_szSelectionTimeout:	; db		DOUBLE_BOTTOM_LEFT_CORNER,DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL,"%ASelection in %2-u s",NULL
                      	; db		0c8h, 0b5h,  25h,  41h,  53h,  65h,  6ch,  65h,  63h,  74h,  69h,  6fh,  6eh,  20h,  69h,  6eh,  20h,  25h,  32h,  2dh,  75h,  20h,  73h,  00h    ; uncompressed
@@ -267,6 +271,7 @@ StringsCompressed_TranslatesAndFormats:
         db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_2_u)    ; 28
         db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_A)    ; 29
 
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
 %if DisplayFormatCompressed_BaseFormatOffset < DisplayFormatCompressed_Format_s || DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_s > 255
 %error "DisplayFormatCompressed_Format_s is out of range of DisplayFormatCompressed_BaseFormatOffset"
 %endif
@@ -297,21 +302,22 @@ StringsCompressed_TranslatesAndFormats:
 %if DisplayFormatCompressed_BaseFormatOffset < DisplayFormatCompressed_Format_A || DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_A > 255
 %error "DisplayFormatCompressed_Format_A is out of range of DisplayFormatCompressed_BaseFormatOffset"
 %endif
+%endif
 
 ;; translated usage stats
 ;; total translated: 
 
 ;; format usage stats
 ;; A:4
-;; c:6
-;; s:14
 ;; 2-u:1
-;; u:5
 ;; 5-u:3
-;; 2-I:1
 ;; x:6
 ;; 5-x:1
+;; s:14
 ;; nl:6
+;; 2-I:1
+;; c:6
+;; u:5
 ;; total format: 10
 
 ;; alphabet usage stats

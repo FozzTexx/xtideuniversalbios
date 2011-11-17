@@ -14,12 +14,14 @@ SECTION .text
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN
 DisplayPage_SetFromAL:
 	xor		ah, ah
 	mul		WORD [VIDEO_BDA.wBytesPerPage]		; AX = Offset to page
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fpCursorPosition], ax
 	ret
+%endif
 
 
 ;--------------------------------------------------------------------

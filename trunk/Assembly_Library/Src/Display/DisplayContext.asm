@@ -99,12 +99,14 @@ DisplayContext_Push:
 	LOAD_BDA_SEGMENT_TO	ds, ax
 	pop		ax						; Pop return address
 
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
 	%assign i 0
 	%rep DISPLAY_CONTEXT_size / 2
 		push	WORD [VIDEO_BDA.displayContext + i]
 	%assign i i+2
 	%endrep
-
+%endif
+		
 	mov		ds, di					; Restore DS
 	jmp		ax
 
@@ -123,12 +125,14 @@ DisplayContext_Pop:
 	LOAD_BDA_SEGMENT_TO	ds, ax
 	pop		ax						; Pop return address
 
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS		
 	%assign i DISPLAY_CONTEXT_size-2
 	%rep DISPLAY_CONTEXT_size / 2
 		pop		WORD [VIDEO_BDA.displayContext + i]
 	%assign i i-2
 	%endrep
-
+%endif
+		
 	push	ax						; Push return address
 	push	dx
 	call	DisplayContext_SynchronizeToHardware
@@ -225,7 +229,7 @@ DisplayContext_SetCharOutputFunctionFromAXwithAttribFlagInBL:
 	or		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bFlags], bl
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fnCharOut], ax
 	ret
-
+		
 
 ;--------------------------------------------------------------------
 ; DisplayContext_SetCharacterAttributeFromAL
@@ -258,6 +262,7 @@ DisplayContext_SetCharacterOutputParameterFromAX:
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.wCharOutParam], ax
 	ret
 
+		
 ;--------------------------------------------------------------------
 ; DisplayContext_GetCharacterOutputParameterToDX
 ;	Parameters:
@@ -285,13 +290,16 @@ DisplayContext_GetCharacterOutputParameterToDX:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN
 DisplayContext_GetCharacterOffsetToAXfromByteOffsetInAX:
 	test	BYTE [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bFlags], FLG_CONTEXT_ATTRIBUTES
 	jz		SHORT ReturnOffsetInAX
 	sar		ax, 1		; BYTE count to WORD count
 	ret
+%endif
 
+		
 ;--------------------------------------------------------------------
 ; DisplayContext_GetByteOffsetToAXfromCharacterOffsetInAX
 ;	Parameters:
@@ -302,6 +310,7 @@ DisplayContext_GetCharacterOffsetToAXfromByteOffsetInAX:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS		
 ALIGN JUMP_ALIGN
 DisplayContext_GetByteOffsetToAXfromCharacterOffsetInAX:
 	test	BYTE [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bFlags], FLG_CONTEXT_ATTRIBUTES
@@ -310,3 +319,4 @@ DisplayContext_GetByteOffsetToAXfromCharacterOffsetInAX:
 ALIGN JUMP_ALIGN, ret
 ReturnOffsetInAX:
 	ret
+%endif

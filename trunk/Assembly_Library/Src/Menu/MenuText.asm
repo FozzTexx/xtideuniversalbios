@@ -14,19 +14,21 @@ SECTION .text
 ;	Corrupts registers:
 ;		AX, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN
 MenuText_ClearTitleArea:
 	CALL_DISPLAY_LIBRARY PushDisplayContext		; Save cursor coordinates
 	call	PrepareToDrawTitleArea
 	mov		cl, [bp+MENUINIT.bTitleLines]
-	jmp		SHORT ClearCLlinesOfText
-
+	jmp		SHORT MenuText_ClearInformationArea.ClearCLlinesOfText
+%endif
+		
 ALIGN JUMP_ALIGN
 MenuText_ClearInformationArea:
 	CALL_DISPLAY_LIBRARY PushDisplayContext		; Save cursor coordinates
 	call	MenuText_PrepareToDrawInformationArea
 	mov		cl, [bp+MENUINIT.bInfoLines]
-ClearCLlinesOfText:
+.ClearCLlinesOfText:
 	mov		al, [bp+MENUINIT.bWidth]
 	sub		al, MENU_HORIZONTAL_BORDER_LINES+(MENU_TEXT_COLUMN_OFFSET/2)
 	mul		cl

@@ -59,6 +59,7 @@ MenuBorders_RedrawBottomBorderLine:
 ;	Corrupts registers:
 ;		AX, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN
 MenuBorders_RefreshItemBorders:
 	call	MenuBorders_AdjustDisplayContextForDrawingBorders
@@ -67,8 +68,9 @@ MenuBorders_RefreshItemBorders:
 
 	call	MenuBorders_GetNumberOfMiddleCharactersToDX
 	jmp		SHORT RefreshItemBorders
+%endif
 
-
+		
 ;--------------------------------------------------------------------
 ; MenuBorders_AdjustDisplayContextForDrawingBorders
 ;	Parameters

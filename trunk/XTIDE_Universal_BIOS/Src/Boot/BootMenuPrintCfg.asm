@@ -25,7 +25,7 @@ BootMenuPrintCfg_ForOurDrive:
 	pop		di
 	eMOVZX	ax, BYTE [di+DPT.bIdevarsOffset]
 	xchg	si, ax						; CS:SI now points to IDEVARS
-	; Fall to PushAndFormatCfgString
+	; Fall to .PushAndFormatCfgString
 
 ;--------------------------------------------------------------------
 ; PushAndFormatCfgString
@@ -37,7 +37,7 @@ BootMenuPrintCfg_ForOurDrive:
 ;	Corrupts registers:
 ;		AX, DX, SI, DI
 ;--------------------------------------------------------------------
-PushAndFormatCfgString:
+.PushAndFormatCfgString:
 	push	bp
 	mov		bp, sp
 	; Fall to first push below
@@ -52,7 +52,7 @@ PushAndFormatCfgString:
 ;	Corrupts registers:
 ;		AX, BX
 ;--------------------------------------------------------------------
-PushAddressingMode:
+.PushAddressingMode:
 	CustomDPT_GetUnshiftedAddressModeToALZF
 	;; 
 	;; This multiply both shifts the addressing mode bits down to low order bits, and 
@@ -75,7 +75,7 @@ PushAddressingMode:
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
-PushBlockMode:
+.PushBlockMode:
 	mov		ax, 1
 	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_BLOCK_MODE_SUPPORTED
 	jz		SHORT .PushBlockSizeFromAX
@@ -93,7 +93,7 @@ PushBlockMode:
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
-;PushBusType:
+.PushBusType:
 	mov		al,g_szBusTypeValues_Displacement
 	mul		BYTE [cs:si+IDEVARS.bDevice]
 		
@@ -112,7 +112,7 @@ PushBlockMode:
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
-PushIRQ:
+.PushIRQ:
 	eMOVZX	ax, BYTE [cs:si+IDEVARS.bIRQ]
 	push	ax
 
@@ -126,7 +126,7 @@ PushIRQ:
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
-PushResetStatus:
+.PushResetStatus:
 	mov		al, [di+DPT.bFlagsHigh]
 	and		ax, MASKH_DPT_RESET
 	push	ax
@@ -140,7 +140,7 @@ PushResetStatus:
 ;	Corrupts registers:
 ;		AX, SI, DI
 ;--------------------------------------------------------------------
-PrintValuesFromStack:
+.PrintValuesFromStack:
 	mov		si, g_szCfgFormat
 	jmp		BootPrint_BootMenuPrint_FormatCSSIfromParamsInSSBP_Relay
 
