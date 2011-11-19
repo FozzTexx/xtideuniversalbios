@@ -113,8 +113,8 @@ DisplayFormatCompressed_Format_5_u:
 	js		short DisplayPrint_CharacterFromAL	; on last iteration, emit postfix character
 												; if it is zero, DisplayPrint_CharacterFromAL will not emit
 
-	or		dh, al						; skip leading zeros, dh keeps track if we have emitted anythng non-zero
-	jnz		.PrintDigit					; note that dh starts at zero, from the div instruction in .DivLoop
+	or		bh, al						; skip leading zeros, bh keeps track if we have emitted anythng non-zero
+	jnz		.PrintDigit					; note that bh starts at zero, from the loop above
 
 	test	ch,2						; are we padding with leading spaces?  
 	jnz		.PrintLoop					; test the even/odd of the format byte in the string
@@ -128,9 +128,7 @@ DisplayFormatCompressed_Format_5_u:
 	add		al,'A'-'9'-1				; adjust for hex output ('A' to 'F')
 .NoHexAdjustment:		
 
-	push	dx								; preserve dh for future iterations
 	call	DisplayPrint_CharacterFromAL
-	pop		dx							
 
 	jmp		.PrintLoop
 
