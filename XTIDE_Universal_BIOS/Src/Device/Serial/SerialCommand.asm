@@ -39,7 +39,9 @@ SerialCommand_UART_modemStatus					EQU		6
 
 SerialCommand_UART_scratch						EQU		7
 
+; note that the actual StaringPoint port address is not achievable (results in 0 which triggers auto detect)
 SerialCommand_PackedPortAndBaud_StartingPort	EQU		240h
+		
 SerialCommand_PackedPortAndBaud_PortMask		EQU		0fch    ; upper 6 bits - 240h through 438h
 SerialCommand_PackedPortAndBaud_BaudMask		EQU		3       ; lower 2 bits - 4 baud rates
 
@@ -124,7 +126,7 @@ SerialCommand_OutputWithParameters_DeviceInDL:
 
 		and		dl, SerialCommand_PackedPortAndBaud_PortMask
 		mov		dh, 0
-		shl		dx, 1
+		shl		dx, 1			; port offset already x4, needs one more shift to be x8
 		add		dx, SerialCommand_PackedPortAndBaud_StartingPort
 
 ;
@@ -498,9 +500,8 @@ SerialCommand_IdentifyDevice_PackedPortAndBaud	equ		(157*2)
 ALIGN JUMP_ALIGN
 SerialCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 
-		mov		dx,[cs:bp+IDEVARS.wPortCtrl]
-		inc		dx
-		dec		dx
+		mov		dl,[cs:bp+IDEVARS.bSerialPackedPortAndBaud]
+		test	dl,dl
 		jz		SerialCommand_AutoSerial
 
 ; fall-through
@@ -541,9 +542,10 @@ SerialCommand_IdentifyDeviceInDL_DriveInBH:
 ; When the SerialAuto IDEVARS entry is used, scans the COM ports on the machine for a possible serial connection.
 ;
 
-SerialCommand_ScanPortAddresses:  db  0b8h, 0f8h, 0bch, 0bah, 0fah, 0beh, 0feh, 0
-; Corresponds to I/O port:             3f8,  2f8,  3e8,  2e8,  2f0,  3e0,  2e0,  260,  368,  268,  360,  270
-; COM Assignments:                       1,    2,    3,    4,    5,    6,    7,    8,    9,   10,   11,   12
+SerialCommand_ScanPortAddresses:     db  0b8h, 0f8h, 0bch, 0bah, 0fah, 0beh, 0feh, 0
+; Corresponds to I/O port:                3f8,  2f8,  3e8,  2e8,  2f0,  3e0,  2e0,  260,  368,  268,  360,  270
+; COM Assignments:                          1,    2,    3,    4,    5,    6,    7,    8,    9,   10,   11,   12
+; Corresponds to Packed I/O port (hex):    37,   17,   35,   15,   16,   34,   14,    4,   25,    5,   24,    6		
 
 ALIGN JUMP_ALIGN
 SerialCommand_AutoSerial:

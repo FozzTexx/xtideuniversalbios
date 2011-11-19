@@ -44,12 +44,17 @@ DEFAULT_TEXT_MODE		EQU	4
 
 ; Controller specific variables
 struc IDEVARS
-	.wPort				resb	2	; IDE Base Port for Command Block (usual) Registers
-	.wPortCtrl			resb	2	; IDE Base Port for Control Block Registers
-	.bDevice			resb	1	; Device type
-	.bIRQ				resb	1	; Interrupt Request Number
-	.drvParamsMaster	resb	DRVPARAMS_size
-	.drvParamsSlave		resb	DRVPARAMS_size
+	.wPort:									; IDE Base Port for Command Block (usual) Registers
+	.bSerialCOMDigit			resb	1	; Serial Device COM Port digit 
+	.bSerialPackedPortAndBaud 	resb	1	; Serial Device packed port and baud
+
+	.wPortCtrl:								; IDE Base Port for Control Block Registers
+	.wSerialPackedPrintBaud		resb	2	; Serial Device packed baud rate for printing
+
+	.bDevice					resb	1	; Device type
+	.bIRQ						resb	1	; Interrupt Request Number
+	.drvParamsMaster			resb	DRVPARAMS_size
+	.drvParamsSlave				resb	DRVPARAMS_size
 endstruc
 
 ; Device types for IDEVARS.bDevice

@@ -35,15 +35,42 @@ DetectPrint_BootMenuPrint_FormatCSSIfromParamsInSSBP_Relay:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, SI, DI
+;		AX, SI, DI, CX
 ;--------------------------------------------------------------------
 DetectPrint_StartDetectWithMasterOrSlaveStringInAXandIdeVarsInCSBP:
 	push	bp
 	mov		di, [cs:bp+IDEVARS.wPort]
+%ifdef MODULE_SERIAL
+	mov		cx, [cs:bp+IDEVARS.wSerialPackedPrintBaud]
+%endif
+		
 	mov		bp, sp
-	push	ax							; Push "Master" or "Slave"
-	push	di							; Push port number
-	jmp		DetectPrint_BootMenuPrint_FormatCSSIfromParamsInSSBP_Relay
+
+	push 	ax							; Push "Master" or "Slave"
+		
+	push	di							; Push Port address or COM port number
+
+%ifdef MODULE_SERIAL
+;
+; Baud rate is packed into one word:
+;    High order 6 bits: number to add to '0' to get postfix character ('0' or 'K')
+;    Low order 10 bits:	binary number to display (960, 240, 38, or 115)
+;          To get 9600:	'0'<<10 + 960
+;          To get 2400:	'0'<<10 + 240
+;          To get 38K:	('K'-'0')<<10 + 38
+;          To get 115K:	('K'-'0')<<10 + 115
+;
+	mov		ax,cx						; Unpack baud rate number
+	and		ax,03ffh
+	push	ax
+
+	mov		al,ch						; Unpack baud rate postfix ('0' or 'K')
+	eSHR_IM	al,2
+	add		al,'0'
+	push	ax
+%endif
+						
+	jmp		short DetectPrint_BootMenuPrint_FormatCSSIfromParamsInSSBP_Relay	
 
 
 ;--------------------------------------------------------------------
@@ -69,15 +96,4 @@ DetectPrint_DriveNameFromBootnfoInESBX:
 	ret
 
 
-;--------------------------------------------------------------------
-; DetectPrint_DriveNotFound
-;	Parameters:
-;		Nothing
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, SI
-;--------------------------------------------------------------------
-DetectPrint_DriveNotFound:
-	mov		si, g_szNotFound
-	jmp		BootMenuPrint_NullTerminatedStringFromCSSIandSetCF
+

@@ -20,7 +20,13 @@ DetectDrives_FromAllIDEControllers:
 	call	RamVars_GetIdeControllerCountToCX
 	mov		bp, ROMVARS.ideVars0			; CS:BP now points to first IDEVARS
 .DriveDetectLoop:
-	mov		si,g_szDetect
+	mov		si, g_szDetect
+%ifdef MODULE_SERIAL
+	cmp		byte [cs:bp+IDEVARS.bDevice], DEVICE_SERIAL_PORT
+	jnz		.DriveNotSerial
+	mov		si, g_szDetectCOM
+.DriveNotSerial:
+%endif
 	call	.DetectDrives_WithIDEVARS		; Detect Master and Slave
 	add		bp, BYTE IDEVARS_size			; Point to next IDEVARS
 	loop	.DriveDetectLoop
@@ -29,7 +35,7 @@ DetectDrives_FromAllIDEControllers:
 	test	BYTE [es:BDA.bKBFlgs1], 8       ; alt key depressed
  	jz		.done
 	mov		bp, ROMVARS.ideVarsSerialAuto
-	mov		si,g_szSerial
+	mov		si, g_szDetectCOMAuto
 ;;; fall-through		
 %else
 	ret
@@ -51,13 +57,13 @@ DetectDrives_FromAllIDEControllers:
 ;--------------------------------------------------------------------
 .DetectDrives_WithIDEVARS:
 	push	cx
-		
-	push	si
+
+	push	si		
 	mov		ax, g_szMaster
 	mov		bh, MASK_DRVNHEAD_SET								; Select Master drive
 	call	StartDetectionWithDriveSelectByteInBHandStringInAX	; Detect and create DPT + BOOTNFO
 	pop		si
-		
+
 	mov		ax, g_szSlave
 	mov		bh, MASK_DRVNHEAD_SET | FLG_DRVNHEAD_DRV
 	call	StartDetectionWithDriveSelectByteInBHandStringInAX
@@ -111,7 +117,7 @@ StartDetectionWithDriveSelectByteInBHandStringInAX:
 .ReadAtapiInfoFromDrive:				; Not yet implemented
 	;call	ReadAtapiInfoFromDrive		; Assume CD-ROM
 	;jnc	SHORT _CreateBiosTablesForCDROM
-	jmp		DetectPrint_DriveNotFound
+	jmp		short DetectDrives_DriveNotFound
 
 
 ;--------------------------------------------------------------------
@@ -129,8 +135,20 @@ StartDetectionWithDriveSelectByteInBHandStringInAX:
 ;--------------------------------------------------------------------
 CreateBiosTablesForHardDisk:
 	call	CreateDPT_FromAtaInformation
-	jc		SHORT .InvalidAtaInfo
+	jc		SHORT DetectDrives_DriveNotFound
 	call	BootInfo_CreateForHardDisk
-	jmp		DetectPrint_DriveNameFromBootnfoInESBX
-.InvalidAtaInfo:
-	jmp		DetectPrint_DriveNotFound
+	jmp		short DetectPrint_DriveNameFromBootnfoInESBX
+
+;--------------------------------------------------------------------
+; DetectDrives_DriveNotFound
+;	Parameters:
+;		Nothing
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, SI
+;--------------------------------------------------------------------
+DetectDrives_DriveNotFound:		
+	mov		si, g_szNotFound
+	jmp		BootMenuPrint_NullTerminatedStringFromCSSIandSetCF		
+
