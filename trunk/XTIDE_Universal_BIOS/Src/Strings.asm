@@ -10,11 +10,13 @@ SECTION .text
 
 ; POST drive detection strings
 g_szRomAt:		db	"%s @ %x",LF,CR,NULL
-g_szMaster:		db	"Master",NULL
-g_szSlave:		db	"Slave ",NULL
-g_szDetect:		db	"IDE %s at %x: ",NULL			; IDE Master at 1F0h:
-g_szSerial:		db	"Serial Port %s: ",NULL
 
+g_szMaster:				db	"IDE Master at ",NULL 
+g_szSlave:				db	"IDE Slave  at ",NULL
+g_szDetect:				db	"%s%x: ",NULL					   ; IDE Master at 1F0h:
+g_szDetectCOM:			db  "%sCOM%c/%u%c: ",NULL              ; IDE Master at COM1/115K:		
+g_szDetectCOMAuto:		db  "%sCOM Detect: ",NULL			   ; IDE Master at COM Detect:
+				
 ; Boot loader strings
 g_szTryToBoot:			db	"Booting from %s %x",ANGLE_QUOTE_RIGHT,"%x",LF,CR,NULL
 g_szBootSectorNotFound:	db	"Boot sector "

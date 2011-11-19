@@ -174,7 +174,7 @@ print "StringsCompressed_TranslatesAndFormats: \n";
 foreach $f (keys(%translate))
 {
 	$translate_index[$translate{$f}] = $f;
-	$used{$f} || print "translate $f unused\n";
+	$used{$f} || die "translate $f unused\n";
 	$translate{$f} <= 31 || die $translate{$f}.": translate codes must be below 32";
 }
 

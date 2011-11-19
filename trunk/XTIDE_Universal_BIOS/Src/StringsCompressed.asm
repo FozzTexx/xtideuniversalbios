@@ -21,21 +21,26 @@ g_szRomAt:		; db	"%s @ %x",LF,CR,NULL
           		; db	 25h,  73h,  20h,  40h,  20h,  25h,  78h,  0ah,  0dh,  00h    ; uncompressed
           		  db	 34h,  20h, 0c6h,  39h,  1bh                                  ; compressed
 
-g_szMaster:		; db	"Master",NULL
-           		; db	 4dh,  61h,  73h,  74h,  65h,  72h,  00h    ; uncompressed
-           		  db	 53h,  67h,  79h,  7ah,  6bh, 0b8h          ; compressed
 
-g_szSlave:		; db	"Slave ",NULL
-          		; db	 53h,  6ch,  61h,  76h,  65h,  20h,  00h    ; uncompressed
-          		  db	 59h,  72h,  67h,  7ch,  6bh,  00h          ; compressed
+g_szMaster:				; db	"IDE Master at ",NULL 
+           				; db	 49h,  44h,  45h,  20h,  4dh,  61h,  73h,  74h,  65h,  72h,  20h,  61h,  74h,  20h,  00h    ; uncompressed
+           				  db	 4fh,  4ah, 0cbh,  53h,  67h,  79h,  7ah,  6bh, 0f8h,  67h,  7ah,  00h                      ; compressed
 
-g_szDetect:		; db	"IDE %s at %x: ",NULL			; IDE Master at 1F0h:
-           		; db	 49h,  44h,  45h,  20h,  25h,  73h,  20h,  61h,  74h,  20h,  25h,  78h,  3ah,  20h,  00h    ; uncompressed
-           		  db	 4fh,  4ah, 0cbh,  34h,  20h,  67h, 0fah,  39h,  40h,  00h                                  ; compressed
+g_szSlave:				; db	"IDE Slave  at ",NULL
+          				; db	 49h,  44h,  45h,  20h,  53h,  6ch,  61h,  76h,  65h,  20h,  20h,  61h,  74h,  20h,  00h    ; uncompressed
+          				  db	 4fh,  4ah, 0cbh,  59h,  72h,  67h,  7ch, 0ebh,  20h,  67h,  7ah,  00h                      ; compressed
 
-g_szSerial:		; db	"Serial Port %s: ",NULL
-           		; db	 53h,  65h,  72h,  69h,  61h,  6ch,  20h,  50h,  6fh,  72h,  74h,  20h,  25h,  73h,  3ah,  20h,  00h    ; uncompressed
-           		  db	 59h,  6bh,  78h,  6fh,  67h, 0f2h,  56h,  75h,  78h, 0fah,  34h,  40h,  00h                            ; compressed
+g_szDetect:				; db	"%s%x: ",NULL					   ; IDE Master at 1F0h:
+           				; db	 25h,  73h,  25h,  78h,  3ah,  20h,  00h    ; uncompressed
+           				  db	 34h,  39h,  40h,  00h                      ; compressed
+
+g_szDetectCOM:			; db  "%sCOM%c/%u%c: ",NULL              ; IDE Master at COM1/115K:		
+              			; db   25h,  73h,  43h,  4fh,  4dh,  25h,  63h,  2fh,  25h,  75h,  25h,  63h,  3ah,  20h,  00h    ; uncompressed
+              			  db   34h,  49h,  55h,  53h,  35h,  2ah,  37h,  35h,  40h,  00h                                  ; compressed
+
+g_szDetectCOMAuto:		; db  "%sCOM Detect: ",NULL			   ; IDE Master at COM Detect:
+                  		; db   25h,  73h,  43h,  4fh,  4dh,  20h,  44h,  65h,  74h,  65h,  63h,  74h,  3ah,  20h,  00h    ; uncompressed
+                  		  db   34h,  49h,  55h, 0d3h,  4ah,  6bh,  7ah,  6bh,  69h,  7ah,  40h,  00h                      ; compressed
 
 
 ; Boot loader strings
@@ -309,19 +314,19 @@ StringsCompressed_TranslatesAndFormats:
 
 ;; format usage stats
 ;; A:4
+;; c:8
+;; s:15
 ;; 2-u:1
+;; u:6
 ;; 5-u:3
+;; 2-I:1
 ;; x:6
 ;; 5-x:1
-;; s:14
 ;; nl:6
-;; 2-I:1
-;; c:6
-;; u:5
 ;; total format: 10
 
 ;; alphabet usage stats
-;; 58,::3
+;; 58,::4
 ;; 59,;:
 ;; 60,<:
 ;; 61,=:
@@ -330,23 +335,23 @@ StringsCompressed_TranslatesAndFormats:
 ;; 64,@:1
 ;; 65,A:3
 ;; 66,B:11
-;; 67,C:3
-;; 68,D:10
-;; 69,E:3
+;; 67,C:5
+;; 68,D:12
+;; 69,E:4
 ;; 70,F:3
 ;; 71,G:
 ;; 72,H:4
-;; 73,I:2
+;; 73,I:3
 ;; 74,J:
 ;; 75,K:
 ;; 76,L:3
-;; 77,M:2
+;; 77,M:4
 ;; 78,N:
-;; 79,O:1
-;; 80,P:2
+;; 79,O:3
+;; 80,P:1
 ;; 81,Q:1
 ;; 82,R:4
-;; 83,S:7
+;; 83,S:6
 ;; 84,T:
 ;; 85,U:1
 ;; 86,V:
@@ -362,24 +367,24 @@ StringsCompressed_TranslatesAndFormats:
 ;; 96,`:
 ;; 97,a:7
 ;; 98,b:
-;; 99,c:4
+;; 99,c:5
 ;; 100,d:4
-;; 101,e:10
+;; 101,e:11
 ;; 102,f:2
 ;; 103,g:2
 ;; 104,h:
-;; 105,i:12
+;; 105,i:11
 ;; 106,j:
 ;; 107,k:4
-;; 108,l:5
+;; 108,l:4
 ;; 109,m:1
 ;; 110,n:9
-;; 111,o:18
+;; 111,o:17
 ;; 112,p:3
 ;; 113,q:
-;; 114,r:13
+;; 114,r:11
 ;; 115,s:6
-;; 116,t:11
+;; 116,t:13
 ;; 117,u:2
 ;; 118,v:2
 ;; 119,w:1
