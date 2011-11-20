@@ -139,9 +139,9 @@ clean:
 	@$(RM) $(BUILD_DIR)\*.*
 	@echo Deleted "(*.*)" from "$(BUILD_DIR)/"
 
-src\StringsCompressed.asm:	src\Strings.asm src\StringsCompress.pl
+src\StringsCompressed.asm:	src\Strings.asm
 	$(AS) src\Strings.asm $(ASFLAGS) $(DEFS_XT) -DMODULE_STRINGS_COMPRESSED_PRECOMPRESS -o build\Strings.bin -l build\StringsPrecompress.lst
-	perl src\StringsCompress.pl < build\StringsPrecompress.lst > src\StringsCompressed.asm
+	perl ..\tools\StringsCompress.pl < build\StringsPrecompress.lst > src\StringsCompressed.asm
 
 $(SRC_ASM):		src\StringsCompressed.asm
 

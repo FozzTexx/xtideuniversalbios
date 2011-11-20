@@ -22,12 +22,13 @@
 
 #----------------------------------------------------------------------
 #
-# Translated and Format characters
+# Translated, Format, and "Normal" characters
 #
 # DisplayFormatCompressed can only deal with characters in one of the following categories:
 #  1. Those in the Translate associative array
 #  2. Those in the Format associative array
-#  3. Characters between $normal_base and $normal_base+0x40
+#  3. Characters between $normal_base and $normal_base+0x40 
+#     (typically covers upper and lowe case alphabets)
 #  4. Null characters (marking the end of strings)
 #  5. The special string LF,CR
 #
@@ -35,54 +36,11 @@
 # it must be added here before this script will accept it (and DisplayFormatCompressed can 
 # display it).
 #
-# Note that these tables are not present in DisplayFormatCompressed, and do not need to
-# updated there.  Needed information is put in the compression output that it reads.
+# Tables for the above categories are expected in the input stream, before string to be
+# compressed are provided.  Note that these tables are not present in DisplayFormatCompressed, 
+# and do not need to updated there.  Needed information is put in the compression output 
+# that it reads.
 #
-$translate{ord(' ')} = 0;
-$translate{172}      = 1;     # ONE_QUARTER
-$translate{171}      = 2;     # ONE_HALF
-$translate{179}      = 3;     # SINGLE_VERTICAL
-$translate{175}      = 4;     # ANGLE_QUOTE_RIGHT
-$translate{ord('!')} = 5;
-$translate{ord('"')} = 6;
-$translate{ord(',')} = 7;
-$translate{ord('-')} = 8;
-$translate{ord('.')} = 9;
-$translate{ord('/')} = 10;
-$translate{ord('1')} = 11;    
-$translate{ord('2')} = 12;
-$translate{ord('3')} = 13;
-$translate{ord('4')} = 14;
-$translate{ord('5')} = 15;
-$translate{ord('6')} = 16;
-$translate{ord('8')} = 17;
-$translate{200}      = 18;    # DOUBLE_BOTTOM_LEFT_CORNER
-$translate{181}      = 19;    # DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL
-
-#
-# Formats begin immediately after the last Translated character (they are in the same table)
-#
-$format_begin = 20;
-
-$format{"s"}   = 20;        # n/a
-$format{"c"}   = 21;        # n/a
-$format{"2-I"} = 22;        # must be even
-$format{"u"}   = 23;        # must be odd
-$format{"5-u"} = 24;        # must be even
-$format{"x"}   = 25;        # must be odd
-$format{"5-x"} = 26;        # must be even
-$format{"nl"}  = 27;        # n/a
-$format{"2-u"} = 28;        # must be even
-$format{"A"}   = 29;        # n/a
-
-# NOTE: The last $format cannot exceed 31 (stored in a 5-bit quantity).
-
-#
-# Starting point for the "normal" range, typically around 0x40 to cover upper and lower case
-# letters.  If lower case 'z' is not used, 0x3a can be a good choice as it adds ':' to the 
-# front end.
-#
-$normal_base = 0x3a;
 
 #
 # High order code bits, determining which type of character we have (translated or not) and
@@ -107,12 +65,62 @@ print ";;; This file only needs to be rebuilt if Strings.asm is changed.\n";
 print ";;;\n";
 print ";;;======================================================================\n\n";
 
+
 #
-# Loop through lines of the listing, looking for 'db' lines (and dealing with continuations)
-# and compressing each line as it is encountered.
+# On a first pass, look for our table directives.  $translate{...}, $format{...}, etc. 
+# are expectd in the input stream.
 #
+$processed = "    [StringsCompress Processed]";
 while(<>)
 {
+	chop;
+	$o = $_;
+
+	#
+	# Table entries for this script
+	#
+	if( /^\s*\d+\s*(\;\$translate\{\s*ord\(\s*'(.)'\s*\)\s*\}\s*=\s*([0-9]+).*$)/ )
+	{
+		$translate{ord($2)} = int($3);
+		$o .= $processed;
+	}
+	elsif( /^\s*\d+\s*(\;\$translate\{\s*([0-9]+)\s*\}\s*=\s*([0-9]+).*$)/ )
+	{
+		$translate{int($2)} = int($3);
+		$o .= $processed;
+	}
+	elsif( /^\s*\d+\s*(\;\$format_begin\s*=\s*([0-9]+).*$)/ )
+	{
+		$format_begin = int($2);
+		$o .= $processed;
+	}
+	elsif( /^\s*\d+\s*(\;\$format\{\s*\"([^\"]+)\"\s*\}\s*=\s*([0-9]+).*$)/ )
+    {
+    	$format{$2} = int($3);
+		$o .= $processed;
+	}
+	elsif( /^\s*\d+\s*(\;\$normal_base\s*=\s*0x([0-9a-fA-F]+).*$)/ )
+	{
+		$normal_base = hex($2);
+		$o .= $processed;
+	}
+	elsif( /^\s*\d+\s*(\;\$normal_base\s*=\s*([0-9]+).*$)/ )
+	{
+		$normal_base = int($2);
+		$o .= $processed;
+	}
+
+	push( @lines, $o );
+}
+
+#
+# On the second pass, loop through lines of the listing, looking for 'db' lines 
+# (and dealing with continuations) and compressing each line as it is encountered.
+#
+for( $l = 0; $l < $#lines; $l++ )
+{
+	$_ = $lines[$l];
+
 	#
 	# The <number> indicates a line from an include file, do not include in the output
 	#
@@ -138,8 +146,8 @@ while(<>)
 		{
 			do
 			{
-				$_ = <>;
-				/^\s*\d+\s[0-9A-F]+\s([0-9A-F]+)(\-?)/i || die "parse error on continuation";
+				$_ = $lines[++$l];
+				/^\s*\d+\s[0-9A-F]+\s([0-9A-F]+)(\-?)/i || die "parse error on continuation: '".$_."'";
 				$bytes .= $1;
 				$continuation = $2;
 			}
@@ -158,7 +166,7 @@ while(<>)
 	}
 }
 
-print ";;; end of strings.asm\n\n";
+print ";;; end of input stream\n\n";
 
 #--------------------------------------------------------------------------------
 #
