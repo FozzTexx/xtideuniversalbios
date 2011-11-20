@@ -238,7 +238,63 @@ g_szDashForZero:		; db		"- ",NULL
                 		; db		 2dh,  20h,  00h    ; uncompressed
                 		  db		 28h,  00h          ; compressed
 
-;;; end of strings.asm
+
+
+;------------------------------------------------------------------------------------------
+; 
+; Tables for StringsCompress.pl
+;
+;$translate{ord(' ')} = 0;    [StringsCompress Processed]
+;$translate{172}      = 1;     # ONE_QUARTER    [StringsCompress Processed]
+;$translate{171}      = 2;     # ONE_HALF    [StringsCompress Processed]
+;$translate{179}      = 3;     # SINGLE_VERTICAL    [StringsCompress Processed]
+;$translate{175}      = 4;     # ANGLE_QUOTE_RIGHT    [StringsCompress Processed]
+;$translate{ord('!')} = 5;    [StringsCompress Processed]
+;$translate{ord('"')} = 6;    [StringsCompress Processed]
+;$translate{ord(',')} = 7;    [StringsCompress Processed]
+;$translate{ord('-')} = 8;    [StringsCompress Processed]
+;$translate{ord('.')} = 9;    [StringsCompress Processed]
+;$translate{ord('/')} = 10;    [StringsCompress Processed]
+;$translate{ord('1')} = 11;        [StringsCompress Processed]
+;$translate{ord('2')} = 12;    [StringsCompress Processed]
+;$translate{ord('3')} = 13;    [StringsCompress Processed]
+;$translate{ord('4')} = 14;    [StringsCompress Processed]
+;$translate{ord('5')} = 15;    [StringsCompress Processed]
+;$translate{ord('6')} = 16;    [StringsCompress Processed]
+;$translate{ord('8')} = 17;    [StringsCompress Processed]
+;$translate{200}      = 18;    # DOUBLE_BOTTOM_LEFT_CORNER    [StringsCompress Processed]
+;$translate{181}      = 19;    # DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL    [StringsCompress Processed]
+;
+; Formats begin immediately after the last Translated character (they are in the same table)
+;
+;$format_begin = 20;    [StringsCompress Processed]
+;
+;$format{"s"}   = 20;        # n/a    [StringsCompress Processed]
+;$format{"c"}   = 21;        # n/a    [StringsCompress Processed]
+;$format{"2-I"} = 22;        # must be even    [StringsCompress Processed]
+;$format{"u"}   = 23;        # must be odd    [StringsCompress Processed]
+;$format{"5-u"} = 24;        # must be even    [StringsCompress Processed]
+;$format{"x"}   = 25;        # must be odd    [StringsCompress Processed]
+;$format{"5-x"} = 26;        # must be even    [StringsCompress Processed]
+;$format{"nl"}  = 27;        # n/a    [StringsCompress Processed]
+;$format{"2-u"} = 28;        # must be even    [StringsCompress Processed]
+;$format{"A"}   = 29;        # n/a    [StringsCompress Processed]
+;
+; NOTE: The last $format cannot exceed 31 (stored in a 5-bit quantity).
+;
+; Starting point for the "normal" range, typically around 0x40 to cover upper and lower case
+; letters.  If lower case 'z' is not used, 0x3a can be a good choice as it adds ':' to the 
+; front end.
+;
+;$normal_base = 0x3a;    [StringsCompress Processed]
+;
+; End of StringsCompress.pl information
+;
+;------------------------------------------------------------------------------------------
+
+
+
+;;; end of input stream
 
 StringsCompressed_NormalBase     equ   58
 
@@ -314,15 +370,15 @@ StringsCompressed_TranslatesAndFormats:
 
 ;; format usage stats
 ;; A:4
-;; c:8
-;; s:15
 ;; 2-u:1
-;; u:6
 ;; 5-u:3
-;; 2-I:1
 ;; x:6
 ;; 5-x:1
+;; s:15
 ;; nl:6
+;; 2-I:1
+;; c:8
+;; u:6
 ;; total format: 10
 
 ;; alphabet usage stats
