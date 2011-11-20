@@ -27,8 +27,19 @@
 ;
 ; 2. If the program needs only one menu, %define MENUEVENT_INLINE_OFFSETS before this include file,
 ;    and define (through EQU statements) each of the entry points as offsets from a base address.  
-;    Entry points must be within 256 bytes of the base (only a byte is used to pass the offset).
+; 
+
 ;
+; If user level idle processing is desired, %define this symbol and .IdleProcessing will be called.
+; Otherwise, the code and structure entry will be omitted.  Note that INCLUDE_MENU_DIALOGS requires
+; the idle processing (if that is the case, it is turned on here).
+;
+;%define MENUEVENT_IDLEPROCESSING_ENABLE
+;
+
+%ifdef INCLUDE_MENU_DIALOGS
+%define MENUEVENT_IDLEPROCESSING_ENABLE
+%endif
 
 %ifndef MENUEVENT_INLINE_OFFSETS
 
@@ -48,11 +59,13 @@ struc MENUEVENT
 	.ExitMenu						resb	2
 %define MENUEVENT_ExitMenu MENUEVENT.ExitMenu
 
+%ifdef MENUEVENT_IDLEPROCESSING_ENABLE
 	; Parameters:
 	;	None
 	; See the definition of MENUEVENT_IDLEPROCESSING_ENABLE below.
 	.IdleProcessing					resb	2
 %define MENUEVENT_IdleProcessing MENUEVENT.IdleProcessing
+%endif
 
 	; Parameters:
 	;	CX:			Index of new highlighted item
@@ -87,10 +100,5 @@ struc MENUEVENT
 endstruc
 
 %endif ; MENUEVENTS_INLINE_OFFSETS
-
-; 
-; If user level idle processing is desired, %define this symbol and .IdleProcessing will be called.
-;
-;%define MENUEVENT_IDLEPROCESSING_ENABLE
 
 %endif ; MENUEVENTS_INC
