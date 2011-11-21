@@ -66,6 +66,7 @@ g_szDlgMainSaveErr:		db	"Failed to save file!",NULL
 g_szDlgFileTitle:		db	"Select file to be flashed.",NULL
 g_szDlgFileFilter:		db	"*.*",NULL
 
+
 g_szNfoMainExitToDOS:	db	"Quits XTIDE Universal BIOS Configurator.",NULL
 g_szNfoMainLoadFile:	db	"Load BIOS file to be configured or flashed.",NULL
 g_szNfoMainLoadROM:		db	"Load BIOS from EEPROM to be reconfigured.",NULL
@@ -110,21 +111,30 @@ g_szItemIdeCmdPort:		db	"Base (cmd block) address",NULL
 g_szItemIdeCtrlPort:	db	"Control block address",NULL
 g_szItemIdeEnIRQ:		db	"Enable interrupt",NULL
 g_szItemIdeIRQ:			db	"IRQ",NULL
+g_szItemSerialCOM:		db	"COM Port",NULL
+g_szItemSerialBaud:		db	"Baud Rate",NULL
+g_szItemSerialPort:		db	"COM Port I/O address",NULL
+
+g_szItemIdeSerialComPort:		db		"COM port",NULL
+g_szItemIdeSerialBaudRate:		db		"Baud rate",NULL
 
 g_szDlgDevice:			db	"Select controller type.",NULL
 g_szDlgIdeCmdPort:		db	"Enter IDE command block (base port) address.",NULL
 g_szDlgIdeCtrlPort:		db	"Enter IDE control block address (usually command block + 200h).",NULL
 g_szDlgIdeEnIRQ:		db	"Enable interrupt?",NULL
 g_szDlgIdeIRQ:			db	"Enter IRQ channel (2...7 for 8-bit controllers, 2...15 for any other controller).",NULL
-
+		
 g_szNfoIdeBackToCfgMenu:db	"Back to XTIDE Universal BIOS Configuration Menu.",NULL
 g_szNfoIdeMaster:		db	"Settings for Master Drive.",NULL
 g_szNfoIdeSlave:		db	"Settings for Slave Drive.",NULL
 g_szNfoIdeDevice:		db	"Select controller device type.",NULL
 g_szNfoIdeCmdPort:		db	"IDE Controller Command Block (base port) address.",NULL
-g_szNfoIdeCtrlPort:		db	"IDE Controller Control Block address. Usually Cmd Block + 200h.",NULL
+g_szNfoIdeCtrlPort:		db	"IDE Controller Control Block address. Usually Cmd Block + 8 for XTIDE, and Cmd Block + 200h for ATA.",NULL
 g_szNfoIdeEnIRQ:		db	"Interrupt or polling mode.",NULL
 g_szNfoIdeIRQ:			db	"IRQ channel to use.",NULL
+g_szNfoIdeSerialCOM:	db	"Select a COM port by number.",NULL
+g_szNfoIdeSerialBaud:	db	"Select the COM port's Baud Rate. The server must match this speed. Note UART clock multipliers may impact the actual speed.",NULL
+g_szNfoIdeSerialPort:	db	"Select a COM port by custom I/O port address. Address must be in the range 240h and 438h and be on an 8-byte boundary.", NULL
 
 g_szHelpIdeCmdPort:		incbin	"IDE_CommandPort.txt"
 						db	NULL
@@ -134,6 +144,12 @@ g_szHelpIdeEnIRQ:		incbin	"IDE_EnableInterrupt.txt"
 						db	NULL
 g_szHelpIdeIRQ:			incbin	"IDE_IRQ.txt"
 						db	NULL
+g_szHelpIdeSerialCOM:	incbin  "IDE_SerialCOM.txt"
+						db	NULL
+g_szHelpIdeSerialPort:	incbin  "IDE_SerialPort.txt"
+						db  NULL
+g_szHelpIdeSerialBaud:	incbin  "IDE_SerialBaud.txt"
+						db  NULL
 
 g_szMultichoiceCfgDevice:
 						db	"8-bit dual port (XTIDE)",LF
@@ -143,12 +159,52 @@ g_szMultichoiceCfgDevice:
 						db	"32-bit generic IDE",LF
 						db	"Serial port virtual device",NULL
 
+g_szSerialCOMChoice:
+						db  "COM1 - Port 3f8h",LF
+						db	"COM2 - Port 2f8h",LF
+						db  "COM3 - Port 3e8h",LF
+						db  "COM4 - Port 2e8h",LF
+						db  "COM5 - Port 2f0h",LF
+						db  "COM6 - Port 3e0h",LF
+						db	"COM7 - Port 2e0h",LF
+						db	"COM8 - Port 260h",LF
+						db	"COM9 - Port 368h",LF
+						db	"COMA - Port 268h",LF
+						db	"COMB - Port 360h",LF
+						db	"COMC - Port 270h",LF
+						db  "COMx - Custom Port",NULL
+
+g_szValueCfgCOM1:		db		"COM1",NULL
+g_szValueCfgCOM2:		db		"COM2",NULL
+g_szValueCfgCOM3:		db		"COM3",NULL
+g_szValueCfgCOM4:		db		"COM4",NULL
+g_szValueCfgCOM5:		db		"COM5",NULL
+g_szValueCfgCOM6:		db		"COM6",NULL
+g_szValueCfgCOM7:		db		"COM7",NULL
+g_szValueCfgCOM8:		db		"COM8",NULL
+g_szValueCfgCOM9:		db		"COM9",NULL
+g_szValueCfgCOMA:		db		"COMA",NULL
+g_szValueCfgCOMB:		db		"COMB",NULL
+g_szValueCfgCOMC:		db		"COMC",NULL
+g_szValueCfgCOMx:		db		"Custom",NULL
+		
+g_szSerialBaudChoice:
+						db  "2400 baud",LF
+						db	"9600 baud",LF
+						db	"38.4K baud",LF
+						db  "115.2K baud",NULL
+
+g_szValueCfgBaud2400:	db		"2400",NULL
+g_szValueCfgBaud9600:	db		"9600",NULL
+g_szValueCfgBaud38_4:	db		"38.4K",NULL
+g_szValueCfgBaud115_2:	db		"115.2K",NULL
+		
 g_szValueCfgDeviceDual8b:	db	"XTIDE",NULL
 g_szValueCfgDeviceMod:		db	"Chuck(G)",NULL
 g_szValueCfgDeviceSingle8b:	db	"8-bit",NULL
 g_szValueCfgDevice16b:		db	"16-bit",NULL
 g_szValueCfgDevice32b:		db	"32-bit",NULL
-g_szValueCfgDeviceSerial:	db	"serial",NULL
+g_szValueCfgDeviceSerial:	db	"Serial",NULL
 
 
 ; Strings for DRVPARAMS menu
@@ -183,18 +239,21 @@ g_szItemBootDrive:		db	"Default boot drive",NULL
 g_szItemBootDispMode:	db	"Display Mode",NULL
 g_szItemBootFloppyDrvs:	db	"Number of Floppy Drives",NULL
 g_szItemBootSwap:		db	"Swap boot drive numbers",NULL
+g_szItemSerialDetect:	db	"Scan for Serial Drives",NULL
 
 g_szDlgBootTimeout:		db	"Enter Boot Menu selection timeout in BIOS timer ticks (1...1092, 0 disables timeout).",NULL
 g_szDlgBootDrive:		db	"Enter default drive number (0xh for Floppy Drives, 8xh for Hard Disks, FFh for ROM boot).",NULL
 g_szDlgBootDispMode:	db	"Select display mode for Boot Menu.",NULL
 g_szDlgBootFloppyDrvs:	db	"Select number of Floppy Drives to display on boot menu.",NULL
 g_szDlgBootSwap:		db	"Enable drive number translation?",NULL
-
+g_szDlgSerialDetect:	db	"Scan for serial drives?",NULL
+		
 g_szNfoBootTimeout:		db	"Menu item selection timeout in BIOS timer ticks.",NULL
 g_szNfoBootDrive:		db	"Default drive on boot menu.",NULL
 g_szNfoDispMode:		db	"Display Mode for Boot Menu.",NULL
 g_szNfoBootFloppyDrvs:	db	"Number of Floppy Drives to display on boot menu.",NULL
 g_szNfoBootSwap:		db	"Drive Number Translation (swap first drive with selected).",NULL
+g_szNfoSerialDetect:	db	"Will scan COM ports for a serial drive. Can also be invoked by holding down ALT at the end of standard drive detection.",NULL
 
 g_szHelpBootTimeout:	incbin	"Bootmenu_Timeout.txt"
 						db	NULL
@@ -204,6 +263,8 @@ g_szHelpBootFloppyDrvs:	incbin	"Bootmenu_FloppyDrives.txt"
 						db	NULL
 g_szHelpBootSwap:		incbin	"Bootmenu_SwapDrives.txt"
 						db	NULL
+g_szHelpSerialDetect:	incbin  "Bootmenu_SerialDetect.txt"
+						db  NULL
 
 g_szMultichoiceBootDispMode:
 						db	"Default",LF

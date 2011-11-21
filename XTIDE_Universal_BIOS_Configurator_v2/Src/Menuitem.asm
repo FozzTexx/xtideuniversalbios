@@ -189,9 +189,15 @@ ALIGN JUMP_ALIGN
 
 ALIGN JUMP_ALIGN
 .TranslateChoiceToValueUsingLookupTable:
+;
+; if the lookup pointer is NULL, no translation is needed
+; 
+	mov		bx, [si+MENUITEM.itemValue+ITEM_VALUE.rgwChoiceToValueLookup]
+	test	bx, bx
+	jz		.StoreByteOrWordValueFromAXtoESDIwithItemInDSSI
+		
 	shl		ax, 1			; Shift for WORD lookup
-	add		ax, [si+MENUITEM.itemValue+ITEM_VALUE.rgwChoiceToValueLookup]
-	xchg	bx, ax
+	add		bx, ax
 	mov		ax, [bx]		; Lookup complete
 	; Fall to .StoreByteOrWordValueFromAXtoESDIwithItemInDSSI
 
@@ -209,9 +215,18 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 .StoreByteOrWordValueFromAXtoESDIwithItemInDSSI:
+	push	bx
+	mov		bx,[si+MENUITEM.itemValue+ITEM_VALUE.fnValueWriter]
+	test	bx,bx
+	jz		SHORT .NoWriter	
+
+	call	bx		
+
+.NoWriter:
+	pop		bx
 	test	BYTE [si+MENUITEM.bFlags], FLG_MENUITEM_BYTEVALUE
 	jnz		SHORT .StoreByteFromAL
-
+		
 	mov		[es:di+1], ah
 ALIGN JUMP_ALIGN
 .StoreByteFromAL:
@@ -268,9 +283,19 @@ ALIGN JUMP_ALIGN
 Menuitem_GetValueToAXfromMenuitemInDSSI:
 	push	es
 	push	di
+	push	bx
 	call	GetConfigurationBufferToESDIforMenuitemInDSSI
 	add		di, [si+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset]
 	mov		ax, [es:di]
+
+	mov		bx, [si+MENUITEM.itemValue+ITEM_VALUE.fnValueReader]
+	test	bx,bx
+	jz		SHORT .NoReader
+
+	call	bx
+
+.NoReader:		
+	pop		bx
 	pop		di
 	pop		es
 

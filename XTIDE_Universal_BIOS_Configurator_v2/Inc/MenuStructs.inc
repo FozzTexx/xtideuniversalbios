@@ -49,6 +49,8 @@ struc ITEM_VALUE
 	.wMinValue				resb	2	; Minimum allowed integer value
 	.wMaxValue:
 	.wValueBitmask			resb	2	; Bitmask for item value flag
+	.fnValueReader			resb	2	; Called just after ROMVARS is read, providing a hook for further action
+	.fnValueWriter			resb	2	; Called just before ROMVARS is written, providing a hook for further action
 endstruc
 
 

@@ -33,10 +33,13 @@ struc ROMVARS
 endstruc
 
 ; Bit defines for ROMVARS.wFlags
-FLG_ROMVARS_FULLMODE		EQU	(1<<0)	; Full operating mode (steals base RAM, supports EBIOS etc.)
-FLG_ROMVARS_DRVXLAT			EQU	(1<<2)	; Enable drive number translation
-FLG_ROMVARS_MODULE_SERIAL	EQU (1<<3)
-FLG_ROMVARS_MODULE_EBIOS	EQU (1<<4)
+FLG_ROMVARS_FULLMODE				EQU	(1<<0)	; Full operating mode (steals base RAM, supports EBIOS etc.)
+FLG_ROMVARS_DRVXLAT					EQU	(1<<2)	; Enable drive number translation
+FLG_ROMVARS_SERIAL_SCANDETECT 		EQU	(1<<3)	; Scan COM ports at the end of drive detection.  Can also be invoked
+												; by holding down the ALT key at the end of drive detection.
+												; (Conveniently, this is 8, a fact we exploit when testing the bit)
+FLG_ROMVARS_MODULE_SERIAL			EQU (1<<6)	; Here in case the configuration needs to know functionality is present
+FLG_ROMVARS_MODULE_EBIOS			EQU (1<<7)	; Here in case the configuration needs to know functionality is present
 
 ; Boot Menu Display Modes (see Assembly Library Display.inc for standard modes)
 DEFAULT_TEXT_MODE		EQU	4
@@ -57,13 +60,24 @@ struc IDEVARS
 	.drvParamsSlave				resb	DRVPARAMS_size
 endstruc
 
+; Default values for Port and PortCtrl, shared with the configurator
+;
+DEVICE_XTIDE_DEFAULT_PORT				EQU		300h
+DEVICE_XTIDE_DEFAULT_PORTCTRL			EQU		308h
+DEVICE_ATA_DEFAULT_PORT					EQU		1F0h
+DEVICE_ATA_DEFAULT_PORTCTRL				EQU		3F0h
+DEVICE_SERIAL_DEFAULT_COM				EQU		0		; COM1
+DEVICE_SERIAL_DEFAULT_BAUD				EQU		1		; 9600
+
 ; Device types for IDEVARS.bDevice
+;
 DEVICE_8BIT_DUAL_PORT_XTIDE				EQU	(0<<1)
 DEVICE_XTIDE_WITH_REVERSED_A3_AND_A0	EQU	(1<<1)
 DEVICE_8BIT_SINGLE_PORT					EQU	(2<<1)
 DEVICE_16BIT_ATA						EQU	(3<<1)
 DEVICE_32BIT_ATA						EQU	(4<<1)
 DEVICE_SERIAL_PORT						EQU	(5<<1)
+
 
 ; Master/Slave drive specific parameters
 struc DRVPARAMS
@@ -77,6 +91,60 @@ endstruc
 ; Bit defines for DRVPARAMS.wFlags
 FLG_DRVPARAMS_USERCHS	EQU	(1<<0)	; User specified P-CHS values
 FLG_DRVPARAMS_BLOCKMODE	EQU	(1<<1)	; Enable Block mode transfers
+
+
+; Defines for IDEVARS.bSerialPackedPortAndBaud (same format used by DPT.bSerialPortAndBaud)
+;
+; pppp ppbb
+;   i/o port address = p * 2 + 240h
+;   baud rate = b, where 00 = 2400, 01 = 9600, 10 = 38.4K, 11 = 115.2K
+;
+DEVICE_SERIAL_PACKEDPORTANDBAUD_PORTMASK		EQU		0fch
+DEVICE_SERIAL_PACKEDPORTANDBAUD_PORTBITS		EQU		03fh
+DEVICE_SERIAL_PACKEDPORTANDBAUD_STARTINGPORT	EQU		240h
+DEVICE_SERIAL_PACKEDPORTANDBAUD_BAUDMASK		EQU		3h
+DEVICE_SERIAL_PACKEDPORTANDBAUD_BAUDBITS		EQU		3h
+
+; Defines for IDEVARS.wSerialPrintBaud
+;
+; pppp ppnn nnnn nnnn
+;   unsigned number to output = n
+;   postfix character = p + '0' (designed for '0' and 'K', although other values are possible)
+;
+; Note that the contents of this word is only used for printing by the BIOS when a drive is detected.  
+; It is not used for any other purpose, and so long as it conforms to the structure, any values can be used.
+;
+DEVICE_SERIAL_PRINTBAUD_NUMBERMASK		EQU		003ffh
+DEVICE_SERIAL_PRINTBAUD_POSTCHARMASK	EQU		0fc00h
+DEVICE_SERIAL_PRINTBAUD_POSTCHARADD		EQU		'0'
+;
+; These are defined here (instead of in the configurator) for consistency since they could also be used 
+; in main.asm as a default for an IDEVARS structure.
+;
+DEVICE_SERIAL_PRINTBAUD_2400  EQU ((('0'-DEVICE_SERIAL_PRINTBAUD_POSTCHARADD)<<10) | 240)		; Prints "2400"
+DEVICE_SERIAL_PRINTBAUD_9600  EQU ((('0'-DEVICE_SERIAL_PRINTBAUD_POSTCHARADD)<<10) | 960)		; Prints "9600"
+DEVICE_SERIAL_PRINTBAUD_38_4  EQU ((('K'-DEVICE_SERIAL_PRINTBAUD_POSTCHARADD)<<10) | 38)		; Prints "38K"
+DEVICE_SERIAL_PRINTBAUD_115_2 EQU ((('K'-DEVICE_SERIAL_PRINTBAUD_POSTCHARADD)<<10) | 115)		; Prints "115K"
+
+;
+; COM Number to I/O Port Address Mapping
+;
+; COM Number:                               1,    2,    3,    4,    5,    6,    7,    8,    9,   10,   11,   12		
+; Corresponds to I/O port:                3f8,  2f8,  3e8,  2e8,  2f0,  3e0,  2e0,  260,  368,  268,  360,  270
+; Corresponds to Packed I/O port (hex):    37,   17,   35,   15,   16,   34,   14,    4,   25,    5,   24,    6
+;
+DEVICE_SERIAL_COM1	EQU		3f8h
+DEVICE_SERIAL_COM2	EQU		2f8h
+DEVICE_SERIAL_COM3	EQU		3e8h
+DEVICE_SERIAL_COM4	EQU		2e8h
+DEVICE_SERIAL_COM5	EQU		2f0h
+DEVICE_SERIAL_COM6	EQU		3e0h
+DEVICE_SERIAL_COM7	EQU		2e0h
+DEVICE_SERIAL_COM8	EQU		260h
+DEVICE_SERIAL_COM9	EQU		368h
+DEVICE_SERIAL_COMA	EQU		268h
+DEVICE_SERIAL_COMB	EQU		360h
+DEVICE_SERIAL_COMC	EQU		270h
 
 
 %endif ; ROMVARS_INC

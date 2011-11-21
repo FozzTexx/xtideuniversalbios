@@ -30,15 +30,20 @@ DetectDrives_FromAllIDEControllers:
 	call	.DetectDrives_WithIDEVARS		; Detect Master and Slave
 	add		bp, BYTE IDEVARS_size			; Point to next IDEVARS
 	loop	.DriveDetectLoop
-
 %ifdef MODULE_SERIAL
-	test	BYTE [es:BDA.bKBFlgs1], 8       ; alt key depressed
- 	jz		.done
+	mov		al,[cs:ROMVARS.wFlags]
+	or		al,[es:BDA.bKBFlgs1]
+	and		al,8		; 8 = alt key depressed, same as FLG_ROMVARS_SERIAL_ALWAYSDETECT
+	jz		.done
 	mov		bp, ROMVARS.ideVarsSerialAuto
 	mov		si, g_szDetectCOMAuto
-;;; fall-through		
+;;; fall-through					
 %else
 	ret
+%endif
+
+%if FLG_ROMVARS_SERIAL_SCANDETECT != 8
+%error "DetectDrives is currently coded to assume that FLG_ROMVARS_SERIAL_ALWAYSDETECT is the same bit as the ALT key code in the BDA.  Changes in the code will be needed if these values are no longer the same."
 %endif
 
 ;--------------------------------------------------------------------

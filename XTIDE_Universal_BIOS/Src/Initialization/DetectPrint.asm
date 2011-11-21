@@ -52,21 +52,15 @@ DetectPrint_StartDetectWithMasterOrSlaveStringInAXandIdeVarsInCSBP:
 
 %ifdef MODULE_SERIAL
 ;
-; Baud rate is packed into one word:
-;    High order 6 bits: number to add to '0' to get postfix character ('0' or 'K')
-;    Low order 10 bits:	binary number to display (960, 240, 38, or 115)
-;          To get 9600:	'0'<<10 + 960
-;          To get 2400:	'0'<<10 + 240
-;          To get 38K:	('K'-'0')<<10 + 38
-;          To get 115K:	('K'-'0')<<10 + 115
-;
+; Print baud rate from .wSerialPackedPrintBaud, in two parts - %u and then %c
+; 
 	mov		ax,cx						; Unpack baud rate number
-	and		ax,03ffh
+	and		ax,DEVICE_SERIAL_PRINTBAUD_NUMBERMASK
 	push	ax
 
 	mov		al,ch						; Unpack baud rate postfix ('0' or 'K')
-	eSHR_IM	al,2
-	add		al,'0'
+	eSHR_IM	al,2				        ; also effectively masks off the postfix
+	add		al,DEVICE_SERIAL_PRINTBAUD_POSTCHARADD
 	push	ax
 %endif
 						
