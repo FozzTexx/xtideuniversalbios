@@ -118,16 +118,16 @@ SerialCommand_OutputWithParameters_DeviceInDL:
 ;
 		mov		cl, dl
 
-		and		cl, SerialCommand_PackedPortAndBaud_BaudMask
+		and		cl, DEVICE_SERIAL_PACKEDPORTANDBAUD_BAUDMASK
 		shl		cl, 1
 		mov		ch, SerialCommand_UART_divisorLow_startingBaud
 		shr		ch, cl
 		adc		ch, 0
 
-		and		dl, SerialCommand_PackedPortAndBaud_PortMask
+		and		dl, DEVICE_SERIAL_PACKEDPORTANDBAUD_PORTMASK
 		mov		dh, 0
 		shl		dx, 1			; port offset already x4, needs one more shift to be x8
-		add		dx, SerialCommand_PackedPortAndBaud_StartingPort
+		add		dx, DEVICE_SERIAL_PACKEDPORTANDBAUD_STARTINGPORT
 
 ;
 ; Buffer is referenced through ES:DI throughout, since we need to store faster than we read
@@ -500,10 +500,13 @@ SerialCommand_IdentifyDevice_PackedPortAndBaud	equ		(157*2)
 ALIGN JUMP_ALIGN
 SerialCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 
-		mov		dl,[cs:bp+IDEVARS.bSerialPackedPortAndBaud]
+		mov		dx,[cs:bp+IDEVARS.bSerialCOMDigit]
 		test	dl,dl
 		jz		SerialCommand_AutoSerial
 
+		xchg	dh,dl			; dh (the COM character to print) will be transmitted to the server,
+								; so we know this is not an auto detect
+		
 ; fall-through
 SerialCommand_IdentifyDeviceInDL_DriveInBH:
 
@@ -542,10 +545,14 @@ SerialCommand_IdentifyDeviceInDL_DriveInBH:
 ; When the SerialAuto IDEVARS entry is used, scans the COM ports on the machine for a possible serial connection.
 ;
 
-SerialCommand_ScanPortAddresses:     db  0b8h, 0f8h, 0bch, 0bah, 0fah, 0beh, 0feh, 0
-; Corresponds to I/O port:                3f8,  2f8,  3e8,  2e8,  2f0,  3e0,  2e0,  260,  368,  268,  360,  270
-; COM Assignments:                          1,    2,    3,    4,    5,    6,    7,    8,    9,   10,   11,   12
-; Corresponds to Packed I/O port (hex):    37,   17,   35,   15,   16,   34,   14,    4,   25,    5,   24,    6		
+SerialCommand_ScanPortAddresses:    db	DEVICE_SERIAL_COM7 >> 2
+									db	DEVICE_SERIAL_COM6 >> 2
+									db	DEVICE_SERIAL_COM5 >> 2
+									db	DEVICE_SERIAL_COM4 >> 2
+									db	DEVICE_SERIAL_COM3 >> 2
+									db	DEVICE_SERIAL_COM2 >> 2
+									db	DEVICE_SERIAL_COM1 >> 2
+									db	0
 
 ALIGN JUMP_ALIGN
 SerialCommand_AutoSerial:
@@ -580,8 +587,9 @@ SerialCommand_AutoSerial:
 ;
 ; Pack into dl, baud rate starts at 0
 ;
-		add		dx,-(SerialCommand_PackedPortAndBaud_StartingPort)
-		shr		dx,1
+		add		dx,-(DEVICE_SERIAL_PACKEDPORTANDBAUD_STARTINGPORT)
+		shr		dx,1			; dh is zero at this point, and will be sent to the server,
+								; so we know this is an auto detect
 
 		jmp		.testFirstBaud
 

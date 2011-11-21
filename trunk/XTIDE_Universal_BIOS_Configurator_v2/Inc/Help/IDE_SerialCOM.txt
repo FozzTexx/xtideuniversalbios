@@ -1,0 +1,1 @@
+Select a serial port by COM port number. COM1 through COM4 have well established I/O port assignments, COM5 and onward are less well established. "COMA" represents COM10, "COMB" represents COM11, and "COMC" represents COM12. Selecting COMx enables the manual selection of an I/O port address.

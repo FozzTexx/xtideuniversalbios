@@ -9,7 +9,7 @@ g_MenupageForBootMenuSettingsMenu:
 istruc MENUPAGE
 	at	MENUPAGE.fnEnter,			dw	BootMenuSettingsMenu_EnterMenuOrModifyItemVisibility
 	at	MENUPAGE.fnBack,			dw	ConfigurationMenu_EnterMenuOrModifyItemVisibility
-	at	MENUPAGE.wMenuitems,		dw	6
+	at	MENUPAGE.wMenuitems,		dw	7
 iend
 
 g_MenuitemBootMnuStngsBackToConfigurationMenu:
@@ -65,7 +65,7 @@ istruc MENUITEM
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	ROMVARS.bMinFddCnt
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgBootFloppyDrvs
 	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoice,				dw	g_szMultichoiceBootFloppyDrvs
-	at	MENUITEM.itemValue + ITEM_VALUE.rgwChoiceToValueLookup,		dw	g_rgwChoiceToValueLookupForFloppyDrives
+	at	MENUITEM.itemValue + ITEM_VALUE.rgwChoiceToValueLookup,		dw	NULL
 	at	MENUITEM.itemValue + ITEM_VALUE.rgszValueToStringLookup,	dw	g_rgszValueToStringLookupForFloppyDrives
 iend
 
@@ -100,6 +100,22 @@ istruc MENUITEM
 	at	MENUITEM.itemValue + ITEM_VALUE.wValueBitmask,				dw	FLG_ROMVARS_DRVXLAT
 iend
 
+g_MenuitemBootMenuSerialScanDetect:		
+istruc MENUITEM
+	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiceSelectionForMenuitemInDSSI
+	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromShiftedItemInDSSI
+	at	MENUITEM.szName,			dw	g_szItemSerialDetect
+	at	MENUITEM.szQuickInfo,		dw	g_szNfoSerialDetect
+	at	MENUITEM.szHelp,			dw	g_szHelpSerialDetect
+	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE | FLG_MENUITEM_FLAGVALUE
+	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOICE
+	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	ROMVARS.wFlags
+	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgSerialDetect
+	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoice,				dw	g_szMultichoiceBooleanFlag
+	at	MENUITEM.itemValue + ITEM_VALUE.rgszValueToStringLookup,	dw	g_rgszValueToStringLookupForFlagBooleans
+	at	MENUITEM.itemValue + ITEM_VALUE.wValueBitmask,				dw	FLG_ROMVARS_SERIAL_SCANDETECT
+iend		
+
 g_rgwChoiceToValueLookupForDisplayModes:
 	dw	DEFAULT_TEXT_MODE
 	dw	CGA_TEXT_MODE_BW40
@@ -117,12 +133,6 @@ g_rgszValueToStringLookupForDisplayModes:
 	dw	NULL
 	dw	g_szValueBootDispModeMono
 
-g_rgwChoiceToValueLookupForFloppyDrives:	; (No translation)
-	dw	0
-	dw	1
-	dw	2
-	dw	3
-	dw	4
 g_rgszValueToStringLookupForFloppyDrives:
 	dw	g_szValueBootFloppyDrvsAuto
 	dw	g_szValueBootFloppyDrvs1

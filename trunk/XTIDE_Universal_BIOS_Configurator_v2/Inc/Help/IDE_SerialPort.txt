@@ -1,0 +1,1 @@
+Select a serial port by I/O address. Supported values are between 240h and 438h, and must be on an 8-byte boundary. If the entered value corresponds to one fo the established COM port numbers, then the selection of serial port will use COM numbers instead.
