@@ -86,7 +86,7 @@ ALIGN JUMP_ALIGN
 Address_OldInt13hAddressToIdeAddress:
 		call	Address_ExtractLCHSparametersFromOldInt13hAddress
 			
-		CustomDPT_GetUnshiftedAddressModeToALZF
+		AccessDPT_GetUnshiftedAddressModeToALZF
 		
 ;;; 0: ADDR_DPT_LCHS		
 		jz		DoNotConvertLCHS	

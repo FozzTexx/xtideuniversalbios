@@ -64,11 +64,6 @@ ADDRESSING_MODE_PCHS			EQU		1	; P-CHS Addressing Mode (LARGE in many other BIOSe
 ADDRESSING_MODE_LBA28			EQU		2	; 28-bit LBA Addressing Mode
 ADDRESSING_MODE_LBA48			EQU		3	; 48-bit LBA Addressing Mode
 
-%macro CustomDPT_GetUnshiftedAddressModeToALZF 0
-	mov		al, [di+DPT.bFlagsLow]
-	and		al, MASKL_DPT_ADDRESSING_MODE
-%endmacro
-
 ; Number of Sectors per Track is fixed to 63 for LBA assist calculation.
 ; 1024 cylinders, 256 heads, 63 sectors = 8.4 GB limit (but DOS does not support more than 255 heads)
 MAX_LCHS_CYLINDERS				EQU		1024

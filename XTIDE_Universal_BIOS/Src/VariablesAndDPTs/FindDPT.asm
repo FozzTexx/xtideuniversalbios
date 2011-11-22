@@ -49,7 +49,6 @@ FindDPT_ForDriveNumber:
 	pop		dx
 	ret
 
-
 ;--------------------------------------------------------------------
 ; Finds Disk Parameter Table for
 ; Master or Slave drive at wanted port.
@@ -66,17 +65,22 @@ FindDPT_ForDriveNumber:
 ;				Cleared if DPT not found
 ;	Corrupts registers:
 ;		SI
+;
+; Converted to macros since there is only once call site for each of these
+;
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-FindDPT_ToDSDIForIdeMasterAtPortDX:
+	
+%macro FindDPT_ToDSDIForIdeMasterAtPortDX 0
 	mov		si, IterateToMasterAtPortCallback
-	jmp		SHORT IterateAllDPTs
+	call	IterateAllDPTs
+%endmacro
 
-ALIGN JUMP_ALIGN
-FindDPT_ToDSDIForIdeSlaveAtPortDX:
+%macro FindDPT_ToDSDIForIdeSlaveAtPortDX 0
 	mov		si, IterateToSlaveAtPortCallback
-	jmp		SHORT IterateAllDPTs
+	call	IterateAllDPTs
+%endmacro
 
+		
 ;--------------------------------------------------------------------
 ; Iteration callback for finding DPT using
 ; IDE base port for Master or Slave drive.
@@ -112,14 +116,17 @@ CompareBasePortAddress:
 	pop		bx
 	jne		SHORT ReturnWrongDPT
 	mov		dl, ch								; Return drive number in DL
+
+ReturnRightDPT:
 	stc											; Set CF since wanted DPT
 	ret
 
 
 ;--------------------------------------------------------------------
-; IterateToDptWithInterruptInServiceFlagSet
+; IterateToDptWithFlagsHighSet:
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT to examine
+;       AL:     Bit in bFlagsHigh to test
 ;	Returns:
 ;		CF:		Set if wanted DPT found
 ;				Cleared if wrong DPT
@@ -127,18 +134,17 @@ CompareBasePortAddress:
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-IterateToDptWithInterruptInServiceFlagSet:
-	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_INTERRUPT_IN_SERVICE
-	jz		SHORT ReturnWrongDPT
-	stc										; Set CF since wanted DPT
-	ret
+IterateToDptWithFlagsHighSet:
+	test	BYTE [di+DPT.bFlagsHigh], al	; Clears CF (but we need the clc below anyway callers above)
+	jnz		SHORT ReturnRightDPT
+
 ReturnWrongDPT:
 	clc										; Clear CF since wrong DPT
 	ret
 
-
 ;--------------------------------------------------------------------
 ; FindDPT_ToDSDIforInterruptInService
+; FindDPT_ToDSDIforSerialDevice
 ;	Parameters:
 ;		DS:		RAMVARS segment
 ;	Returns:
@@ -146,13 +152,23 @@ ReturnWrongDPT:
 ;		CF:		Set if wanted DPT found
 ;				Cleared if DPT not found
 ;	Corrupts registers:
-;		SI
+;		SI, AX, BX (for SerialDevice only)
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-FindDPT_ToDSDIforInterruptInService:
-	mov		si, IterateToDptWithInterruptInServiceFlagSet
-	; Fall to IterateAllDPTs
+		
+%ifdef MODULE_SERIAL
+FindDPT_ToDSDIforSerialDevice:	
+	mov		al, FLGH_DPT_SERIAL_DEVICE
 
+	SKIP2B	bx
+%endif
+		
+; do not align due to SKIP2B above
+FindDPT_ToDSDIforInterruptInService:
+	mov		al, FLGH_DPT_INTERRUPT_IN_SERVICE
+
+	mov		si, IterateToDptWithFlagsHighSet
+	; Fall to IterateAllDPTs
 
 ;--------------------------------------------------------------------
 ; Iterates all Disk Parameter Tables.
@@ -165,8 +181,7 @@ FindDPT_ToDSDIforInterruptInService:
 ;	Returns:
 ;		DS:DI:		Ptr to wanted DPT (if found)
 ;		CF:			Set if wanted DPT found
-;					Cleared if DPT not found
-;					Unchanged if no drives
+;					Cleared if DPT not found, or no DPTs present
 ;	Corrupts registers:
 ;		Nothing unless corrupted by callback function
 ;--------------------------------------------------------------------
@@ -174,7 +189,7 @@ ALIGN JUMP_ALIGN
 IterateAllDPTs:
 	push	cx
 	mov		cx, [RAMVARS.wDrvCntAndFirst]
-	jcxz	.AllDptsIterated			; Return if no drives
+	jcxz	.NotFound					; Return if no drives
 	mov		di, RAMVARS_size			; Point DS:DI to first DPT
 ALIGN JUMP_ALIGN
 .LoopWhileDPTsLeft:
@@ -184,6 +199,7 @@ ALIGN JUMP_ALIGN
 	add		di, BYTE LARGEST_DPT_SIZE	; Point to next DPT
 	dec		cl							; Decrement drives left
 	jnz		SHORT .LoopWhileDPTsLeft
+.NotFound:		
 	clc									; Clear CF since DPT not found
 ALIGN JUMP_ALIGN
 .AllDptsIterated:

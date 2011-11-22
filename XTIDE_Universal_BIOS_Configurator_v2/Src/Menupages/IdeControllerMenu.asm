@@ -118,8 +118,8 @@ istruc MENUITEM
 	at	MENUITEM.bType,				db	TYPE_MENUITEM_HEX
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	NULL
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgIdeCmdPort
-	at	MENUITEM.itemValue + ITEM_VALUE.wMinValue,					dw	240h
-	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	438h
+	at	MENUITEM.itemValue + ITEM_VALUE.wMinValue,					dw	DEVICE_SERIAL_PACKEDPORTANDBAUD_MINPORT
+	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	DEVICE_SERIAL_PACKEDPORTANDBAUD_MAXPORT
 	at	MENUITEM.itemValue + ITEM_VALUE.fnValueReader,				dw	IdeControllerMenu_SerialReadPort
 	at	MENUITEM.itemValue + ITEM_VALUE.fnValueWriter,				dw	IdeControllerMenu_SerialWritePort
 iend		
@@ -537,7 +537,7 @@ IdeControllerMenu_SerialWriteCOM:
 
 .custom:
 		mov		al,'x'								; ASCII value 'x' for custom
-		mov		ah,0								; 240h is default custom value
+		mov		ah,1 << DEVICE_SERIAL_PACKEDPORTANDBAUD_PORT_FIELD_POSITION	; 248h 
 		jmp		IdeControllerMenu_SerialWriteCOM_PackAndRet
 
 .atorabove10:

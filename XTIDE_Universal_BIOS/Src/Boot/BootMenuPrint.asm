@@ -253,6 +253,7 @@ ALIGN JUMP_ALIGN
 ;		BP:		SP before pushing parameters
 ;	Returns:
 ;		BP:		Popped from stack
+;		CF:		Set since menu event was handled successfully		
 ;	Corrupts registers:
 ;		AX, DI
 ;--------------------------------------------------------------------

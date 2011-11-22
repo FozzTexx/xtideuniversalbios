@@ -19,31 +19,35 @@ SECTION .text
 DetectDrives_FromAllIDEControllers:
 	call	RamVars_GetIdeControllerCountToCX
 	mov		bp, ROMVARS.ideVars0			; CS:BP now points to first IDEVARS
-.DriveDetectLoop:
-	mov		si, g_szDetect
+
+.DriveDetectLoop:							; Loop through IDEVARS
+	mov		si, g_szDetect					; Setup standard print string
 %ifdef MODULE_SERIAL
 	cmp		byte [cs:bp+IDEVARS.bDevice], DEVICE_SERIAL_PORT
-	jnz		.DriveNotSerial
+	jnz		.DriveNotSerial					; Special print string for serial drives
 	mov		si, g_szDetectCOM
 .DriveNotSerial:
 %endif
 	call	.DetectDrives_WithIDEVARS		; Detect Master and Slave
 	add		bp, BYTE IDEVARS_size			; Point to next IDEVARS
 	loop	.DriveDetectLoop
+		
 %ifdef MODULE_SERIAL
-	mov		al,[cs:ROMVARS.wFlags]
-	or		al,[es:BDA.bKBFlgs1]
-	and		al,8		; 8 = alt key depressed, same as FLG_ROMVARS_SERIAL_ALWAYSDETECT
-	jz		.done
-	mov		bp, ROMVARS.ideVarsSerialAuto
-	mov		si, g_szDetectCOMAuto
+	call	FindDPT_ToDSDIforSerialDevice	; Did we already find any serial drives? 
+	jc		.done							; Yes, do not scan
+	mov		al,[cs:ROMVARS.wFlags]			; Configurator set to always scan?
+	or		al,[es:BDA.bKBFlgs1]			; Or, did the user hold down the ALT key?
+	and		al,8							; 8 = alt key depressed, same as FLG_ROMVARS_SERIAL_ALWAYSDETECT
+	jz		.done							
+	mov		bp, ROMVARS.ideVarsSerialAuto	; Point to our special IDEVARS sructure, just for serial scans
+	mov		si, g_szDetectCOMAuto			; Special, special print string for serial drives during a scan
 ;;; fall-through					
 %else
 	ret
 %endif
 
 %if FLG_ROMVARS_SERIAL_SCANDETECT != 8
-%error "DetectDrives is currently coded to assume that FLG_ROMVARS_SERIAL_ALWAYSDETECT is the same bit as the ALT key code in the BDA.  Changes in the code will be needed if these values are no longer the same."
+%error "DetectDrives is currently coded to assume that FLG_ROMVARS_SERIAL_SCANDETECT is the same bit as the ALT key code in the BDA.  Changes in the code will be needed if these values are no longer the same."
 %endif
 
 ;--------------------------------------------------------------------
@@ -69,10 +73,25 @@ DetectDrives_FromAllIDEControllers:
 	call	StartDetectionWithDriveSelectByteInBHandStringInAX	; Detect and create DPT + BOOTNFO
 	pop		si
 
+%ifdef MODULE_SERIAL
+;
+; This block of code checks to see if we found a master during a serial drives scan.  If no master
+; was found, there is no point in scanning for a slave as the server will not return a slave without a master,
+; as there is very little point given the drives are emulated.  Performing the slave scan will take 
+; time to rescan all the COM port and baud rate combinations.
+;
+	jnc		.masterFound
+	pop		cx
+	jcxz	.done		; note that CX will only be zero after the .DriveDetectLoop, indicating a serial scan
+	push	cx
+.masterFound:
+%endif
+		
 	mov		ax, g_szSlave
 	mov		bh, MASK_DRVNHEAD_SET | FLG_DRVNHEAD_DRV
 	call	StartDetectionWithDriveSelectByteInBHandStringInAX
 	pop		cx
+		
 .done:	
 	ret
 
@@ -86,7 +105,9 @@ DetectDrives_FromAllIDEControllers:
 ;		DS:		RAMVARS segment
 ;		ES:		Zero (BDA segment)
 ;	Returns:
-;		Nothing
+;		CF:		Set on failure, Clear on success
+;               Note that this is set in the last thing both cases
+;               do: printing the drive name, or printing "Not Found"
 ;	Corrupts registers:
 ;		AX, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
@@ -149,7 +170,7 @@ CreateBiosTablesForHardDisk:
 ;	Parameters:
 ;		Nothing
 ;	Returns:
-;		Nothing
+;		CF:     Set (from BootMenuPrint_NullTerminatedStringFromCSSIandSetCF)
 ;	Corrupts registers:
 ;		AX, SI
 ;--------------------------------------------------------------------
