@@ -1,24 +1,17 @@
 ; Project name	:	Assembly Library
 ; Description	:	Functions for displaying formatted strings.
-;                   ** Compressed Strings edition **
-;
-; Authors   	:	Greg Lindhorst
-;				:	gregli@hotmail.com
-;               :		
-;				:	Tomi Tilli
-;				:	aitotat@gmail.com
-;				:
-; Description	:	This is a plug replacement for DisplayFormat.asm,
-;                   working instead with precompiled and slightly compressed strings.
+;					** Compressed Strings edition **
+;					This is a plug replacement for DisplayFormat.asm,
+;					working instead with precompiled and slightly compressed strings.
 ;
 ; Strings are compressed in a simple manner:
 ;	1. The two most common characters, space and null, are removed
-;   2. Format specifiers are reduced to a single byte, including length information
+;	2. Format specifiers are reduced to a single byte, including length information
 ;
 ; Format of bytes in the string are:
 ;     01 xxxxxx     Character in x plus StringsCompressed_NormalBase
 ;     10 xxxxxx     Character in x plus StringsCompressed_NormalBase, followed by a null (last character)
-;     11 xxxxxx     Character in x plus StringsCompressed_NormalBase, followed by a space		
+;     11 xxxxxx     Character in x plus StringsCompressed_NormalBase, followed by a space
 ;     00 1 yyyyy    Character/Format in lookup table StringsCopmressed_TranslatesAndFormats
 ;     00 0 yyyyy    Character/Format in lookup table StringsCompressed_TranslatesAndFormats, followed by a null
 ;
@@ -30,17 +23,17 @@
 ; The dividing line is defined by StringsCompressed_FormatsBegin
 ;
 ; The assignments of the first two bits above is not by accident.  The translates/format branch is 00
-; which is easy to test for.  The '01' for "normal" (no null or space) and '001' for translates/format "normal" 
+; which is easy to test for.  The '01' for "normal" (no null or space) and '001' for translates/format "normal"
 ; match, allowing the translates/format codes to be shifted left by 1 and then tested with the same instructions.
 ;
-; It is always possible to say that a null character follows the current character - thus there is 
+; It is always possible to say that a null character follows the current character - thus there is
 ; no way (nor need) to specify a zero character.
 ;
 ; Note that this code is optimized for size, not speed.  Since this code is used only during initialization
 ; and only for the user interface, small performance hits should not be noticed.  It will seem odd to do so
 ; much "preload", just in case a branch is taken, but that is cheaper (in size) than adding additional branches.
 ;
-		
+
 ; Section containing code
 SECTION .text
 
@@ -48,7 +41,7 @@ SECTION .text
 ; Format Handlers
 ;
 ; Names of format handlers are DisplayFormatCompressed_Format_* where * is
-; replaced with the format code after the '%' in the original string, 
+; replaced with the format code after the '%' in the original string,
 ; with '-' replaced with '_'.
 ;
 ;	Parameters:
@@ -86,11 +79,11 @@ DisplayFormatCompressed_Format_2_I:
 	test	ax,ax						; if parameter equals zero, emit dash string instead
 	jz		DisplayFormat_ParseCharacters
 	; fall through
-		
+
 DisplayFormatCompressed_Format_2_u:
 	mov		bh,2						; only two characters (instead of the default 5)
 	; fall through
-		
+
 DisplayFormatCompressed_Format_u:
 DisplayFormatCompressed_Format_5_u:
 	push	bx							; push postfix character - either a zero (default) or a 'h'
@@ -100,8 +93,8 @@ DisplayFormatCompressed_Format_5_u:
 	xor		dx, dx						; Zero DX for division
 	div		si							; DX:AX / 10 => AX=quot, DX=rem
  	push	dx							; Push digit
-		
-	dec		bh							
+
+	dec		bh
 	jnz		.DivLoop
 
 .PrintLoop:
@@ -113,26 +106,25 @@ DisplayFormatCompressed_Format_5_u:
 	js		short DisplayPrint_CharacterFromAL	; on last iteration, emit postfix character
 												; if it is zero, DisplayPrint_CharacterFromAL will not emit
 
-	or		bh, al						; skip leading zeros, bh keeps track if we have emitted anythng non-zero
+	or		bh, al						; skip leading zeros, bh keeps track if we have emitted anything non-zero
 	jnz		.PrintDigit					; note that bh starts at zero, from the loop above
 
-	test	ch,2						; are we padding with leading spaces?  
+	test	ch,2						; are we padding with leading spaces?
 	jnz		.PrintLoop					; test the even/odd of the format byte in the string
 
-	mov		al,' '-'0'					; emit space, but let the following instuctions add '0'
+	mov		al, 89h						; emit space
 
-.PrintDigit:	
-	add		al,'0'						; Digit to character
-	cmp		al,'9'						; for hex output, greater than '9'?
-	jle		.NoHexAdjustment
-	add		al,'A'-'9'-1				; adjust for hex output ('A' to 'F')
-.NoHexAdjustment:		
+.PrintDigit:
+	add		al, 90h						; Convert binary digit in AL to ASCII hex digit (0 - 9 or A - F)
+	daa
+	adc		al, 40h
+	daa
 
 	call	DisplayPrint_CharacterFromAL
 
 	jmp		.PrintLoop
 
-		
+
 ;--------------------------------------------------------------------
 ; DisplayFormat_ParseCharacters
 ;	Parameters:
@@ -145,18 +137,18 @@ DisplayFormatCompressed_Format_5_u:
 ;		DI:		Updated offset to video RAM
 ;	Corrupts registers:
 ;		AX, BX, CX, DX, BP
-;--------------------------------------------------------------------		
+;--------------------------------------------------------------------
 
 DisplayFormatCompressed_BaseFormatOffset:
-		
+
 DisplayFormat_ParseCharacters_FromAX:
 	mov		si,ax
 	; fall through to DisplayFormat_ParseCharacters
 
-ALIGN JUMP_ALIGN		
-DisplayFormat_ParseCharacters:	
+ALIGN JUMP_ALIGN
+DisplayFormat_ParseCharacters:
 ;
-; This routine is used to outptu all strings from the ROM.  The strings in ROMVARS are not compressed, 
+; This routine is used to output all strings from the ROM.  The strings in ROMVARS are not compressed,
 ; and must be handled differently.
 ;
 	cmp		si,byte 07fh		; well within the boundaries of ROMVARS_size
@@ -164,8 +156,8 @@ DisplayFormat_ParseCharacters:
 	jb		short DisplayPrint_NullTerminatedStringFromBXSI
 
 .decode:
-	mov		al,[cs:si]			; load next byte of the string
-	inc		si
+	eSEG	cs
+	lodsb						; load next byte of the string
 
 	mov		ch,al				; save a copy for later processing of high order bits
 
@@ -174,9 +166,9 @@ DisplayFormat_ParseCharacters:
 
 	and		al,03fh								; "Normal" character, mask off high order bits
 	add		al,StringsCompressed_NormalBase		; and add character offset (usually around 0x40)
-		
+
 .output:
-	call 	DisplayPrint_CharacterFromAL		
+	call 	DisplayPrint_CharacterFromAL
 
 .process_after_output:
 	shl		ch,1								; check high order bits for end of string or space
@@ -188,7 +180,7 @@ DisplayFormat_ParseCharacters:
 
 
 ALIGN JUMP_ALIGN
-DisplayFormatCompressed_TranslatesAndFormats:		
+DisplayFormatCompressed_TranslatesAndFormats:
 ;
 ; This routine is here (above DisplayFormat_ParseCharacters) to reduce the amount of code between
 ; DisplayFormatCompressed_BaseFormatOffset and jump targets (must fit in 256 bytes)
@@ -200,14 +192,14 @@ DisplayFormatCompressed_TranslatesAndFormats:
 	add		bx,ax
 
 	cmp		al,StringsCompressed_FormatsBegin			; determine if this is a translation or a format
-														
+
 	mov		al,[cs:bx]									; fetch translation/formats byte
 
 	jb		DisplayFormat_ParseCharacters.output		; check if this a translation or a format
 														; if it is translation, output and postprocess for eos
 														; note that the flags for this conditional jump were
 														; set with the cmp al,StringsCompressed_FormatsBegin
-		
+
 	mov		dx,DisplayFormatCompressed_BaseFormatOffset   ; calculate address to jump to for format handler
 	sub		dx,ax
 
@@ -229,15 +221,4 @@ DisplayFormatCompressed_TranslatesAndFormats:
 	pop		si
 
 	jmp		DisplayFormat_ParseCharacters.process_after_output	; continue postprocessing, check for end of string
-
-
-
-
-
-
-		
-
-		
-	
-
 

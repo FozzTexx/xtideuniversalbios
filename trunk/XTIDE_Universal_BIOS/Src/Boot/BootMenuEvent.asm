@@ -17,9 +17,9 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenuEvent_Handler:
-		
+
 %ifdef MENUEVENT_INLINE_OFFSETS
-		
+
 	add		bx, BootMenuEvent_Handler
 	jmp		bx
 
@@ -31,13 +31,13 @@ MENUEVENT_KeyStrokeInAX equ (BootMenuEvent_Handler.KeyStrokeInAX - BootMenuEvent
 MENUEVENT_RefreshTitle equ (BootMenuPrint_TitleStrings - BootMenuEvent_Handler)
 MENUEVENT_RefreshInformation equ (BootMenuEvent_Handler.RefreshInformation - BootMenuEvent_Handler)
 MENUEVENT_RefreshItemFromCX equ (BootMenuEvent_Handler.RefreshItemFromCX - BootMenuEvent_Handler)
-; 
-; Note that there is no entry for MENUEVENT_IdleProcessing.  If MENUEVENT_IDLEPROCESSING_ENABLE is not %defined, 
+;
+; Note that there is no entry for MENUEVENT_IdleProcessing.  If MENUEVENT_IDLEPROCESSING_ENABLE is not %defined,
 ; then the entry point will not be called (saving memory on this end and at the CALL point).
 ;
-		
+
 %else
-		
+
 	cmp		bx, BYTE MENUEVENT.RefreshItemFromCX	; Above last supported item?
 	ja		SHORT .EventNotHandled
 	jmp		[cs:bx+.rgfnEventSpecificHandlers]
@@ -45,7 +45,7 @@ MENUEVENT_RefreshItemFromCX equ (BootMenuEvent_Handler.RefreshItemFromCX - BootM
 .EventNotHandled:
 	clc
 	ret
-		
+
 ALIGN WORD_ALIGN
 .rgfnEventSpecificHandlers:
 	dw		.InitializeMenuinitFromDSSI	; MENUEVENT.InitializeMenuinitFromDSSI
@@ -57,7 +57,7 @@ ALIGN WORD_ALIGN
 	dw		BootMenuPrint_TitleStrings	; MENUEVENT.RefreshTitle
 	dw		.RefreshInformation			; MENUEVENT.RefreshInformation
 	dw		.RefreshItemFromCX			; MENUEVENT.RefreshItemFromCX
-		
+
 %endif
 
 
@@ -152,10 +152,10 @@ ALIGN JUMP_ALIGN
 ;	Cursor has been positioned to the beginning of item line
 ALIGN JUMP_ALIGN
 .RefreshItemFromCX:
-	mov		bl,00h		; will result in SF being clear in .RefreshItemOrInformation...
+	xor		bl, bl		; will result in SF being clear in .RefreshItemOrInformation...
 	SKIP2B  dx			; dx corrupted below by BootMenu_GetDriveToDXforMenuitemInCX
 	; Fall to .RefreshInformation
-		
+
 ; Parameters:
 ;	CX:			Index of highlighted item
 ;	Cursor has been positioned to the beginning of first line
@@ -182,11 +182,11 @@ ALIGN JUMP_ALIGN
 	shl		bl,1				;  drive letter high order bit to CF, Item/Information bit to SF
 	jc		SHORT BootMenuPrint_HardDiskMenuitem
 	; fall through to BootMenuEvent_FallThroughToFloppyMenuitem
-		
-;;; 
+
+;;;
 ;;; Fall-through (to BootMenuPrint_FloppyMenuitem)
 ;;; (checked at assembler time with the code after BootMenuPrint_FloppyMenuitem)
 ;;;
 ALIGN JUMP_ALIGN
-BootMenuEvent_FallThroughToFloppyMenuitem:	
+BootMenuEvent_FallThroughToFloppyMenuitem:
 	; fall through to BootMenuPrint_FloppyMenuitem
