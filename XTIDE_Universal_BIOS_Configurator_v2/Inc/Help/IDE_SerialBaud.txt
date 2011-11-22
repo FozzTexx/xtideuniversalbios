@@ -1,3 +1,1 @@
 Supported baud rates are 2400, 9600, 38.4K, and 115.2K. The server must also be set to this same speed. Older UARTs may only support 2400 and 9600 baud, but sometimes can be pushed to 38.4K. 115.2K will likely only be possible with a newer UART that inclues a FIFO. Some high speed serial ports include UART clock multipliers, allowing for speeds at 230.4K (2x multiplier) and 460.8K (4x multiplier). These high speeds are supported by these BIOS, even on original 4.77MHz 8088 systems. Note that UART clock multipliers are not detectable by the software and 115.2K will still be used during configuration for high speeds; but if a multiplier is used, the actual speed (including the multiplier) will need to be used on the server.
-
-
