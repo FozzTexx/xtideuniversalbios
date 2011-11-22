@@ -87,7 +87,7 @@ Char_IsHexadecimalDigitInAL:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
+%ifndef MODULE_STRINGS_COMPRESSED
 ALIGN JUMP_ALIGN
 Char_IsDecimalDigitInAL:
 	IS_BETWEEN_IMMEDIATES al, '0', '9'

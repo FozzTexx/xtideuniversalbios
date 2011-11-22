@@ -290,7 +290,7 @@ DisplayContext_GetCharacterOutputParameterToDX:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
+%ifndef MODULE_STRINGS_COMPRESSED
 ALIGN JUMP_ALIGN
 DisplayContext_GetCharacterOffsetToAXfromByteOffsetInAX:
 	test	BYTE [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bFlags], FLG_CONTEXT_ATTRIBUTES
@@ -310,7 +310,7 @@ DisplayContext_GetCharacterOffsetToAXfromByteOffsetInAX:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS		
+%ifndef MODULE_STRINGS_COMPRESSED
 ALIGN JUMP_ALIGN
 DisplayContext_GetByteOffsetToAXfromCharacterOffsetInAX:
 	test	BYTE [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bFlags], FLG_CONTEXT_ATTRIBUTES
