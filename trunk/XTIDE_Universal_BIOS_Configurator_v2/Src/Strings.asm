@@ -134,7 +134,7 @@ g_szNfoIdeEnIRQ:		db	"Interrupt or polling mode.",NULL
 g_szNfoIdeIRQ:			db	"IRQ channel to use.",NULL
 g_szNfoIdeSerialCOM:	db	"Select a COM port by number.",NULL
 g_szNfoIdeSerialBaud:	db	"Select the COM port's Baud Rate. The server must match this speed. Note UART clock multipliers may impact the actual speed.",NULL
-g_szNfoIdeSerialPort:	db	"Select a COM port by custom I/O port address. Address must be in the range 240h and 438h and be on an 8-byte boundary.", NULL
+g_szNfoIdeSerialPort:	db	"Select a COM port by custom I/O port address. Address must be in the range 248h to 438h and be on an 8-byte boundary.", NULL
 
 g_szHelpIdeCmdPort:		incbin	"IDE_CommandPort.txt"
 						db	NULL

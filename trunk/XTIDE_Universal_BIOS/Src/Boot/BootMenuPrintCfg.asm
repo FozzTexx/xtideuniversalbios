@@ -53,7 +53,7 @@ BootMenuPrintCfg_ForOurDrive:
 ;		AX, BX
 ;--------------------------------------------------------------------
 .PushAddressingMode:
-	CustomDPT_GetUnshiftedAddressModeToALZF
+	AccessDPT_GetUnshiftedAddressModeToALZF
 	;; 
 	;; This multiply both shifts the addressing mode bits down to low order bits, and 
 	;; at the same time multiplies by the size of the string displacement.  The result is in AH,

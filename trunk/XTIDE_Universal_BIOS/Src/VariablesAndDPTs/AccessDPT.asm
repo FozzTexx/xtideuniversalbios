@@ -123,3 +123,25 @@ AccessDPT_GetPointerToDRVPARAMStoCSBX:
 	add		bx, BYTE DRVPARAMS_size				; CS:BX points to Slave Drive DRVPARAMS
 .ReturnPointerToDRVPARAMS:
 	ret
+
+;--------------------------------------------------------------------
+; AccessDPT_GetUnshiftedAddressModeToALZF
+;	Parameters:
+;		DS:DI:	Ptr to Disk Parameter Table
+;	Returns:
+;		AL:		Addressing Mode (L-CHS, P-CHS, LBA28, LBA48) 
+;               unshifted (still shifted where it is in bFlagsLow)
+;       ZF:     Set based on value in AL
+;	Corrupts registers:
+;		AL
+;--------------------------------------------------------------------
+; 
+; Converted to a macro since only called in two places, and the call/ret overhead 
+; is not worth it for these two instructions (4 bytes total)
+;
+%macro AccessDPT_GetUnshiftedAddressModeToALZF 0
+	mov		al, [di+DPT.bFlagsLow]
+	and		al, MASKL_DPT_ADDRESSING_MODE
+%endmacro
+
+		

@@ -78,13 +78,13 @@ ALIGN JUMP_ALIGN
 InitializeMasterAndSlaveDriveFromPortInDX:
 	push	dx							; Store base port address
 	xor		cx, cx						; Assume no errors
-	call	FindDPT_ToDSDIForIdeMasterAtPortDX
+	FindDPT_ToDSDIForIdeMasterAtPortDX
 	jnc		SHORT .InitializeSlave		; Master drive not present
 	call	AH9h_InitializeDriveForUse
 	mov		cl, ah						; Copy error code to CL
 .InitializeSlave:
 	pop		dx							; Restore base port address
-	call	FindDPT_ToDSDIForIdeSlaveAtPortDX
+	FindDPT_ToDSDIForIdeSlaveAtPortDX
 	jnc		SHORT .CombineErrors		; Slave drive not present
 	call	AH9h_InitializeDriveForUse
 	mov		ch, ah						; Copy error code to CH

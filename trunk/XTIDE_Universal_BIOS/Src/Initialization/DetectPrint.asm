@@ -87,6 +87,7 @@ DetectPrint_DriveNameFromBootnfoInESBX:
 
 	pop		bx
 	pop		di
+	clc							; return success up through DetectDrives
 	ret
 
 
