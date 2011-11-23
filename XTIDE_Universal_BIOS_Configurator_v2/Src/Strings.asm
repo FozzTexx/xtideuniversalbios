@@ -133,8 +133,8 @@ g_szNfoIdeCtrlPort:		db	"IDE Controller Control Block address. Usually Cmd Block
 g_szNfoIdeEnIRQ:		db	"Interrupt or polling mode.",NULL
 g_szNfoIdeIRQ:			db	"IRQ channel to use.",NULL
 g_szNfoIdeSerialCOM:	db	"Select a COM port by number.",NULL
-g_szNfoIdeSerialBaud:	db	"Select the COM port's Baud Rate. The server must match this speed. Note UART clock multipliers may impact the actual speed.",NULL
-g_szNfoIdeSerialPort:	db	"Select a COM port by custom I/O port address. Address must be in the range 248h to 438h and be on an 8-byte boundary.", NULL
+g_szNfoIdeSerialBaud:	db	"Select the COM port's Baud Rate. The server must match this speed. Note that UART clock multipliers may impact the actual speed.",NULL
+g_szNfoIdeSerialPort:	db	"Select a COM port by custom I/O port address. Address must be in the range 248h to 430h and be on an 8-byte boundary.", NULL
 
 g_szHelpIdeCmdPort:		incbin	"IDE_CommandPort.txt"
 						db	NULL
@@ -253,7 +253,7 @@ g_szNfoBootDrive:		db	"Default drive on boot menu.",NULL
 g_szNfoDispMode:		db	"Display Mode for Boot Menu.",NULL
 g_szNfoBootFloppyDrvs:	db	"Number of Floppy Drives to display on boot menu.",NULL
 g_szNfoBootSwap:		db	"Drive Number Translation (swap first drive with selected).",NULL
-g_szNfoSerialDetect:	db	"Will scan COM ports for a serial drive. Can also be invoked by holding down ALT at the end of standard drive detection.",NULL
+g_szNfoSerialDetect:	db	"Scans all standard COM ports for serial drives. This can also be invoked by holding down ALT at the end of normal drive detection.",NULL
 
 g_szHelpBootTimeout:	incbin	"Bootmenu_Timeout.txt"
 						db	NULL

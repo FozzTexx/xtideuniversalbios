@@ -99,15 +99,16 @@ FLG_DRVPARAMS_BLOCKMODE	EQU	(1<<1)	; Enable Block mode transfers
 ;   i/o port address = p * 2 + 240h
 ;   baud rate = b, where 00 = 2400, 01 = 9600, 10 = 38.4K, 11 = 115.2K
 ;
-; 240h/2400baud corresponds to 0 for a PackedPortAndBaud value, which is reserved (in case we need
-; it to know if a value has been set).  Which is why ..._MINPORT is 248h.
+; 240h/2400baud corresponds to 0 for a PackedPortAndBaud value, which triggers auto detect code.
+; Which means 240h is not usable, and is why ..._MINPORT is 248h.  A value is reserved at the upper
+; end of the spectrum in case it is needed (whcih is why it is 430h instead of 438h).
 ;
 DEVICE_SERIAL_PACKEDPORTANDBAUD_PORTMASK			EQU		0fch
 DEVICE_SERIAL_PACKEDPORTANDBAUD_PORTBITS			EQU		03fh
 DEVICE_SERIAL_PACKEDPORTANDBAUD_PORT_FIELD_POSITION	EQU		2
 DEVICE_SERIAL_PACKEDPORTANDBAUD_STARTINGPORT		EQU		240h
-DEVICE_SERIAL_PACKEDPORTANDBAUD_MINPORT				EQU		248h		; minimum port value that the user can set
-DEVICE_SERIAL_PACKEDPORTANDBAUD_MAXPORT				EQU		438h		; or (..._PORTMASK << 1) + ..._STARTINGPORT
+DEVICE_SERIAL_PACKEDPORTANDBAUD_MINPORT				EQU		248h	; minimum port value that the user can set
+DEVICE_SERIAL_PACKEDPORTANDBAUD_MAXPORT				EQU		430h	; or ((..._PORTMASK-1) << 1) + ..._STARTINGPORT
 
 DEVICE_SERIAL_PACKEDPORTANDBAUD_BAUDMASK			EQU		3h
 DEVICE_SERIAL_PACKEDPORTANDBAUD_BAUDBITS			EQU		3h

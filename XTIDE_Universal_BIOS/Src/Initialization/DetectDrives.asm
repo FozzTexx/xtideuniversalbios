@@ -22,23 +22,32 @@ DetectDrives_FromAllIDEControllers:
 
 .DriveDetectLoop:							; Loop through IDEVARS
 	mov		si, g_szDetect					; Setup standard print string
-%ifdef MODULE_SERIAL
+%ifdef MODULE_SERIAL		
 	cmp		byte [cs:bp+IDEVARS.bDevice], DEVICE_SERIAL_PORT
 	jnz		.DriveNotSerial					; Special print string for serial drives
 	mov		si, g_szDetectCOM
 .DriveNotSerial:
 %endif
+
 	call	.DetectDrives_WithIDEVARS		; Detect Master and Slave
 	add		bp, BYTE IDEVARS_size			; Point to next IDEVARS
 	loop	.DriveDetectLoop
+
+%ifdef MODULE_SERIAL		
+;
+; if serial drive detected, do not scan (avoids duplicate drives and isn't needed - we have a connection)
+; Note that XLATEVARS.bLastSerial is zero'd in RamVars_Initialize, called in Initialize_AutoDetectDrives;
+; bLastSerial it set in the detection code of SerialCommand.asm
+;
+	cmp		byte [RAMVARS.xlateVars+XLATEVARS.bLastSerial],cl 	; cx = zero after the loop above
+																; less instruction bytes than using immediate
+	jnz		.done												  
 		
-%ifdef MODULE_SERIAL
-	call	FindDPT_ToDSDIforSerialDevice	; Did we already find any serial drives? 
-	jc		.done							; Yes, do not scan
 	mov		al,[cs:ROMVARS.wFlags]			; Configurator set to always scan?
 	or		al,[es:BDA.bKBFlgs1]			; Or, did the user hold down the ALT key?
 	and		al,8							; 8 = alt key depressed, same as FLG_ROMVARS_SERIAL_ALWAYSDETECT
 	jz		.done							
+
 	mov		bp, ROMVARS.ideVarsSerialAuto	; Point to our special IDEVARS sructure, just for serial scans
 	mov		si, g_szDetectCOMAuto			; Special, special print string for serial drives during a scan
 ;;; fall-through					
@@ -73,20 +82,6 @@ DetectDrives_FromAllIDEControllers:
 	call	StartDetectionWithDriveSelectByteInBHandStringInAX	; Detect and create DPT + BOOTNFO
 	pop		si
 
-%ifdef MODULE_SERIAL
-;
-; This block of code checks to see if we found a master during a serial drives scan.  If no master
-; was found, there is no point in scanning for a slave as the server will not return a slave without a master,
-; as there is very little point given the drives are emulated.  Performing the slave scan will take 
-; time to rescan all the COM port and baud rate combinations.
-;
-	jnc		.masterFound
-	pop		cx
-	jcxz	.done		; note that CX will only be zero after the .DriveDetectLoop, indicating a serial scan
-	push	cx
-.masterFound:
-%endif
-		
 	mov		ax, g_szSlave
 	mov		bh, MASK_DRVNHEAD_SET | FLG_DRVNHEAD_DRV
 	call	StartDetectionWithDriveSelectByteInBHandStringInAX
@@ -105,9 +100,7 @@ DetectDrives_FromAllIDEControllers:
 ;		DS:		RAMVARS segment
 ;		ES:		Zero (BDA segment)
 ;	Returns:
-;		CF:		Set on failure, Clear on success
-;               Note that this is set in the last thing both cases
-;               do: printing the drive name, or printing "Not Found"
+;       None
 ;	Corrupts registers:
 ;		AX, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
@@ -143,7 +136,21 @@ StartDetectionWithDriveSelectByteInBHandStringInAX:
 .ReadAtapiInfoFromDrive:				; Not yet implemented
 	;call	ReadAtapiInfoFromDrive		; Assume CD-ROM
 	;jnc	SHORT _CreateBiosTablesForCDROM
-	jmp		short DetectDrives_DriveNotFound
+	
+	;jmp	short DetectDrives_DriveNotFound
+;;; fall-through instead of previous jmp instruction
+;--------------------------------------------------------------------
+; DetectDrives_DriveNotFound
+;	Parameters:
+;		Nothing
+;	Returns:
+;		CF:     Set (from BootMenuPrint_NullTerminatedStringFromCSSIandSetCF)
+;	Corrupts registers:
+;		AX, SI
+;--------------------------------------------------------------------
+DetectDrives_DriveNotFound:		
+	mov		si, g_szNotFound
+	jmp		BootMenuPrint_NullTerminatedStringFromCSSIandSetCF		
 
 
 ;--------------------------------------------------------------------
@@ -165,16 +172,4 @@ CreateBiosTablesForHardDisk:
 	call	BootInfo_CreateForHardDisk
 	jmp		short DetectPrint_DriveNameFromBootnfoInESBX
 
-;--------------------------------------------------------------------
-; DetectDrives_DriveNotFound
-;	Parameters:
-;		Nothing
-;	Returns:
-;		CF:     Set (from BootMenuPrint_NullTerminatedStringFromCSSIandSetCF)
-;	Corrupts registers:
-;		AX, SI
-;--------------------------------------------------------------------
-DetectDrives_DriveNotFound:		
-	mov		si, g_szNotFound
-	jmp		BootMenuPrint_NullTerminatedStringFromCSSIandSetCF		
 
