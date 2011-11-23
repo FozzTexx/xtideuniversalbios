@@ -123,10 +123,9 @@ ReturnRightDPT:
 
 
 ;--------------------------------------------------------------------
-; IterateToDptWithFlagsHighSet:
+; IterateToDptWithInterruptInServiceFlagSet
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT to examine
-;       AL:     Bit in bFlagsHigh to test
 ;	Returns:
 ;		CF:		Set if wanted DPT found
 ;				Cleared if wrong DPT
@@ -134,8 +133,9 @@ ReturnRightDPT:
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-IterateToDptWithFlagsHighSet:
-	test	BYTE [di+DPT.bFlagsHigh], al	; Clears CF (but we need the clc below anyway callers above)
+IterateToDptWithInterruptInServiceFlagSet:
+	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_INTERRUPT_IN_SERVICE		; Clears CF (but we need the clc
+																		; below anyway for callers above)
 	jnz		SHORT ReturnRightDPT
 
 ReturnWrongDPT:
@@ -144,7 +144,6 @@ ReturnWrongDPT:
 
 ;--------------------------------------------------------------------
 ; FindDPT_ToDSDIforInterruptInService
-; FindDPT_ToDSDIforSerialDevice
 ;	Parameters:
 ;		DS:		RAMVARS segment
 ;	Returns:
@@ -152,22 +151,11 @@ ReturnWrongDPT:
 ;		CF:		Set if wanted DPT found
 ;				Cleared if DPT not found
 ;	Corrupts registers:
-;		SI, AX, BX (for SerialDevice only)
+;		SI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-		
-%ifdef MODULE_SERIAL
-FindDPT_ToDSDIforSerialDevice:	
-	mov		al, FLGH_DPT_SERIAL_DEVICE
-
-	SKIP2B	bx
-%endif
-		
-; do not align due to SKIP2B above
 FindDPT_ToDSDIforInterruptInService:
-	mov		al, FLGH_DPT_INTERRUPT_IN_SERVICE
-
-	mov		si, IterateToDptWithFlagsHighSet
+	mov		si, IterateToDptWithInterruptInServiceFlagSet
 	; Fall to IterateAllDPTs
 
 ;--------------------------------------------------------------------

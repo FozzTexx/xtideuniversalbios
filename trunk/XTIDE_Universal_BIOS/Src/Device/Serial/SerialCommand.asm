@@ -39,12 +39,6 @@ SerialCommand_UART_modemStatus					EQU		6
 
 SerialCommand_UART_scratch						EQU		7
 
-; note that the actual StaringPoint port address is not achievable (results in 0 which triggers auto detect)
-SerialCommand_PackedPortAndBaud_StartingPort	EQU		240h
-		
-SerialCommand_PackedPortAndBaud_PortMask		EQU		0fch    ; upper 6 bits - 240h through 438h
-SerialCommand_PackedPortAndBaud_BaudMask		EQU		3       ; lower 2 bits - 4 baud rates
-
 SerialCommand_Protocol_Write					EQU		3
 SerialCommand_Protocol_Read						EQU		2
 SerialCommand_Protocol_Inquire					EQU		0
@@ -478,12 +472,6 @@ SerialCommand_WriteProtocol:
 		jmp		.writeLoopChecksum
 
 
-; To return the port number and baud rate to the FinalizeDPT routine, we
-; stuff the value in a "vendor" specific area of the 512-byte IdentifyDevice
-; sector.
-;
-SerialCommand_IdentifyDevice_PackedPortAndBaud	equ		(157*2)
-
 ;--------------------------------------------------------------------
 ; SerialCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH
 ;	Parameters:
@@ -493,22 +481,76 @@ SerialCommand_IdentifyDevice_PackedPortAndBaud	equ		(157*2)
 ;		CS:BP:	Ptr to IDEVARS
 ;	Returns:
 ;		AH:		INT 13h Error Code
+;               NOTE: Not set (or checked) during drive detection 
 ;		CF:		Cleared if success, Set if error
 ;	Corrupts registers:
 ;		AL, BL, CX, DX, SI, DI, ES
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 SerialCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
+;
+; To improve boot time, we do our best to avoid looking for slave serial drives when we already know the results 
+; from the looking for a master.  This is particuarly true when doing a COM port scan, as we will end up running
+; through all the COM ports and baud rates a second time.  
+;
+; But drive detection isn't the only case - we also need to get the right drive when called on int13h/25h.  
+;
+; The decision tree:
+;
+;    Master:
+;		   bSerialPackedPortAndBaud Non-Zero:   -> Continue with bSerialPackedAndBaud (1)
+;		   bSerialPackedPortAndBaud Zero: 
+;		   			      bLastSerial Zero:     -> Scan (2)
+;					      bLastSerial Non-Zero: -> Continue with bLastSerial (3)
+;			  				        
+;    Slave:
+;		   bSerialPackedPortAndBaud Non-Zero: 
+;		   			      bLastSerial Zero:     -> Error - Not Found (4)
+;					      bLastSerial Non-Zero: -> Continue with bSerialPackedAndBaud (5)
+;          bSerialPackedPortAndBaud Zero:     
+;		   			      bLastSerial Zero:     -> Error - Not Found (4)
+;					      bLastSerial Non-Zero: -> Continue with bLastSerial (6)
+;
+; (1) This was a port/baud that was explicilty set with the configurator.  In the drive detection case, as this 
+;     is the Master, we are checking out a new controller, and so don't care about the value of bLastSerial.  
+;     And as with the int13h/25h case, we just go off and get the needed information using the user's setting.
+; (2) We are using the special .ideVarsSerialAuto strucutre.  During drive detection, we would only be here
+;     if bLastSerial is zero (since we only scan if no explicit drives are set), so we go off to scan.
+; (3) We are using the special .ideVarsSerialAuto strucutre.  We won't get here during drive detection, but
+;     we might get here on an int13h/25h call.  If we have scanned COM drives, they are the ONLY serial drives
+;     in use, and so bLastSerial will reflect the port/baud setting for the scanned COM drives.
+; (4) No master has been found yet, therefore no slave should be found.  Avoiding the slave reduces boot time, 
+;     especially in the full COM port scan case.  Note that this is different from the hardware IDE, where we
+;     will scan for a slave even if a master is not present.  Note that if ANY master had been previously found,
+;     we will do the slave scan, which isn't harmful, it just wates time.  But the most common case (by a wide
+;     margin) will be just one serial controller.
+; (5) A COM port scan for a master had been previously completed, and a drive was found.  In a multiple serial
+;     controller scenario being called with int13h/25h, we need to use the value in bSerialPackedPortAndBaud 
+;     to make sure we get the proper drive.
+; (6) A COM port scan for a master had been previously completed, and a drive was found.  We would only get here 
+;     if no serial drive was explicitly set by the user in the configurator or that drive had not been found.  
+;     Instead of performing the full COM port scan for the slave, use the port/baud value stored during the 
+;     master scan.
+;		
+		mov		dl,[cs:bp+IDEVARS.bSerialPackedPortAndBaud]		
+		mov		al,	byte [RAMVARS.xlateVars+XLATEVARS.bLastSerial]
+				
+		test	bh, FLG_DRVNHEAD_DRV
+		jz		.master
 
-		mov		dx,[cs:bp+IDEVARS.bSerialCOMDigit]
+		test	al,al			; Take care of the case that is different between master and slave.  
+		jz		.error			; Because we do this here, the jz after the "or" below will not be taken
+
+; fall-through
+.master:		
 		test	dl,dl
-		jz		SerialCommand_AutoSerial
+		jnz		.identifyDeviceInDL
 
-		xchg	dh,dl			; dh (the COM character to print) will be transmitted to the server,
-								; so we know this is not an auto detect
+		or		dl,al			; Move bLast into position in dl, as well as test for zero
+		jz		.scanSerial
 		
 ; fall-through
-SerialCommand_IdentifyDeviceInDL_DriveInBH:
+.identifyDeviceInDL:	
 
 		push	bp				; setup fake IDEREGS_AND_INTPACK
 
@@ -523,7 +565,6 @@ SerialCommand_IdentifyDeviceInDL_DriveInBH:
 		push	bx
 
 		mov		bp,sp
-
 		call	SerialCommand_OutputWithParameters_DeviceInDL
 
 		pop		bx
@@ -532,10 +573,17 @@ SerialCommand_IdentifyDeviceInDL_DriveInBH:
 		pop		dx
 
 		pop		bp
+; 
+; place packed port/baud in RAMVARS, read by FinalizeDPT and DetectDrives
+;
+; Note that this will be set during an int13h/25h call as well.  Which is OK since it is only used (at the
+; top of this routine) for drives found during a COM scan, and we only COM scan if there were no other 
+; COM drives found.  So we will only reaffirm the port/baud for the one COM port/baud that has a drive.
+; 
+		jc		.notFound											; only store bLastSerial if success
+		mov		byte [RAMVARS.xlateVars+XLATEVARS.bLastSerial], dl
 
-; place packed port/baud in vendor area of packet, read by FinalizeDPT
-		mov		byte [es:si+SerialCommand_IdentifyDevice_PackedPortAndBaud], dl
-
+.notFound:		
 		ret
 
 ;----------------------------------------------------------------------
@@ -545,18 +593,18 @@ SerialCommand_IdentifyDeviceInDL_DriveInBH:
 ; When the SerialAuto IDEVARS entry is used, scans the COM ports on the machine for a possible serial connection.
 ;
 
-SerialCommand_ScanPortAddresses:    db	DEVICE_SERIAL_COM7 >> 2
-									db	DEVICE_SERIAL_COM6 >> 2
-									db	DEVICE_SERIAL_COM5 >> 2
-									db	DEVICE_SERIAL_COM4 >> 2
-									db	DEVICE_SERIAL_COM3 >> 2
-									db	DEVICE_SERIAL_COM2 >> 2
-									db	DEVICE_SERIAL_COM1 >> 2
-									db	0
+.scanPortAddresses: db	DEVICE_SERIAL_COM7 >> 2
+					db	DEVICE_SERIAL_COM6 >> 2
+					db	DEVICE_SERIAL_COM5 >> 2
+					db	DEVICE_SERIAL_COM4 >> 2
+					db	DEVICE_SERIAL_COM3 >> 2
+					db	DEVICE_SERIAL_COM2 >> 2
+					db	DEVICE_SERIAL_COM1 >> 2
+					db	0
 
 ALIGN JUMP_ALIGN
-SerialCommand_AutoSerial:
-		mov		di,SerialCommand_ScanPortAddresses-1
+.scanSerial:
+		mov		di,.scanPortAddresses-1
 
 .nextPort:
 		inc		di				; load next port address
@@ -564,7 +612,7 @@ SerialCommand_AutoSerial:
 
 		mov		dh,0			; shift from one byte to two
 		eSHL_IM	dx, 2
-		jz		.exitNotFound
+		jz		.error
 
 ;
 ; Test for COM port presence, write to and read from registers
@@ -602,13 +650,15 @@ SerialCommand_AutoSerial:
 		jz		.nextPort
 
 .testFirstBaud:
-		call	SerialCommand_IdentifyDeviceInDL_DriveInBH
+		call	.identifyDeviceInDL
 		jc		.nextBaud
 
 		ret
 
-.exitNotFound:
+.error:	
 		stc
-		mov		ah,1
-
+		; mov		ah,1		; setting the error code is unnecessary as this path can only be taken during
+								; drive detection, and drive detection works off CF and does not check AH
 		ret
+
+

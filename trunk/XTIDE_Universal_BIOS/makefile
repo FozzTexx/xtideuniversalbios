@@ -86,6 +86,8 @@ IHEADERS = $(HEADERS:%=-I%)
 # Path + target file to be built
 TARGET = $(BUILD_DIR)/$(PROG)
 
+# Target size of the ROM, used by checksum Perl script  
+ROMSIZE = 8192
 
 #########################
 # Compilers and linkers #
@@ -139,9 +141,15 @@ clean:
 	@$(RM) $(BUILD_DIR)\*.*
 	@echo Deleted "(*.*)" from "$(BUILD_DIR)/"
 
+checksum:  all
+	@perl ..\tools\checksum.pl $(TARGET)_at.bin $(ROMSIZE)
+	@perl ..\tools\checksum.pl $(TARGET)_xtp.bin $(ROMSIZE)
+	@perl ..\tools\checksum.pl $(TARGET)_xt.bin $(ROMSIZE)
+
 src\StringsCompressed.asm:	src\Strings.asm
-	$(AS) src\Strings.asm $(ASFLAGS) $(DEFS_XT) -DMODULE_STRINGS_COMPRESSED_PRECOMPRESS -o build\Strings.bin -l build\StringsPrecompress.lst
-	perl ..\tools\StringsCompress.pl < build\StringsPrecompress.lst > src\StringsCompressed.asm
+	@$(AS) src\Strings.asm $(ASFLAGS) $(DEFS_XT) -DMODULE_STRINGS_COMPRESSED_PRECOMPRESS -o build\Strings.bin -l build\StringsPrecompress.lst
+	@perl ..\tools\StringsCompress.pl < build\StringsPrecompress.lst > src\StringsCompressed.asm
+	@echo StringsCompressed.asm updated!
 
 $(SRC_ASM):		src\StringsCompressed.asm
 
