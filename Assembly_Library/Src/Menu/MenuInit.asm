@@ -83,6 +83,24 @@ MenuInit_RefreshMenuWindow:
 
 
 ;--------------------------------------------------------------------
+; MenuInit_CloseMenuIfExitEventAllows
+;	Parameters
+;		SS:BP:	Ptr to MENU
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, BX, DX
+;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
+ALIGN JUMP_ALIGN
+MenuInit_CloseMenuIfExitEventAllows:
+	call	MenuEvent_ExitMenu
+	jc		SHORT MenuInit_CloseMenuWindow
+	ret
+%endif
+
+
+;--------------------------------------------------------------------
 ; MenuInit_CloseMenuWindow
 ;	Parameters
 ;		SS:BP:	Ptr to MENU

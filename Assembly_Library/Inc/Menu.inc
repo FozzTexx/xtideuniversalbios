@@ -18,7 +18,10 @@
 ;		AX (unless used as a return register), DI
 ;--------------------------------------------------------------------
 %macro CALL_MENU_LIBRARY 1
-	%ifidn %1, Close
+	%ifidn %1, CloseMenuIfExitEventAllows
+		call	MenuInit_CloseMenuIfExitEventAllows
+
+	%elifidn %1, Close
 		call	MenuInit_CloseMenuWindow
 
 	%elifidn %1, SetUserDataFromDSSI
@@ -56,6 +59,7 @@
 ; Menu library functions
 struc MENU_LIB
 	.DisplayWithHandlerInBXandUserDataInDXAX	resb	2
+	.SendExitMenuEvent:
 	.Close:
 	.RefreshWindow								resb	2
 
