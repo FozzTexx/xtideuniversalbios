@@ -88,7 +88,7 @@ ALIGN JUMP_ALIGN
 .ExitMenu:
 	call	Menupage_GetActiveMenupageToDSDI
 	mov		si, [di+MENUPAGE.fnBack]
-	cmp		si, ExitToDos
+	cmp		si, ExitToDosFromBackButton
 	je		SHORT .QuitProgram
 	call	si					; Back to previous menu
 	clc
@@ -102,6 +102,7 @@ ALIGN JUMP_ALIGN
 	ret
 .ExitToDOS:
 	call	Buffers_SaveChangesIfFileLoaded
+	CALL_MENU_LIBRARY Close
 	stc
 	ret
 
