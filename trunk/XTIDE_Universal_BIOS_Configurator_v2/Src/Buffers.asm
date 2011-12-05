@@ -228,6 +228,32 @@ Buffers_GetRomvarsValueToAXfromOffsetInBX:
 
 
 ;--------------------------------------------------------------------
+; Buffers_GetIdeControllerCountToCX
+;	Parameters:
+;		SS:BP:	Menu handle
+;	Returns:
+;		CX:		Number of IDE controllers to configure
+;		ES:DI:	Ptr to file buffer
+;	Corrupts registers:
+;		AX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+Buffers_GetIdeControllerCountToCX:
+	call	Buffers_GetFileBufferToESDI
+	mov		al, [es:di+ROMVARS.bIdeCnt]
+
+	; Limit controller count for lite mode
+	test	BYTE [es:di+ROMVARS.wFlags], FLG_ROMVARS_FULLMODE
+	jnz		SHORT .ReturnControllerCountInCX
+	MIN_U	al, MAX_LITE_MODE_CONTROLLERS
+
+.ReturnControllerCountInCX:
+	cbw		; A maximum of 127 controllers should be sufficient
+	xchg	cx, ax
+	ret
+
+
+;--------------------------------------------------------------------
 ; Buffers_GetFileBufferToESDI
 ; Buffers_GetFlashComparisonBufferToESDI
 ; Buffers_GetFileDialogItemBufferToESDI

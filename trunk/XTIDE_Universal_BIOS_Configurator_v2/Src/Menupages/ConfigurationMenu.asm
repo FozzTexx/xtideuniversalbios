@@ -105,17 +105,17 @@ iend
 
 g_MenuitemConfigurationIdeControllers:
 istruc MENUITEM
-	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateUnsignedInputForMenuitemInDSSI
+	at	MENUITEM.fnActivate,		dw	ActivateInputForNumberOfIdeControllersMenuitemInDSSI
 	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteUnsignedValueStringToBufferInESDIfromItemInDSSI
 	at	MENUITEM.szName,			dw	g_szItemCfgIdeCnt
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoCfgIdeCnt
 	at	MENUITEM.szHelp,			dw	g_szNfoCfgIdeCnt
-	at	MENUITEM.bFlags,			db	FLG_MENUITEM_MODIFY_MENU | FLG_MENUITEM_BYTEVALUE
+	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE | FLG_MENUITEM_BYTEVALUE
 	at	MENUITEM.bType,				db	TYPE_MENUITEM_UNSIGNED
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	ROMVARS.bIdeCnt
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgCfgIdeCnt
 	at	MENUITEM.itemValue + ITEM_VALUE.wMinValue,					dw	1
-	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	4
+	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	MAX_ALLOWED_IDE_CONTROLLERS
 iend
 
 
@@ -138,7 +138,7 @@ ConfigurationMenu_EnterMenuOrModifyItemVisibility:
 	call	.DisableAllIdeControllerMenuitems
 	call	.EnableIdeControllerMenuitemsBasedOnConfiguration
 	call	.EnableOrDisableKiBtoStealFromRAM
-	call	.EnableOrDisableIdeControllerCount
+	call	LimitIdeControllersForLiteMode
 	mov		si, g_MenupageForConfigurationMenu
 	jmp		Menupage_ChangeToNewMenupageInDSSI
 
@@ -150,7 +150,7 @@ ConfigurationMenu_EnterMenuOrModifyItemVisibility:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, BX, CX
+;		AX, BX, CX, DI, ES
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 .DisableAllIdeControllerMenuitems:
@@ -165,9 +165,9 @@ ALIGN JUMP_ALIGN
 
 ALIGN JUMP_ALIGN
 .EnableIdeControllerMenuitemsBasedOnConfiguration:
-	call	.GetIdeControllerCountToCX
+	call	Buffers_GetIdeControllerCountToCX
 	dec		cx			; Primary always enabled
-	jz		.PrimaryControllerAlreadyEnabled
+	jz		SHORT .PrimaryControllerAlreadyEnabled
 	mov		bx, g_MenuitemConfigurationSecondaryIdeController
 ALIGN JUMP_ALIGN
 .EnableNextIdeControllerMenuitem:
@@ -177,29 +177,6 @@ ALIGN JUMP_ALIGN
 .PrimaryControllerAlreadyEnabled:
 	ret
 
-;--------------------------------------------------------------------
-; .GetIdeControllerCountToCX
-;	Parameters:
-;		SS:BP:	Menu handle
-;	Returns:
-;		CX:		Number of IDE controllers to configure
-;	Corrupts registers:
-;		AX, BX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-.GetIdeControllerCountToCX:
-	call	Buffers_GetRomvarsFlagsToAX
-	test	ax, FLG_ROMVARS_FULLMODE
-	mov		al, 1	; Assume lite mode
-	jz		SHORT .AllowOnlyOneIdeControllerInLiteMode
-
-	mov		bx, ROMVARS.bIdeCnt
-	call	Buffers_GetRomvarsValueToAXfromOffsetInBX
-ALIGN JUMP_ALIGN
-.AllowOnlyOneIdeControllerInLiteMode:
-	cbw		; A maximum of 127 controllers should be sufficient
-	xchg	cx, ax
-	ret
 
 ;--------------------------------------------------------------------
 ; .EnableOrDisableKiBtoStealFromRAM
@@ -216,28 +193,8 @@ ALIGN JUMP_ALIGN
 	mov		bx, g_MenuitemConfigurationKiBtoStealFromRAM
 	test	ax, FLG_ROMVARS_FULLMODE
 	jz		SHORT .DisableMenuitemFromCSBX
-	jmp		SHORT .EnableMenuitemFromCSBX
+	; Fall to .EnableMenuitemFromCSBX
 
-;--------------------------------------------------------------------
-; .EnableOrDisableKiBtoStealFromRAM
-;	Parameters:
-;		SS:BP:	Menu handle
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, BX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-.EnableOrDisableIdeControllerCount:
-	call	Buffers_GetRomvarsFlagsToAX
-	mov		bx, g_MenuitemConfigurationIdeControllers
-	test	ax, FLG_ROMVARS_FULLMODE
-	jnz		SHORT .EnableMenuitemFromCSBX
-
-	; Limit controller count for lite mode
-	call	Buffers_GetFileBufferToESDI
-	mov		BYTE [es:di+ROMVARS.bIdeCnt], MAX_LITE_MODE_CONTROLLERS
-	jmp		SHORT .DisableMenuitemFromCSBX
 
 ;--------------------------------------------------------------------
 ; .EnableMenuitemFromCSBX
@@ -294,3 +251,28 @@ ALIGN JUMP_ALIGN
 DisplayIdeControllerMenu:
 	call	IdeControllerMenu_InitializeToIdevarsOffsetInBX
 	jmp		IdeControllerMenu_EnterMenuOrModifyItemVisibility
+
+
+ALIGN JUMP_ALIGN
+ActivateInputForNumberOfIdeControllersMenuitemInDSSI:
+	call	Menuitem_ActivateUnsignedInputForMenuitemInDSSI
+	; Fall to LimitIdeControllersForLiteMode
+
+;--------------------------------------------------------------------
+; LimitIdeControllersForLiteMode
+;	Parameters:
+;		SS:BP:	Menu handle
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, CX, DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+LimitIdeControllersForLiteMode:
+	push	es
+	call	Buffers_GetIdeControllerCountToCX
+	mov		[es:di+ROMVARS.bIdeCnt], cl
+	CALL_MENU_LIBRARY GetHighlightedItemToAX
+	CALL_MENU_LIBRARY RefreshItemFromAX
+	pop		es
+	ret
