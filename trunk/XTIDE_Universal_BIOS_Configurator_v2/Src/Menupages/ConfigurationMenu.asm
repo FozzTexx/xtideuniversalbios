@@ -110,7 +110,7 @@ istruc MENUITEM
 	at	MENUITEM.szName,			dw	g_szItemCfgIdeCnt
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoCfgIdeCnt
 	at	MENUITEM.szHelp,			dw	g_szNfoCfgIdeCnt
-	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE | FLG_MENUITEM_BYTEVALUE
+	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE | FLG_MENUITEM_MODIFY_MENU | FLG_MENUITEM_BYTEVALUE
 	at	MENUITEM.bType,				db	TYPE_MENUITEM_UNSIGNED
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	ROMVARS.bIdeCnt
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgCfgIdeCnt

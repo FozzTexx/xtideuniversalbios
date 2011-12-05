@@ -8,18 +8,18 @@ ALIGN WORD_ALIGN
 g_MenupageForMainMenu:
 istruc MENUPAGE
 	at	MENUPAGE.fnEnter,			dw	MainMenu_EnterMenuOrModifyItemVisibility
-	at	MENUPAGE.fnBack,			dw	ExitToDos
+	at	MENUPAGE.fnBack,			dw	ExitToDosFromBackButton
 	at	MENUPAGE.wMenuitems,		dw	6
 iend
 
 g_MenuitemMainMenuExitToDos:
 istruc MENUITEM
-	at	MENUITEM.fnActivate,		dw	ExitToDos
+	at	MENUITEM.fnActivate,		dw	ExitToDosSelectedFromMenu
 	at	MENUITEM.szName,			dw	g_szItemMainExitToDOS
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoMainExitToDOS
 	at	MENUITEM.szHelp,			dw	g_szNfoMainExitToDOS
 	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE
-	at	MENUITEM.bType,				db	TYPE_MENUITEM_PAGEBACK
+	at	MENUITEM.bType,				db	TYPE_MENUITEM_ACTION
 iend
 
 g_MenuitemMainMenuLoadBiosFromFile:
@@ -175,8 +175,9 @@ ALIGN JUMP_ALIGN
 ;		All, except segments
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-ExitToDos:
-	CALL_MENU_LIBRARY Close
+ExitToDosSelectedFromMenu:
+	CALL_MENU_LIBRARY CloseMenuIfExitEventAllows
+ExitToDosFromBackButton:
 	ret
 
 
