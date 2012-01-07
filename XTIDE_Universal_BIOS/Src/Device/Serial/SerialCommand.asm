@@ -321,7 +321,11 @@ SerialCommand_OutputWithParameters_DeviceInDL:
 ;
 ; Compare checksums
 ;
-		xor		bp,si
+		xchg	ax,bp
+		xor		ah,al
+		mov		cx,si
+		xor		cl,ch
+		mov		al,cl
 		cmp		ax,bp
 		jnz		SerialCommand_OutputWithParameters_Error
 
@@ -478,7 +482,10 @@ SerialCommand_WriteProtocol:
 		inc		bh
 
 		mov		ax,bp			; merge checksum for possible write (last loop)
-		xor		ax,si
+		xor		ah,al
+		mov		cx,si
+		xor		cl,ch
+		mov		al,cl
 
 		jmp		.writeLoopChecksum
 
