@@ -176,14 +176,17 @@ SerialCommand_OutputWithParameters_DeviceInDL:
 		out		dx,al
 		dec		dx
 
+;
+; Start off with a normalized buffer pointer
+; 
+		call	Registers_NormalizeESDI
+
 ;----------------------------------------------------------------------
 ;
 ; Send Command
 ;
 ; Sends first six bytes of IDEREGS_AND_INTPACK as the command
 ;
-		call	Registers_NormalizeESDI
-
 		push	es				; save off real buffer location
 		push	di
 
@@ -322,6 +325,12 @@ SerialCommand_OutputWithParameters_DeviceInDL:
 		cmp		ax,bp
 		jnz		SerialCommand_OutputWithParameters_Error
 
+;
+; Normalize buffer pointer for next go round, if needed
+; 
+		test	di,di
+		jns		.clearBuffer
+		call	Registers_NormalizeESDI
 
 ;----------------------------------------------------------------------
 ;
@@ -331,6 +340,7 @@ SerialCommand_OutputWithParameters_DeviceInDL:
 ; In theory the initialization of the UART registers above should have
 ; taken care of this, but I have seen cases where this is not true.
 ;
+		
 .clearBuffer:
 		mov		dl,bh
 		in		al,dx
@@ -343,6 +353,7 @@ SerialCommand_OutputWithParameters_DeviceInDL:
 		jmp		SerialCommand_OutputWithParameters_Error
 
 .clearBufferComplete:
+
 		pop		ax				; sector count and command byte
 		dec		al				; decrememnt sector count
 		push	ax				; save
