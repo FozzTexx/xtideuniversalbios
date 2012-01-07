@@ -68,17 +68,31 @@ Registers_CopyESDItoDSSI:
 ;		DS:SI or ES:DI:	Normalized pointer
 ;	Corrupts registers:
 ;		AX, CX
+; 
+; Inline of NORMALIZE_FAR_POINTER so that we can share the last 2/3 of the 
+; routine with Registers_NormalizeFinish.
+; 
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Registers_NormalizeESSI:
-	NORMALIZE_FAR_POINTER es, si, ax, cx
-	ret
+	mov			cx, si
+	and			si, byte 0fh
+	jmp			Registers_NormalizeFinish
 
 ALIGN JUMP_ALIGN
 Registers_NormalizeESDI:
-	NORMALIZE_FAR_POINTER es, di, ax, cx
-	ret
+	mov			cx, di
+	and			di, byte 0fh
+;;; fall-through
 
+ALIGN JUMP_ALIGN		
+Registers_NormalizeFinish:		
+	eSHR_IM		cx, 4
+	mov			ax, es
+	add			ax, cx
+	mov			es, ax
+	ret
+		
 
 ;--------------------------------------------------------------------
 ; Registers_SetZFifNullPointerInDSSI (commented to save bytes)
