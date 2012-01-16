@@ -67,7 +67,7 @@ void logBuff( char *message, unsigned long buffoffset, unsigned long readto, int
 		if( logCount != buffoffset )
 			sprintf( &logBuff[logCount*9], "... " );
 
-		log( 4, "%s%s", message, logBuff );
+		log( 3, "%s%s", message, logBuff );
 	}
 }
 
@@ -117,7 +117,7 @@ void processRequests( Serial *serial, Image *image0, Image *image1, int timeoutE
 			buffoffset = 0;
 			len = 1;
 			workCount = 0;
-			log( 2, "Timeout waiting on command" );
+			log( 1, "Timeout waiting on command" );
 			continue;
 		}
 
@@ -148,9 +148,9 @@ void processRequests( Serial *serial, Image *image0, Image *image1, int timeoutE
 				if( verboseLevel >= 2 )
 				{
 					if( buff.b[0] >= 0x20 && buff.b[0] <= 0x7e )
-						log( 3, "Spurious: [%d:%c]", buff.b[0], buff.b[0] );
+						log( 2, "Spurious: [%d:%c]", buff.b[0], buff.b[0] );
 					else
-						log( 3, "Spurious: [%d]", buff.b[0] );
+						log( 2, "Spurious: [%d]", buff.b[0] );
 				}
 				buffoffset = 0;
 				continue;
@@ -171,13 +171,13 @@ void processRequests( Serial *serial, Image *image0, Image *image1, int timeoutE
 			buffoffset = readto = 0;
 			if( (crc = checksum( &buff.w[0], 256 )) != buff.w[256] )
 			{
-				log( 1, "Bad Write Sector Checksum" );
+				log( 0, "Bad Write Sector Checksum" );
 				continue;
 			}
 
 			if( img->readOnly )
 			{
-				log( 2, "Attempt to write to read-only image" );
+				log( 1, "Attempt to write to read-only image" );
 				continue;
 			}
 
@@ -188,7 +188,7 @@ void processRequests( Serial *serial, Image *image0, Image *image1, int timeoutE
 			// Echo back the CRC
 			//
 			if( serial->writeCharacters( &buff.w[256], 2 ) != 2 )
-				log( 1, "Serial Port Write Error" );
+				log( 0, "Serial Port Write Error" );
 
 			workOffset++;
 			workCount--;
@@ -208,7 +208,7 @@ void processRequests( Serial *serial, Image *image0, Image *image1, int timeoutE
 				//
 				if( buff.b[0] != (workCount-0) )
 				{
-					log( 1, "Continue Fault: Received=%d, Expected=%d", buff.b[0], workCount );
+					log( 0, "Continue Fault: Received=%d, Expected=%d", buff.b[0], workCount );
 					workCount = 0;
 					continue;
 				}
@@ -220,7 +220,7 @@ void processRequests( Serial *serial, Image *image0, Image *image1, int timeoutE
 				//
 				if( (crc = checksum( &buff.w[0], 3 )) != buff.w[3] )
 				{
-					log( 1, "Bad Command Checksum: %02x %02x %02x %02x %02x %02x %02x %02x, Checksum=%02x",
+					log( 0, "Bad Command Checksum: %02x %02x %02x %02x %02x %02x %02x %02x, Checksum=%02x",
 						 buff.b[0], buff.b[1], buff.b[2], buff.b[3], buff.b[4], buff.b[5], buff.b[6], buff.b[7], crc);
 					continue;
 				}
@@ -229,7 +229,7 @@ void processRequests( Serial *serial, Image *image0, Image *image1, int timeoutE
 				{
 					if( !image1 )
 					{
-						log( 2, "Slave drive selected when not supplied" );
+						log( 1, "Slave drive selected when not supplied" );
 						img = NULL;
 						continue;
 					}
@@ -260,7 +260,7 @@ void processRequests( Serial *serial, Image *image0, Image *image1, int timeoutE
 
 				if( (workCommand & SERIAL_COMMAND_WRITE) && img->readOnly )
 				{
-					log( 2, "Write attempt to Read Only disk" );
+					log( 1, "Write attempt to Read Only disk" );
 					continue;
 				}
 
@@ -292,9 +292,9 @@ void processRequests( Serial *serial, Image *image0, Image *image1, int timeoutE
 						br = baudRateMatchDivisor( buff.inquire.portAndBaud & SERIAL_INQUIRE_PORTANDBAUD_BAUD );
 
 						if( br )
-							log( 2, "    Ignoring Inquire with Baud Rate=%d", br->rate );
+							log( 1, "    Ignoring Inquire with Baud Rate=%d", br->rate );
 						else
-							log( 2, "    Ignoring Inquire with Unknown Baud Rate (portAndBaud=%d)", buff.inquire.portAndBaud );
+							log( 1, "    Ignoring Inquire with Unknown Baud Rate (portAndBaud=%d)", buff.inquire.portAndBaud );
 						workCount = 0;
 						continue;
 					}
@@ -313,7 +313,7 @@ void processRequests( Serial *serial, Image *image0, Image *image1, int timeoutE
 				buff.w[256] = checksum( &buff.w[0], 256 );
 
 				if( serial->writeCharacters( &buff.w[0], 514 ) != 514 )
-					log( 1, "Serial Port Write Error" );
+					log( 0, "Serial Port Write Error" );
 
 				workCount--;
 				workOffset++;
@@ -326,22 +326,22 @@ void processRequests( Serial *serial, Image *image0, Image *image1, int timeoutE
 							(workCommand & SERIAL_COMMAND_READWRITE ? "Read" : "Inquire"));
 
 			if( vtype == 1 )
-				log( 2, "%s %d: LBA=%u, Count=%u", comStr, img == image0 ? 0 : 1,
+				log( 1, "%s %d: LBA=%u, Count=%u", comStr, img == image0 ? 0 : 1,
 					 mylba, workCount );
 			else if( vtype == 2 )
-				log( 2, "%s %d: Cylinder=%u, Sector=%u, Head=%u, Count=%u, LBA=%u", comStr, img == image0 ? 0 : 1,
+				log( 1, "%s %d: Cylinder=%u, Sector=%u, Head=%u, Count=%u, LBA=%u", comStr, img == image0 ? 0 : 1,
 					 cyl, sect, head, workCount+1, mylba );
 
 			vtype = 0;		  
 
 			if( workOffset > 1 )
-				log( 3, "    Continuation: Offset=%u, Checksum=%04x", workOffset-1, buff.w[256] );
+				log( 2, "    Continuation: Offset=%u, Checksum=%04x", workOffset-1, buff.w[256] );
 
 			if( !(workCommand & SERIAL_COMMAND_WRITE) && verboseLevel >= 4 )
 				logBuff( "    Sending: ", 514, 514, verboseLevel );
 
 			if( workCount == 0 && workOffset > 100 )
-				log( 2, "    Block Complete: %.2lf bytes per second", (512.0 * workOffset) / (GetTime() - perfTimer) * 1000.0 );
+				log( 1, "    Block Complete: %.2lf bytes per second", (512.0 * workOffset) / (GetTime() - perfTimer) * 1000.0 );
 		}
 	}
 }

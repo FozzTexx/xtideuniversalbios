@@ -32,7 +32,10 @@ void Image::init( char *name, int p_readOnly, int p_drive )
 			shortFileName = c+1;
 
 	if( *(shortFileName) == 0 )
-		log( 0, "Can't parse %s\n\n", name );
+	{
+		log( 1, "Can't parse '%s' for short file name\n\n", name );
+		shortFileName = "SerDrive";
+	}
   
 	readOnly = p_readOnly;
 	drive = p_drive;

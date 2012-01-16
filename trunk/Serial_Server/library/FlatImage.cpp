@@ -24,46 +24,44 @@ FlatImage::FlatImage( char *name, int p_readOnly, int p_drive, int p_create, uns
 
 		fp = fopen( name, "r" );
 		if( fp )
-			log( 0, "Create Failure: '%s' already exists", name );
+			log( -1, "Create Failure: '%s' already exists", name );
 		
 		if( !(fp = fopen( name, "w" )) )
-			log( 0, "Could not create file '%s'", name );
+			log( -1, "Could not create file '%s'", name );
 
 		memset( &buff[0], 0, 512 );
 		size2 = size = (unsigned long) p_cyl * (unsigned long) p_sect * (unsigned long) p_head;
 		while( size-- )
 		{
 			if( fwrite( &buff[0], 1, 512, fp ) != 512 )
-				log( 0, "Create write black sector error" );
+				log( -1, "Create write black sector error" );
 		}
 		fclose( fp );
 		
 		sizef = size2/2048.0;
-		log( 1, "Created file '%s' with geometry %u:%u:%u, size %.1lf megabytes\n", name, p_cyl, p_sect, p_head, sizef );
+		log( 0, "Created file '%s' with geometry %u:%u:%u, size %.1lf megabytes\n", name, p_cyl, p_sect, p_head, sizef );
 	}
 
 	fp = fopen( name, "r+" );
 	if( !fp )
-		log( 0, "Could not Open %s", name );
-
-	log( 1, "Opening disk image '%s'", name );
+		log( -1, "Could not Open '%s'", name );
 
 	fseek( fp, 0, SEEK_END );
 	totallba = ftell( fp );
 
 	if( !totallba )
-		log( 0, "Could not get file size" );
+		log( -1, "Could not get file size for '%s'", name );
 
 	if( totallba & 0x1ff )
-		log( 0, "File not made up of 512 byte sectors" );
+		log( -1, "'%s' not made up of 512 byte sectors", name );
 
 	totallba >>= 9;
 	if( totallba != (p_sect * p_head * p_cyl) )
 	{
 		if( p_sect || p_head || p_cyl )
-			log( 0, "File size does not match geometry" );
+			log( -1, "'%s', file size does not match geometry", name );
 		else if( (totallba % 16) != 0 || ((totallba/16) % 63) != 0 )
-			log( 0, "File size does not match standard geometry (x:16:63), please give explicitly with -g" );
+			log( -1, "'%s', file size does not match standard geometry (x:16:63), please geometry explicitly with -g", name );
 		else
 		{
 			sect = 63;
@@ -79,7 +77,7 @@ FlatImage::FlatImage( char *name, int p_readOnly, int p_drive, int p_create, uns
 	}
 
 	sizef = totallba/2048.0;
-	log( 1, "Using geometry %u:%u:%u, total size %.1lf megabytes", cyl, sect, head, sizef );
+	log( 0, "Opening disk image '%s', geometry %u:%u:%u, total size %.1lf MB", name, cyl, sect, head, sizef );
 }
 
 int FlatImage::seekSector( unsigned long cyl, unsigned long sect, unsigned long head )
