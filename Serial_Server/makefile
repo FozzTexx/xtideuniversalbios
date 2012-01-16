@@ -12,8 +12,8 @@ CLFLAGS = /Ox
 
 WIN32OBJS = build/win32.obj build/win32serial.obj build/checksum.obj build/serial.obj build/flatimage.obj build/process.obj build/image.obj
 
-build/serserve.exe:	$(WIN32OBJS)
-	$(CL) /Febuild/serserve.exe $(WIN32OBJS)
+build/serdrive.exe:	$(WIN32OBJS)
+	$(CL) /Febuild/serdrive.exe $(WIN32OBJS)
 
 build/%.obj:	win32/%.cpp
 	$(CL) /c $(CLFLAGS) $< /Fo$@

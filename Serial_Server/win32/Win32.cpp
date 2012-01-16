@@ -20,18 +20,32 @@
 void usage(void)
 {
 	char *usageStrings[] = {
-		"usage: SerServe [options] master-imagefile [[slave-options] slave-imagefile]",
+		"SerDrive - XTIDE Universal BIOS Serial Drive Server",
+		"Version 1.2.0_wip, Built " __DATE__,
+		"",
+		"usage: SerDrive [options] imagefile [[slave-options] slave-imagefile]",
+		"",
 		"  -g cyl:sect:head  Geometry in cylinders, sectors per cylinder, and heads",
 		"                    (default is 65:63:16 for a 32 MB disk)",
-		"  -n [megabytes]    New, Create new disk with given size or use -g geometry",
-		"  -p                Named pipe mode for emulators (pipe is " PIPENAME ")",
-		"  -c PortNumber     COM Port to use (default is first found)",
+		"",
+		"  -n [megabytes]    Create new disk with given size or use -g geometry",
+		"",
+		"  -p                Named Pipe mode for emulators (pipe is '" PIPENAME "')",
+		"",
+		"  -c COMPortNumber  COM Port to use (default is first found)",
+		"",
 		"  -b BaudRate       Baud rate to use on the COM port ",
-		"                    9600, 38400, 115200, 230400, or 460800",   
-		"                    (default 9600, 115200 in pipe mode)",
+		"                    Without a rate multiplier: 2400, 9600, 38400, 115200",
+		"                    With a 2x rate multiplier: 4800, 19200, 76800, 230400",
+		"                    With a 4x rate multiplier: 9600, 38400, 153600, 460800",
+		"                    Abbreviations also accepted (ie, '460K', '38.4K', etc)",
+		"                    (default is 9600, 115200 in named pipe mode)",
+		"",
 		"  -t                Disable timeout, useful for long delays when debugging",
-		"  -r                Read Only disk",
-		"  -v [level]        Reporting level 1-6, increasing information",
+		"",
+		"  -r                Read Only disk, do not allow writes",
+		"",
+		"  -v [level]        Reporting level 1-6, with increasing information",
 		NULL };
 
 	for( int t = 0; usageStrings[t]; t++ )
@@ -40,7 +54,7 @@ void usage(void)
 	exit( 1 );
 }
 
-int verbose = 1;
+int verbose = 0;
 
 int main(int argc, char* argv[])
 {
@@ -157,7 +171,7 @@ int main(int argc, char* argv[])
 		delete serial;
 
 		if( serial->resetConnection )
-			log( 1, "==== Resetting Connection ====" );
+			log( 0, "Connection closed, reset..." );
 	}
 	while( serial->resetConnection );
 }
@@ -168,16 +182,17 @@ void log( int level, char *message, ... )
 
 	va_start( args, message );
 
-	if( level == 0 )
+	if( level < 0 )
 	{
-	  vfprintf( stderr, message, args );
-	  fprintf( stderr, "\n" );
-	  exit( 1 );
+		fprintf( stderr, "ERROR: " );
+		vfprintf( stderr, message, args );
+		fprintf( stderr, "\n" );
+		exit( 1 );
 	}
 	else if( verbose >= level )
 	{
-	  vprintf( message, args );
-	  printf( "\n" );
+		vprintf( message, args );
+		printf( "\n" );
 	}
 
 	va_end( args );
