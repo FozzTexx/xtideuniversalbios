@@ -127,7 +127,8 @@ ALIGN JUMP_ALIGN
 .KeyStrokeInAX:
 	cmp		ah, ROM_BOOT_HOTKEY_SCANCODE
 	jne		SHORT .CheckDriveHotkeys
-	jmp		Int19hMenu_RomBoot
+	;; NOTE: carry flag will be clear after compare above that resulted in zero
+	jmp		Int19hMenu_JumpToBootSector_or_RomBoot   	
 ALIGN JUMP_ALIGN
 .CheckDriveHotkeys:
 	call	BootMenu_GetMenuitemToAXforAsciiHotkeyInAL
