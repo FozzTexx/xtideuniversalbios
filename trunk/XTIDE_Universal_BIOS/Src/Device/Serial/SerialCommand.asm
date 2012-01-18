@@ -110,23 +110,17 @@ SerialCommand_OutputWithParameters_DeviceInDL:
 ;		Port to DX more or less for the remainder of the routine
 ;		Baud in CH until UART initialization is complete
 ;
+		mov		dh, ((DEVICE_SERIAL_PACKEDPORTANDBAUD_STARTINGPORT & 0f00h) >> (8+1))
+		shl		dx, 1		; port offset already x4, needs one more shift to be x8
 		mov		cl, dl
 
-		and		cl, DEVICE_SERIAL_PACKEDPORTANDBAUD_BAUDMASK
-		shl		cl, 1
+		and		cl, (DEVICE_SERIAL_PACKEDPORTANDBAUD_BAUDMASK << 1)
 		mov		ch, SerialCommand_UART_divisorLow_startingBaud
 		shr		ch, cl
 		adc		ch, 0
 
-		and		dl, DEVICE_SERIAL_PACKEDPORTANDBAUD_PORTMASK
-		mov		dh, 0
-		shl		dx, 1			; port offset already x4, needs one more shift to be x8
-		add		dx, DEVICE_SERIAL_PACKEDPORTANDBAUD_STARTINGPORT
-
-;
-; Buffer is referenced through ES:DI throughout, since we need to store faster than we read
-;
-		mov		di,si
+		and		dl, ((DEVICE_SERIAL_PACKEDPORTANDBAUD_PORTMASK << 1) & 0ffh)
+		add		dx, byte (DEVICE_SERIAL_PACKEDPORTANDBAUD_STARTINGPORT & 0ffh)
 
 		mov		al,[bp+IDEPACK.bSectorCount]
 
@@ -144,14 +138,14 @@ SerialCommand_OutputWithParameters_DeviceInDL:
 ; We do this each time since DOS (at boot) or another program may have
 ; decided to reprogram the UART
 ;
-		push	dx
-
+		mov		bl,dl			; setup BL with proper values for read/write loops (BH comes later)
+		
 		mov		al,83h
 		add		dl,SerialCommand_UART_lineControl
 		out		dx,al
 
 		mov		al,ch
-		pop		dx				; divisor low
+		mov		dl,bl			; divisor low
 		out		dx,al
 
 		xor		ax,ax
@@ -171,15 +165,12 @@ SerialCommand_OutputWithParameters_DeviceInDL:
 		inc		dx				;  modemcontrol
 		out		dx,al
 
+		inc		dx				;  linestatus (no output now, just setting up BH for later use)
+		mov		bh,dl
+
 		pop		dx				; base, interrupts disabled
 		xor		ax,ax
 		out		dx,al
-		dec		dx
-
-;
-; Start off with a normalized buffer pointer
-; 
-		call	Registers_NormalizeESDI
 
 ;----------------------------------------------------------------------
 ;
@@ -188,23 +179,30 @@ SerialCommand_OutputWithParameters_DeviceInDL:
 ; Sends first six bytes of IDEREGS_AND_INTPACK as the command
 ;
 		push	es				; save off real buffer location
-		push	di
+		push	si
 
-		mov		di,bp			; point to IDEREGS for command dispatch;
+		mov		si,bp			; point to IDEREGS for command dispatch;
 		push	ss
 		pop		es
 
-		xor		si,si			; initialize checksum for write
-		dec		si
-		mov		bp,si
+		mov		di,0ffffh		; initialize checksum for write
+		mov		bp,di
 
-		mov		bl,03h		; writing 3 words
+		mov		cx,4			; writing 3 words (plus 1)
 
-		call	SerialCommand_WriteProtocol
+		cli						; interrupts off... 
 
-		pop		di				; restore real buffer location
+		call	SerialCommand_WriteProtocol.entry
+
+		pop		di				; restore real buffer location (note change from SI to DI)
+								; Buffer is primarily referenced through ES:DI throughout, since
+								; we need to store (read sector) faster than we read (write sector)
 		pop		es
 
+.nextSectorNormalize:			
+
+		call	Registers_NormalizeESDI	
+		
 		pop		ax				; load command byte (done before call to .nextSector on subsequent iterations)
 		push	ax
 
@@ -212,57 +210,37 @@ SerialCommand_OutputWithParameters_DeviceInDL:
 ; Top of the read/write loop, one iteration per sector
 ;
 .nextSector:
-		xor		si,si			; initialize checksum for read or write
-		dec		si
+		mov		si,0ffffh		; initialize checksum for read or write
 		mov		bp,si
 
-		mov		bx,0100h
+		mov		cx,0101h		; writing 256 words (plus 1)
 
 		shr		ah,1			; command byte, are we doing a write?
-		jnc		.readSector
-		call	SerialCommand_WriteProtocol
+		jnc		.readEntry
 
-		xor		bx,bx
+		xchg	si,di
+		call	SerialCommand_WriteProtocol.entry
+		xchg	si,di
 
-.readSector:
-		mov		cx,bx
-		inc		cx
-
-		mov		bl,dl			; setup bl with proper values for read loop (bh comes later)
+		inc		cx				; CX = 1 now (0 out of WriteProtocol)
+		jmp		.readEntry
 
 ;----------------------------------------------------------------------
 ;
 ; Timeout
 ;
-; During read, we first poll in a tight loop, interrupts off, for the next character to come in
-; If that loop completes, then we assume there is a long delay involved, turn interrupts back on
-; and wait for a given number of timer ticks to pass.
-;
 ; To save code space, we use the contents of DL to decide which byte in the word to return for reading.
 ;
 .readTimeout:
-		push	cx
-		xor		cx,cx
-.readTimeoutLoop:
-		push	dx
-		or		dl,SerialCommand_UART_lineStatus
-		in		al,dx
-		pop		dx
-		shr		al,1
-		jc		.readTimeoutComplete
-		loop	.readTimeoutLoop
-		sti
-		mov		bh,1
-		call	SerialCommand_WaitAndPoll_Init
-		cli
-.readTimeoutComplete:
-		mov		bh,bl
-		or		bh,SerialCommand_UART_lineStatus
-
-		pop		cx
+		push	ax				; not only does this push preserve AX (which we need), but it also
+								; means the stack has the same number of bytes on it as when we are 
+								; sending a packet, important for error cleanup and exit
+		mov		ah,1
+		call	SerialCommand_WaitAndPoll_Read
+		pop		ax
 		test	dl,1
 		jz		.readByte1Ready
-		jmp		.readByte2Ready
+		jmp		.readByte2Ready		
 
 ;----------------------------------------------------------------------------
 ;
@@ -281,6 +259,7 @@ SerialCommand_OutputWithParameters_DeviceInDL:
 		add		si, bp
 		adc		si, 0
 
+.readEntry:		
 		mov		dl,bh
 		in		al,dx
 		shr		al,1			; data ready (byte 1)?
@@ -316,7 +295,7 @@ SerialCommand_OutputWithParameters_DeviceInDL:
 
 		loop	.readLoop
 
-		sti						; interrupts back on ASAP, if we turned them off
+		sti						; interrupts back on ASAP, between packets
 
 ;
 ; Compare checksums
@@ -329,13 +308,6 @@ SerialCommand_OutputWithParameters_DeviceInDL:
 		cmp		ax,bp
 		jnz		SerialCommand_OutputWithParameters_Error
 
-;
-; Normalize buffer pointer for next go round, if needed
-; 
-		test	di,di
-		jns		.clearBuffer
-		call	Registers_NormalizeESDI
-
 ;----------------------------------------------------------------------
 ;
 ; Clear read buffer
@@ -344,7 +316,6 @@ SerialCommand_OutputWithParameters_DeviceInDL:
 ; In theory the initialization of the UART registers above should have
 ; taken care of this, but I have seen cases where this is not true.
 ;
-		
 .clearBuffer:
 		mov		dl,bh
 		in		al,dx
@@ -367,7 +338,12 @@ SerialCommand_OutputWithParameters_DeviceInDL:
 								; (host could start sending data immediately)
 		out		dx,al			; ACK with next sector number
 
-		jmp		.nextSector		; all is well, time for next sector
+;
+; Normalize buffer pointer for next go round, if needed
+;
+		test	di,di
+		jns		short .nextSector
+		jmp		short .nextSectorNormalize
 
 ;---------------------------------------------------------------------------
 ;
@@ -377,19 +353,21 @@ SerialCommand_OutputWithParameters_DeviceInDL:
 ;
 ; Used in situations where a call is underway, such as with SerialCommand_WaitAndPoll
 ;
-SerialCommand_OutputWithParameters_ErrorAndPop2Words:
-		pop		ax
-		pop		ax
+ALIGN JUMP_ALIGN
+SerialCommand_OutputWithParameters_ErrorAndPop4Words:
+		add		sp,8
 
+ALIGN JUMP_ALIGN
 SerialCommand_OutputWithParameters_Error:
 		stc
 		mov		al,1
 
+ALIGN JUMP_ALIGN
 SerialCommand_OutputWithParameters_ReturnCodeInALCF:
 		sti
 		mov		ah,al
 
-		pop		bp				;  recover ax from stack, throw away
+		pop		bp				;  recover ax (command and count) from stack, throw away
 
 		pop		es
 		pop		bp
@@ -399,96 +377,138 @@ SerialCommand_OutputWithParameters_ReturnCodeInALCF:
 		ret
 
 ;--------------------------------------------------------------------
+; SerialCommand_WriteProtocol
+;
+; NOTE: As with its read counterpart, this loop is very time sensitive.  
+; Although it will still function, adding additional instructions will 
+; impact the write througput, especially on slower machines.  
+;
+;	Parameters:
+;		ES:SI:	Ptr to buffer
+;		CX:		Words to write, plus 1
+;		BP/DI:	Initialized for Checksum (-1 in each)
+;		DH:		I/O Port high byte
+;		BX:		LineStatus Register address (BH) and Receive/Transmit Register address (BL)
+;	Returns:
+;		BP/DI:	Checksum for written bytes, compared against ACK from server in .readLoop
+;		CX:     Zero
+;		DL:		Receive/Transmit Register address
+;	Corrupts registers:
+;		AX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+SerialCommand_WriteProtocol:
+.writeLoop:
+		es lodsw				; fetch next word
+
+		out		dx,al			; output first byte
+
+		add		bp,ax			; update checksum
+		adc		bp,0
+		add		di,bp
+		adc		di,0
+
+		mov		dl,bh			; transmit buffer empty?
+		in		al,dx
+		test	al,20h
+		jz		.writeTimeout2	; nope, use our polling routine
+
+.writeByte2Ready:
+		mov		dl,bl
+		mov		al,ah			; output second byte
+		out		dx,al
+
+.entry:
+		mov		dl,bh			; transmit buffer empty?
+		in		al,dx
+		test	al,20h
+		mov		dl,bl
+		jz		.writeTimeout1	; nope, use our polling routine
+
+.writeByte1Ready:
+		loop	.writeLoop
+
+		mov		ax,di			; fold Fletcher's checksum and output
+		xor		al,ah
+		out		dx,al			; byte 1
+
+		call	SerialCommand_WaitAndPoll_Write
+
+		mov		ax,bp
+		xor		al,ah
+		out		dx,al			; byte 2
+
+		ret
+
+.writeTimeout2:
+		mov		dl,ah			; need to preserve AH, but don't need DL (will be reset upon return)
+		call	SerialCommand_WaitAndPoll_Write
+		mov		ah,dl
+		jmp		.writeByte2Ready
+		
+.writeTimeout1:
+		mov		ax,.writeByte1Ready
+		push	ax				; return address for ret at end of SC_writeTimeout2
+;;; fall-through
+
+;--------------------------------------------------------------------
 ; SerialCommand_WaitAndPoll
 ;
 ;	Parameters:
-;		BH:		UART_LineStatus bit to test (20h for write, or 1h for read)
+;		AH:		UART_LineStatus bit to test (20h for write, or 1h for read)
+;               One entry point fills in AH with 20h for write
 ;		DX:		Port address (OK if already incremented to UART_lineStatus)
+;       BX:    
 ;       Stack:	2 words on the stack below the command/count word
 ;	Returns:
 ;       Returns when desired UART_LineStatus bit is cleared
 ;       Jumps directly to error exit if timeout elapses (and cleans up stack)
 ;	Corrupts registers:
-;       CX, flags
+;       AX
 ;--------------------------------------------------------------------
 
 SerialCommand_WaitAndPoll_SoftDelayTicks   EQU   20
 
 ALIGN JUMP_ALIGN
-SerialCommand_WaitAndPoll_Init:
+SerialCommand_WaitAndPoll_Write:
+		mov		ah,20h
+;;; fall-through
+
+ALIGN JUMP_ALIGN
+SerialCommand_WaitAndPoll_Read:
+		push	cx
+		push	dx
+
+;
+; We first poll in a tight loop, interrupts off, for the next character to come in/be sent
+;
+		xor		cx,cx
+.readTimeoutLoop:
+		mov		dl,bh				
+		in		al,dx
+		test	al,ah
+		jnz		.readTimeoutComplete
+		loop	.readTimeoutLoop
+
+;
+; If that loop completes, then we assume there is a long delay involved, turn interrupts back on
+; and wait for a given number of timer ticks to pass.
+;
+		sti
 		mov		cl,SerialCommand_WaitAndPoll_SoftDelayTicks
 		call	Timer_InitializeTimeoutWithTicksInCL
-; fall-through
-
-SerialCommand_WaitAndPoll:
+.WaitAndPoll:
 		call	Timer_SetCFifTimeout
-		jc		SerialCommand_OutputWithParameters_ErrorAndPop2Words
-		push	dx
-		push	ax
-		or		dl,SerialCommand_UART_lineStatus
+		jc		SerialCommand_OutputWithParameters_ErrorAndPop4Words
 		in		al,dx
-		test	al,bh
-		pop		ax
+		test	al,ah
+		jz		.WaitAndPoll
+		cli
+
+.readTimeoutComplete:
 		pop		dx
-		jz		SerialCommand_WaitAndPoll
-; fall-through
-
-SerialCommand_WaitAndPoll_Done:
+		pop		cx
 		ret
-
-;--------------------------------------------------------------------
-; SerialCommand_WriteProtocol
-;
-;	Parameters:
-;		ES:DI:	Ptr to buffer
-;		BL:		Words to write (1-255, or 0=256)
-;		BP/SI:	Initialized for Checksum (-1 in each)
-;		DX:		I/O Port
-;	Returns:
-;		BP/SI:	Checksum for written bytes, compared against ACK from server in .readLoop
-;	Corrupts registers:
-;		AX, BX, CX, DI
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-SerialCommand_WriteProtocol:
-		mov		bh,20h
-
-.writeLoop:
-		test	bh,1
-		jnz		SerialCommand_WaitAndPoll_Done
-
-		mov		ax,[es:di]		; fetch next word
-		inc		di
-		inc		di
-
-		add		bp,ax			; update checksum
-		adc		bp,0
-		add		si,bp
-		adc		si,0
-
-.writeLoopChecksum:
-		call	SerialCommand_WaitAndPoll_Init
-
-		out		dx,al			; output first byte
-
-		call	SerialCommand_WaitAndPoll
-
-		mov		al,ah			; output second byte
-		out		dx,al
-
-		dec		bl
-		jnz		.writeLoop
-
-		inc		bh
-
-		mov		ax,bp			; merge checksum for possible write (last loop)
-		xor		ah,al
-		mov		cx,si
-		xor		cl,ch
-		mov		al,cl
-
-		jmp		.writeLoopChecksum
-
 
 ;--------------------------------------------------------------------
 ; SerialCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH
