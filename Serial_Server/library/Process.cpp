@@ -55,9 +55,9 @@ void logBuff( char *message, unsigned long buffoffset, unsigned long readto, int
 	char logBuff[ 514*9 + 10 ];
 	int logCount;
 
-	if( verboseLevel == 6 || (verboseLevel >= 4 && buffoffset == readto) )
+	if( verboseLevel == 5 || (verboseLevel >= 3 && buffoffset == readto) )
 	{
-		if( verboseLevel == 4 && buffoffset > 11 )
+		if( verboseLevel == 3 && buffoffset > 11 )
 			logCount = 11;
 		else
 			logCount = buffoffset;
@@ -105,7 +105,7 @@ void processRequests( Serial *serial, Image *image0, Image *image1, int timeoutE
 		//
 		// For debugging, look at the incoming packet
 		//
-		if( verboseLevel >= 4 )
+		if( verboseLevel >= 3 )
 			logBuff( "    Received: ", buffoffset, readto, verboseLevel );
 
 		timeout = 0;
@@ -266,7 +266,7 @@ void processRequests( Serial *serial, Image *image0, Image *image1, int timeoutE
 
 				workOffset = 0;
 				workCount = buff.chs.count;
-				if( verboseLevel > 1 && workCount > 100 )
+				if( verboseLevel > 0 && workCount > 100 )
 					perfTimer = GetTime();
 			}
 
@@ -320,7 +320,7 @@ void processRequests( Serial *serial, Image *image0, Image *image1, int timeoutE
 			}
 		}
 
-		if( verboseLevel > 1 )
+		if( verboseLevel > 0 )
 		{
 			char *comStr = (workCommand & SERIAL_COMMAND_WRITE ? "Write" : 
 							(workCommand & SERIAL_COMMAND_READWRITE ? "Read" : "Inquire"));
@@ -337,7 +337,7 @@ void processRequests( Serial *serial, Image *image0, Image *image1, int timeoutE
 			if( workOffset > 1 )
 				log( 2, "    Continuation: Offset=%u, Checksum=%04x", workOffset-1, buff.w[256] );
 
-			if( !(workCommand & SERIAL_COMMAND_WRITE) && verboseLevel >= 4 )
+			if( !(workCommand & SERIAL_COMMAND_WRITE) && verboseLevel >= 3 )
 				logBuff( "    Sending: ", 514, 514, verboseLevel );
 
 			if( workCount == 0 && workOffset > 100 )

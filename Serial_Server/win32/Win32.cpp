@@ -106,7 +106,7 @@ int main(int argc, char* argv[])
 			    if( atol(argv[t+1]) != 0 )
 					verbose = atol(argv[++t]);
 				else
-					verbose = 2;
+					verbose = 1;
 				break;
 			case 'r': case 'R':
 				readOnly = 1;

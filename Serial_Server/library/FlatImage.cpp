@@ -77,7 +77,7 @@ FlatImage::FlatImage( char *name, int p_readOnly, int p_drive, int p_create, uns
 	}
 
 	sizef = totallba/2048.0;
-	log( 0, "Opening disk image '%s', geometry %u:%u:%u, total size %.1lf MB", name, cyl, sect, head, sizef );
+	log( 0, "Opening disk '%s', geometry %u:%u:%u, total size %.1lf MB", name, cyl, sect, head, sizef );
 }
 
 int FlatImage::seekSector( unsigned long cyl, unsigned long sect, unsigned long head )
