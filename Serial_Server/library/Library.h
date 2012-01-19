@@ -52,7 +52,6 @@ struct baudRate {
 	unsigned long rate;
 	unsigned char divisor;
 	char *display;
-	char *altSelection;
 };
 struct baudRate *baudRateMatchString( char *str );
 struct baudRate *baudRateMatchDivisor( unsigned char divisor );

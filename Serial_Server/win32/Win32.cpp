@@ -39,13 +39,19 @@ void usage(void)
 		"                    With a 2x rate multiplier: 4800, 19200, 76800, 230400",
 		"                    With a 4x rate multiplier: 9600, 38400, 153600, 460800",
 		"                    Abbreviations also accepted (ie, '460K', '38.4K', etc)",
-		"                    (default is 9600, 115200 in named pipe mode)",
+		"                    (default is 38400, 115200 in named pipe mode)",
 		"",
 		"  -t                Disable timeout, useful for long delays when debugging",
 		"",
 		"  -r                Read Only disk, do not allow writes",
 		"",
 		"  -v [level]        Reporting level 1-6, with increasing information",
+		"",
+		"On the client computer, a serial port can be configured for use as a hard disk",
+		"with xtidecfg.com.  Or one can hold down the ALT key at the end of the normal",
+		"IDE hard disk scan and the XTIDE Universal BIOS will scan COM1-7, at each of",
+		"the four speeds given above for BaudRate.  Note that hardware rate multipliers",
+		"must be taken into account on the server end, but are invisible on the client.",
 		NULL };
 
 	for( int t = 0; usageStrings[t]; t++ )
@@ -67,7 +73,7 @@ int main(int argc, char* argv[])
 
 	Serial *serial;
 	Image *img;
-	struct baudRate *baudRate;
+	struct baudRate *baudRate = NULL;
 
 	int timeoutEnabled = 1;
 
@@ -80,8 +86,6 @@ int main(int argc, char* argv[])
 
 	int imagecount = 0;
 	Image *images[2] = { NULL, NULL };
-
-	baudRate = baudRateMatchString( "9600" );
 
 	for( int t = 1; t < argc; t++ )
 	{
@@ -113,7 +117,8 @@ int main(int argc, char* argv[])
 				break;
 			case 'p': case 'P':
 				ComPort = "PIPE";
-				baudRate = baudRateMatchString( "115200" );
+				if( !baudRate )
+					baudRate = baudRateMatchString( "115200" );
 				break;			  
 			case 'g': case 'G':
 				if( !Image::parseGeometry( argv[++t], &cyl, &sect, &head ) )
@@ -140,8 +145,8 @@ int main(int argc, char* argv[])
 			case 'b': case 'B':
 				if( !(baudRate = baudRateMatchString( argv[++t] )) )
 				{
-						fprintf( stderr, "Unknown Baud Rate %s\n\n", argv[t] );
-						usage();
+					fprintf( stderr, "Unknown Baud Rate %s\n\n", argv[t] );
+					usage();
 				}
 				break;
 			default:
@@ -161,6 +166,9 @@ int main(int argc, char* argv[])
 
 	if( imagecount == 0 )
 		usage();
+
+	if( !baudRate )
+		baudRate = baudRateMatchString( "38400" );
 
 	do
 	{

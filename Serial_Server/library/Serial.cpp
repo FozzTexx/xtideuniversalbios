@@ -11,17 +11,17 @@
 
 struct baudRate supportedBaudRates[] = 
 { 
-	{   2400,  0x0,   "2400",   NULL }, 
-	{   4800, 0xff,   "4800",   NULL }, 
-	{   9600,  0x1,   "9600",   NULL }, 
-	{  19200, 0xff,  "19.2K",  "19K" }, 
-	{  38400,  0x2,  "38.4K",  "38K" }, 
-	{  76800,  0x2,  "76.8K",  "77K" },
-	{ 115200,  0x3, "115.2K", "115K" }, 
-	{ 153600,  0x3, "153.6K", "154K" },
-	{ 230400, 0xff, "230.4K", "230K" }, 
-	{ 460800,  0x1, "460.8K", "460K" }, 
-	{      0,    0,     NULL,   NULL } 
+	{   2400,  0x0,   "2400" },
+	{   4800, 0xff,   "4800" },
+	{   9600,  0x1,   "9600" },
+	{  19200, 0xff,  "19.2K" },
+	{  38400,  0x2,  "38.4K" },
+	{  76800, 0xff,  "76.8K" },
+	{ 115200,  0x3, "115.2K" },
+	{ 153600, 0xff, "153.6K" },
+	{ 230400, 0xff, "230.4K" },
+	{ 460800, 0xff, "460.8K" },
+	{      0,    0,     NULL }
 };
 
 struct baudRate *baudRateMatchString( char *str )
@@ -32,13 +32,9 @@ struct baudRate *baudRateMatchString( char *str )
 	if( a )
 	{
 		for( b = supportedBaudRates; b->rate; b++ )
-			if( b->rate == a )
+			if( b->rate == a || (b->rate / 1000) == a || ((b->rate + 500) / 1000) == a )
 				return( b );
 	}
-
-	for( b = supportedBaudRates; b->rate; b++ )
-		if( !stricmp( str, b->display ) || (b->altSelection && !stricmp( str, b->altSelection )) )
-			return( b );
 
 	return( NULL );
 }

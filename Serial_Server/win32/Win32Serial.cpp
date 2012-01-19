@@ -53,6 +53,9 @@ Win32Serial::Win32Serial( char *name, struct baudRate *baudRate ) : Serial( name
 		if( !ConnectNamedPipe( pipe, NULL ) )
 			log( -1, "Could not ConnectNamedPipe" );
 
+		if( baudRate->divisor > 3 )
+			log( -1, "Cannot simulate baud rates with hardware multipliers" );
+
 		speedEmulation = 1;
 		resetConnection = 1;
 	}
