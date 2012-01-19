@@ -47,8 +47,11 @@ union _buff {
 #define SERIAL_COMMAND_MASK 0xe3
 #define SERIAL_COMMAND_HEADERMASK 0xe0
 
-#define SERIAL_INQUIRE_PORTANDBAUD_BAUD 3
-#define SERIAL_INQUIRE_PORTANDBAUD_PORT 0xfc
+#define SERIAL_INQUIRE_PORTANDBAUD_BAUDMASK 3
+#define SERIAL_INQUIRE_PORTANDBAUD_PORTMASK 0xfc
+#define SERIAL_INQUIRE_PORTANDBAUD_STARTINGPORT 0x240
+
+#define SERIAL_INQUIRE_PORTANDBAUD_PORTTRANSLATE( a ) ( ((a) & SERIAL_INQUIRE_PORTANDBAUD_PORT) << 1 | SERIAL_INQUIRE_PORTANDBAUD_STARTINGPORT )
 
 void logBuff( char *message, unsigned long buffoffset, unsigned long readto, int verboseLevel )
 {
@@ -76,12 +79,9 @@ void processRequests( Serial *serial, Image *image0, Image *image1, int timeoutE
 	unsigned char workCommand;
 	int workOffset, workCount;
 
-	int vtype = 0;
-
 	unsigned long mylba;
 	unsigned long readto;
 	unsigned long buffoffset;
-	int timeout;
 	unsigned long lasttick;
 	unsigned short crc;
 	unsigned long GetTime_Timeout_Local;
@@ -94,11 +94,11 @@ void processRequests( Serial *serial, Image *image0, Image *image1, int timeoutE
 
 	buffoffset = 0;
 	readto = 0;
-	timeout = 0;
 	workCount = workOffset = workCommand = 0;
+
 	lasttick = GetTime();
 
-	while( timeout || (len = serial->readCharacters( &buff.b[buffoffset], (readto ? readto-buffoffset : 1) )) )
+	while( (len = serial->readCharacters( &buff.b[buffoffset], (readto ? readto-buffoffset : 1) )) )
 	{
 		buffoffset += len;
 
@@ -108,17 +108,37 @@ void processRequests( Serial *serial, Image *image0, Image *image1, int timeoutE
 		if( verboseLevel >= 3 )
 			logBuff( "    Received: ", buffoffset, readto, verboseLevel );
 
-		timeout = 0;
-
-		if( buffoffset != 1 && (timeoutEnabled && GetTime() > lasttick + GetTime_Timeout_Local) )
+		if( timeoutEnabled && readto && GetTime() > lasttick + GetTime_Timeout_Local )
 		{
-			timeout = 1;
-			buff.b[0] = buff.b[buffoffset];
-			buffoffset = 0;
-			len = 1;
-			workCount = 0;
-			log( 1, "Timeout waiting on command" );
-			continue;
+			log( 1, "Timeout waiting on data from client, aborting previous command" );
+
+			workCount = workOffset = workCommand = 0;
+			readto = 0;
+
+			if( len <= 8 && (buff.b[buffoffset-len] & SERIAL_COMMAND_HEADERMASK) == SERIAL_COMMAND_HEADER )
+			{
+				// assume that we are at the front of a new command
+				//
+				memcpy( &buff.b[0], &buff.b[buffoffset-len], len );
+				buffoffset = len;
+				readto = 8;
+				// fall through to normal processing
+			}
+			else if( len == 1 )
+			{
+				// one new character, treat it like any other new character received, discarding the buffer
+				//
+				buff.b[0] = buff.b[buffoffset-1];
+				buffoffset = 1;
+				// fall through to normal processing
+			}
+			else
+			{
+				// discard even the newly received data and start listening anew
+				//
+				buffoffset = 0;
+				continue;
+			}
 		}
 
 		lasttick = GetTime();
@@ -126,13 +146,9 @@ void processRequests( Serial *serial, Image *image0, Image *image1, int timeoutE
 		// 
 		// No work currently to do, look at each character as they come in...
 		//
-		if( buffoffset == 1 && !readto )
+		if( !readto )
 		{
-			if( workCount )
-			{
-				readto = 1;
-			}
-			else if( (buff.b[0] & SERIAL_COMMAND_HEADERMASK) == SERIAL_COMMAND_HEADER )
+			if( (buff.b[0] & SERIAL_COMMAND_HEADERMASK) == SERIAL_COMMAND_HEADER )
 			{
 				//
 				// Found our command header byte to start a commnad sequence, read the next 7 and evaluate
@@ -192,6 +208,9 @@ void processRequests( Serial *serial, Image *image0, Image *image1, int timeoutE
 
 			workOffset++;
 			workCount--;
+
+			if( workCount )
+				readto = 1;           // looking for continuation ACK
 		}
 
 		//
@@ -203,6 +222,9 @@ void processRequests( Serial *serial, Image *image0, Image *image1, int timeoutE
 			buffoffset = readto = 0;
 			if( workCount )
 			{
+				if( verboseLevel > 1 )
+					log( 2, "    Continuation: Offset=%u, Checksum=%04x", workOffset-1, buff.w[256] );
+
 				//
 				// Continuation...
 				//
@@ -220,24 +242,12 @@ void processRequests( Serial *serial, Image *image0, Image *image1, int timeoutE
 				//
 				if( (crc = checksum( &buff.w[0], 3 )) != buff.w[3] )
 				{
-					log( 0, "Bad Command Checksum: %02x %02x %02x %02x %02x %02x %02x %02x, Checksum=%02x",
+					log( 0, "Bad Command Checksum: %02x %02x %02x %02x %02x %02x %02x %02x, Checksum=%04x",
 						 buff.b[0], buff.b[1], buff.b[2], buff.b[3], buff.b[4], buff.b[5], buff.b[6], buff.b[7], crc);
 					continue;
 				}
 
-				if( (buff.inquire.driveAndHead & ATA_DriveAndHead_Drive) )
-				{
-					if( !image1 )
-					{
-						log( 1, "Slave drive selected when not supplied" );
-						img = NULL;
-						continue;
-					}
-					else
-						img = image1;
-				}
-				else
-					img = image0;
+				img = (buff.inquire.driveAndHead & ATA_DriveAndHead_Drive) ? image1 : image0;
 
 				workCommand = buff.chs.command & SERIAL_COMMAND_RWMASK;
 
@@ -247,25 +257,49 @@ void processRequests( Serial *serial, Image *image0, Image *image1, int timeoutE
 						| (((unsigned long) buff.lba.bits16) << 16) 
 						| (((unsigned long) buff.lba.bits08) << 8) 
 						| ((unsigned long) buff.lba.bits00);
-					vtype = 1;
 				}
 				else
 				{
 					cyl = buff.chs.cylinder;
 					sect = buff.chs.sector;
 					head = (buff.chs.driveAndHead & ATA_COMMAND_HEADMASK);
-					mylba = (((cyl*img->head + head)*img->sect) + sect-1);
-					vtype = 2;
-				}
-
-				if( (workCommand & SERIAL_COMMAND_WRITE) && img->readOnly )
-				{
-					log( 1, "Write attempt to Read Only disk" );
-					continue;
+					mylba = img ? (((cyl*img->head + head)*img->sect) + sect-1) : 0;
 				}
 
 				workOffset = 0;
 				workCount = buff.chs.count;
+
+				if( verboseLevel > 0 )
+				{
+					char *comStr = (workCommand & SERIAL_COMMAND_WRITE ? "Write" : "Read");
+
+					if( workCommand == SERIAL_COMMAND_INQUIRE )
+						log( 1, "Inquire %d: Client Port=0x%x, Client Baud=%s", img == image0 ? 0 : 1,
+							 ((buff.inquire.portAndBaud & SERIAL_INQUIRE_PORTANDBAUD_PORTMASK) << 1) 
+							 + SERIAL_INQUIRE_PORTANDBAUD_STARTINGPORT,
+							 baudRateMatchDivisor( buff.inquire.portAndBaud & SERIAL_INQUIRE_PORTANDBAUD_BAUDMASK )->display );
+					else if( buff.chs.command & ATA_COMMAND_LBA )
+						log( 1, "%s %d: LBA=%u, Count=%u", comStr, img == image0 ? 0 : 1,
+							 mylba, workCount );
+					else
+						log( 1, "%s %d: Cylinder=%u, Sector=%u, Head=%u, Count=%u, LBA=%u", comStr, img == image0 ? 0 : 1,
+							 cyl, sect, head, workCount, mylba );
+				}
+
+				if( !img )
+				{
+					log( 1, "    No slave drive provided" );
+					workCount = 0;
+					continue;
+				}
+
+				if( (workCommand & SERIAL_COMMAND_WRITE) && img->readOnly )
+				{
+					log( 1, "    Write attempt to Read Only disk" );
+					workCount = 0;
+					continue;
+				}
+
 				if( verboseLevel > 0 && workCount > 100 )
 					perfTimer = GetTime();
 			}
@@ -285,16 +319,9 @@ void processRequests( Serial *serial, Image *image0, Image *image1, int timeoutE
 				if( workCommand == SERIAL_COMMAND_INQUIRE )
 				{
 					if( serial->speedEmulation && 
-						(buff.inquire.portAndBaud & SERIAL_INQUIRE_PORTANDBAUD_BAUD) != serial->baudRate->divisor )
+						(buff.inquire.portAndBaud & SERIAL_INQUIRE_PORTANDBAUD_BAUDMASK) != serial->baudRate->divisor )
 					{
-						struct baudRate *br;
-
-						br = baudRateMatchDivisor( buff.inquire.portAndBaud & SERIAL_INQUIRE_PORTANDBAUD_BAUD );
-
-						if( br )
-							log( 1, "    Ignoring Inquire with Baud Rate=%d", br->rate );
-						else
-							log( 1, "    Ignoring Inquire with Unknown Baud Rate (portAndBaud=%d)", buff.inquire.portAndBaud );
+						log( 1, "    Ignoring Inquire with wrong baud rate" );
 						workCount = 0;
 						continue;
 					}
@@ -315,34 +342,19 @@ void processRequests( Serial *serial, Image *image0, Image *image1, int timeoutE
 				if( serial->writeCharacters( &buff.w[0], 514 ) != 514 )
 					log( 0, "Serial Port Write Error" );
 
+				if( verboseLevel >= 3 )
+					logBuff( "    Sending: ", 514, 514, verboseLevel );
+
 				workCount--;
 				workOffset++;
+
+				if( workCount )
+					readto = 1;           // looking for continuation ACK
 			}
 		}
 
-		if( verboseLevel > 0 )
-		{
-			char *comStr = (workCommand & SERIAL_COMMAND_WRITE ? "Write" : 
-							(workCommand & SERIAL_COMMAND_READWRITE ? "Read" : "Inquire"));
-
-			if( vtype == 1 )
-				log( 1, "%s %d: LBA=%u, Count=%u", comStr, img == image0 ? 0 : 1,
-					 mylba, workCount );
-			else if( vtype == 2 )
-				log( 1, "%s %d: Cylinder=%u, Sector=%u, Head=%u, Count=%u, LBA=%u", comStr, img == image0 ? 0 : 1,
-					 cyl, sect, head, workCount+1, mylba );
-
-			vtype = 0;		  
-
-			if( workOffset > 1 )
-				log( 2, "    Continuation: Offset=%u, Checksum=%04x", workOffset-1, buff.w[256] );
-
-			if( !(workCommand & SERIAL_COMMAND_WRITE) && verboseLevel >= 3 )
-				logBuff( "    Sending: ", 514, 514, verboseLevel );
-
-			if( workCount == 0 && workOffset > 100 )
-				log( 1, "    Block Complete: %.2lf bytes per second", (512.0 * workOffset) / (GetTime() - perfTimer) * 1000.0 );
-		}
+		if( workCount == 0 && workOffset > 100 )
+			log( 1, "    Performance: %.2lf bytes per second", (512.0 * workOffset) / (GetTime() - perfTimer) * 1000.0 );
 	}
 }
 
