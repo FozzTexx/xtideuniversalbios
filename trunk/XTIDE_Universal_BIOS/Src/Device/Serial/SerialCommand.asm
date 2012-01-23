@@ -13,18 +13,26 @@ SECTION .text
 SerialCommand_UART_base							EQU		0
 SerialCommand_UART_transmitByte					EQU		0
 SerialCommand_UART_receiveByte					EQU		0
-SerialCommand_UART_divisorLow					EQU		0
+
+;
 ; Values for UART_divisorLow:
 ; 60h = 1200, 30h = 2400, 18h = 4800, 0ch = 9600, 6 = 19200, 3 = 38400, 2 = 57600, 1 = 115200
+;
+SerialCommand_UART_divisorLow					EQU		0
 
-SerialCommand_UART_divisorLow_startingBaud		EQU   030h
+;
 ; We support 4 baud rates, starting here going higher and skipping every other baud rate
 ; Starting with 30h, that means 30h (1200 baud), 0ch (9600 baud), 3 (38400 baud), and 1 (115200 baud)
 ; Note: hardware baud multipliers (2x, 4x) will impact the final baud rate and are not known at this level
+;
+SerialCommand_UART_divisorLow_startingBaud		EQU   030h
 
 SerialCommand_UART_interruptEnable				EQU		1
+
+;
+; UART_divisorHigh is zero for all speeds including and above 1200 baud (which is all we do)
+;
 SerialCommand_UART_divisorHigh					EQU		1
-; UART_divisorHigh is zero for all speeds including and above 1200 baud
 
 SerialCommand_UART_interruptIdent				EQU		2
 SerialCommand_UART_FIFOControl					EQU		2
@@ -75,6 +83,7 @@ SerialCommand_OutputWithParameters:
 
 ;  all other commands return success
 ;  including function 0ech which should return drive information, this is handled with the identify functions
+;
 		xor		ah,ah			;  also clears carry
 		ret
 
@@ -129,7 +138,9 @@ SerialCommand_OutputWithParameters_DeviceInDL:
 ;
 		push	ax
 
-;		cld		; Shouldn't be needed. DF has already been cleared (line 24, Int13h.asm)
+%if 0
+		cld		; Shouldn't be needed. DF has already been cleared (line 24, Int13h.asm)
+%endif
 
 ;----------------------------------------------------------------------
 ;
@@ -308,6 +319,81 @@ SerialCommand_OutputWithParameters_DeviceInDL:
 		cmp		ax,bp
 		jnz		SerialCommand_OutputWithParameters_Error
 
+		pop		ax				; sector count and command byte
+		dec		al				; decrememnt sector count
+		push	ax				; save
+		jz		SerialCommand_OutputWithParameters_ReturnCodeInALCF    ; CF=0 from "cmp ax,bp" returning Zero above
+
+		cli						; interrupts back off for ACK byte to host
+								; (host could start sending data immediately)
+		out		dx,al			; ACK with next sector number
+
+;
+; Normalize buffer pointer for next go round, if needed.
+;
+; We need to re-nomrlize the pointer in ES:DI after processing every 7f sectors.  That number could 
+; have been 80 if we knew the offset was on a segment boundary, but this may not be the case.
+;
+; We re-normalize based on the sector count (flags from "dec al" above)...
+;    a) we normalize before the first sector goes out, immediately after sending the command packet (above)
+;    b) on transitions from FF to FE, very rare case for writing 255 or 256 sectors
+;    c) on transitions from 80 to 7F, a large read/write
+;    d) on transitions from 00 to FF, very, very rare case of writing 256 secotrs
+;       We don't need to renormalize in this case, but it isn't worth the memory/effort to not do 
+;       the extra work, and it does no harm.
+;
+; I really don't care much about (d) because I have not seen cases where any OS makes a request
+; for more than 127 sectors.  Back in the day, it appears that some BIOS could not support more than 127
+; sectors, so that may be the practical limit for OS and application developers.  The Extended BIOS
+; function also appear to be capped at 127 sectors.  So although this can support the full 256 sectors 
+; if needed, we are optimized for that 1-127 range.
+;
+; Assume we start with 0000:000f, with 256 sectors to write...
+;    After first packet, 0000:020f
+;    First decrement of AL, transition from 00 to FF: renormalize to 0020:000f (unnecessary)
+;    After second packet, 0020:020f
+;    Second derement of AL, transition from FF to FE: renormalize to 0040:000f
+;    After 7f more packets, 0040:fe0f
+;    Decrement of AL, transition from 80 to 7F: renormalize to 1020:000f
+;    After 7f more packets, 1020:fe0f or 2000:000f if normalized
+;    Decrement of AL, from 1 to 0: exit
+;
+		jge		short .nextSector		; OF=SF, branch for 1-7e, most common case
+										; (0 kicked out above for return success)
+
+		add		al,2					; 7f-ff moves to 81-01
+										; (0-7e kicked out before we get here)
+										; 7f moves to 81 and OF=1, so OF=SF
+										; fe moves to 0 and OF=0, SF=0, so OF=SF 
+										; ff moves to 1 and OF=0, SF=0, so OF=SF
+										; 80-fd moves to 82-ff and OF=0, so OF<>SF
+
+		jl		short .nextSector		; OF<>SF, branch for all cases but 7f, fe, and ff
+
+%if 0
+        jpo		short .nextSector		; if we really wanted to avoid normalizing for ff, this
+										; is one way to do it, but it adds more memory and more
+										; cycles for the 7f and fe cases.  IMHO, given that I've
+										; never seen a request for more than 7f, this seems unnecessary.
+%endif
+
+		jmp		short .nextSectorNormalize	; our two renormalization cases (plus one for ff)
+
+;---------------------------------------------------------------------------
+;
+; Cleanup, error reporting, and exit
+;
+
+;
+; Used in situations where a call is underway, such as with SerialCommand_WaitAndPoll
+;
+ALIGN JUMP_ALIGN
+SerialCommand_OutputWithParameters_ErrorAndPop4Words:
+		add		sp,8
+;;; fall-through
+
+ALIGN JUMP_ALIGN
+SerialCommand_OutputWithParameters_Error:
 ;----------------------------------------------------------------------
 ;
 ; Clear read buffer
@@ -325,46 +411,16 @@ SerialCommand_OutputWithParameters_DeviceInDL:
 		shr		al,1
 		in		al,dx
 		jc		.clearBuffer	; note CF from shr above
-		jmp		SerialCommand_OutputWithParameters_Error
 
-.clearBufferComplete:
-
-		pop		ax				; sector count and command byte
-		dec		al				; decrememnt sector count
-		push	ax				; save
-		jz		SerialCommand_OutputWithParameters_ReturnCodeInALCF    ; CF clear from .clearBuffer test above
-
-		cli						; interrupts back off for ACK byte to host
-								; (host could start sending data immediately)
-		out		dx,al			; ACK with next sector number
-
-;
-; Normalize buffer pointer for next go round, if needed
-;
-		test	di,di
-		jns		short .nextSector
-		jmp		short .nextSectorNormalize
-
-;---------------------------------------------------------------------------
-;
-; Cleanup, error reporting, and exit
-;
-
-;
-; Used in situations where a call is underway, such as with SerialCommand_WaitAndPoll
-;
-ALIGN JUMP_ALIGN
-SerialCommand_OutputWithParameters_ErrorAndPop4Words:
-		add		sp,8
-
-ALIGN JUMP_ALIGN
-SerialCommand_OutputWithParameters_Error:
+.clearBufferComplete:			
 		stc
 		mov		al,1
 
 ALIGN JUMP_ALIGN
 SerialCommand_OutputWithParameters_ReturnCodeInALCF:
-		sti
+%if 0
+		sti						;  all paths here will already have interrupts turned back on
+%endif
 		mov		ah,al
 
 		pop		bp				;  recover ax (command and count) from stack, throw away
@@ -695,8 +751,10 @@ ALIGN JUMP_ALIGN
 
 .error:	
 		stc
-		; mov		ah,1		; setting the error code is unnecessary as this path can only be taken during
-								; drive detection, and drive detection works off CF and does not check AH
+%if 0
+		mov		ah,1		; setting the error code is unnecessary as this path can only be taken during
+							; drive detection, and drive detection works off CF and does not check AH
+%endif
 		ret
 
 
