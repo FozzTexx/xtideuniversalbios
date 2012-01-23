@@ -127,7 +127,7 @@ IdeCommand_OutputWithParameters:
 	call	IdeIO_OutputALtoIdeRegisterInDL
 
 	; Output Sector Address High (only used by LBA48)
-	mov		ax, [bp+IDEPACK.wSectorCountHighAndLbaLowExt]
+	eMOVZX	ax, BYTE [bp+IDEPACK.bLbaLowExt]
 	mov		cx, [bp+IDEPACK.wLbaMiddleAndHighExt]
 	call	OutputSectorCountAndAddress
 

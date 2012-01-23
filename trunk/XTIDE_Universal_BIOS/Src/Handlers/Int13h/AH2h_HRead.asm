@@ -30,7 +30,6 @@ AH2h_HandlerForReadDiskSectors:
 	call	CommandLookup_GetOldInt13hIndexToBX
 	mov		ah, [cs:bx+g_rgbReadCommandLookup]
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRQ, FLG_STATUS_DRQ)
-	mov		si, [bp+IDEPACK.intpack+INTPACK.bx]
 %ifdef USE_186
 	push	Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 	jmp		Idepack_TranslateOldInt13hAddressAndIssueCommandFromAH
