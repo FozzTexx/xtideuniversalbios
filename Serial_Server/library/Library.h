@@ -28,11 +28,12 @@ public:
 
 	Image( char *name, int p_readOnly, int p_drive );
 	Image( char *name, int p_readOnly, int p_drive, int p_create, unsigned long p_lba );
-	Image( char *name, int p_readOnly, int p_drive, int p_create, unsigned long p_cyl, unsigned long p_sect, unsigned long p_head );
+	Image( char *name, int p_readOnly, int p_drive, int p_create, unsigned long p_cyl, unsigned long p_head, unsigned long p_sect, int p_useCHS );
 
 	virtual ~Image() {};
 
 	unsigned long cyl, sect, head;
+	int useCHS;
 
 	unsigned long totallba;
 	
@@ -40,12 +41,11 @@ public:
 	int readOnly;
 	int drive;
 
-	static int parseGeometry( char *str, unsigned long *p_cyl, unsigned long *p_sect, unsigned long *p_head );
+	static int parseGeometry( char *str, unsigned long *p_cyl, unsigned long *p_head, unsigned long *p_sect );
 
 	void respondInquire( unsigned short *buff, struct baudRate *baudRate, unsigned char portAndBaud );
 
-private:
-	void init( char *name, int p_readOnly, int p_drive );
+	void init( char *name, int p_readOnly, int p_drive, unsigned long p_cyl, unsigned long p_head, unsigned long p_sect, int p_useCHS );
 };
 
 struct baudRate {

@@ -11,9 +11,9 @@
 
 #include "FlatImage.h"
 
-FlatImage::FlatImage( char *name, int p_readOnly, int p_drive, int p_create, unsigned long p_cyl, unsigned long p_sect, unsigned long p_head )   :   Image( name, p_readOnly, p_drive, p_create, p_cyl, p_sect, p_head )
+FlatImage::FlatImage( char *name, int p_readOnly, int p_drive, int p_create, unsigned long p_cyl, unsigned long p_head, unsigned long p_sect, int p_useCHS )   :   Image( name, p_readOnly, p_drive, p_create, p_cyl, p_head, p_sect, p_useCHS )
 {
-	double sizef;
+	long filesize;
 
 	if( p_create )
 	{
@@ -39,7 +39,10 @@ FlatImage::FlatImage( char *name, int p_readOnly, int p_drive, int p_create, uns
 		fclose( fp );
 		
 		sizef = size2/2048.0;
-		log( 0, "Created file '%s' with geometry %u:%u:%u, size %.1lf megabytes\n", name, p_cyl, p_sect, p_head, sizef );
+		if( p_cyl > 1024 )
+			log( 0, "Created file '%s', size %.1lf MB", name, sizef );
+		else
+			log( 0, "Created file '%s', geometry %u:%u:%u, size %.1lf MB", name, p_cyl, p_sect, p_head, sizef );
 	}
 
 	fp = fopen( name, "r+" );
@@ -47,37 +50,17 @@ FlatImage::FlatImage( char *name, int p_readOnly, int p_drive, int p_create, uns
 		log( -1, "Could not Open '%s'", name );
 
 	fseek( fp, 0, SEEK_END );
-	totallba = ftell( fp );
+	filesize = ftell( fp );
 
-	if( !totallba )
-		log( -1, "Could not get file size for '%s'", name );
+	if( filesize == 0 || filesize == -1L )
+		log( -1, "Could not get file size for '%s', file possibly larger than 2 GB", name );
 
-	if( totallba & 0x1ff )
+	if( filesize & 0x1ff )
 		log( -1, "'%s' not made up of 512 byte sectors", name );
 
-	totallba >>= 9;
-	if( totallba != (p_sect * p_head * p_cyl) )
-	{
-		if( p_sect || p_head || p_cyl )
-			log( -1, "'%s', file size does not match geometry", name );
-		else if( (totallba % 16) != 0 || ((totallba/16) % 63) != 0 )
-			log( -1, "'%s', file size does not match standard geometry (x:16:63), please geometry explicitly with -g", name );
-		else
-		{
-			sect = 63;
-			head = 16;
-			cyl = (totallba / sect / head);
-		}
-	}
-	else
-	{
-		sect = p_sect;
-		head = p_head;
-		cyl = p_cyl;
-	}
+	totallba = filesize >> 9;     // 512 bytes per sector
 
-	sizef = totallba/2048.0;
-	log( 0, "Opening disk '%s', geometry %u:%u:%u, total size %.1lf MB", name, cyl, sect, head, sizef );
+	init( name, p_readOnly, p_drive, p_cyl, p_head, p_sect, p_useCHS );
 }
 
 int FlatImage::seekSector( unsigned long cyl, unsigned long sect, unsigned long head )
