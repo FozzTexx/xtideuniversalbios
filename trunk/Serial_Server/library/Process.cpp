@@ -251,7 +251,7 @@ void processRequests( Serial *serial, Image *image0, Image *image1, int timeoutE
 
 				workCommand = buff.chs.command & SERIAL_COMMAND_RWMASK;
 
-				if( (workCommand != SERIAL_COMMAND_INQUIRE) && (buff.chs.command & ATA_COMMAND_LBA) )
+				if( (workCommand != SERIAL_COMMAND_INQUIRE) && (buff.chs.driveAndHead & ATA_COMMAND_LBA) )
 				{
 					mylba = ((((unsigned long) buff.lba.bits24) & ATA_COMMAND_HEADMASK) << 24) 
 						| (((unsigned long) buff.lba.bits16) << 16) 
@@ -278,7 +278,7 @@ void processRequests( Serial *serial, Image *image0, Image *image1, int timeoutE
 							 ((buff.inquire.portAndBaud & SERIAL_INQUIRE_PORTANDBAUD_PORTMASK) << 1) 
 							 + SERIAL_INQUIRE_PORTANDBAUD_STARTINGPORT,
 							 baudRateMatchDivisor( buff.inquire.portAndBaud & SERIAL_INQUIRE_PORTANDBAUD_BAUDMASK )->display );
-					else if( buff.chs.command & ATA_COMMAND_LBA )
+					else if( buff.chs.driveAndHead & ATA_COMMAND_LBA )
 						log( 1, "%s %d: LBA=%u, Count=%u", comStr, img == image0 ? 0 : 1,
 							 mylba, workCount );
 					else

@@ -25,27 +25,29 @@ void usage(void)
 		"",
 		"usage: SerDrive [options] imagefile [[slave-options] slave-imagefile]",
 		"",
-		"  -g cyl:sect:head  Geometry in cylinders, sectors per cylinder, and heads",
-		"                    (default is 65:63:16 for a 32 MB disk)",
+		"  -g [cyl:head:sect]  Geometry in cylinders, sectors per cylinder, and heads",
+		"                      -g without parameters uses CHS mode (default is LBA28)",
 		"",
-		"  -n [megabytes]    Create new disk with given size or use -g geometry",
+		"  -n [megabytes]      Create new disk with given size or use -g geometry",
+		"                      Maximum size is 137.4 GB (LBA28 limit)",
+		"                      (default is a 32 MB disk, with CHS geometry 65:63:16)",
 		"",
-		"  -p                Named Pipe mode for emulators (pipe is '" PIPENAME "')",
+		"  -p                  Named Pipe mode for emulators (pipe is '" PIPENAME "')",
 		"",
-		"  -c COMPortNumber  COM Port to use (default is first found)",
+		"  -c COMPortNumber    COM Port to use (default is first found)",
 		"",
-		"  -b BaudRate       Baud rate to use on the COM port ",
-		"                    Without a rate multiplier: 2400, 9600, 38400, 115200",
-		"                    With a 2x rate multiplier: 4800, 19200, 76800, 230400",
-		"                    With a 4x rate multiplier: 9600, 38400, 153600, 460800",
-		"                    Abbreviations also accepted (ie, '460K', '38.4K', etc)",
-		"                    (default is 38400, 115200 in named pipe mode)",
+		"  -b BaudRate         Baud rate to use on the COM port ",
+		"                      Without a rate multiplier: 2400, 9600, 38400, 115200",
+		"                      With a 2x rate multiplier: 4800, 19200, 76800, 230400",
+		"                      With a 4x rate multiplier: 9600, 38400, 153600, 460800",
+		"                      Abbreviations also accepted (ie, '460K', '38.4K', etc)",
+		"                      (default is 38400, 115200 in named pipe mode)",
 		"",
-		"  -t                Disable timeout, useful for long delays when debugging",
+		"  -t                  Disable timeout, useful for long delays when debugging",
 		"",
-		"  -r                Read Only disk, do not allow writes",
+		"  -r                  Read Only disk, do not allow writes",
 		"",
-		"  -v [level]        Reporting level 1-6, with increasing information",
+		"  -v [level]          Reporting level 1-6, with increasing information",
 		"",
 		"On the client computer, a serial port can be configured for use as a hard disk",
 		"with xtidecfg.com.  Or one can hold down the ALT key at the end of the normal",
@@ -82,7 +84,8 @@ int main(int argc, char* argv[])
 	_fmode = _O_BINARY;
 
 	unsigned long cyl = 0, sect = 0, head = 0;
-	int readOnly = 0, createFile = 0, explicitGeometry = 0;
+	int readOnly = 0, createFile = 0;
+	int useCHS = 0;
 
 	int imagecount = 0;
 	Image *images[2] = { NULL, NULL };
@@ -121,9 +124,12 @@ int main(int argc, char* argv[])
 					baudRate = baudRateMatchString( "115200" );
 				break;			  
 			case 'g': case 'G':
-				if( !Image::parseGeometry( argv[++t], &cyl, &sect, &head ) )
-					usage();
-				explicitGeometry = 1;
+				if( atol(argv[t+1]) != 0 )
+				{
+					if( !Image::parseGeometry( argv[++t], &cyl, &head, &sect ) )
+						usage();
+				}
+				useCHS = 1;
 				break;
 			case 'h': case 'H': case '?':
 				usage();
@@ -136,7 +142,6 @@ int main(int argc, char* argv[])
 					sect = 63;
 					head = 16;
 					cyl = (size*1024*2) / (16*63);
-					explicitGeometry = 1;
 				}
 				break;
 			case 't': case 'T':
@@ -156,9 +161,9 @@ int main(int argc, char* argv[])
 		}
 		else if( imagecount < 2 )
 		{
-			images[imagecount] = new FlatImage( argv[t], readOnly, imagecount, createFile, cyl, sect, head );
+			images[imagecount] = new FlatImage( argv[t], readOnly, imagecount, createFile, cyl, head, sect, useCHS );
 			imagecount++;
-			createFile = readOnly = cyl = sect = head = 0;
+			createFile = readOnly = cyl = sect = head = useCHS = 0;
 		}
 		else
 			usage();
