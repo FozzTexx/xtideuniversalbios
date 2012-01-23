@@ -52,7 +52,6 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ;ALIGN JUMP_ALIGN
 AH24h_SetBlockSize:
-	MIN_U	al, MAX_SUPPORTED_BLOCK_SIZE_IN_SECTORS
 	push	ax
 	xchg	dx, ax			; DL = Block size (Sector Count Register)
 	mov		al, COMMAND_SET_MULTIPLE_MODE

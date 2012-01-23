@@ -209,6 +209,7 @@ iend
 	%include "DriveXlate.asm"		; For swapping drive numbers
 	%include "Address.asm"			; For sector address translations
 	%include "CommandLookup.asm"	; For getting correct transfer command
+	%include "PrepareBuffer.asm"	; For buffer pointer normalization
 	%include "Int13h.asm"			; For Int 13h, Disk functions
 	%include "AH0h_HReset.asm"		; Required by Int13h_Jump.asm
 	%include "AH1h_HStatus.asm"		; Required by Int13h_Jump.asm

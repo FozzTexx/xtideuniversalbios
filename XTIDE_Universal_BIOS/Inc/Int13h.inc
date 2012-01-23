@@ -44,8 +44,6 @@ FLOPPY_TYPE_35_HD			EQU	4
 FLOPPY_TYPE_35_ED			EQU	6
 
 
-MAX_SUPPORTED_BLOCK_SIZE_IN_SECTORS		EQU		64
-
 %define TIMEOUT_AND_STATUS_TO_WAIT(timeout, status)		(((timeout)<<8) | (status))
 
 

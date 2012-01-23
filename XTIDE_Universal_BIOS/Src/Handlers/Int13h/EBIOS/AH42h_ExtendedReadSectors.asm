@@ -54,7 +54,7 @@ AH42h_LoadDapToESSIandVerifyForTransfer:
 	mov		es, [bp+IDEPACK.intpack+INTPACK.ds]	; ES:SI to point Disk Address Packet
 	cmp		BYTE [es:si+DAP.bSize], MINIMUM_DAP_SIZE
 	jb		SHORT AH42h_ReturnWithInvalidFunctionError
-	cmp		WORD [es:si+DAP.wSectorCount], BYTE 0
+	cmp		WORD [es:si+DAP.bSectorCount], BYTE 0
 	je		SHORT AH42h_ReturnWithInvalidFunctionError
 	ret
 AH42h_ReturnWithInvalidFunctionError:

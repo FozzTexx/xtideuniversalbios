@@ -39,9 +39,8 @@ Idepack_FakeToSSBP:
 ALIGN JUMP_ALIGN
 Idepack_ConvertDapToIdepackAndIssueCommandFromAH:
 	mov		[bp+IDEPACK.bCommand], ah
-	mov		ax, [es:si+DAP.wSectorCount]
+	mov		al, [es:si+DAP.bSectorCount]
 	mov		[bp+IDEPACK.bSectorCount], al
-	mov		[bp+IDEPACK.bSectorCountHighExt], ah
 
 	mov		al, [es:si+DAP.qwLBA]		; LBA byte 0
 	mov		[bp+IDEPACK.bLbaLow], al
@@ -65,16 +64,17 @@ Idepack_ConvertDapToIdepackAndIssueCommandFromAH:
 ; Idepack_TranslateOldInt13hAddressAndIssueCommandFromAH
 ;	Parameters:
 ;		AH:		IDE command to issue
-;		AL:		Number of sectors to transfer (1...255, 0=256)
+;		AL:		Number of sectors to transfer
 ;		BH:		Timeout ticks
 ;		BL:		IDE Status Register flag to wait after command
 ;		CH:		Cylinder number, bits 7...0
 ;		CL:		Bits 7...6: Cylinder number bits 9 and 8
 ;				Bits 5...0:	Starting sector number (1...63)
 ;		DH:		Starting head number (0...255)
-;		ES:SI:	Ptr to data buffer
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
-;		SS:BP:	Ptr to IDEPACK
+;		SS:BP:	Ptr to IDEPACK (containing INTPACK)
+;	Parameters on INTPACK:
+;		ES:BX:	Ptr to data buffer
 ;	Returns:
 ;		AH:		INT 13h Error Code
 ;		CF:		Cleared if success, Set if error
@@ -83,17 +83,11 @@ Idepack_ConvertDapToIdepackAndIssueCommandFromAH:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Idepack_TranslateOldInt13hAddressAndIssueCommandFromAH:
+	mov		[bp+IDEPACK.bSectorCount], al
 	mov		[bp+IDEPACK.bCommand], ah
 
-	xor		ah, ah
-	cmp		ah, al
-	cmc
-	adc		ah, ah
-
-	mov		[bp+IDEPACK.bSectorCount], al
-	mov		[bp+IDEPACK.bSectorCountHighExt], ah
-
 	push	bx
+	call	PrepareBuffer_ToESSIforOldInt13hTransfer
 	call	Address_OldInt13hAddressToIdeAddress
 	call	AccessDPT_GetDriveSelectByteToAL
 	or		al, bh			; AL now has Drive and Head Select Byte
@@ -134,7 +128,6 @@ Idepack_StoreNonExtParametersAndIssueCommandFromAL:
 	mov		[bp+IDEPACK.bCommand], al
 	mov		[bp+IDEPACK.wSectorCountAndLbaLow], dx
 	mov		[bp+IDEPACK.wLbaMiddleAndHigh], cx
-	mov		BYTE [bp+IDEPACK.bSectorCountHighExt], 0
 
 	; Drive and Head select byte
 	and		ah, MASK_DRVNHEAD_HEAD		; Keep head bits only
