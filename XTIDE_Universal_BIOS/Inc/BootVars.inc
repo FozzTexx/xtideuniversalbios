@@ -21,13 +21,13 @@ endstruc
 ; Pre-boot variables. These do not exist after successfull boot to OS.
 ; Segment is always 0000h, same as BDA segment
 struc BOOTVARS
-					resb	800h
-	.dwPostStack	resb	4		;  804h, POST stack when entering INT 19h
-					resb	8
-	.rgBootNfo		resb	73F4h	;  80Ch, Array containing BOOTNFO structs
-	.rgbMnuStack:					; 7C00h and below, Boot Menu stack
+					resb	7C00h
 	.rgbAtaInfo:					; 7C00h, ATA Information for drive detection
 	.rgbBootSect	resb 	512		; 7C00h, Boot sector
+					resb	256		; Boot Menu stack
+	.rgbMnuStack:
+	.dwPostStack	resb	4		; POST stack pointer when entering INT 19h
+	.rgBootNfo:						; Array containing BOOTNFO structs
 endstruc
 
 

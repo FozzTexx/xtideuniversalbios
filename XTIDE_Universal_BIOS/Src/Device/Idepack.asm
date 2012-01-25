@@ -24,6 +24,7 @@ Idepack_FakeToSSBP:
 ; Idepack_ConvertDapToIdepackAndIssueCommandFromAH
 ;	Parameters:
 ;		AH:		IDE command to issue
+;		AL:		Number of sectors to transfer (for xfer commands)
 ;		BH:		Timeout ticks
 ;		BL:		IDE Status Register flag to wait after command
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
@@ -38,9 +39,8 @@ Idepack_FakeToSSBP:
 %ifdef MODULE_EBIOS
 ALIGN JUMP_ALIGN
 Idepack_ConvertDapToIdepackAndIssueCommandFromAH:
-	mov		[bp+IDEPACK.bCommand], ah
-	mov		al, [es:si+DAP.bSectorCount]
 	mov		[bp+IDEPACK.bSectorCount], al
+	mov		[bp+IDEPACK.bCommand], ah
 
 	mov		al, [es:si+DAP.qwLBA]		; LBA byte 0
 	mov		[bp+IDEPACK.bLbaLow], al
@@ -55,7 +55,15 @@ Idepack_ConvertDapToIdepackAndIssueCommandFromAH:
 	call	AccessDPT_GetDriveSelectByteToAL
 	or		al, ah
 	mov		[bp+IDEPACK.bDrvAndHead], al
-	les		si, [es:si+DAP.dwMemoryAddress]
+
+	; Normalize data buffer pointer to ES:SI
+	mov		ax, [es:si+DAP.dwMemoryAddress]		; Load offset
+	mov		cx, ax
+	eSHR_IM	ax, 4								; Divide offset by 16
+	add		ax, [es:si+DAP.dwMemoryAddress+2]	; Add segment
+	mov		es, ax								; Segment normalized
+	mov		si, cx
+	and		si, BYTE 0Fh						; Offset normalized
 	jmp		SHORT GetDeviceControlByteToIdepackAndStartTransfer
 %endif
 
@@ -64,7 +72,7 @@ Idepack_ConvertDapToIdepackAndIssueCommandFromAH:
 ; Idepack_TranslateOldInt13hAddressAndIssueCommandFromAH
 ;	Parameters:
 ;		AH:		IDE command to issue
-;		AL:		Number of sectors to transfer
+;		AL:		Number of sectors to transfer (for xfer commands)
 ;		BH:		Timeout ticks
 ;		BL:		IDE Status Register flag to wait after command
 ;		CH:		Cylinder number, bits 7...0
@@ -72,9 +80,8 @@ Idepack_ConvertDapToIdepackAndIssueCommandFromAH:
 ;				Bits 5...0:	Starting sector number (1...63)
 ;		DH:		Starting head number (0...255)
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
+;		ES:SI:	Ptr to normalized data buffer (for xfer commands)
 ;		SS:BP:	Ptr to IDEPACK (containing INTPACK)
-;	Parameters on INTPACK:
-;		ES:BX:	Ptr to data buffer
 ;	Returns:
 ;		AH:		INT 13h Error Code
 ;		CF:		Cleared if success, Set if error
@@ -87,7 +94,6 @@ Idepack_TranslateOldInt13hAddressAndIssueCommandFromAH:
 	mov		[bp+IDEPACK.bCommand], ah
 
 	push	bx
-	call	PrepareBuffer_ToESSIforOldInt13hTransfer
 	call	Address_OldInt13hAddressToIdeAddress
 	call	AccessDPT_GetDriveSelectByteToAL
 	or		al, bh			; AL now has Drive and Head Select Byte

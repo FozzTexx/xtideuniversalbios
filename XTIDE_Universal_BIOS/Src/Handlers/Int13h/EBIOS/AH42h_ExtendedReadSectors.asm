@@ -23,8 +23,7 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH42h_HandlerForExtendedReadSectors:
-	call	AH42h_LoadDapToESSIandVerifyForTransfer
-	call	CommandLookup_GetEbiosIndexToBX
+	call	Prepare_ByLoadingDapToESSIandVerifyingForTransfer
 	mov		ah, [cs:bx+g_rgbReadCommandLookup]
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRQ, FLG_STATUS_DRQ)
 %ifdef USE_186
@@ -34,29 +33,3 @@ AH42h_HandlerForExtendedReadSectors:
 	call	Idepack_ConvertDapToIdepackAndIssueCommandFromAH
 	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 %endif
-
-
-;--------------------------------------------------------------------
-; AH42h_LoadDapToESSIandVerifyForTransfer
-;	Parameters:
-;		SI:		Same as in INTPACK
-;		SS:BP:	Ptr to IDEPACK
-;	Parameters on INTPACK:
-;		DS:SI:	Ptr to Disk Address Packet
-;	Returns:
-;		ES:SI:	Ptr to Disk Address Packet (DAP)
-;		Exits from INT 13h if invalid DAP
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-AH42h_LoadDapToESSIandVerifyForTransfer:
-	mov		es, [bp+IDEPACK.intpack+INTPACK.ds]	; ES:SI to point Disk Address Packet
-	cmp		BYTE [es:si+DAP.bSize], MINIMUM_DAP_SIZE
-	jb		SHORT AH42h_ReturnWithInvalidFunctionError
-	cmp		WORD [es:si+DAP.bSectorCount], BYTE 0
-	je		SHORT AH42h_ReturnWithInvalidFunctionError
-	ret
-AH42h_ReturnWithInvalidFunctionError:
-	mov		ah, RET_HD_INVALID
-	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH

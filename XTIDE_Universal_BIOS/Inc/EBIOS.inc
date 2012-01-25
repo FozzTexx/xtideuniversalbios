@@ -40,8 +40,7 @@ FLG_NO_MEDIA_PRESENT_AND_CHS_SET_TO_MAX				EQU	(1<<6)	; Removable media only
 struc DAP
 	.bSize					resb	1	; 0, Size of this packet in bytes
 	.bReservedAt1			resb	1	; 1, Currently unused, must be zero
-	.bSectorCount			resb	1	; 2, Number of sectors to process (0...127)
-	.bReservedAt3			resb	1	; 3, Currently unused, must be zero
+	.wSectorCount			resb	1	; 2, Number of sectors to process (0...127)
 	.dwMemoryAddress:
 	.wOffset				resb	2	; 4, Memory offset for transfer
 	.wSegment				resb	2	; 6, Memory segment for transfer

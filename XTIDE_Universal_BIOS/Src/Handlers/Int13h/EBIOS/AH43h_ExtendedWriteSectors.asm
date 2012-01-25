@@ -26,10 +26,9 @@ SECTION .text
 ALIGN JUMP_ALIGN
 AH43h_HandlerForExtendedWriteSectors:
 	cmp		BYTE [bp+IDEPACK.intpack+INTPACK.al], 2	; Verify requested?
-	jae		SHORT AH42h_ReturnWithInvalidFunctionError
+	jae		SHORT Prepare_ReturnFromInt13hWithInvalidFunctionError
 
-	call	AH42h_LoadDapToESSIandVerifyForTransfer
-	call	CommandLookup_GetEbiosIndexToBX
+	call	Prepare_ByLoadingDapToESSIandVerifyingForTransfer
 	mov		ah, [cs:bx+g_rgbWriteCommandLookup]
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRQ, FLG_STATUS_DRQ)
 %ifdef USE_186

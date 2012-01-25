@@ -14,7 +14,7 @@ SECTION .text
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
 ;		SS:BP:	Ptr to INTPACK
 ;	Parameters on INTPACK in SS:BP:
-;		AL:		Number of sectors to verify (1...255, 0=256)
+;		AL:		Number of sectors to verify (1...128)
 ;		CH:		Cylinder number, bits 7...0
 ;		CL:		Bits 7...6: Cylinder number bits 9 and 8
 ;				Bits 5...0:	Starting sector number (1...63)
@@ -25,6 +25,7 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH4h_HandlerForVerifyDiskSectors:
+	call	Prepare_ByValidatingSectorsInALforOldInt13h
 	mov		ah, COMMAND_VERIFY_SECTORS
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRQ, FLG_STATUS_DRDY)
 %ifdef USE_186
