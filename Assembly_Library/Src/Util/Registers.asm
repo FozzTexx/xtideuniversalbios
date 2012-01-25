@@ -73,6 +73,7 @@ Registers_CopyESDItoDSSI:
 ; routine with Registers_NormalizeFinish.
 ; 
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN
 Registers_NormalizeESSI:
 	mov			cx, si
@@ -92,7 +93,8 @@ Registers_NormalizeFinish:
 	add			ax, cx
 	mov			es, ax
 	ret
-		
+%endif
+
 
 ;--------------------------------------------------------------------
 ; Registers_SetZFifNullPointerInDSSI (commented to save bytes)
