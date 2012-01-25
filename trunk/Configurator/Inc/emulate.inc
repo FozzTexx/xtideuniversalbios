@@ -304,36 +304,6 @@ ALIGN JUMP_ALIGN
 
 
 ;--------------------------------------------------------------------
-; Segment override prefix instruction.
-;
-; eSEG
-;	Parameters:
-;		%1:		Name of the segment (ES, CS, SS, DS, FS or GS)
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-%macro eSEG 1
-	%ifidni %1, es
-		db	00100110b
-	%elifidni %1, cs
-		db	00101110b
-	%elifidni %1, ss
-		db	00110110b
-	%elifidni %1, ds
-		db	00111110b
-	%elifidni %1, fs
-		db	01100100b
-	%elifidni %1, gs
-		db	01100101b
-	%else
-		%error "Invalid segment override passed to eSEG!"
-	%endif
-%endmacro
-
-
-;--------------------------------------------------------------------
 ; Repeats string instruction with segment override.
 ; This macro prevents 8088/8086 restart bug.
 ;
@@ -350,16 +320,16 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 %macro eSEG_STR 3
 %ifndef USE_186	; 8088/8086 has string instruction restart bug when more than one prefix
-	 %%Loop:
-	 	%1						; REP is the prefix that can be lost
-	 	eSEG	%2				; SEG is the prefix that won't be lost
-	 	%3						; String instruction
-	 	jcxz	%%End			; Jump to end if no repeats left (preserves FLAGS)
-	 	jmp		SHORT %%Loop	; Loop while repeats left
-	 %%End:
+	%%Loop:
+		%1						; REP is the prefix that can be lost
+		%2						; SEG is the prefix that won't be lost
+		%3						; String instruction
+		jcxz	%%End			; Jump to end if no repeats left (preserves FLAGS)
+		jmp		SHORT %%Loop	; Loop while repeats left
+	%%End:
 %else	; No bug on V20/V30 and later, don't know about 188/186
-	eSEG	%2
-	%1		%3
+	%2
+	%1 %3
 %endif
 %endmacro
 

@@ -91,8 +91,7 @@ ParsePlaceholderSizeDigitFromALtoCX:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 ReadCharacterAndTestForNull:
-	eSEG	cs
-	lodsb									; Load from CS:SI to AL
+	cs lodsb								; Load from CS:SI to AL
 	test	al, al							; NULL to end string?
 	ret
 
@@ -320,7 +319,7 @@ d_FormatSignedDecimalWord:
 	jmp		DisplayPrint_SignedWordFromAXWithBaseInBX
 %endif
 
-ALIGN JUMP_ALIGN		
+ALIGN JUMP_ALIGN
 u_FormatUnsignedDecimalWord:
 	mov		ax, [bp]
 	mov		bx, 10
@@ -338,10 +337,10 @@ ALIGN JUMP_ALIGN
 I_FormatDashForZero:
 	mov		ax, [bp]
 	test	ax,ax
-	jnz		u_FormatUnsignedDecimalWord		
+	jnz		u_FormatUnsignedDecimalWord
 	mov		[bp], word g_szDashForZero
 ;;; fall-through
-		
+
 ALIGN JUMP_ALIGN
 s_FormatStringFromSegmentCS:
 	xchg	si, [bp]

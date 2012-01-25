@@ -150,7 +150,7 @@ SerialCommand_OutputWithParameters_DeviceInDL:
 ; decided to reprogram the UART
 ;
 		mov		bl,dl			; setup BL with proper values for read/write loops (BH comes later)
-		
+
 		mov		al,83h
 		add		dl,SerialCommand_UART_lineControl
 		out		dx,al
@@ -201,7 +201,7 @@ SerialCommand_OutputWithParameters_DeviceInDL:
 
 		mov		cx,4			; writing 3 words (plus 1)
 
-		cli						; interrupts off... 
+		cli						; interrupts off...
 
 		call	SerialCommand_WriteProtocol.entry
 
@@ -214,10 +214,10 @@ SerialCommand_OutputWithParameters_DeviceInDL:
 ;;; no longer needed, since the pointer is normalized before we are called and we do not support
 ;;; more than 128 sectors (and for 128 specifically, the pointer must be segment aligned).
 ;;; See comments below at the point this entry point was called for more details...
-.nextSectorNormalize:			
+.nextSectorNormalize:
 		call	Registers_NormalizeESDI
 %endif
-		
+
 		pop		ax				; load command byte (done before call to .nextSector on subsequent iterations)
 		push	ax
 
@@ -248,14 +248,14 @@ SerialCommand_OutputWithParameters_DeviceInDL:
 ;
 .readTimeout:
 		push	ax				; not only does this push preserve AX (which we need), but it also
-								; means the stack has the same number of bytes on it as when we are 
+								; means the stack has the same number of bytes on it as when we are
 								; sending a packet, important for error cleanup and exit
 		mov		ah,1
 		call	SerialCommand_WaitAndPoll_Read
 		pop		ax
 		test	dl,1
 		jz		.readByte1Ready
-		jmp		.readByte2Ready		
+		jmp		.readByte2Ready
 
 ;----------------------------------------------------------------------------
 ;
@@ -274,7 +274,7 @@ SerialCommand_OutputWithParameters_DeviceInDL:
 		add		si, bp
 		adc		si, 0
 
-.readEntry:		
+.readEntry:
 		mov		dl,bh
 		in		al,dx
 		shr		al,1			; data ready (byte 1)?
@@ -324,7 +324,7 @@ SerialCommand_OutputWithParameters_DeviceInDL:
 		jnz		SerialCommand_OutputWithParameters_Error
 
 		pop		ax				; sector count and command byte
-		dec		al				; decrememnt sector count
+		dec		al				; decrement sector count
 		push	ax				; save
 		jz		SerialCommand_OutputWithParameters_ReturnCodeInALCF    ; CF=0 from "cmp ax,bp" returning Zero above
 
@@ -335,25 +335,25 @@ SerialCommand_OutputWithParameters_DeviceInDL:
 %if 0
 ;;; This code is no longer needed as we do not support more than 128 sectors, and for 128 the pointer
 ;;; must be segment aligned.  If we ever do want to support more sectors, the code can help...
-		
+
 ;
 ; Normalize buffer pointer for next go round, if needed.
 ;
-; We need to re-nomrlize the pointer in ES:DI after processing every 7f sectors.  That number could 
+; We need to re-normalize the pointer in ES:DI after processing every 7f sectors.  That number could
 ; have been 80 if we knew the offset was on a segment boundary, but this may not be the case.
 ;
 ; We re-normalize based on the sector count (flags from "dec al" above)...
 ;    a) we normalize before the first sector goes out, immediately after sending the command packet (above)
 ;    b) on transitions from FF to FE, very rare case for writing 255 or 256 sectors
 ;    c) on transitions from 80 to 7F, a large read/write
-;    d) on transitions from 00 to FF, very, very rare case of writing 256 secotrs
-;       We don't need to renormalize in this case, but it isn't worth the memory/effort to not do 
+;    d) on transitions from 00 to FF, very, very rare case of writing 256 sectors
+;       We don't need to renormalize in this case, but it isn't worth the memory/effort to not do
 ;       the extra work, and it does no harm.
 ;
 ; I really don't care much about (d) because I have not seen cases where any OS makes a request
 ; for more than 127 sectors.  Back in the day, it appears that some BIOS could not support more than 127
 ; sectors, so that may be the practical limit for OS and application developers.  The Extended BIOS
-; function also appear to be capped at 127 sectors.  So although this can support the full 256 sectors 
+; function also appear to be capped at 127 sectors.  So although this can support the full 256 sectors
 ; if needed, we are optimized for that 1-127 range.
 ;
 ; Assume we start with 0000:000f, with 256 sectors to write...
@@ -372,7 +372,7 @@ SerialCommand_OutputWithParameters_DeviceInDL:
 		add		al,2					; 7f-ff moves to 81-01
 										; (0-7e kicked out before we get here)
 										; 7f moves to 81 and OF=1, so OF=SF
-										; fe moves to 0 and OF=0, SF=0, so OF=SF 
+										; fe moves to 0 and OF=0, SF=0, so OF=SF
 										; ff moves to 1 and OF=0, SF=0, so OF=SF
 										; 80-fd moves to 82-ff and OF=0, so OF<>SF
 
@@ -386,9 +386,9 @@ SerialCommand_OutputWithParameters_DeviceInDL:
 		jmp		short .nextSectorNormalize	; our two renormalization cases (plus one for ff)
 
 %else
-		
-		jmp		short .nextSector		
-		
+
+		jmp		short .nextSector
+
 %endif
 
 ;---------------------------------------------------------------------------
@@ -424,7 +424,7 @@ SerialCommand_OutputWithParameters_Error:
 		in		al,dx
 		jc		.clearBuffer	; note CF from shr above
 
-.clearBufferComplete:			
+.clearBufferComplete:
 		stc
 		mov		al,1
 
@@ -447,9 +447,9 @@ SerialCommand_OutputWithParameters_ReturnCodeInALCF:
 ;--------------------------------------------------------------------
 ; SerialCommand_WriteProtocol
 ;
-; NOTE: As with its read counterpart, this loop is very time sensitive.  
-; Although it will still function, adding additional instructions will 
-; impact the write througput, especially on slower machines.  
+; NOTE: As with its read counterpart, this loop is very time sensitive.
+; Although it will still function, adding additional instructions will
+; impact the write throughput, especially on slower machines.
 ;
 ;	Parameters:
 ;		ES:SI:	Ptr to buffer
@@ -513,10 +513,14 @@ SerialCommand_WriteProtocol:
 		call	SerialCommand_WaitAndPoll_Write
 		mov		ah,dl
 		jmp		.writeByte2Ready
-		
+
 .writeTimeout1:
+%ifndef USE_186
 		mov		ax,.writeByte1Ready
 		push	ax				; return address for ret at end of SC_writeTimeout2
+%else
+		push	.writeByte1Ready
+%endif
 ;;; fall-through
 
 ;--------------------------------------------------------------------
@@ -526,7 +530,7 @@ SerialCommand_WriteProtocol:
 ;		AH:		UART_LineStatus bit to test (20h for write, or 1h for read)
 ;               One entry point fills in AH with 20h for write
 ;		DX:		Port address (OK if already incremented to UART_lineStatus)
-;       BX:    
+;       BX:
 ;       Stack:	2 words on the stack below the command/count word
 ;	Returns:
 ;       Returns when desired UART_LineStatus bit is cleared
@@ -552,7 +556,7 @@ SerialCommand_WaitAndPoll_Read:
 ;
 		xor		cx,cx
 .readTimeoutLoop:
-		mov		dl,bh				
+		mov		dl,bh
 		in		al,dx
 		test	al,ah
 		jnz		.readTimeoutComplete
@@ -587,7 +591,7 @@ SerialCommand_WaitAndPoll_Read:
 ;		CS:BP:	Ptr to IDEVARS
 ;	Returns:
 ;		AH:		INT 13h Error Code
-;               NOTE: Not set (or checked) during drive detection 
+;               NOTE: Not set (or checked) during drive detection
 ;		CF:		Cleared if success, Set if error
 ;	Corrupts registers:
 ;		AL, BL, CX, DX, SI, DI, ES
@@ -595,68 +599,68 @@ SerialCommand_WaitAndPoll_Read:
 ALIGN JUMP_ALIGN
 SerialCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 ;
-; To improve boot time, we do our best to avoid looking for slave serial drives when we already know the results 
-; from the looking for a master.  This is particuarly true when doing a COM port scan, as we will end up running
-; through all the COM ports and baud rates a second time.  
+; To improve boot time, we do our best to avoid looking for slave serial drives when we already know the results
+; from the looking for a master.  This is particularly true when doing a COM port scan, as we will end up running
+; through all the COM ports and baud rates a second time.
 ;
-; But drive detection isn't the only case - we also need to get the right drive when called on int13h/25h.  
+; But drive detection isn't the only case - we also need to get the right drive when called on int13h/25h.
 ;
 ; The decision tree:
 ;
 ;    Master:
 ;		   bSerialPackedPortAndBaud Non-Zero:   -> Continue with bSerialPackedAndBaud (1)
-;		   bSerialPackedPortAndBaud Zero: 
+;		   bSerialPackedPortAndBaud Zero:
 ;		   			      bLastSerial Zero:     -> Scan (2)
 ;					      bLastSerial Non-Zero: -> Continue with bLastSerial (3)
-;			  				        
+;
 ;    Slave:
-;		   bSerialPackedPortAndBaud Non-Zero: 
+;		   bSerialPackedPortAndBaud Non-Zero:
 ;		   			      bLastSerial Zero:     -> Error - Not Found (4)
 ;					      bLastSerial Non-Zero: -> Continue with bSerialPackedAndBaud (5)
-;          bSerialPackedPortAndBaud Zero:     
+;          bSerialPackedPortAndBaud Zero:
 ;		   			      bLastSerial Zero:     -> Error - Not Found (4)
 ;					      bLastSerial Non-Zero: -> Continue with bLastSerial (6)
 ;
-; (1) This was a port/baud that was explicilty set with the configurator.  In the drive detection case, as this 
-;     is the Master, we are checking out a new controller, and so don't care about the value of bLastSerial.  
+; (1) This was a port/baud that was explicitly set with the configurator.  In the drive detection case, as this
+;     is the Master, we are checking out a new controller, and so don't care about the value of bLastSerial.
 ;     And as with the int13h/25h case, we just go off and get the needed information using the user's setting.
-; (2) We are using the special .ideVarsSerialAuto strucutre.  During drive detection, we would only be here
+; (2) We are using the special .ideVarsSerialAuto structure.  During drive detection, we would only be here
 ;     if bLastSerial is zero (since we only scan if no explicit drives are set), so we go off to scan.
-; (3) We are using the special .ideVarsSerialAuto strucutre.  We won't get here during drive detection, but
+; (3) We are using the special .ideVarsSerialAuto structure.  We won't get here during drive detection, but
 ;     we might get here on an int13h/25h call.  If we have scanned COM drives, they are the ONLY serial drives
 ;     in use, and so bLastSerial will reflect the port/baud setting for the scanned COM drives.
-; (4) No master has been found yet, therefore no slave should be found.  Avoiding the slave reduces boot time, 
+; (4) No master has been found yet, therefore no slave should be found.  Avoiding the slave reduces boot time,
 ;     especially in the full COM port scan case.  Note that this is different from the hardware IDE, where we
 ;     will scan for a slave even if a master is not present.  Note that if ANY master had been previously found,
-;     we will do the slave scan, which isn't harmful, it just wates time.  But the most common case (by a wide
+;     we will do the slave scan, which isn't harmful, it just wastes time.  But the most common case (by a wide
 ;     margin) will be just one serial controller.
 ; (5) A COM port scan for a master had been previously completed, and a drive was found.  In a multiple serial
-;     controller scenario being called with int13h/25h, we need to use the value in bSerialPackedPortAndBaud 
+;     controller scenario being called with int13h/25h, we need to use the value in bSerialPackedPortAndBaud
 ;     to make sure we get the proper drive.
-; (6) A COM port scan for a master had been previously completed, and a drive was found.  We would only get here 
-;     if no serial drive was explicitly set by the user in the configurator or that drive had not been found.  
-;     Instead of performing the full COM port scan for the slave, use the port/baud value stored during the 
+; (6) A COM port scan for a master had been previously completed, and a drive was found.  We would only get here
+;     if no serial drive was explicitly set by the user in the configurator or that drive had not been found.
+;     Instead of performing the full COM port scan for the slave, use the port/baud value stored during the
 ;     master scan.
-;		
-		mov		dl,[cs:bp+IDEVARS.bSerialPackedPortAndBaud]		
+;
+		mov		dl,[cs:bp+IDEVARS.bSerialPackedPortAndBaud]
 		mov		al,	byte [RAMVARS.xlateVars+XLATEVARS.bLastSerial]
-				
+
 		test	bh, FLG_DRVNHEAD_DRV
 		jz		.master
 
-		test	al,al			; Take care of the case that is different between master and slave.  
+		test	al,al			; Take care of the case that is different between master and slave.
 		jz		.error			; Because we do this here, the jz after the "or" below will not be taken
 
 ; fall-through
-.master:		
+.master:
 		test	dl,dl
 		jnz		.identifyDeviceInDL
 
 		or		dl,al			; Move bLast into position in dl, as well as test for zero
 		jz		.scanSerial
-		
+
 ; fall-through
-.identifyDeviceInDL:	
+.identifyDeviceInDL:
 
 		push	bp				; setup fake IDEREGS_AND_INTPACK
 
@@ -679,17 +683,17 @@ SerialCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 		pop		dx
 
 		pop		bp
-; 
+;
 ; place packed port/baud in RAMVARS, read by FinalizeDPT and DetectDrives
 ;
 ; Note that this will be set during an int13h/25h call as well.  Which is OK since it is only used (at the
-; top of this routine) for drives found during a COM scan, and we only COM scan if there were no other 
+; top of this routine) for drives found during a COM scan, and we only COM scan if there were no other
 ; COM drives found.  So we will only reaffirm the port/baud for the one COM port/baud that has a drive.
-; 
+;
 		jc		.notFound											; only store bLastSerial if success
 		mov		byte [RAMVARS.xlateVars+XLATEVARS.bLastSerial], dl
 
-.notFound:		
+.notFound:
 		ret
 
 ;----------------------------------------------------------------------
@@ -714,10 +718,9 @@ ALIGN JUMP_ALIGN
 
 .nextPort:
 		inc		di				; load next port address
+		xor		dh, dh
 		mov		dl,[cs:di]
-
-		mov		dh,0			; shift from one byte to two
-		eSHL_IM	dx, 2
+		eSHL_IM	dx, 2			; shift from one byte to two
 		jz		.error
 
 ;
@@ -761,7 +764,7 @@ ALIGN JUMP_ALIGN
 
 		ret
 
-.error:	
+.error:
 		stc
 %if 0
 		mov		ah,1		; setting the error code is unnecessary as this path can only be taken during

@@ -21,8 +21,9 @@ SECTION .text
 ;	Corrupts registers:
 ;		AX, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN	
+ALIGN JUMP_ALIGN
 MenuBorders_RefreshAll:
+%ifndef USE_186
 	call	MenuBorders_AdjustDisplayContextForDrawingBorders
 	call	MenuBorders_GetNumberOfMiddleCharactersToDX
 	call	RefreshTitleBorders
@@ -30,6 +31,15 @@ MenuBorders_RefreshAll:
 	call	RefreshInformationBorders
 	call	DrawBottomBorderLine
 	jmp		DrawBottomShadowLine
+%else
+	push	DrawBottomShadowLine
+	push	DrawBottomBorderLine
+	push	RefreshInformationBorders
+	push	RefreshItemBorders
+	push	RefreshTitleBorders
+	push	MenuBorders_GetNumberOfMiddleCharactersToDX
+	jmp		MenuBorders_AdjustDisplayContextForDrawingBorders
+%endif
 
 
 ;--------------------------------------------------------------------
@@ -70,7 +80,7 @@ MenuBorders_RefreshItemBorders:
 	jmp		SHORT RefreshItemBorders
 %endif
 
-		
+
 ;--------------------------------------------------------------------
 ; MenuBorders_AdjustDisplayContextForDrawingBorders
 ;	Parameters
@@ -314,16 +324,13 @@ PrintShadowCharactersByDXtimes:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 PrintBorderCharactersFromCSSI:
-	eSEG	cs
-	lodsb			; Load from [cs:si+BORDER_CHARS.cLeft] to AL
+	cs lodsb		; Load from [cs:si+BORDER_CHARS.cLeft] to AL
 	call	MenuBorders_PrintSingleBorderCharacterFromAL
 
-	eSEG	cs
-	lodsb			; Load from [cs:si+BORDER_CHARS.cMiddle] to AL
+	cs lodsb		; Load from [cs:si+BORDER_CHARS.cMiddle] to AL
 	call	MenuBorders_PrintMultipleBorderCharactersFromAL
 
-	eSEG	cs
-	lodsb			; Load from [cs:si+BORDER_CHARS.cRight] to AL
+	cs lodsb		; Load from [cs:si+BORDER_CHARS.cRight] to AL
 	; Fall to MenuBorders_PrintSingleBorderCharacterFromAL
 
 ;--------------------------------------------------------------------
