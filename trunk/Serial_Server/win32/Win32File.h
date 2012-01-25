@@ -1,0 +1,105 @@
+//======================================================================
+//
+// Project:     XTIDE Universal BIOS, Serial Port Server
+//
+// File:        Win32File.h - Microsoft Windows file system access.
+//
+// Routines for accessing the file system under Win32.  It's important
+// to use these direct Win32 calls for large files, since FILE * routines,
+// in particular ftell() and fseek(), are limites to signed 32-bits (2 GB).
+// These are also likely faster since they are more direct.
+// 
+
+#include <windows.h>
+#include <stdio.h>
+#include "../library/library.h"
+
+class FileAccess
+{
+public:
+	void Create( char *p_name )
+	{
+		fp = CreateFileA( p_name, GENERIC_WRITE, 0, 0, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, 0 );
+		if( !fp )
+			log( -1, "'%s', could not create file", p_name );
+		name = p_name;
+	}
+
+	void Open( char *p_name )
+	{
+		fp = CreateFileA( p_name, GENERIC_READ|GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0 );
+		if( !fp )
+			log( -1, "'%s', could not open file", p_name );
+		name = p_name;
+	}
+
+	void Close()
+	{
+		if( fp )
+		{
+			if( !CloseHandle( fp ) )
+				log( 0, "'%s', could not close file handle", name ? name : "unknown" );			
+		}
+	}
+
+	unsigned long SizeSectors(void)
+	{
+		LARGE_INTEGER li;
+		unsigned long i;
+
+		if( !GetFileSizeEx( fp, &li ) )
+			log( -1, "'%s', could not retrieve file size (error %ul)", name, GetLastError() );
+
+		if( li.LowPart & 0x1ff )
+			log( -1, "'%s', file size is not a multiple of 512 byte sectors", name );
+
+		if( li.HighPart > 0x1f )
+			log( -1, "'%s', file size greater than LBA28 limit of 137,438,952,960 bytes", name );
+
+		i = ((li.HighPart << 23 ) & 0xff800000) | ((li.LowPart >> 9) & 0x7fffff);
+
+		return( (unsigned long) i );
+	}
+
+	void SeekSectors( unsigned long lba )
+	{
+		LARGE_INTEGER dist;
+
+		dist.HighPart = lba >> 23;
+		dist.LowPart = lba << 9;
+
+		if( !SetFilePointerEx( fp, dist, NULL, FILE_BEGIN ) )
+			log( -1, "'%s', Failed to seek to lba=%lu", name, lba );
+	}
+
+	void Read( void *buff, unsigned long len )
+	{
+		unsigned long out_len;
+
+		if( !ReadFile( fp, buff, len, &out_len, NULL ) || len != out_len )
+			log( -1, "'%s', ReadFile failed" );
+	}
+
+	void Write( void *buff, unsigned long len )
+	{
+		unsigned long out_len;
+
+		if( !WriteFile( fp, buff, len, &out_len, NULL ) || len != out_len )
+			log( -1, "'%s', WriteFile failed" );
+	}
+
+	FileAccess()
+	{
+		fp = NULL;
+		name = NULL;
+	}
+
+    // LBA 28 limit - 28-bits (could be 1 more, but not worth pushing it)
+	const static unsigned long MaxSectors = 0xfffffff; 
+#define USAGE_MAXSECTORS "137438 MB (LBA28 limit)"
+
+private:
+	HANDLE fp;
+	char *name;
+};
+

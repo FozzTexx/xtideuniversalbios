@@ -8,6 +8,7 @@
 #include "library.h"
 #include <memory.h>
 #include <string.h>
+#include <stdio.h>
 
 union _buff {
 	struct {
@@ -53,6 +54,11 @@ union _buff {
 
 #define SERIAL_INQUIRE_PORTANDBAUD_PORTTRANSLATE( a ) ( ((a) & SERIAL_INQUIRE_PORTANDBAUD_PORT) << 1 | SERIAL_INQUIRE_PORTANDBAUD_STARTINGPORT )
 
+#define ATA_COMMAND_LBA 0x40
+#define ATA_COMMAND_HEADMASK 0xf
+
+#define ATA_DriveAndHead_Drive 0x10
+
 void logBuff( char *message, unsigned long buffoffset, unsigned long readto, int verboseLevel )
 {
 	char logBuff[ 514*9 + 10 ];
@@ -74,7 +80,7 @@ void logBuff( char *message, unsigned long buffoffset, unsigned long readto, int
 	}
 }
 
-void processRequests( Serial *serial, Image *image0, Image *image1, int timeoutEnabled, int verboseLevel )
+void processRequests( SerialAccess *serial, Image *image0, Image *image1, int timeoutEnabled, int verboseLevel )
 {
 	unsigned char workCommand;
 	int workOffset, workCount;
@@ -203,8 +209,8 @@ void processRequests( Serial *serial, Image *image0, Image *image1, int timeoutE
 			//
 			// Echo back the CRC
 			//
-			if( serial->writeCharacters( &buff.w[256], 2 ) != 2 )
-				log( 0, "Serial Port Write Error" );
+			if( !serial->writeCharacters( &buff.w[256], 2 ) )
+				break;
 
 			workOffset++;
 			workCount--;
@@ -339,8 +345,8 @@ void processRequests( Serial *serial, Image *image0, Image *image1, int timeoutE
 
 				buff.w[256] = checksum( &buff.w[0], 256 );
 
-				if( serial->writeCharacters( &buff.w[0], 514 ) != 514 )
-					log( 0, "Serial Port Write Error" );
+				if( !serial->writeCharacters( &buff.w[0], 514 ) )
+					break;
 
 				if( verboseLevel >= 3 )
 					logBuff( "    Sending: ", 514, 514, verboseLevel );

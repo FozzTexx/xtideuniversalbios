@@ -15,7 +15,6 @@
 
 #include "../library/library.h"
 #include "../library/flatimage.h"
-#include "Win32Serial.h"
 
 void usage(void)
 {
@@ -29,7 +28,7 @@ void usage(void)
 		"                      -g without parameters uses CHS mode (default is LBA28)",
 		"",
 		"  -n [megabytes]      Create new disk with given size or use -g geometry",
-		"                      Maximum size is 137.4 GB (LBA28 limit)",
+		"                      Maximum size is " USAGE_MAXSECTORS, 
 		"                      (default is a 32 MB disk, with CHS geometry 65:63:16)",
 		"",
 		"  -p                  Named Pipe mode for emulators (pipe is '" PIPENAME "')",
@@ -73,7 +72,7 @@ int main(int argc, char* argv[])
 
 	unsigned short wbuff[256];
 
-	Serial *serial;
+	SerialAccess serial;
 	Image *img;
 	struct baudRate *baudRate = NULL;
 
@@ -177,16 +176,16 @@ int main(int argc, char* argv[])
 
 	do
 	{
-		serial = new Win32Serial( ComPort, baudRate );
+		serial.Connect( ComPort, baudRate );
 
-		processRequests( serial, images[0], images[1], timeoutEnabled, verbose );
+		processRequests( &serial, images[0], images[1], timeoutEnabled, verbose );
 
-		delete serial;
+		serial.Disconnect();
 
-		if( serial->resetConnection )
-			log( 0, "Connection closed, reset..." );
+		if( serial.resetConnection )
+			log( 0, "Serial Connection closed, reset..." );
 	}
-	while( serial->resetConnection );
+	while( serial.resetConnection );
 }
 
 void log( int level, char *message, ... )
