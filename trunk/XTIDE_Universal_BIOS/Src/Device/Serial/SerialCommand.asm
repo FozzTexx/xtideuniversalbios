@@ -210,9 +210,13 @@ SerialCommand_OutputWithParameters_DeviceInDL:
 								; we need to store (read sector) faster than we read (write sector)
 		pop		es
 
+%if 0
+;;; no longer needed, since the pointer is normalized before we are called and we do not support
+;;; more than 128 sectors (and for 128 specifically, the pointer must be segment aligned).
+;;; See comments below at the point this entry point was called for more details...
 .nextSectorNormalize:			
-
-		call	Registers_NormalizeESDI	
+		call	Registers_NormalizeESDI
+%endif
 		
 		pop		ax				; load command byte (done before call to .nextSector on subsequent iterations)
 		push	ax
@@ -328,6 +332,10 @@ SerialCommand_OutputWithParameters_DeviceInDL:
 								; (host could start sending data immediately)
 		out		dx,al			; ACK with next sector number
 
+%if 0
+;;; This code is no longer needed as we do not support more than 128 sectors, and for 128 the pointer
+;;; must be segment aligned.  If we ever do want to support more sectors, the code can help...
+		
 ;
 ; Normalize buffer pointer for next go round, if needed.
 ;
@@ -370,14 +378,18 @@ SerialCommand_OutputWithParameters_DeviceInDL:
 
 		jl		short .nextSector		; OF<>SF, branch for all cases but 7f, fe, and ff
 
-%if 0
-        jpo		short .nextSector		; if we really wanted to avoid normalizing for ff, this
+;       jpo		short .nextSector		; if we really wanted to avoid normalizing for ff, this
 										; is one way to do it, but it adds more memory and more
 										; cycles for the 7f and fe cases.  IMHO, given that I've
 										; never seen a request for more than 7f, this seems unnecessary.
-%endif
 
 		jmp		short .nextSectorNormalize	; our two renormalization cases (plus one for ff)
+
+%else
+		
+		jmp		short .nextSector		
+		
+%endif
 
 ;---------------------------------------------------------------------------
 ;
