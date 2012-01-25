@@ -9,6 +9,7 @@
 #include <memory.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 Image::Image( char *name, int p_readOnly, int p_drive )
 {
@@ -81,9 +82,9 @@ void Image::init( char *name, int p_readOnly, int p_drive, unsigned long p_cyl, 
 
 	sizef = totallba/2048.0;
 	if( useCHS )
-		log( 0, "Opening '%s', CHS geometry %u:%u:%u, total size %.1lf MB", name, cyl, sect, head, sizef );
+		log( 0, "Opening '%s', CHS geometry %u:%u:%u, total LBA %lu, total size %.1lf MB", name, cyl, sect, head, totallba, sizef );
 	else
-		log( 0, "Opening '%s', total lba %lu, total size %.1lf MB", name, totallba, sizef );
+		log( 0, "Opening '%s', total LBA %lu, total size %.1lf MB", name, totallba, sizef );
 }
 
 int Image::parseGeometry( char *str, unsigned long *p_cyl, unsigned long *p_head, unsigned long *p_sect )

@@ -8,9 +8,8 @@
 #ifndef LIBRARY_H_INCLUDED
 #define LIBRARY_H_INCLUDED
 
-#include "stdio.h"
-
 void log( int level, char *message, ... );
+
 unsigned long GetTime(void);
 unsigned long GetTime_Timeout(void);
 
@@ -19,12 +18,11 @@ unsigned short checksum( unsigned short *wbuff, int wlen );
 class Image
 {
 public:
-	virtual int seekSector( unsigned long cyl, unsigned long sect, unsigned long head ) = 0;
-	virtual int seekSector( unsigned long lba ) = 0;
+	virtual void seekSector( unsigned long lba ) = 0;
 
-	virtual int writeSector( void *buff ) = 0;
+	virtual void writeSector( void *buff ) = 0;
 	
-	virtual int readSector( void *buff ) = 0;
+	virtual void readSector( void *buff ) = 0;
 
 	Image( char *name, int p_readOnly, int p_drive );
 	Image( char *name, int p_readOnly, int p_drive, int p_create, unsigned long p_lba );
@@ -56,33 +54,18 @@ struct baudRate {
 struct baudRate *baudRateMatchString( char *str );
 struct baudRate *baudRateMatchDivisor( unsigned char divisor );
 
-class Serial
-{
-public:
-	virtual unsigned long readCharacters( void *buff, unsigned long len ) = 0;
+#ifdef WIN32
+#include "../win32/win32serial.h"
+#else
+// there is no standard way to read/write and configure the serial port, OS specifc only
+#endif
 
-	virtual unsigned long writeCharacters( void *buff, unsigned long len ) = 0;
+#ifdef WIN32
+#include "../win32/win32file.h"
+#else
+#include "file.h"
+#endif
 
-	Serial( char *name, struct baudRate *p_baudRate ) 
-	{
-		speedEmulation = 0;
-		resetConnection = 0;
-		baudRate = p_baudRate;
-	};
-
-	virtual ~Serial() {};
-
-	int speedEmulation;
-	int resetConnection;
-
-	struct baudRate *baudRate;
-};
-
-void processRequests( Serial *serial, Image *image0, Image *image1, int timeoutEnabled, int verboseLevel );
-
-#define ATA_COMMAND_LBA 0x40
-#define ATA_COMMAND_HEADMASK 0xf
-
-#define ATA_DriveAndHead_Drive 0x10
+void processRequests( SerialAccess *serial, Image *image0, Image *image1, int timeoutEnabled, int verboseLevel );
 
 #endif
