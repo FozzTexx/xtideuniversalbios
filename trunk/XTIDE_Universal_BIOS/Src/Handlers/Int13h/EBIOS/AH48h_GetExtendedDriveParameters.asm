@@ -39,7 +39,7 @@ AH48h_HandlerForGetExtendedDriveParameters:
 	mov		ds, [bp+IDEPACK.intpack+INTPACK.ds]
 	mov		ax, MINIMUM_EDRIVEINFO_SIZE
 	cmp		[di+EDRIVE_INFO.wSize], ax
-	jb		SHORT AH42h_ReturnWithInvalidFunctionError
+	jb		SHORT Prepare_ReturnFromInt13hWithInvalidFunctionError
 	je		SHORT .SkipEddConfigurationParameters
 
 	; We do not support EDD Configuration Parameters so set to FFFF:FFFFh

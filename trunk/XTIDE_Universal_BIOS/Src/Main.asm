@@ -206,10 +206,6 @@ iend
 %endif
 
 	; INT 13h Hard Disk BIOS functions
-	%include "DriveXlate.asm"		; For swapping drive numbers
-	%include "Address.asm"			; For sector address translations
-	%include "CommandLookup.asm"	; For getting correct transfer command
-	%include "PrepareBuffer.asm"	; For buffer pointer normalization
 	%include "Int13h.asm"			; For Int 13h, Disk functions
 	%include "AH0h_HReset.asm"		; Required by Int13h_Jump.asm
 	%include "AH1h_HStatus.asm"		; Required by Int13h_Jump.asm
@@ -226,13 +222,16 @@ iend
 	%include "AH23h_HFeatures.asm"	; Required by Int13h_Jump.asm
 	%include "AH24h_HSetBlocks.asm"	; Required by Int13h_Jump.asm
 	%include "AH25h_HDrvID.asm"		; Required by Int13h_Jump.asm
+	%include "DriveXlate.asm"		; For swapping drive numbers
+	%include "Address.asm"			; For sector address translations
+	%include "Prepare.asm"			; For buffer pointer normalization
 %ifdef MODULE_EBIOS
-	%include "AH41h_CheckIfExtensionsPresent.asm"
 	%include "AH42h_ExtendedReadSectors.asm"
 	%include "AH43h_ExtendedWriteSectors.asm"
 	%include "AH44h_ExtendedVerifySectors.asm"
 	%include "AH47h_ExtendedSeek.asm"
 	%include "AH48h_GetExtendedDriveParameters.asm"
+	%include "AH41h_CheckIfExtensionsPresent.asm"
 %endif
 
 

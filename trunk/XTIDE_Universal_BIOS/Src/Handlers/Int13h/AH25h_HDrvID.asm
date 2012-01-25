@@ -21,7 +21,8 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH25h_HandlerForGetDriveInformation:
-	mov		si, [bp+IDEPACK.intpack+INTPACK.bx]
+	mov		al, 1			; Read 1 sector
+	call	Prepare_BufferToESSIforOldInt13hTransfer
 %ifdef USE_186
 	push	Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 	; Fall to AH25h_GetDriveInformationToBufferInESSI
