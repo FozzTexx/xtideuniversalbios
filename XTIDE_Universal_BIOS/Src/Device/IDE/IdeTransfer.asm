@@ -7,7 +7,7 @@ struc PIOVARS
 	.wWordsInBlock			resb	2	; 0, Block size in WORDs
 	.wWordsLeft				resb	2	; 2, WORDs left to transfer
 	.wWordsDone				resb	2	; 4, Number of sectors xferred
-							resb	1	; 6, 
+							resb	1	; 6,
 							resb	1	; 7, IDEPACK.bDeviceControl
 	.wDataPort				resb	2	; 8, IDE Data Port
 	.fnXfer					resb	2	; 10, Offset to transfer function
@@ -326,7 +326,7 @@ ALIGN JUMP_ALIGN
 SingleByteWrite:
 %ifdef USE_186	; OUTS instruction available
 	shl		cx, 1		; WORD count to BYTE count
-	eSEG	es			; Source is ES segment
+	es					; Source is ES segment
 	rep outsb
 %else			; If 8088/8086
 	shr		cx, 1		; WORD count to DWORD count
@@ -368,7 +368,7 @@ ALIGN JUMP_ALIGN
 ;----
 ALIGN JUMP_ALIGN
 WordWrite:
-	eSEG	es			; Source is ES segment
+	es					; Source is ES segment
 	rep
 	db		6Fh			; OUTSW (we want this in XT build)
 	ret
@@ -376,7 +376,7 @@ WordWrite:
 ALIGN JUMP_ALIGN
 DWordWrite:
 	shr		cx, 1		; WORD count to DWORD count
-	eSEG	es			; Source is ES segment
+	es					; Source is ES segment
 	rep
 	db		66h			; Override operand size to 32-bit
 	db		6Fh			; OUTSW/OUTSD

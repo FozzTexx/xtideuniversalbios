@@ -67,8 +67,7 @@ ALIGN JUMP_ALIGN
 .LoadColorAttribute:
 	add		si, .rgcColorAttributes
 .LoadAttributeAndReturn:
-	eSEG	cs
-	lodsb								; Load from [CS:SI] to AL
+	cs lodsb							; Load from [CS:SI] to AL
 
 	pop		ds
 	ret

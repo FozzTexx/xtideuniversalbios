@@ -98,8 +98,7 @@ CgaSnow_RepMovsb:
 .MovsbNextByte:
 	cli				; Interrupt request would mess up timing
 	WAIT_UNTIL_SAFE_CGA_WRITE
-	eSEG	es
-	movsb
+	es movsb
 	sti
 	loop	.MovsbNextByte
 	ret

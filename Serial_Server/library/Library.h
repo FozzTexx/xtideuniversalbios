@@ -21,7 +21,7 @@ public:
 	virtual void seekSector( unsigned long lba ) = 0;
 
 	virtual void writeSector( void *buff ) = 0;
-	
+
 	virtual void readSector( void *buff ) = 0;
 
 	Image( char *name, int p_readOnly, int p_drive );
@@ -34,7 +34,7 @@ public:
 	int useCHS;
 
 	unsigned long totallba;
-	
+
 	char *shortFileName;
 	int readOnly;
 	int drive;
@@ -57,7 +57,7 @@ struct baudRate *baudRateMatchDivisor( unsigned char divisor );
 #ifdef WIN32
 #include "../win32/win32serial.h"
 #else
-// there is no standard way to read/write and configure the serial port, OS specifc only
+// there is no standard way to read/write and configure the serial port, OS specific only
 #endif
 
 #ifdef WIN32

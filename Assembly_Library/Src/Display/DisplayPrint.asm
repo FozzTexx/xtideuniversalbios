@@ -4,7 +4,7 @@
 ; Section containing code
 SECTION .text
 
-				
+
 ;--------------------------------------------------------------------
 ; Supports following formatting types:
 ;	%a		Specifies attribute for next character
@@ -103,9 +103,9 @@ DisplayPrint_SignedWordFromAXWithBaseInBX:
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
-		
+
 %ifndef MODULE_STRINGS_COMPRESSED
-		
+
 ALIGN JUMP_ALIGN
 DisplayPrint_WordFromAXWithBaseInBX:
 	push	cx
@@ -125,8 +125,7 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 .PrintNextDigit:
 	pop		ax					; Pop digit
-	eSEG	cs
-	xlatb
+	cs xlatb
 	call	DisplayPrint_CharacterFromAL
 	loop	.PrintNextDigit
 
@@ -150,7 +149,7 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
-%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS		
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN
 DisplayPrint_CharacterBufferFromBXSIwithLengthInCX:
 	jcxz	.NothingToPrintSinceZeroLength
@@ -165,14 +164,11 @@ ALIGN JUMP_ALIGN
 	call	DisplayPrint_CharacterFromAL
 	loop	.PrintNextCharacter
 
-	;mov		ds, cx	; Restore DS to BDA. Not needed unless DisplayPrint_CharacterFromAL changes DS.
 	pop		cx
 	pop		si
 .NothingToPrintSinceZeroLength:
 	ret
 %endif
-
-
 
 
 ;--------------------------------------------------------------------
@@ -276,8 +272,8 @@ ALIGN JUMP_ALIGN
 
 	pop		cx
 .NothingToRepeat:
-
 	ret
+
 
 ;--------------------------------------------------------------------
 ; DisplayPrint_NullTerminatedStringFromCSSI
@@ -290,29 +286,25 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
-
 %ifndef MODULE_STRINGS_COMPRESSED
 ;;;
 ;;; Take care when using this routine with compressed strings (which is why it is disabled).
 ;;; All strings in CSSI should go through the DisplayFormatCompressed code to be decoded.
-;;; 
+;;;
 ALIGN JUMP_ALIGN
 DisplayPrint_NullTerminatedStringFromCSSI:
 	push	bx
 	mov		bx, cs
 	call	DisplayPrint_NullTerminatedStringFromBXSI
 	pop		bx
-
 	ret
 %endif
-
-		
 
 
 ;;;
 ;;; Note that the following routines need to be at the bottom of this file
 ;;; to accomodate short jumps from the next file (DisplayFormat/DisplayFormatCompressed)
-;;; 
+;;;
 
 ;--------------------------------------------------------------------
 ; DisplayPrint_Newline
@@ -327,12 +319,12 @@ DisplayPrint_NullTerminatedStringFromCSSI:
 %ifdef MODULE_STRINGS_COMPRESSED
 ALIGN JUMP_ALIGN
 DisplayPrint_Newline_FormatAdjustBP:
-	inc		bp					; we didn't need a parameter after all, readjust BP 
+	inc		bp					; we didn't need a parameter after all, readjust BP
 	inc		bp
 	; fall through to DisplayPrint_Newline
 %endif
 
-ALIGN JUMP_ALIGN		
+ALIGN JUMP_ALIGN
 DisplayPrint_Newline:
 	mov		al, LF
 	call	DisplayPrint_CharacterFromAL
@@ -360,7 +352,7 @@ DisplayPrint_CharacterFromAL:
 	mov		ah, [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bAttribute]
 	jmp		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fnCharOut]
 
-		
+
 ;--------------------------------------------------------------------
 ; DisplayPrint_NullTerminatedStringFromBXSI
 ;	Parameters:
@@ -392,8 +384,7 @@ ALIGN JUMP_ALIGN
 .EndOfString:
 	pop		cx
 	pop		si
-		
-DisplayPrint_Ret:				; random ret to jump to 				
+
+DisplayPrint_Ret:				; random ret to jump to
 	ret
 
-

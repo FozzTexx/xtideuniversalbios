@@ -156,8 +156,7 @@ DisplayFormat_ParseCharacters:
 	jb		short DisplayPrint_NullTerminatedStringFromBXSI
 
 .decode:
-	eSEG	cs
-	lodsb						; load next byte of the string
+	cs lodsb					; load next byte of the string
 
 	mov		ch,al				; save a copy for later processing of high order bits
 
