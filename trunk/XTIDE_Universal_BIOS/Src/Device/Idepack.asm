@@ -24,7 +24,6 @@ Idepack_FakeToSSBP:
 ; Idepack_ConvertDapToIdepackAndIssueCommandFromAH
 ;	Parameters:
 ;		AH:		IDE command to issue
-;		AL:		Number of sectors to transfer (for xfer commands)
 ;		BH:		Timeout ticks
 ;		BL:		IDE Status Register flag to wait after command
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
@@ -39,6 +38,7 @@ Idepack_FakeToSSBP:
 %ifdef MODULE_EBIOS
 ALIGN JUMP_ALIGN
 Idepack_ConvertDapToIdepackAndIssueCommandFromAH:
+	mov		al, [es:si+DAP.wSectorCount]
 	mov		[bp+IDEPACK.bSectorCount], al
 	mov		[bp+IDEPACK.bCommand], ah
 
@@ -57,10 +57,10 @@ Idepack_ConvertDapToIdepackAndIssueCommandFromAH:
 	mov		[bp+IDEPACK.bDrvAndHead], al
 
 	; Normalize data buffer pointer to ES:SI
-	mov		ax, [es:si+DAP.dwMemoryAddress]		; Load offset
+	mov		ax, [es:si+DAP.wOffset]
 	mov		cx, ax
 	eSHR_IM	ax, 4								; Divide offset by 16
-	add		ax, [es:si+DAP.dwMemoryAddress+2]	; Add segment
+	add		ax, [es:si+DAP.wSegment]			; Add segment
 	mov		es, ax								; Segment normalized
 	mov		si, cx
 	and		si, BYTE 0Fh						; Offset normalized
