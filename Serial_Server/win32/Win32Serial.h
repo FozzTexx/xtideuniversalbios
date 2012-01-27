@@ -39,7 +39,7 @@ public:
 			log( 0, "Opening named pipe %s (simulating %lu baud)", PIPENAME, baudRate->rate );
 		
 			pipe = CreateNamedPipeA( PIPENAME, PIPE_ACCESS_DUPLEX, PIPE_TYPE_BYTE|PIPE_REJECT_REMOTE_CLIENTS, 2, 1024, 1024, 0, NULL );
-			if( !pipe )
+			if( pipe == INVALID_HANDLE_VALUE )
 				log( -1, "Could not CreateNamedPipe " PIPENAME );
 		
 			if( !ConnectNamedPipe( pipe, NULL ) )
@@ -61,7 +61,7 @@ public:
 				log( 0, "Opening %s (%lu baud)", name, baudRate->rate );
 			
 				pipe = CreateFileA( name, GENERIC_READ|GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0 );
-				if( !pipe )
+				if( pipe == INVALID_HANDLE_VALUE )
 					log( -1, "Could not Open \"%s\"", name );
 			
 				FillMemory(&dcb, sizeof(dcb), 0);

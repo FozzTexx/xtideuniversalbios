@@ -25,7 +25,7 @@ void usage(void)
 		"usage: SerDrive [options] imagefile [[slave-options] slave-imagefile]",
 		"",
 		"  -g [cyl:head:sect]  Geometry in cylinders, sectors per cylinder, and heads",
-		"                      -g without parameters uses CHS mode (default is LBA28)",
+		"                      -g also implies CHS addressing mode (default is LBA28)",
 		"",
 		"  -n [megabytes]      Create new disk with given size or use -g geometry",
 		"                      Maximum size is " USAGE_MAXSECTORS, 
@@ -160,6 +160,12 @@ int main(int argc, char* argv[])
 		}
 		else if( imagecount < 2 )
 		{
+			if( createFile && cyl == 0 )
+			{
+				cyl = 65;
+				sect = 63;
+				head = 16;
+			}
 			images[imagecount] = new FlatImage( argv[t], readOnly, imagecount, createFile, cyl, head, sect, useCHS );
 			imagecount++;
 			createFile = readOnly = cyl = sect = head = useCHS = 0;

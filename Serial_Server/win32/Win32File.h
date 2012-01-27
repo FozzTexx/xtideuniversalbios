@@ -17,19 +17,33 @@
 class FileAccess
 {
 public:
-	void Create( char *p_name )
+	int Create( char *p_name )
 	{
 		fp = CreateFileA( p_name, GENERIC_WRITE, 0, 0, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, 0 );
-		if( !fp )
-			log( -1, "'%s', could not create file", p_name );
+
+		if( fp == INVALID_HANDLE_VALUE )
+		{
+			if( GetLastError() == ERROR_FILE_EXISTS )
+			{
+				log( 0, "'%s', file already exists", p_name );
+				return( 0 );
+			}
+			else
+				log( -1, "'%s', could not create file", p_name );
+		}
+
 		name = p_name;
+
+		return( 1 );
 	}
 
 	void Open( char *p_name )
 	{
 		fp = CreateFileA( p_name, GENERIC_READ|GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0 );
-		if( !fp )
+
+		if( fp == INVALID_HANDLE_VALUE )
 			log( -1, "'%s', could not open file", p_name );
+
 		name = p_name;
 	}
 
@@ -77,7 +91,7 @@ public:
 		unsigned long out_len;
 
 		if( !ReadFile( fp, buff, len, &out_len, NULL ) || len != out_len )
-			log( -1, "'%s', ReadFile failed" );
+			log( -1, "'%s', ReadFile failed", name );
 	}
 
 	void Write( void *buff, unsigned long len )
@@ -85,7 +99,7 @@ public:
 		unsigned long out_len;
 
 		if( !WriteFile( fp, buff, len, &out_len, NULL ) || len != out_len )
-			log( -1, "'%s', WriteFile failed" );
+			log( -1, "'%s', WriteFile failed", name );
 	}
 
 	FileAccess()
