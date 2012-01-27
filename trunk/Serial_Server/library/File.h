@@ -17,17 +17,23 @@
 class FileAccess
 {
 public:
-	void Create( char *p_name )
+	int Create( char *p_name )
 	{
 		fp = fopen( p_name, "r" );
 
 		if( fp )
-			log( -1, "Create Failure: '%s' already exists", p_name );
+		{
+			log( 0, "'%s' file already exists", p_name );
+			fclose( fp );
+			return( 0 );
+		}
 		
 		if( !(fp = fopen( p_name, "w" )) )
 			log( -1, "Could not create file '%s'", p_name );
 
 		name = p_name;
+		
+		return( 1 );
 	}
 
 	void Open( char *p_name )
