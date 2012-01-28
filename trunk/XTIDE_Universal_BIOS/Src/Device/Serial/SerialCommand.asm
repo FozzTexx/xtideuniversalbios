@@ -90,7 +90,7 @@ SerialCommand_OutputWithParameters:
 .readOrWrite:
 		mov		[bp+IDEPACK.bFeatures],ah		; store protocol command
 
-		mov		dl, byte [di+DPT.bSerialPortAndBaud]
+		mov		dl, byte [di+DPT_SERIAL.bSerialPortAndBaud]
 
 ; fall-through
 
@@ -112,7 +112,6 @@ SerialCommand_OutputWithParameters_DeviceInDL:
 		push	si
 		push	di
 		push	bp
-		push	es
 
 ;
 ; Unpack I/O port and baud from DPT
@@ -437,7 +436,6 @@ SerialCommand_OutputWithParameters_ReturnCodeInALCF:
 
 		pop		bp				;  recover ax (command and count) from stack, throw away
 
-		pop		es
 		pop		bp
 		pop		di
 		pop		si
