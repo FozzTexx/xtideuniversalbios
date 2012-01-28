@@ -11,11 +11,7 @@ struc DPT	; 10 bytes
 	.bFlagsLow					resb	1
 	.bFlagsHigh					resb	1
 	.bIdevarsOffset				resb	1	; Offset to IDEVARS for this drive
-%ifdef MODULE_SERIAL
-	.bSerialPortAndBaud			resb	1	; Packed I/O port and baud rate for serial drives
-%else
-								resb	1	; without serial port support, alignment byte
-%endif
+								resb	1	; alignment byte
 
 	; IDE Drive related
 	.dwCylinders				resb	4	; Number of Cylinders
@@ -34,6 +30,16 @@ struc DPT_ATA	; 10 + 2 bytes = 12 bytes
 	.bSetBlock					resb	1	; Current block size (at least 1)
 	.bMaxBlock					resb	1	; Maximum block size, 0 = block mode not supported
 endstruc
+
+%ifdef MODULE_SERIAL
+; DPT for Serial devices
+struc DPT_SERIAL 
+	.dpt						resb	DPT_size
+
+	.bSerialPortAndBaud			resb	1	; Packed I/O port and baud rate for serial drives
+								resb 	1	; unused alignment
+endstruc
+%endif
 
 LARGEST_DPT_SIZE				EQU		DPT_ATA_size
 
