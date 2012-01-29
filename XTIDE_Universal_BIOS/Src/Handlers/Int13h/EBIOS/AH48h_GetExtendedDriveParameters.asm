@@ -21,7 +21,10 @@ SECTION .text
 ;		CF:		0 if succesfull, 1 if error
 ;--------------------------------------------------------------------
 AH48h_HandlerForGetExtendedDriveParameters:
+	call	AccessDPT_GetPointerToDRVPARAMStoCSBX
+	push	bx
 	call	AccessDPT_GetLbaSectorCountToBXDXAX
+	pop		di			; CS:DI now points to DRVPARAMS
 
 	; Point DS:SI to Extended Drive Information Table to fill
 	mov		ds, [bp+IDEPACK.intpack+INTPACK.ds]
@@ -41,12 +44,29 @@ AH48h_HandlerForGetExtendedDriveParameters:
 	mov		[si+EDRIVE_INFO.wSize], cx
 	mov		WORD [si+EDRIVE_INFO.wFlags], FLG_DMA_BOUNDARY_ERRORS_HANDLED_BY_BIOS
 
-	mov		[di+EDRIVE_INFO.qwTotalSectors], ax
+	; Limit LBA if necessary
+	test	BYTE [cs:di+DRVPARAMS.wFlags], FLG_DRVPARAMS_USERLBA
+	jz		SHORT .StoreTotalSectorsFromBXDXAX
+	test	bx, bx
+	jnz		SHORT .LimitTotalSectors
+	cmp		dx, [cs:di+DRVPARAMS.dwMaximumLBA+2]
+	jb		SHORT .StoreTotalSectorsFromBXDXAX		; Real size less than max
+	ja		SHORT .LimitTotalSectors
+	cmp		ax, [cs:di+DRVPARAMS.dwMaximumLBA]
+	jbe		SHORT .StoreTotalSectorsFromBXDXAX		; Real size less than max
+
+.LimitTotalSectors:
+	xor		bx, bx
+	mov		ax, [cs:di+DRVPARAMS.dwMaximumLBA]
+	mov		dx, [cs:di+DRVPARAMS.dwMaximumLBA+2]
+
+.StoreTotalSectorsFromBXDXAX:
+	mov		[si+EDRIVE_INFO.qwTotalSectors], ax
 	xor		ax, ax									; Return with success
-	mov		[di+EDRIVE_INFO.qwTotalSectors+2], dx
-	mov		[di+EDRIVE_INFO.qwTotalSectors+4], bx
-	mov		[di+EDRIVE_INFO.qwTotalSectors+6], ax
-	mov		WORD [di+EDRIVE_INFO.wSectorSize], 512
+	mov		[si+EDRIVE_INFO.qwTotalSectors+2], dx
+	mov		[si+EDRIVE_INFO.qwTotalSectors+4], bx
+	mov		[si+EDRIVE_INFO.qwTotalSectors+6], ax
+	mov		WORD [si+EDRIVE_INFO.wSectorSize], 512
 
 .ReturnWithError:
 	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
