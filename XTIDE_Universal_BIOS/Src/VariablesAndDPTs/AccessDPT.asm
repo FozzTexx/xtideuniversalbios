@@ -61,7 +61,7 @@ AccessDPT_GetLCHStoAXBLBH:
 	test	dx, dx
 	jnz		SHORT .LimitAXtoMaxLCHScylinders
 	cmp		ax, MAX_LCHS_CYLINDERS
-	jbe		SHORT .returnLCHS
+	jb		SHORT .returnLCHS
 .LimitAXtoMaxLCHScylinders:
 	mov		ax, MAX_LCHS_CYLINDERS
 .returnLCHS:
@@ -70,7 +70,34 @@ AccessDPT_GetLCHStoAXBLBH:
 .ConvertPchsToLchs:
 	mov		ax, [di+DPT.wPchsCylinders]
 	mov		bx, [di+DPT.wPchsHeadsAndSectors]
-	jmp		SHORT AccessDPT_ShiftPCHinAXBLtoLCH
+	; Fall to AccessDPT_ShiftPCHinAXBLtoLCH
+
+
+;--------------------------------------------------------------------
+; AccessDPT_ShiftPCHinAXBLtoLCH
+;	Parameters:
+;		AX:		P-CHS cylinders (1...16383)
+;		BL:		P-CHS heads (1...16)
+;	Returns:
+;		AX:		Number of L-CHS cylinders (1...1024)
+;		BL:		Number of L-CHS heads (1...255)
+;		CX:		Number of bits shifted (4 at most)
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+AccessDPT_ShiftPCHinAXBLtoLCH:
+	xor		cx, cx
+.ShiftLoop:
+	cmp		ax, MAX_LCHS_CYLINDERS		; Need to shift?
+	jbe		SHORT .LimitHeadsTo255		;  If not, return
+	inc		cx							; Increment shift count
+	shr		ax, 1						; Halve cylinders
+	shl		bl, 1						; Double heads
+	jnz		SHORT .ShiftLoop
+.LimitHeadsTo255:						; DOS does not support drives with 256 heads
+	cmp		bl, cl						; Set CF if BL is zero
+	sbb		bl, ch						; If BL=0 then BL=255
+	ret
 
 
 ;--------------------------------------------------------------------
@@ -86,33 +113,6 @@ AccessDPT_GetLbaSectorCountToBXDXAX:
 	mov		ax, [di+DPT.twLbaSectors]
 	mov		dx, [di+DPT.twLbaSectors+2]
 	mov		bx, [di+DPT.twLbaSectors+4]
-	ret
-
-
-;--------------------------------------------------------------------
-; AccessDPT_ShiftPCHinAXBLtoLCH
-;	Parameters:
-;		AX:		P-CHS cylinders (1...16383)
-;		BL:		P-CHS heads (1...16)
-;	Returns:
-;		AX:		Number of L-CHS cylinders (1...1024)
-;		BL:		Number of L-CHS heads (1...255)
-;		CX:		Number of bits shifted
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-AccessDPT_ShiftPCHinAXBLtoLCH:
-	xor		cx, cx
-.ShiftLoop:
-	cmp		ax, MAX_LCHS_CYLINDERS		; Need to shift?
-	jbe		SHORT .LimitHeadsTo255		;  If not, return
-	inc		cx							; Increment shift count
-	shr		ax, 1						; Halve cylinders
-	shl		bl, 1						; Double heads
-	jmp		SHORT .ShiftLoop
-.LimitHeadsTo255:						; DOS does not support drives with 256 heads
-	cmp		bl, cl						; Set CF if BL is zero
-	sbb		bl, ch						; If BL=0 then BL=255
 	ret
 
 
@@ -142,14 +142,14 @@ AccessDPT_GetPointerToDRVPARAMStoCSBX:
 ;	Parameters:
 ;		DS:DI:	Ptr to Disk Parameter Table
 ;	Returns:
-;		AL:		Addressing Mode (L-CHS, P-CHS, LBA28, LBA48) 
+;		AL:		Addressing Mode (L-CHS, P-CHS, LBA28, LBA48)
 ;               unshifted (still shifted where it is in bFlagsLow)
 ;       ZF:     Set based on value in AL
 ;	Corrupts registers:
 ;		AL
 ;--------------------------------------------------------------------
-; 
-; Converted to a macro since only called in two places, and the call/ret overhead 
+;
+; Converted to a macro since only called in two places, and the call/ret overhead
 ; is not worth it for these two instructions (4 bytes total)
 ;
 %macro AccessDPT_GetUnshiftedAddressModeToALZF 0
