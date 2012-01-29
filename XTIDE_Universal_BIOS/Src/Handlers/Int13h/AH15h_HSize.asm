@@ -52,18 +52,17 @@ AH15h_GetSectorCountFromForeignDriveToDXAX:
 	call	Int13h_CallPreviousInt13hHandler
 	jmp		SHORT ConvertAH08hReturnValuesToSectorCount
 
-ALIGN JUMP_ALIGN
 AH15h_GetSectorCountToDXAX:
 	call	AH8h_GetDriveParameters
 	; Fall to ConvertAH08hReturnValuesToSectorCount
 
 ConvertAH08hReturnValuesToSectorCount:
 	call	Address_ExtractLCHSparametersFromOldInt13hAddress
-	xor		ax, ax			; Zero AX
-	inc		cx				; Max cylinder number to cylinder count
-	xchg	al, bh			; AX=Max head number, BX=Sectors per track
-	inc		ax				; AX=Head count
-	mul		bx				; AX=Head count * Sectors per track
-	mul		cx				; DX:AX = Total sector count
-	xor		bx, bx			; Zero BX for 48-bit sector count (and clear CF)
+	xchg	ax, cx
+	inc		ax				; Max cylinder number to cylinder count
+.MultiplyChsInAXBLBHtoBXDXAX:
+	xchg	bx, ax
+	mul		ah			; Multiply heads and sectors
+	mul		bx			; Multiply with cylinders
+	xor		bx, bx
 	ret

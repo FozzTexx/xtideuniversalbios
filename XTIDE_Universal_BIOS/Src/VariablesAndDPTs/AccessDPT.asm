@@ -39,70 +39,83 @@ AccessDPT_GetDeviceControlByteToAL:
 .EnableDeviceIrq:
 	ret
 
-		
+
 ;--------------------------------------------------------------------
-; AccessDPT_GetLCHS
+; AccessDPT_GetLCHStoAXBLBH
 ;	Parameters:
 ;		DS:DI:	Ptr to Disk Parameter Table
 ;	Returns:
-;		AX:		Number of L-CHS sectors per track
-;		BX:		Number of L-CHS cylinders
-;		DX:		Number of L-CHS heads
+;		AX:		Number of L-CHS cylinders
+;		BL:		Number of L-CHS heads
+;		BH:		Number of L-CHS sectors per track
 ;	Corrupts registers:
-;		CX
+;		CX, DX
 ;--------------------------------------------------------------------
-AccessDPT_GetLCHS:
-	; Load CHS from DPT
-	eMOVZX	ax, BYTE [di+DPT.bSectors]
-	mov		bx, [di+DPT.dwCylinders]
-	cwd
-	mov		dl, [di+DPT.bHeads]
-
-	; Only need to limit sectors for LBA assist
+AccessDPT_GetLCHStoAXBLBH:
+	; Return LBA-assisted CHS if LBA addressing used
 	test	BYTE [di+DPT.bFlagsLow], FLG_DRVNHEAD_LBA
-	jz		SHORT AccessDPT_ShiftPCHinBXDXtoLCH
+	jz		SHORT .ConvertPchsToLchs
 
-	cmp		WORD [di+DPT.dwCylinders+2], BYTE 0
-	jnz		SHORT .Return_MAX_LCHS_CYLINDERS
+	call	AccessDPT_GetLbaSectorCountToBXDXAX
+	call	AtaID_GetLbaAssistedCHStoDXAXBLBH
+	test	dx, dx
+	jnz		SHORT .LimitAXtoMaxLCHScylinders
+	cmp		ax, MAX_LCHS_CYLINDERS
+	jbe		SHORT .returnLCHS
+.LimitAXtoMaxLCHScylinders:
+	mov		ax, MAX_LCHS_CYLINDERS
+.returnLCHS:
+	ret
 
-	; Limit cylinders to 1024
-	cmp		bx, MAX_LCHS_CYLINDERS
-	jb		SHORT .Return
-ALIGN JUMP_ALIGN
-.Return_MAX_LCHS_CYLINDERS:
-	mov		bx, MAX_LCHS_CYLINDERS
-ALIGN JUMP_ALIGN, ret
-.Return:
+.ConvertPchsToLchs:
+	mov		ax, [di+DPT.wPchsCylinders]
+	mov		bx, [di+DPT.wPchsHeadsAndSectors]
+	jmp		SHORT AccessDPT_ShiftPCHinAXBLtoLCH
+
+
+;--------------------------------------------------------------------
+; AccessDPT_GetLbaSectorCountToBXDXAX
+;	Parameters:
+;		DS:DI:	Ptr to Disk Parameter Table
+;	Returns:
+;		BX:DX:AX:	48-bit sector count
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+AccessDPT_GetLbaSectorCountToBXDXAX:
+	mov		ax, [di+DPT.twLbaSectors]
+	mov		dx, [di+DPT.twLbaSectors+2]
+	mov		bx, [di+DPT.twLbaSectors+4]
 	ret
 
 
 ;--------------------------------------------------------------------
-; AccessDPT_ShiftPCHinBXDXtoLCH
+; AccessDPT_ShiftPCHinAXBLtoLCH
 ;	Parameters:
-;		BX:		P-CHS cylinders (1...16383)
-;		DX:		P-CHS heads (1...16)
+;		AX:		P-CHS cylinders (1...16383)
+;		BL:		P-CHS heads (1...16)
 ;	Returns:
-;		BX:		Number of L-CHS cylinders (1...1024)
-;		DX:		Number of L-CHS heads (1...255)
+;		AX:		Number of L-CHS cylinders (1...1024)
+;		BL:		Number of L-CHS heads (1...255)
 ;		CX:		Number of bits shifted
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-AccessDPT_ShiftPCHinBXDXtoLCH:
+AccessDPT_ShiftPCHinAXBLtoLCH:
 	xor		cx, cx
 .ShiftLoop:
-	cmp		bx, MAX_LCHS_CYLINDERS		; Need to shift?
+	cmp		ax, MAX_LCHS_CYLINDERS		; Need to shift?
 	jbe		SHORT .LimitHeadsTo255		;  If not, return
 	inc		cx							; Increment shift count
-	shr		bx, 1						; Halve cylinders
-	shl		dx, 1						; Double heads
+	shr		ax, 1						; Halve cylinders
+	shl		bl, 1						; Double heads
 	jmp		SHORT .ShiftLoop
 .LimitHeadsTo255:						; DOS does not support drives with 256 heads
-	sub		dl, dh						; DH set only when 256 logical heads
-	xor		dh, dh
+	cmp		bl, cl						; Set CF if BL is zero
+	sbb		bl, ch						; If BL=0 then BL=255
 	ret
 
-		
+
 ;--------------------------------------------------------------------
 ; Returns pointer to DRVPARAMS for master or slave drive.
 ;
@@ -143,5 +156,3 @@ AccessDPT_GetPointerToDRVPARAMStoCSBX:
 	mov		al, [di+DPT.bFlagsLow]
 	and		al, MASKL_DPT_ADDRESSING_MODE
 %endmacro
-
-		

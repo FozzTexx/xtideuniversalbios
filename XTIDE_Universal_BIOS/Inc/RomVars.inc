@@ -82,6 +82,7 @@ DEVICE_SERIAL_PORT						EQU	(5<<1)
 ; Master/Slave drive specific parameters
 struc DRVPARAMS
 	.wFlags			resb	2	; Drive flags
+	.dwMaximumLBA:				; User specified maximum number of sectors
 	.wCylinders		resb	2	; User specified cylinders (1...16383)
 	.wHeadsAndSectors:
 	.bHeads			resb	1	; User specified Heads (1...16)
@@ -91,6 +92,7 @@ endstruc
 ; Bit defines for DRVPARAMS.wFlags
 FLG_DRVPARAMS_USERCHS	EQU	(1<<0)	; User specified P-CHS values
 FLG_DRVPARAMS_BLOCKMODE	EQU	(1<<1)	; Enable Block mode transfers
+FLG_DRVPARAMS_USERLBA	EQU	(1<<2)	; User specified LBA values
 
 
 ; Defines for IDEVARS.bSerialPackedPortAndBaud (same format used by DPT.bSerialPortAndBaud)

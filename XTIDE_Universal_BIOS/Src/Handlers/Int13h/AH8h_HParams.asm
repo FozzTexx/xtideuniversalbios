@@ -21,7 +21,6 @@ SECTION .text
 ;		AH:		Int 13h/40h floppy return status
 ;		CF:		0 if successfull, 1 if error
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 AH8h_HandlerForReadDiskDriveParameters:
 	call	RamVars_IsDriveHandledByThisBIOS
 	jnc		SHORT .GetDriveParametersForForeignHardDiskInDL
@@ -55,9 +54,8 @@ AH8h_HandlerForReadDiskDriveParameters:
 ;	Corrupts registers:
 ;		AX, BX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 AH8h_GetDriveParameters:
-	call	AccessDPT_GetLCHS		; AX=sectors, BX=cylinders, DX=heads
+	call	AccessDPT_GetLCHStoAXBLBH
 	; Fall to .PackReturnValues
 
 ;--------------------------------------------------------------------
@@ -65,9 +63,9 @@ AH8h_GetDriveParameters:
 ;
 ; .PackReturnValues
 ;	Parameters:
-;		AX:		Number of L-CHS sectors per track (1...63)
-;		BX:		Number of L-CHS cylinders available (1...1024)
-;		DX:		Number of L-CHS heads (1...256)
+;		AX:		Number of L-CHS cylinders available (1...1024)
+;		BL:		Number of L-CHS heads (1...256)
+;		BH:		Number of L-CHS sectors per track (1...63)
 ;		DS:		RAMVARS segment
 ;	Returns:
 ;		CH:		Maximum cylinder number, bits 7...0
@@ -79,11 +77,11 @@ AH8h_GetDriveParameters:
 ;		AX, BX
 ;--------------------------------------------------------------------
 .PackReturnValues:
-	dec		bx						; Cylinder count to last cylinder
-	dec		dx						; Head count to max head number
-	mov		dh, dl					; Max head number to DH
-	mov		ch, bl					; Cylinder bits 7...0 to CH
-	mov		cl, bh					; Cylinder bits 9...8 to CL
-	eROR_IM	cl, 2					; Cylinder bits 9...8 to CL bits 7...6
-	or		cl, al					; Sectors per track to CL bits 5...0
+	dec		ax						; AX = Number of last cylinder
+	dec		bx						; BL = Number of last head
+	xchg	cx, ax
+	xchg	cl, ch					; CH = Last cylinder bits 0...7
+	eROR_IM	cl, 2					; CL bits 6...7 = Last cylinder bits 8...9
+	or		cl, bh					; CL bits 0...5 = Sectors per track
+	mov		dh, bl					; DH = Maximum head number
 	jmp		RamVars_GetCountOfKnownDrivesToDL

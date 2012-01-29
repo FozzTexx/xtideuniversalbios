@@ -11,13 +11,16 @@ struc DPT	; 10 bytes
 	.bFlagsLow					resb	1
 	.bFlagsHigh					resb	1
 	.bIdevarsOffset				resb	1	; Offset to IDEVARS for this drive
-								resb	1	; alignment byte
 
 	; IDE Drive related
-	.dwCylinders				resb	4	; Number of Cylinders
-	.wHeadsAndSectors:
-	.bHeads						resb	1	; Number of Heads (1...255)
-	.bSectors					resb	1	; Number of Sectors per Track (1...63)
+	; .twLbaSectors is used for LBA addressing only.
+	; .wPchsCylinders and .bPchsSectors are used for CHS addressing only.
+	.bLbaHeads:								; Number of LBA assisted heads (1...255)
+	.twLbaSectors				resb	2	; 48-bit sector count for LBA addressing
+	.wPchsCylinders				resb	2	; Number of P-CHS Cylinders (1...16383)
+	.wPchsHeadsAndSectors:
+	.bPchsHeads					resb	1	; Number of P-CHS heads (1...16)
+	.bPchsSectors				resb	1	; Number of P-CHS Sectors per Track (1...63)
 endstruc
 
 ; DPT for ATA devices
