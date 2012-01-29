@@ -44,23 +44,28 @@ AH48h_HandlerForGetExtendedDriveParameters:
 	mov		[si+EDRIVE_INFO.wSize], cx
 	mov		WORD [si+EDRIVE_INFO.wFlags], FLG_DMA_BOUNDARY_ERRORS_HANDLED_BY_BIOS
 
+	push	ds	; Move CS to DS to avoid segment overrides
+	push	cs
+	pop		ds
+
 	; Limit LBA if necessary
-	test	BYTE [cs:di+DRVPARAMS.wFlags], FLG_DRVPARAMS_USERLBA
+	test	BYTE [di+DRVPARAMS.wFlags], FLG_DRVPARAMS_USERLBA
 	jz		SHORT .StoreTotalSectorsFromBXDXAX
 	test	bx, bx
 	jnz		SHORT .LimitTotalSectors
-	cmp		dx, [cs:di+DRVPARAMS.dwMaximumLBA+2]
+	cmp		dx, [di+DRVPARAMS.dwMaximumLBA+2]
 	jb		SHORT .StoreTotalSectorsFromBXDXAX		; Real size less than max
 	ja		SHORT .LimitTotalSectors
-	cmp		ax, [cs:di+DRVPARAMS.dwMaximumLBA]
+	cmp		ax, [di+DRVPARAMS.dwMaximumLBA]
 	jbe		SHORT .StoreTotalSectorsFromBXDXAX		; Real size less than max
 
 .LimitTotalSectors:
 	xor		bx, bx
-	mov		ax, [cs:di+DRVPARAMS.dwMaximumLBA]
-	mov		dx, [cs:di+DRVPARAMS.dwMaximumLBA+2]
+	mov		ax, [di+DRVPARAMS.dwMaximumLBA]
+	mov		dx, [di+DRVPARAMS.dwMaximumLBA+2]
 
 .StoreTotalSectorsFromBXDXAX:
+	pop		ds	; Restore DS from the change above
 	mov		[si+EDRIVE_INFO.qwTotalSectors], ax
 	xor		ax, ax									; Return with success
 	mov		[si+EDRIVE_INFO.qwTotalSectors+2], dx

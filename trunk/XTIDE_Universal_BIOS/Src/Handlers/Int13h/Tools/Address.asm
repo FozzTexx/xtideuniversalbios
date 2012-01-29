@@ -85,23 +85,23 @@ DoNotConvertLCHS:
 ALIGN JUMP_ALIGN
 Address_OldInt13hAddressToIdeAddress:
 		call	Address_ExtractLCHSparametersFromOldInt13hAddress
-			
+
 		AccessDPT_GetUnshiftedAddressModeToALZF
-		
-;;; 0: ADDR_DPT_LCHS		
-		jz		DoNotConvertLCHS	
-		
+
+;;; 0: ADDR_DPT_LCHS
+		jz		DoNotConvertLCHS
+
 ;;; 1: ADDR_DPT_PCHS
-		; 
+		;
 		; Since we are only checking for zero, we can do our math in the high order bits,
 		; in this case effectively subtracting 1 from the address mode.
 		;
 		sub		al,(1<<ADDRESSING_MODE_FIELD_POSITION)
-		jz		ConvertLCHStoPCHS	
+		jz		ConvertLCHStoPCHS
 
-;;; 2: ADDR_DPT_LBA28 and 3: ADDR_DPT_LBA48				
-		; Fall through to ConvertLCHStoLBARegisterValues  
-		
+;;; 2: ADDR_DPT_LBA28 and 3: ADDR_DPT_LBA48
+		; Fall through to ConvertLCHStoLBARegisterValues
+
 ;---------------------------------------------------------------------
 ; Converts LCHS parameters to 28-bit LBA address.
 ; Only 24-bits are used since LHCS to LBA28 conversion has 8.4GB limit.
@@ -128,6 +128,9 @@ ALIGN JUMP_ALIGN
 ConvertLCHStoLBARegisterValues:
 	; cylToSeek*headsPerCyl (18-bit result)
 	mov		ax, cx					; Copy Cylinder number to AX
+	; We could save a byte here by using CWD instead of the XOR DH, DH in eMOVZX
+	; but I'm not sure how that would affect speed.
+
 	eMOVZX	dx, BYTE [di+DPT.bLbaHeads]
 	mul		dx						; DX:AX = cylToSeek*headsPerCyl
 
