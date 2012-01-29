@@ -65,7 +65,7 @@ AH48h_HandlerForGetExtendedDriveParameters:
 	xor		ax, ax									; Return with success
 	mov		[si+EDRIVE_INFO.qwTotalSectors+2], dx
 	mov		[si+EDRIVE_INFO.qwTotalSectors+4], bx
-	mov		[si+EDRIVE_INFO.qwTotalSectors+6], ax
+	mov		[si+EDRIVE_INFO.qwTotalSectors+6], ax	; Always zero
 	mov		WORD [si+EDRIVE_INFO.wSectorSize], 512
 
 .ReturnWithError:

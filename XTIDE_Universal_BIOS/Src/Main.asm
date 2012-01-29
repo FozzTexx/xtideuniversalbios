@@ -181,9 +181,6 @@ iend
 	%include "BootSector.asm"		; For loading boot sector
 
 	; Boot loader
-%ifndef USE_AT
-	%include "Int19hLate.asm"		; For late initialization
-%endif
 	%include "Int19hMenu.asm"		; For Int 19h, Boot Loader for Boot Menu
 
 	; For all device types

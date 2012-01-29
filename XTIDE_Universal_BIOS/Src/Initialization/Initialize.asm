@@ -16,21 +16,22 @@ SECTION .text
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-Initialize_FromMainBiosRomSearch:             ; unused entrypoint ok
+Initialize_FromMainBiosRomSearch:			; unused entrypoint ok
 	pushf
 	push	es
 	push	ds
 	ePUSHA
 
 	LOAD_BDA_SEGMENT_TO	es, ax
-	call	Initialize_ShouldSkip
+	sti										; Enable interrupts
+	test	BYTE [es:BDA.bKBFlgs1], (1<<2)	; Clears ZF if CTRL is held down
 	jnz		SHORT .SkipRomInitialization
 
-%ifdef USE_AT	; Early initialization on AT build
-	call	Initialize_AndDetectDrives
-%else			; Late initialization on XT builds
-	call	Int19hLate_InitializeInt19h
-%endif
+	; Install INT 19h handler (boot loader) where drives are detected
+	mov		bx, BIOS_BOOT_LOADER_INTERRUPT_19h
+	mov		si, HandlerForLateInitialization
+	call	Interrupts_InstallHandlerToVectorInBXFromCSSI
+
 .SkipRomInitialization:
 	ePOPA
 	pop		ds
@@ -40,21 +41,16 @@ Initialize_FromMainBiosRomSearch:             ; unused entrypoint ok
 
 
 ;--------------------------------------------------------------------
-; Checks if user wants to skip ROM initialization.
-;
-; Initialize_ShouldSkip
+; HandlerForLateInitialization
 ;	Parameters:
-;		ES:		BDA segment
-;	Returns:
-;		ZF:		Cleared if ROM initialization is to be skipped
-;				Set to continue ROM initialization
-;	Corrupts registers:
 ;		Nothing
+;	Returns:
+;		Never returns
 ;--------------------------------------------------------------------
-Initialize_ShouldSkip:
-	sti										; Enable interrupts
-	test	BYTE [es:BDA.bKBFlgs1], (1<<2)	; Clear ZF if CTRL is held down
-	ret
+HandlerForLateInitialization:
+	LOAD_BDA_SEGMENT_TO	es, ax
+	call	Initialize_AndDetectDrives		; Installs new boot menu loader
+	int		BIOS_BOOT_LOADER_INTERRUPT_19h	; Display boot menu
 
 
 ;--------------------------------------------------------------------
