@@ -46,8 +46,6 @@ Int13h_DiskFunctionsHandler:
 	; Jump to correct EBIOS function
 ALIGN JUMP_ALIGN
 .JumpToEbiosFunction:
-	test	BYTE [cs:ROMVARS.wFlags], FLG_ROMVARS_FULLMODE
-	jz		SHORT Int13h_UnsupportedFunction	; No eINT 13h in lite mode
 	test	BYTE [di+DPT.bFlagsLow], FLG_DRVNHEAD_LBA
 	jz		SHORT Int13h_UnsupportedFunction	; No eINT 13h for CHS drives
 	cmp		ah, 48h

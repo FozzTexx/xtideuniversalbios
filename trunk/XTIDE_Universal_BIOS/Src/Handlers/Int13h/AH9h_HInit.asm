@@ -16,7 +16,6 @@ SECTION .text
 ;		AH:		Int 13h return status
 ;		CF:		0 if succesfull, 1 if error
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 AH9h_HandlerForInitializeDriveParameters:
 %ifndef USE_186
 	call	AH9h_InitializeDriveForUse
@@ -40,7 +39,6 @@ AH9h_HandlerForInitializeDriveParameters:
 ;	Corrupts registers:
 ;		AL, BX, DX
 ;--------------------------------------------------------------------
-;ALIGN JUMP_ALIGN
 AH9h_InitializeDriveForUse:
 	push	cx
 
@@ -86,16 +84,15 @@ AH9h_InitializeDriveForUse:
 ;	Corrupts registers:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 InitializeDeviceParameters:
 	; No need to initialize CHS parameters if LBA mode enabled
 	test	BYTE [di+DPT.bFlagsLow], FLG_DRVNHEAD_LBA	; Clear CF
 	jnz		SHORT ReturnSuccessSinceInitializationNotNeeded
 
 	; Initialize Logical Sectors per Track and Max Head number
-	mov		ah, [di+DPT.bHeads]
+	mov		ah, [di+DPT.bPchsHeads]
 	dec		ah							; Max Head number
-	mov		dl, [di+DPT.bSectors]		; Sectors per Track
+	mov		dl, [di+DPT.bPchsSectors]	; Sectors per Track
 	mov		al, COMMAND_INITIALIZE_DEVICE_PARAMETERS
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_BSY, FLG_STATUS_BSY)
 	jmp		Idepack_StoreNonExtParametersAndIssueCommandFromAL
@@ -112,7 +109,6 @@ InitializeDeviceParameters:
 ;	Corrupts registers:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 InitializeBlockMode:
 	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_BLOCK_MODE_SUPPORTED	; Clear CF
 	jz		SHORT ReturnSuccessSinceInitializationNotNeeded

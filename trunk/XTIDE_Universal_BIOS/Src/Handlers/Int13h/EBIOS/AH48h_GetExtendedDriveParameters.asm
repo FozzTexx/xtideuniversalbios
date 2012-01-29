@@ -20,59 +20,33 @@ SECTION .text
 ;		DS:SI:	Ptr to Extended Drive Information Table
 ;		CF:		0 if succesfull, 1 if error
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 AH48h_HandlerForGetExtendedDriveParameters:
-	; Get our buffer to ES:SI
-	push	di
-	call	FindDPT_ForNewDriveToDSDI
-	lea		si, [di+LARGEST_DPT_SIZE]	; IdeCommand.asm required fake DPT
-	pop		di
-	push	ds
-	pop		es
+	call	AccessDPT_GetLbaSectorCountToBXDXAX
 
-	; Get Drive ID and total sector count from it
-	call	AH25h_GetDriveInformationToBufferInESSI
-	jc		SHORT .ReturnWithError
-
-	; Point DS:DI to Destination buffer
-	mov		di, [bp+IDEPACK.intpack+INTPACK.si]
+	; Point DS:SI to Extended Drive Information Table to fill
 	mov		ds, [bp+IDEPACK.intpack+INTPACK.ds]
-	mov		ax, MINIMUM_EDRIVEINFO_SIZE
-	cmp		[di+EDRIVE_INFO.wSize], ax
+	mov		cx, MINIMUM_EDRIVEINFO_SIZE
+	cmp		[si+EDRIVE_INFO.wSize], cx
 	jb		SHORT Prepare_ReturnFromInt13hWithInvalidFunctionError
 	je		SHORT .SkipEddConfigurationParameters
 
 	; We do not support EDD Configuration Parameters so set to FFFF:FFFFh
-	mov		ax, -1		; AX = FFFFh
-	mov		[di+EDRIVE_INFO.fpEDDparams], ax
-	mov		[di+EDRIVE_INFO.fpEDDparams+2], ax
-	mov		ax, EDRIVE_INFO_size
+	mov		cx, -1		; FFFFh
+	mov		[si+EDRIVE_INFO.fpEDDparams], cx
+	mov		[si+EDRIVE_INFO.fpEDDparams+2], cx
+	mov		cx, EDRIVE_INFO_size
 
-	; Fill Extended Drive Information Table in DS:DI
+	; Fill Extended Drive Information Table in DS:SI
 .SkipEddConfigurationParameters:
-	mov		[di+EDRIVE_INFO.wSize], ax
-	mov		WORD [di+EDRIVE_INFO.wFlags], FLG_DMA_BOUNDARY_ERRORS_HANDLED_BY_BIOS | FLG_CHS_INFORMATION_IS_VALID
+	mov		[si+EDRIVE_INFO.wSize], cx
+	mov		WORD [si+EDRIVE_INFO.wFlags], FLG_DMA_BOUNDARY_ERRORS_HANDLED_BY_BIOS
 
-	call	AtaID_GetPCHStoAXBLBHfromAtaInfoInESSI
-	xor		cx, cx
-	mov		[di+EDRIVE_INFO.dwCylinders], ax
-	mov		[di+EDRIVE_INFO.dwCylinders+2], cx
-	eMOVZX	ax, bl
-	mov		[di+EDRIVE_INFO.dwHeads], ax
-	mov		[di+EDRIVE_INFO.dwHeads+2], cx
-	mov		al, bh
-	mov		[di+EDRIVE_INFO.dwSectorsPerTrack], ax
-	mov		[di+EDRIVE_INFO.dwSectorsPerTrack+2], cx
-
-	call	AtaID_GetTotalSectorCountToBXDXAXfromAtaInfoInESSI
 	mov		[di+EDRIVE_INFO.qwTotalSectors], ax
+	xor		ax, ax									; Return with success
 	mov		[di+EDRIVE_INFO.qwTotalSectors+2], dx
 	mov		[di+EDRIVE_INFO.qwTotalSectors+4], bx
-	mov		[di+EDRIVE_INFO.qwTotalSectors+6], cx
-
+	mov		[di+EDRIVE_INFO.qwTotalSectors+6], ax
 	mov		WORD [di+EDRIVE_INFO.wSectorSize], 512
 
-	; Return with success
-	xor		ah, ah
 .ReturnWithError:
 	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
