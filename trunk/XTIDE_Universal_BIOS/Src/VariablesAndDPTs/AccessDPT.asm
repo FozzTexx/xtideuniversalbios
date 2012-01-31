@@ -89,14 +89,14 @@ AccessDPT_ShiftPCHinAXBLtoLCH:
 	xor		cx, cx
 .ShiftLoop:
 	cmp		ax, MAX_LCHS_CYLINDERS		; Need to shift?
-	jbe		SHORT .LimitHeadsTo255		;  If not, return
+	jbe		SHORT .Return				;  If not, return
 	inc		cx							; Increment shift count
 	shr		ax, 1						; Halve cylinders
 	shl		bl, 1						; Double heads
-	jnz		SHORT .ShiftLoop
-.LimitHeadsTo255:						; DOS does not support drives with 256 heads
-	cmp		bl, cl						; Set CF if BL is zero
-	sbb		bl, ch						; If BL=0 then BL=255
+	jnz		SHORT .ShiftLoop			; Falls through only on the last (4th) iteration and only if BL was 16 on entry
+	dec		bl							; DOS doesn't support drives with 256 heads so we limit heads to 255
+	; We can save a byte here by using DEC BX if we don't care about BH
+.Return:
 	ret
 
 
