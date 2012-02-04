@@ -27,8 +27,7 @@ endstruc
 struc DPT_ATA	; 10 + 2 bytes = 12 bytes
 	.dpt						resb	DPT_size
 
-	; Block size is specified in sectors (1, 2, 4, 8, 16, 32 or 64).
-	; 128 is not allowed to prevent offset overflow during data transfer.
+	; Block size is specified in sectors (1, 2, 4, 8, 16, 32, 64 or 128)
 	.wSetAndMaxBlock:
 	.bSetBlock					resb	1	; Current block size (at least 1)
 	.bMaxBlock					resb	1	; Maximum block size, 0 = block mode not supported

@@ -19,16 +19,7 @@ SECTION .text
 ;		AH:		Int 13h return status
 ;		CF:		0 if succesfull, 1 if error
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 AH24h_HandlerForSetMultipleBlocks:
-	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_BLOCK_MODE_SUPPORTED
-	jnz		SHORT .TryToSetBlockMode
-	stc
-	mov		ah, RET_HD_INVALID
-	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
-
-ALIGN JUMP_ALIGN
-.TryToSetBlockMode:
 %ifndef USE_186
 	call	AH24h_SetBlockSize
 	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
@@ -50,16 +41,17 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
-;ALIGN JUMP_ALIGN
 AH24h_SetBlockSize:
 	push	ax
 	xchg	dx, ax			; DL = Block size (Sector Count Register)
+	or		BYTE [di+DPT.bFlagsHigh], FLGH_DPT_BLOCK_MODE_SUPPORTED	; Assume success
 	mov		al, COMMAND_SET_MULTIPLE_MODE
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRDY, FLG_STATUS_DRDY)
 	call	Idepack_StoreNonExtParametersAndIssueCommandFromAL
 	pop		bx
 	jnc		.StoreBlockSize
 	mov		bl, 1	; Disable block mode
+	and		BYTE [di+DPT.bFlagsHigh], ~FLGH_DPT_BLOCK_MODE_SUPPORTED
 .StoreBlockSize:	; Store new block size to DPT and return
 	mov		[di+DPT_ATA.bSetBlock], bl
 	ret
