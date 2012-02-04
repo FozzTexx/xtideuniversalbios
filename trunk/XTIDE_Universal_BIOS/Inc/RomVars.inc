@@ -47,18 +47,32 @@ DEFAULT_TEXT_MODE		EQU	4
 
 ; Controller specific variables
 struc IDEVARS
+;;; Word 0
+	.wSerialPortAndBaud:					; Serial connection port (low, divided by 4) and baud rate divisor (high)
 	.wPort:									; IDE Base Port for Command Block (usual) Registers
-	.bSerialCOMDigit			resb	1	; Serial Device COM Port digit 
-	.bSerialPackedPortAndBaud 	resb	1	; Serial Device packed port and baud
+	.bSerialPort				resb	1
+	.bSerialBaud				resb	1
 
-	.wPortCtrl:								; IDE Base Port for Control Block Registers
-	.wSerialPackedPrintBaud		resb	2	; Serial Device packed baud rate for printing
+;;; Word 1
+	.wPortCtrl:
+	.bSerialUnused				resb	1	; IDE Base Port for Control Block Registers
 
+	.wSerialCOMPortCharAndDevice:			; In DetectPrint, we grab the COM Port char and Device at the same time
+	.bSerialCOMPortChar			resb	1	; Serial connection COM port number/letter
+
+;;; Word 2
 	.bDevice					resb	1	; Device type
+
 	.bIRQ						resb	1	; Interrupt Request Number
+
+;;; And more...
 	.drvParamsMaster			resb	DRVPARAMS_size
 	.drvParamsSlave				resb	DRVPARAMS_size
 endstruc
+
+%if IDEVARS.bSerialCOMPortChar+1 != IDEVARS.bDevice 
+%erorr "IDEVARS.bSerialCOMPortChar needs to come immediately before IDEVARS.bDevice so that both bytes can be fetched at the same time inside DetectPrint.asm"
+%endif
 
 ; Default values for Port and PortCtrl, shared with the configurator
 ;
@@ -66,8 +80,6 @@ DEVICE_XTIDE_DEFAULT_PORT				EQU		300h
 DEVICE_XTIDE_DEFAULT_PORTCTRL			EQU		308h
 DEVICE_ATA_DEFAULT_PORT					EQU		1F0h
 DEVICE_ATA_DEFAULT_PORTCTRL				EQU		3F0h
-DEVICE_SERIAL_DEFAULT_COM				EQU		0		; COM1
-DEVICE_SERIAL_DEFAULT_BAUD				EQU		1		; 9600
 
 ; Device types for IDEVARS.bDevice
 ;
@@ -76,7 +88,7 @@ DEVICE_XTIDE_WITH_REVERSED_A3_AND_A0	EQU	(1<<1)
 DEVICE_8BIT_SINGLE_PORT					EQU	(2<<1)
 DEVICE_16BIT_ATA						EQU	(3<<1)
 DEVICE_32BIT_ATA						EQU	(4<<1)
-DEVICE_SERIAL_PORT						EQU	(5<<1)
+DEVICE_SERIAL_PORT						EQU	(5<<1)		; must be last entry, or remove optimization in DetectPrint
 
 
 ; Master/Slave drive specific parameters
@@ -93,49 +105,6 @@ endstruc
 FLG_DRVPARAMS_USERCHS	EQU	(1<<0)	; User specified P-CHS values
 FLG_DRVPARAMS_BLOCKMODE	EQU	(1<<1)	; Enable Block mode transfers
 FLG_DRVPARAMS_USERLBA	EQU	(1<<2)	; User specified LBA values
-
-
-; Defines for IDEVARS.bSerialPackedPortAndBaud (same format used by DPT.bSerialPortAndBaud)
-;
-; pppp ppbb
-;   i/o port address = p * 2 + 240h
-;   baud rate = b, where 00 = 2400, 01 = 9600, 10 = 38.4K, 11 = 115.2K
-;
-; 240h/2400baud corresponds to 0 for a PackedPortAndBaud value, which triggers auto detect code.
-; Which means 240h is not usable, and is why ..._MINPORT is 248h.  A value is reserved at the upper
-; end of the spectrum in case it is needed (whcih is why it is 430h instead of 438h).
-;
-DEVICE_SERIAL_PACKEDPORTANDBAUD_PORTMASK			EQU		0fch
-DEVICE_SERIAL_PACKEDPORTANDBAUD_PORTBITS			EQU		03fh
-DEVICE_SERIAL_PACKEDPORTANDBAUD_PORT_FIELD_POSITION	EQU		2
-DEVICE_SERIAL_PACKEDPORTANDBAUD_STARTINGPORT		EQU		240h
-DEVICE_SERIAL_PACKEDPORTANDBAUD_MINPORT				EQU		248h	; minimum port value that the user can set
-DEVICE_SERIAL_PACKEDPORTANDBAUD_MAXPORT				EQU		430h	; or ((..._PORTMASK-1) << 1) + ..._STARTINGPORT
-
-DEVICE_SERIAL_PACKEDPORTANDBAUD_BAUDMASK			EQU		3h
-DEVICE_SERIAL_PACKEDPORTANDBAUD_BAUDBITS			EQU		3h
-DEVICE_SERIAL_PACKEDPORTANDBAUD_BAUD_FIELD_POSITION	EQU		0
-
-; Defines for IDEVARS.wSerialPrintBaud
-;
-; pppp ppnn nnnn nnnn
-;   unsigned number to output = n
-;   postfix character = p + '0' (designed for '0' and 'K', although other values are possible)
-;
-; Note that the contents of this word is only used for printing by the BIOS when a drive is detected.  
-; It is not used for any other purpose, and so long as it conforms to the structure, any values can be used.
-;
-DEVICE_SERIAL_PRINTBAUD_NUMBERMASK		EQU		003ffh
-DEVICE_SERIAL_PRINTBAUD_POSTCHARMASK	EQU		0fc00h
-DEVICE_SERIAL_PRINTBAUD_POSTCHARADD		EQU		'0'
-;
-; These are defined here (instead of in the configurator) for consistency since they could also be used 
-; in main.asm as a default for an IDEVARS structure.
-;
-DEVICE_SERIAL_PRINTBAUD_2400  EQU ((('0'-DEVICE_SERIAL_PRINTBAUD_POSTCHARADD)<<10) | 240)		; Prints "2400"
-DEVICE_SERIAL_PRINTBAUD_9600  EQU ((('0'-DEVICE_SERIAL_PRINTBAUD_POSTCHARADD)<<10) | 960)		; Prints "9600"
-DEVICE_SERIAL_PRINTBAUD_38_4  EQU ((('K'-DEVICE_SERIAL_PRINTBAUD_POSTCHARADD)<<10) | 38)		; Prints "38K"
-DEVICE_SERIAL_PRINTBAUD_115_2 EQU ((('K'-DEVICE_SERIAL_PRINTBAUD_POSTCHARADD)<<10) | 115)		; Prints "115K"
 
 ;
 ; COM Number to I/O Port Address Mapping

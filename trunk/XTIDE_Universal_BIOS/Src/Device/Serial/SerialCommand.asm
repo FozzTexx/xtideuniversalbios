@@ -16,18 +16,9 @@ SerialCommand_UART_receiveByte					EQU		0
 
 ;
 ; Values for UART_divisorLow:
-; 60h = 1200, 30h = 2400, 18h = 4800, 0ch = 9600, 6 = 19200, 3 = 38400, 2 = 57600, 1 = 115200
+; 60h = 1200, 30h = 2400, 18h = 4800, 0ch = 9600, 6 = 19200, 4 = 28800, 3 = 38400, 2 = 57600, 1 = 115200
 ;
 SerialCommand_UART_divisorLow					EQU		0
-
-;
-; We support 4 baud rates, starting here going higher and skipping every other baud rate
-; Starting with 30h, that means 30h (1200 baud), 0ch (9600 baud), 3 (38400 baud), and 1 (115200 baud)
-; Note: hardware baud multipliers (2x, 4x) will impact the final baud rate and are not known at this level
-;
-SerialCommand_UART_divisorLow_startingBaud		EQU   030h
-
-SerialCommand_UART_interruptEnable				EQU		1
 
 ;
 ; UART_divisorHigh is zero for all speeds including and above 1200 baud (which is all we do)
@@ -90,15 +81,15 @@ SerialCommand_OutputWithParameters:
 .readOrWrite:
 		mov		[bp+IDEPACK.bFeatures],ah		; store protocol command
 
-		mov		dl, byte [di+DPT_SERIAL.bSerialPortAndBaud]
+		mov		dx, [di+DPT_SERIAL.wSerialPortAndBaud]
 
 ; fall-through
 
 ;--------------------------------------------------------------------
-; SerialCommand_OutputWithParameters_DeviceInDL
+; SerialCommand_OutputWithParameters_DeviceInDX
 ;	Parameters:
 ;       AH:		Protocol Command
-;       DL:		Packed I/O port and baud rate
+;       DX:		Packed I/O port and baud rate
 ;		ES:SI:	Ptr to buffer (for data transfer commands)
 ;		SS:BP:	Ptr to IDEREGS_AND_INTPACK
 ;	Returns:
@@ -107,7 +98,7 @@ SerialCommand_OutputWithParameters:
 ;	Corrupts registers:
 ;		AL, BX, CX, DX, (ES:SI for data transfer commands)
 ;--------------------------------------------------------------------
-SerialCommand_OutputWithParameters_DeviceInDL:
+SerialCommand_OutputWithParameters_DeviceInDX:
 
 		push	si
 		push	di
@@ -115,21 +106,13 @@ SerialCommand_OutputWithParameters_DeviceInDL:
 
 ;
 ; Unpack I/O port and baud from DPT
-;		Port to DX more or less for the remainder of the routine
+;		Port to DX for the remainder of the routine (+/- different register offsets)
 ;		Baud in CH until UART initialization is complete
 ;
-		mov		dh, ((DEVICE_SERIAL_PACKEDPORTANDBAUD_STARTINGPORT & 0f00h) >> (8+1))
-		shl		dx, 1		; port offset already x4, needs one more shift to be x8
-		mov		cl, dl
-
-		and		cl, (DEVICE_SERIAL_PACKEDPORTANDBAUD_BAUDMASK << 1)
-		mov		ch, SerialCommand_UART_divisorLow_startingBaud
-		shr		ch, cl
-		adc		ch, 0
-
-		and		dl, ((DEVICE_SERIAL_PACKEDPORTANDBAUD_PORTMASK << 1) & 0ffh)
-		add		dx, byte (DEVICE_SERIAL_PACKEDPORTANDBAUD_STARTINGPORT & 0ffh)
-
+		mov		ch,dh
+		xor		dh,dh
+		eSHL_IM	dx, 2			; shift from one byte to two		
+		
 		mov		al,[bp+IDEPACK.bSectorCount]
 
 ;
@@ -413,15 +396,16 @@ SerialCommand_OutputWithParameters_Error:
 ; In theory the initialization of the UART registers above should have
 ; taken care of this, but I have seen cases where this is not true.
 ;
+		xor		cx,cx					; timeout this clearing routine, in case the UART isn't there
 .clearBuffer:
 		mov		dl,bh
 		in		al,dx
 		mov		dl,bl
 		test	al,08fh
 		jz		.clearBufferComplete
-		shr		al,1
+		test	al,1
 		in		al,dx
-		jc		.clearBuffer	; note CF from shr above
+		loopnz	.clearBuffer			; note ZF from test above
 
 .clearBufferComplete:
 		stc
@@ -640,31 +624,37 @@ SerialCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 ;     Instead of performing the full COM port scan for the slave, use the port/baud value stored during the
 ;     master scan.
 ;
-		mov		dl,[cs:bp+IDEVARS.bSerialPackedPortAndBaud]
-		mov		al,	byte [RAMVARS.xlateVars+XLATEVARS.bLastSerial]
+		mov		cx,1			; 1 sector to move, 0 for non-scan
+		mov		dx,[cs:bp+IDEVARS.wSerialPortAndBaud]
+		xor		ax,ax
+		push	si
+		call	FindDPT_ToDSDIforSerialDevice
+		pop		si
+		jnc		.notfounddpt
+		mov		ax,[ds:di+DPT_SERIAL.wSerialPortAndBaud]
+.notfounddpt:	
 
 		test	bh, FLG_DRVNHEAD_DRV
 		jz		.master
 
-		test	al,al			; Take care of the case that is different between master and slave.
+		test	ax,ax			; Take care of the case that is different between master and slave.
 		jz		.error			; Because we do this here, the jz after the "or" below will not be taken
 
 ; fall-through
 .master:
-		test	dl,dl
-		jnz		.identifyDeviceInDL
+		test	dx,dx
+		jnz		.identifyDeviceInDX
 
-		or		dl,al			; Move bLast into position in dl, as well as test for zero
+		or		dx,ax			; Move bLast into position in dl, as well as test for zero
 		jz		.scanSerial
 
 ; fall-through
-.identifyDeviceInDL:
+.identifyDeviceInDX:
 
 		push	bp				; setup fake IDEREGS_AND_INTPACK
 
 		push	dx
 
-		mov		cl,1			; 1 sector to move
 		push	cx
 
 		mov		bl,0a0h			; protocol command to ah and onto stack with bh
@@ -673,23 +663,18 @@ SerialCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 		push	bx
 
 		mov		bp,sp
-		call	SerialCommand_OutputWithParameters_DeviceInDL
+		call	SerialCommand_OutputWithParameters_DeviceInDX
 
 		pop		bx
 
 		pop		cx
 		pop		dx
-
+		
 		pop		bp
 ;
 ; place packed port/baud in RAMVARS, read by FinalizeDPT and DetectDrives
 ;
-; Note that this will be set during an int13h/25h call as well.  Which is OK since it is only used (at the
-; top of this routine) for drives found during a COM scan, and we only COM scan if there were no other
-; COM drives found.  So we will only reaffirm the port/baud for the one COM port/baud that has a drive.
-;
-		jc		.notFound											; only store bLastSerial if success
-		mov		byte [RAMVARS.xlateVars+XLATEVARS.bLastSerial], dl
+		mov		[es:si+ATA6.wVendor],dx
 
 .notFound:
 		ret
@@ -713,6 +698,7 @@ SerialCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 ALIGN JUMP_ALIGN
 .scanSerial:
 		mov		di,.scanPortAddresses-1
+		mov		ch,1			;  tell server that we are scanning
 
 .nextPort:
 		inc		di				; load next port address
@@ -740,24 +726,29 @@ ALIGN JUMP_ALIGN
 		jnz		.nextPort
 
 ;
-; Pack into dl, baud rate starts at 0
+; Begin baud rate scan on this port...
 ;
-		add		dx,-(DEVICE_SERIAL_PACKEDPORTANDBAUD_STARTINGPORT)
-		shr		dx,1			; dh is zero at this point, and will be sent to the server,
-								; so we know this is an auto detect
+; On a scan, we support 6 baud rates, starting here and going higher by a factor of two each step, with a 
+; small jump between 9600 and 38800.  These 6 were selected since we wanted to support 9600 baud and 115200,
+; *on the server side* if the client side had a 4x clock multiplier, a 2x clock multiplier, or no clock multiplier. 
+;
+; Starting with 30h, that means 30h (2400 baud), 18h (4800 baud), 0ch (9600 baud), and
+;					            04h (28800 baud), 02h (57600 baud), 01h (115200 baud)
+;
+; Note: hardware baud multipliers (2x, 4x) will impact the final baud rate and are not known at this level
+;
+		mov		dh,030h * 2	    ; multiply by 2 since we are about to divide by 2
+		mov		dl,[cs:di]		; restore single byte port address for scan
 
-		jmp		.testFirstBaud
-
-;
-; Walk through 4 possible baud rates
-;
 .nextBaud:
-		inc		dx
-		test	dl,3
+		shr		dh,1
 		jz		.nextPort
+		cmp		dh,6			; skip from 6 to 4, to move from the top of the 9600 baud range 
+		jnz		.testBaud		; to the bottom of the 115200 baud range
+		mov		dh,4
 
-.testFirstBaud:
-		call	.identifyDeviceInDL
+.testBaud:
+		call	.identifyDeviceInDX
 		jc		.nextBaud
 
 		ret

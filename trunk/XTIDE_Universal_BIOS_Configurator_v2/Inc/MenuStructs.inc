@@ -29,6 +29,8 @@ FLG_MENUITEM_MODIFY_MENU	EQU	(1<<1)	; Item modifies visibility of other items
 FLG_MENUITEM_FLAGVALUE		EQU	(1<<2)	; Item value is single bit
 FLG_MENUITEM_BYTEVALUE		EQU	(1<<3)	; Item value is single byte
 FLG_MENUITEM_PROGRAMVAR		EQU	(1<<4)	; Item is for configuring program, not BIOS
+FLG_MENUITEM_CHOICESTRINGS  EQU (1<<5)  ; ChoiceToStringLookup table is 1-1 with ChoiceToValueLookup table, 
+										; ChoiceToStringLookup table must also NULL terminated
 
 ; Values for MENUITEM.bType
 TYPE_MENUITEM_PAGEBACK		EQU	(0<<1)	; Item returns to previous MENUPAGE
@@ -46,6 +48,7 @@ struc ITEM_VALUE
 	.szMultichoice			resb	2	; Multiple choices in one string
 	.rgwChoiceToValueLookup	resb	2	; Ptr to lookup table for translating selected choice to actual value
 	.rgszValueToStringLookup:			; Ptr to lookup table for translating value to string
+	.rgszChoiceToStringLookup:
 	.wMinValue				resb	2	; Minimum allowed integer value
 	.wMaxValue:
 	.wValueBitmask			resb	2	; Bitmask for item value flag

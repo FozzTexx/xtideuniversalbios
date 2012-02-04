@@ -123,9 +123,10 @@ ReturnRightDPT:
 
 
 ;--------------------------------------------------------------------
-; IterateToDptWithInterruptInServiceFlagSet
+; IterateToDptWithFlagsHighInBL
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT to examine
+;       BL:		Bit(s) to test in DPT.bFlagsHigh 
 ;	Returns:
 ;		CF:		Set if wanted DPT found
 ;				Cleared if wrong DPT
@@ -133,9 +134,9 @@ ReturnRightDPT:
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-IterateToDptWithInterruptInServiceFlagSet:
-	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_INTERRUPT_IN_SERVICE		; Clears CF (but we need the clc
-																		; below anyway for callers above)
+IterateToDptWithFlagsHighInBL:		
+	test	BYTE [di+DPT.bFlagsHigh], bl		; Clears CF (but we need the clc
+												; below anyway for callers above)
 	jnz		SHORT ReturnRightDPT
 
 ReturnWrongDPT:
@@ -143,7 +144,7 @@ ReturnWrongDPT:
 	ret
 
 ;--------------------------------------------------------------------
-; FindDPT_ToDSDIforInterruptInService
+; FindDPT_ToDSDIforSerialDevice
 ;	Parameters:
 ;		DS:		RAMVARS segment
 ;	Returns:
@@ -153,9 +154,26 @@ ReturnWrongDPT:
 ;	Corrupts registers:
 ;		SI
 ;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN		
+FindDPT_ToDSDIforSerialDevice:			
+	mov		bl, FLGH_DPT_SERIAL_DEVICE
+; fall-through
+				
+;--------------------------------------------------------------------
+; FindDPT_ToDSDIforFlagsHigh
+;	Parameters:
+;		DS:		RAMVARS segment
+;       BL:		Bit(s) to test in DPT.bFlagsHigh
+;	Returns:
+;		DS:DI:	Ptr to DPT
+;		CF:		Set if wanted DPT found
+;				Cleared if DPT not found
+;	Corrupts registers:
+;		SI
+;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-FindDPT_ToDSDIforInterruptInService:
-	mov		si, IterateToDptWithInterruptInServiceFlagSet
+FindDPT_ToDSDIforFlagsHighInBL:		
+	mov		si, IterateToDptWithFlagsHighInBL
 	; Fall to IterateAllDPTs
 
 ;--------------------------------------------------------------------

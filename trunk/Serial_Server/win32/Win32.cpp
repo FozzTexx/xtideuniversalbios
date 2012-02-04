@@ -31,16 +31,17 @@ void usage(void)
 		"                      Maximum size is " USAGE_MAXSECTORS, 
 		"                      (default is a 32 MB disk, with CHS geometry 65:63:16)",
 		"",
-		"  -p                  Named Pipe mode for emulators (pipe is '" PIPENAME "')",
+		"  -p                  Named Pipe mode for emulators (pipe is \"" PIPENAME "\")",
 		"",
 		"  -c COMPortNumber    COM Port to use (default is first found)",
 		"",
-		"  -b BaudRate         Baud rate to use on the COM port ",
-		"                      Without a rate multiplier: 2400, 9600, 38400, 115200",
-		"                      With a 2x rate multiplier: 4800, 19200, 76800, 230400",
-		"                      With a 4x rate multiplier: 9600, 38400, 153600, 460800",
-		"                      Abbreviations also accepted (ie, '460K', '38.4K', etc)",
-		"                      (default is 38400, 115200 in named pipe mode)",
+		"  -b BaudRate         Baud rate to use on the COM port, with client machine",
+		"                      rate multiplier in effect:",
+		"                          None:  2400,  4800,  9600,  28.8K,  57.6K, 115.2K",
+		"                          2x:    4800,  9600, 19200,  57.6K, 115.2K, 230.4K",
+		"                          4x:    9600, 19200, 38400, 115.2K, 230.4K, 460.8K",
+		"                          and for completeness:               76.8K, 153.6K",
+		"                      (default is 9600, 115.2K when in named pipe mode)",
 		"",
 		"  -t                  Disable timeout, useful for long delays when debugging",
 		"",
@@ -147,15 +148,11 @@ int main(int argc, char* argv[])
 				timeoutEnabled = 0;
 				break;
 			case 'b': case 'B':
-				if( !(baudRate = baudRateMatchString( argv[++t] )) )
-				{
-					fprintf( stderr, "Unknown Baud Rate %s\n\n", argv[t] );
-					usage();
-				}
+				if( !(baudRate = baudRateMatchString( argv[++t] )) || !baudRate->rate )
+					log( -2, "Unknown Baud Rate \"%s\"", argv[t] );
 				break;
 			default:
-				fprintf( stderr, "Unknown Option: %s\n\n", argv[t] );
-				usage();
+				log( -2, "Unknown Option: \"%s\"", argv[t] );
 			}
 		}
 		else if( imagecount < 2 )
@@ -178,7 +175,7 @@ int main(int argc, char* argv[])
 		usage();
 
 	if( !baudRate )
-		baudRate = baudRateMatchString( "38400" );
+		baudRate = baudRateMatchString( "9600" );
 
 	do
 	{
@@ -205,6 +202,11 @@ void log( int level, char *message, ... )
 		fprintf( stderr, "ERROR: " );
 		vfprintf( stderr, message, args );
 		fprintf( stderr, "\n" );
+		if( level < -1 )
+		{
+			fprintf( stderr, "\n" );
+			usage();
+		}
 		exit( 1 );
 	}
 	else if( verbose >= level )

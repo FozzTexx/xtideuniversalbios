@@ -111,8 +111,6 @@ istruc ROMVARS
 
 %ifdef MODULE_SERIAL
 	at	ROMVARS.ideVarsSerialAuto+IDEVARS.bDevice,		db	DEVICE_SERIAL_PORT
-	at	ROMVARS.ideVarsSerialAuto+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	db	FLG_DRVPARAMS_BLOCKMODE
-	at	ROMVARS.ideVarsSerialAuto+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags,	db	FLG_DRVPARAMS_BLOCKMODE
 %endif
 %else
 ;-----------------------------------;
@@ -144,8 +142,6 @@ istruc ROMVARS
 
 %ifdef MODULE_SERIAL
 	at	ROMVARS.ideVarsSerialAuto+IDEVARS.bDevice,		db	DEVICE_SERIAL_PORT
-	at	ROMVARS.ideVarsSerialAuto+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	db	FLG_DRVPARAMS_BLOCKMODE
-	at	ROMVARS.ideVarsSerialAuto+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags,	db	FLG_DRVPARAMS_BLOCKMODE
 %endif
 %endif
 iend

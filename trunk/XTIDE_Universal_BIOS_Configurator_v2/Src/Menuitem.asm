@@ -288,6 +288,12 @@ Menuitem_GetValueToAXfromMenuitemInDSSI:
 	add		di, [si+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset]
 	mov		ax, [es:di]
 
+	test	BYTE [si+MENUITEM.bFlags], FLG_MENUITEM_BYTEVALUE
+	jz		SHORT .NoConvertWordToByteValue
+	xor		ah, ah				; conversion needs to happen before call to the reader,
+								; in case the reader unpacks the byte to a word
+		
+.NoConvertWordToByteValue:
 	mov		bx, [si+MENUITEM.itemValue+ITEM_VALUE.fnValueReader]
 	test	bx,bx
 	jz		SHORT .NoReader
@@ -299,8 +305,6 @@ Menuitem_GetValueToAXfromMenuitemInDSSI:
 	pop		di
 	pop		es
 
-	test	BYTE [si+MENUITEM.bFlags], FLG_MENUITEM_BYTEVALUE
-	jnz		SHORT .ConvertWordToByteValue
 	test	BYTE [si+MENUITEM.bFlags], FLG_MENUITEM_FLAGVALUE
 	jz		SHORT .Return
 
@@ -308,9 +312,7 @@ Menuitem_GetValueToAXfromMenuitemInDSSI:
 	mov		ax, TRUE<<1		; Shift for lookup
 	jnz		SHORT .Return
 	xor		ax, ax
-ALIGN JUMP_ALIGN
-.ConvertWordToByteValue:
-	xor		ah, ah
+
 ALIGN JUMP_ALIGN, ret
 .Return:
 	ret

@@ -29,7 +29,7 @@ DetectPrint_BootMenuPrint_FormatCSSIfromParamsInSSBP_Relay:
 ;--------------------------------------------------------------------
 ; DetectPrint_StartDetectWithMasterOrSlaveStringInAXandIdeVarsInCSBP
 ;	Parameters:
-;		CS:AX:	Ptr to "Master" or "Slave" string
+;		CS:CX:	Ptr to "Master" or "Slave" string
 ;		CS:BP:	Ptr to IDEVARS
 ;       SI:		Ptr to template string 
 ;	Returns:
@@ -38,32 +38,65 @@ DetectPrint_BootMenuPrint_FormatCSSIfromParamsInSSBP_Relay:
 ;		AX, SI, DI, CX
 ;--------------------------------------------------------------------
 DetectPrint_StartDetectWithMasterOrSlaveStringInAXandIdeVarsInCSBP:
-	push	bp
-	mov		di, [cs:bp+IDEVARS.wPort]
-%ifdef MODULE_SERIAL
-	mov		cx, [cs:bp+IDEVARS.wSerialPackedPrintBaud]
-%endif
+
+	mov		ax, [cs:bp+IDEVARS.wPort]    	; for IDE: AX=port address, DH=.bDevice
+	mov		dx, [cs:bp+IDEVARS.bDevice-1]   ; for Serial: AL=port address>>2, AH=baud rate
+											;			  DL=COM number character, DH=.bDevice
+
+	push	bp								; setup stack for call to 
+	mov		bp, sp							; BootMenuPrint_FormatCSSIfromParamsInSSBP
+
+	push 	cx								; Push "Master" or "Slave"
 		
-	mov		bp, sp
+	mov		cl, (g_szDetectPort-$$) & 0xff	; Setup print string for standard IDE
+											; Note that we modify only the low order bits of CX a lot here,
+											; saving code space rather than reloading CX completely.
+											; This optimization requires that all the g_szDetect* strings are
+											; on the same 256 byte page, which is checked in strings.asm.
 
-	push 	ax							; Push "Master" or "Slave"
+	cmp		dx, DEVICE_SERIAL_PORT << 8  	; Check if this is a serial device, 
+										 	; And also check if DL is zero, check with the jz below
+											; This optimization requires that DEVICE_SERIAL_PORT be 
+											; the highest value in the DEVICE_* series, ensuring that
+											; anything less in the high order bits is a different device.
+
+	jl		.pushAndPrint					; CX = string to print, AX = port address, DX won't be used
+
+	mov		cl, (g_szDetectCOM-$$) & 0xff	; Setup print string for COM ports
+	push	cx								; And push now.  We use the fact that format strings can contain
+											; themselves format strings.
+
+	push	dx								; Push COM number character
+				
+ 	mov		cl, (g_szDetectCOMAuto-$$) & 0xff	; Setup secondary print string for "Auto"
 		
-	push	di							; Push Port address or COM port number
+	jz		.pushAndPrint					; CX = string to print, AX and DX won't be used
+		
+	mov		cl, (g_szDetectCOMLarge-$$) & 0xff	; Setup secondary print string for "COMn/xx.yK"
 
-%ifdef MODULE_SERIAL
-;
-; Print baud rate from .wSerialPackedPrintBaud, in two parts - %u and then %c
-; 
-	mov		ax,cx						; Unpack baud rate number
-	and		ax,DEVICE_SERIAL_PRINTBAUD_NUMBERMASK
-	push	ax
+	mov		al,ah							; baud rate divisor to AL
+	cbw										; clear AH, AL will always be less than 128
+	xchg	si,ax							; move AX to SI for divide
+	mov		ax,1152							; baud rate to displa is 115200/divisor, the "00" is handled
+											; in the print strings
+	xor		dx,dx							; clear top 16-bits of dividend
+	div		si								; and divide...  Now AX = baud rate/100, DX = 0 (always a clean divide)
+		
+	mov		si,10							; Now separate the whole portion from the fractional for "K" display
+	div		si								; and divide...  Now AX = baud rate/1000, DX = low order digit
+		
+	cmp		ax,si							; <= 10: "2400", "9600", etc.; >10: "19.2K", "38.4K", etc.
+	jae		.pushAndPrint
 
-	mov		al,ch						; Unpack baud rate postfix ('0' or 'K')
-	eSHR_IM	al,2				        ; also effectively masks off the postfix
-	add		al,DEVICE_SERIAL_PRINTBAUD_POSTCHARADD
-	push	ax
-%endif
-						
+	mov		cl, (g_szDetectCOMSmall-$$) & 0xff	; Setup secondary print string for "COMn/XXy00"
+		
+.pushAndPrint:	
+	push	cx								; Push print string
+	push	ax								; Push high order digits, or port address, or N/A
+	push	dx								; Push low order digit, or N/A
+
+	mov		si, g_szDetectOuter				; Finally load SI with wrapper string "IDE %s at %s: "
+
 	jmp		short DetectPrint_BootMenuPrint_FormatCSSIfromParamsInSSBP_Relay	
 
 
@@ -88,6 +121,7 @@ DetectPrint_DriveNameFromBootnfoInESBX:
 	pop		bx
 	pop		di
 	ret
+
 
 
 

@@ -41,7 +41,7 @@ public:
 
 	static int parseGeometry( char *str, unsigned long *p_cyl, unsigned long *p_head, unsigned long *p_sect );
 
-	void respondInquire( unsigned short *buff, struct baudRate *baudRate, unsigned char portAndBaud );
+	void respondInquire( unsigned short *buff, struct baudRate *baudRate, unsigned short port, unsigned char scan );
 
 	void init( char *name, int p_readOnly, int p_drive, unsigned long p_cyl, unsigned long p_head, unsigned long p_sect, int p_useCHS );
 };

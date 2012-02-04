@@ -45,7 +45,7 @@ iend
 g_MenuitemIdeControllerDevice:
 istruc MENUITEM
 	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiceSelectionForMenuitemInDSSI
-	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromShiftedItemInDSSI
+	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromRawItemInDSSI
 	at	MENUITEM.szName,			dw	g_szItemIdeDevice
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoIdeDevice
 	at	MENUITEM.szHelp,			dw	g_szNfoIdeDevice
@@ -92,18 +92,17 @@ iend
 g_MenuitemIdeControllerSerialCOM:
 istruc MENUITEM
 	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiceSelectionForMenuitemInDSSI
-	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromUnshiftedItemInDSSI
+	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromRawItemInDSSI
 	at	MENUITEM.szName,			dw	g_szItemSerialCOM
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoIdeSerialCOM
 	at	MENUITEM.szHelp,			dw	g_szHelpIdeSerialCOM
-	at	MENUITEM.bFlags,			db	FLG_MENUITEM_MODIFY_MENU
+	at	MENUITEM.bFlags,			db	FLG_MENUITEM_MODIFY_MENU | FLG_MENUITEM_BYTEVALUE | FLG_MENUITEM_CHOICESTRINGS
 	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOICE 
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	NULL
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgDevice
 	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoice,				dw	g_szSerialCOMChoice
-	at	MENUITEM.itemValue + ITEM_VALUE.rgwChoiceToValueLookup,		dw	NULL
-	at	MENUITEM.itemValue + ITEM_VALUE.rgszValueToStringLookup,	dw	g_rgszValueToStringLookupForCOM
-	at	MENUITEM.itemValue + ITEM_VALUE.fnValueReader,				dw	IdeControllerMenu_SerialReadCOM  
+	at	MENUITEM.itemValue + ITEM_VALUE.rgwChoiceToValueLookup,		dw	g_rgbChoiceToValueLookupForCOM
+	at	MENUITEM.itemValue + ITEM_VALUE.rgszChoiceToStringLookup,	dw	g_rgszChoiceToStringLookupForCOM
 	at	MENUITEM.itemValue + ITEM_VALUE.fnValueWriter,				dw	IdeControllerMenu_SerialWriteCOM
 iend
 
@@ -114,12 +113,12 @@ istruc MENUITEM
 	at	MENUITEM.szName,			dw	g_szItemSerialPort
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoIdeSerialPort
 	at	MENUITEM.szHelp,			dw	g_szHelpIdeSerialPort
-	at	MENUITEM.bFlags,			db	FLG_MENUITEM_MODIFY_MENU		
+	at	MENUITEM.bFlags,			db	FLG_MENUITEM_MODIFY_MENU | FLG_MENUITEM_BYTEVALUE
 	at	MENUITEM.bType,				db	TYPE_MENUITEM_HEX
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	NULL
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgIdeCmdPort
-	at	MENUITEM.itemValue + ITEM_VALUE.wMinValue,					dw	DEVICE_SERIAL_PACKEDPORTANDBAUD_MINPORT
-	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	DEVICE_SERIAL_PACKEDPORTANDBAUD_MAXPORT
+	at	MENUITEM.itemValue + ITEM_VALUE.wMinValue,					dw	8h
+	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	3f8h
 	at	MENUITEM.itemValue + ITEM_VALUE.fnValueReader,				dw	IdeControllerMenu_SerialReadPort
 	at	MENUITEM.itemValue + ITEM_VALUE.fnValueWriter,				dw	IdeControllerMenu_SerialWritePort
 iend		
@@ -127,18 +126,17 @@ iend
 g_MenuitemIdeControllerSerialBaud:		
 istruc MENUITEM
 	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiceSelectionForMenuitemInDSSI
-	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromUnshiftedItemInDSSI
+	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromRawItemInDSSI
 	at	MENUITEM.szName,			dw	g_szItemSerialBaud
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoIdeSerialBaud
 	at	MENUITEM.szHelp,			dw	g_szHelpIdeSerialBaud
+	at	MENUITEM.bFlags,			db	FLG_MENUITEM_BYTEVALUE | FLG_MENUITEM_CHOICESTRINGS
 	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOICE
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	NULL
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgDevice
 	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoice,				dw	g_szSerialBaudChoice
-	at	MENUITEM.itemValue + ITEM_VALUE.rgwChoiceToValueLookup,		dw	NULL
-	at	MENUITEM.itemValue + ITEM_VALUE.rgszValueToStringLookup,	dw	g_rgszValueToStringLookupForBaud
-	at	MENUITEM.itemValue + ITEM_VALUE.fnValueReader,				dw	IdeControllerMenu_SerialReadBaud
-	at	MENUITEM.itemValue + ITEM_VALUE.fnValueWriter,				dw	IdeControllerMenu_SerialWriteBaud
+	at	MENUITEM.itemValue + ITEM_VALUE.rgwChoiceToValueLookup,		dw	g_rgbChoiceToValueLookupForBaud
+	at	MENUITEM.itemValue + ITEM_VALUE.rgszChoiceToStringLookup,	dw	g_rgszChoiceToStringLookupForBaud
 iend
 		
 g_MenuitemIdeControllerEnableInterrupt:
@@ -187,7 +185,21 @@ g_rgszValueToStringLookupForDevice:
 	dw	g_szValueCfgDevice32b
 	dw	g_szValueCfgDeviceSerial
 
-g_rgszValueToStringLookupForCOM:		
+g_rgbChoiceToValueLookupForCOM:
+	dw	'1'
+	dw	'2'
+	dw	'3'
+	dw	'4'
+	dw	'5'
+	dw	'6'
+	dw	'7'
+	dw	'8'
+	dw	'9'
+	dw	'A'
+	dw	'B'
+	dw	'C'
+	dw	'x'				; must be last entry (see reader/write routines)
+g_rgszChoiceToStringLookupForCOM:		
 	dw	g_szValueCfgCOM1
 	dw	g_szValueCfgCOM2
 	dw	g_szValueCfgCOM3
@@ -201,18 +213,46 @@ g_rgszValueToStringLookupForCOM:
 	dw	g_szValueCfgCOMB
 	dw	g_szValueCfgCOMC
 	dw	g_szValueCfgCOMx
+	dw	NULL
 
-g_rgszValueToStringLookupForBaud:
-	dw	g_szValueCfgBaud2400
-	dw	g_szValueCfgBaud9600
-	dw	g_szValueCfgBaud38_4
-	dw	g_szValueCfgBaud115_2
+DEVICE_SERIAL_DEFAULT_CUSTOM_PORT   EQU		300h           ; can't be any of the pre-defined COM values
 
-g_wPrintBaud:
-	dw	DEVICE_SERIAL_PRINTBAUD_2400
-	dw	DEVICE_SERIAL_PRINTBAUD_9600
-	dw	DEVICE_SERIAL_PRINTBAUD_38_4
-	dw	DEVICE_SERIAL_PRINTBAUD_115_2
+PackedCOMPortAddresses:				; COM1 - COMC (or COM12)
+	db      DEVICE_SERIAL_COM1 >> 2
+	db		DEVICE_SERIAL_COM2 >> 2 
+	db		DEVICE_SERIAL_COM3 >> 2 
+	db		DEVICE_SERIAL_COM4 >> 2 
+	db		DEVICE_SERIAL_COM5 >> 2 
+	db		DEVICE_SERIAL_COM6 >> 2 
+	db		DEVICE_SERIAL_COM7 >> 2 
+	db		DEVICE_SERIAL_COM8 >> 2 
+	db		DEVICE_SERIAL_COM9 >> 2 
+	db		DEVICE_SERIAL_COMA >> 2 
+	db		DEVICE_SERIAL_COMB >> 2 
+	db		DEVICE_SERIAL_COMC >> 2
+	db		DEVICE_SERIAL_DEFAULT_CUSTOM_PORT >> 2			; must be last entry (see reader/writer routines)
+DEVICE_SERIAL_DEFAULT_COM			EQU		'1'
+		
+g_rgbChoiceToValueLookupForBaud:
+	dw		(115200 / 115200) & 0xff
+	dw		(115200 /  57600) & 0xff
+	dw		(115200 /  38400) & 0xff
+	dw		(115200 /  28800) & 0xff
+	dw		(115200 /  19200) & 0xff
+	dw		(115200 /   9600) & 0xff
+	dw		(115200 /   4800) & 0xff
+	dw		(115200 /   2400) & 0xff
+g_rgszChoiceToStringLookupForBaud:
+	dw		g_szValueCfgBaud115_2
+	dw		g_szValueCfgBaud57_6
+	dw		g_szValueCfgBaud38_4
+	dw		g_szValueCfgBaud28_8
+	dw		g_szValueCfgBaud19_2
+	dw		g_szValueCfgBaud9600
+	dw		g_szValueCfgBaud4800
+	dw		g_szValueCfgBaud2400
+	dw		NULL
+DEVICE_SERIAL_DEFAULT_BAUD			EQU		((115200 / 9600)	& 0xff)
 
 ; Section containing code
 SECTION .text
@@ -239,13 +279,18 @@ IdeControllerMenu_InitializeToIdevarsOffsetInBX:
 
 	lea		ax, [bx+IDEVARS.wPort]
 	mov		[cs:g_MenuitemIdeControllerCommandBlockAddress+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset], ax
+		
+	lea		ax, [bx+IDEVARS.bSerialPort]		
 	mov		[cs:g_MenuitemIdeControllerSerialPort+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset], ax
-	mov		[cs:g_MenuitemIdeControllerSerialCOM+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset], ax		
+
+	lea		ax, [bx+IDEVARS.bSerialBaud]
 	mov		[cs:g_MenuitemIdeControllerSerialBaud+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset], ax
-				;; baud also modifies the next two bytes (print chars in wPortCtrl), but it never reads them
 		
 	lea		ax, [bx+IDEVARS.wPortCtrl]
 	mov		[cs:g_MenuitemIdeControllerControlBlockAddress+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset], ax
+		
+	lea		ax, [bx+IDEVARS.bSerialCOMPortChar]
+	mov		[cs:g_MenuitemIdeControllerSerialCOM+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset], ax				
 
 	lea		ax, [bx+IDEVARS.bIRQ]
 	mov		[cs:g_MenuitemIdeControllerEnableInterrupt+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset], ax
@@ -381,23 +426,24 @@ SlaveDrive:
 
 ALIGN JUMP_ALIGN
 DisplayMasterSlaveMenu:
+;
+; block mode is not supported on serial drives, disable/enable the option as appropriate
+;
+	push	bx
+	mov		bx, [cs:g_MenuitemIdeControllerDevice+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset]		
+	call	Buffers_GetRomvarsValueToAXfromOffsetInBX
+	mov		bx, g_MenuitemMasterSlaveBlockModeTransfers
+	cmp		al,DEVICE_SERIAL_PORT
+	jz		.isSerial
+	or		BYTE [cs:bx+MENUITEM.bFlags], FLG_MENUITEM_VISIBLE
+	jmp		.isDone
+.isSerial:		
+	and		BYTE [cs:bx+MENUITEM.bFlags], ~FLG_MENUITEM_VISIBLE
+.isDone:
+	pop		bx
+			
 	call	MasterSlaveMenu_InitializeToDrvparamsOffsetInBX
 	jmp		MasterSlaveMenu_EnterMenuOrModifyItemVisibility
-
-PackedCOMPortAddresses:				; COM1 - COMC (or COM12)
-	db      (DEVICE_SERIAL_COM1 - DEVICE_SERIAL_PACKEDPORTANDBAUD_STARTINGPORT) >> 1
-	db		(DEVICE_SERIAL_COM2 - DEVICE_SERIAL_PACKEDPORTANDBAUD_STARTINGPORT) >> 1
-	db		(DEVICE_SERIAL_COM3 - DEVICE_SERIAL_PACKEDPORTANDBAUD_STARTINGPORT) >> 1
-	db		(DEVICE_SERIAL_COM4 - DEVICE_SERIAL_PACKEDPORTANDBAUD_STARTINGPORT) >> 1   
-	db		(DEVICE_SERIAL_COM5 - DEVICE_SERIAL_PACKEDPORTANDBAUD_STARTINGPORT) >> 1
-	db		(DEVICE_SERIAL_COM6 - DEVICE_SERIAL_PACKEDPORTANDBAUD_STARTINGPORT) >> 1
-	db		(DEVICE_SERIAL_COM7 - DEVICE_SERIAL_PACKEDPORTANDBAUD_STARTINGPORT) >> 1   
-	db		(DEVICE_SERIAL_COM8 - DEVICE_SERIAL_PACKEDPORTANDBAUD_STARTINGPORT) >> 1   
-	db		(DEVICE_SERIAL_COM9 - DEVICE_SERIAL_PACKEDPORTANDBAUD_STARTINGPORT) >> 1
-	db		(DEVICE_SERIAL_COMA - DEVICE_SERIAL_PACKEDPORTANDBAUD_STARTINGPORT) >> 1   
-	db		(DEVICE_SERIAL_COMB - DEVICE_SERIAL_PACKEDPORTANDBAUD_STARTINGPORT) >> 1
-	db		(DEVICE_SERIAL_COMC - DEVICE_SERIAL_PACKEDPORTANDBAUD_STARTINGPORT) >> 1  
-	db		0						; null terminated
 
 ;------------------------------------------------------------------------------------------
 ;
@@ -473,18 +519,13 @@ IdeControllerMenu_WriteDevice:
 		cmp		bl,DEVICE_SERIAL_PORT
 		jz		.done								; if we were already serial, nothing to do
 
-		mov		ax,DEVICE_SERIAL_DEFAULT_COM
-		call	IdeControllerMenu_SerialWriteCOM
-		mov		[es:di],ax
-		
-		mov		ax,DEVICE_SERIAL_DEFAULT_BAUD
-		call	IdeControllerMenu_SerialWriteBaud
-		mov		[es:di],ax
-				
-		add		di,IDEVARS.bIRQ - IDEVARS.wPort		; clear out the interrupt information, we don't use interrupts
-		mov		al,0
-		mov		[es:di],al
+		mov		byte [es:di+IDEVARS.bSerialBaud-IDEVARS.wPort],DEVICE_SERIAL_DEFAULT_BAUD
 
+		mov		al,DEVICE_SERIAL_DEFAULT_COM
+		add		di,IDEVARS.bSerialCOMPortChar-IDEVARS.wPort
+		call	IdeControllerMenu_SerialWriteCOM
+		mov		[es:di],al
+				
 .done:	
 		pop		di
 		pop		bx
@@ -493,134 +534,97 @@ IdeControllerMenu_WriteDevice:
 		ret
 
 ;
-; "COMn" ASCII characer -> Numeric COM number
-;
-ALIGN JUMP_ALIGN
-IdeControllerMenu_SerialReadCOM:
-		xor		ah,ah								; clear out packedportbaud value
-
-		cmp		al,'x'								; base this on the ASCII character used to print
-		jz		.custom
-
-		cmp		al,'A'
-		jae		.over10
-
-		sub		al, '0'+1							; convert ASCII value '0'-'9' to numeric
-		ret
-
-.over10:
-		sub		al, 'A'-10+1						; convert ASCII value 'A'-'C' to numeric
-		ret
-
-.custom:
-		mov		al, 12								; convert ASCII value 'x' (for custom) to numeric
-		ret
-
-;
-; Numeric COM number -> Packed port address, and update ASCII character for printing "COMn"
+; Doesn't modify COM character (unless it is not recognized, which would be an error case),
+; But does update the port address based on COM port selection  
 ;				
 ALIGN JUMP_ALIGN
 IdeControllerMenu_SerialWriteCOM:
+		push	ax
 		push	bx
-
-		cmp		al,12								; custom?
-		jge		.custom
-
-		mov		bx,ax								; lookup packed port address based on COM address
-		mov		ah,[cs:bx+PackedCOMPortAddresses]
-
-		cmp		al,9								; COMA or higher, but not custom
-		jge		.atorabove10
-
-		add		al, '0'+1							; convert numeric to ASCII '1' to '9'
-		jmp		IdeControllerMenu_SerialWriteCOM_PackAndRet
-
-.custom:
-		mov		al,'x'								; ASCII value 'x' for custom
-		mov		ah,1 << DEVICE_SERIAL_PACKEDPORTANDBAUD_PORT_FIELD_POSITION	; 248h 
-		jmp		IdeControllerMenu_SerialWriteCOM_PackAndRet
-
-.atorabove10:
-		add		al, 'A'-10+1						; convert numeric to ASCII 'A' to 'C'
-
-IdeControllerMenu_SerialWriteCOM_PackAndRet:
-		mov		bl,[es:di+1]						; read baud rate bits
-		and		bl,DEVICE_SERIAL_PACKEDPORTANDBAUD_BAUDMASK  	
-		or		ah,bl
-
-		pop		bx
-		ret		
-
-;
-; Packed Baud -> Numeric Baud
-;				
-ALIGN JUMP_ALIGN
-IdeControllerMenu_SerialReadBaud:
-		xchg	al,ah
-		and		ax,DEVICE_SERIAL_PACKEDPORTANDBAUD_BAUDMASK			; also clears high order byte
-		ret
-
-;
-; Numeric Baud -> Packed Baud, also update ASCII printing characters for baud rate
-;				
-ALIGN JUMP_ALIGN
-IdeControllerMenu_SerialWriteBaud:
-		and		ax,DEVICE_SERIAL_PACKEDPORTANDBAUD_BAUDBITS 		; ensure we only have the bits we want
+		push	si
 		
-		push	bx
+		mov		si,g_rgbChoiceToValueLookupForCOM
+		mov		bx,PackedCOMPortAddresses
 
-		mov		bx,ax												; lookup printing word for wPortCtrl
-		shl		bx,1
-		mov		bx,[cs:bx+g_wPrintBaud]
-		mov		[es:di+2],bx
+.loop:
+		mov		ah,[bx]
 
-		xchg	al,ah												; or in port bits
-		mov		bx,[es:di]
-		and		bh,DEVICE_SERIAL_PACKEDPORTANDBAUD_PORTMASK 
-		or		ax,bx
+		cmp		ah,(DEVICE_SERIAL_DEFAULT_CUSTOM_PORT >> 2)
+		jz		.notFound
+		
+		cmp		al,[si]
+		jz		.found
+		
+		inc		si
+		inc		si
+		inc		bx
+		
+		jmp		.loop
 
+.notFound:
+		mov		al, 'x'
+		
+.found:			
+		mov		[es:di+IDEVARS.bSerialPort-IDEVARS.bSerialCOMPortChar], ah
+
+		pop		si
 		pop		bx
+		pop		ax
+		
 		ret
+		
 
 ;
-; Packed Port -> Numeric Port
+; Packed Port (byte) -> Numeric Port (word)
 ;				
 ALIGN JUMP_ALIGN
-IdeControllerMenu_SerialReadPort:		
-		mov		al,ah
-		and		ax,DEVICE_SERIAL_PACKEDPORTANDBAUD_PORTMASK    		; note that this clears AH
+IdeControllerMenu_SerialReadPort:
+		xor		ah,ah
 		shl		ax,1
-		add		ax,DEVICE_SERIAL_PACKEDPORTANDBAUD_STARTINGPORT
+		shl		ax,1
 		ret
 
 ;
-; Numeric Port -> Packed Port, convert from Custom to a defined COM port if we match one
+; Numeric Port (word) -> Packed Port (byte)
+; And convert from Custom to a defined COM port if we match one of the pre-defined COM port numbers
 ;
 ALIGN JUMP_ALIGN
 IdeControllerMenu_SerialWritePort:		
 		push	bx
+		push	si
 
-		sub		ax,DEVICE_SERIAL_PACKEDPORTANDBAUD_STARTINGPORT		; convert from numeric to packed port number
 		shr		ax,1
-		and		al,DEVICE_SERIAL_PACKEDPORTANDBAUD_PORTMASK
+		shr		ax,1
+		and		al,0feh			; force 8-byte boundary
 
-		mov		bx,PackedCOMPortAddresses							; loop, looking for port address in known COM address list
-.next:	
-		mov		ah,[cs:bx]
+		mov		si,g_rgbChoiceToValueLookupForCOM						
+		mov		bx,PackedCOMPortAddresses			; loop, looking for port address in known COM address list
+
+.loop:
+		mov		ah,[si]
+		cmp		ah,'x'
+		jz		.found
+				
+		cmp		al,[bx]
+		jz		.found
+		
+		inc		si
+		inc		si
 		inc		bx
-		test	ah,ah
-		jz		.notfound
-		cmp		al,ah
-		jnz		.next
+		
+		jmp		.loop
 
-		sub		bx,PackedCOMPortAddresses + 1						; FOUND!, +1 since we already incremented
-		mov		ax,bx
+.found:	
+		mov		[es:di+IDEVARS.bSerialCOMPortChar-IDEVARS.bSerialPort], ah
+
+		pop		si
 		pop		bx
-		jmp		IdeControllerMenu_SerialWriteCOM					; if found, use that logic to get ASCII character
 
-.notfound:
-		xchg	ah,al												
-		mov		al,'x'
-		jmp		IdeControllerMenu_SerialWriteCOM_PackAndRet
+		ret
+
+
+
+
+
 
 
