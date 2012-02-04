@@ -590,27 +590,28 @@ SerialCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 ; The decision tree:
 ;
 ;    Master:
-;		   bSerialPackedPortAndBaud Non-Zero:   -> Continue with bSerialPackedAndBaud (1)
-;		   bSerialPackedPortAndBaud Zero:
-;		   			      bLastSerial Zero:     -> Scan (2)
-;					      bLastSerial Non-Zero: -> Continue with bLastSerial (3)
+;		   wSerialPortAndBaud Non-Zero:           -> Continue with wSerialPortAndBaud (1)
+;		   wSerialPortAndBaud Zero:
+;		       previous serial drive not found:   -> Scan (2)
+;		       previous serial drive found:       -> Continue with previous serial drive info (3)
 ;
 ;    Slave:
-;		   bSerialPackedPortAndBaud Non-Zero:
-;		   			      bLastSerial Zero:     -> Error - Not Found (4)
-;					      bLastSerial Non-Zero: -> Continue with bSerialPackedAndBaud (5)
-;          bSerialPackedPortAndBaud Zero:
-;		   			      bLastSerial Zero:     -> Error - Not Found (4)
-;					      bLastSerial Non-Zero: -> Continue with bLastSerial (6)
+;		   wSerialPortAndBaud Non-Zero:
+;		   	   previous serial drive not found:   -> Error - Not Found (4)
+;			   previosu serial drive found:       -> Continue with wSerialPackedAndBaud (5)
+;          wSerialPortAndBaud Zero:
+;		   	   previous serial drive not found:	  -> Error - Not Found (4)
+;			   previous serial drive found:       -> Continue with previous serial drive info (6)
 ;
 ; (1) This was a port/baud that was explicitly set with the configurator.  In the drive detection case, as this
-;     is the Master, we are checking out a new controller, and so don't care about the value of bLastSerial.
+;     is the Master, we are checking out a new controller, and so don't care if we already have a serial drive.
 ;     And as with the int13h/25h case, we just go off and get the needed information using the user's setting.
 ; (2) We are using the special .ideVarsSerialAuto structure.  During drive detection, we would only be here
-;     if bLastSerial is zero (since we only scan if no explicit drives are set), so we go off to scan.
+;     if we hand't already seen a serial drive (since we only scan if no explicit drives are set),
+;     so we go off to scan.
 ; (3) We are using the special .ideVarsSerialAuto structure.  We won't get here during drive detection, but
 ;     we might get here on an int13h/25h call.  If we have scanned COM drives, they are the ONLY serial drives
-;     in use, and so bLastSerial will reflect the port/baud setting for the scanned COM drives.
+;     in use, and so we use the values from the previously seen serial drive DPT.
 ; (4) No master has been found yet, therefore no slave should be found.  Avoiding the slave reduces boot time,
 ;     especially in the full COM port scan case.  Note that this is different from the hardware IDE, where we
 ;     will scan for a slave even if a master is not present.  Note that if ANY master had been previously found,
@@ -645,7 +646,8 @@ SerialCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 		test	dx,dx
 		jnz		.identifyDeviceInDX
 
-		or		dx,ax			; Move bLast into position in dl, as well as test for zero
+		or		dx,ax			; Since DX is zero, this effectively moves the previously found serial drive 
+								; information to dx, as well as test for zero
 		jz		.scanSerial
 
 ; fall-through
@@ -672,7 +674,8 @@ SerialCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 		
 		pop		bp
 ;
-; place packed port/baud in RAMVARS, read by FinalizeDPT and DetectDrives
+; place port and baud word in to the return sector, in a vendor specific area, 
+; which is read by FinalizeDPT and DetectDrives
 ;
 		mov		[es:si+ATA6.wVendor],dx
 
