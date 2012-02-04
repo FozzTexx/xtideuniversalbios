@@ -16,7 +16,7 @@ SECTION .text
 ;--------------------------------------------------------------------
 SerialDPT_Finalize:
 		or		byte [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE
-		mov		al, [RAMVARS.xlateVars+XLATEVARS.bLastSerial]
-		mov		byte [di+DPT_SERIAL.bSerialPortAndBaud], al
+		mov		ax, [es:si+ATA6.wVendor]
+		mov		word [di+DPT_SERIAL.wSerialPortAndBaud], ax
 		ret
 

@@ -21,81 +21,54 @@ DetectDrives_FromAllIDEControllers:
 	mov		bp, ROMVARS.ideVars0			; CS:BP now points to first IDEVARS
 
 .DriveDetectLoop:							; Loop through IDEVARS
-	mov		si, g_szDetect					; Setup standard print string
-%ifdef MODULE_SERIAL		
-	cmp		byte [cs:bp+IDEVARS.bDevice], DEVICE_SERIAL_PORT
-	jnz		.DriveNotSerial					; Special print string for serial drives
-	mov		si, g_szDetectCOM
-.DriveNotSerial:
-%endif
+	push	cx
 
-	call	.DetectDrives_WithIDEVARS		; Detect Master and Slave
+	mov		cx, g_szDetectMaster
+	mov		bh, MASK_DRVNHEAD_SET								; Select Master drive
+	call	StartDetectionWithDriveSelectByteInBHandStringInAX	; Detect and create DPT + BOOTNFO
+
+	mov		cx, g_szDetectSlave
+	mov		bh, MASK_DRVNHEAD_SET | FLG_DRVNHEAD_DRV  
+	call	StartDetectionWithDriveSelectByteInBHandStringInAX
+		
+	pop		cx
+
 	add		bp, BYTE IDEVARS_size			; Point to next IDEVARS
+
+%ifdef MODULE_SERIAL		
+	jcxz	.done							; Set to zero on .ideVarsSerialAuto iteration (if any)
+%endif
+		
 	loop	.DriveDetectLoop
 
 %ifdef MODULE_SERIAL		
 ;
-; if serial drive detected, do not scan (avoids duplicate drives and isn't needed - we have a connection)
-; Note that XLATEVARS.bLastSerial is zero'd in RamVars_Initialize, called in Initialize_AutoDetectDrives;
-; bLastSerial it set in the detection code of SerialCommand.asm
+; if serial drive detected, do not scan (avoids duplicate drives and isn't needed - we already have a connection)
 ;
-	cmp		byte [RAMVARS.xlateVars+XLATEVARS.bLastSerial],cl 	; cx = zero after the loop above
-																; less instruction bytes than using immediate
-	jnz		.done												  
-		
+	call	FindDPT_ToDSDIforSerialDevice
+	jc		.done
+
+	mov		bp, ROMVARS.ideVarsSerialAuto	; Point to our special IDEVARS sructure, just for serial scans		
+				
 	mov		al,[cs:ROMVARS.wFlags]			; Configurator set to always scan?
 	or		al,[es:BDA.bKBFlgs1]			; Or, did the user hold down the ALT key?
 	and		al,8							; 8 = alt key depressed, same as FLG_ROMVARS_SERIAL_ALWAYSDETECT
-	jz		.done							
-
-	mov		bp, ROMVARS.ideVarsSerialAuto	; Point to our special IDEVARS sructure, just for serial scans
-	mov		si, g_szDetectCOMAuto			; Special, special print string for serial drives during a scan
-;;; fall-through					
-%else
-	ret
+	jnz		.DriveDetectLoop							
 %endif
+
+.done:
+	ret
 
 %if FLG_ROMVARS_SERIAL_SCANDETECT != 8
 %error "DetectDrives is currently coded to assume that FLG_ROMVARS_SERIAL_SCANDETECT is the same bit as the ALT key code in the BDA.  Changes in the code will be needed if these values are no longer the same."
 %endif
 
-;--------------------------------------------------------------------
-; Detects IDE hard disks by using information from IDEVARS.
-;
-; DetectDrives_WithIDEVARS
-;	Parameters:
-;		CS:BP:		Ptr to IDEVARS
-;		DS:			RAMVARS segment
-;		ES:			Zero (BDA segment)
-;       SI:		    Ptr to template string
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, BX, DX, SI, DI
-;--------------------------------------------------------------------
-.DetectDrives_WithIDEVARS:
-	push	cx
-
-	push	si		
-	mov		ax, g_szMaster
-	mov		bh, MASK_DRVNHEAD_SET								; Select Master drive
-	call	StartDetectionWithDriveSelectByteInBHandStringInAX	; Detect and create DPT + BOOTNFO
-	pop		si
-
-	mov		ax, g_szSlave
-	mov		bh, MASK_DRVNHEAD_SET | FLG_DRVNHEAD_DRV
-	call	StartDetectionWithDriveSelectByteInBHandStringInAX
-	pop		cx
-		
-.done:	
-	ret
-
 		
 ;--------------------------------------------------------------------
 ; StartDetectionWithDriveSelectByteInBHandStringInAX
 ;	Parameters:
-;		AX:		Offset to "Master" or "Slave" string
 ;		BH:		Drive Select byte for Drive and Head Register
+;		CX:		Offset to "Master" or "Slave" string
 ;		CS:BP:	Ptr to IDEVARS for the drive
 ;		DS:		RAMVARS segment
 ;		ES:		Zero (BDA segment)

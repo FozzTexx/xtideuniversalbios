@@ -134,7 +134,7 @@ g_szNfoIdeEnIRQ:		db	"Interrupt or polling mode.",NULL
 g_szNfoIdeIRQ:			db	"IRQ channel to use.",NULL
 g_szNfoIdeSerialCOM:	db	"Select a COM port by number.",NULL
 g_szNfoIdeSerialBaud:	db	"Select the COM port's Baud Rate. The server must match this speed. Note that UART clock multipliers may impact the actual speed.",NULL
-g_szNfoIdeSerialPort:	db	"Select a COM port by custom I/O port address. Address must be in the range 248h to 430h and be on an 8-byte boundary.", NULL
+g_szNfoIdeSerialPort:	db	"Select a COM port by custom I/O port address. Any address is valud up to 3f8h, but must be on an 8-byte boundary.", NULL
 
 g_szHelpIdeCmdPort:		incbin	"IDE_CommandPort.txt"
 						db	NULL
@@ -160,19 +160,19 @@ g_szMultichoiceCfgDevice:
 						db	"Serial port virtual device",NULL
 
 g_szSerialCOMChoice:
-						db  "COM1 - Port 3f8h",LF
-						db	"COM2 - Port 2f8h",LF
-						db  "COM3 - Port 3e8h",LF
-						db  "COM4 - Port 2e8h",LF
-						db  "COM5 - Port 2f0h",LF
-						db  "COM6 - Port 3e0h",LF
-						db	"COM7 - Port 2e0h",LF
-						db	"COM8 - Port 260h",LF
-						db	"COM9 - Port 368h",LF
-						db	"COMA - Port 268h",LF
-						db	"COMB - Port 360h",LF
-						db	"COMC - Port 270h",LF
-						db  "COMx - Custom Port",NULL
+						db  "COM1 - address 3f8h",LF
+						db	"COM2 - address 2f8h",LF
+						db  "COM3 - address 3e8h",LF
+						db  "COM4 - address 2e8h",LF
+						db  "COM5 - address 2f0h",LF
+						db  "COM6 - address 3e0h",LF
+						db	"COM7 - address 2e0h",LF
+						db	"COM8 - address 260h",LF
+						db	"COM9 - address 368h",LF
+						db	"COMA - address 268h",LF
+						db	"COMB - address 360h",LF
+						db	"COMC - address 270h",LF
+						db  "COMx - Custom address",NULL
 
 g_szValueCfgCOM1:		db		"COM1",NULL
 g_szValueCfgCOM2:		db		"COM2",NULL
@@ -189,15 +189,24 @@ g_szValueCfgCOMC:		db		"COMC",NULL
 g_szValueCfgCOMx:		db		"Custom",NULL
 		
 g_szSerialBaudChoice:
-						db  "2400 baud",LF
-						db	"9600 baud",LF
+						db  "115.2K baud",LF
+						db  "57.6K baud",LF
 						db	"38.4K baud",LF
-						db  "115.2K baud",NULL
+						db  "28.8K baud",LF
+						db  "19.2K baud",LF
+						db	"9600 baud",LF
+						db  "4800 baud",LF		
+						db  "2400 baud",NULL
 
-g_szValueCfgBaud2400:	db		"2400",NULL
-g_szValueCfgBaud9600:	db		"9600",NULL
-g_szValueCfgBaud38_4:	db		"38.4K",NULL
 g_szValueCfgBaud115_2:	db		"115.2K",NULL
+g_szValueCfgBaud57_6:	db		"57.6K",NULL
+g_szValueCfgBaud38_4:	db		"38.4K",NULL
+g_szValueCfgBaud28_8:	db		"28.8K",NULL
+g_szValueCfgBaud19_2:	db		"19.2K",NULL
+g_szValueCfgBaud9600:	db		"9600",NULL
+g_szValueCfgBaud4800:	db		"4800",NULL		
+g_szValueCfgBaud2400:	db		"2400",NULL
+
 		
 g_szValueCfgDeviceDual8b:	db	"XTIDE",NULL
 g_szValueCfgDeviceMod:		db	"Chuck(G)",NULL
@@ -362,3 +371,8 @@ g_szValueFlash64bytes:	db	"64 bytes",NULL
 g_szSelectionTimeout:	db		DOUBLE_BOTTOM_LEFT_CORNER,DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL,"%ASelection in %2u s",NULL
 
 g_szDashForZero:		db		"- ",NULL
+
+g_szValueUnknownError:	db	"Error!",NULL
+
+
+

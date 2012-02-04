@@ -12,13 +12,7 @@ struc XLATEVARS
 	.bFDSwap		resb	1	; Floppy Drive to swap to 00h and vice versa
 	.bHDSwap		resb	1	; Hard Drive to swap to 80h and vice versa
 	.bXlatedDrv		resb	1	; Drive number after translation
-%ifdef MODULE_SERIAL
-	.bLastSerial	resb	1	; Packed Port and Baud for last serial drive detected
-								; (using space of an alignment byte, 
-								; used during and after boot (int13/25h case))
-%else
 					resb	1	; alignment
-%endif
 endstruc
 
 ; RAM Variables.

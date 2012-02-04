@@ -30,9 +30,9 @@ union _buff {
 		unsigned char command;
 		unsigned char driveAndHead;
 		unsigned char count;
-		unsigned char undefined1;
-		unsigned char portAndBaud;
-		unsigned char undefined2;
+		unsigned char scan;
+		unsigned char port;
+		unsigned char baud;
 	} inquire;
 	unsigned char b[514];
 	unsigned short w[257];
@@ -47,12 +47,6 @@ union _buff {
 
 #define SERIAL_COMMAND_MASK 0xe3
 #define SERIAL_COMMAND_HEADERMASK 0xe0
-
-#define SERIAL_INQUIRE_PORTANDBAUD_BAUDMASK 3
-#define SERIAL_INQUIRE_PORTANDBAUD_PORTMASK 0xfc
-#define SERIAL_INQUIRE_PORTANDBAUD_STARTINGPORT 0x240
-
-#define SERIAL_INQUIRE_PORTANDBAUD_PORTTRANSLATE( a ) ( ((a) & SERIAL_INQUIRE_PORTANDBAUD_PORT) << 1 | SERIAL_INQUIRE_PORTANDBAUD_STARTINGPORT )
 
 #define ATA_COMMAND_LBA 0x40
 #define ATA_COMMAND_HEADMASK 0xf
@@ -95,12 +89,14 @@ void processRequests( SerialAccess *serial, Image *image0, Image *image1, int ti
 	Image *img;
 	unsigned long cyl, sect, head;
 	unsigned long perfTimer;
+	unsigned char lastScan;
 
 	GetTime_Timeout_Local = GetTime_Timeout();
 
 	buffoffset = 0;
 	readto = 0;
 	workCount = workOffset = workCommand = 0;
+	lastScan = 0;
 
 	lasttick = GetTime();
 
@@ -281,9 +277,8 @@ void processRequests( SerialAccess *serial, Image *image0, Image *image1, int ti
 
 					if( workCommand == SERIAL_COMMAND_INQUIRE )
 						log( 1, "Inquire %d: Client Port=0x%x, Client Baud=%s", img == image0 ? 0 : 1,
-							 ((buff.inquire.portAndBaud & SERIAL_INQUIRE_PORTANDBAUD_PORTMASK) << 1) 
-							 + SERIAL_INQUIRE_PORTANDBAUD_STARTINGPORT,
-							 baudRateMatchDivisor( buff.inquire.portAndBaud & SERIAL_INQUIRE_PORTANDBAUD_BAUDMASK )->display );
+							 ((unsigned short) buff.inquire.port) << 2,
+							 baudRateMatchDivisor( buff.inquire.baud )->display );
 					else if( buff.chs.driveAndHead & ATA_COMMAND_LBA )
 						log( 1, "%s %d: LBA=%u, Count=%u", comStr, img == image0 ? 0 : 1,
 							 mylba, workCount );
@@ -324,15 +319,22 @@ void processRequests( SerialAccess *serial, Image *image0, Image *image1, int ti
 				//
 				if( workCommand == SERIAL_COMMAND_INQUIRE )
 				{
+					unsigned char localScan;
+
 					if( serial->speedEmulation && 
-						(buff.inquire.portAndBaud & SERIAL_INQUIRE_PORTANDBAUD_BAUDMASK) != serial->baudRate->divisor )
+						buff.inquire.baud != serial->baudRate->divisor )
 					{
 						log( 1, "    Ignoring Inquire with wrong baud rate" );
 						workCount = 0;
 						continue;
 					}
 
-					img->respondInquire( &buff.w[0], serial->baudRate, buff.inquire.portAndBaud );
+					localScan = buff.inquire.scan;         // need to do this before the call to 
+					                                       // img->respondInquire, as it will clear the buff
+					img->respondInquire( &buff.w[0], serial->baudRate, 
+										 ((unsigned short) buff.inquire.port) << 2, 
+										 (img == image1 && lastScan) || buff.inquire.scan );
+					lastScan = localScan;
 				}
 				//
 				// Read command...
@@ -341,6 +343,7 @@ void processRequests( SerialAccess *serial, Image *image0, Image *image1, int ti
 				{
 					img->seekSector( mylba + workOffset );
 					img->readSector( &buff.w[0] );
+					lastScan = 0;
 				}
 
 				buff.w[256] = checksum( &buff.w[0], 256 );

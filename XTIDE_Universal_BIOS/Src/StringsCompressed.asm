@@ -19,34 +19,58 @@ SECTION .text
 ; POST drive detection strings
 g_szRomAt:		; db	"%s @ %x",LF,CR,NULL
           		; db	 25h,  73h,  20h,  40h,  20h,  25h,  78h,  0ah,  0dh,  00h    ; uncompressed
-          		  db	 34h,  20h, 0c6h,  39h,  1bh                                  ; compressed
+          		  db	 3eh,  20h, 0c6h,  39h,  1bh                                  ; compressed
 
 
-g_szMaster:				; db	"IDE Master at ",NULL 
-           				; db	 49h,  44h,  45h,  20h,  4dh,  61h,  73h,  74h,  65h,  72h,  20h,  61h,  74h,  20h,  00h    ; uncompressed
-           				  db	 4fh,  4ah, 0cbh,  53h,  67h,  79h,  7ah,  6bh, 0f8h,  67h,  7ah,  00h                      ; compressed
+; The following strings are used by DetectPrint_StartDetectWithMasterOrSlaveStringInAXandIdeVarsInCSBP
+; To support an optimization in that code, these strings must start on the same 256 byte page, 
+; which is checked at assembly time below.
+;
+g_szDetectStart:		
+g_szDetectMaster:		; db	"Master",NULL 
+                 		; db	 4dh,  61h,  73h,  74h,  65h,  72h,  00h    ; uncompressed
+                 		  db	 53h,  67h,  79h,  7ah,  6bh, 0b8h          ; compressed
 
-g_szSlave:				; db	"IDE Slave  at ",NULL
-          				; db	 49h,  44h,  45h,  20h,  53h,  6ch,  61h,  76h,  65h,  20h,  20h,  61h,  74h,  20h,  00h    ; uncompressed
-          				  db	 4fh,  4ah, 0cbh,  59h,  72h,  67h,  7ch, 0ebh,  20h,  67h,  7ah,  00h                      ; compressed
+g_szDetectSlave:		; db	"Slave ",NULL
+                		; db	 53h,  6ch,  61h,  76h,  65h,  20h,  00h    ; uncompressed
+                		  db	 59h,  72h,  67h,  7ch,  6bh,  00h          ; compressed
 
-g_szDetect:				; db	"%s%x: ",NULL					   ; IDE Master at 1F0h:
-           				; db	 25h,  73h,  25h,  78h,  3ah,  20h,  00h    ; uncompressed
-           				  db	 34h,  39h,  40h,  00h                      ; compressed
+g_szDetectOuter:		; db	"IDE %s at %s: ",NULL
+                		; db	 49h,  44h,  45h,  20h,  25h,  73h,  20h,  61h,  74h,  20h,  25h,  73h,  3ah,  20h,  00h    ; uncompressed
+                		  db	 4fh,  4ah, 0cbh,  3eh,  20h,  67h, 0fah,  3eh,  40h,  00h                                  ; compressed
 
-g_szDetectCOM:			; db  "%sCOM%c/%u%c: ",NULL              ; IDE Master at COM1/115K:		
-              			; db   25h,  73h,  43h,  4fh,  4dh,  25h,  63h,  2fh,  25h,  75h,  25h,  63h,  3ah,  20h,  00h    ; uncompressed
-              			  db   34h,  49h,  55h,  53h,  35h,  2ah,  37h,  35h,  40h,  00h                                  ; compressed
+g_szDetectPort:			; db	"%x",NULL					   	; IDE Master at 1F0h:
+               			; db	 25h,  78h,  00h    ; uncompressed
+               			  db	 19h                ; compressed
 
-g_szDetectCOMAuto:		; db  "%sCOM Detect: ",NULL			   ; IDE Master at COM Detect:
-                  		; db   25h,  73h,  43h,  4fh,  4dh,  20h,  44h,  65h,  74h,  65h,  63h,  74h,  3ah,  20h,  00h    ; uncompressed
-                  		  db   34h,  49h,  55h, 0d3h,  4ah,  6bh,  7ah,  6bh,  69h,  7ah,  40h,  00h                      ; compressed
+g_szDetectCOM:			; db  "COM%c%s",NULL            
+              			; db   43h,  4fh,  4dh,  25h,  63h,  25h,  73h,  00h    ; uncompressed
+              			  db   49h,  55h,  53h,  35h,  1eh                      ; compressed
 
+g_szDetectCOMAuto:		; db	" Auto",NULL
+                  		; db	 20h,  41h,  75h,  74h,  6fh,  00h    ; uncompressed
+                  		  db	 20h,  47h,  7bh,  7ah, 0b5h          ; compressed
+
+g_szDetectCOMSmall:		; db	"/%u%u00",NULL					; IDE Master at COM1/9600:
+                   		; db	 2fh,  25h,  75h,  25h,  75h,  30h,  30h,  00h    ; uncompressed
+                   		  db	 2ah,  37h,  37h,  34h,  14h                      ; compressed
+
+g_szDetectEnd:
+g_szDetectCOMLarge:		; db	"/%u.%uK",NULL					; IDE Master at COM1/19.2K:
+                   		; db	 2fh,  25h,  75h,  2eh,  25h,  75h,  4bh,  00h    ; uncompressed
+                   		  db	 2ah,  37h,  29h,  37h,  91h                      ; compressed
+
+
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS				
+%if ((g_szDetectEnd-$$) & 0xff00) <> ((g_szDetectStart-$$) & 0xff00)
+%error "g_szDetect* strings must be on the same 256 byte page, required by DetectPrint_StartDetectWithMasterOrSlaveStringInAXandIdeVarsInCSBP.  Please move this block up or down within strings.asm"
+%endif
+%endif				
 
 ; Boot loader strings
 g_szTryToBoot:			; db	"Booting from %s %x",ANGLE_QUOTE_RIGHT,"%x",LF,CR,NULL
               			; db	 42h,  6fh,  6fh,  74h,  69h,  6eh,  67h,  20h,  66h,  72h,  6fh,  6dh,  20h,  25h,  73h,  20h,  25h,  78h, 0afh,  25h,  78h,  0ah,  0dh,  00h    ; uncompressed
-              			  db	 48h,  75h,  75h,  7ah,  6fh,  74h, 0edh,  6ch,  78h,  75h, 0f3h,  34h,  20h,  39h,  24h,  39h,  1bh                                              ; compressed
+              			  db	 48h,  75h,  75h,  7ah,  6fh,  74h, 0edh,  6ch,  78h,  75h, 0f3h,  3eh,  20h,  39h,  24h,  39h,  1bh                                              ; compressed
 
 g_szBootSectorNotFound:	; db	"Boot sector "
                        	; db	 42h,  6fh,  6fh,  74h,  20h,  73h,  65h,  63h,  74h,  6fh,  72h,  20h    ; uncompressed
@@ -76,7 +100,7 @@ g_szRomBoot:	; db	"ROM Boot",NULL
 
 g_szHotkey:		; db	"%A%c%c%A%s%A ",NULL
            		; db	 25h,  41h,  25h,  63h,  25h,  63h,  25h,  41h,  25h,  73h,  25h,  41h,  20h,  00h    ; uncompressed
-           		  db	 3dh,  35h,  35h,  3dh,  34h,  3dh,  00h                                              ; compressed
+           		  db	 3dh,  35h,  35h,  3dh,  3eh,  3dh,  00h                                              ; compressed
 
 
 
@@ -87,7 +111,7 @@ g_szDriveNum:	; db	"%x ",NULL
 
 g_szFDLetter:	; db	"%s %c",NULL
              	; db	 25h,  73h,  20h,  25h,  63h,  00h    ; uncompressed
-             	  db	 34h,  20h,  15h                      ; compressed
+             	  db	 3eh,  20h,  15h                      ; compressed
 
 g_szFloppyDrv:	; db	"Floppy Drive",NULL
               	; db	 46h,  6ch,  6fh,  70h,  70h,  79h,  20h,  44h,  72h,  69h,  76h,  65h,  00h    ; uncompressed
@@ -105,11 +129,11 @@ g_szCapacity:	; db	"Capacity : ",NULL
 
 g_szSizeSingle:	; db	"%s%u.%u %ciB",NULL
                	; db	 25h,  73h,  25h,  75h,  2eh,  25h,  75h,  20h,  25h,  63h,  69h,  42h,  00h    ; uncompressed
-               	  db	 34h,  37h,  29h,  37h,  20h,  35h,  6fh,  88h                                  ; compressed
+               	  db	 3eh,  37h,  29h,  37h,  20h,  35h,  6fh,  88h                                  ; compressed
 
 g_szSizeDual:	; db	"%s%5-u.%u %ciB /%5-u.%u %ciB",LF,CR,NULL
              	; db	 25h,  73h,  25h,  35h,  2dh,  75h,  2eh,  25h,  75h,  20h,  25h,  63h,  69h,  42h,  20h,  2fh,  25h,  35h,  2dh,  75h,  2eh,  25h,  75h,  20h,  25h,  63h,  69h,  42h,  0ah,  0dh,  00h    ; uncompressed
-             	  db	 34h,  38h,  29h,  37h,  20h,  35h,  6fh, 0c8h,  2ah,  38h,  29h,  37h,  20h,  35h,  6fh,  48h,  1bh                                                                                        ; compressed
+             	  db	 3eh,  38h,  29h,  37h,  20h,  35h,  6fh, 0c8h,  2ah,  38h,  29h,  37h,  20h,  35h,  6fh,  48h,  1bh                                                                                        ; compressed
 
 g_szCfgHeader:	; db	"Addr.",SINGLE_VERTICAL,"Block",SINGLE_VERTICAL,"Bus",  SINGLE_VERTICAL,"IRQ",  SINGLE_VERTICAL,"Reset",LF,CR,NULL
               	; db	 41h,  64h,  64h,  72h,  2eh, 0b3h,  42h,  6ch,  6fh,  63h,  6bh, 0b3h,  42h,  75h,  73h, 0b3h,  49h,  52h,  51h, 0b3h,  52h,  65h,  73h,  65h,  74h,  0ah,  0dh,  00h    ; uncompressed
@@ -117,7 +141,7 @@ g_szCfgHeader:	; db	"Addr.",SINGLE_VERTICAL,"Block",SINGLE_VERTICAL,"Bus",  SING
 
 g_szCfgFormat:	; db	"%s"   ,SINGLE_VERTICAL,"%5-u", SINGLE_VERTICAL,"%s",SINGLE_VERTICAL," %2-I",SINGLE_VERTICAL,"%5-x",  NULL
               	; db	 25h,  73h, 0b3h,  25h,  35h,  2dh,  75h, 0b3h,  25h,  73h, 0b3h,  20h,  25h,  32h,  2dh,  49h, 0b3h,  25h,  35h,  2dh,  78h,  00h    ; uncompressed
-              	  db	 34h,  23h,  38h,  23h,  34h,  23h,  20h,  36h,  23h,  1ah                                                                            ; compressed
+              	  db	 3eh,  23h,  38h,  23h,  3eh,  23h,  20h,  36h,  23h,  1ah                                                                            ; compressed
 
 
 g_szAddressingModes:					
@@ -158,15 +182,15 @@ g_szAddressingModes_Displacement equ (g_szPCHS - g_szAddressingModes)
 
 g_szFddUnknown:	; db	"%sUnknown",NULL
                	; db	 25h,  73h,  55h,  6eh,  6bh,  6eh,  6fh,  77h,  6eh,  00h    ; uncompressed
-               	  db	 34h,  5bh,  74h,  71h,  74h,  75h,  7dh, 0b4h                ; compressed
+               	  db	 3eh,  5bh,  74h,  71h,  74h,  75h,  7dh, 0b4h                ; compressed
 
 g_szFddSizeOr:	; db	"%s5",ONE_QUARTER,QUOTATION_MARK," or 3",ONE_HALF,QUOTATION_MARK," DD",NULL
               	; db	 25h,  73h,  35h, 0ach,  22h,  20h,  6fh,  72h,  20h,  33h, 0abh,  22h,  20h,  44h,  44h,  00h    ; uncompressed
-              	  db	 34h,  2fh,  21h,  26h,  20h,  75h, 0f8h,  2dh,  22h,  26h,  20h,  4ah,  8ah                      ; compressed
+              	  db	 3eh,  2fh,  21h,  26h,  20h,  75h, 0f8h,  2dh,  22h,  26h,  20h,  4ah,  8ah                      ; compressed
 
 g_szFddSize:	; db	"%s%s",QUOTATION_MARK,", %u kiB",NULL	; 3½", 1440 kiB
             	; db	 25h,  73h,  25h,  73h,  22h,  2ch,  20h,  25h,  75h,  20h,  6bh,  69h,  42h,  00h    ; uncompressed
-            	  db	 34h,  34h,  26h,  27h,  20h,  37h,  20h,  71h,  6fh,  88h                            ; compressed
+            	  db	 3eh,  3eh,  26h,  27h,  20h,  37h,  20h,  71h,  6fh,  88h                            ; compressed
 
 
 g_szFddThreeHalf:		; db  "3",ONE_HALF,NULL
@@ -264,12 +288,12 @@ g_szDashForZero:		; db		"- ",NULL
 ;$translate{ord('8')} = 17;    [StringsCompress Processed]
 ;$translate{200}      = 18;    # DOUBLE_BOTTOM_LEFT_CORNER    [StringsCompress Processed]
 ;$translate{181}      = 19;    # DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL    [StringsCompress Processed]
+;$translate{ord('0')} = 20;    # DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL		    [StringsCompress Processed]
 ;
 ; Formats begin immediately after the last Translated character (they are in the same table)
 ;
-;$format_begin = 20;    [StringsCompress Processed]
+;$format_begin = 21;    [StringsCompress Processed]
 ;
-;$format{"s"}   = 20;        # n/a    [StringsCompress Processed]
 ;$format{"c"}   = 21;        # n/a    [StringsCompress Processed]
 ;$format{"2-I"} = 22;        # must be even    [StringsCompress Processed]
 ;$format{"u"}   = 23;        # must be odd    [StringsCompress Processed]
@@ -279,6 +303,7 @@ g_szDashForZero:		; db		"- ",NULL
 ;$format{"nl"}  = 27;        # n/a    [StringsCompress Processed]
 ;$format{"2-u"} = 28;        # must be even    [StringsCompress Processed]
 ;$format{"A"}   = 29;        # n/a    [StringsCompress Processed]
+;$format{"s"}   = 30;        # n/a		    [StringsCompress Processed]
 ;
 ; NOTE: The last $format cannot exceed 31 (stored in a 5-bit quantity).
 ;
@@ -298,7 +323,7 @@ g_szDashForZero:		; db		"- ",NULL
 
 StringsCompressed_NormalBase     equ   58
 
-StringsCompressed_FormatsBegin   equ   20
+StringsCompressed_FormatsBegin   equ   21
 
 StringsCompressed_TranslatesAndFormats: 
         db     32  ; 0
@@ -321,7 +346,7 @@ StringsCompressed_TranslatesAndFormats:
         db     56  ; 17
         db     200  ; 18
         db     181  ; 19
-        db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_s)    ; 20
+        db     48  ; 20
         db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_c)    ; 21
         db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_2_I)    ; 22
         db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_u)    ; 23
@@ -331,11 +356,9 @@ StringsCompressed_TranslatesAndFormats:
         db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_nl)    ; 27
         db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_2_u)    ; 28
         db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_A)    ; 29
+        db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_s)    ; 30
 
 %ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
-%if DisplayFormatCompressed_BaseFormatOffset < DisplayFormatCompressed_Format_s || DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_s > 255
-%error "DisplayFormatCompressed_Format_s is out of range of DisplayFormatCompressed_BaseFormatOffset"
-%endif
 %if DisplayFormatCompressed_BaseFormatOffset < DisplayFormatCompressed_Format_c || DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_c > 255
 %error "DisplayFormatCompressed_Format_c is out of range of DisplayFormatCompressed_BaseFormatOffset"
 %endif
@@ -363,6 +386,9 @@ StringsCompressed_TranslatesAndFormats:
 %if DisplayFormatCompressed_BaseFormatOffset < DisplayFormatCompressed_Format_A || DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_A > 255
 %error "DisplayFormatCompressed_Format_A is out of range of DisplayFormatCompressed_BaseFormatOffset"
 %endif
+%if DisplayFormatCompressed_BaseFormatOffset < DisplayFormatCompressed_Format_s || DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_s > 255
+%error "DisplayFormatCompressed_Format_s is out of range of DisplayFormatCompressed_BaseFormatOffset"
+%endif
 %endif
 
 ;; translated usage stats
@@ -373,37 +399,37 @@ StringsCompressed_TranslatesAndFormats:
 ;; 2-u:1
 ;; 5-u:3
 ;; x:6
-;; 5-x:1
 ;; s:15
+;; 5-x:1
 ;; nl:6
 ;; 2-I:1
-;; c:8
-;; u:6
+;; c:7
+;; u:9
 ;; total format: 10
 
 ;; alphabet usage stats
-;; 58,::4
+;; 58,::2
 ;; 59,;:
 ;; 60,<:
 ;; 61,=:
 ;; 62,>:
 ;; 63,?:
 ;; 64,@:1
-;; 65,A:3
+;; 65,A:4
 ;; 66,B:11
-;; 67,C:5
-;; 68,D:12
-;; 69,E:4
+;; 67,C:4
+;; 68,D:10
+;; 69,E:3
 ;; 70,F:3
 ;; 71,G:
 ;; 72,H:4
-;; 73,I:3
+;; 73,I:2
 ;; 74,J:
-;; 75,K:
+;; 75,K:1
 ;; 76,L:3
-;; 77,M:4
+;; 77,M:3
 ;; 78,N:
-;; 79,O:3
+;; 79,O:2
 ;; 80,P:1
 ;; 81,Q:1
 ;; 82,R:4
@@ -421,11 +447,11 @@ StringsCompressed_TranslatesAndFormats:
 ;; 94,^:
 ;; 95,_:
 ;; 96,`:
-;; 97,a:7
+;; 97,a:6
 ;; 98,b:
-;; 99,c:5
+;; 99,c:4
 ;; 100,d:4
-;; 101,e:11
+;; 101,e:9
 ;; 102,f:2
 ;; 103,g:2
 ;; 104,h:
@@ -435,15 +461,15 @@ StringsCompressed_TranslatesAndFormats:
 ;; 108,l:4
 ;; 109,m:1
 ;; 110,n:9
-;; 111,o:17
+;; 111,o:18
 ;; 112,p:3
 ;; 113,q:
 ;; 114,r:11
 ;; 115,s:6
-;; 116,t:13
-;; 117,u:2
+;; 116,t:11
+;; 117,u:3
 ;; 118,v:2
 ;; 119,w:1
 ;; 120,x:
 ;; 121,y:2
-;; alphabet used count: 39
+;; alphabet used count: 40

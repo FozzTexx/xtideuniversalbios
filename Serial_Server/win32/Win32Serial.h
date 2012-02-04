@@ -36,7 +36,7 @@ public:
 
 		if( !strcmp( name, "PIPE" ) )
 		{
-			log( 0, "Opening named pipe %s (simulating %lu baud)", PIPENAME, baudRate->rate );
+			log( 0, "Opening named pipe %s (simulating %s baud)", PIPENAME, baudRate->display );
 		
 			pipe = CreateNamedPipeA( PIPENAME, PIPE_ACCESS_DUPLEX, PIPE_TYPE_BYTE|PIPE_REJECT_REMOTE_CLIENTS, 2, 1024, 1024, 0, NULL );
 			if( pipe == INVALID_HANDLE_VALUE )

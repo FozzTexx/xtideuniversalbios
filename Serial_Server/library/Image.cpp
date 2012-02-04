@@ -136,7 +136,7 @@ int Image::parseGeometry( char *str, unsigned long *p_cyl, unsigned long *p_head
 #define ATA_dwCurSCnt 57
 #define ATA_dwLBACnt 60
 
-#define ATA_VendorSpecific_ReturnPortBaud 158
+#define ATA_wVendor 159
 
 #define ATA_wCaps_LBA 0x200
 
@@ -163,26 +163,29 @@ struct comPorts supportedComPorts[] =
   { 0, 0 } 
 };
 
-void Image::respondInquire( unsigned short *buff, struct baudRate *baudRate, unsigned char portAndBaud )
+void Image::respondInquire( unsigned short *buff, struct baudRate *baudRate, unsigned short port, unsigned char scan )
 {
-	unsigned short comPort = 0;
-	struct comPorts *cp;
-
-	if( portAndBaud )
-	{
-		for( cp = supportedComPorts; cp->port && cp->port != ((portAndBaud << 3) + 0x260); cp++ ) ;
-		if( cp->port )
-			comPort = cp->com;
-	}
-	  
 	memset( &buff[0], 0, 514 );
 
-	if( comPort )
-		sprintf( (char *) &buff[ATA_strModel], "%.20s (COM%d/%s)", shortFileName, comPort, baudRate->display );
-	else
-		sprintf( (char *) &buff[ATA_strModel], "%.30s (%s baud)", shortFileName, baudRate->display );
+	if( scan )
+	{
+		unsigned short comPort = 0;
+		struct comPorts *cp;
 
-	// strncpy( (char *) &buff[ATA_strModel], img->shortFileName, 40 );
+		if( port )
+		{
+			for( cp = supportedComPorts; cp->port && cp->port != port; cp++ ) ;
+			if( cp->port )
+				comPort = cp->com;
+		}
+
+		if( comPort )
+			sprintf( (char *) &buff[ATA_strModel], "%.15s (COM%c/%s)", shortFileName, comPort, baudRate->display );
+		else
+			sprintf( (char *) &buff[ATA_strModel], "%.25s (%s baud)", shortFileName, baudRate->display );
+	}
+	else
+		sprintf( (char *) &buff[ATA_strModel], "%.30s", shortFileName );
 
 	strncpy( (char *) &buff[ATA_strSerial], "serial", 20 );
 	strncpy( (char *) &buff[ATA_strFirmware], "firmw", 8 );

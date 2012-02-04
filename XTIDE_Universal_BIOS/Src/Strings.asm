@@ -11,11 +11,26 @@ SECTION .text
 ; POST drive detection strings
 g_szRomAt:		db	"%s @ %x",LF,CR,NULL
 
-g_szMaster:				db	"IDE Master at ",NULL 
-g_szSlave:				db	"IDE Slave  at ",NULL
-g_szDetect:				db	"%s%x: ",NULL					   ; IDE Master at 1F0h:
-g_szDetectCOM:			db  "%sCOM%c/%u%c: ",NULL              ; IDE Master at COM1/115K:		
-g_szDetectCOMAuto:		db  "%sCOM Detect: ",NULL			   ; IDE Master at COM Detect:
+; The following strings are used by DetectPrint_StartDetectWithMasterOrSlaveStringInAXandIdeVarsInCSBP
+; To support an optimization in that code, these strings must start on the same 256 byte page, 
+; which is checked at assembly time below.
+;
+g_szDetectStart:		
+g_szDetectMaster:		db	"Master",NULL 
+g_szDetectSlave:		db	"Slave ",NULL
+g_szDetectOuter:		db	"IDE %s at %s: ",NULL
+g_szDetectPort:			db	"%x",NULL					   	; IDE Master at 1F0h:
+g_szDetectCOM:			db  "COM%c%s",NULL            
+g_szDetectCOMAuto:		db	" Auto",NULL
+g_szDetectCOMSmall:		db	"/%u%u00",NULL					; IDE Master at COM1/9600:
+g_szDetectEnd:
+g_szDetectCOMLarge:		db	"/%u.%uK",NULL					; IDE Master at COM1/19.2K:
+		
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS				
+%if ((g_szDetectEnd-$$) & 0xff00) <> ((g_szDetectStart-$$) & 0xff00)
+%error "g_szDetect* strings must be on the same 256 byte page, required by DetectPrint_StartDetectWithMasterOrSlaveStringInAXandIdeVarsInCSBP.  Please move this block up or down within strings.asm"
+%endif
+%endif				
 				
 ; Boot loader strings
 g_szTryToBoot:			db	"Booting from %s %x",ANGLE_QUOTE_RIGHT,"%x",LF,CR,NULL
@@ -136,12 +151,12 @@ g_szDashForZero:		db		"- ",NULL
 ;$translate{ord('8')} = 17;
 ;$translate{200}      = 18;    # DOUBLE_BOTTOM_LEFT_CORNER
 ;$translate{181}      = 19;    # DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL
+;$translate{ord('0')} = 20;    # DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL		
 ;
 ; Formats begin immediately after the last Translated character (they are in the same table)
 ;
-;$format_begin = 20;
+;$format_begin = 21;
 ;
-;$format{"s"}   = 20;        # n/a
 ;$format{"c"}   = 21;        # n/a
 ;$format{"2-I"} = 22;        # must be even
 ;$format{"u"}   = 23;        # must be odd
@@ -151,6 +166,7 @@ g_szDashForZero:		db		"- ",NULL
 ;$format{"nl"}  = 27;        # n/a
 ;$format{"2-u"} = 28;        # must be even
 ;$format{"A"}   = 29;        # n/a
+;$format{"s"}   = 30;        # n/a		
 ;
 ; NOTE: The last $format cannot exceed 31 (stored in a 5-bit quantity).
 ;

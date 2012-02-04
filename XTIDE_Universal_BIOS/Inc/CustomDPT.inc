@@ -27,7 +27,8 @@ endstruc
 struc DPT_ATA	; 10 + 2 bytes = 12 bytes
 	.dpt						resb	DPT_size
 
-	; Block size is specified in sectors (1, 2, 4, 8, 16, 32, 64 or 128)
+	; Block size is specified in sectors (1, 2, 4, 8, 16, 32 or 64).
+	; 128 is not allowed to prevent offset overflow during data transfer.
 	.wSetAndMaxBlock:
 	.bSetBlock					resb	1	; Current block size (at least 1)
 	.bMaxBlock					resb	1	; Maximum block size, 0 = block mode not supported
@@ -38,8 +39,9 @@ endstruc
 struc DPT_SERIAL 
 	.dpt						resb	DPT_size
 
-	.bSerialPortAndBaud			resb	1	; Packed I/O port and baud rate for serial drives
-								resb 	1	; unused alignment
+	.wSerialPortAndBaud:
+	.bSerialPort				resb	1	; Serial connection I/O port address, divided by 4
+	.bSerialBaud				resb 	1	; Serial connection baud rate divisor
 endstruc
 %endif
 

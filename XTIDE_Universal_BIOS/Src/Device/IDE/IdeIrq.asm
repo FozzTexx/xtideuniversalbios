@@ -108,7 +108,8 @@ AcknowledgeIdeInterruptAndSetTaskFlag:
 
 	; Reading Status Register acknowledges IDE interrupt
 	call	RamVars_GetSegmentToDS
-	call	FindDPT_ToDSDIforInterruptInService
+	mov		bl, FLGH_DPT_INTERRUPT_IN_SERVICE
+	call	FindDPT_ToDSDIforFlagsHighInBL
 	mov		dl, STATUS_REGISTER_in
 	call	IdeIO_InputToALfromIdeRegisterInDL
 

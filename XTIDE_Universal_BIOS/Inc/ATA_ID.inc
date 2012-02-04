@@ -253,7 +253,8 @@ struc ATA6
 				resw 127-104	; 104...126R
 	.wRMSN		resw 1	; 127F, Removable Media Status Notification feature set support
 	.wSecurity	resw 1	; 128FV, Security Status
-				resw 160-129	; 129...159X
+				resw 159-129	; 129...158X, Vendor Specific
+	.wVendor    resw 1  ; 159X, Vendor Specific - picking one word for use by the Serial Port code
 	.wCFAPower	resw 1	; 160FV, CFA Power Mode 1
 				resw 176-161	; 161...175R, Reserved for assignment by the CompactFlash Association
 	.strMediaSr	resw 206-176	; 176...205V, Current media serial number
