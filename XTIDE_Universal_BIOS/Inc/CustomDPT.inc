@@ -13,10 +13,11 @@ struc DPT	; 10 bytes
 	.bIdevarsOffset				resb	1	; Offset to IDEVARS for this drive
 
 	; IDE Drive related
-	; .twLbaSectors is used for LBA addressing only.
-	; .wPchsCylinders and .bPchsSectors are used for CHS addressing only.
+	; .bLbaHeads and .twLbaSectors are used for LBA addressing only.
 	.bLbaHeads:					resb	1	; Number of LBA assisted heads (1...255)
 	.twLbaSectors				resb	2	; 48-bit sector count for LBA addressing
+
+	; .wPchsCylinders and .bPchsSectors are used for CHS addressing only.
 	.wPchsCylinders				resb	2	; Number of P-CHS Cylinders (1...16383)
 	.wPchsHeadsAndSectors:
 	.bPchsHeads					resb	1	; Number of P-CHS heads (1...16)

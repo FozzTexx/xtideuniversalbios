@@ -96,12 +96,13 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 .WriteLastBlockToDrive:
 	mov		cx, [bp+PIOVARS.wWordsLeft]
+%ifdef USE_186
+	push	CheckErrorsAfterTransferringLastBlock
+	jmp		[bp+PIOVARS.fnXfer]					; Transfer possibly partial block
+%else
 	call	[bp+PIOVARS.fnXfer]					; Transfer possibly partial block
-
-	; Check for errors in last block
-	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRQ, FLG_STATUS_DRDY)
-	call	IdeWait_PollStatusFlagInBLwithTimeoutInBH
-	jmp		SHORT ReturnWithTransferErrorInAH
+	jmp		SHORT CheckErrorsAfterTransferringLastBlock
+%endif
 
 
 ;--------------------------------------------------------------------
@@ -154,6 +155,7 @@ ALIGN JUMP_ALIGN
 
 	; Check for errors in last block
 	mov		di, si								; DS:DI now points DPT
+CheckErrorsAfterTransferringLastBlock:
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRQ, FLG_STATUS_DRDY)
 	call	IdeWait_PollStatusFlagInBLwithTimeoutInBH
 

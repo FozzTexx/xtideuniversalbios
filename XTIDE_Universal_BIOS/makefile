@@ -41,6 +41,7 @@ HEADERS += Src/Handlers/Int13h/EBIOS/
 HEADERS += Src/Handlers/Int13h/Tools/
 HEADERS += Src/Device/
 HEADERS += Src/Device/IDE/
+HEADERS += Src/Device/MemoryMappedIDE/
 HEADERS += Src/Device/Serial/
 HEADERS += Src/Initialization/
 HEADERS += Src/Libraries/
@@ -68,6 +69,9 @@ DEFINES = INCLUDE_MENU_LIBRARY EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS MODULE_EBIOS MO
 DEFINES_XT = ELIMINATE_CGA_SNOW
 DEFINES_XTPLUS = ELIMINATE_CGA_SNOW USE_186
 DEFINES_AT = USE_186 USE_286 USE_AT
+DEFINES_XT_LARGE = $(DEFINES_XT) MODULE_JRIDE
+DEFINES_XTPLUS_LARGE = $(DEFINES_XTPLUS) MODULE_JRIDE
+DEFINES_AT_LARGE = $(DEFINES_AT) MODULE_JRIDE
 
 
 ###################
@@ -79,6 +83,9 @@ DEFS = $(DEFINES:%=-D%)
 DEFS_XT = $(DEFINES_XT:%=-D%)
 DEFS_XTPLUS = $(DEFINES_XTPLUS:%=-D%)
 DEFS_AT = $(DEFINES_AT:%=-D%)
+DEFS_XT_LARGE = $(DEFINES_XT_LARGE:%=-D%)
+DEFS_XTPLUS_LARGE = $(DEFINES_XTPLUS_LARGE:%=-D%)
+DEFS_AT_LARGE = $(DEFINES_AT_LARGE:%=-D%)
 
 # Add -I in front of all header directories
 IHEADERS = $(HEADERS:%=-I%)
@@ -119,23 +126,35 @@ ASFLAGS += -O9					# Optimize operands to their shortest forms
 # Build process. Actual work is done here. #
 ############################################
 
-.PHONY: all at xtplus xt clean
+.PHONY: all at at_large xtplus xtplus_large xt xt_large clean
 
 # Make clean debug and release versions
-all: clean at xtplus xt
+all: clean at at_large xtplus xtplus_large xt xt_large
 	@echo All done!
 
 at:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_AT) -l"$(TARGET)_at.lst" -o"$(TARGET)_at.bin"
 	@echo AT version "$(TARGET)_at.bin" built.
 
+at_large:
+	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_AT_LARGE) -l"$(TARGET)_atl.lst" -o"$(TARGET)_atl.bin"
+	@echo Large AT version "$(TARGET)_atl.bin" built.
+
 xtplus:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XTPLUS) -l"$(TARGET)_xtp.lst" -o"$(TARGET)_xtp.bin"
 	@echo XT plus version "$(TARGET)_xtp.bin" built.
 
+xtplus_large:
+	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XTPLUS_LARGE) -l"$(TARGET)_xtpl.lst" -o"$(TARGET)_xtpl.bin"
+	@echo Large XT plus version "$(TARGET)_xtpl.bin" built.
+
 xt:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XT) -l"$(TARGET)_xt.lst" -o"$(TARGET)_xt.bin"
 	@echo XT version "$(TARGET)_xt.bin" built.
+
+xt_large:
+	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XT_LARGE) -l"$(TARGET)_xtl.lst" -o"$(TARGET)_xtl.bin"
+	@echo Large XT version "$(TARGET)_xtl.bin" built.
 
 clean:
 	@$(RM) $(BUILD_DIR)\*.*

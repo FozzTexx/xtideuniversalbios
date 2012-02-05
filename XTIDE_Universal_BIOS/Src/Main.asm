@@ -185,6 +185,9 @@ iend
 	%include "Timer.asm"			; For timeout and delay
 
 	; IDE Device support
+%define IDEDEVICE Ide
+%define ASSEMBLE_SHARED_IDE_DEVICE_FUNCTIONS
+	%include "IOMappedIDE.inc"		; Assembly IDE support for normal I/O mapped controllers
 	%include "IdeCommand.asm"
 	%include "IdeTransfer.asm"		; Must be included after IdeCommand.asm
 	%include "IdeWait.asm"
@@ -192,6 +195,20 @@ iend
 	%include "IdeDPT.asm"
 	%include "IdeIO.asm"
 	%include "IdeIrq.asm"
+%undef IDEDEVICE
+%undef ASSEMBLE_SHARED_IDE_DEVICE_FUNCTIONS
+
+	; JR-IDE support
+%ifdef MODULE_JRIDE
+%define IDEDEVICE MemIde
+	%include "MemMappedIDE.inc"		; Assembly IDE support for memory mapped controllers
+	%include "IdeCommand.asm"
+	%include "MemIdeTransfer.asm"	; Must be included after IdeCommand.asm
+	%include "IdeWait.asm"
+	%include "IdeError.asm"			; Must be included after IdeWait.asm		
+%undef IDEDEVICE
+%endif
+
 
 %ifdef MODULE_SERIAL				; Serial Port Device support
 	%include "SerialCommand.asm"

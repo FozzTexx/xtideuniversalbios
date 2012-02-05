@@ -15,10 +15,12 @@ SECTION .text
 ;	Corrupts registers:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
-IdeWait_IRQorDRQ:
+IDEDEVICE%+Wait_IRQorDRQ:
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRQ, FLG_STATUS_DRQ)
+%ifdef ASSEMBLE_SHARED_IDE_DEVICE_FUNCTIONS		; JR-IDE/ISA does not support IRQ
 	test	BYTE [bp+IDEPACK.bDeviceControl], FLG_DEVCONTROL_nIEN
-	jnz		SHORT IdeWait_PollStatusFlagInBLwithTimeoutInBH	; Interrupt disabled
+	jnz		SHORT IDEDEVICE%+Wait_PollStatusFlagInBLwithTimeoutInBH	; Interrupt disabled
+%endif
 	; Fall to IdeWait_IRQorStatusFlagInBLwithTimeoutInBH
 
 
@@ -34,8 +36,10 @@ IdeWait_IRQorDRQ:
 ;	Corrupts registers:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
-IdeWait_IRQorStatusFlagInBLwithTimeoutInBH:
+IDEDEVICE%+Wait_IRQorStatusFlagInBLwithTimeoutInBH:
+%ifdef ASSEMBLE_SHARED_IDE_DEVICE_FUNCTIONS		; JR-IDE/ISA does not support IRQ
 	call	IdeIrq_WaitForIRQ
+%endif
 	; Always fall to IdeWait_PollStatusFlagInBLwithTimeoutInBH for error processing
 
 
@@ -51,12 +55,12 @@ IdeWait_IRQorStatusFlagInBLwithTimeoutInBH:
 ;	Corrupts registers:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
-IdeWait_PollStatusFlagInBLwithTimeoutInBH:
+IDEDEVICE%+Wait_PollStatusFlagInBLwithTimeoutInBH:
 	mov		ah, bl
 	mov		cl, bh
 	call	Timer_InitializeTimeoutWithTicksInCL
 	and		ah, ~FLG_STATUS_BSY
-	jz		SHORT PollBsyOnly
+	jz		SHORT IDEDEVICE%+PollBsyOnly
 	; Fall to PollBsyAndFlgInAH
 
 ;--------------------------------------------------------------------
@@ -71,24 +75,26 @@ IdeWait_PollStatusFlagInBLwithTimeoutInBH:
 ;	Corrupts registers:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
+%ifdef ASSEMBLE_SHARED_IDE_DEVICE_FUNCTIONS
 PollBsyAndFlgInAH:
-	call	ReadIdeStatusRegisterToAL			; Discard contents for first read
+	call	IDEDEVICE%+ReadIdeStatusRegisterToAL; Discard contents for first read
 ALIGN JUMP_ALIGN
 .PollLoop:
-	call	ReadIdeStatusRegisterToAL
+	call	IDEDEVICE%+ReadIdeStatusRegisterToAL
 	test	al, FLG_STATUS_BSY					; Controller busy?
 	jnz		SHORT .UpdateTimeout				;  If so, jump to timeout update
 	test	al, ah								; Test secondary flag
-	jnz		SHORT IdeError_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL
+	jnz		SHORT IDEDEVICE%+Error_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL
 .UpdateTimeout:
 	call	Timer_SetCFifTimeout
 	jnc		SHORT .PollLoop						; Loop if time left
-	call	IdeError_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL
+	call	IDEDEVICE%+Error_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL
 	jc		SHORT .ReturnErrorCodeInAH
 	mov		ah, RET_HD_TIMEOUT					; Expected bit never got set
 	stc
 .ReturnErrorCodeInAH:
 	ret
+%endif
 
 
 ;--------------------------------------------------------------------
@@ -102,16 +108,16 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
-PollBsyOnly:
-	call	ReadIdeStatusRegisterToAL			; Discard contents for first read
+IDEDEVICE%+PollBsyOnly:
+	call	IDEDEVICE%+ReadIdeStatusRegisterToAL; Discard contents for first read
 ALIGN JUMP_ALIGN
 .PollLoop:
-	call	ReadIdeStatusRegisterToAL
+	call	IDEDEVICE%+ReadIdeStatusRegisterToAL
 	test	al, FLG_STATUS_BSY					; Controller busy?
-	jz		SHORT IdeError_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL
+	jz		SHORT IDEDEVICE%+Error_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL
 	call	Timer_SetCFifTimeout				; Update timeout counter
 	jnc		SHORT .PollLoop						; Loop if time left (sets CF on timeout)
-	jmp		SHORT IdeError_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL
+	jmp		SHORT IDEDEVICE%+Error_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL
 
 
 ;--------------------------------------------------------------------
@@ -124,6 +130,5 @@ ALIGN JUMP_ALIGN
 ;		BX, DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-ReadIdeStatusRegisterToAL:
-	mov		dl, STATUS_REGISTER_in
-	jmp		IdeIO_InputToALfromIdeRegisterInDL
+IDEDEVICE%+ReadIdeStatusRegisterToAL:
+	JUMP_TO_INPUT_TO_AL_FROM_IDE_REGISTER STATUS_REGISTER_in
