@@ -11,6 +11,7 @@ struc DPT	; 10 bytes
 	.bFlagsLow					resb	1
 	.bFlagsHigh					resb	1
 	.bIdevarsOffset				resb	1	; Offset to IDEVARS for this drive
+								resb	1	; Alignment
 
 	; IDE Drive related
 	; .twLbaSectors is used for LBA addressing only.
