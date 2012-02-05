@@ -78,23 +78,24 @@ DEFINES_AT_LARGE = $(DEFINES_AT) MODULE_JRIDE
 # Other variables #
 ###################
 
+# Target size of the ROM, used in main.asm for number of 512B blocks and by checksum Perl script below
+ROMSIZE = 8192
+ROMSIZE_LARGE = 15360
+
 # Add -D in front of every preprocessor define declaration
-DEFS = $(DEFINES:%=-D%)
-DEFS_XT = $(DEFINES_XT:%=-D%)
-DEFS_XTPLUS = $(DEFINES_XTPLUS:%=-D%)
-DEFS_AT = $(DEFINES_AT:%=-D%)
-DEFS_XT_LARGE = $(DEFINES_XT_LARGE:%=-D%)
-DEFS_XTPLUS_LARGE = $(DEFINES_XTPLUS_LARGE:%=-D%)
-DEFS_AT_LARGE = $(DEFINES_AT_LARGE:%=-D%)
+DEFS = $(DEFINES:%=-D%) 
+DEFS_XT = $(DEFINES_XT:%=-D%) -DROMSIZE=$(ROMSIZE)
+DEFS_XTPLUS = $(DEFINES_XTPLUS:%=-D%) -DROMSIZE=$(ROMSIZE)
+DEFS_AT = $(DEFINES_AT:%=-D%) -DROMSIZE=$(ROMSIZE)
+DEFS_XT_LARGE = $(DEFINES_XT_LARGE:%=-D%) -DROMSIZE=$(ROMSIZE_LARGE)
+DEFS_XTPLUS_LARGE = $(DEFINES_XTPLUS_LARGE:%=-D%) -DROMSIZE=$(ROMSIZE_LARGE)
+DEFS_AT_LARGE = $(DEFINES_AT_LARGE:%=-D%) -DROMSIZE=$(ROMSIZE_LARGE)
 
 # Add -I in front of all header directories
 IHEADERS = $(HEADERS:%=-I%)
 
 # Path + target file to be built
 TARGET = $(BUILD_DIR)/$(PROG)
-
-# Target size of the ROM, used by checksum Perl script  
-ROMSIZE = 8192
 
 #########################
 # Compilers and linkers #
@@ -164,6 +165,9 @@ checksum:  all
 	@perl ..\tools\checksum.pl $(TARGET)_at.bin $(ROMSIZE)
 	@perl ..\tools\checksum.pl $(TARGET)_xtp.bin $(ROMSIZE)
 	@perl ..\tools\checksum.pl $(TARGET)_xt.bin $(ROMSIZE)
+	@perl ..\tools\checksum.pl $(TARGET)_atl.bin $(ROMSIZE_LARGE)
+	@perl ..\tools\checksum.pl $(TARGET)_xtpl.bin $(ROMSIZE_LARGE)
+	@perl ..\tools\checksum.pl $(TARGET)_xtl.bin $(ROMSIZE_LARGE)
 
 src\StringsCompressed.asm:	src\Strings.asm
 	@$(AS) src\Strings.asm $(ASFLAGS) $(DEFS_XT) -DMODULE_STRINGS_COMPRESSED_PRECOMPRESS -o build\Strings.bin -l build\StringsPrecompress.lst
