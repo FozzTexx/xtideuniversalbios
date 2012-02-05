@@ -67,6 +67,10 @@ DetectPrint_StartDetectWithMasterOrSlaveStringInAXandIdeVarsInCSBP:
 											; themselves format strings.
 
 	push	dx								; Push COM number character
+											; If the strnig is going to be "Auto", we will push a NULL (zero)
+											; here for the COM port number, which will be eaten by the 
+											; print routine (DisplayPrint_CharacterFromAL), resulting in 
+											; just "COM" being printed without a character after it.
 				
  	mov		cl, (g_szDetectCOMAuto-$$) & 0xff	; Setup secondary print string for "Auto"
 		
