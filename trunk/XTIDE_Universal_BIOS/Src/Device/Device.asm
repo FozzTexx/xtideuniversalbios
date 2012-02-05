@@ -4,6 +4,25 @@
 ; Section containing code
 SECTION .text
 
+
+%macro TEST_USIGN_DPT_AND_JUMP_IF_SERIAL_DEVICE 1
+	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE
+	jnz		SHORT %1
+%endmacro
+
+%macro CMP_USING_DPT_AND_JUMP_IF_JRIDE_DEVICE 1
+	eMOVZX	bx, [di+DPT.bIdevarsOffset]
+	cmp		BYTE [cs:bx+IDEVARS.bDevice], DEVICE_JRIDE_ISA
+	je		SHORT %1
+%endmacro
+
+%macro CMP_USING_IDEVARS_IN_CSBP_AND_JUMP_IF 2
+	cmp		BYTE [cs:bp+IDEVARS.bDevice], %1
+	je		SHORT %2
+%endmacro
+
+
+
 ;--------------------------------------------------------------------
 ; Device_FinalizeDPT
 ;	Parameters:
@@ -17,13 +36,12 @@ SECTION .text
 ;--------------------------------------------------------------------
 %ifdef MODULE_SERIAL
 Device_FinalizeDPT:
-	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE
-	jnz		SHORT .FinalizeDptForSerialPortDevice
+	TEST_USIGN_DPT_AND_JUMP_IF_SERIAL_DEVICE .FinalizeDptForSerialPortDevice
 	jmp		IdeDPT_Finalize
-
 .FinalizeDptForSerialPortDevice:
 	jmp		SerialDPT_Finalize
-%else
+
+%else	; IDE or JR-IDE/ISA
 	Device_FinalizeDPT EQU IdeDPT_Finalize
 %endif
 
@@ -38,13 +56,31 @@ Device_FinalizeDPT:
 ;	Corrupts registers:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
-%ifdef MODULE_SERIAL
+%ifdef MODULE_JRIDE
+	%ifdef MODULE_SERIAL				; IDE + JR-IDE/ISA + Serial
+	Device_ResetMasterAndSlaveController:
+		TEST_USIGN_DPT_AND_JUMP_IF_SERIAL_DEVICE ReturnSuccessForSerialPort
+		CMP_USING_DPT_AND_JUMP_IF_JRIDE_DEVICE .ResetJrIDE
+		jmp		IdeCommand_ResetMasterAndSlaveController
+
+	%else								; IDE + JR-IDE/ISA
+	Device_ResetMasterAndSlaveController:
+		CMP_USING_DPT_AND_JUMP_IF_JRIDE_DEVICE .ResetJrIDE
+		jmp		IdeCommand_ResetMasterAndSlaveController
+	%endif
+
+%elifdef MODULE_SERIAL					; IDE + Serial
 Device_ResetMasterAndSlaveController:
-	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE
-	jnz		SHORT ReturnSuccessForSerialPort
+	TEST_USIGN_DPT_AND_JUMP_IF_SERIAL_DEVICE ReturnSuccessForSerialPort
 	jmp		IdeCommand_ResetMasterAndSlaveController
-%else
+
+%else									; IDE
 	Device_ResetMasterAndSlaveController EQU IdeCommand_ResetMasterAndSlaveController
+%endif
+
+%ifdef MODULE_JRIDE
+.ResetJrIDE:
+	jmp		MemIdeCommand_ResetMasterAndSlaveController
 %endif
 
 
@@ -61,16 +97,36 @@ Device_ResetMasterAndSlaveController:
 ;	Corrupts registers:
 ;		AL, BL, CX, DX, SI, DI, ES
 ;--------------------------------------------------------------------
-%ifdef MODULE_SERIAL
+%ifdef MODULE_JRIDE
+	%ifdef MODULE_SERIAL				; IDE + JR-IDE/ISA + Serial
+	Device_IdentifyToBufferInESSIwithDriveSelectByteInBH:
+		CMP_USING_IDEVARS_IN_CSBP_AND_JUMP_IF DEVICE_SERIAL_PORT, .IdentifyDriveFromSerialPort
+		CMP_USING_IDEVARS_IN_CSBP_AND_JUMP_IF DEVICE_JRIDE_ISA, .IdentifyDriveFromJrIde
+		jmp		IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH
+
+	%else								; IDE + JR-IDE/ISA
+	Device_IdentifyToBufferInESSIwithDriveSelectByteInBH:
+		CMP_USING_IDEVARS_IN_CSBP_AND_JUMP_IF DEVICE_JRIDE_ISA, .IdentifyDriveFromJrIde
+		jmp		IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH
+	%endif
+
+%elifdef MODULE_SERIAL					; IDE + Serial
 Device_IdentifyToBufferInESSIwithDriveSelectByteInBH:
-	cmp		BYTE [cs:bp+IDEVARS.bDevice], DEVICE_SERIAL_PORT
-	je		SHORT .IdentifyDriveFromSerialPort
+	CMP_USING_IDEVARS_IN_CSBP_AND_JUMP_IF DEVICE_SERIAL_PORT, .IdentifyDriveFromSerialPort
 	jmp		IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH
 
+%else									; IDE
+	Device_IdentifyToBufferInESSIwithDriveSelectByteInBH EQU IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH
+%endif
+
+%ifdef MODULE_JRIDE
+.IdentifyDriveFromJrIde:
+	jmp		MemIdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH
+%endif
+
+%ifdef MODULE_SERIAL
 .IdentifyDriveFromSerialPort:
 	jmp		SerialCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH
-%else
-	Device_IdentifyToBufferInESSIwithDriveSelectByteInBH EQU IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH
 %endif
 
 
@@ -88,18 +144,38 @@ Device_IdentifyToBufferInESSIwithDriveSelectByteInBH:
 ;	Corrupts registers:
 ;		AL, BX, CX, DX, (ES:SI for data transfer commands)
 ;--------------------------------------------------------------------
-%ifdef MODULE_SERIAL
-ALIGN JUMP_ALIGN
+%ifdef MODULE_JRIDE
+	%ifdef MODULE_SERIAL				; IDE + JR-IDE/ISA + Serial
+	Device_OutputCommandWithParameters:
+		TEST_USIGN_DPT_AND_JUMP_IF_SERIAL_DEVICE .OutputCommandToSerialPort
+		CMP_USING_DPT_AND_JUMP_IF_JRIDE_DEVICE .OutputCommandToJrIDE
+		jmp		IdeCommand_OutputWithParameters
+
+	%else								; IDE + JR-IDE/ISA
+	Device_OutputCommandWithParameters:
+		CMP_USING_DPT_AND_JUMP_IF_JRIDE_DEVICE .OutputCommandToJrIDE
+		jmp		IdeCommand_OutputWithParameters
+	%endif
+
+%elifdef MODULE_SERIAL					; IDE + Serial
 Device_OutputCommandWithParameters:
-	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE
-	jnz		SHORT .OutputCommandToSerialPort
+	TEST_USIGN_DPT_AND_JUMP_IF_SERIAL_DEVICE .OutputCommandToSerialPort
 	jmp		IdeCommand_OutputWithParameters
 
+%else									; IDE
+	Device_OutputCommandWithParameters EQU IdeCommand_OutputWithParameters
+%endif
+
+%ifdef MODULE_JRIDE
+ALIGN JUMP_ALIGN
+.OutputCommandToJrIDE:
+	jmp		MemIdeCommand_OutputWithParameters
+%endif
+
+%ifdef MODULE_SERIAL
 ALIGN JUMP_ALIGN
 .OutputCommandToSerialPort:
 	jmp		SerialCommand_OutputWithParameters
-%else
-	Device_OutputCommandWithParameters EQU IdeCommand_OutputWithParameters
 %endif
 
 
@@ -114,17 +190,37 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
-%ifdef MODULE_SERIAL
-ALIGN JUMP_ALIGN
+%ifdef MODULE_JRIDE
+	%ifdef MODULE_SERIAL				; IDE + JR-IDE/ISA + Serial
+	Device_SelectDrive:
+		TEST_USIGN_DPT_AND_JUMP_IF_SERIAL_DEVICE ReturnSuccessForSerialPort
+		CMP_USING_DPT_AND_JUMP_IF_JRIDE_DEVICE .SelectJrIdeDrive
+		jmp		IdeCommand_SelectDrive
+
+	%else								; IDE + JR-IDE/ISA
+	Device_SelectDrive:
+		CMP_USING_DPT_AND_JUMP_IF_JRIDE_DEVICE .SelectJrIdeDrive
+		jmp		IdeCommand_SelectDrive
+	%endif
+
+%elifdef MODULE_SERIAL					; IDE + Serial
 Device_SelectDrive:
-	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE
-	jnz		SHORT ReturnSuccessForSerialPort
+	TEST_USIGN_DPT_AND_JUMP_IF_SERIAL_DEVICE ReturnSuccessForSerialPort
 	jmp		IdeCommand_SelectDrive
 
-ReturnSuccessForSerialPort:
-	xor		ax, ax
-	ret
-%else
+%else									; IDE
 	Device_SelectDrive EQU IdeCommand_SelectDrive
 %endif
 
+%ifdef MODULE_JRIDE
+ALIGN JUMP_ALIGN
+.SelectJrIdeDrive:
+	jmp		MemIdeCommand_SelectDrive
+%endif
+
+%ifdef MODULE_SERIAL
+ALIGN JUMP_ALIGN
+ReturnSuccessForSerialPort:
+	xor		ax, ax
+	ret
+%endif

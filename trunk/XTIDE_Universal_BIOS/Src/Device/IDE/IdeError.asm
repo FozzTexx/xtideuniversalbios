@@ -17,10 +17,9 @@ SECTION .text
 ;		AL, BX, DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-IdeError_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL:
+IDEDEVICE%+Error_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL:
 	mov		ah, al			; IDE Status Register to AH
-	mov		dl, ERROR_REGISTER_in
-	call	IdeIO_InputToALfromIdeRegisterInDL
+	INPUT_TO_AL_FROM_IDE_REGISTER ERROR_REGISTER_in
 	xchg	al, ah			; Status Register now in AL, Error Register now in AH
 
 	; I don't think anything actually reads these from BDA
@@ -44,6 +43,7 @@ IdeError_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL:
 ;	Corrupts registers:
 ;		BX
 ;--------------------------------------------------------------------
+%ifdef ASSEMBLE_SHARED_IDE_DEVICE_FUNCTIONS
 ALIGN JUMP_ALIGN
 GetBiosErrorCodeToAHfromStatusAndErrorRegistersInAX:
 	test	al, FLG_STATUS_BSY
@@ -91,3 +91,4 @@ ALIGN JUMP_ALIGN
 	db	RET_HD_UNCORRECC	; Bit6=UNC, Uncorrectable Data Error
 	db	RET_HD_BADSECTOR	; Bit7=BBK, Bad Block Detected
 	db	RET_HD_STATUSERR	; When Error Register is zero
+%endif

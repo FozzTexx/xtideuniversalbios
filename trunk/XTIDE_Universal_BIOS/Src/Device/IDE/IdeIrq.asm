@@ -110,8 +110,7 @@ AcknowledgeIdeInterruptAndSetTaskFlag:
 	call	RamVars_GetSegmentToDS
 	mov		bl, FLGH_DPT_INTERRUPT_IN_SERVICE
 	call	FindDPT_ToDSDIforFlagsHighInBL
-	mov		dl, STATUS_REGISTER_in
-	call	IdeIO_InputToALfromIdeRegisterInDL
+	INPUT_TO_AL_FROM_IDE_REGISTER STATUS_REGISTER_in
 
 	; Clear Interrupt In-Service Flag from DPT
 	and		BYTE [di+DPT.bFlagsHigh], ~FLGH_DPT_INTERRUPT_IN_SERVICE

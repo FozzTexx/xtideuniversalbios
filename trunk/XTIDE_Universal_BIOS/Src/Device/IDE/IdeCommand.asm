@@ -14,12 +14,11 @@ SECTION .text
 ;	Corrupts registers:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
-IdeCommand_ResetMasterAndSlaveController:
+IDEDEVICE%+Command_ResetMasterAndSlaveController:
 	; HSR0: Set_SRST
 	call	AccessDPT_GetDeviceControlByteToAL
 	or		al, FLG_DEVCONTROL_SRST | FLG_DEVCONTROL_nIEN	; Set Reset bit
-	mov		dl, DEVICE_CONTROL_REGISTER_out
-	call	IdeIO_OutputALtoIdeControlBlockRegisterInDL
+	OUTPUT_AL_TO_IDE_CONTROL_BLOCK_REGISTER DEVICE_CONTROL_REGISTER_out
 	mov		ax, HSR0_RESET_WAIT_US
 	call	Timer_DelayMicrosecondsFromAX
 
@@ -27,14 +26,13 @@ IdeCommand_ResetMasterAndSlaveController:
 	call	AccessDPT_GetDeviceControlByteToAL
 	or		al, FLG_DEVCONTROL_nIEN
 	and		al, ~FLG_DEVCONTROL_SRST						; Clear reset bit
-	mov		dl, DEVICE_CONTROL_REGISTER_out
-	call	IdeIO_OutputALtoIdeControlBlockRegisterInDL
+	OUTPUT_AL_TO_IDE_CONTROL_BLOCK_REGISTER DEVICE_CONTROL_REGISTER_out
 	mov		ax, HSR1_RESET_WAIT_US
 	call	Timer_DelayMicrosecondsFromAX
 
 	; HSR2: Check_status
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_MOTOR_STARTUP, FLG_STATUS_BSY)
-	jmp		IdeWait_PollStatusFlagInBLwithTimeoutInBH
+	jmp		IDEDEVICE%+Wait_PollStatusFlagInBLwithTimeoutInBH
 
 
 ;--------------------------------------------------------------------
@@ -50,7 +48,7 @@ IdeCommand_ResetMasterAndSlaveController:
 ;	Corrupts registers:
 ;		AL, BL, CX, DX, SI, DI, ES
 ;--------------------------------------------------------------------
-IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
+IDEDEVICE%+Command_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 	; Create fake DPT to be able to use Device.asm functions
 	call	FindDPT_ForNewDriveToDSDI
 	eMOVZX	ax, bh
@@ -65,7 +63,7 @@ IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 	test	al, FLG_DRVNHEAD_DRV
 	jnz		SHORT .SkipLongWaitSinceDriveIsNotPrimaryMaster
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_MOTOR_STARTUP, FLG_STATUS_BSY)
-	call	IdeWait_PollStatusFlagInBLwithTimeoutInBH
+	call	IDEDEVICE%+Wait_PollStatusFlagInBLwithTimeoutInBH
 .SkipLongWaitSinceDriveIsNotPrimaryMaster:
 
 	; Create IDEPACK without INTPACK
@@ -99,11 +97,11 @@ IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 ;		AL, BX, CX, DX, (ES:SI for data transfer commands)
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-IdeCommand_OutputWithParameters:
+IDEDEVICE%+Command_OutputWithParameters:
 	push	bx						; Store status register bits to poll
 
 	; Select Master or Slave drive and output head number or LBA28 top bits
-	call	IdeCommand_SelectDrive
+	call	IDEDEVICE%+Command_SelectDrive
 	jc		SHORT .DriveNotReady
 
 	; Output Device Control Byte to enable or disable interrupts
@@ -118,13 +116,11 @@ IdeCommand_OutputWithParameters:
 	mov		[BDA.bHDTaskFlg], dl
 	pop		ds
 .DoNotSetInterruptInServiceFlag:
-	mov		dl, DEVICE_CONTROL_REGISTER_out
-	call	IdeIO_OutputALtoIdeControlBlockRegisterInDL
+	OUTPUT_AL_TO_IDE_CONTROL_BLOCK_REGISTER DEVICE_CONTROL_REGISTER_out
 
 	; Output Feature Number
-	mov		dl, FEATURES_REGISTER_out
 	mov		al, [bp+IDEPACK.bFeatures]
-	call	IdeIO_OutputALtoIdeRegisterInDL
+	OUTPUT_AL_TO_IDE_REGISTER FEATURES_REGISTER_out
 
 	; Output Sector Address High (only used by LBA48)
 	eMOVZX	ax, BYTE [bp+IDEPACK.bLbaLowExt]
@@ -137,25 +133,24 @@ IdeCommand_OutputWithParameters:
 	call	OutputSectorCountAndAddress
 
 	; Output command
-	mov		dl, COMMAND_REGISTER_out
 	mov		al, [bp+IDEPACK.bCommand]
-	call	IdeIO_OutputALtoIdeRegisterInDL
+	OUTPUT_AL_TO_IDE_REGISTER COMMAND_REGISTER_out
 
 	; Wait until command completed
 	pop		bx						; Pop status and timeout for polling
 	cmp		bl, FLG_STATUS_DRQ		; Data transfer started?
-	je		SHORT IdeTransfer_StartWithCommandInAL
+	je		SHORT IDEDEVICE%+Transfer_StartWithCommandInAL
 	test	BYTE [bp+IDEPACK.bDeviceControl], FLG_DEVCONTROL_nIEN
 	jz		SHORT .WaitForIrqOrRdy
-	jmp		IdeWait_PollStatusFlagInBLwithTimeoutInBH
+	jmp		IDEDEVICE%+Wait_PollStatusFlagInBLwithTimeoutInBH
 
 ALIGN JUMP_ALIGN
 .WaitForIrqOrRdy:
-	jmp		IdeWait_IRQorStatusFlagInBLwithTimeoutInBH
+	jmp		IDEDEVICE%+Wait_IRQorStatusFlagInBLwithTimeoutInBH
 
 .DriveNotReady:
 	pop		bx							; Clean stack
-ReturnSinceTimeoutWhenPollingBusy:
+IDEDEVICE%+ReturnSinceTimeoutWhenPollingBusy:
 	ret
 
 
@@ -171,22 +166,21 @@ ReturnSinceTimeoutWhenPollingBusy:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-IdeCommand_SelectDrive:
+IDEDEVICE%+Command_SelectDrive:
 	; Wait until neither Master or Slave Drive is busy
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_BSY, FLG_STATUS_BSY)
 	cmp		BYTE [bp+IDEPACK.bCommand], COMMAND_IDENTIFY_DEVICE
 	eCMOVE	bh, TIMEOUT_IDENTIFY_DEVICE
-	call	IdeWait_PollStatusFlagInBLwithTimeoutInBH
-	jc		SHORT ReturnSinceTimeoutWhenPollingBusy
+	call	IDEDEVICE%+Wait_PollStatusFlagInBLwithTimeoutInBH
+	jc		SHORT IDEDEVICE%+ReturnSinceTimeoutWhenPollingBusy
 
 	; Select Master or Slave Drive
-	mov		dl, DRIVE_AND_HEAD_SELECT_REGISTER
 	mov		al, [bp+IDEPACK.bDrvAndHead]
-	call	IdeIO_OutputALtoIdeRegisterInDL
+	OUTPUT_AL_TO_IDE_REGISTER DRIVE_AND_HEAD_SELECT_REGISTER
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRDY, FLG_STATUS_DRDY)
 	cmp		BYTE [bp+IDEPACK.bCommand], COMMAND_IDENTIFY_DEVICE
 	eCMOVE	bh, TIMEOUT_IDENTIFY_DEVICE
-	jmp		IdeWait_PollStatusFlagInBLwithTimeoutInBH
+	jmp		IDEDEVICE%+Wait_PollStatusFlagInBLwithTimeoutInBH
 
 
 ;--------------------------------------------------------------------
@@ -202,19 +196,17 @@ IdeCommand_SelectDrive:
 ;	Corrupts registers:
 ;		AL, BX, DX
 ;--------------------------------------------------------------------
+%ifdef ASSEMBLE_SHARED_IDE_DEVICE_FUNCTIONS
 ALIGN JUMP_ALIGN
 OutputSectorCountAndAddress:
-	mov		dl, SECTOR_COUNT_REGISTER
-	call	IdeIO_OutputALtoIdeRegisterInDL
+	OUTPUT_AL_TO_IDE_REGISTER SECTOR_COUNT_REGISTER
 
 	mov		al, ah
-	mov		dl, LBA_LOW_REGISTER
-	call	IdeIO_OutputALtoIdeRegisterInDL
+	OUTPUT_AL_TO_IDE_REGISTER LBA_LOW_REGISTER
 
 	mov		al, cl
-	mov		dl, LBA_MIDDLE_REGISTER
-	call	IdeIO_OutputALtoIdeRegisterInDL
+	OUTPUT_AL_TO_IDE_REGISTER LBA_MIDDLE_REGISTER
 
 	mov		al, ch
-	mov		dl, LBA_HIGH_REGISTER
-	jmp		IdeIO_OutputALtoIdeRegisterInDL
+	JUMP_TO_OUTPUT_AL_TO_IDE_REGISTER LBA_HIGH_REGISTER
+%endif
