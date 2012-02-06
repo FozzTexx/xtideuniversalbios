@@ -162,12 +162,12 @@ clean:
 	@echo Deleted "(*.*)" from "$(BUILD_DIR)/"
 
 checksum:  all
-	@perl ..\tools\checksum.pl $(TARGET)_at.bin $(ROMSIZE)
-	@perl ..\tools\checksum.pl $(TARGET)_xtp.bin $(ROMSIZE)
-	@perl ..\tools\checksum.pl $(TARGET)_xt.bin $(ROMSIZE)
 	@perl ..\tools\checksum.pl $(TARGET)_atl.bin $(ROMSIZE_LARGE)
 	@perl ..\tools\checksum.pl $(TARGET)_xtpl.bin $(ROMSIZE_LARGE)
 	@perl ..\tools\checksum.pl $(TARGET)_xtl.bin $(ROMSIZE_LARGE)
+	@perl ..\tools\checksum.pl $(TARGET)_at.bin $(ROMSIZE)
+	@perl ..\tools\checksum.pl $(TARGET)_xtp.bin $(ROMSIZE)
+	@perl ..\tools\checksum.pl $(TARGET)_xt.bin $(ROMSIZE)
 
 src\StringsCompressed.asm:	src\Strings.asm
 	@$(AS) src\Strings.asm $(ASFLAGS) $(DEFS_XT) -DMODULE_STRINGS_COMPRESSED_PRECOMPRESS -o build\Strings.bin -l build\StringsPrecompress.lst
