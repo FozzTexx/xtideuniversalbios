@@ -67,6 +67,11 @@ DisplayFormatCompressed_Format_A:
 DisplayFormatCompressed_ret:			; jump target for other routines who need a "ret"
 	ret
 
+DisplayFormatCompressed_Format_z:
+	xor		bx, bx
+	xchg	si, ax
+	jmp		short DisplayPrint_NullTerminatedStringFromBXSI
+
 DisplayFormatCompressed_Format_x:
 DisplayFormatCompressed_Format_5_x:
 	mov		si,16						; hex output, change base to 16

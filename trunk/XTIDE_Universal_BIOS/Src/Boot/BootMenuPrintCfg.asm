@@ -11,8 +11,7 @@ SECTION .text
 ;
 ; BootMenuPrintCfg_ForOurDrive
 ;	Parameters:
-;		DS:		Segment to DPT
-;		Stack:	Offset to DPT
+;		DS:DI:		Pointer to DPT
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
@@ -20,27 +19,9 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenuPrintCfg_ForOurDrive:
-	mov		si, g_szCfgHeader
-	call	BootMenuPrint_NullTerminatedStringFromCSSIandSetCF
-	pop		di
 	eMOVZX	ax, BYTE [di+DPT.bIdevarsOffset]
 	xchg	si, ax						; CS:SI now points to IDEVARS
 	; Fall to .PushAndFormatCfgString
-
-;--------------------------------------------------------------------
-; PushAndFormatCfgString
-;	Parameters:
-;		DS:DI:	Ptr to DPT
-;		CS:SI:	Ptr to IDEVARS
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, DX, SI, DI
-;--------------------------------------------------------------------
-.PushAndFormatCfgString:
-	push	bp
-	mov		bp, sp
-	; Fall to first push below
 
 ;--------------------------------------------------------------------
 ; PushAddressingMode
@@ -113,7 +94,8 @@ BootMenuPrintCfg_ForOurDrive:
 ;		AX, DX
 ;--------------------------------------------------------------------
 .PushIRQ:
-	eMOVZX	ax, BYTE [cs:si+IDEVARS.bIRQ]
+	mov		al, BYTE [cs:si+IDEVARS.bIRQ]
+	cbw
 	push	ax
 
 ;--------------------------------------------------------------------
@@ -128,7 +110,7 @@ BootMenuPrintCfg_ForOurDrive:
 ;--------------------------------------------------------------------
 .PushResetStatus:
 	mov		al, [di+DPT.bFlagsHigh]
-	and		ax, MASKH_DPT_RESET
+	and		al, MASKH_DPT_RESET			;  ah already zero from last push
 	push	ax
 
 ;--------------------------------------------------------------------
@@ -141,6 +123,5 @@ BootMenuPrintCfg_ForOurDrive:
 ;		AX, SI, DI
 ;--------------------------------------------------------------------
 .PrintValuesFromStack:
-	mov		si, g_szCfgFormat
-	jmp		BootPrint_BootMenuPrint_FormatCSSIfromParamsInSSBP_Relay
+	jmp		BootMenuPrint_HardDiskRefreshInformation.output
 

@@ -21,28 +21,41 @@ BootMenu_DisplayAndReturnSelection:
 	call	BootMenuPrint_TheBottomOfScreen
 	call	BootMenu_Enter			; Get selected menuitem index to CX
 	call	BootMenuPrint_ClearScreen
-	cmp		cx, BYTE NO_ITEM_SELECTED
-	je		SHORT BootMenu_DisplayAndReturnSelection	; Clear screen and display menu
-	; Fall to BootMenu_GetDriveToDXforMenuitemInCX
+	call	BootMenu_GetDriveToDXforMenuitemInCX
+	jnc		BootMenu_DisplayAndReturnSelection
+	ret
 
 ;--------------------------------------------------------------------
 ; BootMenu_GetDriveToDXforMenuitemInCX
 ;	Parameters:
 ;		CX:		Index of menuitem selected from Boot Menu
-;		DS:		RAMVARS segment
 ;	Returns:
 ;		DX:		Drive number to be used for booting
+;		DS:		RAMVARS segment
+;       CF:     Set: There is a selected menu item, DL is valid
+;               Clear: There is no selected menu item, DL is not valid
 ;	Corrupts registers:
-;		CX
+;		CX, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
+BootMenu_GetDriveToDXforMenuitemInCX_And_RamVars_GetSegmentToDS:
+	call	RamVars_GetSegmentToDS
+;;; fall-through
+						
+ALIGN JUMP_ALIGN
 BootMenu_GetDriveToDXforMenuitemInCX:
-	mov		dx, cx					; Copy menuitem index to DX
+	cmp		cl, NO_ITEM_HIGHLIGHTED
+	je		SHORT .ReturnFloppyDriveInDX	; Clear CF if branch taken
+
+	mov		dl, cl							; Copy menuitem index to DX
 	call	FloppyDrive_GetCountToCX
-	cmp		dx, cx					; Floppy drive?
-	jb		SHORT .ReturnFloppyDriveInDX
-	sub		dx, cx					; Remove floppy drives from index
-	or		dl, 80h
+	cmp		dl, cl							; Floppy drive?
+	jb		SHORT .ReturnFloppyDriveInDX	; Set CF if branch taken
+	or		cl, 80h							; Or 80h into CL before the sub
+											; to cause CF to be set after
+											; and result has high order bit set
+	sub		dl, cl							; Remove floppy drives from index
+
 .ReturnFloppyDriveInDX:
 	ret
 

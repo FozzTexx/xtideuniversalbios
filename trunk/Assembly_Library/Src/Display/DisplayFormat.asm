@@ -126,9 +126,9 @@ ALIGN JUMP_ALIGN
 
 .rgcFormatCharToLookupIndex:
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-	db		"aIAduxsSct-+%"
+	db		"aIAduxsSctz-+%"
 %else
-	db		"IAuxsc-"		; Required by XTIDE Universal BIOS
+	db		"IAuxscz-"		; Required by XTIDE Universal BIOS
 %endif
 .rgcFormatCharToLookupIndexEnd:
 ALIGN WORD_ALIGN
@@ -151,6 +151,7 @@ ALIGN WORD_ALIGN
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 	dw		t_FormatRepeatCharacter
 %endif
+	dw		z_FormatStringFromSegmentZero
 	dw		PrepareToPrependParameterWithSpaces
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 	dw		PrepareToAppendSpacesAfterParameter
@@ -343,10 +344,35 @@ I_FormatDashForZero:
 
 ALIGN JUMP_ALIGN
 s_FormatStringFromSegmentCS:
-	xchg	si, [bp]
-	call	DisplayPrint_NullTerminatedStringFromCSSI
+	push	si
+	push	cx
 	mov		si, [bp]
-	ret
+		
+	cmp		si, byte 07fh		;  well within the boundaries of ROMVARS_size
+	jb		.notFormatted
+
+	dec		bp
+	dec		bp
+	call	DisplayFormat_ParseCharacters
+	inc		bp					; will be decremented after the call is done
+	inc		bp
+	jmp		.done
+		
+.notFormatted:	
+	call	DisplayPrint_NullTerminatedStringFromCSSI
+		
+.done:
+	pop		cx
+	pop		si
+	ret		
+
+ALIGN JUMP_ALIGN
+z_FormatStringFromSegmentZero:	
+	xchg	si, [bp]
+	xor		bx, bx
+	call	DisplayPrint_NullTerminatedStringFromBXSI
+	mov		si, [bp]
+	ret		
 
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN

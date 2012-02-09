@@ -30,6 +30,7 @@ RamVars_Initialize:
 ;		AX
 ;--------------------------------------------------------------------
 .StealMemoryForRAMVARS:
+	mov		ax, LITE_MODE_RAMVARS_SEGMENT
 	test	BYTE [cs:ROMVARS.wFlags], FLG_ROMVARS_FULLMODE
 	jz		SHORT .InitializeRamvars	; No need to steal RAM
 
@@ -38,25 +39,22 @@ RamVars_Initialize:
 	sub		[BDA.wBaseMem], ax
 	mov		ax, [BDA.wBaseMem]
 	eSHL_IM	ax, 6						; Segment to first stolen kB (*=40h)
-	mov		ds, ax
-	mov		WORD [RAMVARS.wSignature], RAMVARS_SIGNATURE
 	; Fall to .InitializeRamvars
 
 ;--------------------------------------------------------------------
 ; .InitializeRamvars
 ;	Parameters:
-;		Nothing
+;		AX:		RAMVARS segment
 ;	Returns:
 ;		DS:		RAMVARS segment
 ;	Corrupts registers:
 ;		AX, CX, DI, ES
 ;--------------------------------------------------------------------
 .InitializeRamvars:
-	call	RamVars_GetSegmentToDS
+	mov		ds, ax
+	mov		es, ax
 	mov		cx, RAMVARS_size
 	xor		di, di
-	push	ds
-	pop		es
 	call	Memory_ZeroESDIwithSizeInCX
 	mov		WORD [RAMVARS.wSignature], RAMVARS_SIGNATURE
 	; Fall to .InitializeDriveTranslationAndReturn

@@ -21,7 +21,6 @@ BootPrint_FailedToLoadFirstSector:
 	push	cx					; Push INT 13h error code
 	mov		si, g_szReadError
 		
-BootPrint_BootMenuPrint_FormatCSSIfromParamsInSSBP_Relay:		
 	jmp		short BootMenuPrint_FormatCSSIfromParamsInSSBP_Relay
 		
 
@@ -53,7 +52,7 @@ BootPrint_TryToBootFromDL:
 	push	dx					; Push translated drive number
 
 	mov		si, g_szTryToBoot
-	jmp		short BootPrint_BootMenuPrint_FormatCSSIfromParamsInSSBP_Relay		
+	jmp		short BootMenuPrint_FormatCSSIfromParamsInSSBP_Relay		
 
 
 

@@ -8,9 +8,6 @@
 ; Section containing code
 SECTION .text
 
-; POST drive detection strings
-g_szRomAt:		db	"%s @ %x",LF,CR,NULL
-
 ; The following strings are used by DetectPrint_StartDetectWithMasterOrSlaveStringInAXandIdeVarsInCSBP
 ; To support an optimization in that code, these strings must start on the same 256 byte page, 
 ; which is checked at assembly time below.
@@ -28,9 +25,31 @@ g_szDetectCOMLarge:		db	"/%u.%uK",NULL					; IDE Master at COM1/19.2K:
 		
 %ifndef CHECK_FOR_UNUSED_ENTRYPOINTS				
 %if ((g_szDetectEnd-$$) & 0xff00) <> ((g_szDetectStart-$$) & 0xff00)
-%error "g_szDetect* strings must be on the same 256 byte page, required by DetectPrint_StartDetectWithMasterOrSlaveStringInAXandIdeVarsInCSBP.  Please move this block up or down within strings.asm"
+%error "g_szDetect* strings must start on the same 256 byte page, required by DetectPrint_StartDetectWithMasterOrSlaveStringInAXandIdeVarsInCSBP.  Please move this block up or down within strings.asm"
 %endif
-%endif				
+%endif
+
+; Boot Menu menuitem strings
+; 
+; The following strings are used by BootMenuPrint_* routines.
+; To support optimizations in that code, these strings must start on the same 256 byte page, 
+; which is checked at assembly time below.
+;		
+g_szBootMenuPrintStart:	
+g_szDriveNum:			db	"%x %s",NULL
+g_szDriveNumBOOTNFO:	db	"%x %z",NULL
+g_szFloppyDrv:			db	"Floppy Drive %c",NULL
+g_szBootMenuPrintEnd:	
+g_szForeignHD:			db	"Foreign Hard Disk",NULL
+
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS				
+%if ((g_szBootMenuPrintStart-$$) & 0xff00) <> ((g_szBootMenuPrintEnd-$$) & 0xff00)
+%error "g_szBootMenuPrint* strings must start on the same 256 byte page, required by the BootMenuPrint_* routines.  Please move this block up or down within strings.asm"
+%endif
+%endif
+
+; POST drive detection strings
+g_szRomAt:		db	"%s @ %x",LF,CR,NULL
 				
 ; Boot loader strings
 g_szTryToBoot:			db	"Booting from %s %x",ANGLE_QUOTE_RIGHT,"%x",LF,CR,NULL
@@ -43,21 +62,34 @@ g_szFDD:		db	"FDD     ",NULL
 g_szHDD:		db	"HDD     ",NULL
 g_szRomBoot:	db	"ROM Boot",NULL
 g_szHotkey:		db	"%A%c%c%A%s%A ",NULL
-
-
-; Boot Menu menuitem strings
-g_szDriveNum:	db	"%x ",NULL
-g_szFDLetter:	db	"%s %c",NULL
-g_szFloppyDrv:	db	"Floppy Drive",NULL
-g_szforeignHD:	db	"Foreign Hard Disk",NULL
-
+				
 ; Boot Menu information strings
-g_szCapacity:	db	"Capacity : ",NULL
-g_szSizeSingle:	db	"%s%u.%u %ciB",NULL
-g_szSizeDual:	db	"%s%5-u.%u %ciB /%5-u.%u %ciB",LF,CR,NULL
-g_szCfgHeader:	db	"Addr.",SINGLE_VERTICAL,"Block",SINGLE_VERTICAL,"Bus",  SINGLE_VERTICAL,"IRQ",  SINGLE_VERTICAL,"Reset",LF,CR,NULL
-g_szCfgFormat:	db	"%s"   ,SINGLE_VERTICAL,"%5-u", SINGLE_VERTICAL,"%s",SINGLE_VERTICAL," %2-I",SINGLE_VERTICAL,"%5-x",  NULL
-		
+g_szCapacity:			db	"Capacity : %s",NULL
+g_szCapacityNum:		db	"%5-u.%u %ciB",NULL		
+g_szSizeDual:			db	"%s /%s",LF,CR
+	db	"Addr.",SINGLE_VERTICAL,"Block",SINGLE_VERTICAL,"Bus",SINGLE_VERTICAL,  "IRQ",SINGLE_VERTICAL,"Reset",LF,CR
+	db	   "%s",SINGLE_VERTICAL, "%5-u",SINGLE_VERTICAL, "%s",SINGLE_VERTICAL," %2-I",SINGLE_VERTICAL,"%5-x" ,NULL
+
+; Boot Menu Floppy Disk strings
+; 
+; The following strings are used by BootMenuPrint_RefreshInformation
+; To support optimizations in that code, these strings must start on the same 256 byte page, 
+; which is checked at assembly time below.
+;				
+g_szFddStart:	
+g_szFddUnknown:	db	"Unknown",NULL
+g_szFddSizeOr:	db	"5",ONE_QUARTER,QUOTATION_MARK," or 3",ONE_HALF,QUOTATION_MARK," DD",NULL
+g_szFddSize:	db	"%s",QUOTATION_MARK,", %u kiB",NULL	; 3½", 1440 kiB
+g_szFddThreeHalf:		db  "3",ONE_HALF,NULL
+g_szFddEnd:		
+g_szFddFiveQuarter:		db  "5",ONE_QUARTER,NULL
+
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS				
+%if ((g_szFddStart-$$) & 0xff00) <> ((g_szFddEnd-$$) & 0xff00)
+%error "g_szFdd* strings must start on the same 256 byte page, required by the BootMenuPrint_RefreshInformation routines for floppy drives.  Please move this block up or down within strings.asm"
+%endif
+%endif						
+
 g_szAddressingModes:					
 g_szLCHS:		db	"L-CHS",NULL
 g_szPCHS:		db	"P-CHS",NULL
@@ -82,14 +114,6 @@ g_szAddressingModes_Displacement equ (g_szPCHS - g_szAddressingModes)
 %endif
 %endif		
 		
-g_szFddUnknown:	db	"%sUnknown",NULL
-g_szFddSizeOr:	db	"%s5",ONE_QUARTER,QUOTATION_MARK," or 3",ONE_HALF,QUOTATION_MARK," DD",NULL
-g_szFddSize:	db	"%s%s",QUOTATION_MARK,", %u kiB",NULL	; 3½", 1440 kiB
-
-g_szFddThreeHalf:		db  "3",ONE_HALF,NULL
-g_szFddFiveQuarter:		db  "5",ONE_QUARTER,NULL		
-g_szFddThreeFive_Displacement equ (g_szFddFiveQuarter - g_szFddThreeHalf)
-
 g_szBusTypeValues:		
 g_szBusTypeValues_8Dual:		db		"D8 ",NULL
 g_szBusTypeValues_8Reversed:	db		"X8 ",NULL
@@ -151,7 +175,7 @@ g_szDashForZero:		db		"- ",NULL
 ;$translate{ord('8')} = 17;
 ;$translate{200}      = 18;    # DOUBLE_BOTTOM_LEFT_CORNER
 ;$translate{181}      = 19;    # DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL
-;$translate{ord('0')} = 20;    # DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL		
+;$translate{ord('0')} = 20;
 ;
 ; Formats begin immediately after the last Translated character (they are in the same table)
 ;
@@ -166,7 +190,8 @@ g_szDashForZero:		db		"- ",NULL
 ;$format{"nl"}  = 27;        # n/a
 ;$format{"2-u"} = 28;        # must be even
 ;$format{"A"}   = 29;        # n/a
-;$format{"s"}   = 30;        # n/a		
+;$format{"s"}   = 30;        # n/a, normal string from DS
+;$format{"z"}   = 31;        # n/a, boot string from BDA
 ;
 ; NOTE: The last $format cannot exceed 31 (stored in a 5-bit quantity).
 ;

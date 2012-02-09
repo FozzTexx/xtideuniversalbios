@@ -15,55 +15,24 @@ SECTION .text
 ;		ES:SI:	Ptr to 512-byte ATA information read from the drive
 ;	Returns:
 ;		ES:BX:	Ptr to BOOTNFO (if successful)
-;		CF:		Cleared if BOOTNFO created succesfully
-;				Set if any error
 ;	Corrupts registers:
-;		AX, BX, CX, DX
+;		AX, BX, CX, DX, DI, SI
 ;--------------------------------------------------------------------
 BootInfo_CreateForHardDisk:
-	call	BootInfo_GetOffsetToBX		; ES:BX now points to new BOOTNFO
-	; Fall to .StoreSectorCount
+	call	BootInfo_ConvertDPTtoBX		; ES:BX now points to new BOOTNFO
+	push	bx							; Preserve for return
 
-;--------------------------------------------------------------------
-; .StoreSectorCount
-;	Parameters:
-;		ES:BX:	Ptr to BOOTNFO
-;		ES:SI:	Ptr to 512-byte ATA information read from the drive
-;		DS:DI:	Ptr to Disk Parameter Table
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, CX, DX
-;--------------------------------------------------------------------
-.StoreSectorCount:
-	push	bx
-	call	AtaID_GetTotalSectorCountToBXDXAXfromAtaInfoInESSI
-	mov		cx, bx							; Now in CX:DX:AX
-	pop		bx
-	mov		[es:bx+BOOTNFO.twSectCnt], ax
-	mov		[es:bx+BOOTNFO.twSectCnt+2], dx
-	mov		[es:bx+BOOTNFO.twSectCnt+4], cx
-	; Fall to .StoreDriveName
+	mov		di, bx						; Starting pointer at beginning of structure
 
-;--------------------------------------------------------------------
-; .StoreDriveName
-;	Parameters:
-;		ES:BX:	Ptr to BOOTNFO
-;		ES:SI:	Ptr to 512-byte ATA information read from the drive
-;		DS:DI:	Ptr to Disk Parameter Table
-;	Returns:
-;		CF:		Cleared if variables stored succesfully
-;				Set if any error
-;	Corrupts registers:
-;		AX, CX
-;--------------------------------------------------------------------
-.StoreDriveName:
-	push	ds
-	push	si
-	push	di
+;
+; Store Drive Name
+;		
+	push	ds							; Preserve RAMVARS
+	push	si							; Preserve SI for call to GetTotalSectorCount...
 
-	push	es
+	push	es							; ES copied to DS
 	pop		ds
+
 	add		si, BYTE ATA1.strModel		; DS:SI now points drive name
 	lea		di, [bx+BOOTNFO.szDrvName]	; ES:DI now points to name destination
 	mov		cx, LEN_BOOTNFO_DRV / 2		; Max number of WORDs allowed
@@ -73,21 +42,33 @@ BootInfo_CreateForHardDisk:
 	stosw
 	loop	.CopyNextWord
 	xor		ax, ax						; Zero AX and clear CF
-	stosb								; Terminate with NULL
+	stosw								; Terminate with NULL
 
-	pop		di
 	pop		si
 	pop		ds
+
+;
+; Store Sector Count
+;
+	call	AtaID_GetTotalSectorCountToBXDXAXfromAtaInfoInESSI
+
+	stosw
+	xchg	ax, dx
+	stosw
+	xchg	ax, bx
+	stosw
+
+	pop		bx
+		
 	ret
 
-
+		
 ;--------------------------------------------------------------------
 ; Finds BOOTNFO for drive and returns total sector count.
 ;
 ; BootInfo_GetTotalSectorCount
 ;	Parameters:
-;		DL:		Drive number
-;		DS:		RAMVARS segment
+;		DS:DI:		DPT Pointer
 ;	Returns:
 ;		BX:DX:AX:	48-bit sector count
 ;	Corrupts registers:
@@ -96,7 +77,7 @@ BootInfo_CreateForHardDisk:
 ALIGN JUMP_ALIGN
 BootInfo_GetTotalSectorCount:
 	push	ds
-	call	BootInfo_GetOffsetToBX
+	call	BootInfo_ConvertDPTtoBX
 	LOAD_BDA_SEGMENT_TO	ds, ax
 	mov		ax, [bx+BOOTNFO.twSectCnt]
 	mov		dx, [bx+BOOTNFO.twSectCnt+2]
@@ -106,23 +87,22 @@ BootInfo_GetTotalSectorCount:
 
 
 ;--------------------------------------------------------------------
-; Returns offset to BOOTNFO for wanted drive.
+; Returns offset to BOOTNFO based on DPT pointer.
 ;
-; BootInfo_GetOffsetToBX
+; BootInfo_ConvertDPTtoBX
 ;	Parameters:
-;		DL:		Drive number
-;		DS:		RAMVARS segment
+;		DS:DI:	DPT Pointer
 ;	Returns:
 ;		BX:		Offset to BOOTNFO struct
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-BootInfo_GetOffsetToBX:
-	mov		bl, dl						; Copy drive number to BL
-	mov		al, BOOTNFO_size			; Size of struct
-	sub		bl, [RAMVARS.bFirstDrv]		; Drive number to index
-	mul		bl							; AX = Offset inside BOOTNFO array
-	add		ax, BOOTVARS.rgBootNfo		; Add offset to BOOTNFO array
-	xchg	bx, ax						; Move result to BX
-	ret
+BootInfo_ConvertDPTtoBX:
+	mov		ax, di
+	sub		ax, RAMVARS_size				; subtract off base of DPTs
+	mov		bl, DPT_BOOTNFO_SIZE_MULTIPLIER	; BOOTNFO's are a whole number multiple of DPT size
+	mul		bl								
+	add		ax, BOOTVARS.rgBootNfo			; add base of BOOTNFO
+	xchg	ax, bx
+	ret			

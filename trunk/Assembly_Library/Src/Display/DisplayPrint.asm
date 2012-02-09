@@ -345,10 +345,9 @@ DisplayPrint_Newline:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 DisplayPrint_CharacterFromAL:
-%ifdef MODULE_STRINGS_COMPRESSED
 	test	al,al
 	jz		DisplayPrint_Ret
-%endif
+
 	mov		ah, [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bAttribute]
 	jmp		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fnCharOut]
 
