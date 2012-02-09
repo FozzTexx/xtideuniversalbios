@@ -24,13 +24,13 @@ BootMenuEvent_Handler:
 	jmp		bx
 
 MENUEVENT_InitializeMenuinitFromDSSI equ  (BootMenuEvent_Handler.InitializeMenuinitFromDSSI - BootMenuEvent_Handler)
-MENUEVENT_ExitMenu equ  (BootMenuEvent_Handler.EventCompleted - BootMenuEvent_Handler)
+MENUEVENT_ExitMenu equ  (BootMenuEvent_EventCompleted - BootMenuEvent_Handler)
 MENUEVENT_ItemHighlightedFromCX equ (BootMenuEvent_Handler.ItemHighlightedFromCX - BootMenuEvent_Handler)
 MENUEVENT_ItemSelectedFromCX equ (BootMenuEvent_Handler.ItemSelectedFromCX - BootMenuEvent_Handler)
 MENUEVENT_KeyStrokeInAX equ (BootMenuEvent_Handler.KeyStrokeInAX - BootMenuEvent_Handler)
 MENUEVENT_RefreshTitle equ (BootMenuPrint_TitleStrings - BootMenuEvent_Handler)
-MENUEVENT_RefreshInformation equ (BootMenuEvent_Handler.RefreshInformation - BootMenuEvent_Handler)
-MENUEVENT_RefreshItemFromCX equ (BootMenuEvent_Handler.RefreshItemFromCX - BootMenuEvent_Handler)
+MENUEVENT_RefreshInformation equ (BootMenuPrint_RefreshInformation - BootMenuEvent_Handler)
+MENUEVENT_RefreshItemFromCX equ (BootMenuPrint_RefreshItem - BootMenuEvent_Handler)
 ;
 ; Note that there is no entry for MENUEVENT_IdleProcessing.  If MENUEVENT_IDLEPROCESSING_ENABLE is not %defined,
 ; then the entry point will not be called (saving memory on this end and at the CALL point).
@@ -48,15 +48,15 @@ MENUEVENT_RefreshItemFromCX equ (BootMenuEvent_Handler.RefreshItemFromCX - BootM
 
 ALIGN WORD_ALIGN
 .rgfnEventSpecificHandlers:
-	dw		.InitializeMenuinitFromDSSI	; MENUEVENT.InitializeMenuinitFromDSSI
-	dw		.EventCompleted				; MENUEVENT.ExitMenu
-	dw		.EventNotHandled			; MENUEVENT.IdleProcessing
-	dw		.ItemHighlightedFromCX		; MENUEVENT.ItemHighlightedFromCX
-	dw		.ItemSelectedFromCX			; MENUEVENT.ItemSelectedFromCX
-	dw		.KeyStrokeInAX				; MENUEVENT.KeyStrokeInAX
-	dw		BootMenuPrint_TitleStrings	; MENUEVENT.RefreshTitle
-	dw		.RefreshInformation			; MENUEVENT.RefreshInformation
-	dw		.RefreshItemFromCX			; MENUEVENT.RefreshItemFromCX
+	dw		.InitializeMenuinitFromDSSI			; MENUEVENT.InitializeMenuinitFromDSSI
+	dw		BootMenuEvent_EventCompleted		; MENUEVENT.ExitMenu
+	dw		.EventNotHandled					; MENUEVENT.IdleProcessing
+	dw		.ItemHighlightedFromCX				; MENUEVENT.ItemHighlightedFromCX
+	dw		.ItemSelectedFromCX					; MENUEVENT.ItemSelectedFromCX
+	dw		.KeyStrokeInAX						; MENUEVENT.KeyStrokeInAX
+	dw		BootMenuPrint_TitleStrings			; MENUEVENT.RefreshTitle
+	dw		BootMenuPrint_RefreshInformation	; MENUEVENT.RefreshInformation
+	dw		BootMenuPrint_RefreshItem			; MENUEVENT.RefreshItemFromCX
 
 %endif
 
@@ -102,9 +102,8 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 .ItemHighlightedFromCX:
 	push	cx
-	call	RamVars_GetSegmentToDS
+	call	BootMenu_GetDriveToDXforMenuitemInCX_And_RamVars_GetSegmentToDS		
 	call	DriveXlate_Reset
-	call	BootMenu_GetDriveToDXforMenuitemInCX
 	call	DriveXlate_SetDriveToSwap
 
 	xor		ax, ax	; Update first floppy drive (for translated drive number)
@@ -133,7 +132,7 @@ ALIGN JUMP_ALIGN
 .CheckDriveHotkeys:
 	call	BootMenu_GetMenuitemToAXforAsciiHotkeyInAL
 	cmp		ax, [bp+MENUINIT.wItems]
-	jae		SHORT .EventCompleted	; Invalid key
+	jae		SHORT BootMenuEvent_EventCompleted	; Invalid key
 	CALL_MENU_LIBRARY HighlightItemFromAX
 	; Fall to .ItemSelectedFromCX
 
@@ -143,51 +142,8 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 .ItemSelectedFromCX:
 	CALL_MENU_LIBRARY Close
-.EventCompleted:
+		
+BootMenuEvent_EventCompleted:
 	stc
 	ret
 
-
-; Parameters:
-;	CX:			Index of item to refresh
-;	Cursor has been positioned to the beginning of item line
-ALIGN JUMP_ALIGN
-.RefreshItemFromCX:
-	xor		bl, bl		; will result in SF being clear in .RefreshItemOrInformation...
-	SKIP2B  dx			; dx corrupted below by BootMenu_GetDriveToDXforMenuitemInCX
-	; Fall to .RefreshInformation
-
-; Parameters:
-;	CX:			Index of highlighted item
-;	Cursor has been positioned to the beginning of first line
-; NO ALIGN - in the shadow of SKIP2B
-.RefreshInformation:
-	mov		bl,040h		;  will result in SF being set in .RefreshItemOrInformation...
-	; Fall to .RefreshItemOrInformationWithJumpTableInCSBX
-
-;--------------------------------------------------------------------
-; RefreshItemOrInformationWithJumpTableInCSBX
-;	Parameters:
-;		CX: 	Index of selected menuitem
-;		CS:BX:	Ptr to ITEM_TYPE_REFRESH jump table
-;	Returns:
-;		CF:		set since event processed
-;--------------------------------------------------------------------
-.RefreshItemOrInformationWithJumpTableInCSBX:
-	cmp		cl, NO_ITEM_HIGHLIGHTED
-	je		SHORT .EventCompleted
-
-	call	RamVars_GetSegmentToDS
-	call	BootMenu_GetDriveToDXforMenuitemInCX
-	or		bl,dl				;  or drive number with bit from .RefreshItemFromCX or .RefreshInformation
-	shl		bl,1				;  drive letter high order bit to CF, Item/Information bit to SF
-	jc		SHORT BootMenuPrint_HardDiskMenuitem
-	; fall through to BootMenuEvent_FallThroughToFloppyMenuitem
-
-;;;
-;;; Fall-through (to BootMenuPrint_FloppyMenuitem)
-;;; (checked at assembler time with the code after BootMenuPrint_FloppyMenuitem)
-;;;
-ALIGN JUMP_ALIGN
-BootMenuEvent_FallThroughToFloppyMenuitem:
-	; fall through to BootMenuPrint_FloppyMenuitem

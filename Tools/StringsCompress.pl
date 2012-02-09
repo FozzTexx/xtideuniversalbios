@@ -225,7 +225,7 @@ print "%endif\n";
 #
 
 print "\n;; translated usage stats\n";
-foreach $f (keys(%special))
+foreach $f (keys(%translate))
 {
 	print ";; ".$f.":".$used{$f}."\n";
 	$translate_count++;
