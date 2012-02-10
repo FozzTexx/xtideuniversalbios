@@ -13,7 +13,7 @@ SECTION .text
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, BX, CX, DX
+;		AX
 ;--------------------------------------------------------------------
 IdeDPT_Finalize:
 	; Fall to .StoreBlockMode
@@ -27,7 +27,7 @@ IdeDPT_Finalize:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		Nothing
+;		AX
 ;--------------------------------------------------------------------
 .StoreBlockMode:
 	mov		al, 1

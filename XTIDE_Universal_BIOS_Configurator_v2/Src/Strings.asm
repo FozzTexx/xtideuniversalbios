@@ -13,7 +13,7 @@ g_szEEPROM:							db	"EEPROM",NULL
 g_szSourceAndTypeSeparator:			db	" : ",NULL
 g_szUnidentified:					db	"Unidentified",NULL
 g_szUnsaved:						db	" ",SINGLE_LEFT_HORIZONTAL_TO_VERTICAL,
-									db	"Unsaved",SINGLE_RIGHT_HORIZONTAL_TO_VERTICAL, NULL
+									db	"Unsaved",SINGLE_RIGHT_HORIZONTAL_TO_VERTICAL,NULL
 
 ; Item formatting
 g_szFormatItemWithoutValue:			db	"%c%s",NULL
@@ -123,7 +123,7 @@ g_szDlgIdeCmdPort:		db	"Enter IDE command block (base port) address.",NULL
 g_szDlgIdeCtrlPort:		db	"Enter IDE control block address (usually command block + 200h).",NULL
 g_szDlgIdeEnIRQ:		db	"Enable interrupt?",NULL
 g_szDlgIdeIRQ:			db	"Enter IRQ channel (2...7 for 8-bit controllers, 2...15 for any other controller).",NULL
-		
+
 g_szNfoIdeBackToCfgMenu:db	"Back to XTIDE Universal BIOS Configuration Menu.",NULL
 g_szNfoIdeMaster:		db	"Settings for Master Drive.",NULL
 g_szNfoIdeSlave:		db	"Settings for Slave Drive.",NULL
@@ -134,7 +134,7 @@ g_szNfoIdeEnIRQ:		db	"Interrupt or polling mode.",NULL
 g_szNfoIdeIRQ:			db	"IRQ channel to use.",NULL
 g_szNfoIdeSerialCOM:	db	"Select a COM port by number.",NULL
 g_szNfoIdeSerialBaud:	db	"Select the COM port's Baud Rate. The server must match this speed. Note that UART clock multipliers may impact the actual speed.",NULL
-g_szNfoIdeSerialPort:	db	"Select a COM port by custom I/O port address. Any address is valud up to 3f8h, but must be on an 8-byte boundary.", NULL
+g_szNfoIdeSerialPort:	db	"Select a COM port by custom I/O port address. Any address is valid up to 3f8h, but must be on an 8-byte boundary.",NULL
 
 g_szHelpIdeCmdPort:		incbin	"IDE_CommandPort.txt"
 						db	NULL
@@ -187,7 +187,7 @@ g_szValueCfgCOMA:		db		"COMA",NULL
 g_szValueCfgCOMB:		db		"COMB",NULL
 g_szValueCfgCOMC:		db		"COMC",NULL
 g_szValueCfgCOMx:		db		"Custom",NULL
-		
+
 g_szSerialBaudChoice:
 						db  "115.2K baud",LF
 						db  "57.6K baud",LF
@@ -195,7 +195,7 @@ g_szSerialBaudChoice:
 						db  "28.8K baud",LF
 						db  "19.2K baud",LF
 						db	"9600 baud",LF
-						db  "4800 baud",LF		
+						db  "4800 baud",LF
 						db  "2400 baud",NULL
 
 g_szValueCfgBaud115_2:	db		"115.2K",NULL
@@ -204,10 +204,10 @@ g_szValueCfgBaud38_4:	db		"38.4K",NULL
 g_szValueCfgBaud28_8:	db		"28.8K",NULL
 g_szValueCfgBaud19_2:	db		"19.2K",NULL
 g_szValueCfgBaud9600:	db		"9600",NULL
-g_szValueCfgBaud4800:	db		"4800",NULL		
+g_szValueCfgBaud4800:	db		"4800",NULL
 g_szValueCfgBaud2400:	db		"2400",NULL
 
-		
+
 g_szValueCfgDeviceDual8b:	db	"XTIDE",NULL
 g_szValueCfgDeviceMod:		db	"Chuck(G)",NULL
 g_szValueCfgDeviceSingle8b:	db	"8-bit",NULL
@@ -256,7 +256,7 @@ g_szDlgBootDispMode:	db	"Select display mode for Boot Menu.",NULL
 g_szDlgBootFloppyDrvs:	db	"Select number of Floppy Drives to display on boot menu.",NULL
 g_szDlgBootSwap:		db	"Enable drive number translation?",NULL
 g_szDlgSerialDetect:	db	"Scan for serial drives?",NULL
-		
+
 g_szNfoBootTimeout:		db	"Menu item selection timeout in BIOS timer ticks.",NULL
 g_szNfoBootDrive:		db	"Default drive on boot menu.",NULL
 g_szNfoDispMode:		db	"Display Mode for Boot Menu.",NULL
@@ -373,6 +373,4 @@ g_szSelectionTimeout:	db		DOUBLE_BOTTOM_LEFT_CORNER,DOUBLE_LEFT_HORIZONTAL_TO_SI
 g_szDashForZero:		db		"- ",NULL
 
 g_szValueUnknownError:	db	"Error!",NULL
-
-
 

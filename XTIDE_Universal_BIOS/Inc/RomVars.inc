@@ -70,8 +70,8 @@ struc IDEVARS
 	.drvParamsSlave				resb	DRVPARAMS_size
 endstruc
 
-%if IDEVARS.bSerialCOMPortChar+1 != IDEVARS.bDevice 
-%erorr "IDEVARS.bSerialCOMPortChar needs to come immediately before IDEVARS.bDevice so that both bytes can be fetched at the same time inside DetectPrint.asm"
+%if IDEVARS.bSerialCOMPortChar+1 != IDEVARS.bDevice
+	%error "IDEVARS.bSerialCOMPortChar needs to come immediately before IDEVARS.bDevice so that both bytes can be fetched at the same time inside DetectPrint.asm"
 %endif
 
 ; Default values for Port and PortCtrl, shared with the configurator
@@ -110,7 +110,7 @@ FLG_DRVPARAMS_USERLBA	EQU	(1<<2)	; User specified LBA values
 ;
 ; COM Number to I/O Port Address Mapping
 ;
-; COM Number:                               1,    2,    3,    4,    5,    6,    7,    8,    9,   10,   11,   12		
+; COM Number:                               1,    2,    3,    4,    5,    6,    7,    8,    9,   10,   11,   12
 ; Corresponds to I/O port:                3f8,  2f8,  3e8,  2e8,  2f0,  3e0,  2e0,  260,  368,  268,  360,  270
 ; Corresponds to Packed I/O port (hex):    37,   17,   35,   15,   16,   34,   14,    4,   25,    5,   24,    6
 ;

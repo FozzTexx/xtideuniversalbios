@@ -97,7 +97,7 @@ istruc MENUITEM
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoIdeSerialCOM
 	at	MENUITEM.szHelp,			dw	g_szHelpIdeSerialCOM
 	at	MENUITEM.bFlags,			db	FLG_MENUITEM_MODIFY_MENU | FLG_MENUITEM_BYTEVALUE | FLG_MENUITEM_CHOICESTRINGS
-	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOICE 
+	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOICE
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	NULL
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgDevice
 	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoice,				dw	g_szSerialCOMChoice
@@ -121,9 +121,9 @@ istruc MENUITEM
 	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	3f8h
 	at	MENUITEM.itemValue + ITEM_VALUE.fnValueReader,				dw	IdeControllerMenu_SerialReadPort
 	at	MENUITEM.itemValue + ITEM_VALUE.fnValueWriter,				dw	IdeControllerMenu_SerialWritePort
-iend		
+iend
 
-g_MenuitemIdeControllerSerialBaud:		
+g_MenuitemIdeControllerSerialBaud:
 istruc MENUITEM
 	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiceSelectionForMenuitemInDSSI
 	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromRawItemInDSSI
@@ -138,7 +138,7 @@ istruc MENUITEM
 	at	MENUITEM.itemValue + ITEM_VALUE.rgwChoiceToValueLookup,		dw	g_rgbChoiceToValueLookupForBaud
 	at	MENUITEM.itemValue + ITEM_VALUE.rgszChoiceToStringLookup,	dw	g_rgszChoiceToStringLookupForBaud
 iend
-		
+
 g_MenuitemIdeControllerEnableInterrupt:
 istruc MENUITEM
 	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiceSelectionForMenuitemInDSSI
@@ -199,7 +199,7 @@ g_rgbChoiceToValueLookupForCOM:
 	dw	'B'
 	dw	'C'
 	dw	'x'				; must be last entry (see reader/write routines)
-g_rgszChoiceToStringLookupForCOM:		
+g_rgszChoiceToStringLookupForCOM:
 	dw	g_szValueCfgCOM1
 	dw	g_szValueCfgCOM2
 	dw	g_szValueCfgCOM3
@@ -219,20 +219,20 @@ DEVICE_SERIAL_DEFAULT_CUSTOM_PORT   EQU		300h           ; can't be any of the pr
 
 PackedCOMPortAddresses:				; COM1 - COMC (or COM12)
 	db      DEVICE_SERIAL_COM1 >> 2
-	db		DEVICE_SERIAL_COM2 >> 2 
-	db		DEVICE_SERIAL_COM3 >> 2 
-	db		DEVICE_SERIAL_COM4 >> 2 
-	db		DEVICE_SERIAL_COM5 >> 2 
-	db		DEVICE_SERIAL_COM6 >> 2 
-	db		DEVICE_SERIAL_COM7 >> 2 
-	db		DEVICE_SERIAL_COM8 >> 2 
-	db		DEVICE_SERIAL_COM9 >> 2 
-	db		DEVICE_SERIAL_COMA >> 2 
-	db		DEVICE_SERIAL_COMB >> 2 
+	db		DEVICE_SERIAL_COM2 >> 2
+	db		DEVICE_SERIAL_COM3 >> 2
+	db		DEVICE_SERIAL_COM4 >> 2
+	db		DEVICE_SERIAL_COM5 >> 2
+	db		DEVICE_SERIAL_COM6 >> 2
+	db		DEVICE_SERIAL_COM7 >> 2
+	db		DEVICE_SERIAL_COM8 >> 2
+	db		DEVICE_SERIAL_COM9 >> 2
+	db		DEVICE_SERIAL_COMA >> 2
+	db		DEVICE_SERIAL_COMB >> 2
 	db		DEVICE_SERIAL_COMC >> 2
 	db		DEVICE_SERIAL_DEFAULT_CUSTOM_PORT >> 2			; must be last entry (see reader/writer routines)
 DEVICE_SERIAL_DEFAULT_COM			EQU		'1'
-		
+
 g_rgbChoiceToValueLookupForBaud:
 	dw		(115200 / 115200) & 0xff
 	dw		(115200 /  57600) & 0xff
@@ -279,18 +279,18 @@ IdeControllerMenu_InitializeToIdevarsOffsetInBX:
 
 	lea		ax, [bx+IDEVARS.wPort]
 	mov		[cs:g_MenuitemIdeControllerCommandBlockAddress+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset], ax
-		
-	lea		ax, [bx+IDEVARS.bSerialPort]		
+
+	lea		ax, [bx+IDEVARS.bSerialPort]
 	mov		[cs:g_MenuitemIdeControllerSerialPort+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset], ax
 
 	lea		ax, [bx+IDEVARS.bSerialBaud]
 	mov		[cs:g_MenuitemIdeControllerSerialBaud+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset], ax
-		
+
 	lea		ax, [bx+IDEVARS.wPortCtrl]
 	mov		[cs:g_MenuitemIdeControllerControlBlockAddress+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset], ax
-		
+
 	lea		ax, [bx+IDEVARS.bSerialCOMPortChar]
-	mov		[cs:g_MenuitemIdeControllerSerialCOM+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset], ax				
+	mov		[cs:g_MenuitemIdeControllerSerialCOM+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset], ax
 
 	lea		ax, [bx+IDEVARS.bIRQ]
 	mov		[cs:g_MenuitemIdeControllerEnableInterrupt+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset], ax
@@ -373,8 +373,8 @@ ALIGN JUMP_ALIGN
 
 	mov		bx, g_MenuitemIdeControllerSerialPort
 	call	.DisableMenuitemFromCSBX
-				
-	mov		bx, [cs:g_MenuitemIdeControllerDevice+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset]		
+
+	mov		bx, [cs:g_MenuitemIdeControllerDevice+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset]
 	call	Buffers_GetRomvarsValueToAXfromOffsetInBX
 	cmp		al,DEVICE_SERIAL_PORT
 	jnz		.DisableAllSerial
@@ -385,7 +385,7 @@ ALIGN JUMP_ALIGN
 	mov		bx, g_MenuitemIdeControllerSerialBaud
 	call	.EnableMenuitemFromCSBX
 
-	mov		bx, [cs:g_MenuitemIdeControllerSerialCOM+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset]			
+	mov		bx, [cs:g_MenuitemIdeControllerSerialCOM+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset]
 	call	Buffers_GetRomvarsValueToAXfromOffsetInBX
 	mov		bx, g_MenuitemIdeControllerSerialPort
 	cmp		al,'x'
@@ -401,10 +401,10 @@ ALIGN JUMP_ALIGN
 	call	.EnableMenuitemFromCSBX
 
 	mov		bx, g_MenuitemIdeControllerEnableInterrupt
-	call	.EnableMenuitemFromCSBX				
+	call	.EnableMenuitemFromCSBX
 
 	ret
-		
+
 ;--------------------------------------------------------------------
 ; MENUITEM activation functions (.fnActivate)
 ;	Parameters:
@@ -430,18 +430,18 @@ DisplayMasterSlaveMenu:
 ; block mode is not supported on serial drives, disable/enable the option as appropriate
 ;
 	push	bx
-	mov		bx, [cs:g_MenuitemIdeControllerDevice+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset]		
+	mov		bx, [cs:g_MenuitemIdeControllerDevice+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset]
 	call	Buffers_GetRomvarsValueToAXfromOffsetInBX
 	mov		bx, g_MenuitemMasterSlaveBlockModeTransfers
 	cmp		al,DEVICE_SERIAL_PORT
 	jz		.isSerial
 	or		BYTE [cs:bx+MENUITEM.bFlags], FLG_MENUITEM_VISIBLE
 	jmp		.isDone
-.isSerial:		
+.isSerial:
 	and		BYTE [cs:bx+MENUITEM.bFlags], ~FLG_MENUITEM_VISIBLE
 .isDone:
 	pop		bx
-			
+
 	call	MasterSlaveMenu_InitializeToDrvparamsOffsetInBX
 	jmp		MasterSlaveMenu_EnterMenuOrModifyItemVisibility
 
@@ -452,7 +452,7 @@ DisplayMasterSlaveMenu:
 ; For serial drives, we pack the port number and baud rate into a single byte, and thus
 ; we need to take care to properly read/write just the bits we need.  In addition, since
 ; we use the Port/PortCtrl bytes in a special way for serial drives, we need to properly
-; default the values stored in both these words  when switching in and out of the Serial 
+; default the values stored in both these words when switching in and out of the Serial
 ; device choice.
 ;
 ; Writers:
@@ -478,8 +478,7 @@ DisplayMasterSlaveMenu:
 
 ;
 ; No change to Device byte, but use this opportunity to change defaults stored in wPort and wPortCtrl if we are
-; changing in/out of a Serial device (since we use these bytes in radically different ways).  Also clear the
-; interrupt informtion is we are moving into Serial (since the serial device does not use interrupts).
+; changing in/out of a Serial device (since we use these bytes in radically different ways).
 ;
 ALIGN JUMP_ALIGN
 IdeControllerMenu_WriteDevice:
@@ -488,9 +487,9 @@ IdeControllerMenu_WriteDevice:
 		push	di
 
 		mov		bl,[es:di]							; what is the current Device?
-		
+
 		add		di,IDEVARS.wPort - IDEVARS.bDevice	; Get ready to set the Port addresses
-		
+
 		cmp		al,DEVICE_SERIAL_PORT
 		jz		.changingToSerial
 
@@ -499,23 +498,23 @@ IdeControllerMenu_WriteDevice:
 
 .changingFromSerial:
 		cmp		al,DEVICE_16BIT_ATA
-		jl		.xtide
+
+		mov		ax,DEVICE_XTIDE_DEFAULT_PORT		; Defaults for 8-bit XTIDE devices
+		mov		bx,DEVICE_XTIDE_DEFAULT_PORTCTRL
+
+		jb		.writeNonSerial
 
 		mov		ax,DEVICE_ATA_DEFAULT_PORT			; Defaults for 16-bit and better ATA devices
 		mov		bx,DEVICE_ATA_DEFAULT_PORTCTRL
-		jmp		.writeNonSerial
 
-.xtide:	
-		mov		ax,DEVICE_XTIDE_DEFAULT_PORT		; Defaults for 8-bit XTIDE devices
-		mov		bx,DEVICE_XTIDE_DEFAULT_PORTCTRL		
-
-.writeNonSerial:		
-		mov		[es:di],ax							; Store defaults in IDEVARS.wPort and IDEVARS.wPortCtrl
-		mov		[es:di+2],bx
+.writeNonSerial:
+		stosw										; Store defaults in IDEVARS.wPort and IDEVARS.wPortCtrl
+		xchg	bx, ax
+		stosw
 
 		jmp		.done
 
-.changingToSerial:		
+.changingToSerial:
 		cmp		bl,DEVICE_SERIAL_PORT
 		jz		.done								; if we were already serial, nothing to do
 
@@ -524,9 +523,9 @@ IdeControllerMenu_WriteDevice:
 		mov		al,DEVICE_SERIAL_DEFAULT_COM
 		add		di,IDEVARS.bSerialCOMPortChar-IDEVARS.wPort
 		call	IdeControllerMenu_SerialWriteCOM
-		mov		[es:di],al
-				
-.done:	
+		stosb
+
+.done:
 		pop		di
 		pop		bx
 		pop		ax
@@ -535,14 +534,14 @@ IdeControllerMenu_WriteDevice:
 
 ;
 ; Doesn't modify COM character (unless it is not recognized, which would be an error case),
-; But does update the port address based on COM port selection  
-;				
+; But does update the port address based on COM port selection
+;
 ALIGN JUMP_ALIGN
 IdeControllerMenu_SerialWriteCOM:
 		push	ax
 		push	bx
 		push	si
-		
+
 		mov		si,g_rgbChoiceToValueLookupForCOM
 		mov		bx,PackedCOMPortAddresses
 
@@ -551,37 +550,36 @@ IdeControllerMenu_SerialWriteCOM:
 
 		cmp		ah,(DEVICE_SERIAL_DEFAULT_CUSTOM_PORT >> 2)
 		jz		.notFound
-		
+
 		cmp		al,[si]
 		jz		.found
-		
+
 		inc		si
 		inc		si
 		inc		bx
-		
+
 		jmp		.loop
 
 .notFound:
 		mov		al, 'x'
-		
-.found:			
+
+.found:
 		mov		[es:di+IDEVARS.bSerialPort-IDEVARS.bSerialCOMPortChar], ah
 
 		pop		si
 		pop		bx
 		pop		ax
-		
+
 		ret
-		
+
 
 ;
 ; Packed Port (byte) -> Numeric Port (word)
-;				
+;
 ALIGN JUMP_ALIGN
 IdeControllerMenu_SerialReadPort:
 		xor		ah,ah
-		shl		ax,1
-		shl		ax,1
+		eSHL_IM	ax, 2
 		ret
 
 ;
@@ -589,42 +587,35 @@ IdeControllerMenu_SerialReadPort:
 ; And convert from Custom to a defined COM port if we match one of the pre-defined COM port numbers
 ;
 ALIGN JUMP_ALIGN
-IdeControllerMenu_SerialWritePort:		
+IdeControllerMenu_SerialWritePort:
 		push	bx
 		push	si
 
-		shr		ax,1
-		shr		ax,1
+		eSHR_IM	ax, 2
 		and		al,0feh			; force 8-byte boundary
 
-		mov		si,g_rgbChoiceToValueLookupForCOM						
+		mov		si,g_rgbChoiceToValueLookupForCOM
 		mov		bx,PackedCOMPortAddresses			; loop, looking for port address in known COM address list
 
 .loop:
 		mov		ah,[si]
 		cmp		ah,'x'
 		jz		.found
-				
+
 		cmp		al,[bx]
 		jz		.found
-		
+
 		inc		si
 		inc		si
 		inc		bx
-		
+
 		jmp		.loop
 
-.found:	
+.found:
 		mov		[es:di+IDEVARS.bSerialCOMPortChar-IDEVARS.bSerialPort], ah
 
 		pop		si
 		pop		bx
 
 		ret
-
-
-
-
-
-
 

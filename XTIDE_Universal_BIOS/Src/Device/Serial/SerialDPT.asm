@@ -12,11 +12,11 @@ SECTION .text
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, BX, CX, DX
+;		AX
 ;--------------------------------------------------------------------
 SerialDPT_Finalize:
 		or		byte [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE
 		mov		ax, [es:si+ATA6.wVendor]
-		mov		word [di+DPT_SERIAL.wSerialPortAndBaud], ax
+		mov		[di+DPT_SERIAL.wSerialPortAndBaud], ax
 		ret
 
