@@ -69,11 +69,18 @@ istruc ROMVARS
 	MAIN_FLG_MODULE_EBIOS	equ	0
 %endif
 
+%ifdef MODULE_JRIDE
+	MAIN_FLG_MODULE_JRIDE	equ	FLG_ROMVARS_MODULE_JRIDE
+%else
+	MAIN_FLG_MODULE_JRIDE	equ	0
+%endif
+
+
 ;---------------------------;
 ; AT Build default settings ;
 ;---------------------------;
 %ifdef USE_AT
-	at	ROMVARS.wFlags,			dw	FLG_ROMVARS_FULLMODE | FLG_ROMVARS_DRVXLAT | MAIN_FLG_MODULE_SERIAL | MAIN_FLG_MODULE_EBIOS
+	at	ROMVARS.wFlags,			dw	FLG_ROMVARS_FULLMODE | FLG_ROMVARS_DRVXLAT | MAIN_FLG_MODULE_SERIAL | MAIN_FLG_MODULE_EBIOS | MAIN_FLG_MODULE_JRIDE
 	at	ROMVARS.wDisplayMode,	dw	DEFAULT_TEXT_MODE
 	at	ROMVARS.wBootTimeout,	dw	30 * TICKS_PER_SECOND	; Boot Menu selection timeout
 	at	ROMVARS.bIdeCnt,		db	4						; Number of supported controllers
@@ -116,7 +123,7 @@ istruc ROMVARS
 ;-----------------------------------;
 ; XT and XT+ Build default settings ;
 ;-----------------------------------;
-	at	ROMVARS.wFlags,			dw	FLG_ROMVARS_DRVXLAT | MAIN_FLG_MODULE_SERIAL | MAIN_FLG_MODULE_EBIOS
+	at	ROMVARS.wFlags,			dw	FLG_ROMVARS_DRVXLAT | MAIN_FLG_MODULE_SERIAL | MAIN_FLG_MODULE_EBIOS | MAIN_FLG_MODULE_JRIDE
 	at	ROMVARS.wDisplayMode,	dw	DEFAULT_TEXT_MODE
 	at	ROMVARS.wBootTimeout,	dw	30 * TICKS_PER_SECOND	; Boot Menu selection timeout
 	at	ROMVARS.bIdeCnt,		db	1						; Number of supported controllers
@@ -177,7 +184,7 @@ iend
 	%include "BootSector.asm"		; For loading boot sector
 
 	; Boot loader
-	%include "Int19hMenu.asm"		; For Int 19h, Boot Loader for Boot Menu
+	%include "Int19h.asm"			; For Int 19h, Boot Loader
 
 	; For all device types
 	%include "Idepack.asm"

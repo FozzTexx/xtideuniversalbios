@@ -16,6 +16,7 @@ struc ROMVARS
 
 	.wFlags				resb	2	; Word for ROM flags
 	.wDisplayMode		resb	2	; Display mode for boot menu
+	.wfDisplayBootMenu:				; Zero = no Boot Menu, non-zero = Boot Menu timeout
 	.wBootTimeout		resb	2	; Boot Menu selection timeout in system timer ticks
 	.bIdeCnt			resb	1	; Number of available IDE controllers
 	.bBootDrv			resb	1	; Boot Menu default drive
@@ -38,6 +39,7 @@ FLG_ROMVARS_DRVXLAT					EQU	(1<<2)	; Enable drive number translation
 FLG_ROMVARS_SERIAL_SCANDETECT 		EQU	(1<<3)	; Scan COM ports at the end of drive detection.  Can also be invoked
 												; by holding down the ALT key at the end of drive detection.
 												; (Conveniently, this is 8, a fact we exploit when testing the bit)
+FLG_ROMVARS_MODULE_JRIDE			EQU	(1<<5)	; Here in case the configuration needs to know functionality is present
 FLG_ROMVARS_MODULE_SERIAL			EQU (1<<6)	; Here in case the configuration needs to know functionality is present
 FLG_ROMVARS_MODULE_EBIOS			EQU (1<<7)	; Here in case the configuration needs to know functionality is present
 
