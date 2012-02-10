@@ -7,7 +7,7 @@ SECTION .text
 ;--------------------------------------------------------------------
 ; Displays Boot Menu and returns Drive or Function number.
 ;
-; BootMenu_DisplayAndReturnSelection
+; BootMenu_DisplayAndReturnSelectionInDX
 ;	Parameters:
 ;		DS:		RAMVARS segment
 ;	Returns:
@@ -16,13 +16,13 @@ SECTION .text
 ;		All General Purpose Registers
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-BootMenu_DisplayAndReturnSelection:
+BootMenu_DisplayAndReturnSelectionInDX:
 	call	DriveXlate_Reset
 	call	BootMenuPrint_TheBottomOfScreen
 	call	BootMenu_Enter			; Get selected menuitem index to CX
 	call	BootMenuPrint_ClearScreen
 	call	BootMenu_GetDriveToDXforMenuitemInCX
-	jnc		BootMenu_DisplayAndReturnSelection
+	jnc		BootMenu_DisplayAndReturnSelectionInDX
 	ret
 
 ;--------------------------------------------------------------------

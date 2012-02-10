@@ -55,15 +55,15 @@ endstruc
 ;
 ; STORE_POST_STACK_POINTER
 ;	Parameters:
-;		DS:		BDA and Interrupt Vector segment (zero)
+;		ES:		BDA and Interrupt Vector segment (zero)
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
 %macro STORE_POST_STACK_POINTER 0
-	mov		[BOOTVARS.dwPostStack], sp
-	mov		[BOOTVARS.dwPostStack+2], ss
+	mov		[es:BOOTVARS.dwPostStack], sp
+	mov		[es:BOOTVARS.dwPostStack+2], ss
 %endmacro
 
 
@@ -101,28 +101,28 @@ endstruc
 ;--------------------------------------------------------------------
 ; Restores SS and SP to initial boot loader values.
 ;
-; Before doing any changes, see the note regarding
-; LOAD_BDA_SEGMENT_TO in BootVars_SwitchToBootMenuStack
+; Note! Must return with AX=0 and CF preserved.
+; See Int19hMenu_JumpToBootSector_or_RomBoot.
 ;
 ; SWITCH_BACK_TO_POST_STACK
 ;	Parameters:
-;		Nothing
+;		AX:		BDA and Interrupt Vector segment (zero)
 ;	Returns:
 ;		SS:SP:	Ptr to POST stack
 ;	Corrupts registers:
-;		Nothing
+;		Nothing (not even FLAGS)
 ;--------------------------------------------------------------------
 %macro SWITCH_BACK_TO_POST_STACK 0
 %ifndef USE_386
-	cli									; Disable interrupts
-	LOAD_BDA_SEGMENT_TO	ss, sp
+	cli
+	mov		ss, ax
 	mov		sp, [ss:BOOTVARS.dwPostStack]
 	mov		ss, [ss:BOOTVARS.dwPostStack+2]
-	sti									; Enable interrupts
+	sti
 %else
-	LOAD_BDA_SEGMENT_TO	ss, sp
+	mov		ss, ax
 	lss		sp, [ss:BOOTVARS.dwPostStack]
-%endif
+%endif	
 %endmacro
 
 

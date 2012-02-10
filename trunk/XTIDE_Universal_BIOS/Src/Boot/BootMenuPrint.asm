@@ -425,11 +425,3 @@ FloppyTypes:
 	db		1440  / FloppyTypes.rgbCapacityMultiplier    ;  type 4
 	db		2880  / FloppyTypes.rgbCapacityMultiplier    ;  type 5
 	db		2880  / FloppyTypes.rgbCapacityMultiplier    ;  type 6
-
-
-
-
-		
-
-
-		

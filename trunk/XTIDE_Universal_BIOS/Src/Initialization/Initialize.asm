@@ -29,7 +29,7 @@ Initialize_FromMainBiosRomSearch:			; unused entrypoint ok
 
 	; Install INT 19h handler (boot loader) where drives are detected
 	mov		bx, BIOS_BOOT_LOADER_INTERRUPT_19h
-	mov		si, HandlerForLateInitialization
+	mov		si, Int19h_BootLoaderHandler
 	call	Interrupts_InstallHandlerToVectorInBXFromCSSI
 
 .SkipRomInitialization:
@@ -38,19 +38,6 @@ Initialize_FromMainBiosRomSearch:			; unused entrypoint ok
 	pop		es
 	popf
 	retf
-
-
-;--------------------------------------------------------------------
-; HandlerForLateInitialization
-;	Parameters:
-;		Nothing
-;	Returns:
-;		Never returns
-;--------------------------------------------------------------------
-HandlerForLateInitialization:
-	LOAD_BDA_SEGMENT_TO	es, ax
-	call	Initialize_AndDetectDrives		; Installs new boot menu loader
-	int		BIOS_BOOT_LOADER_INTERRUPT_19h	; Display boot menu
 
 
 ;--------------------------------------------------------------------
@@ -102,10 +89,11 @@ Initialize_AndDetectDrives:
 ; .ResetDetectedDrives
 ;	Parameters:
 ;		DS:		RAMVARS segment
+;		ES:		BDA and interrupt vector segment (zero)
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		All
+;		All, except DS and ES
 ;--------------------------------------------------------------------
 .ResetDetectedDrives:
 	call	Idepack_FakeToSSBP

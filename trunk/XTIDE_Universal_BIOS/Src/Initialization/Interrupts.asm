@@ -42,25 +42,10 @@ Interrupts_InitializeInterruptVectors:
 	; At least AMI BIOS for 286 stores 40h handler by itself and calls
 	; 40h from 13h. That system locks to infinite loop if we copy 13h to 40h.
 	call	FloppyDrive_IsInt40hInstalled
-	jc		SHORT .InitializeInt19h
+	jc		SHORT .Int40hAlreadyInstalled
 	mov		[es:BIOS_DISKETTE_INTERRUPT_40h*4], ax		; Store old INT 13h offset
 	mov		[es:BIOS_DISKETTE_INTERRUPT_40h*4+2], dx	; Store old INT 13h segment
-	; Fall to .InitializeInt19h
-
-;--------------------------------------------------------------------
-; .InitializeInt19h
-;	Parameters:
-;		DS:		RAMVARS segment
-;		ES:		BDA and Interrupt Vector segment (zero)
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		BX, SI
-;--------------------------------------------------------------------
-.InitializeInt19h:
-	mov		bx, BIOS_BOOT_LOADER_INTERRUPT_19h
-	mov		si, Int19hMenu_BootLoader
-	call	Interrupts_InstallHandlerToVectorInBXFromCSSI
+.Int40hAlreadyInstalled:
 	; Fall to .InitializeHardwareIrqHandlers
 
 ;--------------------------------------------------------------------
