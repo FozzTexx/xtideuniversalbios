@@ -54,13 +54,9 @@ DetectPrint_StartDetectWithMasterOrSlaveStringInAXandIdeVarsInCSBP:
 											; This optimization requires that all the g_szDetect* strings are
 											; on the same 256 byte page, which is checked in strings.asm.
 
-	cmp		dx, DEVICE_SERIAL_PORT << 8  	; Check if this is a serial device,
-										 	; And also check if DL is zero, check with the jz below
-											; This optimization requires that DEVICE_SERIAL_PORT be
-											; the highest value in the DEVICE_* series, ensuring that
-											; anything less in the high order bits is a different device.
+	cmp		dh, DEVICE_SERIAL_PORT		  	; Check if this is a serial device
 
-	jb		.pushAndPrint					; CX = string to print, AX = port address, DX won't be used
+	jnz		.pushAndPrint					; CX = string to print, AX = port address, DX won't be used
 
 	mov		cl, (g_szDetectCOM-$$) & 0xff	; Setup print string for COM ports
 	push	cx								; And push now.  We use the fact that format strings can contain
@@ -74,6 +70,7 @@ DetectPrint_StartDetectWithMasterOrSlaveStringInAXandIdeVarsInCSBP:
 
  	mov		cl, (g_szDetectCOMAuto-$$) & 0xff	; Setup secondary print string for "Auto"
 
+	test	dl, dl							; Check if serial port "Auto"
 	jz		.pushAndPrint					; CX = string to print, AX and DX won't be used
 
 	mov		cl, (g_szDetectCOMLarge-$$) & 0xff	; Setup secondary print string for "COMn/xx.yK"
