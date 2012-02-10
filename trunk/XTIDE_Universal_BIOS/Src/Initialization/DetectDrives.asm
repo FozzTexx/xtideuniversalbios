@@ -28,42 +28,42 @@ DetectDrives_FromAllIDEControllers:
 	call	StartDetectionWithDriveSelectByteInBHandStringInAX	; Detect and create DPT + BOOTNFO
 
 	mov		cx, g_szDetectSlave
-	mov		bh, MASK_DRVNHEAD_SET | FLG_DRVNHEAD_DRV  
+	mov		bh, MASK_DRVNHEAD_SET | FLG_DRVNHEAD_DRV
 	call	StartDetectionWithDriveSelectByteInBHandStringInAX
-		
+
 	pop		cx
 
 	add		bp, BYTE IDEVARS_size			; Point to next IDEVARS
 
-%ifdef MODULE_SERIAL		
+%ifdef MODULE_SERIAL
 	jcxz	.done							; Set to zero on .ideVarsSerialAuto iteration (if any)
 %endif
-		
+
 	loop	.DriveDetectLoop
 
-%ifdef MODULE_SERIAL		
+%ifdef MODULE_SERIAL
 ;
 ; if serial drive detected, do not scan (avoids duplicate drives and isn't needed - we already have a connection)
 ;
 	call	FindDPT_ToDSDIforSerialDevice
 	jc		.done
 
-	mov		bp, ROMVARS.ideVarsSerialAuto	; Point to our special IDEVARS sructure, just for serial scans		
-				
+	mov		bp, ROMVARS.ideVarsSerialAuto	; Point to our special IDEVARS structure, just for serial scans
+
 	mov		al,[cs:ROMVARS.wFlags]			; Configurator set to always scan?
 	or		al,[es:BDA.bKBFlgs1]			; Or, did the user hold down the ALT key?
 	and		al,8							; 8 = alt key depressed, same as FLG_ROMVARS_SERIAL_ALWAYSDETECT
-	jnz		.DriveDetectLoop							
+	jnz		.DriveDetectLoop
 %endif
 
 .done:
 	ret
 
 %if FLG_ROMVARS_SERIAL_SCANDETECT != 8
-%error "DetectDrives is currently coded to assume that FLG_ROMVARS_SERIAL_SCANDETECT is the same bit as the ALT key code in the BDA.  Changes in the code will be needed if these values are no longer the same."
+	%error "DetectDrives is currently coded to assume that FLG_ROMVARS_SERIAL_SCANDETECT is the same bit as the ALT key code in the BDA.  Changes in the code will be needed if these values are no longer the same."
 %endif
 
-		
+
 ;--------------------------------------------------------------------
 ; StartDetectionWithDriveSelectByteInBHandStringInAX
 ;	Parameters:
@@ -109,7 +109,7 @@ StartDetectionWithDriveSelectByteInBHandStringInAX:
 .ReadAtapiInfoFromDrive:				; Not yet implemented
 	;call	ReadAtapiInfoFromDrive		; Assume CD-ROM
 	;jnc	SHORT _CreateBiosTablesForCDROM
-	
+
 	;jmp	short DetectDrives_DriveNotFound
 ;;; fall-through instead of previous jmp instruction
 ;--------------------------------------------------------------------
@@ -121,9 +121,9 @@ StartDetectionWithDriveSelectByteInBHandStringInAX:
 ;	Corrupts registers:
 ;		AX, SI
 ;--------------------------------------------------------------------
-DetectDrives_DriveNotFound:		
+DetectDrives_DriveNotFound:
 	mov		si, g_szNotFound
-	jmp		BootMenuPrint_NullTerminatedStringFromCSSIandSetCF		
+	jmp		BootMenuPrint_NullTerminatedStringFromCSSIandSetCF
 
 
 ;--------------------------------------------------------------------

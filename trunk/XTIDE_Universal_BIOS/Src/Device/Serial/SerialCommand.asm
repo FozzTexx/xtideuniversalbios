@@ -111,8 +111,8 @@ SerialCommand_OutputWithParameters_DeviceInDX:
 ;
 		mov		ch,dh
 		xor		dh,dh
-		eSHL_IM	dx, 2			; shift from one byte to two		
-		
+		eSHL_IM	dx, 2			; shift from one byte to two
+
 		mov		al,[bp+IDEPACK.bSectorCount]
 
 ;
@@ -598,7 +598,7 @@ SerialCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 ;    Slave:
 ;		   wSerialPortAndBaud Non-Zero:
 ;		   	   previous serial drive not found:   -> Error - Not Found (4)
-;			   previosu serial drive found:       -> Continue with wSerialPackedAndBaud (5)
+;			   previous serial drive found:       -> Continue with wSerialPackedAndBaud (5)
 ;          wSerialPortAndBaud Zero:
 ;		   	   previous serial drive not found:	  -> Error - Not Found (4)
 ;			   previous serial drive found:       -> Continue with previous serial drive info (6)
@@ -607,7 +607,7 @@ SerialCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 ;     is the Master, we are checking out a new controller, and so don't care if we already have a serial drive.
 ;     And as with the int13h/25h case, we just go off and get the needed information using the user's setting.
 ; (2) We are using the special .ideVarsSerialAuto structure.  During drive detection, we would only be here
-;     if we hand't already seen a serial drive (since we only scan if no explicit drives are set),
+;     if we hadn't already seen a serial drive (since we only scan if no explicit drives are set),
 ;     so we go off to scan.
 ; (3) We are using the special .ideVarsSerialAuto structure.  We won't get here during drive detection, but
 ;     we might get here on an int13h/25h call.  If we have scanned COM drives, they are the ONLY serial drives
@@ -632,8 +632,8 @@ SerialCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 		call	FindDPT_ToDSDIforSerialDevice
 		pop		si
 		jnc		.notfounddpt
-		mov		ax,[ds:di+DPT_SERIAL.wSerialPortAndBaud]
-.notfounddpt:	
+		mov		ax, [di+DPT_SERIAL.wSerialPortAndBaud]
+.notfounddpt:
 
 		test	bh, FLG_DRVNHEAD_DRV
 		jz		.master
@@ -646,7 +646,7 @@ SerialCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 		test	dx,dx
 		jnz		.identifyDeviceInDX
 
-		or		dx,ax			; Since DX is zero, this effectively moves the previously found serial drive 
+		or		dx,ax			; Since DX is zero, this effectively moves the previously found serial drive
 								; information to dx, as well as test for zero
 		jz		.scanSerial
 
@@ -671,10 +671,10 @@ SerialCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 
 		pop		cx
 		pop		dx
-		
+
 		pop		bp
 ;
-; place port and baud word in to the return sector, in a vendor specific area, 
+; place port and baud word in to the return sector, in a vendor specific area,
 ; which is read by FinalizeDPT and DetectDrives
 ;
 		mov		[es:si+ATA6.wVendor],dx
@@ -731,9 +731,9 @@ ALIGN JUMP_ALIGN
 ;
 ; Begin baud rate scan on this port...
 ;
-; On a scan, we support 6 baud rates, starting here and going higher by a factor of two each step, with a 
+; On a scan, we support 6 baud rates, starting here and going higher by a factor of two each step, with a
 ; small jump between 9600 and 38800.  These 6 were selected since we wanted to support 9600 baud and 115200,
-; *on the server side* if the client side had a 4x clock multiplier, a 2x clock multiplier, or no clock multiplier. 
+; *on the server side* if the client side had a 4x clock multiplier, a 2x clock multiplier, or no clock multiplier.
 ;
 ; Starting with 30h, that means 30h (2400 baud), 18h (4800 baud), 0ch (9600 baud), and
 ;					            04h (28800 baud), 02h (57600 baud), 01h (115200 baud)
@@ -746,7 +746,7 @@ ALIGN JUMP_ALIGN
 .nextBaud:
 		shr		dh,1
 		jz		.nextPort
-		cmp		dh,6			; skip from 6 to 4, to move from the top of the 9600 baud range 
+		cmp		dh,6			; skip from 6 to 4, to move from the top of the 9600 baud range
 		jnz		.testBaud		; to the bottom of the 115200 baud range
 		mov		dh,4
 

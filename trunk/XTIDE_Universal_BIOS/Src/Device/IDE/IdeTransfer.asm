@@ -34,82 +34,20 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 IdeTransfer_StartWithCommandInAL:
-	mov		ah, [bp+IDEPACK.bSectorCount]
-
 	; Are we reading or writing?
 	test	al, 16	; Bit 4 is cleared on all the read commands but set on 3 of the 4 write commands
-	jnz		SHORT .PrepareToWriteDataFromESSI
+	mov		ah, [bp+IDEPACK.bSectorCount]
+	jnz		SHORT WriteToDrive
 	cmp		al, COMMAND_WRITE_MULTIPLE
-	je		SHORT .PrepareToWriteDataFromESSI
-
-	; Prepare to read data to ESSI
-	mov		bx, g_rgfnPioRead
-	call	InitializePiovarsInSSBPwithSectorCountInAH
-	xchg	si, di
-	jmp		SHORT ReadFromDrive
-
-ALIGN JUMP_ALIGN
-.PrepareToWriteDataFromESSI:
-	mov		bx, g_rgfnPioWrite
-	call	InitializePiovarsInSSBPwithSectorCountInAH
-	; Fall to WriteToDrive
-
-
-;--------------------------------------------------------------------
-; WriteToDrive
-;	Parameters:
-;		DS:DI:	Ptr to DPT (in RAMVARS segment)
-;		ES:SI:	Normalized ptr to buffer containing data
-;		SS:BP:	Ptr to PIOVARS
-;	Returns:
-;		AH:		BIOS Error code
-;		CX:		Number of successfully transferred sectors
-;		CF:		0 if transfer succesfull
-;				1 if any error
-;	Corrupts registers:
-;		AL, BX, DX, SI, ES
-;--------------------------------------------------------------------
-WriteToDrive:
-	; Always poll when writing first block (IRQs are generated for following blocks)
-	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRQ, FLG_STATUS_DRQ)
-	call	IdeWait_PollStatusFlagInBLwithTimeoutInBH
-	jc		SHORT ReturnWithTransferErrorInAH
-
-ALIGN JUMP_ALIGN
-.WriteNextBlockToDrive:
-	mov		cx, [bp+PIOVARS.wWordsInBlock]
-	mov		dx, [bp+PIOVARS.wDataPort]
-	cmp		[bp+PIOVARS.wWordsLeft], cx
-	jbe		SHORT .WriteLastBlockToDrive
-	call	[bp+PIOVARS.fnXfer]
-
-	; Wait until ready for next block and check for errors
-	call	IdeWait_IRQorDRQ					; Wait until ready to transfer
-	jc		SHORT ReturnWithTransferErrorInAH
-
-	; Increment number of successfully written WORDs
-	mov		ax, [bp+PIOVARS.wWordsInBlock]
-	sub		[bp+PIOVARS.wWordsLeft], ax
-	add		[bp+PIOVARS.wWordsDone], ax
-	jmp		SHORT .WriteNextBlockToDrive
-
-ALIGN JUMP_ALIGN
-.WriteLastBlockToDrive:
-	mov		cx, [bp+PIOVARS.wWordsLeft]
-%ifdef USE_186
-	push	CheckErrorsAfterTransferringLastBlock
-	jmp		[bp+PIOVARS.fnXfer]					; Transfer possibly partial block
-%else
-	call	[bp+PIOVARS.fnXfer]					; Transfer possibly partial block
-	jmp		SHORT CheckErrorsAfterTransferringLastBlock
-%endif
-
+	je		SHORT WriteToDrive
+	; Fall to ReadFromDrive
 
 ;--------------------------------------------------------------------
 ; ReadFromDrive
 ;	Parameters:
-;		ES:DI:	Normalized ptr to buffer to recieve data
-;		DS:SI:	Ptr to DPT (in RAMVARS segment)
+;		AH:		Number of sectors to transfer (1...128)
+;		ES:SI:	Normalized ptr to buffer to receive data
+;		DS:DI:	Ptr to DPT (in RAMVARS segment)
 ;		SS:BP:	Ptr to PIOVARS
 ;	Returns:
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
@@ -120,17 +58,20 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		AL, BX, DX, SI, ES
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 ReadFromDrive:
+	; Prepare to read data to ESSI
+	mov		bx, g_rgfnPioRead
+	call	InitializePiovarsInSSBPwithSectorCountInAH
+
 	; Wait until drive is ready to transfer
-	xchg	di, si								; DS:DI now points DPT
 	call	IdeWait_IRQorDRQ					; Wait until ready to transfer
 	jc		SHORT ReturnWithTransferErrorInAH
 	xchg	si, di								; ES:DI now points buffer
 
+	mov		cx, [bp+PIOVARS.wWordsInBlock]
+
 ALIGN JUMP_ALIGN
 .ReadNextBlockFromDrive:
-	mov		cx, [bp+PIOVARS.wWordsInBlock]
 	mov		dx, [bp+PIOVARS.wDataPort]
 	cmp		[bp+PIOVARS.wWordsLeft], cx
 	jbe		SHORT .ReadLastBlockFromDrive
@@ -143,9 +84,9 @@ ALIGN JUMP_ALIGN
 	xchg	si, di								; ES:DI now points buffer
 
 	; Increment number of successfully read WORDs
-	mov		ax, [bp+PIOVARS.wWordsInBlock]
-	sub		[bp+PIOVARS.wWordsLeft], ax
-	add		[bp+PIOVARS.wWordsDone], ax
+	mov		cx, [bp+PIOVARS.wWordsInBlock]
+	sub		[bp+PIOVARS.wWordsLeft], cx
+	add		[bp+PIOVARS.wWordsDone], cx
 	jmp		SHORT .ReadNextBlockFromDrive
 
 ALIGN JUMP_ALIGN
@@ -170,6 +111,63 @@ ReturnWithTransferErrorInAH:
 
 
 ;--------------------------------------------------------------------
+; WriteToDrive
+;	Parameters:
+;		AH:		Number of sectors to transfer (1...128)
+;		DS:DI:	Ptr to DPT (in RAMVARS segment)
+;		ES:SI:	Normalized ptr to buffer containing data
+;		SS:BP:	Ptr to PIOVARS
+;	Returns:
+;		AH:		BIOS Error code
+;		CX:		Number of successfully transferred sectors
+;		CF:		0 if transfer succesfull
+;				1 if any error
+;	Corrupts registers:
+;		AL, BX, DX, SI, ES
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+WriteToDrive:
+	; Prepare to write data from ESSI
+	mov		bx, g_rgfnPioWrite
+	call	InitializePiovarsInSSBPwithSectorCountInAH
+
+	; Always poll when writing first block (IRQs are generated for following blocks)
+	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRQ, FLG_STATUS_DRQ)
+	call	IdeWait_PollStatusFlagInBLwithTimeoutInBH
+	jc		SHORT ReturnWithTransferErrorInAH
+
+	mov		cx, [bp+PIOVARS.wWordsInBlock]
+
+ALIGN JUMP_ALIGN
+.WriteNextBlockToDrive:
+	mov		dx, [bp+PIOVARS.wDataPort]
+	cmp		[bp+PIOVARS.wWordsLeft], cx
+	jbe		SHORT .WriteLastBlockToDrive
+	call	[bp+PIOVARS.fnXfer]
+
+	; Wait until ready for next block and check for errors
+	call	IdeWait_IRQorDRQ					; Wait until ready to transfer
+	jc		SHORT ReturnWithTransferErrorInAH
+
+	; Increment number of successfully written WORDs
+	mov		cx, [bp+PIOVARS.wWordsInBlock]
+	sub		[bp+PIOVARS.wWordsLeft], cx
+	add		[bp+PIOVARS.wWordsDone], cx
+	jmp		SHORT .WriteNextBlockToDrive
+
+ALIGN JUMP_ALIGN
+.WriteLastBlockToDrive:
+	mov		cx, [bp+PIOVARS.wWordsLeft]
+%ifdef USE_186
+	push	CheckErrorsAfterTransferringLastBlock
+	jmp		[bp+PIOVARS.fnXfer]					; Transfer possibly partial block
+%else
+	call	[bp+PIOVARS.fnXfer]					; Transfer possibly partial block
+	jmp		SHORT CheckErrorsAfterTransferringLastBlock
+%endif
+
+
+;--------------------------------------------------------------------
 ; InitializePiovarsInSSBPwithSectorCountInAH
 ;	Parameters:
 ;		AH:		Number of sectors to transfer (1...128)
@@ -179,26 +177,26 @@ ReturnWithTransferErrorInAH:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, BX, CX, DX
+;		AX, BX, DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 InitializePiovarsInSSBPwithSectorCountInAH:
 	; Store sizes
 	xor		al, al
 	mov		[bp+PIOVARS.wWordsLeft], ax
-	cbw
-	mov		[bp+PIOVARS.wWordsDone], ax			; Zero
 	mov		ah, [di+DPT_ATA.bSetBlock]
 	mov		[bp+PIOVARS.wWordsInBlock], ax
+	cbw
+	mov		[bp+PIOVARS.wWordsDone], ax			; Zero
 
 	; Get transfer function based on bus type
 	xchg	ax, bx								; Lookup table offset to AX
-	eMOVZX	bx, BYTE [di+DPT.bIdevarsOffset]	; CS:BX now points to IDEVARS
+	mov		bl, [di+DPT.bIdevarsOffset]			; CS:BX now points to IDEVARS
 	mov		dx, [cs:bx+IDEVARS.wPort]			; Load IDE Data port address
 	mov		bl, [cs:bx+IDEVARS.bDevice]			; Load device type to BX
 	add		bx, ax
-	mov		ax, [cs:bx]							; Load offset to transfer function
 	mov		[bp+PIOVARS.wDataPort], dx
+	mov		ax, [cs:bx]							; Load offset to transfer function
 	mov		[bp+PIOVARS.fnXfer], ax
 	ret
 
@@ -212,7 +210,7 @@ InitializePiovarsInSSBPwithSectorCountInAH:
 ;	Parameters:
 ;		CX:		Block size in WORDs
 ;		DX:		IDE Data port address
-;		ES:DI:	Normalized ptr to buffer to recieve data
+;		ES:DI:	Normalized ptr to buffer to receive data
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
@@ -235,8 +233,11 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 SingleByteRead:
 %ifdef USE_186	; INS instruction available
+	dec		cx			; Avoid overflowing CX on a 128 sector transfer
 	shl		cx, 1		; WORD count to BYTE count
+	inc		cx
 	rep insb
+	insb
 %else			; If 8088/8086
 	shr		cx, 1		; WORD count to DWORD count
 ALIGN JUMP_ALIGN
@@ -327,9 +328,12 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 SingleByteWrite:
 %ifdef USE_186	; OUTS instruction available
+	dec		cx			; Avoid overflowing CX on a 128 sector transfer
 	shl		cx, 1		; WORD count to BYTE count
+	inc		cx
 	es					; Source is ES segment
 	rep outsb
+	es outsb
 %else			; If 8088/8086
 	shr		cx, 1		; WORD count to DWORD count
 	push	ds			; Store DS
@@ -383,7 +387,6 @@ DWordWrite:
 	db		66h			; Override operand size to 32-bit
 	db		6Fh			; OUTSW/OUTSD
 	ret
-
 
 
 ; Lookup tables to get transfer function based on bus type
