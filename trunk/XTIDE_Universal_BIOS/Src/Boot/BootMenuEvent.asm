@@ -133,7 +133,13 @@ ALIGN JUMP_ALIGN
 	call	BootMenu_GetMenuitemToAXforAsciiHotkeyInAL
 	cmp		ax, [bp+MENUINIT.wItems]
 	jae		SHORT BootMenuEvent_EventCompleted	; Invalid key
+
+	; Highlighting new item resets drive translation and we do not want that.
+	; We must be able to translate both floppy drive and hard drive when using hotkey.
+	call	RamVars_GetSegmentToDS	
+	mov		dx, [RAMVARS.xlateVars+XLATEVARS.wFDandHDswap]
 	CALL_MENU_LIBRARY HighlightItemFromAX
+	or		[RAMVARS.xlateVars+XLATEVARS.wFDandHDswap], dx
 	; Fall to .ItemSelectedFromCX
 
 
@@ -142,7 +148,7 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 .ItemSelectedFromCX:
 	CALL_MENU_LIBRARY Close
-		
+
 BootMenuEvent_EventCompleted:
 	stc
 	ret

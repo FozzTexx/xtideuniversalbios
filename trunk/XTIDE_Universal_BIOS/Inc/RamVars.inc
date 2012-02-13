@@ -9,6 +9,7 @@ LITE_MODE_RAMVARS_SEGMENT	EQU		30h
 
 ; Variables for translating drive numbers.
 struc XLATEVARS
+	.wFDandHDswap:
 	.bFDSwap		resb	1	; Floppy Drive to swap to 00h and vice versa
 	.bHDSwap		resb	1	; Hard Drive to swap to 80h and vice versa
 	.bXlatedDrv		resb	1	; Drive number after translation

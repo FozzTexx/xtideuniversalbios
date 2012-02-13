@@ -153,18 +153,16 @@ istruc ROMVARS
 %endif
 iend
 
-	; Libraries and data
+	; Libraries, data, Initialization and drive detection
 	%include "AssemblyLibrary.asm"
+	%include "Initialize.asm"		; For BIOS initialization
+	%include "Interrupts.asm"		; For Interrupt initialization
+	%include "RamVars.asm"			; For RAMVARS initialization and access
 %ifdef MODULE_STRINGS_COMPRESSED
 	%include "StringsCompressed.asm"
 %else
 	%include "Strings.asm"			; For BIOS message strings
 %endif
-
-	; Initialization and drive detection
-	%include "Initialize.asm"		; For BIOS initialization
-	%include "Interrupts.asm"		; For Interrupt initialization
-	%include "RamVars.asm"			; For RAMVARS initialization and access
 	%include "CreateDPT.asm"		; For creating DPTs
 	%include "FindDPT.asm"			; For finding DPTs
 	%include "AccessDPT.asm"		; For accessing DPTs
@@ -172,7 +170,7 @@ iend
 	%include "AtaID.asm"			; For ATA Identify Device information
 	%include "DetectDrives.asm"		; For detecting IDE drives
 	%include "DetectPrint.asm"		; For printing drive detection strings
-		
+
 	; Boot menu
 	%include "BootMenu.asm"			; For Boot Menu operations
 	%include "BootMenuEvent.asm"	; For menu library event handling
