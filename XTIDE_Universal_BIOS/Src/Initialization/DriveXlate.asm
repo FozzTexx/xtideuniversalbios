@@ -84,7 +84,7 @@ ALIGN JUMP_ALIGN, ret
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 DriveXlate_Reset:
-	mov		WORD [RAMVARS.xlateVars], 8000h	; .bFDSwap and .bHDSwap
+	mov		WORD [RAMVARS.xlateVars+XLATEVARS.wFDandHDswap], 8000h
 	ret
 
 
