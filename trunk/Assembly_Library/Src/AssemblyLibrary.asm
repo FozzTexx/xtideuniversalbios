@@ -80,6 +80,7 @@ SECTION .text
 	%endif
 	%include "Math.asm"
 	%include "Registers.asm"
+	%include "Reboot.asm"
 	%include "Memory.asm"
 	%include "Size.asm"
 	%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS

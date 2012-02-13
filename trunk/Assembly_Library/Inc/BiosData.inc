@@ -125,4 +125,10 @@ struc HDBDA
 endstruc
 
 
+; Warm Boot Flags for BDA.wBoot
+BOOT_FLAG_COLD			EQU	0
+BOOT_FLAG_WARM			EQU	1234h	; Same effect as CTRL + ALT + DEL, skips memory tests
+BOOT_FLAG_PRESERVE_RAM	EQU	4321h	; No mem test, leave memory unchanged (AT+)
+
+
 %endif ; BIOSDATA_INC
