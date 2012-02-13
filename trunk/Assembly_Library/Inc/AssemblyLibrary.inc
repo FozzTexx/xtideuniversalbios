@@ -10,6 +10,7 @@
 %include "BiosFunctions.inc"
 %include "CgaSnow.inc"
 %include "Debug.inc"
+%include "Delay.inc"
 %include "DosFunctions.inc"
 %include "File.inc"
 %include "Math.inc"
