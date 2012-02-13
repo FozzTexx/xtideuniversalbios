@@ -371,31 +371,5 @@ ALIGN JUMP_ALIGN
 .DisplayRebootMessageAndReboot:
 	mov		dx, g_szPCFlashSuccessfull
 	call	Dialogs_DisplayNotificationFromCSDX
-	; Fall to .RebootComputer
-
-
-;--------------------------------------------------------------------
-; .RebootComputer
-;	Parameters:
-; 		Nothing
-;	Returns:
-;		Nothing, function never returns
-;	Corrupts registers:
-;		Doesn't matter
-;--------------------------------------------------------------------
-.RebootComputer:
-.ResetAT:
-	LOAD_BDA_SEGMENT_TO ds, ax, !	; Force use of AX so we can
-	mov		[BDA.wBoot], ax			; make sure soft reset flag is not set
-	mov		al, 0FEh				; System reset (AT+ keyboard controller)
-	out		64h, al					; Reset computer (AT+)
-	mov		al, 10
-	call	Delay_MicrosecondsFromAX
-.ResetXT:
-	xor		ax, ax
-	push	ax
-	popf							; Clear FLAGS (disables interrupt)
-	mov		ds, ax
-	mov		es, ax
-	mov		ss, ax
-	jmp		WORD 0FFFFh:0h			; XT reset
+	xor		ax, ax			; Cold boot flag
+	jmp		Reboot_ComputerWithBootFlagInAX
