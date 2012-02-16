@@ -28,8 +28,12 @@ Int19h_ResetHandler:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Int19h_BootLoaderHandler:
+	; Install INT 19h handler for proper reboot
 	LOAD_BDA_SEGMENT_TO	es, ax
-	call	Initialize_AndDetectDrives		; Installs new boot menu loader
+	mov		bx, BIOS_BOOT_LOADER_INTERRUPT_19h	; INT 19h interrupt vector offset
+	mov		si, Int19h_ResetHandler				; INT 19h handler to reboot the system
+	call	Interrupts_InstallHandlerToVectorInBXFromCSSI
+	call	Initialize_AndDetectDrives			; Installs new boot menu loader
 	; Fall to .PrepareStackAndSelectDriveFromBootMenu
 
 ;--------------------------------------------------------------------
@@ -139,9 +143,6 @@ Int19hMenu_JumpToBootSector_or_RomBoot:
 ; jump to boot sector
 	push	cx			; sgment address for MBR
 	push	bx			; offset address for MBR
-	mov		bx, BIOS_BOOT_LOADER_INTERRUPT_19h	; INT 19h interrupt vector offset
-	mov		si, Int19h_ResetHandler				; INT 19h handler to reboot the system
-	call	Interrupts_InstallHandlerToVectorInBXFromCSSI
 	retf				; NOTE:	DL is set to the drive number
 
 ; Boot by calling INT 18h (ROM Basic of ROM DOS)
