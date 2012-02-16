@@ -21,7 +21,7 @@ SECTION .text
 ;		AH:		Int 13h return status
 ;		CF:		0 if succesfull, 1 if error
 ;	Return with Disk Address Packet in INTPACK:
-;		.bSectorCount	Number of sectors written successfully
+;		.wSectorCount	Number of sectors written successfully
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH43h_HandlerForExtendedWriteSectors:
@@ -32,9 +32,9 @@ AH43h_HandlerForExtendedWriteSectors:
 	mov		ah, [cs:bx+g_rgbWriteCommandLookup]
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRQ, FLG_STATUS_DRQ)
 %ifdef USE_186
-	push	Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
+	push	AH42h_ReturnFromInt13hAfterStoringErrorCodeFromAHandTransferredSectorsFromCX
 	jmp		Idepack_ConvertDapToIdepackAndIssueCommandFromAH
 %else
 	call	Idepack_ConvertDapToIdepackAndIssueCommandFromAH
-	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
+	jmp		SHORT AH42h_ReturnFromInt13hAfterStoringErrorCodeFromAHandTransferredSectorsFromCX
 %endif

@@ -92,9 +92,10 @@ IDEDEVICE%+Command_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 ;		SS:BP:	Ptr to IDEPACK
 ;	Returns:
 ;		AH:		INT 13h Error Code
+;		CX:		Number of successfully transferred sectors (for transfer commands)
 ;		CF:		Cleared if success, Set if error
 ;	Corrupts registers:
-;		AL, BX, CX, DX, (ES:SI for data transfer commands)
+;		AL, BX, (CX), DX, (ES:SI for data transfer commands)
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 IDEDEVICE%+Command_OutputWithParameters:

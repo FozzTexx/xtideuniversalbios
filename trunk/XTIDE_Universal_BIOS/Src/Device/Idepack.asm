@@ -31,9 +31,10 @@ Idepack_FakeToSSBP:
 ;		SS:BP:	Ptr to IDEPACK
 ;	Returns:
 ;		AH:		INT 13h Error Code
+;		CX:		Number of successfully transferred sectors (for transfer commands)
 ;		CF:		Cleared if success, Set if error
 ;	Corrupts registers:
-;		AL, BX, CX, DX, SI, ES
+;		AL, BX, (CX), DX, SI, ES
 ;--------------------------------------------------------------------
 %ifdef MODULE_EBIOS
 ALIGN JUMP_ALIGN
@@ -84,9 +85,10 @@ Idepack_ConvertDapToIdepackAndIssueCommandFromAH:
 ;		SS:BP:	Ptr to IDEPACK (containing INTPACK)
 ;	Returns:
 ;		AH:		INT 13h Error Code
+;		CX:		Number of successfully transferred sectors (for transfer commands)
 ;		CF:		Cleared if success, Set if error
 ;	Corrupts registers:
-;		AL, BX, CX, DX
+;		AL, BX, (CX), DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Idepack_TranslateOldInt13hAddressAndIssueCommandFromAH:

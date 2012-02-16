@@ -21,6 +21,7 @@ SECTION .text
 ;		DH:		Starting head number (0...255)
 ;	Returns with INTPACK in SS:BP:
 ;		AH:		Int 13h/40h floppy return status
+;		AL:		Number of sectors actually verified (only valid if CF set for someBIOSes)
 ;		CF:		0 if successfull, 1 if error
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
@@ -29,9 +30,9 @@ AH4h_HandlerForVerifyDiskSectors:
 	mov		ah, COMMAND_VERIFY_SECTORS
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRQ, FLG_STATUS_DRDY)
 %ifdef USE_186
-	push	Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
+	push	Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAHandTransferredSectorsFromCL
 	jmp		Idepack_TranslateOldInt13hAddressAndIssueCommandFromAH
 %else
 	call	Idepack_TranslateOldInt13hAddressAndIssueCommandFromAH
-	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
+	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAHandTransferredSectorsFromCL
 %endif
