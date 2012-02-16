@@ -22,7 +22,8 @@ SECTION .text
 ;		ES:BX:	Pointer to buffer recieving data
 ;	Returns with INTPACK:
 ;		AH:		Int 13h/40h floppy return status
-;		AL:		Burst error length if AH returns 11h, undefined otherwise
+;		AL:		Burst error length if AH returns 11h (we never return error code 11h)
+;				Number of sectors actually read (only valid if CF set for someBIOSes)
 ;		CF:		0 if successfull, 1 if error
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
@@ -32,9 +33,9 @@ AH2h_HandlerForReadDiskSectors:
 	mov		ah, [cs:bx+g_rgbReadCommandLookup]
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRQ, FLG_STATUS_DRQ)
 %ifdef USE_186
-	push	Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
+	push	Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAHandTransferredSectorsFromCL
 	jmp		Idepack_TranslateOldInt13hAddressAndIssueCommandFromAH
 %else
 	call	Idepack_TranslateOldInt13hAddressAndIssueCommandFromAH
-	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
+	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAHandTransferredSectorsFromCL
 %endif

@@ -22,6 +22,7 @@ SECTION .text
 ;		ES:BX:	Pointer to source data
 ;	Returns with INTPACK:
 ;		AH:		Int 13h/40h floppy return status
+;		AL:		Number of sectors actually written (only valid if CF set for someBIOSes)
 ;		CF:		0 if successfull, 1 if error
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
@@ -31,9 +32,9 @@ AH3h_HandlerForWriteDiskSectors:
 	mov		ah, [cs:bx+g_rgbWriteCommandLookup]
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRQ, FLG_STATUS_DRQ)
 %ifdef USE_186
-	push	Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
+	push	Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAHandTransferredSectorsFromCL
 	jmp		Idepack_TranslateOldInt13hAddressAndIssueCommandFromAH
 %else
 	call	Idepack_TranslateOldInt13hAddressAndIssueCommandFromAH
-	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
+	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAHandTransferredSectorsFromCL
 %endif

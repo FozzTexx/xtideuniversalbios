@@ -35,6 +35,3 @@ AH47h_HandlerForExtendedSeek:
 	call	Idepack_ConvertDapToIdepackAndIssueCommandFromAH
 	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 %endif
-
-.WriteWithVerifyNotSupported:
-	jmp		Prepare_ReturnFromInt13hWithInvalidFunctionError

@@ -104,9 +104,28 @@ Int13h_DirectCallToAnotherBios:
 	mov		[bp+IDEPACK.intpack+INTPACK.dl], dl		; Something is returned in DL
 ALIGN JUMP_ALIGN
 .ExchangeInt13hHandlers:
+%ifdef USE_186
+	push	Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
+	jmp		SHORT ExchangeCurrentInt13hHandlerWithOldInt13hHandler
+%else
 	call	ExchangeCurrentInt13hHandlerWithOldInt13hHandler
-	; Fall to Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
+	jmp		SHORT Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
+%endif
 
+
+;--------------------------------------------------------------------
+; Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAHandTransferredSectorsFromCL
+;	Parameters:
+;		AH:		BIOS Error code
+;		CL:		Number of sectors actually transferred
+;		SS:BP:	Ptr to IDEPACK
+;	Returns:
+;		All registers are loaded from INTPACK
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAHandTransferredSectorsFromCL:
+	mov		[bp+IDEPACK.intpack+INTPACK.al], cl
+	; Fall to Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 
 ;--------------------------------------------------------------------
 ; Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH

@@ -19,17 +19,30 @@ SECTION .text
 ;		AH:		Int 13h return status
 ;		CF:		0 if succesfull, 1 if error
 ;	Return with Disk Address Packet in INTPACK:
-;		.bSectorCount	Number of sectors read successfully
+;		.wSectorCount	Number of sectors read successfully
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH42h_HandlerForExtendedReadSectors:
 	call	Prepare_ByLoadingDapToESSIandVerifyingForTransfer
 	mov		ah, [cs:bx+g_rgbReadCommandLookup]
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRQ, FLG_STATUS_DRQ)
-%ifdef USE_186
-	push	Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
-	jmp		Idepack_ConvertDapToIdepackAndIssueCommandFromAH
-%else
 	call	Idepack_ConvertDapToIdepackAndIssueCommandFromAH
+	; Fall to AH42h_ReturnFromInt13hAfterStoringErrorCodeFromAHandTransferredSectorsFromCX
+
+
+;--------------------------------------------------------------------
+; AH42h_ReturnFromInt13hAfterStoringErrorCodeFromAHandTransferredSectorsFromCX
+;	Parameters:
+;		AH:		INT 13h Error Code
+;		CX:		Number of successfully transferred sectors
+;		SS:BP:	Ptr to IDEPACK
+;	Returns:
+;		Nothing, jumps to Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
+;	Corrupts registers:
+;		SI, DS
+;--------------------------------------------------------------------
+AH42h_ReturnFromInt13hAfterStoringErrorCodeFromAHandTransferredSectorsFromCX:
+	mov		ds, [bp+IDEPACK.intpack+INTPACK.ds]
+	mov		si, [bp+IDEPACK.intpack+INTPACK.si]
+	mov		[si+DAP.wSectorCount], cx
 	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
-%endif

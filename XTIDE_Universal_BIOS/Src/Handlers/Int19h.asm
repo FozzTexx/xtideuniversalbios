@@ -5,6 +5,21 @@
 SECTION .text
 
 ;--------------------------------------------------------------------
+; INT 19h handler that properly reboots the computer when
+; INT 19h is called.
+;
+; Int19h_ResetHandler
+;	Parameters:
+;		Nothing
+;	Returns:
+;		Never returns (reboots computer)
+;--------------------------------------------------------------------
+Int19h_ResetHandler:
+	mov		ax, BOOT_FLAG_WARM				; Skip memory tests
+	jmp		Reboot_ComputerWithBootFlagInAX
+
+
+;--------------------------------------------------------------------
 ; Int19h_BootLoaderHandler
 ;	Parameters:
 ;		Nothing
@@ -124,6 +139,9 @@ Int19hMenu_JumpToBootSector_or_RomBoot:
 ; jump to boot sector
 	push	cx			; sgment address for MBR
 	push	bx			; offset address for MBR
+	mov		bx, BIOS_BOOT_LOADER_INTERRUPT_19h	; INT 19h interrupt vector offset
+	mov		si, Int19h_ResetHandler				; INT 19h handler to reboot the system
+	call	Interrupts_InstallHandlerToVectorInBXFromCSSI
 	retf				; NOTE:	DL is set to the drive number
 
 ; Boot by calling INT 18h (ROM Basic of ROM DOS)
