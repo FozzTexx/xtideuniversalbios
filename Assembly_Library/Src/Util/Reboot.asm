@@ -12,7 +12,7 @@ SECTION .text
 ;		Nothing, function never returns
 ;--------------------------------------------------------------------
 Reboot_ComputerWithBootFlagInAX:
-	LOAD_BDA_SEGMENT_TO	dx, bx
+	LOAD_BDA_SEGMENT_TO	ds, bx
 	mov		[BDA.wBoot], ax			; Store boot flag
 	; Fall to Reboot_AT
 
@@ -28,7 +28,7 @@ Reboot_AT:
 	mov		al, 0FEh				; System reset (AT+ keyboard controller)
 	out		64h, al					; Reset computer (AT+)
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-	mov		al, 10
+	mov		ax, 10
 	call	Delay_MicrosecondsFromAX
 %else
 	JMP_DELAY
@@ -50,4 +50,4 @@ Reboot_XT:
 	mov		ds, ax
 	mov		es, ax
 	mov		ss, ax
-	jmp		WORD 0FFFFh:0h			; XT reset
+	jmp		0FFFFh:0				; XT reset
