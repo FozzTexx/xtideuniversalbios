@@ -233,11 +233,10 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 SingleByteRead:
 %ifdef USE_186	; INS instruction available
-	dec		cx			; Avoid overflowing CX on a 128 sector transfer
 	shl		cx, 1		; WORD count to BYTE count
-	inc		cx
-	rep insb
+	dec		cx			; Fix for CX overflowing on a 128 sector transfer
 	insb
+	rep insb
 %else			; If 8088/8086
 	shr		cx, 1		; WORD count to DWORD count
 ALIGN JUMP_ALIGN
@@ -328,12 +327,10 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 SingleByteWrite:
 %ifdef USE_186	; OUTS instruction available
-	dec		cx			; Avoid overflowing CX on a 128 sector transfer
 	shl		cx, 1		; WORD count to BYTE count
-	inc		cx
-	es					; Source is ES segment
-	rep outsb
-	es outsb
+	dec		cx			; Fix for CX overflowing on a 128 sector transfer
+	es outsb			; Source is ES segment
+	rep es outsb
 %else			; If 8088/8086
 	shr		cx, 1		; WORD count to DWORD count
 	push	ds			; Store DS
