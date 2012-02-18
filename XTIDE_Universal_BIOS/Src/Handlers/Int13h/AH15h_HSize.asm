@@ -24,7 +24,7 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH15h_HandlerForReadDiskDriveSize:
-	call	AH15h_GetSectorCountToDXAX
+	call	AH15h_GetSectorCountToBXDXAX
 	mov		[bp+IDEPACK.intpack+INTPACK.cx], dx			; HIWORD to CX
 	mov		[bp+IDEPACK.intpack+INTPACK.dx], ax			; LOWORD to DX
 
@@ -36,11 +36,11 @@ AH15h_HandlerForReadDiskDriveSize:
 
 ;--------------------------------------------------------------------
 ; AH15h_GetSectorCountFromForeignDriveToDXAX:
-; AH15h_GetSectorCountToDXAX:
+; AH15h_GetSectorCountToBXDXAX:
 ;	Parameters:
-;		DL:		Drive number
+;		DL:		Drive number (AH15h_GetSectorCountFromForeignDriveToDXAX only)
 ;		DS:		RAMVARS segment
-;		DS:DI:	Ptr to DPT (AH15h_GetSectorCount only)
+;		DS:DI:	Ptr to DPT (AH15h_GetSectorCountToDXAX only)
 ;	Returns:
 ;		DX:AX:	Total sector count
 ;		BX:		Zero
@@ -52,7 +52,7 @@ AH15h_GetSectorCountFromForeignDriveToDXAX:
 	call	Int13h_CallPreviousInt13hHandler
 	jmp		SHORT ConvertAH08hReturnValuesToSectorCount
 
-AH15h_GetSectorCountToDXAX:
+AH15h_GetSectorCountToBXDXAX:
 	call	AH8h_GetDriveParameters
 	; Fall to ConvertAH08hReturnValuesToSectorCount
 

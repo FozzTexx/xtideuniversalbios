@@ -99,7 +99,6 @@ BootMenuPrint_NullTerminatedStringFromCSSIandSetCF:
 ;	Corrupts registers:
 ;		AX, BX, CX, DX, SI, DI, ES
 ;--------------------------------------------------------------------
-
 ALIGN JUMP_ALIGN
 BootMenuPrint_RefreshInformation:
 	CALL_MENU_LIBRARY ClearInformationArea		
@@ -194,17 +193,13 @@ BootMenuPrint_HardDiskRefreshInformation:
 ;		AX, BX, CX, DX, SI, DI, ES
 ;--------------------------------------------------------------------
 .HardDiskMenuitemInfoForOurDrive:
-	ePUSH_T	ax, g_szSizeDual
-		
-	; Get and push L-CHS size
-	call	AH15h_GetSectorCountToDXAX
-	call	ConvertSectorCountInBXDXAXtoSizeAndPushForFormat
+	ePUSH_T	ax, g_szInformation
 
 	; Get and push total LBA size
 	call	BootInfo_GetTotalSectorCount
 	call	ConvertSectorCountInBXDXAXtoSizeAndPushForFormat		
 	jmp		BootMenuPrintCfg_ForOurDrive
-				
+
 ;--------------------------------------------------------------------
 ; .HardDiskMenuitemInfoForForeignDrive
 ;	Parameters:

@@ -66,7 +66,7 @@ g_szHotkey:		db	"%A%c%c%A%s%A ",NULL
 ; Boot Menu information strings
 g_szCapacity:			db	"Capacity : %s",NULL
 g_szCapacityNum:		db	"%5-u.%u %ciB",NULL
-g_szSizeDual:			db	"%s /%s",LF,CR
+g_szInformation:		db	"%s",LF,CR
 	db	"Addr.",SINGLE_VERTICAL,"Block",SINGLE_VERTICAL,"Bus",SINGLE_VERTICAL,  "IRQ",SINGLE_VERTICAL,"Reset",LF,CR
 	db	   "%s",SINGLE_VERTICAL, "%5-u",SINGLE_VERTICAL, "%s",SINGLE_VERTICAL," %2-I",SINGLE_VERTICAL,"%5-x" ,NULL
 
