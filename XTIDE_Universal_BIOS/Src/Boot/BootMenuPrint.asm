@@ -114,13 +114,13 @@ BootMenuPrint_RefreshInformation:
 		
 	call	FloppyDrive_GetType							; Get Floppy Drive type to BX
 
-	mov		cx, g_szFddSizeOr	        				; .PrintXTFloppyType
+	mov		ax, g_szFddSizeOr	        				; .PrintXTFloppyType
 	test	bx, bx										; Two possibilities? (FLOPPY_TYPE_525_OR_35_DD)		
-	jz		SHORT BootMenuPrint_HardDiskRefreshInformation.output
+	jz		SHORT .PushAXAndOutput
 
-	mov		cl, (g_szFddUnknown - $$) & 0xff	        ; .PrintUnknownFloppyType
+	mov		al, (g_szFddUnknown - $$) & 0xff	        ; .PrintUnknownFloppyType
 	cmp		bl, FLOPPY_TYPE_35_ED
-	ja		SHORT BootMenuPrint_HardDiskRefreshInformation.output
+	ja		SHORT .PushAXAndOutput
 		
 	; Fall to .PrintKnownFloppyType
 
@@ -146,18 +146,20 @@ BootMenuPrint_RefreshInformation:
 ; 
 ;--------------------------------------------------------------------
 .PrintKnownFloppyType:
-	mov		cl, (g_szFddSize - $$) & 0xff
-	push	cx
+	mov		al, (g_szFddSize - $$) & 0xff
+	push	ax
 		
-	mov		cl, (g_szFddThreeHalf - $$) & 0xff
+	mov		al, (g_szFddThreeHalf - $$) & 0xff
 	cmp		bl, FLOPPY_TYPE_525_HD
 	ja		.ThreeHalf
-	mov		cl, (g_szFddFiveQuarter - $$) & 0xff
+	mov		al, (g_szFddFiveQuarter - $$) & 0xff
 .ThreeHalf:		
-	push	cx											; "5 1/4" or "3 1/2"
+	push	ax											; "5 1/4" or "3 1/2"
 
 	mov		al,FloppyTypes.rgbCapacityMultiplier
 	mul		byte [cs:bx+FloppyTypes.rgbCapacity - 1]    ; -1 since 0 is handled above and not in the table
+
+.PushAXAndOutput:					
 	push	ax
 
 	jmp		short BootMenuPrint_HardDiskRefreshInformation.output
