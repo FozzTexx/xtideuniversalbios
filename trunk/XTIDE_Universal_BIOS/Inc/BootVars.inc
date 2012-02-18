@@ -14,8 +14,7 @@ LEN_BOOTNFO_DRV		EQU		26		; Bytes reserved for drive name
 struc BOOTNFO
 	.szDrvName		resb	LEN_BOOTNFO_DRV		; Drive name
 					resb	2		; Zero word (ensures string terminates)
-	.twSectCnt		resb	6		; Total user addressable sectors
-					resb	2		; padding to make BOOTNFO size an even multiple of DPT size
+					resb	8		; padding to make BOOTNFO size an even multiple of DPT size
 endstruc
 
 DPT_BOOTNFO_SIZE_MULTIPLIER  equ	BOOTNFO_size / LARGEST_DPT_SIZE
@@ -28,10 +27,6 @@ DPT_BOOTNFO_SIZE_MULTIPLIER  equ	BOOTNFO_size / LARGEST_DPT_SIZE
 
 %if BOOTNFO.szDrvName <> 0
 %error "BOOTNFO.szDrvName is assumed to be the first member of struc BOOTNFO, in BootMenuPrint_RefreshItem"
-%endif
-
-%if BOOTNFO.szDrvName + LEN_BOOTNFO_DRV + 2 <> BOOTNFO.twSectCnt
-%error "BOOTNFO.twSectCnt is assumed to come immediately after BOOTNFO.szDrvName (with zero padding), in BootInfo_CreateForHardDisk"
 %endif
 
 %endif

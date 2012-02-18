@@ -62,28 +62,23 @@ BootInfo_CreateForHardDisk:
 		
 	ret
 
-		
+
 ;--------------------------------------------------------------------
-; Finds BOOTNFO for drive and returns total sector count.
-;
 ; BootInfo_GetTotalSectorCount
 ;	Parameters:
 ;		DS:DI:		DPT Pointer
 ;	Returns:
 ;		BX:DX:AX:	48-bit sector count
 ;	Corrupts registers:
-;		Nothing
+;		CX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootInfo_GetTotalSectorCount:
-	push	ds
-	call	BootInfo_ConvertDPTtoBX
-	LOAD_BDA_SEGMENT_TO	ds, ax
-	mov		ax, [bx+BOOTNFO.twSectCnt]
-	mov		dx, [bx+BOOTNFO.twSectCnt+2]
-	mov		bx, [bx+BOOTNFO.twSectCnt+4]
-	pop		ds
-	ret
+	test	BYTE [di+DPT.bFlagsLow], FLG_DRVNHEAD_LBA
+	jnz		SHORT .ReturnFullCapacity
+	jmp		AH15h_GetSectorCountToBXDXAX
+.ReturnFullCapacity:
+	jmp		AccessDPT_GetLbaSectorCountToBXDXAX
 
 
 ;--------------------------------------------------------------------

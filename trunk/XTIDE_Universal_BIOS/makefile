@@ -1,14 +1,14 @@
 ###############################################################################
-# Generic makefile for building BIOS binary file.                             #
-# v. 1.0.0 (28.7.2007 ... 28.7.2007)                                          #
-# (C) Tomi Tilli                                                              #
-# aitotat@gmail.com                                                           #
+# Makefile to build XTIDE Universal BIOS.                                     #
 #                                                                             #
 # Valid makefile targets are:                                                 #
 # all		Removes existing files and builds binary file in \Build           #
 # build		Builds binary file in \Build                                      #
 # clean		Removes all files from \Build                                     #
+# checksum*	Builds all and then generates checksum byte to all binary files   #
+# strings*	Compress src\strings.asm to src\StringsCompressed.asm             #
 #                                                                             #
+# * at the end of target name means that Perl is required for the job.        #
 # Build directory must be created manually if it does not exist.              #
 #                                                                             #
 ###############################################################################
@@ -157,6 +157,8 @@ xt_large:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XT_LARGE) -l"$(TARGET)_xtl.lst" -o"$(TARGET)_xtl.bin"
 	@echo Large XT version "$(TARGET)_xtl.bin" built.
 
+strings: src\StringsCompressed.asm
+
 clean:
 	@$(RM) $(BUILD_DIR)\*.*
 	@echo Deleted "(*.*)" from "$(BUILD_DIR)/"
@@ -169,14 +171,12 @@ checksum:  all
 	@perl ..\tools\checksum.pl $(TARGET)_xtp.bin $(ROMSIZE)
 	@perl ..\tools\checksum.pl $(TARGET)_xt.bin $(ROMSIZE)
 
-src\StringsCompressed.asm:	src\Strings.asm
+src\StringsCompressed.asm: src\Strings.asm
 	@$(AS) src\Strings.asm $(ASFLAGS) $(DEFS_XT) -DMODULE_STRINGS_COMPRESSED_PRECOMPRESS -o build\Strings.bin -l build\StringsPrecompress.lst
 	@perl ..\tools\StringsCompress.pl < build\StringsPrecompress.lst > src\StringsCompressed.asm
 	@echo StringsCompressed.asm updated!
 
-$(SRC_ASM):		src\StringsCompressed.asm
-
-xt_unused:  xt
+xt_unused: xt
 	$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XT) -o"$(TARGET)_xt_unused.asm" -E -DCHECK_FOR_UNUSED_ENTRYPOINTS
 	perl ..\tools\unused.pl $(TARGET)_xt.lst $(TARGET)_xt_unused.asm
 
