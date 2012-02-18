@@ -8,29 +8,6 @@
 BOOT_READ_RETRY_TIMES		EQU		3
 
 
-; Boot Menu Information Table. These are generated for all XTIDE Universal
-; BIOS drives. Available only until boot is successfull.
-LEN_BOOTNFO_DRV		EQU		26		; Bytes reserved for drive name
-struc BOOTNFO
-	.szDrvName		resb	LEN_BOOTNFO_DRV		; Drive name
-					resb	2		; Zero word (ensures string terminates)
-					resb	8		; padding to make BOOTNFO size an even multiple of DPT size
-endstruc
-
-DPT_BOOTNFO_SIZE_MULTIPLIER  equ	BOOTNFO_size / LARGEST_DPT_SIZE
-
-%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS				
-
-%if BOOTNFO_size % LARGEST_DPT_SIZE <> 0
-%error "BOOTNFO's size must be an even multiple of DPT's size.  Add or remove padding at the bottom of BOOTNFO to bring the two sizes into alignment.  As BOOTNFO is only used at boot time, with plenty of memory to consume, it is OK to waste some space here."
-%endif
-
-%if BOOTNFO.szDrvName <> 0
-%error "BOOTNFO.szDrvName is assumed to be the first member of struc BOOTNFO, in BootMenuPrint_RefreshItem"
-%endif
-
-%endif
-
 
 ; Pre-boot variables. These do not exist after successfull boot to OS.
 ; Segment is always 0000h, same as BDA segment

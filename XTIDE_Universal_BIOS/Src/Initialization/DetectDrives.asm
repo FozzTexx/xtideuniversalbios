@@ -142,7 +142,7 @@ DetectDrives_DriveNotFound:
 CreateBiosTablesForHardDisk:
 	call	CreateDPT_FromAtaInformation
 	jc		SHORT DetectDrives_DriveNotFound
-	call	BootInfo_CreateForHardDisk
+	call	BootMenuInfo_CreateForHardDisk
 	jmp		short DetectPrint_DriveNameFromBootnfoInESBX
 
 

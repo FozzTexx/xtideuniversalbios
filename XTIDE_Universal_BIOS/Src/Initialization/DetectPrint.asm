@@ -104,7 +104,7 @@ DetectPrint_StartDetectWithMasterOrSlaveStringInAXandIdeVarsInCSBP:
 ;--------------------------------------------------------------------
 ; DetectPrint_DriveNameFromBootnfoInESBX
 ;	Parameters:
-;		ES:BX:	Ptr to BOOTNFO (if drive found)
+;		ES:BX:	Ptr to BOOTMENUINFO (if drive found)
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
@@ -114,7 +114,7 @@ DetectPrint_DriveNameFromBootnfoInESBX:
 	push	di
 	push	bx
 
-	lea		si, [bx+BOOTNFO.szDrvName]
+	lea		si, [bx+BOOTMENUINFO.szDrvName]
 	mov		bx, es
 	CALL_DISPLAY_LIBRARY PrintNullTerminatedStringFromBXSI
 	CALL_DISPLAY_LIBRARY PrintNewlineCharacters
@@ -122,4 +122,3 @@ DetectPrint_DriveNameFromBootnfoInESBX:
 	pop		bx
 	pop		di
 	ret
-
