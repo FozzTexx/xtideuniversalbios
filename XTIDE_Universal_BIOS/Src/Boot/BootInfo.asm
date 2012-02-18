@@ -46,18 +46,6 @@ BootInfo_CreateForHardDisk:
 
 	pop		si
 	pop		ds
-
-;
-; Store Sector Count
-;
-	call	AtaID_GetTotalSectorCountToBXDXAXfromAtaInfoInESSI
-
-	stosw
-	xchg	ax, dx
-	stosw
-	xchg	ax, bx
-	stosw
-
 	pop		bx
 		
 	ret
