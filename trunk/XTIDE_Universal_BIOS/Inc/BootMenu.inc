@@ -1,5 +1,5 @@
 ; Project name	:	XTIDE Universal BIOS
-; Description	:	Equates used in Boot Menu.
+; Description	:	Equates and structs used in Boot Menu.
 %ifndef BOOTMENU_INC
 %define BOOTMENU_INC
 
@@ -14,6 +14,31 @@ MENU_SCREEN_BOTTOM_LINES				EQU	1
 
 ; Hotkeys
 ROM_BOOT_HOTKEY_SCANCODE				EQU	42h	; F8
+
+
+; Boot Menu Information Table. These are generated for all XTIDE Universal
+; BIOS drives. Available only until boot is successfull.
+MAX_HARD_DISK_NAME_LENGTH				EQU		26		; Bytes reserved for drive name
+
+struc BOOTMENUINFO
+	.szDrvName		resb	MAX_HARD_DISK_NAME_LENGTH
+					resb	2		; Zero word (ensures string terminates)
+					resb	8		; padding to make BOOTMENUINFO size an even multiple of DPT size
+endstruc
+
+DPT_BOOTMENUINFO_SIZE_MULTIPLIER  equ	BOOTMENUINFO_size / LARGEST_DPT_SIZE
+
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS				
+
+%if BOOTMENUINFO_size % LARGEST_DPT_SIZE <> 0
+%error "BOOTMENUINFO's size must be an even multiple of DPT's size.  Add or remove padding at the bottom of BOOTMENUINFO to bring the two sizes into alignment.  As BOOTMENUINFO is only used at boot time, with plenty of memory to consume, it is OK to waste some space here."
+%endif
+
+%if BOOTMENUINFO.szDrvName <> 0
+%error "BOOTMENUINFO.szDrvName is assumed to be the first member of struc BOOTMENUINFO, in BootMenuPrint_RefreshItem"
+%endif
+
+%endif
 
 
 %endif ; BOOTMENU_INC

@@ -6,43 +6,41 @@
 SECTION .text
 
 ;--------------------------------------------------------------------
-; Creates new BOOTNFO struct for detected hard disk.
+; Creates new BOOTMENUINFO struct for detected hard disk.
 ;
-; BootInfo_CreateForHardDisk
+; BootMenuInfo_CreateForHardDisk
 ;	Parameters:
 ;		DL:		Drive number
 ;		DS:DI:	Ptr to Disk Parameter Table
 ;		ES:SI:	Ptr to 512-byte ATA information read from the drive
 ;	Returns:
-;		ES:BX:	Ptr to BOOTNFO (if successful)
+;		ES:BX:	Ptr to BOOTMENUINFO (if successful)
 ;	Corrupts registers:
-;		AX, BX, CX, DX, DI, SI
+;		AX, BX, CX, DX, DI
 ;--------------------------------------------------------------------
-BootInfo_CreateForHardDisk:
-	call	BootInfo_ConvertDPTtoBX		; ES:BX now points to new BOOTNFO
-	push	bx							; Preserve for return
+BootMenuInfo_CreateForHardDisk:
+	call	BootMenuInfo_ConvertDPTtoBX			; ES:BX now points to new BOOTMENUINFO
+	push	bx									; Preserve for return
 
-	mov		di, bx						; Starting pointer at beginning of structure
+	mov		di, bx								; Starting pointer at beginning of structure
 
-;
-; Store Drive Name
-;		
-	push	ds							; Preserve RAMVARS
-	push	si							; Preserve SI for call to GetTotalSectorCount...
+	; Store Drive Name
+	push	ds									; Preserve RAMVARS
+	push	si
 
-	push	es							; ES copied to DS
+	push	es									; ES copied to DS
 	pop		ds
 
-	add		si, BYTE ATA1.strModel		; DS:SI now points drive name
-	lea		di, [bx+BOOTNFO.szDrvName]	; ES:DI now points to name destination
-	mov		cx, LEN_BOOTNFO_DRV / 2		; Max number of WORDs allowed
+	add		si, BYTE ATA1.strModel				; DS:SI now points drive name
+	lea		di, [bx+BOOTMENUINFO.szDrvName]		; ES:DI now points to name destination
+	mov		cx, MAX_HARD_DISK_NAME_LENGTH / 2	; Max number of WORDs allowed
 .CopyNextWord:
 	lodsw
-	xchg	al, ah						; Change endianness
+	xchg	al, ah								; Change endianness
 	stosw
 	loop	.CopyNextWord
-	xor		ax, ax						; Zero AX and clear CF
-	stosw								; Terminate with NULL
+	xor		ax, ax								; Zero AX and clear CF
+	stosw										; Terminate with NULL
 
 	pop		si
 	pop		ds
@@ -52,7 +50,7 @@ BootInfo_CreateForHardDisk:
 
 
 ;--------------------------------------------------------------------
-; BootInfo_GetTotalSectorCount
+; BootMenuInfo_GetTotalSectorCount
 ;	Parameters:
 ;		DS:DI:		DPT Pointer
 ;	Returns:
@@ -61,7 +59,7 @@ BootInfo_CreateForHardDisk:
 ;		CX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-BootInfo_GetTotalSectorCount:
+BootMenuInfo_GetTotalSectorCount:
 	test	BYTE [di+DPT.bFlagsLow], FLG_DRVNHEAD_LBA
 	jnz		SHORT .ReturnFullCapacity
 	jmp		AH15h_GetSectorCountToBXDXAX
@@ -70,22 +68,22 @@ BootInfo_GetTotalSectorCount:
 
 
 ;--------------------------------------------------------------------
-; Returns offset to BOOTNFO based on DPT pointer.
+; Returns offset to BOOTMENUINFO based on DPT pointer.
 ;
-; BootInfo_ConvertDPTtoBX
+; BootMenuInfo_ConvertDPTtoBX
 ;	Parameters:
 ;		DS:DI:	DPT Pointer
 ;	Returns:
-;		BX:		Offset to BOOTNFO struct
+;		BX:		Offset to BOOTMENUINFO struct
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-BootInfo_ConvertDPTtoBX:
+BootMenuInfo_ConvertDPTtoBX:
 	mov		ax, di
-	sub		ax, RAMVARS_size				; subtract off base of DPTs
-	mov		bl, DPT_BOOTNFO_SIZE_MULTIPLIER	; BOOTNFO's are a whole number multiple of DPT size
+	sub		ax, RAMVARS_size						; subtract off base of DPTs
+	mov		bl, DPT_BOOTMENUINFO_SIZE_MULTIPLIER	; BOOTMENUINFO's are a whole number multiple of DPT size
 	mul		bl								
-	add		ax, BOOTVARS.rgBootNfo			; add base of BOOTNFO
+	add		ax, BOOTVARS.rgBootNfo					; add base of BOOTMENUINFO
 	xchg	ax, bx
 	ret			

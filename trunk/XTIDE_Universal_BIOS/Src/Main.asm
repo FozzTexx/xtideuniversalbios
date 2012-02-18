@@ -28,7 +28,7 @@ ORG 000h						; Code start offset 0000h
 	%include "CustomDPT.inc"		; For Disk Parameter Table
 	%include "RomVars.inc"			; For ROMVARS and IDEVARS structs
 	%include "RamVars.inc"			; For RAMVARS struct
-	%include "BootVars.inc"			; For BOOTVARS and BOOTNFO structs
+	%include "BootVars.inc"			; For BOOTVARS struct
 	%include "BootMenu.inc"			; For Boot Menu
 	%include "IDE_8bit.inc"			; For IDE 8-bit data port macros
 	%include "DeviceIDE.inc"		; For IDE device equates
@@ -166,7 +166,7 @@ iend
 	%include "CreateDPT.asm"		; For creating DPTs
 	%include "FindDPT.asm"			; For finding DPTs
 	%include "AccessDPT.asm"		; For accessing DPTs
-	%include "BootInfo.asm"			; For creating BOOTNFO structs
+	%include "BootMenuInfo.asm"		; For creating BOOTMENUINFO structs
 	%include "AtaID.asm"			; For ATA Identify Device information
 	%include "DetectDrives.asm"		; For detecting IDE drives
 	%include "DetectPrint.asm"		; For printing drive detection strings

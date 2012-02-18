@@ -26,7 +26,7 @@ BootMenuPrint_RefreshItem:
 	jnc		.notOurs
 
 	call	FindDPT_ForDriveNumber					; if it is one of ours, print the string in bootnfo
-	call	BootInfo_ConvertDPTtoBX
+	call	BootMenuInfo_ConvertDPTtoBX
 	mov		si, g_szDriveNumBOOTNFO					; special g_szDriveNum that prints from BDA
 	jmp		.go
 		
@@ -196,7 +196,7 @@ BootMenuPrint_HardDiskRefreshInformation:
 	ePUSH_T	ax, g_szInformation
 
 	; Get and push total LBA size
-	call	BootInfo_GetTotalSectorCount
+	call	BootMenuInfo_GetTotalSectorCount
 	call	ConvertSectorCountInBXDXAXtoSizeAndPushForFormat		
 	jmp		BootMenuPrintCfg_ForOurDrive
 
