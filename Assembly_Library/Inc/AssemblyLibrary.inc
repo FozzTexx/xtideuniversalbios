@@ -15,6 +15,8 @@
 %include "File.inc"
 %include "Math.inc"
 %include "Registers.inc"
+%include "SystemTimer.inc"
+
 
 ; Library dependencies
 %ifdef INCLUDE_MENU_DIALOGS
