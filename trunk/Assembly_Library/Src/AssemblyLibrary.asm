@@ -70,6 +70,7 @@ SECTION .text
 %ifdef INCLUDE_TIME_LIBRARY
 	%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 		%include "Delay.asm"
+		%include "SystemTimer.asm"
 	%endif
 	%include "TimerTicks.asm"
 %endif
