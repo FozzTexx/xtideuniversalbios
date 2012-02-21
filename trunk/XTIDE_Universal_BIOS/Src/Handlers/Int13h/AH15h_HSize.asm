@@ -25,12 +25,12 @@ SECTION .text
 ALIGN JUMP_ALIGN
 AH15h_HandlerForReadDiskDriveSize:
 	call	AH15h_GetSectorCountToBXDXAX
-	mov		[bp+IDEPACK.intpack+INTPACK.cx], dx			; HIWORD to CX
-	mov		[bp+IDEPACK.intpack+INTPACK.dx], ax			; LOWORD to DX
+	mov		[bp+IDEPACK.intpack+INTPACK.cx], dx	; HIWORD to CX
+	mov		[bp+IDEPACK.intpack+INTPACK.dx], ax	; LOWORD to DX
 
 	xor		ah, ah
-	call	Int13h_SetErrorCodeToIntpackInSSBPfromAH	; Store success to BDA and CF
-	mov		BYTE [bp+IDEPACK.intpack+INTPACK.ah], 3		; Type code = Hard disk
+	call	Int13h_SetErrorCodeToBdaAndToIntpackInSSBPfromAH	; Store success to BDA and CF
+	mov		BYTE [bp+IDEPACK.intpack+INTPACK.ah], 3				; Type code = Hard disk
 	jmp		Int13h_ReturnFromHandlerWithoutStoringErrorCode
 
 
