@@ -30,9 +30,9 @@ ALIGN JUMP_ALIGN
 Int19h_BootLoaderHandler:
 	; Install INT 19h handler for proper reboot
 	LOAD_BDA_SEGMENT_TO	es, ax
-	mov		bx, BIOS_BOOT_LOADER_INTERRUPT_19h	; INT 19h interrupt vector offset
+	mov		al, BIOS_BOOT_LOADER_INTERRUPT_19h	; INT 19h interrupt vector offset
 	mov		si, Int19h_ResetHandler				; INT 19h handler to reboot the system
-	call	Interrupts_InstallHandlerToVectorInBXFromCSSI
+	call	Interrupts_InstallHandlerToVectorInALFromCSSI
 	call	Initialize_AndDetectDrives			; Installs new boot menu loader
 	; Fall to .PrepareStackAndSelectDriveFromBootMenu
 

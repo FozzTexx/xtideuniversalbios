@@ -13,12 +13,16 @@ SECTION .text
 ;	Returns:
 ;		DS:DI:	Ptr to first unused DPT
 ;	Corrupts registers:
-;		DL
+;		DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 FindDPT_ForNewDriveToDSDI:
-	mov		dl, [RAMVARS.bFirstDrv]
-	add		dl, [RAMVARS.bDrvCnt]
+	mov		ax, [RAMVARS.wDrvCntAndFirst]
+	add		al, ah
+%ifdef MODULE_SERIAL_FLOPPY
+	add		al, [RAMVARS.xlateVars+XLATEVARS.bFlopCreateCnt]
+%endif
+	xchg	ax, dx		
 	; Fall to FindDPT_ForDriveNumber
 
 
@@ -40,12 +44,26 @@ FindDPT_ForDriveNumber:
 	push	dx
 	xchg	di, ax	; Save the contents of AX in DI
 
+%ifdef MODULE_SERIAL_FLOPPY
+	mov		ax, [RAMVARS.wDrvCntAndFirst]
+		
+	test	dl, dl
+	js		.harddisk
+
+	call	RamVars_UnpackFlopCntAndFirstToAL
+	add		dl, ah						; add in end of hard disk DPT list, floppies start immediately after
+.harddisk:
+	sub		dl, al						; subtract off beginning of either hard disk or floppy list (as appropriate)
+%else
+	sub		dl, [RAMVARS.bFirstDrv]		; subtract off beginning of hard disk list
+%endif
+		
 	mov		al, LARGEST_DPT_SIZE
-	sub		dl, [RAMVARS.bFirstDrv]
+		
 	mul		dl
 	add		ax, BYTE RAMVARS_size
 
-	xchg	di, ax	; Restore AX and put result in DI
+	xchg	di, ax						; Restore AX and put result in DI
 	pop		dx
 	ret
 
@@ -88,11 +106,9 @@ FindDPT_ForDriveNumber:
 ; IterateToSlaveAtPortCallback
 ; IterateToMasterAtPortCallback
 ;	Parameters:
-;		CH:		Drive number
 ;		DX:		IDE Base Port address
 ;		DS:DI:	Ptr to DPT to examine
 ;	Returns:
-;		DL:		Drive number if correct DPT
 ;		CF:		Set if wanted DPT found
 ;				Cleared if wrong DPT
 ;	Corrupts registers:
@@ -115,7 +131,6 @@ CompareBasePortAddress:
 	cmp		dx, [cs:bx+IDEVARS.wPort]			; Wanted port?
 	pop		bx
 	jne		SHORT ReturnWrongDPT
-	mov		dl, ch								; Return drive number in DL
 
 ReturnRightDPT:
 	stc											; Set CF since wanted DPT
@@ -186,6 +201,7 @@ FindDPT_ToDSDIforFlagsHighInBL:
 ;		DS:			RAMVARS segment
 ;	Returns:
 ;		DS:DI:		Ptr to wanted DPT (if found)
+;					If not found, points to first empty DPT
 ;		CF:			Set if wanted DPT found
 ;					Cleared if DPT not found, or no DPTs present
 ;	Corrupts registers:
@@ -194,19 +210,24 @@ FindDPT_ToDSDIforFlagsHighInBL:
 ALIGN JUMP_ALIGN
 IterateAllDPTs:
 	push	cx
-	mov		cx, [RAMVARS.wDrvCntAndFirst]
-	jcxz	.NotFound					; Return if no drives
+
+	mov		cl, [RAMVARS.bDrvCnt]		
+	mov		ch, 0
+		
 	mov		di, RAMVARS_size			; Point DS:DI to first DPT
+		
+	jcxz	.NotFound					; Return if no drives
+		
 ALIGN JUMP_ALIGN
 .LoopWhileDPTsLeft:
 	call	si							; Is wanted DPT?
 	jc		SHORT .AllDptsIterated		;  If so, return
-	inc		ch							; Increment drive number
 	add		di, BYTE LARGEST_DPT_SIZE	; Point to next DPT
-	dec		cl							; Decrement drives left
-	jnz		SHORT .LoopWhileDPTsLeft
+	loop	.LoopWhileDPTsLeft
+		
 .NotFound:		
 	clc									; Clear CF since DPT not found
+		
 ALIGN JUMP_ALIGN
 .AllDptsIterated:
 	pop		cx

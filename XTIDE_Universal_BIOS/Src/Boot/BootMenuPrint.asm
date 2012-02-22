@@ -23,7 +23,7 @@ BootMenuPrint_RefreshItem:
 	mov		bp, sp
 
 	call	RamVars_IsDriveHandledByThisBIOS				
-	jnc		.notOurs
+	jc		.notOurs
 
 	call	FindDPT_ForDriveNumber					; if it is one of ours, print the string in bootnfo
 	call	BootMenuInfo_ConvertDPTtoBX
@@ -46,7 +46,7 @@ BootMenuPrint_RefreshItem:
 	add		al, 'A'									; floppy drive letter (we always push this although
 	push	ax										; the hard disks don't ever use it, but it does no harm)
 		
-	jmp		short BootMenuPrint_FormatCSSIfromParamsInSSBP
+	jmp		short BootMenuPrint_RefreshInformation.FormatRelay
 
 ;--------------------------------------------------------------------
 ; Prints Boot Menu title strings.
@@ -86,7 +86,7 @@ BootMenuPrint_NullTerminatedStringFromCSSIandSetCF:
 ;
 	push	bp
 	mov		bp,sp
-	jmp		short BootMenuPrint_FormatCSSIfromParamsInSSBP
+	jmp		short BootMenuPrint_RefreshInformation.FormatRelay
 
 		
 ;--------------------------------------------------------------------
@@ -109,13 +109,27 @@ BootMenuPrint_RefreshInformation:
 	push	bp
 	mov		bp, sp
 
+	mov		si, g_szCapacity							; Setup print string now, carries through to print call
+
+	xor		di, di
+	call	RamVars_IsDriveHandledByThisBIOS
+	jc		SHORT .notours
+	call	FindDPT_ForDriveNumber						; DS:DI to point DPT
+.notours:		
+		
 	test	dl, dl										; are we a hard disk?
 	js		BootMenuPrint_HardDiskRefreshInformation		
-		
+
+	test	di,di
+	jnz		.ours
 	call	FloppyDrive_GetType							; Get Floppy Drive type to BX
+	jmp		.around
+.ours:
+	call	AH8h_GetDriveParameters
+.around:				
 
 	mov		ax, g_szFddSizeOr	        				; .PrintXTFloppyType
-	test	bx, bx										; Two possibilities? (FLOPPY_TYPE_525_OR_35_DD)		
+	test	bl, bl										; Two possibilities? (FLOPPY_TYPE_525_OR_35_DD)		
 	jz		SHORT .PushAXAndOutput
 
 	mov		al, (g_szFddUnknown - $$) & 0xff	        ; .PrintUnknownFloppyType
@@ -157,12 +171,14 @@ BootMenuPrint_RefreshInformation:
 	push	ax											; "5 1/4" or "3 1/2"
 
 	mov		al,FloppyTypes.rgbCapacityMultiplier
+	mov		bh, 0
 	mul		byte [cs:bx+FloppyTypes.rgbCapacity - 1]    ; -1 since 0 is handled above and not in the table
 
 .PushAXAndOutput:					
 	push	ax
 
-	jmp		short BootMenuPrint_HardDiskRefreshInformation.output
+.FormatRelay:
+	jmp		short BootMenuPrint_FormatCSSIfromParamsInSSBP
 
 
 ;--------------------------------------------------------------------
@@ -179,49 +195,36 @@ BootMenuPrint_RefreshInformation:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenuPrint_HardDiskRefreshInformation:		
-	call	RamVars_IsDriveHandledByThisBIOS
-	jnc		SHORT .HardDiskMenuitemInfoForForeignDrive
-	call	FindDPT_ForDriveNumber						; DS:DI to point DPT
-	; Fall to .HardDiskMenuitemInfoForOurDrive
+	test	di,di
+	jz		.HardDiskMenuitemInfoForForeignDrive		
 
-;--------------------------------------------------------------------
-; .HardDiskMenuitemInfoForOurDrive
-;	Parameters:
-;		DL:		Untranslated Hard Disk number
-;		DS:DI:	Ptr to DPT
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, BX, CX, DX, SI, DI, ES
-;--------------------------------------------------------------------
 .HardDiskMenuitemInfoForOurDrive:
 	ePUSH_T	ax, g_szInformation
 
 	; Get and push total LBA size
 	call	BootMenuInfo_GetTotalSectorCount
-	call	ConvertSectorCountInBXDXAXtoSizeAndPushForFormat		
-	jmp		BootMenuPrintCfg_ForOurDrive
-
-;--------------------------------------------------------------------
-; .HardDiskMenuitemInfoForForeignDrive
-;	Parameters:
-;		DL:		Untranslated Hard Disk number
-;		DS:		RAMVARS segment
-;	Returns:
-;		CF:		Set since menu event was handled successfully
-;	Corrupts registers:
-;		AX, BX, CX, DX, SI, DI
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+	jmp		.ConvertSectorCountInBXDXAXtoSizeAndPushForFormat
+		
 .HardDiskMenuitemInfoForForeignDrive:
 	call	DriveXlate_ToOrBack
 	call	AH15h_GetSectorCountFromForeignDriveToDXAX
-	call	ConvertSectorCountInBXDXAXtoSizeAndPushForFormat
 
-ALIGN JUMP_ALIGN		
-.output:
-	mov		si, g_szCapacity
-;;; fall-through
+.ConvertSectorCountInBXDXAXtoSizeAndPushForFormat:
+	ePUSH_T	cx, g_szCapacityNum		; Push format substring
+	call	Size_ConvertSectorCountInBXDXAXtoKiB
+	mov		cx, BYTE_MULTIPLES.kiB
+	call	Size_GetSizeToAXAndCharToDLfromBXDXAXwithMagnitudeInCX
+	push	ax						; Size in magnitude
+	push	cx						; Tenths
+	push	dx						; Magnitude character		
+				
+	test	di,di
+	jz		short BootMenuPrint_FormatCSSIfromParamsInSSBP
+
+%include "BootMenuPrintCfg.asm"			; inline of code to fill out remainder of information string
+
+;;; fall-through to BootMenuPrint_FormatCSSIfromParamsInSSBP
+
 
 ;--------------------------------------------------------------------
 ; BootMenuPrint_FormatCSSIfromParamsInSSBP
@@ -272,10 +275,10 @@ BootMenuPrint_ClearScreen:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenuPrint_TheBottomOfScreen:
-	call	FloppyDrive_GetCountToCX
-	mov		bl, cl					; Floppy Drive count to BL
-	call	RamVars_GetHardDiskCountFromBDAtoCX
-	mov		bh, cl					; Hard Disk count to BH
+	call	FloppyDrive_GetCountToAX
+	xchg	bx, ax					; Floppy Drive count to BL
+	call	RamVars_GetHardDiskCountFromBDAtoAX
+	mov		bh, al					; Hard Disk count to BH
 	; Fall to .MoveCursorToHotkeyStrings
 
 ;--------------------------------------------------------------------
@@ -320,10 +323,8 @@ BootMenuPrint_TheBottomOfScreen:
 .SkipFloppyDriveHotkeys:
 	test	bh, bh		; Any Hard Drives?
 	jz		SHORT .SkipHardDriveHotkeys
-	xchg	ax, cx		; Store Key Attribute
-	call	BootMenu_GetLetterForFirstHardDiskToCL
-	mov		ch, ANGLE_QUOTE_RIGHT
-	xchg	ax, cx
+	call	BootMenu_GetLetterForFirstHardDiskToAL
+	mov		ah, ANGLE_QUOTE_RIGHT
 	mov		si, g_szHDD
 	call	PushHotkeyParamsAndFormat
 
@@ -389,28 +390,6 @@ ALIGN JUMP_ALIGN
 BootMenuPrint_InitializeDisplayContext:
 	CALL_DISPLAY_LIBRARY InitializeDisplayContext
 	ret
-
-
-;--------------------------------------------------------------------
-; ConvertSectorCountInBXDXAXtoSizeAndPushForFormat
-;	Parameters:
-;		BX:DX:AX:	Sector count
-;	Returns:
-;		Size in stack
-;	Corrupts registers:
-;		AX, BX, CX, DX, SI
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-ConvertSectorCountInBXDXAXtoSizeAndPushForFormat:
-	pop		si						; Pop return address
-	ePUSH_T	cx, g_szCapacityNum		; Push format substring
-	call	Size_ConvertSectorCountInBXDXAXtoKiB
-	mov		cx, BYTE_MULTIPLES.kiB
-	call	Size_GetSizeToAXAndCharToDLfromBXDXAXwithMagnitudeInCX
-	push	ax						; Size in magnitude
-	push	cx						; Tenths
-	push	dx						; Magnitude character
-	jmp		si
 
 
 FloppyTypes:

@@ -14,7 +14,8 @@ SECTION .text
 ;		SS:BP:	Ptr to IDEPACK
 ;	Returns with INTPACK:
 ;		If succesfull:
-;			AH:		3 (Hard disk accessible)
+;			AH:		Hard Disk: 3 (Hard disk accessible)
+;                   Floppy:    1 (Floppy disk, without change detection)
 ;			CX:DX:	Total number of sectors
 ;			CF:		0
 ;		If failed:
@@ -24,13 +25,30 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH15h_HandlerForReadDiskDriveSize:
+%ifdef MODULE_SERIAL_FLOPPY
+	mov		cl, 1										; 1 = floppy disk, no change detection
+				
+	test	dl,dl										; DO NOT store the sector count if this is a 
+	jns		.FloppyDrive								; floppy disk, some OS's depend on this not 
+														; happening for floppies in order to boot.
+%endif
+		
 	call	AH15h_GetSectorCountToBXDXAX
-	mov		[bp+IDEPACK.intpack+INTPACK.cx], dx	; HIWORD to CX
-	mov		[bp+IDEPACK.intpack+INTPACK.dx], ax	; LOWORD to DX
+	mov		[bp+IDEPACK.intpack+INTPACK.cx], dx			; HIWORD to CX
+	xchg	[bp+IDEPACK.intpack+INTPACK.dx], ax			; LOWORD to DX, AL gets drive number
 
-	xor		ah, ah
-	call	Int13h_SetErrorCodeToBdaAndToIntpackInSSBPfromAH	; Store success to BDA and CF
-	mov		BYTE [bp+IDEPACK.intpack+INTPACK.ah], 3				; Type code = Hard disk
+	xor		ah, ah		
+%ifdef MODULE_SERIAL_FLOPPY				
+	mov		cl, 3										; 3 = Hard Disk Accessible
+.FloppyDrive:
+		
+	call	Int13h_SetErrorCodeToBdaAndToIntpackInSSBPfromAH_ALHasDriveNumber	; Store success to BDA and CF		
+	mov		BYTE [bp+IDEPACK.intpack+INTPACK.ah], cl
+%else
+	call	Int13h_SetErrorCodeToBdaAndToIntpackInSSBPfromAH	; Store success to BDA and CF		
+	mov		BYTE [bp+IDEPACK.intpack+INTPACK.ah], 3
+%endif		
+		
 	jmp		Int13h_ReturnFromHandlerWithoutStoringErrorCode
 
 

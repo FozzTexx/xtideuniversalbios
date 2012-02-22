@@ -55,6 +55,7 @@ SerialCommand_Protocol_Header					EQU		0a0h
 ;		SS:BP:	Ptr to IDEREGS_AND_INTPACK
 ;	Returns:
 ;		AH:		INT 13h Error Code
+;		CX:		Number of successfully transferred sectors (for transfer commands)
 ;		CF:		Cleared if success, Set if error
 ;	Corrupts registers:
 ;		AL, BX, CX, DX, (ES:SI for data transfer commands)
@@ -308,7 +309,7 @@ SerialCommand_OutputWithParameters_DeviceInDX:
 		pop		ax				; sector count and command byte
 		dec		al				; decrement sector count
 		push	ax				; save
-		jz		SerialCommand_OutputWithParameters_ReturnCodeInALCF    ; CF=0 from "cmp ax,bp" returning Zero above
+		jz		SerialCommand_OutputWithParameters_ReturnCodeInAL
 
 		cli						; interrupts back off for ACK byte to host
 								; (host could start sending data immediately)
@@ -408,21 +409,26 @@ SerialCommand_OutputWithParameters_Error:
 		loopnz	.clearBuffer			; note ZF from test above
 
 .clearBufferComplete:
-		stc
-		mov		al,1
+		mov		al, 3			;  error return code and CF (low order bit)
 
 ALIGN JUMP_ALIGN
-SerialCommand_OutputWithParameters_ReturnCodeInALCF:
+SerialCommand_OutputWithParameters_ReturnCodeInAL:
 %if 0
 		sti						;  all paths here will already have interrupts turned back on
 %endif
-		mov		ah,al
+		mov		ah, al			;  for success, AL will already be zero
 
-		pop		bp				;  recover ax (command and count) from stack, throw away
+		pop		bx				;  recover "ax" (command and count) from stack
 
 		pop		bp
 		pop		di
 		pop		si
+
+		mov		ch, 0
+		mov		cl,[bp+IDEPACK.bSectorCount]
+		sub		cl, bl			; subtract off the number of sectors that remained
+		
+		shr		ah, 1			; shift down return code and CF
 
 		ret
 
@@ -631,7 +637,17 @@ SerialCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 		push	si
 		call	FindDPT_ToDSDIforSerialDevice
 		pop		si
+%ifdef MODULE_SERIAL_FLOPPY
+		jc		.founddpt
+;
+; If not found above with FindDPT_ToDSDIforSerialDevice, DI will point to the DPT after the last hard disk DPT
+;
+		cmp		byte [RAMVARS.xlateVars+XLATEVARS.bFlopCntAndFirst], 0
+		jz		.notfounddpt
+.founddpt:
+%else
 		jnc		.notfounddpt
+%endif
 		mov		ax, [di+DPT_SERIAL.wSerialPortAndBaud]
 .notfounddpt:
 
@@ -677,7 +693,7 @@ SerialCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 ; place port and baud word in to the return sector, in a vendor specific area,
 ; which is read by FinalizeDPT and DetectDrives
 ;
-		mov		[es:si+ATA6.wVendor],dx
+		mov		[es:si+ATA6.wSerialPortAndBaud],dx
 
 .notFound:
 		ret

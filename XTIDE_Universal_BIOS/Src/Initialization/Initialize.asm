@@ -28,9 +28,9 @@ Initialize_FromMainBiosRomSearch:			; unused entrypoint ok
 	jnz		SHORT .SkipRomInitialization
 
 	; Install INT 19h handler (boot loader) where drives are detected
-	mov		bx, BIOS_BOOT_LOADER_INTERRUPT_19h
+	mov		al, BIOS_BOOT_LOADER_INTERRUPT_19h
 	mov		si, Int19h_BootLoaderHandler
-	call	Interrupts_InstallHandlerToVectorInBXFromCSSI
+	call	Interrupts_InstallHandlerToVectorInALFromCSSI
 
 .SkipRomInitialization:
 	ePOPA
@@ -72,14 +72,14 @@ Initialize_AndDetectDrives:
 .StoreDptPointersToIntVectors:
 	mov		dl, 80h
 	call	RamVars_IsDriveHandledByThisBIOS
-	jnc		SHORT .FindForDrive81h	; Store nothing if not our drive
+	jc		SHORT .FindForDrive81h	; Store nothing if not our drive
 	call	FindDPT_ForDriveNumber	; DPT to DS:DI
 	mov		[es:HD0_DPT_POINTER_41h*4], di
 	mov		[es:HD0_DPT_POINTER_41h*4+2], ds
 .FindForDrive81h:
 	inc		dx
 	call	RamVars_IsDriveHandledByThisBIOS
-	jnc		SHORT .ResetDetectedDrives
+	jc		SHORT .ResetDetectedDrives
 	call	FindDPT_ForDriveNumber
 	mov		[es:HD1_DPT_POINTER_46h*4], di
 	mov		[es:HD1_DPT_POINTER_46h*4+2], ds

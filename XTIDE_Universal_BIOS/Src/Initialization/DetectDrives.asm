@@ -42,6 +42,7 @@ DetectDrives_FromAllIDEControllers:
 	loop	.DriveDetectLoop
 
 %ifdef MODULE_SERIAL
+;----------------------------------------------------------------------
 ;
 ; if serial drive detected, do not scan (avoids duplicate drives and isn't needed - we already have a connection)
 ;
@@ -56,7 +57,46 @@ DetectDrives_FromAllIDEControllers:
 	jnz		.DriveDetectLoop
 %endif
 
-.done:
+.done:	
+%ifdef MODULE_SERIAL_FLOPPY
+;----------------------------------------------------------------------
+;
+; Add in any emulated serial floppy drives.
+;
+	mov		al, [RAMVARS.xlateVars+XLATEVARS.bFlopCreateCnt]
+	dec		al
+	mov		cl, al
+	js		.NoFloppies						; if no drives are present, we store 0ffh
+
+	call	FloppyDrive_GetCountFromBIOS_or_BDA
+
+	push	ax
+
+	add		al, cl							; Add our drives to existing drive count
+	cmp		al, 3							; For BDA, max out at 4 drives (ours is zero based)
+	jl		.MaxBDAFloppiesExceeded
+	mov		al, 3							
+.MaxBDAFloppiesExceeded:
+	eROR_IM	al, 2							; move to bits 6-7
+	inc		ax								; low order bit, indicating floppy drive exists
+
+	mov		ah, [es:BDA.wEquipment]			; Load Equipment WORD low byte	
+	and		ah, 03eh						; Mask off drive number and drives present bit
+	or		al, ah							; Or in new values
+	mov		[es:BDA.wEquipment], al			; and store
+
+	mov		al, 1eh							; BDA pointer to Floppy DPT
+	mov		si, AH8h_FloppyDPT
+	call	Interrupts_InstallHandlerToVectorInALFromCSSI
+
+	pop		ax
+
+	shr		cl, 1							; number of drives, 1 or 2 only, to CF flag (clear=1, set=2)
+	rcl		al, 1							; starting drive number in upper 7 bits, number of drives in low bit
+.NoFloppies:	
+	mov		[RAMVARS.xlateVars+XLATEVARS.bFlopCntAndFirst], al
+%endif
+		
 	ret
 
 %if FLG_ROMVARS_SERIAL_SCANDETECT != 8

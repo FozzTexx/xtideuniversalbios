@@ -51,7 +51,12 @@
 ; useful when that register needs to be zeroed in subsequent code or
 ; when stack usage is undesirable (ie speed is critical).
 ;
+; The PRESERVE_FLAGS version will zero the register with a MOV instead
+; of an XOR, thus preserving the flags.  It is one byte larger on
+; non-186 or higher systems.
+;
 ; LOAD_BDA_SEGMENT_TO
+; LOAD_BDA_SEGMENT_PRESERVE_FLAGS_TO
 ;	Parameters:
 ;		%1:		Destination Segment Register
 ;		%2:		Temporary WORD Register
@@ -67,6 +72,19 @@
 	mov		%1, %2
 %elifidn %3, !
 	xor		%2, %2
+	mov		%1, %2
+%else
+	push	BYTE 0
+	pop		%1
+%endif
+%endmacro
+
+%macro LOAD_BDA_SEGMENT_PRESERVE_FLAGS_TO 2-3
+%ifndef USE_186
+	mov		%2, 0
+	mov		%1, %2
+%elifidn %3, !
+	mov		%2, 0
 	mov		%1, %2
 %else
 	push	BYTE 0

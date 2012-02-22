@@ -122,25 +122,25 @@ ALIGN JUMP_ALIGN
 ;		DL:		Drive number
 ;		DS:		RAMVARS segment
 ;	Returns:
-;		CF:		Set if function is handled by this BIOS
-;				Cleared if function belongs to some other BIOS
+;		CF:		Cleared if function is handled by this BIOS
+;				Set if function belongs to some other BIOS
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 RamVars_IsFunctionHandledByThisBIOS:
 	test	ah, ah			; Reset for all floppy and hard disk drives?
-	jz		SHORT .FunctionIsHandledByOurBIOS
-	cmp		ah, 08h			; Read Disk Drive Parameters?
-	jne		SHORT RamVars_IsDriveHandledByThisBIOS
-	test	dl, dl			; We do not handle floppy drives
-	jns		SHORT .FunctionIsNotHandledByOurBIOS
-ALIGN JUMP_ALIGN
-.FunctionIsHandledByOurBIOS:
-	stc
-.FunctionIsNotHandledByOurBIOS:
-	ret
-
+	jz		SHORT RamVars_IsDriveHandledByThisBIOS.CFAlreadyClear_IsHandledByOurBIOS
+	cmp		ah, 08h
+%ifdef MODULE_SERIAL_FLOPPY
+; we handle all traffic for function 08h, as we need to wrap both hard disk and floppy drive counts
+	je		SHORT RamVars_IsDriveHandledByThisBIOS.CFAlreadyClear_IsHandledByOurBIOS
+%else
+; we handle all *hard disk* traffic for function 08h, as we need to wrap the hard disk drive count
+	je		SHORT RamVars_IsDriveHandledByThisBIOS.IsDriveAHardDisk
+%endif
+;;; fall-through			
+		
 ;--------------------------------------------------------------------
 ; Checks if drive is handled by this BIOS.
 ;
@@ -149,66 +149,92 @@ ALIGN JUMP_ALIGN
 ;		DL:		Drive number
 ;		DS:		RAMVARS segment
 ;	Returns:
-;		CF:		Set if drive is handled by this BIOS
-;				Cleared if drive belongs to some other BIOS
+;		CF:		Cleared if drive is handled by this BIOS
+;				Set if drive belongs to some other BIOS
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 RamVars_IsDriveHandledByThisBIOS:
 	push	ax
-	mov		ax, [RAMVARS.wDrvCntAndFirst]		; Drive count to AL, First number to AH
-	add		al, ah								; One past last drive to AL
-	cmp		dl, al								; Above last supported?
-	jae		SHORT .DriveNotHandledByThisBIOS
-	cmp		ah, dl								; Below first supported?
-	ja		SHORT .DriveNotHandledByThisBIOS
-	stc
-.DriveNotHandledByThisBIOS:
+
+	mov		ax, [RAMVARS.wDrvCntAndFirst]		; Drive count to AH, First number to AL
+	add		ah, al								; One past last drive to AH
+	cmp		dl, ah								; Above last supported?
+	jae		SHORT .HardDiskIsNotHandledByThisBIOS
+.TestLowLimit:
+	cmp		dl, al								; Below first supported?
+	jae		SHORT .CFAlreadyClear_IsHandledByOurBIOS_PopAX	; note that CF is clear if the branch is taken
+
+.HardDiskIsNotHandledByThisBIOS:
+%ifdef MODULE_SERIAL_FLOPPY
+	call	RamVars_UnpackFlopCntAndFirstToAL
+	cbw											; normally 0h, could be ffh if no drives present
+	adc		ah, al								; if no drives present, still ffh (ffh + ffh + 1 = ffh)
+	js		SHORT .DiskIsNotHandledByThisBIOS
+	cmp		ah, dl
+	jz		SHORT .CFAlreadyClear_IsHandledByOurBIOS_PopAX
+	cmp		al, dl
+	jz		SHORT .CFAlreadyClear_IsHandledByOurBIOS_PopAX
+.DiskIsNotHandledByThisBIOS:			
+%endif
+
+	stc											; Is not supported by our BIOS
+		
+.CFAlreadyClear_IsHandledByOurBIOS_PopAX:				
 	pop		ax
+.CFAlreadyClear_IsHandledByOurBIOS:	
 	ret
 
+%ifndef MODULE_SERIAL_FLOPPY		
+;
+; Note that we could have just checked for the high order bit in dl, but with the needed STC and jumps, 
+; leveraging the code above resulted in space savings.
+;
+.IsDriveAHardDisk:		
+	push	ax									; match stack at the top of routine
+	mov		al, 80h								; to catch all hard disks, lower limit is 80h vs. bFirstDrv
+	jmp		.TestLowLimit						; and there is no need to test a high limit
+%endif
 
 ;--------------------------------------------------------------------
-; RamVars_GetHardDiskCountFromBDAtoCX
+; RamVars_GetHardDiskCountFromBDAtoAX
 ;	Parameters:
 ;		DS:		RAMVARS segment
 ;	Returns:
-;		CX:		Total hard disk count
+;		AX:		Total hard disk count
 ;	Corrupts registers:
-;		Nothing
+;		CX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-RamVars_GetHardDiskCountFromBDAtoCX:
+RamVars_GetHardDiskCountFromBDAtoAX:
 	push	es
-	push	dx
 
-	LOAD_BDA_SEGMENT_TO	es, cx, !		; Zero CX
-	call	RamVars_GetCountOfKnownDrivesToDL
+	LOAD_BDA_SEGMENT_TO	es, ax
+	call	RamVars_GetCountOfKnownDrivesToAX
 	mov		cl, [es:BDA.bHDCount]
-	MAX_U	cl, dl
-
-	pop		dx
+	MAX_U	al, cl
+		
 	pop		es
 	ret
 
 ;--------------------------------------------------------------------
-; RamVars_GetCountOfKnownDrivesToDL
+; RamVars_GetCountOfKnownDrivesToAX
 ;	Parameters:
 ;		DS:		RAMVARS segment
 ;	Returns:
-;		DL:		Total hard disk count
+;		AX:		Total hard disk count
 ;	Corrupts registers:
-;		Nothing
+;		None
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-RamVars_GetCountOfKnownDrivesToDL:
-	mov		dl, [RAMVARS.bFirstDrv]		; Number for our first drive
-	add		dl, [RAMVARS.bDrvCnt]		; Our drives
-	and		dl, 7Fh						; Clear HD bit for drive count
+RamVars_GetCountOfKnownDrivesToAX:
+	mov		ax, [RAMVARS.wDrvCntAndFirst]
+	add		al, ah
+	and		al, 7fh
+	cbw
 	ret
-
-
+	
 ;--------------------------------------------------------------------
 ; RamVars_GetIdeControllerCountToCX
 ;	Parameters:
@@ -218,6 +244,25 @@ RamVars_GetCountOfKnownDrivesToDL:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
 RamVars_GetIdeControllerCountToCX:
 	eMOVZX	cx, BYTE [cs:ROMVARS.bIdeCnt]
 	ret
+
+%ifdef MODULE_SERIAL_FLOPPY
+;--------------------------------------------------------------------
+; RamVars_UnpackFlopCntAndFirstToAL
+;	Parameters:
+;		Nothing
+;	Returns:
+;		AL:		First floppy drive number supported
+;       CF:		Number of floppy drives supported (clear = 1, set = 2)
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------		
+ALIGN JUMP_ALIGN
+RamVars_UnpackFlopCntAndFirstToAL:
+	mov		al, [RAMVARS.xlateVars+XLATEVARS.bFlopCntAndFirst]
+	sar		al, 1		
+	ret
+%endif

@@ -31,6 +31,7 @@ public:
 	virtual ~Image() {};
 
 	unsigned long cyl, sect, head;
+	unsigned char floppy, floppyType;
 	int useCHS;
 
 	unsigned long totallba;

@@ -10,10 +10,18 @@ LITE_MODE_RAMVARS_SEGMENT	EQU		30h
 ; Variables for translating drive numbers.
 struc XLATEVARS
 	.wFDandHDswap:
-	.bFDSwap		resb	1	; Floppy Drive to swap to 00h and vice versa
-	.bHDSwap		resb	1	; Hard Drive to swap to 80h and vice versa
-	.bXlatedDrv		resb	1	; Drive number after translation
-					resb	1	; alignment
+	.bFDSwap			resb	1	; Floppy Drive to swap to 00h and vice versa
+	.bHDSwap			resb	1	; Hard Drive to swap to 80h and vice versa
+	.bXlatedDrv			resb	1	; Drive number after translation
+%ifdef MODULE_SERIAL_FLOPPY
+	.bFlopCreateCnt:
+	.bFlopCntAndFirst	resb	1	; Normally, packed starting floppy drive number (high order 7 bits)
+									; and number of drives (low order bit, max 2 drives supported).
+									; During initialization, until the end of DetectDrives_FromAllIDEControllers,
+									; this byte contains the raw number of floppy drives seen (using .bFlopCreateCnt)
+%else
+						resb	1	; alignment
+%endif
 endstruc
 
 ; RAM Variables.
@@ -26,8 +34,8 @@ struc RAMVARS
 	.bLastTimeoutUpdate	resb	1
 
 	.wDrvCntAndFirst:
-	.bDrvCnt			resb	1	; Number of drives handled by this BIOS
 	.bFirstDrv			resb	1	; Number of first drive for this BIOS
+	.bDrvCnt			resb	1	; Number of drives handled by this BIOS
 
 	; Variables for drive number translation
 	.xlateVars		resb	XLATEVARS_size

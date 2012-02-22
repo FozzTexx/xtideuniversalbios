@@ -34,11 +34,11 @@ public:
 				log( -1, "No physical COM ports found" );
 		}
 
-		if( !strcmp( name, "PIPE" ) )
+		if( name[0] == '\\' && name[1] == '\\' )
 		{
-			log( 0, "Opening named pipe %s (simulating %s baud)", PIPENAME, baudRate->display );
+			log( 0, "Opening named pipe %s (simulating %s baud)", name, baudRate->display );
 		
-			pipe = CreateNamedPipeA( PIPENAME, PIPE_ACCESS_DUPLEX, PIPE_TYPE_BYTE|PIPE_REJECT_REMOTE_CLIENTS, 2, 1024, 1024, 0, NULL );
+			pipe = CreateNamedPipeA( name, PIPE_ACCESS_DUPLEX, PIPE_TYPE_BYTE|PIPE_REJECT_REMOTE_CLIENTS, 2, 1024, 1024, 0, NULL );
 			if( pipe == INVALID_HANDLE_VALUE )
 				log( -1, "Could not CreateNamedPipe " PIPENAME );
 		
@@ -58,7 +58,7 @@ public:
 				COMMTIMEOUTS timeouts;
 				DCB dcb;
 
-				log( 0, "Opening %s (%lu baud)", name, baudRate->rate );
+				log( 0, "Opening %s (%s baud)", name, baudRate->display );
 			
 				pipe = CreateFileA( name, GENERIC_READ|GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0 );
 				if( pipe == INVALID_HANDLE_VALUE )
@@ -73,7 +73,17 @@ public:
 				dcb.StopBits = ONESTOPBIT;
 				dcb.Parity = NOPARITY;
 				if( !SetCommState( pipe, &dcb ) )
-					log( -1, "Could not SetCommState" );
+				{
+					char *msg = "";
+					COMMPROP comProp;
+
+					if( GetCommProperties( pipe, &comProp ) )
+					{
+						if( comProp.dwMaxBaud != BAUD_USER )
+							msg = "\n    On this COM port, baud rate is limited to 115.2K";
+					}
+					log( -1, "Could not SetCommState: baud rate selected may not be availabele%s", msg );
+				}
 
 				if( !SetCommTimeouts( pipe, &timeouts ) )
 					log( -1, "Could not SetCommTimeouts" );
@@ -81,26 +91,35 @@ public:
 			else
 			{
 				char logbuff[ 1024 ];
-				int found = 0;
 
-				sprintf( logbuff, "serial port '%s' not found, detected COM ports:", name );
-
-				for( int t = 1; t <= 40; t++ )
-				{
-					sprintf( buff1, "COM%d", t );
-					if( QueryDosDeviceA( buff1, buff2, sizeof(buff2) ) )
-					{
-						strcat( logbuff, "\n    " );
-						strcat( logbuff, buff1 );
-						found = 1;
-					}
-				}
-				if( !found )
-					strcat( logbuff, "\n    (none)" );
+				EnumerateCOMPorts( logbuff, 1024 );
 				
-				log( -1, logbuff );
+				log( -1, "Serial port '%s' not found, detected COM ports: %s", name, logbuff );
 			}
 		}
+	}
+
+	static void EnumerateCOMPorts( char *logbuff, int logbuffLen )
+	{
+		int found = 0;
+		char buff1[20], buff2[1024];
+
+		logbuff[0] = 0;
+
+		for( int t = 1; t <= 40 && strlen(logbuff) < (logbuffLen - 40); t++ )
+		{
+			sprintf( buff1, "COM%d", t );
+			if( QueryDosDeviceA( buff1, buff2, sizeof(buff2) ) )
+			{
+				if( found )
+					strcat( logbuff, ", " );
+				strcat( logbuff, buff1 );
+				found = 1;
+			}
+		}
+
+		if( !found )
+			strcat( logbuff, "(none)" );
 	}
 
 	void Disconnect()

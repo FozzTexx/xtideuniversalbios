@@ -21,8 +21,6 @@ ALIGN JUMP_ALIGN
 AH0h_HandlerForDiskControllerReset:
 	eMOVZX	bx, dl						; Copy requested drive to BL, zero BH to assume no errors
 	call	ResetFloppyDrivesWithInt40h
-	test	bl, bl
-	jns		SHORT .SkipHardDiskReset
 	call	ResetForeignHardDisks
 	call	AH0h_ResetHardDisksHandledByOurBIOS
 .SkipHardDiskReset:
@@ -63,8 +61,26 @@ ResetForeignHardDisks:
 	call	GetDriveNumberForForeignBiosesToDL
 	xor		ah, ah						; Disk Controller Reset
 	call	Int13h_CallPreviousInt13hHandler
-	jmp		SHORT BackupErrorCodeFromTheRequestedDriveToBH
+;;; fall-through to BackupErrorCodeFromTheRequestedDriveToBH
 
+
+;--------------------------------------------------------------------
+; BackupErrorCodeFromTheRequestedDriveToBH
+;	Parameters:
+;		AH:		Error code from the last resetted drive
+;		DL:		Drive last resetted
+;		BL:		Requested drive (DL when entering AH=00h)
+;	Returns:
+;		BH:		Backuped error code
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+BackupErrorCodeFromTheRequestedDriveToBH:
+	cmp		dl, bl				; Requested drive?
+	eCMOVE	bh, ah
+	ret
+		
 
 ;--------------------------------------------------------------------
 ; GetDriveNumberForForeignBiosesToDL
@@ -81,7 +97,7 @@ ALIGN JUMP_ALIGN
 GetDriveNumberForForeignBiosesToDL:
 	mov		dl, bl
 	call	RamVars_IsDriveHandledByThisBIOS
-	jnc		SHORT .Return				; Return what was in BL unmodified
+	jc		SHORT .Return				; Return what was in BL unmodified
 	mov		dl, 80h
 .Return:
 	ret
@@ -100,10 +116,9 @@ GetDriveNumberForForeignBiosesToDL:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH0h_ResetHardDisksHandledByOurBIOS:
-	mov		dh, [RAMVARS.bDrvCnt]		; Load drive count to DH
+	mov		dx, [RAMVARS.wDrvCntAndFirst]	; DL = drive number, DH = drive count
 	test	dh, dh
 	jz		SHORT .AllDrivesReset		; Return if no drives
-	mov		dl, [RAMVARS.bFirstDrv]		; Load number of our first drive
 	add		dh, dl						; DH = one past last drive to reset
 ALIGN JUMP_ALIGN
 .DriveResetLoop:
@@ -113,8 +128,29 @@ ALIGN JUMP_ALIGN
 	cmp		dl, dh						; All done?
 	jb		SHORT .DriveResetLoop		;  If not, reset next drive
 .AllDrivesReset:
-	ret
+%ifdef MODULE_SERIAL_FLOPPY
+;
+; "Reset" emulatd serial floppy drives, if any.  There is nothing to actually do for this reset,
+; but record the proper error return code if one of these floppy drives is the drive requested.
+;
+	call	RamVars_UnpackFlopCntAndFirstToAL
 
+	cbw													; Clears AH (there are flop drives) or ffh (there are not)
+														; Either AH has success code (flop drives are present)
+														; or it doesn't matter because we won't match drive ffh
+
+	cwd													; clears DX (there are flop drives) or ffffh (there are not)
+
+	adc		dl, al										; second drive (CF set) if present
+														; If no drive is present, this will result in ffh which 
+														; won't match a drive
+	call	BackupErrorCodeFromTheRequestedDriveToBH
+	mov		dl, al										; We may end up doing the first drive twice (if there is
+	jmp		BackupErrorCodeFromTheRequestedDriveToBH	; only one drive), but doing it again is not harmful.
+%else
+	ret
+%endif
+		
 ;--------------------------------------------------------------------
 ; .BackupErrorCodeFromMasterOrSlaveToBH
 ;	Parameters:
@@ -143,6 +179,7 @@ ALIGN JUMP_ALIGN
 	dec		dx
 	ret
 
+		
 ;--------------------------------------------------------------------
 ; GetBasePortToCX
 ;	Parameters:
@@ -166,19 +203,3 @@ GetBasePortToCX:
 	ret
 
 
-;--------------------------------------------------------------------
-; BackupErrorCodeFromTheRequestedDriveToBH
-;	Parameters:
-;		AH:		Error code from the last resetted drive
-;		DL:		Drive last resetted
-;		BL:		Requested drive (DL when entering AH=00h)
-;	Returns:
-;		BH:		Backuped error code
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-BackupErrorCodeFromTheRequestedDriveToBH:
-	cmp		dl, bl				; Requested drive?
-	eCMOVE	bh, ah
-	ret

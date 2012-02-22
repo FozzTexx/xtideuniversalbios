@@ -29,11 +29,14 @@ void usage(void)
 		"",
 		"  -n [megabytes]      Create new disk with given size or use -g geometry",
 		"                      Maximum size is " USAGE_MAXSECTORS, 
-		"                      (default is a 32 MB disk, with CHS geometry 65:63:16)",
+		"                      (default is a 32 MB disk, with CHS geometry 65:16:63)",
 		"",
-		"  -p                  Named Pipe mode for emulators (pipe is \"" PIPENAME "\")",
+		"  -p [pipename]       Named Pipe mode for emulators",
+		"                      (must begin with \"\\\\\", default is \"" PIPENAME "\")",
 		"",
-		"  -c COMPortNumber    COM Port to use (default is first found)",
+        "  -c COMPortNumber    COM Port to use (default is first found)",
+   	    "                      Available COM ports on this system are:",
+   	 "COM                          ",
 		"",
 		"  -b BaudRate         Baud rate to use on the COM port, with client machine",
 		"                      rate multiplier in effect:",
@@ -52,12 +55,27 @@ void usage(void)
 		"On the client computer, a serial port can be configured for use as a hard disk",
 		"with xtidecfg.com.  Or one can hold down the ALT key at the end of the normal",
 		"IDE hard disk scan and the XTIDE Universal BIOS will scan COM1-7, at each of",
-		"the four speeds given above for BaudRate.  Note that hardware rate multipliers",
+		"the six speeds given above for BaudRate.  Note that hardware rate multipliers",
 		"must be taken into account on the server end, but are invisible on the client.",
+		"",
+		"Floppy images may also be used.  Image size must be exactly the same size",
+		"as a 2.88MB, 1.44MB, 1.2MB, 720KB, 360KB, 320KB, 180KB, or 160KB disk.",
+		"Floppy images must be the last disks discovered by the BIOS, and only",
+		"two floppy drives are supported by the BIOS at a time.",
 		NULL };
 
 	for( int t = 0; usageStrings[t]; t++ )
-		fprintf( stderr, "%s\n", usageStrings[t] );
+	{
+		if( !strncmp( usageStrings[t], "COM", 3 ) )
+		{
+			char logbuff[ 1024 ];
+
+			SerialAccess::EnumerateCOMPorts( logbuff, 1024 );
+			fprintf( stderr, "%s%s\n", usageStrings[t]+3, logbuff );
+		}
+		else
+			fprintf( stderr, "%s\n", usageStrings[t] );
+	}
 
 	exit( 1 );
 }
@@ -119,7 +137,10 @@ int main(int argc, char* argv[])
 				readOnly = 1;
 				break;
 			case 'p': case 'P':
-				ComPort = "PIPE";
+				if( argv[t+1][0] == '\\' && argv[t+1][1] == '\\' )
+					ComPort = argv[++t];
+				else
+					ComPort = PIPENAME;
 				if( !baudRate )
 					baudRate = baudRateMatchString( "115200" );
 				break;			  

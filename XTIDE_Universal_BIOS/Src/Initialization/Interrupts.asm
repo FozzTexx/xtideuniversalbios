@@ -34,10 +34,6 @@ Interrupts_InitializeInterruptVectors:
 	mov		ax, [es:BIOS_DISK_INTERRUPT_13h*4]	; Load old INT 13h offset
 	mov		[RAMVARS.fpOldI13h], ax				; Store old INT 13h offset
 
-	mov		bx, BIOS_DISK_INTERRUPT_13h			; INT 13h interrupt vector offset
-	mov		si, Int13h_DiskFunctionsHandler		; Interrupt handler offset
-	call	Interrupts_InstallHandlerToVectorInBXFromCSSI
-
 	; Only store INT 13h handler to 40h if 40h is not already installed.
 	; At least AMI BIOS for 286 stores 40h handler by itself and calls
 	; 40h from 13h. That system locks to infinite loop if we copy 13h to 40h.
@@ -46,6 +42,10 @@ Interrupts_InitializeInterruptVectors:
 	mov		[es:BIOS_DISKETTE_INTERRUPT_40h*4], ax		; Store old INT 13h offset
 	mov		[es:BIOS_DISKETTE_INTERRUPT_40h*4+2], dx	; Store old INT 13h segment
 .Int40hAlreadyInstalled:
+
+	mov		al, BIOS_DISK_INTERRUPT_13h			; INT 13h interrupt vector offset
+	mov		si, Int13h_DiskFunctionsHandler		; Interrupt handler offset
+	call	Interrupts_InstallHandlerToVectorInALFromCSSI
 	; Fall to .InitializeHardwareIrqHandlers
 
 ;--------------------------------------------------------------------
@@ -55,13 +55,13 @@ Interrupts_InitializeInterruptVectors:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		BX, CX, DX, SI, DI
+;		BX, CX, DX, SI, DI, AX
 ;--------------------------------------------------------------------
 .InitializeHardwareIrqHandlers:
 	call	RamVars_GetIdeControllerCountToCX
 	mov		di, ROMVARS.ideVars0			; CS:SI points to first IDEVARS
 .IdeControllerLoop:
-	eMOVZX	bx, BYTE [cs:di+IDEVARS.bIRQ]
+	mov		al, BYTE [cs:di+IDEVARS.bIRQ]
 	add		di, BYTE IDEVARS_size			; Increment to next controller
 	call	.InstallLowOrHighIrqHandler
 	loop	.IdeControllerLoop
@@ -71,7 +71,7 @@ Interrupts_InitializeInterruptVectors:
 ;--------------------------------------------------------------------
 ; .InstallLowOrHighIrqHandler
 ;	Parameters:
-;		BX:		IRQ number, 0 if IRQ disabled
+;		AL:		IRQ number, 0 if IRQ disabled
 ;		ES:		BDA and Interrupt Vector segment (zero)
 ;	Returns:
 ;		Nothing
@@ -79,9 +79,9 @@ Interrupts_InitializeInterruptVectors:
 ;		BX, SI
 ;--------------------------------------------------------------------
 .InstallLowOrHighIrqHandler:
-	test	bl, bl
+	test	al, al
 	jz		SHORT .Return	; IRQ not used
-	cmp		bl, 8
+	cmp		al, 8
 	jb		SHORT .InstallLowIrqHandler
 	; Fall to .InstallHighIrqHandler
 
@@ -93,42 +93,44 @@ Interrupts_InitializeInterruptVectors:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		BX, SI
+;		AL, BX, SI
 ;--------------------------------------------------------------------
 .InstallHighIrqHandler:
-	add		bx, BYTE HARDWARE_IRQ_8_INTERRUPT_70h - 8	; Interrupt vector number
+	add		al, BYTE HARDWARE_IRQ_8_INTERRUPT_70h - 8	; Interrupt vector number
 	mov		si, IdeIrq_InterruptServiceRoutineForIrqs8to15
-	jmp		SHORT Interrupts_InstallHandlerToVectorInBXFromCSSI
+	jmp		SHORT Interrupts_InstallHandlerToVectorInALFromCSSI
 
 ;--------------------------------------------------------------------
 ; .InstallLowIrqHandler
 ;	Parameters:
-;		BX:		IRQ number (0...7)
+;		AL:		IRQ number (0...7)
 ;		ES:		BDA and Interrupt Vector segment (zero)
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		BX, SI
+;		AL, BX, SI
 ;--------------------------------------------------------------------
 .InstallLowIrqHandler:
-	add		bx, BYTE HARDWARE_IRQ_0_INTERRUPT_08h		; Interrupt vector number
+	add		al, BYTE HARDWARE_IRQ_0_INTERRUPT_08h		; Interrupt vector number
 	mov		si, IdeIrq_InterruptServiceRoutineForIrqs2to7
-	; Fall to Interrupts_InstallHandlerToVectorInBXFromCSSI
+	; Fall to Interrupts_InstallHandlerToVectorInALFromCSSI
 
 
 ;--------------------------------------------------------------------
-; Interrupts_InstallHandlerToVectorInBXFromCSSI
+; Interrupts_InstallHandlerToVectorInALFromCSSI
 ;	Parameters:
-;		BX:		Interrupt vector number (for example 13h)
+;		AL:		Interrupt vector number (for example 13h)
 ;		ES:		BDA and Interrupt Vector segment (zero)
 ;		CS:SI:	Ptr to interrupt handler
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		BX
+;		AX, BX
 ;--------------------------------------------------------------------
-Interrupts_InstallHandlerToVectorInBXFromCSSI:
-	eSHL_IM	bx, 2					; Shift for DWORD offset
+Interrupts_InstallHandlerToVectorInALFromCSSI:
+	mov		bl, 4					; Shift for DWORD offset, MUL smaller than other alternatives
+	mul		bl
+	xchg	ax, bx
 	mov		[es:bx], si				; Store offset
 	mov		[es:bx+2], cs			; Store segment
 	ret
