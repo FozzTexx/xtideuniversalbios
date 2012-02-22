@@ -36,7 +36,7 @@ BootMenu_DisplayAndReturnSelectionInDX:
 ;       CF:     Set: There is a selected menu item, DL is valid
 ;               Clear: There is no selected menu item, DL is not valid
 ;	Corrupts registers:
-;		CX, DI
+;		AX, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenu_GetDriveToDXforMenuitemInCX_And_RamVars_GetSegmentToDS:
@@ -49,13 +49,13 @@ BootMenu_GetDriveToDXforMenuitemInCX:
 	je		SHORT .ReturnFloppyDriveInDX	; Clear CF if branch taken
 
 	mov		dl, cl							; Copy menuitem index to DX
-	call	FloppyDrive_GetCountToCX
-	cmp		dl, cl							; Floppy drive?
+	call	FloppyDrive_GetCountToAX
+	cmp		dl, al							; Floppy drive?
 	jb		SHORT .ReturnFloppyDriveInDX	; Set CF if branch taken
-	or		cl, 80h							; Or 80h into CL before the sub
+	or		al, 80h							; Or 80h into AL before the sub
 											; to cause CF to be set after
 											; and result has high order bit set
-	sub		dl, cl							; Remove floppy drives from index
+	sub		dl, al							; Remove floppy drives from index
 
 .ReturnFloppyDriveInDX:
 	ret
@@ -93,9 +93,9 @@ BootMenu_Enter:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenu_GetMenuitemCountToAX:
-	call	RamVars_GetHardDiskCountFromBDAtoCX
+	call	RamVars_GetHardDiskCountFromBDAtoAX
 	xchg	ax, cx
-	call	FloppyDrive_GetCountToCX
+	call	FloppyDrive_GetCountToAX
 	add		ax, cx
 	ret
 
@@ -135,17 +135,20 @@ ALIGN JUMP_ALIGN, ret
 ALIGN JUMP_ALIGN
 BootMenu_GetMenuitemToAXforAsciiHotkeyInAL:
 	call	Char_ALtoUpperCaseLetter
-	call	BootMenu_GetLetterForFirstHardDiskToCL
 	xor		ah, ah
-	cmp		al, cl						; Letter is for Hard Disk?
+	xchg	ax, cx
+	call	BootMenu_GetLetterForFirstHardDiskToAL
+	cmp		cl, al						; Letter is for Hard Disk?
 	jae		SHORT .StartFromHardDiskLetter
+	xchg	ax, cx
 	sub		al, 'A'						; Letter to Floppy Drive menuitem
 	ret
 ALIGN JUMP_ALIGN
 .StartFromHardDiskLetter:
-	sub		al, cl						; Hard Disk index
-	call	FloppyDrive_GetCountToCX
+	sub		cl, al						; Hard Disk index
+	call	FloppyDrive_GetCountToAX
 	add		ax, cx						; Menuitem index
+										; Note: no need to xchg ax, cx as above, since adding with result to ax
 	ret
 
 
@@ -159,15 +162,15 @@ ALIGN JUMP_ALIGN
 ;	Returns:
 ;		CL:		Upper case letter for first hard disk
 ;	Corrupts registers:
-;		CH
+;		AX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-BootMenu_GetLetterForFirstHardDiskToCL:
-	call	FloppyDrive_GetCountToCX
-	add		cl, 'A'
-	cmp		cl, 'C'
+BootMenu_GetLetterForFirstHardDiskToAL:
+	call	FloppyDrive_GetCountToAX
+	add		al, 'A'
+	cmp		al, 'C'
 	ja		.Return
-	mov		cl, 'C'
+	mov		al, 'C'
 ALIGN JUMP_ALIGN, ret
 .Return:
 	ret
@@ -180,16 +183,16 @@ ALIGN JUMP_ALIGN, ret
 ;	Returns:
 ;		DX:		Menuitem index (assuming drive is available)
 ;	Corrupts registers:
-;		Nothing
+;		AX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenu_GetMenuitemToDXforDriveInDL:
 	xor		dh, dh						; Drive number now in DX
 	test	dl, dl
 	jns		SHORT .ReturnItemIndexInDX	; Return if floppy drive (HD bit not set)
-	call	FloppyDrive_GetCountToCX
+	call	FloppyDrive_GetCountToAX
 	and		dl, ~80h					; Clear HD bit
-	add		dx, cx
+	add		dx, ax
 .ReturnItemIndexInDX:
 	ret
 
@@ -211,11 +214,11 @@ ALIGN JUMP_ALIGN
 BootMenu_IsDriveInSystem:
 	test	dl, dl								; Floppy drive?
 	jns		SHORT .IsFloppyDriveInSystem
-	call	RamVars_GetHardDiskCountFromBDAtoCX	; Hard Disk count to CX
-	or		cl, 80h								; Set Hard Disk bit to CX
+	call	RamVars_GetHardDiskCountFromBDAtoAX	; Hard Disk count to AX
+	or		al, 80h								; Set Hard Disk bit to AX
 	jmp		SHORT .CompareDriveNumberToDriveCount
 .IsFloppyDriveInSystem:
-	call	FloppyDrive_GetCountToCX
+	call	FloppyDrive_GetCountToAX
 .CompareDriveNumberToDriveCount:
-	cmp		dl, cl								; Set CF when DL is smaller
+	cmp		dl, al								; Set CF when DL is smaller
 	ret

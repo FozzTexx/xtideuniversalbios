@@ -42,6 +42,16 @@ AH9h_HandlerForInitializeDriveParameters:
 AH9h_InitializeDriveForUse:
 	push	cx
 
+%ifdef MODULE_SERIAL
+	; 
+	; no need to do this for serial deveices, and we use the DPT_RESET flag bits
+	; to store the drive type for serial floppy drives (MODULE_SERIAL_FLOPPY)
+	;
+	xor		ah, ah
+	test	byte [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE	; Clears CF
+	jnz		.ReturnNotSuccessfull
+%endif
+		
 	; Try to select drive and wait until ready
 	or		BYTE [di+DPT.bFlagsHigh], MASKH_DPT_RESET		; Everything uninitialized
 	call	AccessDPT_GetDriveSelectByteToAL

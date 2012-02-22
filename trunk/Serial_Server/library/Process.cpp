@@ -98,6 +98,16 @@ void processRequests( SerialAccess *serial, Image *image0, Image *image1, int ti
 	workCount = workOffset = workCommand = 0;
 	lastScan = 0;
 
+	//
+	// Floppy disks must come after any hard disks
+	//
+	if( (image0 && image0->floppy) && (image1 && !image1->floppy) )
+	{
+		img = image0;
+		image0 = image1;
+		image1 = img;
+	}
+
 	lasttick = GetTime();
 
 	while( (len = serial->readCharacters( &buff.b[buffoffset], (readto ? readto-buffoffset : 1) )) )

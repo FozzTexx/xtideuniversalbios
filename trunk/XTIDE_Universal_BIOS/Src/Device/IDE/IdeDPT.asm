@@ -11,7 +11,7 @@ SECTION .text
 ;		ES:SI:	Ptr to 512-byte ATA information read from the drive
 ;		CS:BP:	Ptr to IDEVARS for the controller
 ;	Returns:
-;		Nothing
+;		CF:		Clear, IDE interface only supports hard disks
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
@@ -41,7 +41,7 @@ IdeDPT_Finalize:
 ;		DS:DI:	Ptr to Disk Parameter Table
 ;		CS:BP:	Ptr to IDEVARS for the controller
 ;	Returns:
-;		Nothing
+;		CF:		Always clear, we don't support floppies on the IDE inteface
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
@@ -51,4 +51,5 @@ IdeDPT_StoreReversedAddressLinesFlagIfNecessary:
 	or		BYTE [di+DPT.bFlagsHigh], FLGH_DPT_REVERSED_A0_AND_A3
 
 .EndDPT:
+	clc
 	ret

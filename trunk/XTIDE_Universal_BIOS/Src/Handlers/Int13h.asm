@@ -28,7 +28,8 @@ Int13h_DiskFunctionsHandler:
 	call	DriveXlate_ToOrBack
 	mov		[RAMVARS.xlateVars+XLATEVARS.bXlatedDrv], dl
 	call	RamVars_IsFunctionHandledByThisBIOS
-	jnc		SHORT Int13h_DirectCallToAnotherBios
+	jc		SHORT Int13h_DirectCallToAnotherBios
+
 	call	FindDPT_ForDriveNumber		; DS:DI now points to DPT
 
 	; Jump to correct BIOS function
@@ -138,7 +139,13 @@ Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAHandTransferredSectorsFromCL:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH:
+%ifdef MODULE_SERIAL_FLOPPY
+	mov		al, [bp+IDEPACK.intpack+INTPACK.dl]
+Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH_ALHasDriveNumber:	
+	call	Int13h_SetErrorCodeToBdaAndToIntpackInSSBPfromAH_ALHasDriveNumber
+%else
 	call	Int13h_SetErrorCodeToBdaAndToIntpackInSSBPfromAH
+%endif
 Int13h_ReturnFromHandlerWithoutStoringErrorCode:
 	or		WORD [bp+IDEPACK.intpack+INTPACK.flags], FLG_FLAGS_IF	; Return with interrupts enabled
 	mov		sp, bp									; Now we can exit anytime
@@ -153,18 +160,16 @@ Int13h_ReturnFromHandlerWithoutStoringErrorCode:
 ;		DS:		RAMVARS segment
 ;	Returns:
 ;		Depends on function
+;       NOTE: ES:DI needs to be returned from the previous interrupt 
+;		      handler, for floppy DPT in function 08h
 ;	Corrupts registers:
-;		BX, DI, ES
+;		None
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Int13h_CallPreviousInt13hHandler:
-	push	di
 	call	ExchangeCurrentInt13hHandlerWithOldInt13hHandler
 	int		BIOS_DISK_INTERRUPT_13h
-	call	ExchangeCurrentInt13hHandlerWithOldInt13hHandler
-	pop		di
-	ret
-
+;;;  fall-through to ExchangeCurrentInt13hHandlerWithOldInt13hHandler
 
 ;--------------------------------------------------------------------
 ; ExchangeCurrentInt13hHandlerWithOldInt13hHandler
@@ -173,20 +178,23 @@ Int13h_CallPreviousInt13hHandler:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		DI
+;       Nothing
+;       Note: Flags are preserved
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 ExchangeCurrentInt13hHandlerWithOldInt13hHandler:
 	push	es
-	LOAD_BDA_SEGMENT_TO	es, di
-	mov		di, [RAMVARS.fpOldI13h]
+	push	si
+	LOAD_BDA_SEGMENT_PRESERVE_FLAGS_TO	es, si
+	mov		si, [RAMVARS.fpOldI13h]
 	cli
-	xchg	di, [es:BIOS_DISK_INTERRUPT_13h*4]
-	mov		[RAMVARS.fpOldI13h], di
-	mov		di, [RAMVARS.fpOldI13h+2]
-	xchg	di, [es:BIOS_DISK_INTERRUPT_13h*4+2]
+	xchg	si, [es:BIOS_DISK_INTERRUPT_13h*4]
+	mov		[RAMVARS.fpOldI13h], si
+	mov		si, [RAMVARS.fpOldI13h+2]
+	xchg	si, [es:BIOS_DISK_INTERRUPT_13h*4+2]
 	sti
-	mov		[RAMVARS.fpOldI13h+2], di
+	mov		[RAMVARS.fpOldI13h+2], si
+	pop		si
 	pop		es
 	ret
 
@@ -203,10 +211,22 @@ ExchangeCurrentInt13hHandlerWithOldInt13hHandler:
 ;		DS, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
+%ifdef MODULE_SERIAL_FLOPPY
+Int13h_SetErrorCodeToBdaAndToIntpackInSSBPfromAH_ALHasDriveNumber:
+	; Store error code to BDA
+	mov		bx, BDA.bHDLastSt
+	test	al, al
+	js		.HardDisk
+	mov		bl, BDA.bFDRetST & 0xff
+.HardDisk:
+	LOAD_BDA_SEGMENT_TO	ds, di
+	mov		[bx], ah		
+%else
 Int13h_SetErrorCodeToBdaAndToIntpackInSSBPfromAH:
 	; Store error code to BDA
-	LOAD_BDA_SEGMENT_TO	ds, di
+	LOAD_BDA_SEGMENT_TO	ds, di		
 	mov		[BDA.bHDLastSt], ah
+%endif
 
 	; Store error code to INTPACK
 Int13h_SetErrorCodeToIntpackInSSBPfromAH:

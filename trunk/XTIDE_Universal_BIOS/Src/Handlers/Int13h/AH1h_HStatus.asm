@@ -19,6 +19,18 @@ SECTION .text
 ALIGN JUMP_ALIGN
 AH1h_HandlerForReadDiskStatus:
 	LOAD_BDA_SEGMENT_TO	ds, ax, !
+
+%ifdef MODULE_SERIAL_FLOPPY
+	test	dl, dl
+	jns		.HardDisk
+	mov		ah, [BDA.bFDRetST]		; Unlike for hard disks below, floppy version does not clear the status
+	jmp		.done
+.HardDisk:	
+%endif
+		
 	xchg	ah, [BDA.bHDLastSt]		; Load and clear last error
+									; Note that AH is cleared with the LOAD_BDA_SEGMENT above
+				
+.done:
 	call	Int13h_SetErrorCodeToIntpackInSSBPfromAH
 	jmp		Int13h_ReturnFromHandlerWithoutStoringErrorCode

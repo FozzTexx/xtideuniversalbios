@@ -11,6 +11,25 @@
 #include <string.h>
 #include <stdio.h>
 
+struct floppyInfo {
+	unsigned long size;
+	unsigned char type;
+	unsigned char cylinders;
+	unsigned char heads;
+	unsigned char sectors;
+} floppyInfos[] = 
+{
+{ 2949120 / 512, 6, 80, 2, 36 },   // 2.88MB 3.5"
+{ 1474560 / 512, 4, 80, 2, 18 },        // 1.44MB 3.5"
+{ 1228800 / 512, 2, 80, 2, 15 },     // 1.2MB 5.25"
+{ 737280 / 512, 3, 80, 1, 18 },    // 720KB 3.5"
+{ 368640 / 512, 1, 40, 2, 9 }, // 360KB 5.25"
+{ 327680 / 512, 0, 40, 2, 8 }, // 320KB 5.25"
+{ 184320 / 512, 0, 40, 1, 9 }, // 180KB 5.25" single sided
+{ 163840 / 512, 0, 40, 1, 8 }, // 160KB 5.25" single sided
+{ 0, 0, 0, 0, 0 }
+};
+
 Image::Image( char *name, int p_readOnly, int p_drive )
 {
 }
@@ -26,6 +45,8 @@ Image::Image( char *name, int p_readOnly, int p_drive, int p_create, unsigned lo
 void Image::init( char *name, int p_readOnly, int p_drive, unsigned long p_cyl, unsigned long p_head, unsigned long p_sect, int p_useCHS )
 {
 	double sizef;
+	char sizeChar;
+	struct floppyInfo *f;
 
 	for( char *c = shortFileName = name; *c; c++ )
 		if( *c == '\\' || *c == '/' || *c == ':' )
@@ -45,6 +66,18 @@ void Image::init( char *name, int p_readOnly, int p_drive, unsigned long p_cyl, 
 
 	if( totallba == 0 )
 		log( -1, "'%s', Image size zero?" );
+
+	floppy = 0;
+	for( f = floppyInfos; f->size && f->size != totallba; f++ ) ;
+	if( f->size )
+	{
+		floppy = 1;
+		floppyType = f->type;
+		p_useCHS = 1;
+		p_cyl = f->cylinders;
+		p_head = f->heads;
+		p_sect = f->sectors;
+	}
 
 	if( p_useCHS )
 	{
@@ -81,10 +114,18 @@ void Image::init( char *name, int p_readOnly, int p_drive, unsigned long p_cyl, 
 	useCHS = p_useCHS;
 
 	sizef = totallba/2048.0;
+	sizeChar = 'M';
+	if( sizef < 1 ) 
+	{
+		sizef *= 1024;
+		sizeChar = 'K';
+	}
 	if( useCHS )
-		log( 0, "Opening '%s', CHS geometry %u:%u:%u, total LBA %lu, total size %.1lf MB", name, cyl, sect, head, totallba, sizef );
+		log( 0, "%s: %s with CHS geometry %u:%u:%u, size %.2lf %cB",
+			 name, (floppy ? "Floppy Disk" : "Hard Disk"), cyl, head, sect, sizef, sizeChar );
 	else
-		log( 0, "Opening '%s', total LBA %lu, total size %.1lf MB", name, totallba, sizef );
+		log( 0, "%s: %s with total sectors %lu, size %.2lf %cB", 
+			 name, (floppy ? "Floppy Disk" : "Hard Disk"), totallba, sizef, sizeChar );
 }
 
 int Image::parseGeometry( char *str, unsigned long *p_cyl, unsigned long *p_head, unsigned long *p_sect )
@@ -136,11 +177,19 @@ int Image::parseGeometry( char *str, unsigned long *p_cyl, unsigned long *p_head
 #define ATA_dwCurSCnt 57
 #define ATA_dwLBACnt 60
 
-#define ATA_wVendor 159
+// Words carved out of the vendor specific area for our use
+//
+#define ATA_wSerialFloppyFlagAndType 158
+#define ATA_wSerialPortAndBaud 159
 
+// Defines used in the words above
+//
 #define ATA_wCaps_LBA 0x200
 
 #define ATA_wGenCfg_FIXED 0x40
+
+#define ATA_wSerialFloppyFlagAndType_Flag 0x10
+#define ATA_wSerialFloppyFlagAndType_TypePosition 5
 
 struct comPorts {
 	unsigned long port;
@@ -206,6 +255,10 @@ void Image::respondInquire( unsigned short *buff, struct baudRate *baudRate, uns
 		buff[ ATA_dwLBACnt+1 ] = (unsigned short) (totallba >> 16);
 	}
 
+	if( floppy )
+		buff[ ATA_wSerialFloppyFlagAndType ] = ATA_wSerialFloppyFlagAndType_Flag | (floppyType << ATA_wSerialFloppyFlagAndType_TypePosition);
+
+	// we always set this, so that the bulk of the BIOS will consider this disk as a hard disk
+	//
 	buff[ ATA_wGenCfg ] = ATA_wGenCfg_FIXED;
-	//					buff[ ATA_VendorSpecific_ReturnPortBaud ] = retWord;
 }

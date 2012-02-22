@@ -275,4 +275,124 @@ LimitIdeControllersForLiteMode:
 	CALL_MENU_LIBRARY GetHighlightedItemToAX
 	CALL_MENU_LIBRARY RefreshItemFromAX
 	pop		es
+	; Fall to ConfigurationMenu_CheckAndMoveSerialDrivesToBottom
+
+;----------------------------------------------------------------------
+; ConfigurationMenu_CheckAndMoveSerialDrivesToBottom
+;
+; Checks to ensure that serial adapters are at the end of the 
+; IDEVARS structures list, as serial floppies (if present) need to be 
+; the last drives detected by the BIOS.  If there are other controllers
+; after a serial controller, the other controllers are moved up on the list
+; and the serial controller is placed at the end of the list.
+;
+;	Parameters:
+;		SS:BP:	Menu handle
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		All
+;----------------------------------------------------------------------		
+ConfigurationMenu_CheckAndMoveSerialDrivesToBottom:		
+	push	es
+	push	ds
+	push	di
+	push	si
+
+	call	Buffers_GetIdeControllerCountToCX	; will also set ES:DI to point to file buffer
+	push	es
+	pop		ds
+	mov		ch, 0						; clearing high order of CX and notification flag 
+	mov		dx, cx						; (probably unncessary, CX should be less than 127, but just to be sure)
+	jcxz	.done						; probably unnecessary, but make sure there is at least one controller		
+
+	add		di, ROMVARS.ideVars0		; add in offset of first idevars
+	mov		bx, di
+
+.outerLoop:
+	mov		di, bx						; start of idevars
+	xor		si, si						; first serial found
+	xor		ax, ax						; first non-serial found
+	mov		cl, dl						; idevars count
+	mov		ch, 0
+
+.loop:
+	cmp		byte [di+IDEVARS.bDevice], DEVICE_SERIAL_PORT
+	jnz		.notSerial
+
+	test	si, si						; record the first serial controllert that we find
+	jnz		.next	
+	mov		si, di
+	jmp		.next
+
+.notSerial:
+	mov		ax, di						; record the *last* non-serial controller that we find
+
+.next:	
+	add		di, IDEVARS_size
+	loop	.loop
+
+	test	si,si						; no serial drives, nothing to do
+	jz		.done
+	cmp		si,ax						; serial port is already later on the list than any other controllers
+	ja		.done						; (also takes care of the case where ther are no other controllers)
+
+;
+; move serial to end of list, others up
+;
+	cld
+
+	mov		ax, di						; save end pointer of list after scan
+
+	sub		sp, IDEVARS_size			; copy serial to temporary space on stack
+
+	mov		di, sp
+
+	mov		cx, IDEVARS_size
+	push	ss
+	pop		es
+
+	rep	movsb
+
+	mov		di, si						; move up all the idevars below the serial, by one slot
+	sub		di, IDEVARS_size
+
+	mov		cx, ax						; restore end pointer of list, subtract off end of serial idevars
+	sub		cx, si
+
+	push	ds
+	pop		es
+
+	rep	movsb
+
+	mov		si, sp						; place serial (currently on the stack) at bottom of list
+	push	ss
+	pop		ds
+	mov		cx, IDEVARS_size
+	; di is already at last IDEVARS position
+	
+	rep	movsb
+
+	add		sp, IDEVARS_size			
+
+	push	es
+	pop		ds
+
+	mov		dh, 1						; set flag that we have done a relocation
+	
+	jmp		.outerLoop
+
+.done:
+	pop		si
+	pop		di
+	pop		ds
+	pop		es
+
+	test	dh, dh
+	jz		.noWorkDone
+		
+	mov		dx, g_szSerialMoved
+	call	Dialogs_DisplayNotificationFromCSDX
+
+.noWorkDone:		
 	ret

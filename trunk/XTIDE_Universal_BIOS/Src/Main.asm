@@ -175,9 +175,9 @@ iend
 	%include "BootMenu.asm"			; For Boot Menu operations
 	%include "BootMenuEvent.asm"	; For menu library event handling
 									; NOTE: BootMenuPrint needs to come immediately after BootMenuEvent
-	%include "BootMenuPrint.asm"	; For printing Boot Menu strings 
+									;       so that jump table entries in BootMenuEvent stay within 8-bits
+	%include "BootMenuPrint.asm"	; For printing Boot Menu strings, also includes "BootMenuPrintCfg.asm"
 	%include "BootPrint.asm"		; For printing boot information
-	%include "BootMenuPrintCfg.asm"	; For printing hard disk configuration
 	%include "FloppyDrive.asm"		; Floppy Drive related functions
 	%include "BootSector.asm"		; For loading boot sector
 

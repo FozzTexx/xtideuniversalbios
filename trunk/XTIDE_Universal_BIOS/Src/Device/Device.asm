@@ -36,9 +36,10 @@ SECTION .text
 ;--------------------------------------------------------------------
 %ifdef MODULE_SERIAL
 Device_FinalizeDPT:
-	TEST_USIGN_DPT_AND_JUMP_IF_SERIAL_DEVICE .FinalizeDptForSerialPortDevice
+	; needs to check IDEVARS vs. checking the DPT as the serial bit in the DPT is set in the Finalize routine
+	CMP_USING_IDEVARS_IN_CSBP_AND_JUMP_IF DEVICE_SERIAL_PORT, .FinalizeDptForSerialPortDevice
 	jmp		IdeDPT_Finalize
-.FinalizeDptForSerialPortDevice:
+.FinalizeDptForSerialPortDevice: 
 	jmp		SerialDPT_Finalize
 
 %else	; IDE or JR-IDE/ISA

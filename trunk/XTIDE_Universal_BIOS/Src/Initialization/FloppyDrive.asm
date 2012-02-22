@@ -119,28 +119,33 @@ FloppyDrive_GetType:
 ;--------------------------------------------------------------------
 ; Returns number of Floppy Drives in system.
 ;
-; FloppyDrive_GetCountToCX
+; FloppyDrive_GetCountToAX
 ;	Parameters:
-;		Nothing
+;		DS:		RAMVARS Segment
 ;	Returns:
-;		CX:		Number of Floppy Drives
-;	Corrupts registers:
-;		Nothing
+;		AX:		Number of Floppy Drives
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-FloppyDrive_GetCountToCX:
-	push	es
-%ifdef USE_AT
-	call	GetCountFromBIOS
-%else
-	call	GetCountFromBDA
+FloppyDrive_GetCountToAX:		
+%ifdef MODULE_SERIAL_FLOPPY
+	call	RamVars_UnpackFlopCntAndFirstToAL
+	adc		al,1						; adds in the drive count bit, and adds 1 for count vs. 0-index, 
+										; but still won't impact SF
+	jns		.UseInternalNumber			; need to clear CH on the way out, and add in additional drive numbers
+
 %endif
-	mov		ch, [cs:ROMVARS.bMinFddCnt]
-	MAX_U	cl, ch
-	pop		es
-	xor		ch, ch
+	call	FloppyDrive_GetCountFromBIOS_or_BDA
+		
+.UseInternalNumber:	
+	mov		ah, [cs:ROMVARS.bMinFddCnt]
+	MAX_U	al, ah
+	cbw
+		
 	ret
 
+ALIGN JUMP_ALIGN		
+FloppyDrive_GetCountFromBIOS_or_BDA:
+	push	es
 
 ;--------------------------------------------------------------------
 ; Reads Floppy Drive Count from BIOS.
@@ -159,24 +164,20 @@ FloppyDrive_GetCountToCX:
 ;--------------------------------------------------------------------
 %ifdef USE_AT
 ALIGN JUMP_ALIGN
-GetCountFromBIOS:
+.GetCountFromBIOS:
 	push	di
 	push	dx
 	push	bx
-	push	ax
 
 	mov		ah, 08h					; Get Drive Parameters
 	cwd								; Floppy Drive 00h
 	int		BIOS_DISKETTE_INTERRUPT_40h
-	mov		cl, dl					; Number of Floppy Drives to CL
+	mov		al, dl					; Number of Floppy Drives to AL
 
-	pop		ax
 	pop		bx
 	pop		dx
 	pop		di
-	ret
 %endif
-
 
 ;--------------------------------------------------------------------
 ; Reads Floppy Drive Count (0...4) from BIOS Data Area.
@@ -192,12 +193,15 @@ GetCountFromBIOS:
 ;--------------------------------------------------------------------
 %ifndef USE_AT
 ALIGN JUMP_ALIGN
-GetCountFromBDA:
-	LOAD_BDA_SEGMENT_TO	es, cx
-	mov		cl, [es:BDA.wEquipment]			; Load Equipment WORD low byte
-	mov		ch, cl							; Copy it to CH
-	and		cx, 0C001h						; Leave bits 15..14 and 0
-	eROL_IM	ch, 2							; EW low byte bits 7..6 to 1..0
-	add		cl, ch							; CL = Floppy Drive count
-	ret
+.GetCountFromBDA:
+	LOAD_BDA_SEGMENT_TO	es, ax
+	mov		al, [es:BDA.wEquipment]			; Load Equipment WORD low byte
+	mov		ah, al							; Copy it to CH
+	and		ax, 0C001h						; Leave bits 15..14 and 0
+	eROL_IM	ah, 2							; EW low byte bits 7..6 to 1..0
+	add		al, ah							; CL = Floppy Drive count
 %endif
+
+	pop		es
+	ret
+		

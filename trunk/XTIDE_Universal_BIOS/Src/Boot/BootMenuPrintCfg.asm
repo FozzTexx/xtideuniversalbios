@@ -1,9 +1,14 @@
 ; Project name	:	XTIDE Universal BIOS
 ; Description	:	Functions for printing drive configuration
 ;					information on Boot Menu.
-
+;
+; Included by BootMenuPrint.asm, this routine is to be inserted into
+; BootMenuPrint_HardDiskRefreshInformation.
+;
 ; Section containing code
 SECTION .text
+
+;;; fall-into from BootMenuPrint_HardDiskRefreshInformation.
 
 ;--------------------------------------------------------------------
 ; Prints Hard Disk configuration for drive handled by our BIOS.
@@ -15,23 +20,22 @@ SECTION .text
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, BX, CX, DX, SI, DI
+;		AX, BX, CX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-BootMenuPrintCfg_ForOurDrive:
+.BootMenuPrintCfg_ForOurDrive:
 	eMOVZX	ax, BYTE [di+DPT.bIdevarsOffset]
-	xchg	si, ax						; CS:SI now points to IDEVARS
+	xchg	bx, ax						; CS:BX now points to IDEVARS
 	; Fall to .PushAndFormatCfgString
 
 ;--------------------------------------------------------------------
 ; PushAddressingMode
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT
-;		CS:SI:	Ptr to IDEVARS
+;		CS:BX:	Ptr to IDEVARS
 ;	Returns:
 ;		Nothing (jumps to next push below)
 ;	Corrupts registers:
-;		AX, BX
+;		AX, CX
 ;--------------------------------------------------------------------
 .PushAddressingMode:
 	AccessDPT_GetUnshiftedAddressModeToALZF
@@ -40,8 +44,8 @@ BootMenuPrintCfg_ForOurDrive:
 	;; at the same time multiplies by the size of the string displacement.  The result is in AH,
 	;; with AL clear, and so we exchange AL and AH after the multiply for the final result.
 	;; 
-	mov		bl,(1<<(8-ADDRESSING_MODE_FIELD_POSITION)) * g_szAddressingModes_Displacement
-	mul		bl
+	mov		cl,(1<<(8-ADDRESSING_MODE_FIELD_POSITION)) * g_szAddressingModes_Displacement
+	mul		cl
 	xchg	al,ah
 	add		ax,g_szAddressingModes
 	push	ax
@@ -50,7 +54,7 @@ BootMenuPrintCfg_ForOurDrive:
 ; PushBlockMode
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT
-;		CS:SI:	Ptr to IDEVARS
+;		CS:BX:	Ptr to IDEVARS
 ;	Returns:
 ;		Nothing (falls to next push below)
 ;	Corrupts registers:
@@ -68,7 +72,7 @@ BootMenuPrintCfg_ForOurDrive:
 ; PushBusType
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT
-;		CS:SI:	Ptr to IDEVARS
+;		CS:BX:	Ptr to IDEVARS
 ;	Returns:
 ;		Nothing (jumps to next push below)
 ;	Corrupts registers:
@@ -76,7 +80,7 @@ BootMenuPrintCfg_ForOurDrive:
 ;--------------------------------------------------------------------
 .PushBusType:
 	mov		al,g_szBusTypeValues_Displacement
-	mul		BYTE [cs:si+IDEVARS.bDevice]
+	mul		BYTE [cs:bx+IDEVARS.bDevice]
 		
 	shr		ax,1			; divide by 2 since IDEVARS.bDevice is multiplied by 2
 		
@@ -87,14 +91,14 @@ BootMenuPrintCfg_ForOurDrive:
 ; PushIRQ
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT
-;		CS:SI:	Ptr to IDEVARS
+;		CS:BX:	Ptr to IDEVARS
 ;	Returns:
 ;		Nothing (falls to next push below)
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
 .PushIRQ:
-	mov		al, BYTE [cs:si+IDEVARS.bIRQ]
+	mov		al, BYTE [cs:bx+IDEVARS.bIRQ]
 	cbw
 	push	ax
 
@@ -102,7 +106,7 @@ BootMenuPrintCfg_ForOurDrive:
 ; PushResetStatus
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT
-;		CS:SI:	Ptr to IDEVARS
+;		CS:BX:	Ptr to IDEVARS
 ;	Returns:
 ;		Nothing (falls to next push below)
 ;	Corrupts registers:
@@ -113,15 +117,4 @@ BootMenuPrintCfg_ForOurDrive:
 	and		al, MASKH_DPT_RESET			;  ah already zero from last push
 	push	ax
 
-;--------------------------------------------------------------------
-; PrintValuesFromStack
-;	Parameters:
-;		Stack:	All formatting parameters
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, SI, DI
-;--------------------------------------------------------------------
-.PrintValuesFromStack:
-	jmp		BootMenuPrint_HardDiskRefreshInformation.output
-
+;;; fall-out to BootMenuPrint_HardDiskRefreshInformation.

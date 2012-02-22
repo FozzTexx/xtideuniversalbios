@@ -96,11 +96,12 @@ g_szNfoCfgFullMode:		db	"Full mode supports multiple controllers and has more fe
 g_szNfoCfgStealSize:	db	"How many kiB's to steal from Conventional memory for XTIDE Universal BIOS variables.",NULL
 g_szNfoCfgIdeCnt:		db	"Number of IDE controllers to manage.",NULL
 
+g_szSerialMoved:		db  "A Serial Controller has been moved to the end of the Controller list. No further action is required. Serial Controllers must be placed at the end of the list.",NULL
+
 g_szHelpCfgFullMode:	incbin	"Configuration_FullMode.txt"
 						db	NULL
 g_szHelpCfgStealSize:	incbin	"Configuration_StealSize.txt"
 						db	NULL
-
 
 ; Strings for IDE Controller menu
 g_szItemBackToCfgMenu:	db	"Back to Configuration Menu",NULL

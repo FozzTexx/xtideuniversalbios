@@ -20,17 +20,17 @@ BootMenuEvent_Handler:
 
 %ifdef MENUEVENT_INLINE_OFFSETS
 
-	add		bx, BootMenuEvent_Handler
+	add		bx, BootMenuEvent_Handler.FirstEvent
 	jmp		bx
 
-MENUEVENT_InitializeMenuinitFromDSSI equ  (BootMenuEvent_Handler.InitializeMenuinitFromDSSI - BootMenuEvent_Handler)
-MENUEVENT_ExitMenu equ  (BootMenuEvent_EventCompleted - BootMenuEvent_Handler)
-MENUEVENT_ItemHighlightedFromCX equ (BootMenuEvent_Handler.ItemHighlightedFromCX - BootMenuEvent_Handler)
-MENUEVENT_ItemSelectedFromCX equ (BootMenuEvent_Handler.ItemSelectedFromCX - BootMenuEvent_Handler)
-MENUEVENT_KeyStrokeInAX equ (BootMenuEvent_Handler.KeyStrokeInAX - BootMenuEvent_Handler)
-MENUEVENT_RefreshTitle equ (BootMenuPrint_TitleStrings - BootMenuEvent_Handler)
-MENUEVENT_RefreshInformation equ (BootMenuPrint_RefreshInformation - BootMenuEvent_Handler)
-MENUEVENT_RefreshItemFromCX equ (BootMenuPrint_RefreshItem - BootMenuEvent_Handler)
+MENUEVENT_InitializeMenuinitFromDSSI equ  (BootMenuEvent_Handler.InitializeMenuinitFromDSSI - BootMenuEvent_Handler.FirstEvent)
+MENUEVENT_ExitMenu equ  (BootMenuEvent_EventCompleted - BootMenuEvent_Handler.FirstEvent)
+MENUEVENT_ItemHighlightedFromCX equ (BootMenuEvent_Handler.ItemHighlightedFromCX - BootMenuEvent_Handler.FirstEvent)
+MENUEVENT_ItemSelectedFromCX equ (BootMenuEvent_Handler.ItemSelectedFromCX - BootMenuEvent_Handler.FirstEvent)
+MENUEVENT_KeyStrokeInAX equ (BootMenuEvent_Handler.KeyStrokeInAX - BootMenuEvent_Handler.FirstEvent)
+MENUEVENT_RefreshTitle equ (BootMenuPrint_TitleStrings - BootMenuEvent_Handler.FirstEvent)
+MENUEVENT_RefreshInformation equ (BootMenuPrint_RefreshInformation - BootMenuEvent_Handler.FirstEvent)
+MENUEVENT_RefreshItemFromCX equ (BootMenuPrint_RefreshItem - BootMenuEvent_Handler.FirstEvent)
 ;
 ; Note that there is no entry for MENUEVENT_IdleProcessing.  If MENUEVENT_IDLEPROCESSING_ENABLE is not %defined,
 ; then the entry point will not be called (saving memory on this end and at the CALL point).
@@ -66,6 +66,7 @@ ALIGN WORD_ALIGN
 ; Returns:
 ;	DS:SI:		Ptr to initialized MENUINIT struct
 ALIGN JUMP_ALIGN
+.FirstEvent:	
 .InitializeMenuinitFromDSSI:
 	push	ds
 	call	RamVars_GetSegmentToDS
