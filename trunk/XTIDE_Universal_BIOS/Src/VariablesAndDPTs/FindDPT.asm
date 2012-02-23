@@ -22,9 +22,8 @@ FindDPT_ForNewDriveToDSDI:
 %ifdef MODULE_SERIAL_FLOPPY
 	add		al, [RAMVARS.xlateVars+XLATEVARS.bFlopCreateCnt]
 %endif
-	xchg	ax, dx		
-	; Fall to FindDPT_ForDriveNumber
-
+	xchg	ax, dx
+	; fall-through to FindDPT_ForDriveNumber
 
 ;--------------------------------------------------------------------
 ; Finds Disk Parameter Table for drive number.
@@ -65,7 +64,29 @@ FindDPT_ForDriveNumber:
 
 	xchg	di, ax						; Restore AX and put result in DI
 	pop		dx
+		
 	ret
+
+;--------------------------------------------------------------------
+; Consolidator for checking the result from RamVars_IsDriveHandledByThisBIOS
+; and then if it is our drive, getting the DPT with FindDPT_ForDriveNumber
+;
+; RamVars_IsDriveHandledByThisBIOS_And_FindDPT_ForDriveNumber
+;	Parameters:
+;		DL:		Drive number
+;		DS:		RAMVARS segment
+;	Returns:
+;		DS:DI:	Ptr to DPT, if it is our drive
+;       CF:     Set if not our drive, clear if it is our drive
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+RamVars_IsDriveHandledByThisBIOS_And_FindDPT_ForDriveNumber:
+	call	RamVars_IsDriveHandledByThisBIOS
+	jnc		FindDPT_ForDriveNumber
+	ret
+
 
 ;--------------------------------------------------------------------
 ; Finds Disk Parameter Table for
@@ -211,24 +232,24 @@ ALIGN JUMP_ALIGN
 IterateAllDPTs:
 	push	cx
 
-	mov		cl, [RAMVARS.bDrvCnt]		
-	mov		ch, 0
-		
 	mov		di, RAMVARS_size			; Point DS:DI to first DPT
 		
-	jcxz	.NotFound					; Return if no drives
+	mov		cl, [RAMVARS.bDrvCnt]
+	xor		ch, ch						; Clears CF  
+		
+	jcxz	.AllDptsIterated			; Return if no drives, CF will be clear from xor above
 		
 ALIGN JUMP_ALIGN
 .LoopWhileDPTsLeft:
 	call	si							; Is wanted DPT?
 	jc		SHORT .AllDptsIterated		;  If so, return
-	add		di, BYTE LARGEST_DPT_SIZE	; Point to next DPT
+	add		di, BYTE LARGEST_DPT_SIZE	; Point to next DPT, clears CF
 	loop	.LoopWhileDPTsLeft
-		
-.NotFound:		
-	clc									; Clear CF since DPT not found
+	
+	; fall-through: DPT was not found, CF is already clear from ADD di inside the loop
 		
 ALIGN JUMP_ALIGN
 .AllDptsIterated:
 	pop		cx
 	ret
+

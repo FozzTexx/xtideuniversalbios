@@ -11,24 +11,33 @@
 #include <string.h>
 #include <stdio.h>
 
-struct floppyInfo {
-	unsigned long size;
-	unsigned char type;
-	unsigned char cylinders;
-	unsigned char heads;
-	unsigned char sectors;
-} floppyInfos[] = 
+struct floppyInfo floppyInfos[] = 
 {
-{ 2949120 / 512, 6, 80, 2, 36 },   // 2.88MB 3.5"
-{ 1474560 / 512, 4, 80, 2, 18 },        // 1.44MB 3.5"
-{ 1228800 / 512, 2, 80, 2, 15 },     // 1.2MB 5.25"
-{ 737280 / 512, 3, 80, 1, 18 },    // 720KB 3.5"
-{ 368640 / 512, 1, 40, 2, 9 }, // 360KB 5.25"
-{ 327680 / 512, 0, 40, 2, 8 }, // 320KB 5.25"
-{ 184320 / 512, 0, 40, 1, 9 }, // 180KB 5.25" single sided
-{ 163840 / 512, 0, 40, 1, 8 }, // 160KB 5.25" single sided
-{ 0, 0, 0, 0, 0 }
+	{ 1, 2949120 / 512, 6, 80, 2, 36 },   		// 2.88MB 3.5"
+	{ 0, 2867200 / 512, 6, 80, 2, 36 },   		// 2.88MB 3.5" (alternate spelling with 2.8)
+	{ 0, 2969600 / 512, 6, 80, 2, 36 },   		// 2.88MB 3.5" (alternate spelling with 2.9)
+	{ 1, 1474560 / 512, 4, 80, 2, 18 },         // 1.44MB 3.5"
+	{ 0, 1433600 / 512, 4, 80, 2, 18 },         // 1.44MB 3.5" (alternate spelling with 1.4)
+	{ 1, 1228800 / 512, 2, 80, 2, 15 },     	// 1.2MB 5.25"
+	{ 1, 737280 / 512, 3, 80, 1, 18 },    		// 720KB 3.5"
+	{ 1, 368640 / 512, 1, 40, 2, 9 }, 			// 360KB 5.25"
+	{ 1, 327680 / 512, 0, 40, 2, 8 }, 			// 320KB 5.25"
+	{ 1, 184320 / 512, 0, 40, 1, 9 }, 			// 180KB 5.25" single sided
+	{ 1, 163840 / 512, 0, 40, 1, 8 }, 			// 160KB 5.25" single sided
+	{ 0, 0, 0, 0, 0, 0 }
 };
+
+struct floppyInfo *FindFloppyInfoBySize( double size )
+{
+	struct floppyInfo *fi;
+
+	for( fi = floppyInfos; fi->size != 0 && !(size+5 > fi->size && size-5 < fi->size); fi++ ) ;
+
+	if( fi->size == 0 )
+		fi = NULL;
+
+	return( fi );
+}
 
 Image::Image( char *name, int p_readOnly, int p_drive )
 {
@@ -68,7 +77,7 @@ void Image::init( char *name, int p_readOnly, int p_drive, unsigned long p_cyl, 
 		log( -1, "'%s', Image size zero?" );
 
 	floppy = 0;
-	for( f = floppyInfos; f->size && f->size != totallba; f++ ) ;
+	for( f = floppyInfos; f->size && !(f->size == totallba && f->real); f++ ) ;
 	if( f->size )
 	{
 		floppy = 1;
@@ -77,6 +86,7 @@ void Image::init( char *name, int p_readOnly, int p_drive, unsigned long p_cyl, 
 		p_cyl = f->cylinders;
 		p_head = f->heads;
 		p_sect = f->sectors;
+		totallba = p_cyl * p_head * p_sect;
 	}
 
 	if( p_useCHS )
