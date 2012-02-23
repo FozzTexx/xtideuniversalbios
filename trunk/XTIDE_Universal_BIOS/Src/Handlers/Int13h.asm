@@ -56,6 +56,7 @@ ALIGN JUMP_ALIGN
 	jmp		[cs:bx+g_rgwEbiosFunctionJumpTable]
 %endif
 
+
 ;--------------------------------------------------------------------
 ; Int13h_UnsupportedFunction
 ; Int13h_DirectCallToAnotherBios
@@ -113,6 +114,20 @@ ALIGN JUMP_ALIGN
 	jmp		SHORT Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 %endif
 
+%ifdef MODULE_SERIAL_FLOPPY
+;--------------------------------------------------------------------
+; Int13h_ReturnSuccessForFloppy
+;
+; Some operations, such as format of a floppy disk track, should just
+; return success, while for hard disks it should be treated as unsupported.
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+Int13h_ReturnSuccessForFloppy:
+	test	dl, dl
+	js		short Int13h_UnsupportedFunction
+	mov		ah, 0
+	jmp		short Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
+%endif
 
 ;--------------------------------------------------------------------
 ; Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAHandTransferredSectorsFromCL
@@ -248,7 +263,11 @@ g_rgw13hFuncJump:
 	dw	AH2h_HandlerForReadDiskSectors					; 02h, Read Disk Sectors (All)
 	dw	AH3h_HandlerForWriteDiskSectors					; 03h, Write Disk Sectors (All)
 	dw	AH4h_HandlerForVerifyDiskSectors				; 04h, Verify Disk Sectors (All)
+%ifdef MODULE_SERIAL_FLOPPY
+	dw	Int13h_ReturnSuccessForFloppy					; 05h, Format Disk Track (XT, AT, EISA)
+%else
 	dw	Int13h_UnsupportedFunction						; 05h, Format Disk Track (XT, AT, EISA)
+%endif
 	dw	Int13h_UnsupportedFunction						; 06h, Format Disk Track with Bad Sectors (XT)
 	dw	Int13h_UnsupportedFunction						; 07h, Format Multiple Cylinders (XT)
 	dw	AH8h_HandlerForReadDiskDriveParameters			; 08h, Read Disk Drive Parameters (All)
