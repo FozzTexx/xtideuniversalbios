@@ -29,6 +29,7 @@ void usage(void)
 		"",
 		"  -n [megabytes]      Create new disk with given size or use -g geometry",
 		"                      Maximum size is " USAGE_MAXSECTORS, 
+		"                      Floppy images can also be created, such as \"360K\"",
 		"                      (default is a 32 MB disk, with CHS geometry 65:16:63)",
 		"",
 		"  -p [pipename]       Named Pipe mode for emulators",
@@ -159,10 +160,27 @@ int main(int argc, char* argv[])
 				createFile = 1;
 				if( atol(argv[t+1]) != 0 )
 				{
-					unsigned long size = atol(argv[++t]);
-					sect = 63;
-					head = 16;
-					cyl = (size*1024*2) / (16*63);
+					double size = atof(argv[++t]);
+					struct floppyInfo *fi;
+					char *c;
+
+					size *= 2;
+					for( c = argv[t]; *c && *c != 'k' && *c != 'K'; c++ ) ;
+					if( !(*c) )
+						size *= 1000;
+
+					if( (fi = FindFloppyInfoBySize( size )) )
+					{
+						sect = fi->sectors;
+						head = fi->heads;
+						cyl = fi->cylinders;
+					}
+					else
+					{
+						sect = 63;
+						head = 16;
+						cyl = size / (16*63);
+					}
 				}
 				break;
 			case 't': case 'T':

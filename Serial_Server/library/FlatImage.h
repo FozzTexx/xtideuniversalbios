@@ -23,11 +23,18 @@ public:
 			unsigned long size;
 			double sizef;
 			FileAccess cf;
+			char sizeChar;
 
 			size = (unsigned long) p_cyl * (unsigned long) p_sect * (unsigned long) p_head;
 			if( size > cf.MaxSectors )
 				log( -1, "'%s', can't create flat file with size greater than %lu 512-byte sectors", name, cf.MaxSectors );
 			sizef = size / 2048.0;   // 512 byte sectors -> MB
+			sizeChar = 'M';
+			if( sizef < 1 ) 
+			{
+				sizef *= 1024;
+				sizeChar = 'K';
+			}
 
 			if( cf.Create( name ) )
 			{
@@ -36,9 +43,9 @@ public:
 					cf.Write( &buff[0], 512 );
 				
 				if( p_cyl > 1024 )
-					log( 0, "Created file '%s', size %.1lf MB", name, sizef );
+					log( 0, "Created file '%s', size %.2lf %cB", name, sizef, sizeChar );
 				else
-					log( 0, "Created file '%s', geometry %u:%u:%u, size %.1lf MB", name, p_cyl, p_sect, p_head, sizef );
+					log( 0, "Created file '%s', geometry %u:%u:%u, size %.2lf %cB", name, p_cyl, p_head, p_sect, sizef, sizeChar );
 				cf.Close();
 			}
 		}

@@ -15,6 +15,17 @@ unsigned long GetTime_Timeout(void);
 
 unsigned short checksum( unsigned short *wbuff, int wlen );
 
+struct floppyInfo {
+	unsigned char real;
+	unsigned long size;
+	unsigned char type;
+	unsigned char cylinders;
+	unsigned char heads;
+	unsigned char sectors;
+};
+
+struct floppyInfo *FindFloppyInfoBySize( double size );
+
 class Image
 {
 public:

@@ -21,6 +21,30 @@ ALIGN JUMP_ALIGN
 AH0h_HandlerForDiskControllerReset:
 	eMOVZX	bx, dl						; Copy requested drive to BL, zero BH to assume no errors
 	call	ResetFloppyDrivesWithInt40h
+
+%ifdef MODULE_SERIAL_FLOPPY
+;
+; "Reset" emulatd serial floppy drives, if any.  There is nothing to actually do for this reset,
+; but record the proper error return code if one of these floppy drives is the drive requested.
+;
+	call	RamVars_UnpackFlopCntAndFirstToAL
+	cbw													; Clears AH (there are flop drives) or ffh (there are not)
+														; Either AH has success code (flop drives are present)
+														; or it doesn't matter because we won't match drive ffh
+
+	cwd													; clears DX (there are flop drives) or ffffh (there are not)
+
+	adc		dl, al										; second drive (CF set) if present
+														; If no drive is present, this will result in ffh which 
+														; won't match a drive
+	call	BackupErrorCodeFromTheRequestedDriveToBH
+	mov		dl, al										; We may end up doing the first drive twice (if there is
+	call	BackupErrorCodeFromTheRequestedDriveToBH	; only one drive), but doing it again is not harmful.
+%endif
+
+	test	bl, bl										; If we were called with a floppy disk, then we are done,
+	jns		SHORT .SkipHardDiskReset					; don't do hard disks.
+		
 	call	ResetForeignHardDisks
 	call	AH0h_ResetHardDisksHandledByOurBIOS
 .SkipHardDiskReset:
@@ -128,29 +152,9 @@ ALIGN JUMP_ALIGN
 	cmp		dl, dh						; All done?
 	jb		SHORT .DriveResetLoop		;  If not, reset next drive
 .AllDrivesReset:
-%ifdef MODULE_SERIAL_FLOPPY
-;
-; "Reset" emulatd serial floppy drives, if any.  There is nothing to actually do for this reset,
-; but record the proper error return code if one of these floppy drives is the drive requested.
-;
-	call	RamVars_UnpackFlopCntAndFirstToAL
-
-	cbw													; Clears AH (there are flop drives) or ffh (there are not)
-														; Either AH has success code (flop drives are present)
-														; or it doesn't matter because we won't match drive ffh
-
-	cwd													; clears DX (there are flop drives) or ffffh (there are not)
-
-	adc		dl, al										; second drive (CF set) if present
-														; If no drive is present, this will result in ffh which 
-														; won't match a drive
-	call	BackupErrorCodeFromTheRequestedDriveToBH
-	mov		dl, al										; We may end up doing the first drive twice (if there is
-	jmp		BackupErrorCodeFromTheRequestedDriveToBH	; only one drive), but doing it again is not harmful.
-%else
 	ret
-%endif
-		
+
+				
 ;--------------------------------------------------------------------
 ; .BackupErrorCodeFromMasterOrSlaveToBH
 ;	Parameters:

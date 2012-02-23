@@ -22,10 +22,9 @@ BootMenuPrint_RefreshItem:
 	push	bp
 	mov		bp, sp
 
-	call	RamVars_IsDriveHandledByThisBIOS				
+	call	RamVars_IsDriveHandledByThisBIOS_And_FindDPT_ForDriveNumber
 	jc		.notOurs
 
-	call	FindDPT_ForDriveNumber					; if it is one of ours, print the string in bootnfo
 	call	BootMenuInfo_ConvertDPTtoBX
 	mov		si, g_szDriveNumBOOTNFO					; special g_szDriveNum that prints from BDA
 	jmp		.go
@@ -111,17 +110,14 @@ BootMenuPrint_RefreshInformation:
 
 	mov		si, g_szCapacity							; Setup print string now, carries through to print call
 
-	xor		di, di
-	call	RamVars_IsDriveHandledByThisBIOS
-	jc		SHORT .notours
-	call	FindDPT_ForDriveNumber						; DS:DI to point DPT
-.notours:		
-		
-	test	dl, dl										; are we a hard disk?
-	js		BootMenuPrint_HardDiskRefreshInformation		
+	xor		di, di										; Zero DI for checks for our drive later on
+	call	RamVars_IsDriveHandledByThisBIOS_And_FindDPT_ForDriveNumber
 
-	test	di,di
-	jnz		.ours
+	test	dl, dl										; are we a hard disk?
+	js		BootMenuPrint_HardDiskRefreshInformation	
+
+	test	di, di
+	jnz		.ours										; Based on CF from RamVars_IsDriveHandledByThisBIOS above
 	call	FloppyDrive_GetType							; Get Floppy Drive type to BX
 	jmp		.around
 .ours:
@@ -186,7 +182,6 @@ BootMenuPrint_RefreshInformation:
 ;
 ; BootMenuPrint_HardDiskMenuitemInformation
 ;	Parameters:
-;		DL:		Untranslated Hard Disk number
 ;		DS:		RAMVARS segment
 ;	Returns:
 ;		CF:		Set since menu event was handled successfully
@@ -195,14 +190,12 @@ BootMenuPrint_RefreshInformation:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 BootMenuPrint_HardDiskRefreshInformation:		
-	test	di,di
+	test	di, di
 	jz		.HardDiskMenuitemInfoForForeignDrive		
 
 .HardDiskMenuitemInfoForOurDrive:
-	ePUSH_T	ax, g_szInformation
-
-	; Get and push total LBA size
-	call	BootMenuInfo_GetTotalSectorCount
+	ePUSH_T ax, g_szInformation						; Add substring for our hard disk information
+	call	BootMenuInfo_GetTotalSectorCount		; Get Total LBA Size
 	jmp		.ConvertSectorCountInBXDXAXtoSizeAndPushForFormat
 		
 .HardDiskMenuitemInfoForForeignDrive:
