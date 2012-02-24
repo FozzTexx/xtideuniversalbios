@@ -24,9 +24,8 @@ SECTION .text
 ;		CF:		0 if successfull, 1 if error
 ;--------------------------------------------------------------------
 AH8h_HandlerForReadDiskDriveParameters:
-
-	call	RamVars_IsDriveHandledByThisBIOS
-	jnc		SHORT .OurDrive
+	test	di,di
+	jnz		SHORT .OurDrive
 
 	call	Int13h_CallPreviousInt13hHandler
 	jnc		SHORT .MidGame

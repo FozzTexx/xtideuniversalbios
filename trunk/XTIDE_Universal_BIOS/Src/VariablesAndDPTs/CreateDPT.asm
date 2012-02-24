@@ -199,6 +199,10 @@ CreateDPT_FromAtaInformation:
 .StoreDeviceSpecificParameters:
 	call	Device_FinalizeDPT
 
+;----------------------------------------------------------------------
+; Update drive counts (hard and floppy)
+;----------------------------------------------------------------------	
+		
 %ifdef MODULE_SERIAL_FLOPPY
 ;
 ; These two instructions serve two purposes:
@@ -222,33 +226,9 @@ CreateDPT_FromAtaInformation:
 	jc		.AllDone
 %endif
 
-	; Fall to .StoreDriveNumberAndUpdateDriveCount
-
-;--------------------------------------------------------------------
-; .StoreDriveNumberAndUpdateDriveCount
-;	Parameters:
-;		DS:DI:	Ptr to Disk Parameter Table
-;		ES:SI:	Ptr to 512-byte ATA information read from the drive
-;		CS:BP:	Ptr to IDEVARS for the controller
-;		ES:		BDA Segment
-;	Returns:
-;		DL:		Drive number for new drive
-;		CF:		Always cleared
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-.StoreDriveNumberAndUpdateDriveCount:
-	mov		dl, [es:BDA.bHDCount]
-	or		dl, 80h						; Set bit 7 since hard disk
-
 	inc		BYTE [RAMVARS.bDrvCnt]		; Increment drive count to RAMVARS
-	inc		BYTE [es:BDA.bHDCount]		; Increment drive count to BDA
-
-	cmp		BYTE [RAMVARS.bFirstDrv], 0	; First drive set?
-	ja		SHORT .AllDone				;  If so, return
-	mov		[RAMVARS.bFirstDrv], dl		; Store first drive number
-
-.AllDone:
+		
+.AllDone:				
 	clc
 	ret
 

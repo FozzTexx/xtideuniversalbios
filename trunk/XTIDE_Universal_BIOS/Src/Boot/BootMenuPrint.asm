@@ -22,7 +22,7 @@ BootMenuPrint_RefreshItem:
 	push	bp
 	mov		bp, sp
 
-	call	RamVars_IsDriveHandledByThisBIOS_And_FindDPT_ForDriveNumber
+	call	FindDPT_ForDriveNumberInDL
 	jc		.notOurs
 
 	call	BootMenuInfo_ConvertDPTtoBX
@@ -110,14 +110,13 @@ BootMenuPrint_RefreshInformation:
 
 	mov		si, g_szCapacity							; Setup print string now, carries through to print call
 
-	xor		di, di										; Zero DI for checks for our drive later on
-	call	RamVars_IsDriveHandledByThisBIOS_And_FindDPT_ForDriveNumber
+	call	FindDPT_ForDriveNumberInDL
 
-	test	dl, dl										; are we a hard disk?
-	js		BootMenuPrint_HardDiskRefreshInformation	
+	inc		dl											; are we a hard disk?
+	dec		dl											; inc/dec will set SF, without modifying CF or DL
+	js		.HardDiskRefreshInformation	
 
-	test	di, di
-	jnz		.ours										; Based on CF from RamVars_IsDriveHandledByThisBIOS above
+	jnc		.ours										; Based on CF from FindDPT_ForDriveNumberInDL above
 	call	FloppyDrive_GetType							; Get Floppy Drive type to BX
 	jmp		.around
 .ours:
@@ -189,13 +188,12 @@ BootMenuPrint_RefreshInformation:
 ;		BX, CX, DX, SI, DI, ES
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-BootMenuPrint_HardDiskRefreshInformation:		
-	test	di, di
-	jz		.HardDiskMenuitemInfoForForeignDrive		
+.HardDiskRefreshInformation:		
+	jc		.HardDiskMenuitemInfoForForeignDrive		; Based on CF from FindDPT_ForDriveNumberInDL (way) above
 
 .HardDiskMenuitemInfoForOurDrive:
-	ePUSH_T ax, g_szInformation						; Add substring for our hard disk information
-	call	BootMenuInfo_GetTotalSectorCount		; Get Total LBA Size
+	ePUSH_T ax, g_szInformation							; Add substring for our hard disk information
+	call	BootMenuInfo_GetTotalSectorCount			; Get Total LBA Size
 	jmp		.ConvertSectorCountInBXDXAXtoSizeAndPushForFormat
 		
 .HardDiskMenuitemInfoForForeignDrive:

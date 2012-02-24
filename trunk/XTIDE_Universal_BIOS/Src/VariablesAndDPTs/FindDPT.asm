@@ -5,43 +5,77 @@
 SECTION .text
 
 ;--------------------------------------------------------------------
-; Finds pointer to first unused Disk Parameter Table.
+; Checks if drive is handled by this BIOS, and return DPT pointer.
 ;
-; FindDPT_ForNewDriveToDSDI
-;	Parameters:
-;		DS:		RAMVARS segment
-;	Returns:
-;		DS:DI:	Ptr to first unused DPT
-;	Corrupts registers:
-;		DX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-FindDPT_ForNewDriveToDSDI:
-	mov		ax, [RAMVARS.wDrvCntAndFirst]
-	add		al, ah
-%ifdef MODULE_SERIAL_FLOPPY
-	add		al, [RAMVARS.xlateVars+XLATEVARS.bFlopCreateCnt]
-%endif
-	xchg	ax, dx
-	; fall-through to FindDPT_ForDriveNumber
-
-;--------------------------------------------------------------------
-; Finds Disk Parameter Table for drive number.
-; IDE Base Port address will be stored to RAMVARS if correct DPT is found.
-;
-; FindDPT_ForDriveNumber
+; FindDPT_ForDriveNumberInDL		
 ;	Parameters:
 ;		DL:		Drive number
 ;		DS:		RAMVARS segment
 ;	Returns:
-;		DS:DI:	Ptr to DPT
+;		CF:		Cleared if drive is handled by this BIOS
+;				Set if drive belongs to some other BIOS
+;		DI:		DPT Pointer if drive is handled by this BIOS
+;				Zero if drive belongs to some other BIOS
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-FindDPT_ForDriveNumber:
+FindDPT_ForDriveNumberInDL:		
+	xchg	di, ax								; Save the contents of AX in DI
+
+; 
+; Check Our Hard Disks
+;
+	mov		ax, [RAMVARS.wDrvCntAndFirst]		; Drive count to AH, First number to AL
+	add		ah, al								; One past last drive to AH
+
+%ifdef MODULE_SERIAL_FLOPPY
+	cmp		dl, ah								; Above last supported?
+	jae		SHORT .HardDiskNotHandledByThisBIOS
+		
+	cmp		dl, al								; Below first supported?
+	jae		SHORT .CalcDPTForDriveNumber
+
+ALIGN JUMP_ALIGN				
+.HardDiskNotHandledByThisBIOS:	
+;
+; Check Our Floppy Disks
+; 
+	call	RamVars_UnpackFlopCntAndFirstToAL
+	cbw											; normally 0h, could be ffh if no drives present
+	adc		ah, al								; if no drives present, still ffh (ffh + ffh + 1 = ffh)
+	js		SHORT .DiskIsNotHandledByThisBIOS
+	cmp		ah, dl								; Check second drive if two, first drive if only one
+	jz		SHORT .CalcDPTForDriveNumber
+	cmp		al, dl								; Check first drive in all cases, redundant but OK to repeat
+	jnz		SHORT .DiskIsNotHandledByThisBIOS			
+%else
+	cmp		dl, ah								; Above last supported?		
+	jae		SHORT .DiskIsNotHandledByThisBIOS
+		
+	cmp		dl, al								; Below first supported?
+	jb		SHORT .DiskIsNotHandledByThisBIOS			
+%endif
+	; fall-through to CalcDPTForDriveNumber
+
+;--------------------------------------------------------------------
+; Finds Disk Parameter Table for drive number.
+; Note intended to be called except by FindDPT_ForDriveNumber
+;
+; CalcDPTForDriveNumber
+;	Parameters:
+;		DL:		Drive number
+;		DS:		RAMVARS segment
+;       DI:     Saved copy of AX from entry at FindDPT_ForDriveNumber
+;	Returns:
+;		DS:DI:	Ptr to DPT
+;       CF:     Clear
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+.CalcDPTForDriveNumber:
 	push	dx
-	xchg	di, ax	; Save the contents of AX in DI
 
 %ifdef MODULE_SERIAL_FLOPPY
 	mov		ax, [RAMVARS.wDrvCntAndFirst]
@@ -51,112 +85,60 @@ FindDPT_ForDriveNumber:
 
 	call	RamVars_UnpackFlopCntAndFirstToAL
 	add		dl, ah						; add in end of hard disk DPT list, floppies start immediately after
+		
+ALIGN JUMP_ALIGN				
 .harddisk:
 	sub		dl, al						; subtract off beginning of either hard disk or floppy list (as appropriate)
 %else
 	sub		dl, [RAMVARS.bFirstDrv]		; subtract off beginning of hard disk list
 %endif
-		
+
+.CalcDPTForNewDrive:				
 	mov		al, LARGEST_DPT_SIZE
 		
 	mul		dl
-	add		ax, BYTE RAMVARS_size
+	add		ax, BYTE RAMVARS_size		; Clears CF (will not oveflow)
 
-	xchg	di, ax						; Restore AX and put result in DI
 	pop		dx
+
+	xchg	di, ax						; Restore AX from entry at FindDPT_ForDriveNumber, put DPT pointer in DI
+	ret
+
+ALIGN JUMP_ALIGN		
+.DiskIsNotHandledByThisBIOS:			
+;
+; Drive not found...
+;
+	xor		ax, ax								; Clear DPT pointer
+	stc											; Is not supported by our BIOS		
 		
+	xchg	di, ax								; Restore AX from save at top
 	ret
 
 ;--------------------------------------------------------------------
-; Consolidator for checking the result from RamVars_IsDriveHandledByThisBIOS
-; and then if it is our drive, getting the DPT with FindDPT_ForDriveNumber
+; Finds pointer to first unused Disk Parameter Table.
+; Should only be used before DetectDrives is complete (not valid after this time).
 ;
-; RamVars_IsDriveHandledByThisBIOS_And_FindDPT_ForDriveNumber
+; FindDPT_ForNewDriveToDSDI
 ;	Parameters:
-;		DL:		Drive number
 ;		DS:		RAMVARS segment
 ;	Returns:
-;		DS:DI:	Ptr to DPT, if it is our drive
-;       CF:     Set if not our drive, clear if it is our drive
+;		DS:DI:	Ptr to first unused DPT
 ;	Corrupts registers:
-;		Nothing
+;		AX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-RamVars_IsDriveHandledByThisBIOS_And_FindDPT_ForDriveNumber:
-	call	RamVars_IsDriveHandledByThisBIOS
-	jnc		FindDPT_ForDriveNumber
-	ret
-
-
-;--------------------------------------------------------------------
-; Finds Disk Parameter Table for
-; Master or Slave drive at wanted port.
-;
-; FindDPT_ToDSDIForIdeMasterAtPortDX
-; FindDPT_ToDSDIForIdeSlaveAtPortDX
-;	Parameters:
-;		DX:		IDE Base Port address
-;		DS:		RAMVARS segment
-;	Returns:
-;		DL:		Drive number (if DPT found)
-;		DS:DI:	Ptr to DPT
-;		CF:		Set if wanted DPT found
-;				Cleared if DPT not found
-;	Corrupts registers:
-;		SI
-;
-; Converted to macros since there is only once call site for each of these
-;
-;--------------------------------------------------------------------
-	
-%macro FindDPT_ToDSDIForIdeMasterAtPortDX 0
-	mov		si, IterateToMasterAtPortCallback
-	call	IterateAllDPTs
-%endmacro
-
-%macro FindDPT_ToDSDIForIdeSlaveAtPortDX 0
-	mov		si, IterateToSlaveAtPortCallback
-	call	IterateAllDPTs
-%endmacro
-
+FindDPT_ForNewDriveToDSDI:
+	push	dx
 		
-;--------------------------------------------------------------------
-; Iteration callback for finding DPT using
-; IDE base port for Master or Slave drive.
-;
-; IterateToSlaveAtPortCallback
-; IterateToMasterAtPortCallback
-;	Parameters:
-;		DX:		IDE Base Port address
-;		DS:DI:	Ptr to DPT to examine
-;	Returns:
-;		CF:		Set if wanted DPT found
-;				Cleared if wrong DPT
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-IterateToSlaveAtPortCallback:
-	test	BYTE [di+DPT.bFlagsLow], FLGL_DPT_SLAVE	; Clears CF
-	jnz		SHORT CompareBasePortAddress
-	ret		; Wrong DPT
-
-ALIGN JUMP_ALIGN
-IterateToMasterAtPortCallback:
-	test	BYTE [di+DPT.bFlagsLow], FLGL_DPT_SLAVE
-	jnz		SHORT ReturnWrongDPT				; Return if slave drive
-
-CompareBasePortAddress:
-	push	bx
-	eMOVZX	bx, BYTE [di+DPT.bIdevarsOffset]	; CS:BX now points to IDEVARS
-	cmp		dx, [cs:bx+IDEVARS.wPort]			; Wanted port?
-	pop		bx
-	jne		SHORT ReturnWrongDPT
-
-ReturnRightDPT:
-	stc											; Set CF since wanted DPT
-	ret
-
+%ifdef MODULE_SERIAL_FLOPPY
+	mov		dx, [RAMVARS.wDrvCntAndFlopCnt]
+	add		dl, dh
+%else
+	mov		dl, [RAMVARS.bDrvCnt]
+%endif
+		
+	jmp		short FindDPT_ForDriveNumberInDL.CalcDPTForNewDrive
 
 ;--------------------------------------------------------------------
 ; IterateToDptWithFlagsHighInBL
@@ -164,19 +146,17 @@ ReturnRightDPT:
 ;		DS:DI:	Ptr to DPT to examine
 ;       BL:		Bit(s) to test in DPT.bFlagsHigh 
 ;	Returns:
-;		CF:		Set if wanted DPT found
-;				Cleared if wrong DPT
+;		CF:		Clear if wanted DPT found
+;				Set if wrong DPT
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 IterateToDptWithFlagsHighInBL:		
-	test	BYTE [di+DPT.bFlagsHigh], bl		; Clears CF (but we need the clc
-												; below anyway for callers above)
-	jnz		SHORT ReturnRightDPT
-
-ReturnWrongDPT:
-	clc										; Clear CF since wrong DPT
+	test	BYTE [di+DPT.bFlagsHigh], bl		; Clears CF
+	jnz		SHORT .ReturnRightDPT
+	stc
+.ReturnRightDPT:		
 	ret
 
 ;--------------------------------------------------------------------
@@ -219,12 +199,13 @@ FindDPT_ToDSDIforFlagsHighInBL:
 ;	Parameters:
 ;		AX,BX,DX:	Parameters to callback function
 ;		CS:SI:		Ptr to callback function
+;                   Callback routine should return CF=clear if found
 ;		DS:			RAMVARS segment
 ;	Returns:
 ;		DS:DI:		Ptr to wanted DPT (if found)
 ;					If not found, points to first empty DPT
-;		CF:			Set if wanted DPT found
-;					Cleared if DPT not found, or no DPTs present
+;		CF:			Clear if wanted DPT found
+;					Set if DPT not found, or no DPTs present
 ;	Corrupts registers:
 ;		Nothing unless corrupted by callback function
 ;--------------------------------------------------------------------
@@ -237,19 +218,21 @@ IterateAllDPTs:
 	mov		cl, [RAMVARS.bDrvCnt]
 	xor		ch, ch						; Clears CF  
 		
-	jcxz	.AllDptsIterated			; Return if no drives, CF will be clear from xor above
+	jcxz	.NotFound					; Return if no drives
 		
 ALIGN JUMP_ALIGN
 .LoopWhileDPTsLeft:
 	call	si							; Is wanted DPT?
-	jc		SHORT .AllDptsIterated		;  If so, return
-	add		di, BYTE LARGEST_DPT_SIZE	; Point to next DPT, clears CF
+	jnc		SHORT .Found				;  If so, return
+	add		di, BYTE LARGEST_DPT_SIZE	; Point to next DPT
 	loop	.LoopWhileDPTsLeft
-	
-	; fall-through: DPT was not found, CF is already clear from ADD di inside the loop
-		
+
 ALIGN JUMP_ALIGN
-.AllDptsIterated:
+.NotFound:
+	stc
+
+ALIGN JUMP_ALIGN
+.Found:
 	pop		cx
 	ret
 

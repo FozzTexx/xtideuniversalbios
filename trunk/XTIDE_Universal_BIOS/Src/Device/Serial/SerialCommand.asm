@@ -638,7 +638,7 @@ SerialCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 		call	FindDPT_ToDSDIforSerialDevice
 		pop		si
 %ifdef MODULE_SERIAL_FLOPPY
-		jc		.founddpt
+		jnc		.founddpt
 ;
 ; If not found above with FindDPT_ToDSDIforSerialDevice, DI will point to the DPT after the last hard disk DPT
 ;

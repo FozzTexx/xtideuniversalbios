@@ -9,10 +9,6 @@ LITE_MODE_RAMVARS_SEGMENT	EQU		30h
 
 ; Variables for translating drive numbers.
 struc XLATEVARS
-	.wFDandHDswap:
-	.bFDSwap			resb	1	; Floppy Drive to swap to 00h and vice versa
-	.bHDSwap			resb	1	; Hard Drive to swap to 80h and vice versa
-	.bXlatedDrv			resb	1	; Drive number after translation
 %ifdef MODULE_SERIAL_FLOPPY
 	.bFlopCreateCnt:
 	.bFlopCntAndFirst	resb	1	; Normally, packed starting floppy drive number (high order 7 bits)
@@ -22,6 +18,10 @@ struc XLATEVARS
 %else
 						resb	1	; alignment
 %endif
+	.bXlatedDrv			resb	1	; Drive number after translation
+	.wFDandHDswap:
+	.bFDSwap			resb	1	; Floppy Drive to swap to 00h and vice versa
+	.bHDSwap			resb	1	; Hard Drive to swap to 80h and vice versa
 endstruc
 
 ; RAM Variables.
@@ -35,11 +35,21 @@ struc RAMVARS
 
 	.wDrvCntAndFirst:
 	.bFirstDrv			resb	1	; Number of first drive for this BIOS
+	.wDrvCntAndFlopCnt:				; Both the hard disk and floppy counts in one word
+									; (yes, misaligned, but it is only used this way during initialization)
 	.bDrvCnt			resb	1	; Number of drives handled by this BIOS
 
 	; Variables for drive number translation
 	.xlateVars		resb	XLATEVARS_size
 endstruc
+
+%ifdef MODULE_SERIAL_FLOPPY
+  %ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
+	%if RAMVARS.xlateVars != RAMVARS.bDrvCnt+1 || XLATEVARS.bFlopCreateCnt != 0
+		%error "bFlopCreateCnt needs to be the first thing in XLATEVARS, and .xlateVars needs to come immediately after .bDrvCnt.  In at least one place, we read .wDrvCntAndFlopCnt to get both counts in one fetch"
+	%endif
+  %endif
+%endif
 
 RAMVARS_SIGNATURE		EQU	"Xu"	; RAMVARS signature for .wSignature
 

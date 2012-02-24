@@ -42,7 +42,9 @@ DetectPrint_StartDetectWithMasterOrSlaveStringInAXandIdeVarsInCSBP:
 	mov		ax, [cs:bp+IDEVARS.wPort]    	; for IDE: AX=port address, DH=.bDevice
 	mov		dx, [cs:bp+IDEVARS.bDevice-1]   ; for Serial: AL=port address>>2, AH=baud rate
 											;			  DL=COM number character, DH=.bDevice
-
+		
+	mov		si, g_szDetectOuter				; Load SI with default wrapper string "IDE %s at %s: "
+		
 	push	bp								; setup stack for call to
 	mov		bp, sp							; BootMenuPrint_FormatCSSIfromParamsInSSBP
 
@@ -71,7 +73,7 @@ DetectPrint_StartDetectWithMasterOrSlaveStringInAXandIdeVarsInCSBP:
  	mov		cl, (g_szDetectCOMAuto-$$) & 0xff	; Setup secondary print string for "Auto"
 
 	test	dl, dl							; Check if serial port "Auto"
-	jz		.pushAndPrint					; CX = string to print, AX and DX won't be used
+	jz		.pushAndPrintSerial				; CX = string to print, AX and DX won't be used
 
 	mov		cl, (g_szDetectCOMLarge-$$) & 0xff	; Setup secondary print string for "COMn/xx.yK"
 
@@ -87,16 +89,17 @@ DetectPrint_StartDetectWithMasterOrSlaveStringInAXandIdeVarsInCSBP:
 	div		si								; and divide...  Now AX = baud rate/1000, DX = low order digit
 
 	cmp		ax,si							; < 10: "2400", "9600", etc.; >= 10: "19.2K", "38.4K", etc.
-	jae		.pushAndPrint
+	jae		.pushAndPrintSerial
 
 	mov		cl, (g_szDetectCOMSmall-$$) & 0xff	; Setup secondary print string for "COMn/XXy00"
+
+.pushAndPrintSerial:	
+	mov		si, g_szDetectOuterSerial		; Finally load SI with wrapper string "Serial %s on %s: "		
 
 .pushAndPrint:
 	push	cx								; Push print string
 	push	ax								; Push high order digits, or port address, or N/A
 	push	dx								; Push low order digit, or N/A
-
-	mov		si, g_szDetectOuter				; Finally load SI with wrapper string "IDE %s at %s: "
 
 	jmp		short DetectPrint_BootMenuPrint_FormatCSSIfromParamsInSSBP_Relay
 
