@@ -75,12 +75,11 @@ IDEDEVICE%+Wait_PollStatusFlagInBLwithTimeoutInBH:
 ;	Corrupts registers:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
-%ifdef ASSEMBLE_SHARED_IDE_DEVICE_FUNCTIONS
-PollBsyAndFlgInAH:
-	call	IDEDEVICE%+ReadIdeStatusRegisterToAL; Discard contents for first read
+IDEDEVICE%+PollBsyAndFlgInAH:
+	INPUT_TO_AL_FROM_IDE_REGISTER	STATUS_REGISTER_in	; Discard contents for first read
 ALIGN JUMP_ALIGN
 .PollLoop:
-	call	IDEDEVICE%+ReadIdeStatusRegisterToAL
+	INPUT_TO_AL_FROM_IDE_REGISTER	STATUS_REGISTER_in
 	test	al, FLG_STATUS_BSY					; Controller busy?
 	jnz		SHORT .UpdateTimeout				;  If so, jump to timeout update
 	test	al, ah								; Test secondary flag
@@ -94,7 +93,6 @@ ALIGN JUMP_ALIGN
 	stc
 .ReturnErrorCodeInAH:
 	ret
-%endif
 
 
 ;--------------------------------------------------------------------
@@ -109,26 +107,12 @@ ALIGN JUMP_ALIGN
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
 IDEDEVICE%+PollBsyOnly:
-	call	IDEDEVICE%+ReadIdeStatusRegisterToAL; Discard contents for first read
+	INPUT_TO_AL_FROM_IDE_REGISTER	STATUS_REGISTER_in	; Discard contents for first read
 ALIGN JUMP_ALIGN
 .PollLoop:
-	call	IDEDEVICE%+ReadIdeStatusRegisterToAL
+	INPUT_TO_AL_FROM_IDE_REGISTER	STATUS_REGISTER_in
 	test	al, FLG_STATUS_BSY					; Controller busy?
 	jz		SHORT IDEDEVICE%+Error_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL
 	call	Timer_SetCFifTimeout				; Update timeout counter
 	jnc		SHORT .PollLoop						; Loop if time left (sets CF on timeout)
 	jmp		SHORT IDEDEVICE%+Error_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL
-
-
-;--------------------------------------------------------------------
-; ReadIdeStatusRegisterToAL
-;	Parameters:
-;		DS:DI:	Ptr to DPT (in RAMVARS segment)
-;	Returns:
-;		AL:		IDE Status Register contents
-;	Corrupts registers:
-;		BX, DX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-IDEDEVICE%+ReadIdeStatusRegisterToAL:
-	JUMP_TO_INPUT_TO_AL_FROM_IDE_REGISTER STATUS_REGISTER_in
