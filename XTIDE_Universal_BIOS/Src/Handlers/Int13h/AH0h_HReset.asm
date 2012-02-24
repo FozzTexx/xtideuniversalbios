@@ -120,8 +120,8 @@ BackupErrorCodeFromTheRequestedDriveToBH:
 ALIGN JUMP_ALIGN
 GetDriveNumberForForeignBiosesToDL:
 	mov		dl, bl
-	call	RamVars_IsDriveHandledByThisBIOS
-	jc		SHORT .Return				; Return what was in BL unmodified
+	test	di, di
+	jz		SHORT .Return				; Return what was in BL unmodified
 	mov		dl, 80h
 .Return:
 	ret
@@ -140,70 +140,30 @@ GetDriveNumberForForeignBiosesToDL:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH0h_ResetHardDisksHandledByOurBIOS:
-	mov		dx, [RAMVARS.wDrvCntAndFirst]	; DL = drive number, DH = drive count
-	test	dh, dh
-	jz		SHORT .AllDrivesReset		; Return if no drives
-	add		dh, dl						; DH = one past last drive to reset
-ALIGN JUMP_ALIGN
-.DriveResetLoop:
-	call	AHDh_ResetDrive
-	call	.BackupErrorCodeFromMasterOrSlaveToBH
-	inc		dx
-	cmp		dl, dh						; All done?
-	jb		SHORT .DriveResetLoop		;  If not, reset next drive
-.AllDrivesReset:
+	mov		bl, [di+DPT.bIdevarsOffset]					; replace drive number with Idevars pointer for comparisons
+	mov		cl, [cs:ROMVARS.bIdeCnt]					; get count of ide controllers
+	mov		ch, 0										
+	mov		dl, 0										; starting Idevars offset
+	mov		si, IterateFindFirstDPTforIdevars			; iteration routine
+.loop:
+	call	IterateAllDPTs								; look for the first drive on this controller, if any
+	jc		.notFound
+	call	AHDh_ResetDrive								; reset master and slave on that controller
+	call	BackupErrorCodeFromTheRequestedDriveToBH	; save error code if same controller as initial request
+.notFound:
+	add		dl, IDEVARS_size							; move pointer forward
+	loop	.loop										; and repeat
 	ret
 
-				
 ;--------------------------------------------------------------------
-; .BackupErrorCodeFromMasterOrSlaveToBH
-;	Parameters:
-;		AH:		Error code for drive DL reset
-;		BL:		Requested drive (DL when entering AH=00h)
-;		DL:		Drive just resetted
-;		DS:		RAMVARS segment
-;	Returns:
-;		BH:		Backuped error code
-;		DL:		Incremented if next drive is slave drive
-;				(=already resetted)
-;	Corrupts registers:
-;		CX, DI
+; Iteration routine for AH0h_ResetHardDisksHandledByOurBIOS, 
+; for use with IterateAllDPTs
+; 
+; Returns when DPT is found on the controller with Idevars offset in DL
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-.BackupErrorCodeFromMasterOrSlaveToBH:
-	call	BackupErrorCodeFromTheRequestedDriveToBH
-	call	GetBasePortToCX				; Load base port for resetted drive
-	push	cx
-	inc		dx							; DL to next drive
-	call	GetBasePortToCX
-	pop		di
-	cmp		cx, di						; Next drive is from same controller?
-	je		SHORT BackupErrorCodeFromTheRequestedDriveToBH
-.NoMoreDrivesOrNoSlaveDrive:
-	dec		dx
+IterateFindFirstDPTforIdevars:		
+	cmp		dl, [di+DPT.bIdevarsOffset]			; Clears CF if matched
+	jz		.done
+	stc											; Set CF for not found
+.done:	
 	ret
-
-		
-;--------------------------------------------------------------------
-; GetBasePortToCX
-;	Parameters:
-;		DL:		Drive number
-;		DS:		RAMVARS segment
-;	Returns:
-;		CX:		Base port address
-;		CF:		Set if valid drive number
-;				Cleared if invalid drive number
-;	Corrupts registers:
-;		DI
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-GetBasePortToCX:
-	xchg	cx, bx
-	xor		bx, bx
-	call	FindDPT_ForDriveNumber
-	mov		bl, [di+DPT.bIdevarsOffset]
-	mov		bx, [cs:bx+IDEVARS.wPort]
-	xchg	bx, cx
-	ret
-
-

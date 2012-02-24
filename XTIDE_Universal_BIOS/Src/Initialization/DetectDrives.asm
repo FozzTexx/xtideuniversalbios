@@ -36,7 +36,7 @@ DetectDrives_FromAllIDEControllers:
 	add		bp, BYTE IDEVARS_size			; Point to next IDEVARS
 
 %ifdef MODULE_SERIAL
-	jcxz	.done							; Set to zero on .ideVarsSerialAuto iteration (if any)
+	jcxz	.AddHardDisks					; Set to zero on .ideVarsSerialAuto iteration (if any)
 %endif
 
 	loop	.DriveDetectLoop
@@ -47,7 +47,7 @@ DetectDrives_FromAllIDEControllers:
 ; if serial drive detected, do not scan (avoids duplicate drives and isn't needed - we already have a connection)
 ;
 	call	FindDPT_ToDSDIforSerialDevice
-	jc		.done
+	jnc		.AddHardDisks
 
 	mov		bp, ROMVARS.ideVarsSerialAuto	; Point to our special IDEVARS structure, just for serial scans
 
@@ -57,22 +57,37 @@ DetectDrives_FromAllIDEControllers:
 	jnz		.DriveDetectLoop
 %endif
 
-.done:	
-%ifdef MODULE_SERIAL_FLOPPY
+.AddHardDisks:
 ;----------------------------------------------------------------------
 ;
-; Add in any emulated serial floppy drives.
+; Add in hard disks to BDA, finalize our Count and First variables
 ;
-	mov		al, [RAMVARS.xlateVars+XLATEVARS.bFlopCreateCnt]
-	dec		al
-	mov		cl, al
-	js		.NoFloppies						; if no drives are present, we store 0ffh
+	mov		cx, [RAMVARS.wDrvCntAndFlopCnt]		; Our count of hard disks
+	test	cl, cl
+	jz		.AddFloppies				; If none, nothing more to do
+
+	mov		al, [es:BDA.bHDCount]
+	add		cl, al						; Add our drives to the system count
+	mov		[es:BDA.bHDCount], cl		
+	or		al, 80h						; Or in hard disk flag		
+	mov		[RAMVARS.bFirstDrv], al		; Store first drive number		
+
+
+.AddFloppies:		
+;%ifdef MODULE_SERIAL_FLOPPY		
+;----------------------------------------------------------------------
+;
+; Add in any emulated serial floppy drives, finalize our packed Count and First variables
+;
+	dec		ch
+	mov		al, ch
+	js		.NoFloppies						; if no drives are present, we store 0ffh		
 
 	call	FloppyDrive_GetCountFromBIOS_or_BDA
 
 	push	ax
 
-	add		al, cl							; Add our drives to existing drive count
+	add		al, ch							; Add our drives to existing drive count
 	cmp		al, 3							; For BDA, max out at 4 drives (ours is zero based)
 	jl		.MaxBDAFloppiesExceeded
 	mov		al, 3							
@@ -91,11 +106,11 @@ DetectDrives_FromAllIDEControllers:
 
 	pop		ax
 
-	shr		cl, 1							; number of drives, 1 or 2 only, to CF flag (clear=1, set=2)
+	shr		ch, 1							; number of drives, 1 or 2 only, to CF flag (clear=1, set=2)
 	rcl		al, 1							; starting drive number in upper 7 bits, number of drives in low bit
 .NoFloppies:	
 	mov		[RAMVARS.xlateVars+XLATEVARS.bFlopCntAndFirst], al
-%endif
+;%endif
 		
 	ret
 

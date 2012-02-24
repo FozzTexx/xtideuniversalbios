@@ -39,59 +39,49 @@ AHDh_HandlerForResetHardDisk:
 ;		AH:		Int 13h return status
 ;		CF:		0 if succesfull, 1 if error
 ;	Corrupts registers:
-;		AL, CX, SI, DI
+;		AL, CX, SI
 ;--------------------------------------------------------------------
 ;ALIGN JUMP_ALIGN
 AHDh_ResetDrive:
 	push	dx
 	push	bx
+	push	di
 
-	call	FindDPT_ForDriveNumber		; DS:DI now points to DPT
 	call	Interrupts_UnmaskInterruptControllerForDriveInDSDI
 	call	Device_ResetMasterAndSlaveController
-	;jc		SHORT .ReturnError			; CF would be set if slave drive present without master
-										; (error register has special values after reset)
+	;jc		SHORT .ReturnError					; CF would be set if slave drive present without master
+												; (error register has special values after reset)
 
 	; Initialize Master and Slave drives
-	eMOVZX	bx, BYTE [di+DPT.bIdevarsOffset]
-	mov		dx, [cs:bx+IDEVARS.wPort]
-	call	InitializeMasterAndSlaveDriveFromPortInDX
+	mov		al, [di+DPT.bIdevarsOffset]			; pointer to controller we are looking to reset
+	mov		ah, 0								; initialize error code, assume success
+		
+	mov		si, IterateAndResetDrives
+	call	IterateAllDPTs
 
+	shr		ah, 1								; Move error code and CF into proper position
+
+	pop		di
 	pop		bx
 	pop		dx
 	ret
 
-
 ;--------------------------------------------------------------------
-; InitializeMasterAndSlaveDriveFromPortInDX
-;	Parameters:
-;		DX:		IDE Base Port address
-;		SS:BP:	Ptr to IDEPACK
-;	Returns:
-;		AH:		Error code
-;		CF:		0 if initialization succesfull
-;				1 if any error
-;	Corrupts registers:
-;		AL, BX, CX, DX, SI, DI
+; IterateAndResetDrives: Iteration routine for use with IterateAllDPTs.
+;
+; When a drive on the controller is found, it is reset, and the error code 
+; merged into overall error code for this controller.  Master will be reset
+; first.  Note that the iteration will go until the end of the DPT list.
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-InitializeMasterAndSlaveDriveFromPortInDX:
-	push	dx							; Store base port address
-	xor		cx, cx						; Assume no errors
-	FindDPT_ToDSDIForIdeMasterAtPortDX
-	jnc		SHORT .InitializeSlave		; Master drive not present
-	call	AH9h_InitializeDriveForUse
-	mov		cl, ah						; Copy error code to CL
-.InitializeSlave:
-	pop		dx							; Restore base port address
-	FindDPT_ToDSDIForIdeSlaveAtPortDX
-	jnc		SHORT .CombineErrors		; Slave drive not present
-	call	AH9h_InitializeDriveForUse
-	mov		ch, ah						; Copy error code to CH
-.CombineErrors:
-	or		cl, ch						; OR error codes, clear CF
-	jz		SHORT .Return
-	mov		ah, RET_HD_RESETFAIL		; Load Reset Failed error code
-	stc
-.Return:
+IterateAndResetDrives:
+	cmp		al, [di+DPT.bIdevarsOffset]			; The right controller?
+	jnz		.done
+	push	ax
+	call	AH9h_InitializeDriveForUse			; Reset Master and Slave (Master will come first in DPT list)
+	pop		ax		
+	jc		.done
+	or		ah, (RET_HD_RESETFAIL << 1) | 1		; OR in Reset Failed error code and CF, will SHR into position later
+.done:
+	stc											; From IterateAllDPTs perspective, the DPT is never found
 	ret
+		

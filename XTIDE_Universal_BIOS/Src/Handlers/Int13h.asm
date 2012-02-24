@@ -25,13 +25,27 @@ Int13h_DiskFunctionsHandler:
 	CREATE_FRAME_INTPACK_TO_SSBP	EXTRA_BYTES_FOR_INTPACK
 
 	call	RamVars_GetSegmentToDS
+		
 	call	DriveXlate_ToOrBack
 	mov		[RAMVARS.xlateVars+XLATEVARS.bXlatedDrv], dl
-	call	RamVars_IsFunctionHandledByThisBIOS
-	jc		SHORT Int13h_DirectCallToAnotherBios
+		
+	call	FindDPT_ForDriveNumberInDL				; DS:DI points to our DPT, or NULL if not our drive
+	jnc		SHORT .OurFunction						; DPT found, this is one of our drives, and thus our function
 
-	call	FindDPT_ForDriveNumber		; DS:DI now points to DPT
-
+	cmp		ah, 0
+	jz		short .OurFunction						; we handle all function 0h requests (resets)
+	cmp		ah, 8
+%ifdef MODULE_SERIAL_FLOPPY
+	jnz		SHORT Int13h_DirectCallToAnotherBios	; we handle all traffic for function 08h, 
+													; as we need to wrap both hard disk and floppy drive counts
+%else
+	jz		SHORT .WeHandleTheFunction				; we handle all *hard disk* (only) traffic for function 08h, 
+													; as we need to wrap the hard disk drive count
+	test	dl, dl
+	jns		SHORT Int13h_DirectCallToAnotherBios
+%endif		
+				
+.OurFunction:	
 	; Jump to correct BIOS function
 	eMOVZX	bx, ah
 	shl		bx, 1

@@ -33,6 +33,10 @@ g_szDetectOuter:		; db	"IDE %s at %s: ",NULL
                 		; db	 49h,  44h,  45h,  20h,  25h,  73h,  20h,  61h,  74h,  20h,  25h,  73h,  3ah,  20h,  00h    ; uncompressed
                 		  db	 4fh,  4ah, 0cbh,  3eh,  20h,  67h, 0fah,  3eh,  40h,  00h                                  ; compressed
 
+g_szDetectOuterSerial:	; db	"Serial %s on %s: ",NULL		
+                      	; db	 53h,  65h,  72h,  69h,  61h,  6ch,  20h,  25h,  73h,  20h,  6fh,  6eh,  20h,  25h,  73h,  3ah,  20h,  00h    ; uncompressed
+                      	  db	 59h,  6bh,  78h,  6fh,  67h, 0f2h,  3eh,  20h,  75h, 0f4h,  3eh,  40h,  00h                                  ; compressed
+
 g_szDetectPort:			; db	"%x",NULL					   	; IDE Master at 1F0h:
                			; db	 25h,  78h,  00h    ; uncompressed
                			  db	 19h                ; compressed
@@ -41,9 +45,9 @@ g_szDetectCOM:			; db  "COM%c%s",NULL
               			; db   43h,  4fh,  4dh,  25h,  63h,  25h,  73h,  00h    ; uncompressed
               			  db   49h,  55h,  53h,  35h,  1eh                      ; compressed
 
-g_szDetectCOMAuto:		; db	" Auto",NULL
-                  		; db	 20h,  41h,  75h,  74h,  6fh,  00h    ; uncompressed
-                  		  db	 20h,  47h,  7bh,  7ah, 0b5h          ; compressed
+g_szDetectCOMAuto:		; db	" Detect",NULL
+                  		; db	 20h,  44h,  65h,  74h,  65h,  63h,  74h,  00h    ; uncompressed
+                  		  db	 20h,  4ah,  6bh,  7ah,  6bh,  69h, 0bah          ; compressed
 
 g_szDetectCOMSmall:		; db	"/%u%u00",NULL					; IDE Master at COM1/9600:
                    		; db	 2fh,  25h,  75h,  25h,  75h,  30h,  30h,  00h    ; uncompressed
@@ -156,41 +160,6 @@ g_szInformation:		; db	"%s",LF,CR
 	  db	    3eh,  23h,  38h,  23h,  3eh,  23h,  20h,  36h,  23h,  1ah                                                                            ; compressed
 
 
-; Boot Menu Floppy Disk strings
-;
-; The following strings are used by BootMenuPrint_RefreshInformation
-; To support optimizations in that code, these strings must start on the same 256 byte page,
-; which is checked at assembly time below.
-;
-g_szFddStart:
-g_szFddUnknown:	; db	"Unknown",NULL
-               	; db	 55h,  6eh,  6bh,  6eh,  6fh,  77h,  6eh,  00h    ; uncompressed
-               	  db	 5bh,  74h,  71h,  74h,  75h,  7dh, 0b4h          ; compressed
-
-g_szFddSizeOr:	; db	"5",ONE_QUARTER,QUOTATION_MARK," or 3",ONE_HALF,QUOTATION_MARK," DD",NULL
-              	; db	 35h, 0ach,  22h,  20h,  6fh,  72h,  20h,  33h, 0abh,  22h,  20h,  44h,  44h,  00h    ; uncompressed
-              	  db	 2fh,  21h,  26h,  20h,  75h, 0f8h,  2dh,  22h,  26h,  20h,  4ah,  8ah                ; compressed
-
-g_szFddSize:	; db	"%s",QUOTATION_MARK,", %u kiB",NULL	; 3½", 1440 kiB
-            	; db	 25h,  73h,  22h,  2ch,  20h,  25h,  75h,  20h,  6bh,  69h,  42h,  00h    ; uncompressed
-            	  db	 3eh,  26h,  27h,  20h,  37h,  20h,  71h,  6fh,  88h                      ; compressed
-
-g_szFddThreeHalf:		; db  "3",ONE_HALF,NULL
-                 		; db   33h, 0abh,  00h    ; uncompressed
-                 		  db   2dh,  02h          ; compressed
-
-g_szFddEnd:
-g_szFddFiveQuarter:		; db  "5",ONE_QUARTER,NULL
-                   		; db   35h, 0ach,  00h    ; uncompressed
-                   		  db   2fh,  01h          ; compressed
-
-
-%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
-%if ((g_szFddStart-$$) & 0xff00) <> ((g_szFddEnd-$$) & 0xff00)
-%error "g_szFdd* strings must start on the same 256 byte page, required by the BootMenuPrint_RefreshInformation routines for floppy drives.  Please move this block up or down within strings.asm"
-%endif
-%endif
-
 g_szAddressingModes:
 g_szLCHS:		; db	"L-CHS",NULL
          		; db	 4ch,  2dh,  43h,  48h,  53h,  00h    ; uncompressed
@@ -287,6 +256,40 @@ g_szDashForZero:		; db		"- ",NULL
                 		  db		 28h,  00h          ; compressed
 
 
+; Boot Menu Floppy Disk strings
+;
+; The following strings are used by BootMenuPrint_RefreshInformation
+; To support optimizations in that code, these strings must start on the same 256 byte page,
+; which is checked at assembly time below.
+;
+g_szFddStart:
+g_szFddUnknown:	; db	"Unknown",NULL
+               	; db	 55h,  6eh,  6bh,  6eh,  6fh,  77h,  6eh,  00h    ; uncompressed
+               	  db	 5bh,  74h,  71h,  74h,  75h,  7dh, 0b4h          ; compressed
+
+g_szFddSizeOr:	; db	"5",ONE_QUARTER,QUOTATION_MARK," or 3",ONE_HALF,QUOTATION_MARK," DD",NULL
+              	; db	 35h, 0ach,  22h,  20h,  6fh,  72h,  20h,  33h, 0abh,  22h,  20h,  44h,  44h,  00h    ; uncompressed
+              	  db	 2fh,  21h,  26h,  20h,  75h, 0f8h,  2dh,  22h,  26h,  20h,  4ah,  8ah                ; compressed
+
+g_szFddSize:	; db	"%s",QUOTATION_MARK,", %u kiB",NULL	; 3½", 1440 kiB
+            	; db	 25h,  73h,  22h,  2ch,  20h,  25h,  75h,  20h,  6bh,  69h,  42h,  00h    ; uncompressed
+            	  db	 3eh,  26h,  27h,  20h,  37h,  20h,  71h,  6fh,  88h                      ; compressed
+
+g_szFddThreeHalf:		; db  "3",ONE_HALF,NULL
+                 		; db   33h, 0abh,  00h    ; uncompressed
+                 		  db   2dh,  02h          ; compressed
+
+g_szFddEnd:
+g_szFddFiveQuarter:		; db  "5",ONE_QUARTER,NULL
+                   		; db   35h, 0ach,  00h    ; uncompressed
+                   		  db   2fh,  01h          ; compressed
+
+
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
+%if ((g_szFddStart-$$) & 0xff00) <> ((g_szFddEnd-$$) & 0xff00)
+%error "g_szFdd* strings must start on the same 256 byte page, required by the BootMenuPrint_RefreshInformation routines for floppy drives.  Please move this block up or down within strings.asm"
+%endif
+%endif
 
 ;------------------------------------------------------------------------------------------
 ;
@@ -420,7 +423,7 @@ StringsCompressed_TranslatesAndFormats:
 
 ;; translated usage stats
 ;; 33:1
-;; 32:30
+;; 32:32
 ;; 181:1
 ;; 53:2
 ;; 48:2
@@ -447,7 +450,7 @@ StringsCompressed_TranslatesAndFormats:
 ;; 2-u:1
 ;; 5-u:2
 ;; x:7
-;; s:12
+;; s:14
 ;; 5-x:1
 ;; nl:6
 ;; 2-I:1
@@ -457,17 +460,17 @@ StringsCompressed_TranslatesAndFormats:
 ;; total format: 11
 
 ;; alphabet usage stats
-;; 58,::2
+;; 58,::3
 ;; 59,;:
 ;; 60,<:
 ;; 61,=:
 ;; 62,>:
 ;; 63,?:
 ;; 64,@:1
-;; 65,A:4
+;; 65,A:3
 ;; 66,B:9
 ;; 67,C:4
-;; 68,D:10
+;; 68,D:11
 ;; 69,E:3
 ;; 70,F:3
 ;; 71,G:
@@ -482,7 +485,7 @@ StringsCompressed_TranslatesAndFormats:
 ;; 80,P:1
 ;; 81,Q:1
 ;; 82,R:4
-;; 83,S:6
+;; 83,S:7
 ;; 84,T:
 ;; 85,U:1
 ;; 86,V:
@@ -496,27 +499,27 @@ StringsCompressed_TranslatesAndFormats:
 ;; 94,^:
 ;; 95,_:
 ;; 96,`:
-;; 97,a:6
+;; 97,a:7
 ;; 98,b:
-;; 99,c:4
+;; 99,c:5
 ;; 100,d:4
-;; 101,e:9
+;; 101,e:12
 ;; 102,f:2
 ;; 103,g:2
 ;; 104,h:
-;; 105,i:9
+;; 105,i:10
 ;; 106,j:
 ;; 107,k:4
-;; 108,l:4
+;; 108,l:5
 ;; 109,m:1
-;; 110,n:9
+;; 110,n:10
 ;; 111,o:18
 ;; 112,p:3
 ;; 113,q:
-;; 114,r:11
+;; 114,r:12
 ;; 115,s:6
-;; 116,t:11
-;; 117,u:3
+;; 116,t:12
+;; 117,u:2
 ;; 118,v:2
 ;; 119,w:1
 ;; 120,x:
