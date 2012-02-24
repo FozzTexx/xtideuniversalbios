@@ -39,7 +39,7 @@ Int13h_DiskFunctionsHandler:
 	jnz		SHORT Int13h_DirectCallToAnotherBios	; we handle all traffic for function 08h, 
 													; as we need to wrap both hard disk and floppy drive counts
 %else
-	jz		SHORT .WeHandleTheFunction				; we handle all *hard disk* (only) traffic for function 08h, 
+	jz		SHORT .OurFunction						; we handle all *hard disk* (only) traffic for function 08h, 
 													; as we need to wrap the hard disk drive count
 	test	dl, dl
 	jns		SHORT Int13h_DirectCallToAnotherBios
