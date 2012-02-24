@@ -170,10 +170,12 @@ IterateToDptWithFlagsHighInBL:
 ;	Corrupts registers:
 ;		SI
 ;--------------------------------------------------------------------
+%ifdef MODULE_SERIAL
 ALIGN JUMP_ALIGN		
 FindDPT_ToDSDIforSerialDevice:			
 	mov		bl, FLGH_DPT_SERIAL_DEVICE
 ; fall-through
+%endif
 				
 ;--------------------------------------------------------------------
 ; FindDPT_ToDSDIforFlagsHigh
