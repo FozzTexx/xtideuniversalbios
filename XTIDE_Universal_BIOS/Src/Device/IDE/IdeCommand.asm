@@ -55,7 +55,9 @@ IDEDEVICE%+Command_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 	mov		[di+DPT.wFlags], ax
 	mov		[di+DPT.bIdevarsOffset], bp
 	mov		BYTE [di+DPT_ATA.bSetBlock], 1	; Block = 1 sector
+%ifdef ASSEMBLE_SHARED_IDE_DEVICE_FUNCTIONS
 	call	IdeDPT_StoreReversedAddressLinesFlagIfNecessary
+%endif
 
 	; Wait until drive motors have reached max speed
 	cmp		bp, BYTE ROMVARS.ideVars0
@@ -107,6 +109,7 @@ IDEDEVICE%+Command_OutputWithParameters:
 
 	; Output Device Control Byte to enable or disable interrupts
 	mov		al, [bp+IDEPACK.bDeviceControl]
+%ifdef ASSEMBLE_SHARED_IDE_DEVICE_FUNCTIONS	; JR-IDE/ISA
 	test	al, FLG_DEVCONTROL_nIEN	; Interrupts disabled?
 	jnz		SHORT .DoNotSetInterruptInServiceFlag
 
@@ -117,6 +120,7 @@ IDEDEVICE%+Command_OutputWithParameters:
 	mov		[BDA.bHDTaskFlg], dl
 	pop		ds
 .DoNotSetInterruptInServiceFlag:
+%endif
 	OUTPUT_AL_TO_IDE_CONTROL_BLOCK_REGISTER DEVICE_CONTROL_REGISTER_out
 
 	; Output Feature Number
@@ -126,12 +130,12 @@ IDEDEVICE%+Command_OutputWithParameters:
 	; Output Sector Address High (only used by LBA48)
 	eMOVZX	ax, BYTE [bp+IDEPACK.bLbaLowExt]
 	mov		cx, [bp+IDEPACK.wLbaMiddleAndHighExt]
-	call	OutputSectorCountAndAddress
+	call	IDEDEVICE%+OutputSectorCountAndAddress
 
 	; Output Sector Address Low
 	mov		ax, [bp+IDEPACK.wSectorCountAndLbaLow]
 	mov		cx, [bp+IDEPACK.wLbaMiddleAndHigh]
-	call	OutputSectorCountAndAddress
+	call	IDEDEVICE%+OutputSectorCountAndAddress
 
 	; Output command
 	mov		al, [bp+IDEPACK.bCommand]
@@ -197,9 +201,8 @@ IDEDEVICE%+Command_SelectDrive:
 ;	Corrupts registers:
 ;		AL, BX, DX
 ;--------------------------------------------------------------------
-%ifdef ASSEMBLE_SHARED_IDE_DEVICE_FUNCTIONS
 ALIGN JUMP_ALIGN
-OutputSectorCountAndAddress:
+IDEDEVICE%+OutputSectorCountAndAddress:
 	OUTPUT_AL_TO_IDE_REGISTER SECTOR_COUNT_REGISTER
 
 	mov		al, ah
@@ -210,4 +213,3 @@ OutputSectorCountAndAddress:
 
 	mov		al, ch
 	JUMP_TO_OUTPUT_AL_TO_IDE_REGISTER LBA_HIGH_REGISTER
-%endif

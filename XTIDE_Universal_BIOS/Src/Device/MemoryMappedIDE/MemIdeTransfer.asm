@@ -159,12 +159,7 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 .WriteLastBlockToDrive:
 	mov		ch, [bp+PIOVARS.wWordsLeft+1]		; Sectors left
-%ifndef USE_186
-	mov		bx, CheckErrorsAfterTransferringLastMemoryMappedBlock
-	push	bx
-%else
-	push	CheckErrorsAfterTransferringLastMemoryMappedBlock
-%endif
+	ePUSH_T	bx, CheckErrorsAfterTransferringLastMemoryMappedBlock
 	; Fall to WriteSingleBlockFromDSSIToSectorAccessWindowInESDI
 
 ;--------------------------------------------------------------------

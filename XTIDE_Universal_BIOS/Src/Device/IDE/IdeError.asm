@@ -29,7 +29,9 @@ IDEDEVICE%+Error_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL:
 	pop		ds
 
 	; Fall to GetBiosErrorCodeToAHfromStatusAndErrorRegistersInAX
-
+%ifndef ASSEMBLE_SHARED_IDE_DEVICE_FUNCTIONS	; JR-IDE/ISA
+	jmp		GetBiosErrorCodeToAHfromStatusAndErrorRegistersInAX
+%endif
 
 ;--------------------------------------------------------------------
 ; GetBiosErrorCodeToAHfromStatusAndErrorRegistersInAX
