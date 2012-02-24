@@ -99,8 +99,10 @@ DetectDrives_FromAllIDEControllers:
 		
 	ret
 
-%if FLG_ROMVARS_SERIAL_SCANDETECT != 8
-	%error "DetectDrives is currently coded to assume that FLG_ROMVARS_SERIAL_SCANDETECT is the same bit as the ALT key code in the BDA.  Changes in the code will be needed if these values are no longer the same."
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS		
+	%if FLG_ROMVARS_SERIAL_SCANDETECT != 8
+		%error "DetectDrives is currently coded to assume that FLG_ROMVARS_SERIAL_SCANDETECT is the same bit as the ALT key code in the BDA.  Changes in the code will be needed if these values are no longer the same."
+	%endif
 %endif
 
 
