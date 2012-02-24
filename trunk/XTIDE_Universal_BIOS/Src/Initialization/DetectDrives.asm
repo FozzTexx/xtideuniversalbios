@@ -74,7 +74,7 @@ DetectDrives_FromAllIDEControllers:
 
 
 .AddFloppies:		
-;%ifdef MODULE_SERIAL_FLOPPY		
+%ifdef MODULE_SERIAL_FLOPPY		
 ;----------------------------------------------------------------------
 ;
 ; Add in any emulated serial floppy drives, finalize our packed Count and First variables
@@ -110,7 +110,7 @@ DetectDrives_FromAllIDEControllers:
 	rcl		al, 1							; starting drive number in upper 7 bits, number of drives in low bit
 .NoFloppies:	
 	mov		[RAMVARS.xlateVars+XLATEVARS.bFlopCntAndFirst], al
-;%endif
+%endif
 		
 	ret
 
