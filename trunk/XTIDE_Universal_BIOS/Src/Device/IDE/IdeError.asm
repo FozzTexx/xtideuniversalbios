@@ -19,7 +19,12 @@ SECTION .text
 ALIGN JUMP_ALIGN
 IDEDEVICE%+Error_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL:
 	mov		ah, al			; IDE Status Register to AH
-	INPUT_TO_AL_FROM_IDE_REGISTER ERROR_REGISTER_in
+	INPUT_TO_AL_FROM_IDE_REGISTER	ERROR_REGISTER_in
+
+%ifndef ASSEMBLE_SHARED_IDE_DEVICE_FUNCTIONS	; JR-IDE/ISA
+	jmp		ContinueFromMemIdeError
+%else
+ContinueFromMemIdeError:
 	xchg	al, ah			; Status Register now in AL, Error Register now in AH
 
 	; I don't think anything actually reads these from BDA
@@ -29,9 +34,7 @@ IDEDEVICE%+Error_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL:
 	pop		ds
 
 	; Fall to GetBiosErrorCodeToAHfromStatusAndErrorRegistersInAX
-%ifndef ASSEMBLE_SHARED_IDE_DEVICE_FUNCTIONS	; JR-IDE/ISA
-	jmp		GetBiosErrorCodeToAHfromStatusAndErrorRegistersInAX
-%endif
+
 
 ;--------------------------------------------------------------------
 ; GetBiosErrorCodeToAHfromStatusAndErrorRegistersInAX
@@ -45,7 +48,6 @@ IDEDEVICE%+Error_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL:
 ;	Corrupts registers:
 ;		BX
 ;--------------------------------------------------------------------
-%ifdef ASSEMBLE_SHARED_IDE_DEVICE_FUNCTIONS
 ALIGN JUMP_ALIGN
 GetBiosErrorCodeToAHfromStatusAndErrorRegistersInAX:
 	test	al, FLG_STATUS_BSY

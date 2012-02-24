@@ -8,7 +8,7 @@ SECTION .text
 ; IdeWait_IRQorDRQ
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
-;		SS:BP:	Ptr to IDEPACK or PIOVARS
+;		SS:BP:	Ptr to IDEPACK, PIOVARS or MEMPIOVARS
 ;	Returns:
 ;		AH:		INT 13h Error Code
 ;		CF:		Cleared if success, Set if error
