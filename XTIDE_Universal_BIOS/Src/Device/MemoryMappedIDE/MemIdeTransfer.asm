@@ -69,32 +69,32 @@ MemIdeTransfer_StartWithCommandInAL:
 ;		AL, BX, DX, SI, ES
 ;--------------------------------------------------------------------
 ReadFromSectorAccessWindow:
-	pop		ds	; CS -> DS
-	mov		di, si
-	mov		si, JRIDE_SECTOR_ACCESS_WINDOW_OFFSET
+	pop		ds		; CS -> DS
+	mov		di, si	; ES:DI = destination
+	mov		si, JRIDE_SECTOR_ACCESS_WINDOW_OFFSET	; DS:SI = source
 
 	call	WaitUntilReadyToTransferNextBlock
 	jc		SHORT ReturnWithMemoryIOtransferErrorInAH
 
-	mov		cx, [bp+PIOVARS.wWordsInBlock]
+	mov		cx, [bp+MEMPIOVARS.wWordsInBlock]
 
 ALIGN JUMP_ALIGN
 .ReadNextBlockFromDrive:
-	cmp		[bp+PIOVARS.wWordsLeft], cx
+	cmp		[bp+MEMPIOVARS.wWordsLeft], cx
 	jbe		SHORT .ReadLastBlockFromDrive
 	call	ReadSingleBlockFromSectorAccessWindowInDSSItoESDI
 	call	WaitUntilReadyToTransferNextBlock
 	jc		SHORT ReturnWithMemoryIOtransferErrorInAH
 
 	; Increment number of successfully read WORDs
-	mov		cx, [bp+PIOVARS.wWordsInBlock]
-	sub		[bp+PIOVARS.wWordsLeft], cx
-	add		[bp+PIOVARS.wWordsDone], cx
+	mov		cx, [bp+MEMPIOVARS.wWordsInBlock]
+	sub		[bp+MEMPIOVARS.wWordsLeft], cx
+	add		[bp+MEMPIOVARS.wWordsDone], cx
 	jmp		SHORT .ReadNextBlockFromDrive
 
 ALIGN JUMP_ALIGN
 .ReadLastBlockFromDrive:
-	mov		ch, [bp+PIOVARS.wWordsLeft+1]		; Sectors left
+	mov		ch, [bp+MEMPIOVARS.wWordsLeft+1]	; Sectors left
 	call	ReadSingleBlockFromSectorAccessWindowInDSSItoESDI
 
 	; Check for errors in last block
@@ -106,9 +106,9 @@ CheckErrorsAfterTransferringLastMemoryMappedBlock:
 	; Return number of successfully transferred sectors
 ReturnWithMemoryIOtransferErrorInAH:
 	lds		di, [bp+MEMPIOVARS.fpDPT]			; DPT now in DS:DI
-	mov		cx, [bp+PIOVARS.wWordsDone]
+	mov		cx, [bp+MEMPIOVARS.wWordsDone]
 	jc		SHORT .ConvertTransferredWordsInCXtoSectors
-	add		cx, [bp+PIOVARS.wWordsLeft]			; Never sets CF
+	add		cx, [bp+MEMPIOVARS.wWordsLeft]		; Never sets CF
 .ConvertTransferredWordsInCXtoSectors:
 	xchg	cl, ch
 	ret
@@ -140,25 +140,25 @@ WriteToSectorAccessWindow:
 	call	WaitUntilReadyToTransferNextBlock
 	jc		SHORT ReturnWithMemoryIOtransferErrorInAH
 
-	mov		cx, [bp+PIOVARS.wWordsInBlock]
+	mov		cx, [bp+MEMPIOVARS.wWordsInBlock]
 
 ALIGN JUMP_ALIGN
 .WriteNextBlockToDrive:
-	cmp		[bp+PIOVARS.wWordsLeft], cx
+	cmp		[bp+MEMPIOVARS.wWordsLeft], cx
 	jbe		SHORT .WriteLastBlockToDrive
 	call	WriteSingleBlockFromDSSIToSectorAccessWindowInESDI
 	call	WaitUntilReadyToTransferNextBlock
 	jc		SHORT ReturnWithMemoryIOtransferErrorInAH
 
 	; Increment number of successfully written WORDs
-	mov		cx, [bp+PIOVARS.wWordsInBlock]
-	sub		[bp+PIOVARS.wWordsLeft], cx
-	add		[bp+PIOVARS.wWordsDone], cx
+	mov		cx, [bp+MEMPIOVARS.wWordsInBlock]
+	sub		[bp+MEMPIOVARS.wWordsLeft], cx
+	add		[bp+MEMPIOVARS.wWordsDone], cx
 	jmp		SHORT .WriteNextBlockToDrive
 
 ALIGN JUMP_ALIGN
 .WriteLastBlockToDrive:
-	mov		ch, [bp+PIOVARS.wWordsLeft+1]		; Sectors left
+	mov		ch, [bp+MEMPIOVARS.wWordsLeft+1]		; Sectors left
 	ePUSH_T	bx, CheckErrorsAfterTransferringLastMemoryMappedBlock
 	; Fall to WriteSingleBlockFromDSSIToSectorAccessWindowInESDI
 
