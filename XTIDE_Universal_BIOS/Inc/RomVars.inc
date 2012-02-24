@@ -72,8 +72,10 @@ struc IDEVARS
 	.drvParamsSlave				resb	DRVPARAMS_size
 endstruc
 
-%if IDEVARS.bSerialCOMPortChar+1 != IDEVARS.bDevice
-	%error "IDEVARS.bSerialCOMPortChar needs to come immediately before IDEVARS.bDevice so that both bytes can be fetched at the same time inside DetectPrint.asm"
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
+	%if IDEVARS.bSerialCOMPortChar+1 != IDEVARS.bDevice
+		%error "IDEVARS.bSerialCOMPortChar needs to come immediately before IDEVARS.bDevice so that both bytes can be fetched at the same time inside DetectPrint.asm"
+	%endif
 %endif
 
 ; Default values for Port and PortCtrl, shared with the configurator

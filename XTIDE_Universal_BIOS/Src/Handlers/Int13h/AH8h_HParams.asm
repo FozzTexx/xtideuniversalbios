@@ -115,7 +115,9 @@ AH8h_GetDriveParameters:
 		
 %ifdef MODULE_SERIAL_FLOPPY
 	mov		bl,[di+DPT.bFlagsHigh]
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS             ; not sure why this is needed for preprocessor-only
 	eSHR_IM	bl,FLGH_DPT_SERIAL_FLOPPY_TYPE_FIELD_POSITION
+%endif
 %endif		
 	ret
 
@@ -123,7 +125,7 @@ AH8h_GetDriveParameters:
 ;
 ; Floppy Disk Parameter Table.  There is no way to specify more than one of these
 ; for any given system, so no way to make this drive or media specific.
-; So we return fixed values out of the ROM for callers might be expecting this information.
+; So we return fixed values out of the ROM for callers who might be expecting this information.
 ;
 ; On AT systems, we return the information for a 1.44 MB disk, 
 ; and on XT systems, we return the information for a 360 KB disk.
