@@ -46,7 +46,11 @@ AH0h_HandlerForDiskControllerReset:
 	jns		SHORT .SkipHardDiskReset					; don't do hard disks.
 		
 	call	ResetForeignHardDisks
-	call	AH0h_ResetHardDisksHandledByOurBIOS
+
+	; Resetting our hard disks will modify dl and bl such that this call must be the last in the list
+	;
+	call	AH0h_ResetHardDisksHandledByOurBIOS			
+
 .SkipHardDiskReset:
 	mov		ah, bh
 	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
@@ -140,19 +144,27 @@ GetDriveNumberForForeignBiosesToDL:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH0h_ResetHardDisksHandledByOurBIOS:
-	mov		bl, [di+DPT.bIdevarsOffset]					; replace drive number with Idevars pointer for comparisons
+	mov		bl, [di+DPT.bIdevarsOffset]					; replace drive number with Idevars pointer for cmp with dl
+	mov		dl, ROMVARS.ideVars0						; starting Idevars offset
+
 	mov		cl, [cs:ROMVARS.bIdeCnt]					; get count of ide controllers
-	mov		ch, 0										
-	mov		dl, 0										; starting Idevars offset
-	mov		si, IterateFindFirstDPTforIdevars			; iteration routine
+	mov		ch, 0
+	jcxz	.done										; just in case bIdeCnt is zero (shouldn't be)
+
+	mov		si, IterateFindFirstDPTforIdevars			; iteration routine (see below)
+
 .loop:
 	call	IterateAllDPTs								; look for the first drive on this controller, if any
 	jc		.notFound
+
 	call	AHDh_ResetDrive								; reset master and slave on that controller
-	call	BackupErrorCodeFromTheRequestedDriveToBH	; save error code if same controller as initial request
+	call	BackupErrorCodeFromTheRequestedDriveToBH	; save error code if same controller as drive from entry
+
 .notFound:
-	add		dl, IDEVARS_size							; move pointer forward
-	loop	.loop										; and repeat
+	add		dl, IDEVARS_size							; move Idevars pointer forward
+	loop	.loop
+
+.done:
 	ret
 
 ;--------------------------------------------------------------------
