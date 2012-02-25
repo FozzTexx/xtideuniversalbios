@@ -11,8 +11,10 @@ SECTION .text
 %endmacro
 
 %macro CMP_USING_DPT_AND_JUMP_IF_JRIDE_DEVICE 1
+	xchg	ax, bx
 	eMOVZX	bx, [di+DPT.bIdevarsOffset]
 	cmp		BYTE [cs:bx+IDEVARS.bDevice], DEVICE_JRIDE_ISA
+	xchg	bx, ax				; Restore BX
 	je		SHORT %1
 %endmacro
 
