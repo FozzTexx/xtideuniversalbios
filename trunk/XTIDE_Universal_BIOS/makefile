@@ -2,8 +2,9 @@
 # Makefile to build XTIDE Universal BIOS.                                     #
 #                                                                             #
 # Valid makefile targets are:                                                 #
-# all		Removes existing files and builds binary file in \Build           #
-# build		Builds binary file in \Build                                      #
+# all		Removes existing files and builds binary files in \Build          #
+# small		Builds 8 kiB binaries only (without checksum)                     #
+# large		Builds 15 kiB binaries only (without checksum)                    #
 # clean		Removes all files from \Build                                     #
 # checksum*	Builds all and then generates checksum byte to all binary files   #
 # strings*	Compress src\strings.asm to src\StringsCompressed.asm             #
@@ -65,13 +66,14 @@ HEADERS += $(LIBS)
 #################################################################
 # Assembler preprocessor defines.                               #
 #################################################################
-DEFINES = INCLUDE_MENU_LIBRARY EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS MODULE_EBIOS MODULE_SERIAL MODULE_STRINGS_COMPRESSED MODULE_SERIAL_FLOPPY
-DEFINES_XT = ELIMINATE_CGA_SNOW
-DEFINES_XTPLUS = ELIMINATE_CGA_SNOW USE_186
-DEFINES_AT = USE_186 USE_286 USE_AT
+DEFINES = INCLUDE_MENU_LIBRARY EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS MODULE_EBIOS MODULE_STRINGS_COMPRESSED
+DEFINES_XT = ELIMINATE_CGA_SNOW MODULE_SERIAL MODULE_SERIAL_FLOPPY
+DEFINES_XTPLUS = ELIMINATE_CGA_SNOW USE_186 MODULE_SERIAL MODULE_SERIAL_FLOPPY
+DEFINES_AT = USE_186 USE_286 USE_AT MODULE_SERIAL MODULE_SERIAL_FLOPPY
 DEFINES_XT_LARGE = $(DEFINES_XT) MODULE_JRIDE
 DEFINES_XTPLUS_LARGE = $(DEFINES_XTPLUS) MODULE_JRIDE
 DEFINES_AT_LARGE = $(DEFINES_AT) MODULE_JRIDE
+DEFINES_JRIDE_8K = ELIMINATE_CGA_SNOW MODULE_JRIDE
 
 
 ###################
@@ -90,6 +92,7 @@ DEFS_AT = $(DEFINES_AT:%=-D%) -DROMSIZE=$(ROMSIZE)
 DEFS_XT_LARGE = $(DEFINES_XT_LARGE:%=-D%) -DROMSIZE=$(ROMSIZE_LARGE)
 DEFS_XTPLUS_LARGE = $(DEFINES_XTPLUS_LARGE:%=-D%) -DROMSIZE=$(ROMSIZE_LARGE)
 DEFS_AT_LARGE = $(DEFINES_AT_LARGE:%=-D%) -DROMSIZE=$(ROMSIZE_LARGE)
+DEFS_JRIDE_8K = $(DEFINES_JRIDE_8K:%=-D%) -DROMSIZE=$(ROMSIZE)
 
 # Add -I in front of all header directories
 IHEADERS = $(HEADERS:%=-I%)
@@ -127,35 +130,43 @@ ASFLAGS += -O9					# Optimize operands to their shortest forms
 # Build process. Actual work is done here. #
 ############################################
 
-.PHONY: all at at_large xtplus xtplus_large xt xt_large clean
-
 # Make clean debug and release versions
-all: clean at at_large xtplus xtplus_large xt xt_large
+all: clean small large
 	@echo All done!
+
+small: at xtplus xt jride_8k
+	@echo All  8 kiB binaries built!
+
+large: at_large xtplus_large xt_large
+	@echo All 15 kiB binaries build!
 
 at:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_AT) -l"$(TARGET)_at.lst" -o"$(TARGET)_at.bin"
-	@echo AT version "$(TARGET)_at.bin" built.
+	@echo * 8k AT version "$(TARGET)_at.bin" built.
 
 at_large:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_AT_LARGE) -l"$(TARGET)_atl.lst" -o"$(TARGET)_atl.bin"
-	@echo Large AT version "$(TARGET)_atl.bin" built.
+	@echo *15k AT version "$(TARGET)_atl.bin" built.
 
 xtplus:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XTPLUS) -l"$(TARGET)_xtp.lst" -o"$(TARGET)_xtp.bin"
-	@echo XT plus version "$(TARGET)_xtp.bin" built.
+	@echo * 8k XT plus version "$(TARGET)_xtp.bin" built.
 
 xtplus_large:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XTPLUS_LARGE) -l"$(TARGET)_xtpl.lst" -o"$(TARGET)_xtpl.bin"
-	@echo Large XT plus version "$(TARGET)_xtpl.bin" built.
+	@echo *15k XT plus version "$(TARGET)_xtpl.bin" built.
 
 xt:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XT) -l"$(TARGET)_xt.lst" -o"$(TARGET)_xt.bin"
-	@echo XT version "$(TARGET)_xt.bin" built.
+	@echo * 8k XT version "$(TARGET)_xt.bin" built.
 
 xt_large:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XT_LARGE) -l"$(TARGET)_xtl.lst" -o"$(TARGET)_xtl.bin"
-	@echo Large XT version "$(TARGET)_xtl.bin" built.
+	@echo *15k XT version "$(TARGET)_xtl.bin" built.
+	
+jride_8k:
+	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_JRIDE_8K) -l"$(TARGET)_jr8k.lst" -o"$(TARGET)_jr8k.bin"
+	@echo * 8k JR-IDE/ISA version "$(TARGET)_jr8k.bin" built.
 
 strings: src\StringsCompressed.asm
 
@@ -170,6 +181,7 @@ checksum:  all
 	@perl ..\tools\checksum.pl $(TARGET)_at.bin $(ROMSIZE)
 	@perl ..\tools\checksum.pl $(TARGET)_xtp.bin $(ROMSIZE)
 	@perl ..\tools\checksum.pl $(TARGET)_xt.bin $(ROMSIZE)
+	@perl ..\tools\checksum.pl $(TARGET)_jr8k.bin $(ROMSIZE)
 
 src\StringsCompressed.asm: src\Strings.asm
 	@$(AS) src\Strings.asm $(ASFLAGS) $(DEFS_XT) -DMODULE_STRINGS_COMPRESSED_PRECOMPRESS -o build\Strings.bin -l build\StringsPrecompress.lst
