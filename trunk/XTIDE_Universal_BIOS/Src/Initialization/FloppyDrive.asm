@@ -158,26 +158,30 @@ FloppyDrive_GetCountFromBIOS_or_BDA:
 ;	Parameters:
 ;		Nothing
 ;	Returns:
-;		CL:		Number of Floppy Drives
+;		AL:		Number of Floppy Drives
 ;		CF:		Cleared if successfull
 ;				Set if BIOS function not supported
 ;	Corrupts registers:
-;		CH, ES
+;		ES
 ;--------------------------------------------------------------------
 %ifdef USE_AT
 ALIGN JUMP_ALIGN
 .GetCountFromBIOS:
 	push	di
-	push	dx
+	push	es
 	push	bx
+	push	cx
+	push	dx
 
 	mov		ah, 08h					; Get Drive Parameters
 	cwd								; Floppy Drive 00h
 	int		BIOS_DISKETTE_INTERRUPT_40h
 	mov		al, dl					; Number of Floppy Drives to AL
 
-	pop		bx
 	pop		dx
+	pop		cx
+	pop		bx
+	pop		es
 	pop		di
 %endif
 
