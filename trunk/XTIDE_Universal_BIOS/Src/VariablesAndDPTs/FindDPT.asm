@@ -115,6 +115,44 @@ ALIGN JUMP_ALIGN
 	xchg	di, ax								; Restore AX from save at top
 	ret
 
+
+;--------------------------------------------------------------------
+; FindDPT_ForIdevarsOffsetInDL
+;	Parameters:
+;		DL:		Offset to IDEVARS to search for
+;		DS:		RAMVARS segment
+;	Returns:
+;		DS:DI:		Ptr to first DPT with same IDEVARS as in DL
+;		CF:			Clear if wanted DPT found
+;					Set if DPT not found, or no DPTs present
+;	Corrupts registers:
+;		SI
+;--------------------------------------------------------------------
+FindDPT_ForIdevarsOffsetInDL:
+	mov		si, IterateFindFirstDPTforIdevars			; iteration routine (see below)
+	jmp		SHORT FindDPT_IterateAllDPTs				; look for the first drive on this controller, if any
+
+;--------------------------------------------------------------------
+; Iteration routine for FindDPT_ForIdevarsOffsetInDL, 
+; for use with IterateAllDPTs
+; 
+; Returns when DPT is found on the controller with Idevars offset in DL
+;
+; IterateFindFirstDPTforIdevars
+;       DL:		Offset to IDEVARS to search from DPTs
+;		DS:DI:	Ptr to DPT to examine
+;	Returns:
+;		CF:		Clear if wanted DPT found
+;				Set if wrong DPT
+;--------------------------------------------------------------------
+IterateFindFirstDPTforIdevars:		
+	cmp		dl, [di+DPT.bIdevarsOffset]			; Clears CF if matched
+	je		.done
+	stc											; Set CF for not found
+.done:	
+	ret
+
+
 ;--------------------------------------------------------------------
 ; Finds pointer to first unused Disk Parameter Table.
 ; Should only be used before DetectDrives is complete (not valid after this time).
@@ -197,7 +235,7 @@ FindDPT_ToDSDIforFlagsHighInBL:
 ;--------------------------------------------------------------------
 ; Iterates all Disk Parameter Tables.
 ;
-; IterateAllDPTs
+; FindDPT_IterateAllDPTs
 ;	Parameters:
 ;		AX,BX,DX:	Parameters to callback function
 ;		CS:SI:		Ptr to callback function
@@ -212,7 +250,7 @@ FindDPT_ToDSDIforFlagsHighInBL:
 ;		Nothing unless corrupted by callback function
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-IterateAllDPTs:
+FindDPT_IterateAllDPTs:
 	push	cx
 
 	mov		di, RAMVARS_size			; Point DS:DI to first DPT
