@@ -129,14 +129,16 @@ ALIGN JUMP_ALIGN
 FloppyDrive_GetCountToAX:		
 %ifdef MODULE_SERIAL_FLOPPY
 	call	RamVars_UnpackFlopCntAndFirstToAL
+	js		.UseBIOSorBDA				; We didn't add in any drives, counts here are not valid
+		
 	adc		al,1						; adds in the drive count bit, and adds 1 for count vs. 0-index, 
-										; but still won't impact SF
-	jns		.UseInternalNumber			; need to clear CH on the way out, and add in additional drive numbers
+	jmp		.FinishCalc					; need to clear AH on the way out, and add in minimum drive numbers
 
+.UseBIOSorBDA:	
 %endif
 	call	FloppyDrive_GetCountFromBIOS_or_BDA
-		
-.UseInternalNumber:	
+
+.FinishCalc:	
 	mov		ah, [cs:ROMVARS.bMinFddCnt]
 	MAX_U	al, ah
 	cbw

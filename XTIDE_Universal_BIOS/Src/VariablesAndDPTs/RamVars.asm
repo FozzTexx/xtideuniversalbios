@@ -173,6 +173,7 @@ RamVars_GetIdeControllerCountToCX:
 ;	Returns:
 ;		AL:		First floppy drive number supported
 ;       CF:		Number of floppy drives supported (clear = 1, set = 2)
+;		SF:		Emulating drives (clear = yes, set = no)
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------		
