@@ -7,11 +7,14 @@ SECTION .text
 ;--------------------------------------------------------------------
 ; Int 13h function AH=0h, Disk Controller Reset.
 ;
+; Note: We handle all AH=0h calls, even for drives handled by other
+; BIOSes!
+;
 ; AH0h_HandlerForDiskControllerReset
 ;	Parameters:
 ;		DL:		Translated Drive number (ignored so all drives are reset)
 ;				If bit 7 is set all hard disks and floppy disks reset.
-;		DS:DI:	Ptr to DPT (in RAMVARS segment)
+;		DS:DI:	Ptr to DPT (only if DL is our drive)
 ;		SS:BP:	Ptr to IDEPACK
 ;	Returns with INTPACK:
 ;		AH:		Int 13h return status (from drive requested in DL)
@@ -48,8 +51,9 @@ AH0h_HandlerForDiskControllerReset:
 	call	ResetForeignHardDisks
 
 	; Resetting our hard disks will modify dl and bl such that this call must be the last in the list
-	;
-	call	AH0h_ResetHardDisksHandledByOurBIOS			
+	call	GetDriveNumberForForeignHardDiskHandlerToDL	; Load DPT for our drive
+	jc		SHORT .SkipHardDiskReset					; Our drive not requested so let's not reset them
+	call	ResetHardDisksHandledByOurBIOS			
 
 .SkipHardDiskReset:
 	mov		ah, bh
@@ -65,9 +69,8 @@ AH0h_HandlerForDiskControllerReset:
 ;	Corrupts registers:
 ;		AX, DL, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 ResetFloppyDrivesWithInt40h:
-	call	GetDriveNumberForForeignBiosesToDL
+	call	GetDriveNumberForForeignHardDiskHandlerToDL
 	and		dl, 7Fh						; Clear hard disk bit
 	xor		ah, ah						; Disk Controller Reset
 	int		BIOS_DISKETTE_INTERRUPT_40h
@@ -84,9 +87,8 @@ ResetFloppyDrivesWithInt40h:
 ;	Corrupts registers:
 ;		AX, DL, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 ResetForeignHardDisks:
-	call	GetDriveNumberForForeignBiosesToDL
+	call	GetDriveNumberForForeignHardDiskHandlerToDL
 	xor		ah, ah						; Disk Controller Reset
 	call	Int13h_CallPreviousInt13hHandler
 ;;; fall-through to BackupErrorCodeFromTheRequestedDriveToBH
@@ -103,57 +105,69 @@ ResetForeignHardDisks:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 BackupErrorCodeFromTheRequestedDriveToBH:
 	cmp		dl, bl				; Requested drive?
 	eCMOVE	bh, ah
 	ret
-		
+
 
 ;--------------------------------------------------------------------
-; GetDriveNumberForForeignBiosesToDL
+; GetDriveNumberForForeignHardDiskHandlerToDL
 ;	Parameters:
 ;		BL:		Requested drive (DL when entering AH=00h)
 ;		DS:		RAMVARS segment
 ;	Returns:
+;		DS:DI:	Ptr to DPT if our drive
 ;		DL:		BL if foreign drive
 ;				80h if our drive
+;		CF:		Set if foreign drive
+;				Cleared if our drive
 ;	Corrupts registers:
-;		DI
+;		(DI)
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-GetDriveNumberForForeignBiosesToDL:
+GetDriveNumberForForeignHardDiskHandlerToDL:
 	mov		dl, bl
-	test	di, di
-	jz		SHORT .Return				; Return what was in BL unmodified
-	mov		dl, 80h
-.Return:
+	call	FindDPT_ForDriveNumberInDL
+	jc		SHORT .ReturnWithForeignDriveInDL
+	mov		dl, 80h				; First possible Hard Disk should be safe value
+.ReturnWithForeignDriveInDL:
 	ret
 
 
 ;--------------------------------------------------------------------
-; AH0h_ResetHardDisksHandledByOurBIOS
+; AH0h_ResetAllOurHardDisksAtTheEndOfDriveInitialization
+;	Parameters:
+;		DS:		RAMVARS segment
+;		SS:BP:	Ptr to IDEPACK
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, BX, CX, DX, SI, DI
+;--------------------------------------------------------------------
+AH0h_ResetAllOurHardDisksAtTheEndOfDriveInitialization:
+	mov		bl, [RAMVARS.bFirstDrv]
+	call	GetDriveNumberForForeignHardDiskHandlerToDL
+	; Fall to ResetHardDisksHandledByOurBIOS
+
+;--------------------------------------------------------------------
+; ResetHardDisksHandledByOurBIOS
 ;	Parameters:
 ;		BL:		Requested drive (DL when entering AH=00h)
-;		DS:		RAMVARS segment
+;		DS:DI:	Ptr to DPT for requested drive
 ;		SS:BP:	Ptr to IDEPACK
 ;	Returns:
 ;		BH:		Error code from requested drive (if available)
 ;	Corrupts registers:
 ;		AX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-AH0h_ResetHardDisksHandledByOurBIOS:
+ResetHardDisksHandledByOurBIOS:
 	mov		bl, [di+DPT.bIdevarsOffset]					; replace drive number with Idevars pointer for cmp with dl
 	mov		dl, ROMVARS.ideVars0						; starting Idevars offset
 
-	call	RamVars_GetIdeControllerCountToCX
+	call	RamVars_GetIdeControllerCountToCX			; get count of ide controllers
 	jcxz	.done										; just in case bIdeCnt is zero (shouldn't be)
-
-	mov		si, IterateFindFirstDPTforIdevars			; iteration routine (see below)
-
 .loop:
-	call	IterateAllDPTs								; look for the first drive on this controller, if any
+	call	FindDPT_ForIdevarsOffsetInDL				; look for the first drive on this controller, if any
 	jc		.notFound
 
 	call	AHDh_ResetDrive								; reset master and slave on that controller
@@ -164,17 +178,4 @@ AH0h_ResetHardDisksHandledByOurBIOS:
 	loop	.loop
 
 .done:
-	ret
-
-;--------------------------------------------------------------------
-; Iteration routine for AH0h_ResetHardDisksHandledByOurBIOS, 
-; for use with IterateAllDPTs
-; 
-; Returns when DPT is found on the controller with Idevars offset in DL
-;--------------------------------------------------------------------
-IterateFindFirstDPTforIdevars:		
-	cmp		dl, [di+DPT.bIdevarsOffset]			; Clears CF if matched
-	jz		.done
-	stc											; Set CF for not found
-.done:	
 	ret

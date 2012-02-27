@@ -32,18 +32,17 @@ AHDh_HandlerForResetHardDisk:
 ;
 ; AHDh_ResetDrive
 ;	Parameters:
-;		DL:		Drive number
-;		DS:		RAMVARS segment
+;		DS:DI:	Ptr to DPT
 ;		SS:BP:	Ptr to IDEPACK
 ;	Returns:
 ;		AH:		Int 13h return status
 ;		CF:		0 if succesfull, 1 if error
 ;	Corrupts registers:
-;		AL, CX, SI
+;		AL, SI
 ;--------------------------------------------------------------------
-;ALIGN JUMP_ALIGN
 AHDh_ResetDrive:
 	push	dx
+	push	cx
 	push	bx
 	push	di
 
@@ -57,12 +56,13 @@ AHDh_ResetDrive:
 	mov		ah, 0								; initialize error code, assume success
 		
 	mov		si, IterateAndResetDrives
-	call	IterateAllDPTs
+	call	FindDPT_IterateAllDPTs
 
 	shr		ah, 1								; Move error code and CF into proper position
 
 	pop		di
 	pop		bx
+	pop		cx
 	pop		dx
 	ret
 
@@ -75,13 +75,12 @@ AHDh_ResetDrive:
 ;--------------------------------------------------------------------
 IterateAndResetDrives:
 	cmp		al, [di+DPT.bIdevarsOffset]			; The right controller?
-	jnz		.done
+	jne		.done
 	push	ax
 	call	AH9h_InitializeDriveForUse			; Reset Master and Slave (Master will come first in DPT list)
 	pop		ax		
 	jc		.done
 	or		ah, (RET_HD_RESETFAIL << 1) | 1		; OR in Reset Failed error code and CF, will SHR into position later
 .done:
-	stc											; From IterateAllDPTs perspective, the DPT is never found
+	stc											; From IterateAllDPTs perspective, the DPT is never found (continue iteration)
 	ret
-		
