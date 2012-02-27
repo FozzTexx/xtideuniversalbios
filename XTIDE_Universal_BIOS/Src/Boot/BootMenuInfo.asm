@@ -20,9 +20,6 @@ SECTION .text
 ;--------------------------------------------------------------------
 BootMenuInfo_CreateForHardDisk:
 	call	BootMenuInfo_ConvertDPTtoBX			; ES:BX now points to new BOOTMENUINFO
-	push	bx									; Preserve for return
-
-	mov		di, bx								; Starting pointer at beginning of structure
 
 	; Store Drive Name
 	push	ds									; Preserve RAMVARS
@@ -44,7 +41,6 @@ BootMenuInfo_CreateForHardDisk:
 
 	pop		si
 	pop		ds
-	pop		bx
 		
 	ret
 

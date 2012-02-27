@@ -147,8 +147,7 @@ AH0h_ResetHardDisksHandledByOurBIOS:
 	mov		bl, [di+DPT.bIdevarsOffset]					; replace drive number with Idevars pointer for cmp with dl
 	mov		dl, ROMVARS.ideVars0						; starting Idevars offset
 
-	mov		cl, [cs:ROMVARS.bIdeCnt]					; get count of ide controllers
-	mov		ch, 0
+	call	RamVars_GetIdeControllerCountToCX
 	jcxz	.done										; just in case bIdeCnt is zero (shouldn't be)
 
 	mov		si, IterateFindFirstDPTforIdevars			; iteration routine (see below)

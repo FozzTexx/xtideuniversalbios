@@ -62,16 +62,18 @@ DetectDrives_FromAllIDEControllers:
 ;
 ; Add in hard disks to BDA, finalize our Count and First variables
 ;
+; Note that we perform the add to bHDCount and store bFirstDrv even if the count is zero.
+; This is done because we use the value of .bFirstDrv to know how many drives were in the system
+; at the time of boot, and to return that number on int13h/8h calls.  Because the count is zero,
+; FindDPT_ForDriveNumber will not find any drives that are ours.
+;
 	mov		cx, [RAMVARS.wDrvCntAndFlopCnt]		; Our count of hard disks
-	test	cl, cl
-	jz		.AddFloppies				; If none, nothing more to do
 
 	mov		al, [es:BDA.bHDCount]
 	add		cl, al						; Add our drives to the system count
 	mov		[es:BDA.bHDCount], cl		
 	or		al, 80h						; Or in hard disk flag		
 	mov		[RAMVARS.bFirstDrv], al		; Store first drive number		
-
 
 .AddFloppies:		
 %ifdef MODULE_SERIAL_FLOPPY		
