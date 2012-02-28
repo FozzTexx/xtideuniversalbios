@@ -14,7 +14,7 @@ SECTION .text
 ;	Parameters:
 ;		DL:		Translated Drive number (ignored so all drives are reset)
 ;				If bit 7 is set all hard disks and floppy disks reset.
-;		DS:DI:	Ptr to DPT (only if DL is our drive)
+;		DS:DI:	Ptr to DPT (or Null if foreign drive)
 ;		SS:BP:	Ptr to IDEPACK
 ;	Returns with INTPACK:
 ;		AH:		Int 13h return status (from drive requested in DL)
@@ -50,9 +50,12 @@ AH0h_HandlerForDiskControllerReset:
 		
 	call	ResetForeignHardDisks
 
-	; Resetting our hard disks will modify dl and bl such that this call must be the last in the list
-	call	GetDriveNumberForForeignHardDiskHandlerToDL	; Load DPT for our drive
-	jc		SHORT .SkipHardDiskReset					; Our drive not requested so let's not reset them
+	test	di, di
+	jz		SHORT .SkipHardDiskReset
+
+	; Resetting our hard disks will modify dl and bl to be idevars offset based instead of drive number based, 
+	; such that this call must be the last in the list of reset routines called.
+	;
 	call	ResetHardDisksHandledByOurBIOS			
 
 .SkipHardDiskReset:
@@ -117,51 +120,38 @@ BackupErrorCodeFromTheRequestedDriveToBH:
 ;		BL:		Requested drive (DL when entering AH=00h)
 ;		DS:		RAMVARS segment
 ;	Returns:
-;		DS:DI:	Ptr to DPT if our drive
+;		DS:DI:	Ptr to DPT if our drive (or Null if foreign drive)
 ;		DL:		BL if foreign drive
 ;				80h if our drive
-;		CF:		Set if foreign drive
-;				Cleared if our drive
-;	Corrupts registers:
-;		(DI)
 ;--------------------------------------------------------------------
 GetDriveNumberForForeignHardDiskHandlerToDL:
 	mov		dl, bl
-	call	FindDPT_ForDriveNumberInDL
-	jc		SHORT .ReturnWithForeignDriveInDL
+	test	di, di
+	jz		SHORT .Return
 	mov		dl, 80h				; First possible Hard Disk should be safe value
-.ReturnWithForeignDriveInDL:
+.Return:
 	ret
 
-
-;--------------------------------------------------------------------
-; AH0h_ResetAllOurHardDisksAtTheEndOfDriveInitialization
-;	Parameters:
-;		DS:		RAMVARS segment
-;		SS:BP:	Ptr to IDEPACK
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, BX, CX, DX, SI, DI
-;--------------------------------------------------------------------
-AH0h_ResetAllOurHardDisksAtTheEndOfDriveInitialization:
-	mov		bl, [RAMVARS.bFirstDrv]
-	call	GetDriveNumberForForeignHardDiskHandlerToDL
-	; Fall to ResetHardDisksHandledByOurBIOS
+AH0h_ResetAllOurHardDisksAtTheEndOfDriveInitialization equ ResetHardDisksHandledByOurBIOS.ErrorCodeNotUsed
 
 ;--------------------------------------------------------------------
 ; ResetHardDisksHandledByOurBIOS
 ;	Parameters:
-;		BL:		Requested drive (DL when entering AH=00h)
 ;		DS:DI:	Ptr to DPT for requested drive
+;				If DI is Null (foreign drive), or if error result in BH won't be used,
+;               enter through .ErrorCodeNotUsed, to avoid di=Null dereference
 ;		SS:BP:	Ptr to IDEPACK
 ;	Returns:
 ;		BH:		Error code from requested drive (if available)
 ;	Corrupts registers:
-;		AX, CX, DX, SI, DI
+;		AX, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 ResetHardDisksHandledByOurBIOS:
 	mov		bl, [di+DPT.bIdevarsOffset]					; replace drive number with Idevars pointer for cmp with dl
+
+.ErrorCodeNotUsed:										; BH will be garbage if thie entry point is used, 
+														; but reset of all drives will still happen
+
 	mov		dl, ROMVARS.ideVars0						; starting Idevars offset
 
 	call	RamVars_GetIdeControllerCountToCX			; get count of ide controllers
