@@ -8,47 +8,6 @@
 ; Section containing code
 SECTION .text
 
-; The following strings are used by DetectPrint_StartDetectWithMasterOrSlaveStringInAXandIdeVarsInCSBP
-; To support an optimization in that code, these strings must start on the same 256 byte page,
-; which is checked at assembly time below.
-;
-g_szDetectStart:
-g_szDetectMaster:		db	"Master",NULL
-g_szDetectSlave:		db	"Slave ",NULL
-g_szDetectOuter:		db	"IDE %s at %s: ",NULL
-g_szDetectOuterSerial:	db	"Serial %s on %s: ",NULL		
-g_szDetectPort:			db	"%x",NULL					   	; IDE Master at 1F0h:
-g_szDetectCOM:			db  "COM%c%s",NULL
-g_szDetectCOMAuto:		db	" Detect",NULL
-g_szDetectCOMSmall:		db	"/%u%u00",NULL					; IDE Master at COM1/9600:
-g_szDetectEnd:
-g_szDetectCOMLarge:		db	"/%u.%uK",NULL					; IDE Master at COM1/19.2K:
-
-%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
-	%if ((g_szDetectEnd-$$) & 0xff00) <> ((g_szDetectStart-$$) & 0xff00)
-		%error "g_szDetect* strings must start on the same 256 byte page, required by DetectPrint_StartDetectWithMasterOrSlaveStringInAXandIdeVarsInCSBP.  Please move this block up or down within strings.asm"
-	%endif
-%endif
-
-; Boot Menu menuitem strings
-;
-; The following strings are used by BootMenuPrint_* routines.
-; To support optimizations in that code, these strings must start on the same 256 byte page,
-; which is checked at assembly time below.
-;
-g_szBootMenuPrintStart:
-g_szDriveNum:			db	"%x %s",NULL
-g_szDriveNumBOOTNFO:	db	"%x %z",NULL
-g_szFloppyDrv:			db	"Floppy Drive %c",NULL
-g_szBootMenuPrintEnd:
-g_szForeignHD:			db	"Foreign Hard Disk",NULL
-
-%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
-	%if ((g_szBootMenuPrintStart-$$) & 0xff00) <> ((g_szBootMenuPrintEnd-$$) & 0xff00)
-		%error "g_szBootMenuPrint* strings must start on the same 256 byte page, required by the BootMenuPrint_* routines.  Please move this block up or down within strings.asm"
-	%endif
-%endif
-
 ; POST drive detection strings
 g_szRomAt:		db	"%s @ %x",LF,CR,NULL
 
@@ -57,19 +16,6 @@ g_szTryToBoot:			db	"Booting from %s %x",ANGLE_QUOTE_RIGHT,"%x",LF,CR,NULL
 g_szBootSectorNotFound:	db	"Boot sector "
 g_szNotFound:			db	"not found",LF,CR,NULL
 g_szReadError:			db	"Error %x!",LF,CR,NULL
-
-; Boot menu bottom of screen strings
-g_szFDD:		db	"FDD     ",NULL
-g_szHDD:		db	"HDD     ",NULL
-g_szRomBoot:	db	"ROM Boot",NULL
-g_szHotkey:		db	"%A%c%c%A%s%A ",NULL
-
-; Boot Menu information strings
-g_szCapacity:			db	"Capacity : %s",NULL
-g_szCapacityNum:		db	"%5-u.%u %ciB",NULL
-g_szInformation:		db	"%s",LF,CR
-	db	"Addr.",SINGLE_VERTICAL,"Block",SINGLE_VERTICAL,"Bus",SINGLE_VERTICAL,  "IRQ",SINGLE_VERTICAL,"Reset",LF,CR
-	db	   "%s",SINGLE_VERTICAL, "%5-u",SINGLE_VERTICAL, "%s",SINGLE_VERTICAL," %2-I",SINGLE_VERTICAL,"%5-x" ,NULL
 
 g_szAddressingModes:
 g_szLCHS:		db	"L-CHS",NULL
@@ -150,6 +96,62 @@ g_szFddFiveQuarter:		db  "5",ONE_QUARTER,NULL
 		%error "g_szFdd* strings must start on the same 256 byte page, required by the BootMenuPrint_RefreshInformation routines for floppy drives.  Please move this block up or down within strings.asm"
 	%endif
 %endif
+
+; The following strings are used by DetectPrint_StartDetectWithMasterOrSlaveStringInAXandIdeVarsInCSBP
+; To support an optimization in that code, these strings must start on the same 256 byte page,
+; which is checked at assembly time below.
+;
+g_szDetectStart:
+g_szDetectMaster:		db	"Master",NULL
+g_szDetectSlave:		db	"Slave ",NULL
+g_szDetectOuter:		db	"IDE %s at %s: ",NULL
+;%%; %ifdef MODULE_SERIAL		;%%; is stripped off after string compression, %ifdef won't compress properly
+g_szDetectOuterSerial:	db	"Serial %s on %s: ",NULL
+g_szDetectCOM:			db  "COM%c%s",NULL
+g_szDetectCOMAuto:		db	" Detect",NULL
+g_szDetectCOMSmall:		db	"/%u%u00",NULL					; IDE Master at COM1/9600:
+g_szDetectCOMLarge:		db	"/%u.%uK",NULL					; IDE Master at COM1/19.2K:
+;%%; %endif						;%%; is stripped off after string compression, %ifdef won't compress properly
+g_szDetectEnd:
+g_szDetectPort:			db	"%x",NULL					   	; IDE Master at 1F0h:
+
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
+	%if ((g_szDetectEnd-$$) & 0xff00) <> ((g_szDetectStart-$$) & 0xff00)
+		%error "g_szDetect* strings must start on the same 256 byte page, required by DetectPrint_StartDetectWithMasterOrSlaveStringInAXandIdeVarsInCSBP.  Please move this block up or down within strings.asm"
+	%endif
+%endif
+
+; Boot Menu menuitem strings
+;
+; The following strings are used by BootMenuPrint_* routines.
+; To support optimizations in that code, these strings must start on the same 256 byte page,
+; which is checked at assembly time below.
+;
+g_szBootMenuPrintStart:
+g_szDriveNum:			db	"%x %s",NULL
+g_szDriveNumBOOTNFO:	db	"%x %z",NULL
+g_szFloppyDrv:			db	"Floppy Drive %c",NULL
+g_szBootMenuPrintEnd:
+g_szForeignHD:			db	"Foreign Hard Disk",NULL
+
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
+	%if ((g_szBootMenuPrintStart-$$) & 0xff00) <> ((g_szBootMenuPrintEnd-$$) & 0xff00)
+		%error "g_szBootMenuPrint* strings must start on the same 256 byte page, required by the BootMenuPrint_* routines.  Please move this block up or down within strings.asm"
+	%endif
+%endif
+
+; Boot menu bottom of screen strings
+g_szFDD:		db	"FDD     ",NULL
+g_szHDD:		db	"HDD     ",NULL
+g_szRomBoot:	db	"ROM Boot",NULL
+g_szHotkey:		db	"%A%c%c%A%s%A ",NULL
+
+; Boot Menu information strings
+g_szCapacity:			db	"Capacity : %s",NULL
+g_szCapacityNum:		db	"%5-u.%u %ciB",NULL
+g_szInformation:		db	"%s",LF,CR
+	db	"Addr.",SINGLE_VERTICAL,"Block",SINGLE_VERTICAL,"Bus",SINGLE_VERTICAL,  "IRQ",SINGLE_VERTICAL,"Reset",LF,CR
+	db	   "%s",SINGLE_VERTICAL, "%5-u",SINGLE_VERTICAL, "%s",SINGLE_VERTICAL," %2-I",SINGLE_VERTICAL,"%5-x" ,NULL
 
 ;------------------------------------------------------------------------------------------
 ;

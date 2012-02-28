@@ -16,15 +16,15 @@ SECTION .text
 ;		AX
 ;--------------------------------------------------------------------
 SerialDPT_Finalize:
-		mov		ax, [es:si+ATA6.wSerialPortAndBaud]
+		mov		ax, [es:si+SerialServer_ATA_wPortAndBaud]
 		mov		[di+DPT_SERIAL.wSerialPortAndBaud], ax
 
 ;
 ; Note that this section is not under %ifdef MODULE_SERIAL_FLOPPY.  It is important to 
-; detect floppy disks presented by the server and not treat them like hard disks, even
+; distinguish floppy disks presented by the server and not treat them as hard disks, even
 ; if the floppy support is disabled.
 ;
-		mov		al, [es:si+ATA6.wSerialFloppyFlagAndType]
+		mov		al, [es:si+SerialServer_ATA_wFloppyFlagAndType]
 		or		al, FLGH_DPT_SERIAL_DEVICE
 		or		byte [di+DPT.bFlagsHigh], al
 

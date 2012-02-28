@@ -67,6 +67,18 @@ SECTION .text
 	%endif
 %endif
 
+%ifdef INCLUDE_SERIAL_LIBRARY
+	%include "Serial.inc"
+%endif		
+%ifdef INCLUDE_SERIALSERVER_LIBRARY
+	%include "SerialServer.asm"
+	%include "SerialServerScan.asm"
+	%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
+		%include "SerialServerImage.asm"
+	%endif
+	%define INCLUDE_TIME_LIBRARY
+%endif		
+
 %ifdef INCLUDE_TIME_LIBRARY
 	%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 		%include "Delay.asm"
@@ -88,3 +100,4 @@ SECTION .text
 		%include "Sort.asm"
 	%endif
 %endif
+

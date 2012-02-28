@@ -8,6 +8,9 @@
 #ifndef LIBRARY_H_INCLUDED
 #define LIBRARY_H_INCLUDED
 
+#define SERIAL_SERVER_MAJORVERSION 1
+#define SERIAL_SERVER_MINORVERSION 0
+
 void log( int level, char *message, ... );
 
 unsigned long GetTime(void);
@@ -53,7 +56,7 @@ public:
 
 	static int parseGeometry( char *str, unsigned long *p_cyl, unsigned long *p_head, unsigned long *p_sect );
 
-	void respondInquire( unsigned short *buff, struct baudRate *baudRate, unsigned short port, unsigned char scan );
+	void respondInquire( unsigned short *buff, unsigned short originalPortAndBaud, struct baudRate *baudRate, unsigned short port, unsigned char scan );
 
 	void init( char *name, int p_readOnly, int p_drive, unsigned long p_cyl, unsigned long p_head, unsigned long p_sect, int p_useCHS );
 };

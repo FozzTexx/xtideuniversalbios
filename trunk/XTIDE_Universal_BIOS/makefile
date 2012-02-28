@@ -59,6 +59,7 @@ LIBS += ../Assembly_Library/Src/Menu/Dialog/
 LIBS += ../Assembly_Library/Src/String/
 LIBS += ../Assembly_Library/Src/Time/
 LIBS += ../Assembly_Library/Src/Util/
+LIBS += ../Assembly_Library/Src/Serial/
 LIBS += ../XTIDE_Universal_BIOS/Inc/
 HEADERS += $(LIBS)
 
@@ -163,7 +164,7 @@ xt:
 xt_large:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XT_LARGE) -l"$(TARGET)_xtl.lst" -o"$(TARGET)_xtl.bin"
 	@echo *15k XT version "$(TARGET)_xtl.bin" built.
-	
+
 jride_8k:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_JRIDE_8K) -l"$(TARGET)_jr8k.lst" -o"$(TARGET)_jr8k.bin"
 	@echo * 8k JR-IDE/ISA version "$(TARGET)_jr8k.bin" built.
@@ -184,7 +185,7 @@ checksum:  all
 	@perl ..\tools\checksum.pl $(TARGET)_jr8k.bin $(ROMSIZE)
 
 src\StringsCompressed.asm: src\Strings.asm
-	@$(AS) src\Strings.asm $(ASFLAGS) $(DEFS_XT) -DMODULE_STRINGS_COMPRESSED_PRECOMPRESS -o build\Strings.bin -l build\StringsPrecompress.lst
+	@$(AS) src\Strings.asm $(ASFLAGS) $(DEFS_XT) -DCHECK_FOR_UNUSED_ENTRYPOINTS -DMODULE_STRINGS_COMPRESSED_PRECOMPRESS -o build\Strings.bin -l build\StringsPrecompress.lst
 	@perl ..\tools\StringsCompress.pl < build\StringsPrecompress.lst > src\StringsCompressed.asm
 	@echo StringsCompressed.asm updated!
 

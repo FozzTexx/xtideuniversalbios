@@ -15,6 +15,10 @@
 ORG 000h						; Code start offset 0000h
 
 %define MENUEVENT_INLINE_OFFSETS    ; Only one menu required, save space and inline offsets
+
+%ifdef MODULE_SERIAL
+%define INCLUDE_SERIALSERVER_LIBRARY
+%endif
 		
 	; Included .inc files
 	%include "AssemblyLibrary.inc"	; Assembly Library. Must be included first!

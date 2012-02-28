@@ -34,6 +34,13 @@ union _buff {
 		unsigned char port;
 		unsigned char baud;
 	} inquire;
+	struct {
+		unsigned char command;
+		unsigned char driveAndHead;
+		unsigned char count;
+		unsigned char scan;
+		unsigned short PackedPortAndBaud;
+	} inquirePacked;
 	unsigned char b[514];
 	unsigned short w[257];
 } buff;
@@ -341,7 +348,8 @@ void processRequests( SerialAccess *serial, Image *image0, Image *image1, int ti
 
 					localScan = buff.inquire.scan;         // need to do this before the call to 
 					                                       // img->respondInquire, as it will clear the buff
-					img->respondInquire( &buff.w[0], serial->baudRate, 
+					img->respondInquire( &buff.w[0], buff.inquirePacked.PackedPortAndBaud, 
+										 serial->baudRate, 
 										 ((unsigned short) buff.inquire.port) << 2, 
 										 (img == image1 && lastScan) || buff.inquire.scan );
 					lastScan = localScan;

@@ -35,13 +35,14 @@ Int13h_DiskFunctionsHandler:
 	cmp		ah, 0
 	jz		short .OurFunction						; we handle all function 0h requests (resets)
 	cmp		ah, 8
-%ifdef MODULE_SERIAL_FLOPPY
-	jnz		SHORT Int13h_DirectCallToAnotherBios	; we handle all traffic for function 08h, 
-													; as we need to wrap both hard disk and floppy drive counts
-%else
-	jz		SHORT .OurFunction						; we handle all *hard disk* (only) traffic for function 08h, 
-													; as we need to wrap the hard disk drive count
-	test	dl, dl
+	jnz		SHORT Int13h_DirectCallToAnotherBios	; non-8h function, handled by foreign bios
+
+%ifndef MODULE_SERIAL_FLOPPY
+; With floppy support, we handle all traffic for function 08h, as we need to wrap both hard disk and 
+; floppy drive counts.  Without floppy support, we handle only hard disk traffic for function 08h, 
+; and thus need the check below.
+;
+	test	dl, dl								
 	jns		SHORT Int13h_DirectCallToAnotherBios
 %endif		
 				

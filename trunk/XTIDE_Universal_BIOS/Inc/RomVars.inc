@@ -117,27 +117,4 @@ DEFAULT_WRITE_CACHE			EQU	0		; Must be 0
 DISABLE_WRITE_CACHE			EQU	1
 ENABLE_WRITE_CACHE			EQU	2
 
-
-
-;
-; COM Number to I/O Port Address Mapping
-;
-; COM Number:                               1,    2,    3,    4,    5,    6,    7,    8,    9,   10,   11,   12
-; Corresponds to I/O port:                3f8,  2f8,  3e8,  2e8,  2f0,  3e0,  2e0,  260,  368,  268,  360,  270
-; Corresponds to Packed I/O port (hex):    37,   17,   35,   15,   16,   34,   14,    4,   25,    5,   24,    6
-;
-DEVICE_SERIAL_COM1	EQU		3f8h
-DEVICE_SERIAL_COM2	EQU		2f8h
-DEVICE_SERIAL_COM3	EQU		3e8h
-DEVICE_SERIAL_COM4	EQU		2e8h
-DEVICE_SERIAL_COM5	EQU		2f0h
-DEVICE_SERIAL_COM6	EQU		3e0h
-DEVICE_SERIAL_COM7	EQU		2e0h
-DEVICE_SERIAL_COM8	EQU		260h
-DEVICE_SERIAL_COM9	EQU		368h
-DEVICE_SERIAL_COMA	EQU		268h
-DEVICE_SERIAL_COMB	EQU		360h
-DEVICE_SERIAL_COMC	EQU		270h
-
-
 %endif ; ROMVARS_INC

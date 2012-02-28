@@ -39,6 +39,12 @@ struct floppyInfo *FindFloppyInfoBySize( double size )
 	return( fi );
 }
 
+void flipEndian( unsigned short *buff, unsigned int len )
+{
+	for( unsigned int t = 0; t < len/2; t++ )
+		buff[t] = (buff[t] & 0xff) << 8 | (buff[t] & 0xff00) >> 8;
+}
+
 Image::Image( char *name, int p_readOnly, int p_drive )
 {
 }
@@ -177,9 +183,16 @@ int Image::parseGeometry( char *str, unsigned long *p_cyl, unsigned long *p_head
 #define ATA_wBpTrck 4
 #define ATA_wBpSect 5
 #define ATA_wSPT 6
+
 #define ATA_strSerial 10
+#define ATA_strSerial_Length 20
+
 #define ATA_strFirmware 23
+#define ATA_strFirmware_Length 8
+
 #define ATA_strModel 27
+#define ATA_strModel_Length 40
+
 #define ATA_wCaps 49
 #define ATA_wCurCyls 54
 #define ATA_wCurHeads 55
@@ -189,6 +202,7 @@ int Image::parseGeometry( char *str, unsigned long *p_cyl, unsigned long *p_head
 
 // Words carved out of the vendor specific area for our use
 //
+#define ATA_wSerialServerVersion 157
 #define ATA_wSerialFloppyFlagAndType 158
 #define ATA_wSerialPortAndBaud 159
 
@@ -222,8 +236,10 @@ struct comPorts supportedComPorts[] =
   { 0, 0 } 
 };
 
-void Image::respondInquire( unsigned short *buff, struct baudRate *baudRate, unsigned short port, unsigned char scan )
+void Image::respondInquire( unsigned short *buff, unsigned short originalPortAndBaud, struct baudRate *baudRate, unsigned short port, unsigned char scan )
 {
+	char formatBuff[ 128 ];
+
 	memset( &buff[0], 0, 514 );
 
 	if( scan )
@@ -239,18 +255,21 @@ void Image::respondInquire( unsigned short *buff, struct baudRate *baudRate, uns
 		}
 
 		if( comPort )
-			sprintf( (char *) &buff[ATA_strModel], "%.15s (COM%c/%s)", shortFileName, comPort, baudRate->display );
+			sprintf( formatBuff, "%.15s (COM%c/%s) ", shortFileName, comPort, baudRate->display );
 		else
-			sprintf( (char *) &buff[ATA_strModel], "%.25s (%s baud)", shortFileName, baudRate->display );
+			sprintf( formatBuff, "%.25s (%s baud) ", shortFileName, baudRate->display );
 	}
 	else
-		sprintf( (char *) &buff[ATA_strModel], "%.30s", shortFileName );
+		sprintf( formatBuff, "%.30s ", shortFileName );
+	strncpy( (char *) &buff[ATA_strModel], formatBuff, ATA_strModel_Length );
+	flipEndian( &buff[ATA_strModel], ATA_strModel_Length );
 
-	strncpy( (char *) &buff[ATA_strSerial], "serial", 20 );
-	strncpy( (char *) &buff[ATA_strFirmware], "firmw", 8 );
+	strncpy( (char *) &buff[ATA_strSerial], "SerialDrive ", ATA_strSerial_Length );
+	flipEndian( &buff[ATA_strSerial], ATA_strSerial_Length );
 
-	for( int t = ATA_strModel; t < ATA_strModel+40; t++ )
-		buff[t] = (buff[t] >> 8) | (buff[t] << 8);
+	sprintf( formatBuff, "%d.%d ", SERIAL_SERVER_MAJORVERSION, SERIAL_SERVER_MINORVERSION );
+	strncpy( (char *) &buff[ATA_strFirmware], formatBuff, ATA_strFirmware_Length );
+	flipEndian( &buff[ATA_strFirmware], ATA_strFirmware_Length );
 
 	if( useCHS )
 	{
@@ -265,8 +284,18 @@ void Image::respondInquire( unsigned short *buff, struct baudRate *baudRate, uns
 		buff[ ATA_dwLBACnt+1 ] = (unsigned short) (totallba >> 16);
 	}
 
+	// We echo back the port and baud that we were called on from the client, 
+	// the client then uses this value to finalize the DPT.
+	//
+	buff[ ATA_wSerialPortAndBaud ] = originalPortAndBaud;
+
+	// In case the client requires a specific server version...
+	//
+	buff[ ATA_wSerialServerVersion ] = (SERIAL_SERVER_MAJORVERSION << 8) | SERIAL_SERVER_MINORVERSION;
+
 	if( floppy )
-		buff[ ATA_wSerialFloppyFlagAndType ] = ATA_wSerialFloppyFlagAndType_Flag | (floppyType << ATA_wSerialFloppyFlagAndType_TypePosition);
+		buff[ ATA_wSerialFloppyFlagAndType ] = 
+			ATA_wSerialFloppyFlagAndType_Flag | (floppyType << ATA_wSerialFloppyFlagAndType_TypePosition);
 
 	// we always set this, so that the bulk of the BIOS will consider this disk as a hard disk
 	//
