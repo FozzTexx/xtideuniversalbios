@@ -188,13 +188,13 @@ IDEDEVICE%+Command_SelectDrive:
 	jc		SHORT .ErrorWhenSelectingMasterOrSlave
 	ret
 
-	; Ignore previously unsupported command (for example some SET FEATURES subcommand)
+	; Ignore errors from IDE Error Register (set by previous command)
 .ErrorWhenSelectingMasterOrSlave:
-	sub		ah, 1							; Clear CF
-	jz		SHORT .IgnoreABRTerror			; RET_HD_INVALID == 1
-	inc		ah
-	stc										; Restore error
-.IgnoreABRTerror:
+	cmp		ah, RET_HD_TIMEOUT		; Do not ignore timeout
+	stc
+	je		SHORT .ReturnWithErrorCodeInAHandCF
+	xor		ah, ah					; No errors
+.ReturnWithErrorCodeInAHandCF:
 	ret
 
 
