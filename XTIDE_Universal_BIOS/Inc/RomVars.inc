@@ -107,9 +107,17 @@ struc DRVPARAMS
 endstruc
 
 ; Bit defines for DRVPARAMS.wFlags
-FLG_DRVPARAMS_USERCHS	EQU	(1<<0)	; User specified P-CHS values
-FLG_DRVPARAMS_BLOCKMODE	EQU	(1<<1)	; Enable Block mode transfers
-FLG_DRVPARAMS_USERLBA	EQU	(1<<2)	; User specified LBA values
+MASK_DRVPARAMS_WRITECACHE	EQU	(3<<0)	; Drive internal write cache settings (must start at bit 0)
+FLG_DRVPARAMS_BLOCKMODE		EQU	(1<<2)	; Enable Block mode transfers
+FLG_DRVPARAMS_USERCHS		EQU	(1<<3)	; User specified P-CHS values
+FLG_DRVPARAMS_USERLBA		EQU	(1<<4)	; User specified LBA values
+
+; Drive Write Cache values for DRVPARAMS.wFlags.MASK_DRVPARAMS_WRITECACHE
+DEFAULT_WRITE_CACHE			EQU	0		; Must be 0
+DISABLE_WRITE_CACHE			EQU	1
+ENABLE_WRITE_CACHE			EQU	2
+
+
 
 ;
 ; COM Number to I/O Port Address Mapping

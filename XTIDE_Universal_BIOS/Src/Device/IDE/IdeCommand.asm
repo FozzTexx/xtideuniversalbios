@@ -128,7 +128,7 @@ IDEDEVICE%+Command_OutputWithParameters:
 	OUTPUT_AL_TO_IDE_REGISTER	FEATURES_REGISTER_out
 
 	; Output Sector Address High (only used by LBA48)
-	eMOVZX	ax, BYTE [bp+IDEPACK.bLbaLowExt]
+	eMOVZX	ax, BYTE [bp+IDEPACK.bLbaLowExt]	; Zero sector count
 	mov		cx, [bp+IDEPACK.wLbaMiddleAndHighExt]
 	call	IDEDEVICE%+OutputSectorCountAndAddress
 
