@@ -155,7 +155,6 @@ ALIGN JUMP_ALIGN
 
 .DriveNotReady:
 	pop		bx							; Clean stack
-IDEDEVICE%+ReturnSinceTimeoutWhenPollingBusy:
 	ret
 
 
@@ -172,12 +171,12 @@ IDEDEVICE%+ReturnSinceTimeoutWhenPollingBusy:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 IDEDEVICE%+Command_SelectDrive:
-	; Wait until neither Master or Slave Drive is busy
-	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_BSY, FLG_STATUS_BSY)
-	cmp		BYTE [bp+IDEPACK.bCommand], COMMAND_IDENTIFY_DEVICE
-	eCMOVE	bh, TIMEOUT_IDENTIFY_DEVICE
-	call	IDEDEVICE%+Wait_PollStatusFlagInBLwithTimeoutInBH
-	jc		SHORT IDEDEVICE%+ReturnSinceTimeoutWhenPollingBusy
+	; Wait until neither Master or Slave Drive is busy.
+	; I don't think this wait is necessary.
+	;mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_BSY, FLG_STATUS_BSY)
+	;cmp		BYTE [bp+IDEPACK.bCommand], COMMAND_IDENTIFY_DEVICE
+	;eCMOVE	bh, TIMEOUT_IDENTIFY_DEVICE
+	;call	IDEDEVICE%+Wait_PollStatusFlagInBLwithTimeoutInBH
 
 	; Select Master or Slave Drive
 	mov		al, [bp+IDEPACK.bDrvAndHead]
@@ -185,7 +184,18 @@ IDEDEVICE%+Command_SelectDrive:
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRDY, FLG_STATUS_DRDY)
 	cmp		BYTE [bp+IDEPACK.bCommand], COMMAND_IDENTIFY_DEVICE
 	eCMOVE	bh, TIMEOUT_IDENTIFY_DEVICE
-	jmp		IDEDEVICE%+Wait_PollStatusFlagInBLwithTimeoutInBH
+	call	IDEDEVICE%+Wait_PollStatusFlagInBLwithTimeoutInBH
+	jc		SHORT .ErrorWhenSelectingMasterOrSlave
+	ret
+
+	; Ignore previously unsupported command (for example some SET FEATURES subcommand)
+.ErrorWhenSelectingMasterOrSlave:
+	sub		ah, 1							; Clear CF
+	jz		SHORT .IgnoreABRTerror			; RET_HD_INVALID == 1
+	inc		ah
+	stc										; Restore error
+.IgnoreABRTerror:
+	ret
 
 
 ;--------------------------------------------------------------------
