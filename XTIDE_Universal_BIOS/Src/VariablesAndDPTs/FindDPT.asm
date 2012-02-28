@@ -42,9 +42,11 @@ ALIGN JUMP_ALIGN
 ; Check Our Floppy Disks
 ; 
 	call	RamVars_UnpackFlopCntAndFirstToAL
-	cbw											; normally 0h, could be ffh if no drives present
-	adc		ah, al								; if no drives present, still ffh (ffh + ffh + 1 = ffh)
 	js		SHORT .DiskIsNotHandledByThisBIOS
+				
+	cbw											; Always 0h (no floppy drive covered above)
+	adc		ah, al								; Add in first drive number and number of drives
+
 	cmp		ah, dl								; Check second drive if two, first drive if only one
 	jz		SHORT .CalcDPTForDriveNumber
 	cmp		al, dl								; Check first drive in all cases, redundant but OK to repeat

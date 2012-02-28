@@ -158,6 +158,14 @@ for( $l = 0; $l < $#lines; $l++ )
 	}
 
 	#
+	# a ';%%;' prefix line, copy to output without the prefix
+	#
+	elsif( /^\s*\d+\s*;%%;\s*(.*)$/ )
+	{
+		print $1."\n";
+	}
+
+	#
 	# everything else, copy to the output as is
 	#
 	elsif( /^\s*\d+\s*(.*)$/ )

@@ -56,6 +56,7 @@ DetectPrint_StartDetectWithMasterOrSlaveStringInAXandIdeVarsInCSBP:
 											; This optimization requires that all the g_szDetect* strings are
 											; on the same 256 byte page, which is checked in strings.asm.
 
+%ifdef MODULE_SERIAL
 	cmp		dh, DEVICE_SERIAL_PORT		  	; Check if this is a serial device
 
 	jnz		.pushAndPrint					; CX = string to print, AX = port address, DX won't be used
@@ -94,9 +95,11 @@ DetectPrint_StartDetectWithMasterOrSlaveStringInAXandIdeVarsInCSBP:
 	mov		cl, (g_szDetectCOMSmall-$$) & 0xff	; Setup secondary print string for "COMn/XXy00"
 
 .pushAndPrintSerial:	
-	mov		si, g_szDetectOuterSerial		; Finally load SI with wrapper string "Serial %s on %s: "		
+	mov		si, g_szDetectOuterSerial		; Finally load SI with wrapper string "Serial %s on %s: "
 
 .pushAndPrint:
+%endif
+		
 	push	cx								; Push print string
 	push	ax								; Push high order digits, or port address, or N/A
 	push	dx								; Push low order digit, or N/A
