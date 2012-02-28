@@ -68,7 +68,7 @@ AH9h_InitializeDriveForUse:
 
 	; Enable or Disable Write Cache
 .SetWriteCache:
-	;call	SetWriteCache
+	call	SetWriteCache
 
 	; Recalibrate drive by seeking to cylinder 0
 .RecalibrateDrive:
