@@ -73,9 +73,6 @@ SECTION .text
 %ifdef INCLUDE_SERIALSERVER_LIBRARY
 	%include "SerialServer.asm"
 	%include "SerialServerScan.asm"
-	%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-		%include "SerialServerImage.asm"
-	%endif
 	%define INCLUDE_TIME_LIBRARY
 %endif		
 

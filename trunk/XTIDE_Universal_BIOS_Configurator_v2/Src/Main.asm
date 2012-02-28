@@ -2,7 +2,10 @@
 ; Description	:	Program start and exit.
 
 ; Include .inc files
+		
 %define INCLUDE_MENU_DIALOGS
+%define INCLUDE_SERIAL_LIBRARY
+		
 %include "AssemblyLibrary.inc"	; Assembly Library. Must be included first!
 %include "Romvars.inc"			; XTIDE Universal BIOS variables
 

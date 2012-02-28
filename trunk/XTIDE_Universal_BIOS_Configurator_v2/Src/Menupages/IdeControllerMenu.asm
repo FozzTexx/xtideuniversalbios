@@ -215,23 +215,23 @@ g_rgszChoiceToStringLookupForCOM:
 	dw	g_szValueCfgCOMx
 	dw	NULL
 
-DEVICE_SERIAL_DEFAULT_CUSTOM_PORT   EQU		300h           ; can't be any of the pre-defined COM values
+SERIAL_DEFAULT_CUSTOM_PORT   EQU		300h           ; can't be any of the pre-defined COM values
 
 PackedCOMPortAddresses:				; COM1 - COMC (or COM12)
-	db      DEVICE_SERIAL_COM1 >> 2
-	db		DEVICE_SERIAL_COM2 >> 2
-	db		DEVICE_SERIAL_COM3 >> 2
-	db		DEVICE_SERIAL_COM4 >> 2
-	db		DEVICE_SERIAL_COM5 >> 2
-	db		DEVICE_SERIAL_COM6 >> 2
-	db		DEVICE_SERIAL_COM7 >> 2
-	db		DEVICE_SERIAL_COM8 >> 2
-	db		DEVICE_SERIAL_COM9 >> 2
-	db		DEVICE_SERIAL_COMA >> 2
-	db		DEVICE_SERIAL_COMB >> 2
-	db		DEVICE_SERIAL_COMC >> 2
-	db		DEVICE_SERIAL_DEFAULT_CUSTOM_PORT >> 2			; must be last entry (see reader/writer routines)
-DEVICE_SERIAL_DEFAULT_COM			EQU		'1'
+	db      SERIAL_COM1_IOADDRESS >> 2
+	db		SERIAL_COM2_IOADDRESS >> 2
+	db		SERIAL_COM3_IOADDRESS >> 2
+	db		SERIAL_COM4_IOADDRESS >> 2
+	db		SERIAL_COM5_IOADDRESS >> 2
+	db		SERIAL_COM6_IOADDRESS >> 2
+	db		SERIAL_COM7_IOADDRESS >> 2
+	db		SERIAL_COM8_IOADDRESS >> 2
+	db		SERIAL_COM9_IOADDRESS >> 2
+	db		SERIAL_COMA_IOADDRESS >> 2
+	db		SERIAL_COMB_IOADDRESS >> 2
+	db		SERIAL_COMC_IOADDRESS >> 2
+	db		SERIAL_DEFAULT_CUSTOM_PORT >> 2			; must be last entry (see reader/writer routines)
+SERIAL_DEFAULT_COM			EQU		'1'
 
 g_rgbChoiceToValueLookupForBaud:
 	dw		(115200 / 115200) & 0xff
@@ -252,7 +252,7 @@ g_rgszChoiceToStringLookupForBaud:
 	dw		g_szValueCfgBaud4800
 	dw		g_szValueCfgBaud2400
 	dw		NULL
-DEVICE_SERIAL_DEFAULT_BAUD			EQU		((115200 / 9600)	& 0xff)
+SERIAL_DEFAULT_BAUD			EQU		((115200 / 9600)	& 0xff)
 
 ; Section containing code
 SECTION .text
@@ -518,9 +518,9 @@ IdeControllerMenu_WriteDevice:
 		cmp		bl,DEVICE_SERIAL_PORT
 		jz		.done								; if we were already serial, nothing to do
 
-		mov		byte [es:di+IDEVARS.bSerialBaud-IDEVARS.wPort],DEVICE_SERIAL_DEFAULT_BAUD
+		mov		byte [es:di+IDEVARS.bSerialBaud-IDEVARS.wPort],SERIAL_DEFAULT_BAUD
 
-		mov		al,DEVICE_SERIAL_DEFAULT_COM
+		mov		al,SERIAL_DEFAULT_COM
 		add		di,IDEVARS.bSerialCOMPortChar-IDEVARS.wPort
 		call	IdeControllerMenu_SerialWriteCOM
 		stosb
@@ -548,7 +548,7 @@ IdeControllerMenu_SerialWriteCOM:
 .loop:
 		mov		ah,[bx]
 
-		cmp		ah,(DEVICE_SERIAL_DEFAULT_CUSTOM_PORT >> 2)
+		cmp		ah,(SERIAL_DEFAULT_CUSTOM_PORT >> 2)
 		jz		.notFound
 
 		cmp		al,[si]
