@@ -20,7 +20,7 @@ void usage(void)
 {
 	char *usageStrings[] = {
 		"SerDrive - XTIDE Universal BIOS Serial Drive Server",
-		"Version 1.2.0_wip, Built " __DATE__,
+		"Version 2.0.0_wip, Built " __DATE__,
 		"",
 		"usage: SerDrive [options] imagefile [[slave-options] slave-imagefile]",
 		"",
