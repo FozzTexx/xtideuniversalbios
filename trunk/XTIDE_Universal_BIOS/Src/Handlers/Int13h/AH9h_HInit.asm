@@ -40,6 +40,7 @@ AH9h_HandlerForInitializeDriveParameters:
 ;		AL, BX, DX
 ;--------------------------------------------------------------------
 AH9h_InitializeDriveForUse:
+	push	si
 	push	cx
 
 %ifdef MODULE_SERIAL
@@ -62,8 +63,12 @@ AH9h_InitializeDriveForUse:
 
 	; Initialize CHS parameters if LBA is not used
 	call	InitializeDeviceParameters
-	jc		SHORT .RecalibrateDrive
+	jc		SHORT .SetWriteCache
 	and		BYTE [di+DPT.bFlagsHigh], ~FLGH_DPT_RESET_nINITPRMS
+
+	; Enable or Disable Write Cache
+.SetWriteCache:
+	;call	SetWriteCache
 
 	; Recalibrate drive by seeking to cylinder 0
 .RecalibrateDrive:
@@ -79,6 +84,7 @@ AH9h_InitializeDriveForUse:
 
 .ReturnNotSuccessfull:
 	pop		cx
+	pop		si
 	ret
 
 
@@ -109,6 +115,31 @@ InitializeDeviceParameters:
 
 
 ;--------------------------------------------------------------------
+; SetWriteCache
+;	Parameters:
+;		DS:DI:	Ptr to DPT (in RAMVARS segment)
+;	Returns:
+;		AH:		BIOS Error code
+;		CF:		Cleared if succesfull
+;				Set if any error
+;	Corrupts registers:
+;		AL, BX, CX, DX, SI
+;--------------------------------------------------------------------
+SetWriteCache:
+	call	AccessDPT_GetPointerToDRVPARAMStoCSBX
+	mov		bl, [cs:bx+DRVPARAMS.wFlags]
+	and		bx, BYTE MASK_DRVPARAMS_WRITECACHE
+	jz		SHORT ReturnSuccessSinceInitializationNotNeeded		; DEFAULT_WRITE_CACHE
+	mov		si, [cs:bx+.rgbWriteCacheCommands]
+	jmp		AH23h_SetControllerFeatures
+
+.rgbWriteCacheCommands:
+	db		0								; DEFAULT_WRITE_CACHE
+	db		FEATURE_DISABLE_WRITE_CACHE		; DISABLE_WRITE_CACHE
+	db		FEATURE_ENABLE_WRITE_CACHE		; ENABLE_WRITE_CACHE
+
+
+;--------------------------------------------------------------------
 ; InitializeBlockMode
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
@@ -123,7 +154,11 @@ InitializeBlockMode:
 	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_BLOCK_MODE_SUPPORTED	; Clear CF
 	jz		SHORT ReturnSuccessSinceInitializationNotNeeded
 
-	mov		al, [di+DPT_ATA.bMaxBlock]	; Load max block size, zero AH
+	call	AccessDPT_GetPointerToDRVPARAMStoCSBX
+	mov		al, 1						; Disable block mode
+	test	BYTE [cs:bx+DRVPARAMS.wFlags], FLG_DRVPARAMS_BLOCKMODE
+	eCMOVNZ	al, [di+DPT_ATA.bMaxBlock]	; Load max block size
 	jmp		AH24h_SetBlockSize
 ReturnSuccessSinceInitializationNotNeeded:
+	xor		ah, ah
 	ret
