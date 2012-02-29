@@ -191,7 +191,8 @@ int Image::parseGeometry( char *str, unsigned long *p_cyl, unsigned long *p_head
 #define ATA_strFirmware_Length 8
 
 #define ATA_strModel 27
-#define ATA_strModel_Length 40
+#define ATA_strModel_Length 40                 // Maximum allowable length of the string according to the ATA spec
+#define XTIDEBIOS_strModel_Length 30           // Maximum length copied out of the ATA information by the BIOS
 
 #define ATA_wCaps 49
 #define ATA_wCurCyls 54
@@ -239,6 +240,7 @@ struct comPorts supportedComPorts[] =
 void Image::respondInquire( unsigned short *buff, unsigned short originalPortAndBaud, struct baudRate *baudRate, unsigned short port, unsigned char scan )
 {
 	char formatBuff[ 128 ];
+	char speedBuff[ 128 ];
 
 	memset( &buff[0], 0, 514 );
 
@@ -255,12 +257,14 @@ void Image::respondInquire( unsigned short *buff, unsigned short originalPortAnd
 		}
 
 		if( comPort )
-			sprintf( formatBuff, "%.15s (COM%c/%s) ", shortFileName, comPort, baudRate->display );
+			sprintf( speedBuff, " (COM%c/%s)", comPort, baudRate->display );
 		else
-			sprintf( formatBuff, "%.25s (%s baud) ", shortFileName, baudRate->display );
+			sprintf( speedBuff, " (%s baud)", shortFileName, baudRate->display );
+
+		sprintf( formatBuff, "%.*s%s ", XTIDEBIOS_strModel_Length - strlen(speedBuff), shortFileName, speedBuff );
 	}
 	else
-		sprintf( formatBuff, "%.30s ", shortFileName );
+		sprintf( formatBuff, "%.*s ", XTIDEBIOS_strModel_Length, shortFileName );
 	strncpy( (char *) &buff[ATA_strModel], formatBuff, ATA_strModel_Length );
 	flipEndian( &buff[ATA_strModel], ATA_strModel_Length );
 
@@ -301,3 +305,4 @@ void Image::respondInquire( unsigned short *buff, unsigned short originalPortAnd
 	//
 	buff[ ATA_wGenCfg ] = ATA_wGenCfg_FIXED;
 }
+
