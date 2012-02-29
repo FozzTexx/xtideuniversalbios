@@ -76,11 +76,13 @@ AH15h_GetSectorCountToBXDXAX:
 
 ConvertAH08hReturnValuesToSectorCount:
 	call	Address_ExtractLCHSparametersFromOldInt13hAddress
-	xchg	ax, cx
-	inc		ax				; Max cylinder number to cylinder count
-.MultiplyChsInAXBLBHtoBXDXAX:
-	xchg	bx, ax
-	mul		ah			; Multiply heads and sectors
-	mul		bx			; Multiply with cylinders
-	xor		bx, bx
+
+	mov		al, bl		; Get sector value
+	mul		bh			; Multiply by heads-1 (since bh is zero based, and could be 255 and overflow)
+	xor		bh, bh		; Clear upper byte for following addition...
+	add		ax, bx		; Add in one more sector value, since heads was off by one
+	inc		cx			; Max cylinder number to cylinder count (again, zero based)
+	mul		cx			; Multiply in cylinders
+	xor		bx, bx		; Zero upper 16-bits, sector count will not be that large
+		
 	ret
