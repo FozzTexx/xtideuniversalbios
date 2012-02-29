@@ -18,17 +18,21 @@ ROM_BOOT_HOTKEY_SCANCODE				EQU	42h	; F8
 
 ; Boot Menu Information Table. These are generated for all XTIDE Universal
 ; BIOS drives. Available only until boot is successfull.
-MAX_HARD_DISK_NAME_LENGTH				EQU		26		; Bytes reserved for drive name
+MAX_HARD_DISK_NAME_LENGTH				EQU		30		; Bytes reserved for drive name
 
 struc BOOTMENUINFO
 	.szDrvName		resb	MAX_HARD_DISK_NAME_LENGTH
 					resb	2		; Zero word (ensures string terminates)
-					resb	8		; padding to make BOOTMENUINFO size an even multiple of DPT size
+					resb	4		; padding to make BOOTMENUINFO size an even multiple of DPT size
 endstruc
 
 DPT_BOOTMENUINFO_SIZE_MULTIPLIER  equ	BOOTMENUINFO_size / LARGEST_DPT_SIZE
 
 %ifndef CHECK_FOR_UNUSED_ENTRYPOINTS				
+
+%if MAX_HARD_DISK_NAME_LENGTH % 2 <> 0 
+%error "MAX_HARD_DISK_NAME_LENGTH needs to be a multiple of 2, memory is moved with word operations."
+%endif
 
 %if BOOTMENUINFO_size % LARGEST_DPT_SIZE <> 0
 %error "BOOTMENUINFO's size must be an even multiple of DPT's size.  Add or remove padding at the bottom of BOOTMENUINFO to bring the two sizes into alignment.  As BOOTMENUINFO is only used at boot time, with plenty of memory to consume, it is OK to waste some space here."

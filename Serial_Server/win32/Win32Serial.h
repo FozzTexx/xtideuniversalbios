@@ -45,7 +45,7 @@ public:
 			if( !ConnectNamedPipe( pipe, NULL ) )
 				log( -1, "Could not ConnectNamedPipe" );
 
-			if( baudRate->divisor > 3 )
+			if( baudRate->divisor > 0x80 )
 				log( -1, "Cannot simulate baud rates with hardware multipliers" );
 
 			speedEmulation = 1;
