@@ -79,7 +79,7 @@ IterateAndResetDrives:
 	push	ax
 	call	AH9h_InitializeDriveForUse			; Reset Master and Slave (Master will come first in DPT list)
 	pop		ax		
-	jc		.done
+	jnc		.done
 	or		ah, (RET_HD_RESETFAIL << 1) | 1		; OR in Reset Failed error code and CF, will SHR into position later
 .done:
 	stc											; From IterateAllDPTs perspective, the DPT is never found (continue iteration)

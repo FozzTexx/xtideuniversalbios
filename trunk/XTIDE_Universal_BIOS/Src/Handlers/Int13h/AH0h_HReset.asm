@@ -50,11 +50,11 @@ AH0h_HandlerForDiskControllerReset:
 		
 	call	ResetForeignHardDisks
 
-	test	di, di
-	jz		SHORT .SkipHardDiskReset
-
 	; Resetting our hard disks will modify dl and bl to be idevars offset based instead of drive number based, 
 	; such that this call must be the last in the list of reset routines called.
+	;
+	; This needs to happen after ResetForeignHardDisks, as that call may have set the error code for 80h,
+	; and we need to override that value if we are xlate'd into 80h with one of our drives.
 	;
 	call	ResetHardDisksHandledByOurBIOS			
 
@@ -138,8 +138,8 @@ AH0h_ResetAllOurHardDisksAtTheEndOfDriveInitialization equ ResetHardDisksHandled
 ; ResetHardDisksHandledByOurBIOS
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT for requested drive
-;				If DI is Null (foreign drive), or if error result in BH won't be used,
-;               enter through .ErrorCodeNotUsed, to avoid di=Null dereference
+;				If DPT pointer is not available, or error result in BH won't be used anyway, 
+;				enter through .ErrorCodeNotUsed.
 ;		SS:BP:	Ptr to IDEPACK
 ;	Returns:
 ;		BH:		Error code from requested drive (if available)
@@ -147,9 +147,12 @@ AH0h_ResetAllOurHardDisksAtTheEndOfDriveInitialization equ ResetHardDisksHandled
 ;		AX, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 ResetHardDisksHandledByOurBIOS:
+	mov		bl, 0										; Assume Null IdevarsOffset for now, assuming foreign drive
+	test	di, di
+	jz		.ErrorCodeNotUsed
 	mov		bl, [di+DPT.bIdevarsOffset]					; replace drive number with Idevars pointer for cmp with dl
-
-.ErrorCodeNotUsed:										; BH will be garbage if thie entry point is used, 
+		
+.ErrorCodeNotUsed:										; BH will be garbage on exit if thie entry point is used, 
 														; but reset of all drives will still happen
 
 	mov		dl, ROMVARS.ideVars0						; starting Idevars offset
