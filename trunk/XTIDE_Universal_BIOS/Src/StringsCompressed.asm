@@ -101,6 +101,10 @@ g_szBusTypeValues_Serial:		; db		"SER",NULL
                          		; db		 53h,  45h,  52h,  00h    ; uncompressed
                          		  db		 59h,  4bh,  98h          ; compressed
 
+g_szBusTypeValues_8MemMapped:	; db		"M8 ",NULL
+                             	; db		 4dh,  38h,  20h,  00h    ; uncompressed
+                             	  db		 53h,  31h,  00h          ; compressed
+
 g_szBusTypeValues_Displacement equ (g_szBusTypeValues_8Reversed - g_szBusTypeValues)
 ;
 ; Ensure that bus type strings are correctly spaced in memory
@@ -123,6 +127,9 @@ g_szBusTypeValues_Displacement equ (g_szBusTypeValues_8Reversed - g_szBusTypeVal
 %endif
 %if g_szBusTypeValues_Serial <> g_szBusTypeValues_32 + g_szBusTypeValues_Displacement
 %error "g_szBusTypeValues Displacement Incorrect 6"
+%endif
+%if g_szBusTypeValues_8MemMapped <> g_szBusTypeValues_Serial + g_szBusTypeValues_Displacement
+%error "g_szBusTypeValues Displacement Incorrect 7"
 %endif
 %endif
 
@@ -188,7 +195,7 @@ g_szDetectOuter:		; db	"IDE %s at %s: ",NULL
                 		; db	 49h,  44h,  45h,  20h,  25h,  73h,  20h,  61h,  74h,  20h,  25h,  73h,  3ah,  20h,  00h    ; uncompressed
                 		  db	 4fh,  4ah, 0cbh,  3eh,  20h,  67h, 0fah,  3eh,  40h,  00h                                  ; compressed
 
-%ifdef MODULE_SERIAL		;%%; is stripped off after string compression, %ifdef won't compress properly
+;%%; %ifdef MODULE_SERIAL		;%%; is stripped off after string compression, %ifdef won't compress properly
 g_szDetectOuterSerial:	; db	"Serial %s on %s: ",NULL
                       	; db	 53h,  65h,  72h,  69h,  61h,  6ch,  20h,  25h,  73h,  20h,  6fh,  6eh,  20h,  25h,  73h,  3ah,  20h,  00h    ; uncompressed
                       	  db	 59h,  6bh,  78h,  6fh,  67h, 0f2h,  3eh,  20h,  75h, 0f4h,  3eh,  40h,  00h                                  ; compressed
@@ -209,7 +216,7 @@ g_szDetectCOMLarge:		; db	"/%u.%uK",NULL					; IDE Master at COM1/19.2K:
                    		; db	 2fh,  25h,  75h,  2eh,  25h,  75h,  4bh,  00h    ; uncompressed
                    		  db	 2ah,  37h,  29h,  37h,  91h                      ; compressed
 
-%endif						;%%; is stripped off after string compression, %ifdef won't compress properly
+;%%; %endif						;%%; is stripped off after string compression, %ifdef won't compress properly
 g_szDetectEnd:
 g_szDetectPort:			; db	"%x",NULL					   	; IDE Master at 1F0h:
                			; db	 25h,  78h,  00h    ; uncompressed
@@ -425,7 +432,7 @@ StringsCompressed_TranslatesAndFormats:
 
 ;; translated usage stats
 ;; 33:1
-;; 32:32
+;; 32:33
 ;; 181:1
 ;; 53:2
 ;; 48:2
@@ -440,7 +447,7 @@ StringsCompressed_TranslatesAndFormats:
 ;; 172:2
 ;; 34:3
 ;; 49:1
-;; 56:5
+;; 56:6
 ;; 45:3
 ;; 175:1
 ;; 171:2
@@ -481,7 +488,7 @@ StringsCompressed_TranslatesAndFormats:
 ;; 74,J:
 ;; 75,K:1
 ;; 76,L:3
-;; 77,M:3
+;; 77,M:4
 ;; 78,N:
 ;; 79,O:2
 ;; 80,P:1

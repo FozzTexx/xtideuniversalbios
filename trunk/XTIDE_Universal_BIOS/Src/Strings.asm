@@ -48,6 +48,7 @@ g_szBusTypeValues_8Single:		db		"S8 ",NULL
 g_szBusTypeValues_16:			db		" 16",NULL
 g_szBusTypeValues_32:			db		" 32",NULL
 g_szBusTypeValues_Serial:		db		"SER",NULL
+g_szBusTypeValues_8MemMapped:	db		"M8 ",NULL
 g_szBusTypeValues_Displacement equ (g_szBusTypeValues_8Reversed - g_szBusTypeValues)
 ;
 ; Ensure that bus type strings are correctly spaced in memory
@@ -70,6 +71,9 @@ g_szBusTypeValues_Displacement equ (g_szBusTypeValues_8Reversed - g_szBusTypeVal
 	%endif
 	%if g_szBusTypeValues_Serial <> g_szBusTypeValues_32 + g_szBusTypeValues_Displacement
 		%error "g_szBusTypeValues Displacement Incorrect 6"
+	%endif
+	%if g_szBusTypeValues_8MemMapped <> g_szBusTypeValues_Serial + g_szBusTypeValues_Displacement
+		%error "g_szBusTypeValues Displacement Incorrect 7"
 	%endif
 %endif
 

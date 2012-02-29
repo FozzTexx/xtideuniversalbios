@@ -128,9 +128,11 @@ IDEDEVICE%+Command_OutputWithParameters:
 	OUTPUT_AL_TO_IDE_REGISTER	FEATURES_REGISTER_out
 
 	; Output Sector Address High (only used by LBA48)
+%ifdef MODULE_EBIOS
 	eMOVZX	ax, BYTE [bp+IDEPACK.bLbaLowExt]	; Zero sector count
 	mov		cx, [bp+IDEPACK.wLbaMiddleAndHighExt]
 	call	IDEDEVICE%+OutputSectorCountAndAddress
+%endif
 
 	; Output Sector Address Low
 	mov		ax, [bp+IDEPACK.wSectorCountAndLbaLow]
@@ -185,16 +187,14 @@ IDEDEVICE%+Command_SelectDrive:
 	cmp		BYTE [bp+IDEPACK.bCommand], COMMAND_IDENTIFY_DEVICE
 	eCMOVE	bh, TIMEOUT_IDENTIFY_DEVICE
 	call	IDEDEVICE%+Wait_PollStatusFlagInBLwithTimeoutInBH
-	jc		SHORT .ErrorWhenSelectingMasterOrSlave
-	ret
 
 	; Ignore errors from IDE Error Register (set by previous command)
-.ErrorWhenSelectingMasterOrSlave:
-	cmp		ah, RET_HD_TIMEOUT		; Do not ignore timeout
+	cmp		ah, RET_HD_TIMEOUT
+	je		SHORT .FailedToSelectDrive
+	xor		ax, ax					; Always success unless timeout
+	ret
+.FailedToSelectDrive:
 	stc
-	je		SHORT .ReturnWithErrorCodeInAHandCF
-	xor		ah, ah					; No errors
-.ReturnWithErrorCodeInAHandCF:
 	ret
 
 

@@ -17,7 +17,7 @@ SECTION .text
 ;		CH:		Maximum cylinder number, bits 7...0
 ;		CL:		Bits 7...6: Cylinder number bits 9...8
 ;				Bits 5...0:	Maximum sector number (1...63)
-;		DH:		Maximum head number (0...255)
+;		DH:		Maximum head number (0...254)
 ;		DL:		Number of drives
 ;       ES:DI:  Floppy DPT (for floppies only)
 ;		AH:		Int 13h/40h floppy return status
@@ -78,7 +78,7 @@ AH8h_HandlerForReadDiskDriveParameters:
 ;		CH:		Maximum cylinder number, bits 7...0
 ;		CL:		Bits 7...6: Cylinder number bits 9...8
 ;				Bits 5...0:	Maximum sector number (1...63)
-;		DH:		Maximum head number (0...255)
+;		DH:		Maximum head number (0...254)
 ;	Corrupts registers:
 ;		AX, BX
 ;--------------------------------------------------------------------
@@ -92,14 +92,14 @@ AH8h_GetDriveParameters:
 ; .PackReturnValues
 ;	Parameters:
 ;		AX:		Number of L-CHS cylinders available (1...1024)
-;		BL:		Number of L-CHS heads (1...256)
+;		BL:		Number of L-CHS heads (1...255)
 ;		BH:		Number of L-CHS sectors per track (1...63)
 ;		DS:		RAMVARS segment
 ;	Returns:
 ;		CH:		Maximum cylinder number, bits 7...0
 ;		CL:		Bits 7...6: Cylinder number bits 9...8
 ;				Bits 5...0:	Maximum sector number (1...63)
-;		DH:		Maximum head number (0...255)
+;		DH:		Maximum head number (0...254)
 ;	Corrupts registers:
 ;		AX, BX
 ;--------------------------------------------------------------------
@@ -111,7 +111,7 @@ AH8h_GetDriveParameters:
 	eROR_IM	cl, 2					; CL bits 6...7 = Last cylinder bits 8...9
 	or		cl, bh					; CL bits 0...5 = Sectors per track
 	mov		dh, bl					; DH = Maximum head number
-		
+
 %ifdef MODULE_SERIAL_FLOPPY
 	mov		bl,[di+DPT.bFlagsHigh]
 %ifndef CHECK_FOR_UNUSED_ENTRYPOINTS             ; not sure why this is needed for preprocessor-only
