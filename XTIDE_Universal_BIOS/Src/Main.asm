@@ -135,11 +135,11 @@ istruc ROMVARS
 	at	ROMVARS.bMinFddCnt, 	db	1						; Assume at least 1 floppy drive present if autodetect fails
 	at	ROMVARS.bStealSize,		db	1						; Steal 1kB from base memory in full mode
 
+	at	ROMVARS.ideVars0+IDEVARS.wPort,			dw	DEVICE_XTIDE_DEFAULT_PORT			; Controller Command Block base port
+	at	ROMVARS.ideVars0+IDEVARS.wPortCtrl,		dw	DEVICE_XTIDE_DEFAULT_PORTCTRL		; Controller Control Block base port
 %ifdef MODULE_JRIDE
 	at	ROMVARS.ideVars0+IDEVARS.bDevice,		db	DEVICE_JRIDE_ISA
 %else
-	at	ROMVARS.ideVars0+IDEVARS.wPort,			dw	DEVICE_XTIDE_DEFAULT_PORT			; Controller Command Block base port
-	at	ROMVARS.ideVars0+IDEVARS.wPortCtrl,		dw	DEVICE_XTIDE_DEFAULT_PORTCTRL		; Controller Control Block base port
 	at	ROMVARS.ideVars0+IDEVARS.bDevice,		db	DEVICE_8BIT_DUAL_PORT_XTIDE
 %endif
 	at	ROMVARS.ideVars0+IDEVARS.bIRQ,			db	0				; IRQ
@@ -166,13 +166,13 @@ iend
 	%include "Initialize.asm"		; For BIOS initialization
 	%include "Interrupts.asm"		; For Interrupt initialization
 	%include "RamVars.asm"			; For RAMVARS initialization and access
+	%include "CreateDPT.asm"		; For creating DPTs
+	%include "FindDPT.asm"			; For finding DPTs
 %ifdef MODULE_STRINGS_COMPRESSED
 	%include "StringsCompressed.asm"
 %else
 	%include "Strings.asm"			; For BIOS message strings
 %endif
-	%include "CreateDPT.asm"		; For creating DPTs
-	%include "FindDPT.asm"			; For finding DPTs
 	%include "AccessDPT.asm"		; For accessing DPTs
 	%include "BootMenuInfo.asm"		; For creating BOOTMENUINFO structs
 	%include "AtaID.asm"			; For ATA Identify Device information
