@@ -7,7 +7,7 @@ SECTION .data
 ; Menu title
 g_szProgramTitle:
 	db	"Configuration and Flashing program for XTIDE Universal BIOS v2.0.0.",LF,CR,NULL
-g_szXtideUniversalBiosSignature:	db	"XTIDE120",NULL
+g_szXtideUniversalBiosSignature:	db	"XTIDE200",NULL
 g_szBiosIsNotLoaded:				db	"BIOS is not loaded!",NULL
 g_szEEPROM:							db	"EEPROM",NULL
 g_szSourceAndTypeSeparator:			db	" : ",NULL

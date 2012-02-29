@@ -28,6 +28,7 @@ Int19h_ResetHandler:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Int19h_BootLoaderHandler:
+	sti
 	; Install INT 19h handler for proper reboot
 	LOAD_BDA_SEGMENT_TO	es, ax
 	mov		al, BIOS_BOOT_LOADER_INTERRUPT_19h	; INT 19h interrupt vector offset
