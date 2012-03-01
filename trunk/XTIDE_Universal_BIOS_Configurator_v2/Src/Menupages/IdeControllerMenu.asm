@@ -177,6 +177,7 @@ g_rgwChoiceToValueLookupForDevice:
 	dw	DEVICE_16BIT_ATA
 	dw	DEVICE_32BIT_ATA
 	dw	DEVICE_SERIAL_PORT
+	dw	DEVICE_JRIDE_ISA
 g_rgszValueToStringLookupForDevice:
 	dw	g_szValueCfgDeviceDual8b
 	dw	g_szValueCfgDeviceMod
@@ -184,6 +185,7 @@ g_rgszValueToStringLookupForDevice:
 	dw	g_szValueCfgDevice16b
 	dw	g_szValueCfgDevice32b
 	dw	g_szValueCfgDeviceSerial
+	dw	g_szValueCfgDeviceJrIdeIsa
 
 g_rgbChoiceToValueLookupForCOM:
 	dw	'1'

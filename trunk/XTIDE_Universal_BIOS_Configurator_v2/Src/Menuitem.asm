@@ -75,7 +75,8 @@ Menuitem_ActivateHexInputForMenuitemInDSSI:
 ;	Parameters:
 ;		DS:SI:	Ptr to MENUITEM
 ;	Returns:
-;		Nothing
+;		CF:		Cleared if value inputted
+;				Set if user cancellation
 ;	Corrupts registers:
 ;		AX, BX, CX, SI, DI, ES
 ;--------------------------------------------------------------------
@@ -96,13 +97,15 @@ ContinueWordInput:
 	CALL_MENU_LIBRARY GetWordWithIoInDSSI
 	pop		di
 
-	cmp		BYTE [si+WORD_DIALOG_IO.bUserCancellation], TRUE
+	mov		cl, [si+WORD_DIALOG_IO.bUserCancellation]
+	cmp		cl, TRUE
 	je		SHORT .NothingToChange
 	mov		ax, [si+WORD_DIALOG_IO.wReturnWord]
 	call	Registers_CopyESDItoDSSI
 	call	Menuitem_StoreValueFromAXtoMenuitemInDSSI
 .NothingToChange:
 	add		sp, BYTE WORD_DIALOG_IO_size
+	shr		cl, 1
 	ret
 
 
@@ -149,6 +152,8 @@ Menuitem_StoreValueFromAXtoMenuitemInDSSI:
 	call	GetConfigurationBufferToESDIforMenuitemInDSSI
 	add		di, [si+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset]
 	jmp		[cs:bx+.rgfnJumpToStoreValueBasedOnItemType]
+.InvalidItemType:
+	ret
 
 ALIGN WORD_ALIGN
 .rgfnJumpToStoreValueBasedOnItemType:
@@ -173,6 +178,8 @@ ALIGN WORD_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 .StoreMultichoiceValueFromAXtoESDIwithItemInDSSI:
+	test	BYTE [si+MENUITEM.bFlags], FLG_MENUITEM_MASKVALUE
+	jnz		SHORT .ClearBitsUsingMask
 	test	BYTE [si+MENUITEM.bFlags], FLG_MENUITEM_FLAGVALUE
 	jz		SHORT .TranslateChoiceToValueUsingLookupTable
 
@@ -186,6 +193,14 @@ ALIGN JUMP_ALIGN
 .SetFlagFromAX:
 	or		[es:di], ax
 	jmp		SHORT .SetUnsavedChanges
+
+ALIGN JUMP_ALIGN
+.ClearBitsUsingMask:
+	mov		bx, [si+MENUITEM.itemValue+ITEM_VALUE.wValueBitmask]
+	not		bx
+	and		[es:di], bx
+	; Fall to .TranslateChoiceToValueUsingLookupTable
+
 
 ALIGN JUMP_ALIGN
 .TranslateChoiceToValueUsingLookupTable:
@@ -224,9 +239,15 @@ ALIGN JUMP_ALIGN
 
 .NoWriter:
 	pop		bx
+	test	BYTE [si+MENUITEM.bFlags], FLG_MENUITEM_MASKVALUE
+	jz		SHORT .StoreByteOrWord
+	or		[es:di], ax
+	jmp		SHORT .SetUnsavedChanges
+
+.StoreByteOrWord:
 	test	BYTE [si+MENUITEM.bFlags], FLG_MENUITEM_BYTEVALUE
 	jnz		SHORT .StoreByteFromAL
-		
+
 	mov		[es:di+1], ah
 ALIGN JUMP_ALIGN
 .StoreByteFromAL:
@@ -254,7 +275,6 @@ ALIGN JUMP_ALIGN
 	CALL_MENU_LIBRARY RefreshTitle
 	CALL_MENU_LIBRARY GetHighlightedItemToAX
 	CALL_MENU_LIBRARY RefreshItemFromAX
-.InvalidItemType:
 	ret
 
 ALIGN JUMP_ALIGN
@@ -305,6 +325,12 @@ Menuitem_GetValueToAXfromMenuitemInDSSI:
 	pop		di
 	pop		es
 
+	test	BYTE [si+MENUITEM.bFlags], FLG_MENUITEM_MASKVALUE
+	jz		SHORT .TestIfFlagValue
+	and		ax, [si+MENUITEM.itemValue+ITEM_VALUE.wValueBitmask]
+	ret
+
+.TestIfFlagValue:
 	test	BYTE [si+MENUITEM.bFlags], FLG_MENUITEM_FLAGVALUE
 	jz		SHORT .Return
 
