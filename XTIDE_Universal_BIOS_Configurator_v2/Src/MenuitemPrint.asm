@@ -232,7 +232,7 @@ MenuitemPrint_WriteUnsignedValueStringToBufferInESDIfromItemInDSSI:
 	call	Menuitem_GetValueToAXfromMenuitemInDSSI
 	mov		bx, 10
 	CALL_DISPLAY_LIBRARY PrintWordFromAXwithBaseInBX
-	jmp		SHORT FinishPrintingUnsignedOrHexValue
+	jmp		SHORT MenuitemPrint_FinishPrintingUnsignedOrHexValue
 
 ;--------------------------------------------------------------------
 ; MenuitemPrint_WriteHexValueStringToBufferInESDIfromItemInDSSI
@@ -257,7 +257,7 @@ MenuitemPrint_WriteHexValueStringToBufferInESDIfromItemInDSSI:
 	mov		al, 'h'
 	CALL_DISPLAY_LIBRARY PrintCharacterFromAL
 ALIGN JUMP_ALIGN
-FinishPrintingUnsignedOrHexValue:
+MenuitemPrint_FinishPrintingUnsignedOrHexValue:
 	CALL_DISPLAY_LIBRARY GetCharacterPointerToBXAX
 	xchg	bx, ax
 
