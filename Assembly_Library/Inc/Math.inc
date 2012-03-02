@@ -64,6 +64,27 @@ ALIGN JUMP_ALIGN
 
 
 ;--------------------------------------------------------------------
+; SHL_DXAX
+;	Parameters:
+;		%1:		Number of bits to shift
+;	Returns:
+;		DX:AX	Shifted value
+;	Corrupts registers:
+;		CX
+;--------------------------------------------------------------------
+%macro SHL_DXAX 1
+	%ifnidni %1, cx
+		mov		cx, %1
+	%endif
+ALIGN JUMP_ALIGN
+.ShiftNextBit:
+	shl		ax, 1
+	rcl		dx, 1
+	loop	.ShiftNextBit
+%endmacro
+
+
+;--------------------------------------------------------------------
 ; SHR_DXAX
 ;	Parameters:
 ;		%1:		Number of bits to shift
