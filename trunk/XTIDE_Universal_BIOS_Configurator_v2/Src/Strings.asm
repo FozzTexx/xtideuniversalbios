@@ -81,7 +81,7 @@ g_szItemCfgIde1:		db	"Primary IDE Controller",NULL
 g_szItemCfgIde2:		db	"Secondary IDE Controller",NULL
 g_szItemCfgIde3:		db	"Tertiary IDE Controller",NULL
 g_szItemCfgIde4:		db	"Quaternary IDE Controller",NULL
-g_szItemCfgBootMenu:	db	"Boot menu settings",NULL
+g_szItemCfgBootMenu:	db	"Boot settings",NULL
 g_szItemCfgFullMode:	db	"Full operating mode",NULL
 g_szItemCfgStealSize:	db	"kiB to steal from RAM",NULL
 g_szItemCfgIdeCnt:		db	"IDE controllers",NULL
@@ -91,7 +91,7 @@ g_szDlgCfgStealSize:	db	"How many kiB of base memory to steal for XTIDE Universa
 g_szDlgCfgIdeCnt:		db	"How many IDE controllers to manage (1...4)?",NULL
 
 g_szNfoCfgIde:			db	"IDE controller and drive configuration.",NULL
-g_szNfoCfgBootMenu:		db	"Boot menu configuration.",NULL
+g_szNfoCfgBootMenu:		db	"Boot configuration.",NULL
 g_szNfoCfgFullMode:		db	"Full mode supports multiple controllers and has more features.",NULL
 g_szNfoCfgStealSize:	db	"How many kiB's to steal from Conventional memory for XTIDE Universal BIOS variables.",NULL
 g_szNfoCfgIdeCnt:		db	"Number of IDE controllers to manage.",NULL
@@ -265,7 +265,8 @@ g_szValueDrvWrCaDis:	db	"Disabled",NULL
 g_szValueDrvWrCaEn:		db	"Enabled",NULL
 
 
-; Strings for boot menu settings menu
+; Strings for boot settings menu
+g_szItemBootEnableMenu:	db	"Boot Menu",NULL
 g_szItemBootTimeout:	db	"Selection timeout",NULL
 g_szItemBootDrive:		db	"Default boot drive",NULL
 g_szItemBootDispMode:	db	"Display Mode",NULL
@@ -273,14 +274,16 @@ g_szItemBootFloppyDrvs:	db	"Number of Floppy Drives",NULL
 g_szItemBootSwap:		db	"Swap boot drive numbers",NULL
 g_szItemSerialDetect:	db	"Scan for Serial Drives",NULL
 
-g_szDlgBootTimeout:		db	"Enter Boot Menu selection timeout in BIOS timer ticks (1...1092, 0 disables timeout).",NULL
+g_szDlgBootEnableMenu:	db	"Enable Boot Menu?",NULL
+g_szDlgBootTimeout:		db	"Enter Boot Menu selection timeout in BIOS timer ticks (2...1092).",NULL
 g_szDlgBootDrive:		db	"Enter default drive number (0xh for Floppy Drives, 8xh for Hard Disks, FFh for ROM boot).",NULL
 g_szDlgBootDispMode:	db	"Select display mode for Boot Menu.",NULL
 g_szDlgBootFloppyDrvs:	db	"Select number of Floppy Drives to display on boot menu.",NULL
 g_szDlgBootSwap:		db	"Enable drive number translation?",NULL
 g_szDlgSerialDetect:	db	"Scan for serial drives?",NULL
 
-g_szNfoBootTimeout:		db	"Menu item selection timeout in BIOS timer ticks.",NULL
+g_szNfoBootEnableMenu:	db	"Enable to display boot drive selection menu.",NULL
+g_szNfoBootTimeout:		db	"Menu item selection timeout in BIOS timer ticks. 1 tick = 54.9 ms.",NULL
 g_szNfoBootDrive:		db	"Default drive on boot menu.",NULL
 g_szNfoDispMode:		db	"Display Mode for Boot Menu.",NULL
 g_szNfoBootFloppyDrvs:	db	"Number of Floppy Drives to display on boot menu.",NULL
