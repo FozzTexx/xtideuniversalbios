@@ -16,8 +16,9 @@ SECTION .text
 ALIGN JUMP_ALIGN
 DisplayContext_Initialize:
 	mov		WORD [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fnCharOut], DEFAULT_CHARACTER_OUTPUT
-	mov		WORD [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.wCursorShape], CURSOR_NORMAL
 	mov		BYTE [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bAttribute], SCREEN_BACKGROUND_ATTRIBUTE
+	mov		ax, [VIDEO_BDA.wCursorShape]
+	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.wCursorShape], ax
 	; Fall to .DetectAndSetDisplaySegment
 
 ;--------------------------------------------------------------------

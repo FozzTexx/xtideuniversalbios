@@ -33,7 +33,7 @@ COUNT_REGISTER_1						EQU	41h		; Timer 1 Count Register (DRAM Refresh)
 COUNT_REGISTER_2						EQU	42h		; Timer 2 Count Register (General Use)
 CONTROL_WORD_REGISTER_out				EQU	43h
 
-; Timer 2 is Connected to PC Speaker that can be controller from port 61h.
+; Timer 2 is connected to PC Speaker that can be controller from port 61h.
 SPEAKER_CONTROL_REGISTER				EQU	61h
 FLG_TIMER_2_OUTPUT_in					EQU	(1<<5)	; AT+ only
 FLG_SPEAKER_DATA_ENABLED				EQU	(1<<1)

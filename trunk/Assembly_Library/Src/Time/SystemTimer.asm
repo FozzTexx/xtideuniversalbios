@@ -28,21 +28,19 @@ SystemTimer_IntializePreciseEventTimer:
 ; 1. Call SystemTimer_IntializePreciseEventTimer
 ; 2. Use START_PRECISE_EVENT_TIMER macro to start timer
 ; 3. Use STOP_PRECISE_EVENT_TIMER to stop timer (optional)
-; 4. Call SystemTimer_ReadNanosecsToDXAXfromPreciseEventTimer to get event duration
+; 4. Call SystemTimer_GetPreciseEventTimerTicksToAX to get event duration
 ;
-; SystemTimer_ReadNanosecsToDXAXfromPreciseEventTimer
+; SystemTimer_GetPreciseEventTimerTicksToAX
 ;	Parameters:
 ;		Nothing
 ;	Returns:
-;		DX:AX:	Event duration in nanosecs
+;		AX:		Event duration in timer ticks
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-SystemTimer_ReadNanosecsToDXAXfromPreciseEventTimer:
+SystemTimer_GetPreciseEventTimerTicksToAX:
 	OUTPUT_COUNTER_COMMAND_TO TIMER_2, LATCH, MODE_0_SINGLE_TIMEOUT, BINARY_COUNTER
 	READ_COUNT_TO_AX_FROM TIMER_2
 	neg		ax					; 0 - count (Mode 0 counts toward zero)
-	mov		dx, TIMER_CYCLE_TIME
-	mul		dx
 	ret
