@@ -57,7 +57,7 @@ istruc ROMVARS
 %else
 		db	" (XT)=-",NULL
 %endif
-	at	ROMVARS.szVersion,	db	"v2.0.0_wip (",__DATE__,")",NULL
+	at	ROMVARS.szVersion,	db	"v2.0.0",BETA," (",__DATE__,")",NULL
 
 ;;; For OR'ing into wFlags below
 ;;;
@@ -256,7 +256,3 @@ iend
 	%include "AH48h_GetExtendedDriveParameters.asm"
 	%include "AH41h_CheckIfExtensionsPresent.asm"
 %endif
-
-
-; Fill with zeroes until size is what we want
-;times (CNT_ROM_BLOCKS*512)-($-$$) db 0
