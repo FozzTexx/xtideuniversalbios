@@ -30,6 +30,7 @@ MenuInit_DisplayMenuWithHandlerInBXandUserDataInDXAX:
 	eLEAVE_STRUCT MENU_size
 	pop		ax
 	CALL_DISPLAY_LIBRARY SetCursorShapeFromAX
+	CALL_DISPLAY_LIBRARY SynchronizeDisplayContextToHardware
 	xchg	ax, dx			; Return highlighted item in AX
 	pop		ds
 	pop		es
