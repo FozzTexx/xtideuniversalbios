@@ -4,6 +4,9 @@
 ; Section containing code
 SECTION .text
 
+%define SERIALSERVER_AH_ALREADY_HAS_COMMAND_BYTE
+%define SERIALSERVER_NO_ZERO_SECTOR_COUNTS		
+
 ;--------------------------------------------------------------------
 ; SerialCommand_OutputWithParameters
 ;	Parameters:
@@ -42,11 +45,22 @@ SerialCommand_OutputWithParameters:
 
 .readOrWrite:
 		mov		[bp+IDEPACK.bFeatures],ah		; store protocol command
-
+				
 		mov		dx, [di+DPT_SERIAL.wSerialPortAndBaud]
 
-		jmp		SerialServer_SendReceive
+ALIGN JUMP_ALIGN
+SerialCommand_FallThroughToSerialServer_SendReceive:
 
+%include "SerialServer.asm"
+
+%if SerialCommand_FallThroughToSerialServer_SendReceive <> SerialServer_SendReceive
+%error "SerialServer_SendReceive must be the first routine at the top of SerialServer.asm in the Assembly_Library"
+%endif
+
+ALIGN JUMP_ALIGN		
+SerialCommand_ReturnError:		
+		stc
+		ret		
 
 ;--------------------------------------------------------------------
 ; SerialCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH
@@ -132,7 +146,7 @@ SerialCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 		jz		.master
 
 		test	ax,ax			; Take care of the case that is different between master and slave.
-		jz		.error			
+		jz		SerialCommand_ReturnError
 
 ; fall-through
 .master:
@@ -141,9 +155,15 @@ SerialCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 
 		xchg	dx, ax			;  move ax to dx (move previously found serial drive to dx, could be zero)
 
-.identifyDeviceInDX:	
-		jmp		SerialServerScan_ScanForServer
+.identifyDeviceInDX:
 
-.error:
-		stc
-		ret
+ALIGN JUMP_ALIGN
+SerialCommand_FallThroughToSerialServerScan_ScanForServer:		
+		
+%include "SerialServerScan.asm"
+
+%if SerialCommand_FallThroughToSerialServerScan_ScanForServer <> SerialServerScan_ScanForServer
+%error "SerialServerScan_ScanForServer must be the first routine at the top of SerialServerScan.asm in the Assembly_Library"
+%endif				
+
+

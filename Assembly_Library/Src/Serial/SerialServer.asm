@@ -36,6 +36,7 @@ SerialServer_SendReceive:
 
 		mov		al,[bp+SerialServer_Command.bSectorCount]
 		mov		ah,[bp+SerialServer_Command.bCommand]
+		
 ;
 ; Command byte and sector count live at the top of the stack, pop/push are used to access
 ;
@@ -115,9 +116,11 @@ SerialServer_SendReceive:
 		pop		ax				; load command byte (done before call to .nextSector on subsequent iterations)
 		push	ax
 
+%ifndef SERIALSERVER_NO_ZERO_SECTOR_COUNTS
 		test	al,al			; if no sectors to be transferred, wait for the ACK checksum on the command
 		jz		.zeroSectors
-
+%endif
+		
 ;
 ; Top of the read/write loop, one iteration per sector
 ;
