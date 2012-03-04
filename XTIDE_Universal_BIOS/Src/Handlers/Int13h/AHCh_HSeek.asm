@@ -20,7 +20,7 @@ SECTION .text
 ;		DH:		Starting head number (0...255)
 ;	Returns with INTPACK:
 ;		AH:		BIOS Error code
-;		CF:		0 if succesfull, 1 if error
+;		CF:		0 if successful, 1 if error
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AHCh_HandlerForSeek:
@@ -43,7 +43,7 @@ AHCh_HandlerForSeek:
 ;		SS:BP:	Ptr to IDEREGS_AND_INTPACK
 ;	Returns:
 ;		AH:		BIOS Error code
-;		CF:		0 if succesfull, 1 if error
+;		CF:		0 if successful, 1 if error
 ;	Corrupts registers:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------

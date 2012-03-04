@@ -19,12 +19,12 @@ SECTION .text
 ;		CL:		Bits 7...6: Cylinder number bits 9 and 8
 ;				Bits 5...0:	Starting sector number (1...63)
 ;		DH:		Starting head number (0...255)
-;		ES:BX:	Pointer to buffer recieving data
+;		ES:BX:	Pointer to buffer receiving data
 ;	Returns with INTPACK:
 ;		AH:		Int 13h/40h floppy return status
 ;		AL:		Burst error length if AH returns 11h (we never return error code 11h)
 ;				Number of sectors actually read (only valid if CF set for someBIOSes)
-;		CF:		0 if successfull, 1 if error
+;		CF:		0 if successful, 1 if error
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH2h_HandlerForReadDiskSectors:

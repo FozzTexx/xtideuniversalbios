@@ -36,7 +36,7 @@ endstruc
 
 %ifdef MODULE_SERIAL
 ; DPT for Serial devices
-struc DPT_SERIAL 
+struc DPT_SERIAL
 	.dpt						resb	DPT_size
 
 	.wSerialPortAndBaud:
@@ -62,9 +62,9 @@ FLGH_DPT_SERIAL_DEVICE			EQU	(1<<2)	; Serial Port Device
 %endif
 FLGH_DPT_INTERRUPT_IN_SERVICE	EQU	(1<<3)	; Set when waiting for IRQ
 FLGH_DPT_RESET_nDRDY			EQU	(1<<4)	; Drive ready to accept commands
-FLGH_DPT_RESET_nINITPRMS		EQU	(1<<5)	; Initialize Device Parameters successfull
-FLGH_DPT_RESET_nRECALIBRATE		EQU	(1<<6)	; Recalibrate successfull
-FLGH_DPT_RESET_nSETBLOCK		EQU	(1<<7)	; Initialize Block Mode successfull
+FLGH_DPT_RESET_nINITPRMS		EQU	(1<<5)	; Initialize Device Parameters successful
+FLGH_DPT_RESET_nRECALIBRATE		EQU	(1<<6)	; Recalibrate successful
+FLGH_DPT_RESET_nSETBLOCK		EQU	(1<<7)	; Initialize Block Mode successful
 MASKH_DPT_RESET					EQU	0F0h
 
 FLGH_DPT_SERIAL_FLOPPY						EQU	(1<<4)

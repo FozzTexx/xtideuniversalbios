@@ -14,7 +14,7 @@ SECTION .text
 ;		SS:BP:	Ptr to IDEPACK
 ;	Returns with INTPACK:
 ;		AH:		Int 13h return status
-;		CF:		0 if succesfull, 1 if error
+;		CF:		0 if successful, 1 if error
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AHDh_HandlerForResetHardDisk:
@@ -36,7 +36,7 @@ AHDh_HandlerForResetHardDisk:
 ;		SS:BP:	Ptr to IDEPACK
 ;	Returns:
 ;		AH:		Int 13h return status
-;		CF:		0 if succesfull, 1 if error
+;		CF:		0 if successful, 1 if error
 ;	Corrupts registers:
 ;		AL, SI
 ;--------------------------------------------------------------------
@@ -52,9 +52,9 @@ AHDh_ResetDrive:
 												; (error register has special values after reset)
 
 	; Initialize Master and Slave drives
-	mov		al, [di+DPT.bIdevarsOffset]			; pointer to controller we are looking to reset
-	mov		ah, 0								; initialize error code, assume success
-		
+	eMOVZX	ax, [di+DPT.bIdevarsOffset]			; (AL) pointer to controller we are looking to reset
+												; (AH) initialize error code, assume success
+
 	mov		si, IterateAndResetDrives
 	call	FindDPT_IterateAllDPTs
 
@@ -69,7 +69,7 @@ AHDh_ResetDrive:
 ;--------------------------------------------------------------------
 ; IterateAndResetDrives: Iteration routine for use with IterateAllDPTs.
 ;
-; When a drive on the controller is found, it is reset, and the error code 
+; When a drive on the controller is found, it is reset, and the error code
 ; merged into overall error code for this controller.  Master will be reset
 ; first.  Note that the iteration will go until the end of the DPT list.
 ;--------------------------------------------------------------------
@@ -78,7 +78,7 @@ IterateAndResetDrives:
 	jne		.done
 	push	ax
 	call	AH9h_InitializeDriveForUse			; Reset Master and Slave (Master will come first in DPT list)
-	pop		ax		
+	pop		ax
 	jnc		.done
 	or		ah, (RET_HD_RESETFAIL << 1) | 1		; OR in Reset Failed error code and CF, will SHR into position later
 .done:

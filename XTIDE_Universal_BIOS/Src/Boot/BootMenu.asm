@@ -42,7 +42,7 @@ ALIGN JUMP_ALIGN
 BootMenu_GetDriveToDXforMenuitemInCX_And_RamVars_GetSegmentToDS:
 	call	RamVars_GetSegmentToDS
 ;;; fall-through
-						
+
 ALIGN JUMP_ALIGN
 BootMenu_GetDriveToDXforMenuitemInCX:
 	cmp		cl, NO_ITEM_HIGHLIGHTED
@@ -135,7 +135,7 @@ ALIGN JUMP_ALIGN, ret
 ALIGN JUMP_ALIGN
 BootMenu_GetMenuitemToAXforAsciiHotkeyInAL:
 	call	Char_ALtoUpperCaseLetter
-	xor		ah, ah
+	cbw
 	xchg	ax, cx
 	call	BootMenu_GetLetterForFirstHardDiskToAL
 	cmp		cl, al						; Letter is for Hard Disk?

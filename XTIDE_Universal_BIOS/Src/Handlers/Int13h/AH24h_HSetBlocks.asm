@@ -17,7 +17,7 @@ SECTION .text
 ;		AL:		Number of Sectors per Block (1, 2, 4, 8, 16, 32, 64 or 128)
 ;	Returns with INTPACK:
 ;		AH:		Int 13h return status
-;		CF:		0 if succesfull, 1 if error
+;		CF:		0 if successful, 1 if error
 ;--------------------------------------------------------------------
 AH24h_HandlerForSetMultipleBlocks:
 %ifndef USE_186
@@ -37,7 +37,7 @@ AH24h_HandlerForSetMultipleBlocks:
 ;		SS:BP:	Ptr to IDEPACK
 ;	Returns:
 ;		AH:		Int 13h return status
-;		CF:		0 if succesfull, 1 if error
+;		CF:		0 if successful, 1 if error
 ;	Corrupts registers:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------

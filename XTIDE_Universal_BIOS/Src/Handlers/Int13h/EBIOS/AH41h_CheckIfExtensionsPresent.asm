@@ -18,7 +18,7 @@ SECTION .text
 ;		AH:		Major version of EBIOS extensions
 ;		BX:		AA55h
 ;		CX:		Support bits
-;		CF:		0 if succesfull, 1 if error
+;		CF:		0 if successful, 1 if error
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH41h_HandlerForCheckIfExtensionsPresent:

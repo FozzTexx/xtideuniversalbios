@@ -61,7 +61,7 @@ Interrupts_InitializeInterruptVectors:
 	call	RamVars_GetIdeControllerCountToCX
 	mov		di, ROMVARS.ideVars0			; CS:SI points to first IDEVARS
 .IdeControllerLoop:
-	mov		al, BYTE [cs:di+IDEVARS.bIRQ]
+	mov		al, [cs:di+IDEVARS.bIRQ]
 	add		di, BYTE IDEVARS_size			; Increment to next controller
 	call	.InstallLowOrHighIrqHandler
 	loop	.IdeControllerLoop
@@ -146,7 +146,7 @@ Interrupts_InstallHandlerToVectorInALFromCSSI:
 ;		AX, BX, DX
 ;--------------------------------------------------------------------
 Interrupts_UnmaskInterruptControllerForDriveInDSDI:
-	eMOVZX	bx, BYTE [di+DPT.bIdevarsOffset]
+	eMOVZX	bx, [di+DPT.bIdevarsOffset]
 	mov		al, [cs:bx+IDEVARS.bIRQ]
 	test	al, al
 	jz		SHORT .Return	; Interrupts disabled

@@ -33,23 +33,12 @@ Prepare_ByLoadingDapToESSIandVerifyingForTransfer:
 	jz		SHORT ZeroSectorsRequestedSoNoErrors
 	cmp		ax, BYTE 127
 	ja		SHORT InvalidNumberOfSectorsRequested
-	; Fall to GetEbiosCommandIndexToBX
 
-;--------------------------------------------------------------------
-; GetEbiosCommandIndexToBX
-;	Parameters:
-;		DS:DI:	Ptr to DPT
-;		ES:SI:	Ptr to DAP (Disk Address Packet)
-;	Returns:
-;		BX:		Index to command lookup table
-;	Corrupts registers:
-;		AX, DX
-;--------------------------------------------------------------------
-GetEbiosCommandIndexToBX:
+	; Get EBIOS command index to BX
 	; LBA28 or LBA48 command
-	xor		dx, dx
+	cwd
 	mov		al, [es:si+DAP.qwLBA+3]	; Load LBA48 byte 3 (bits 24...31)
-	and		ax, 00F0h				; Clear LBA28 bits 24...27
+	and		al, 0F0h				; Clear LBA28 bits 24...27
 	or		ax, [es:si+DAP.qwLBA+4]	; Set bits from LBA bytes 4 and 5
 	cmp		dx, ax					; Set CF if any of bits 28...47 set
 	rcl		dx, 1					; DX = 0 for LBA28, DX = 1 for LBA48

@@ -18,7 +18,7 @@ SECTION .text
 ;		SS:BP:	Ptr to IDEPACK
 ;	Returns with INTPACK:
 ;		AH:		Int 13h return status (from drive requested in DL)
-;		CF:		0 if succesfull, 1 if error
+;		CF:		0 if successful, 1 if error
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH0h_HandlerForDiskControllerReset:
@@ -27,7 +27,7 @@ AH0h_HandlerForDiskControllerReset:
 
 %ifdef MODULE_SERIAL_FLOPPY
 ;
-; "Reset" emulatd serial floppy drives, if any.  There is nothing to actually do for this reset,
+; "Reset" emulated serial floppy drives, if any.  There is nothing to actually do for this reset,
 ; but record the proper error return code if one of these floppy drives is the drive requested.
 ;
 	call	RamVars_UnpackFlopCntAndFirstToAL
@@ -38,7 +38,7 @@ AH0h_HandlerForDiskControllerReset:
 	cwd													; clears DX (there are flop drives) or ffffh (there are not)
 
 	adc		dl, al										; second drive (CF set) if present
-														; If no drive is present, this will result in ffh which 
+														; If no drive is present, this will result in ffh which
 														; won't match a drive
 	call	BackupErrorCodeFromTheRequestedDriveToBH
 	mov		dl, al										; We may end up doing the first drive twice (if there is
@@ -47,16 +47,16 @@ AH0h_HandlerForDiskControllerReset:
 
 	test	bl, bl										; If we were called with a floppy disk, then we are done,
 	jns		SHORT .SkipHardDiskReset					; don't do hard disks.
-		
+
 	call	ResetForeignHardDisks
 
-	; Resetting our hard disks will modify dl and bl to be idevars offset based instead of drive number based, 
+	; Resetting our hard disks will modify dl and bl to be idevars offset based instead of drive number based,
 	; such that this call must be the last in the list of reset routines called.
 	;
 	; This needs to happen after ResetForeignHardDisks, as that call may have set the error code for 80h,
 	; and we need to override that value if we are xlate'd into 80h with one of our drives.
 	;
-	call	ResetHardDisksHandledByOurBIOS			
+	call	ResetHardDisksHandledByOurBIOS
 
 .SkipHardDiskReset:
 	mov		ah, bh
@@ -138,7 +138,7 @@ AH0h_ResetAllOurHardDisksAtTheEndOfDriveInitialization equ ResetHardDisksHandled
 ; ResetHardDisksHandledByOurBIOS
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT for requested drive
-;				If DPT pointer is not available, or error result in BH won't be used anyway, 
+;				If DPT pointer is not available, or error result in BH won't be used anyway,
 ;				enter through .ErrorCodeNotUsed.
 ;		SS:BP:	Ptr to IDEPACK
 ;	Returns:
@@ -147,12 +147,12 @@ AH0h_ResetAllOurHardDisksAtTheEndOfDriveInitialization equ ResetHardDisksHandled
 ;		AX, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 ResetHardDisksHandledByOurBIOS:
-	mov		bl, 0										; Assume Null IdevarsOffset for now, assuming foreign drive
+	xor		bl, bl										; Assume Null IdevarsOffset for now, assuming foreign drive
 	test	di, di
 	jz		.ErrorCodeNotUsed
 	mov		bl, [di+DPT.bIdevarsOffset]					; replace drive number with Idevars pointer for cmp with dl
-		
-.ErrorCodeNotUsed:										; BH will be garbage on exit if thie entry point is used, 
+
+.ErrorCodeNotUsed:										; BH will be garbage on exit if this entry point is used,
 														; but reset of all drives will still happen
 
 	mov		dl, ROMVARS.ideVars0						; starting Idevars offset

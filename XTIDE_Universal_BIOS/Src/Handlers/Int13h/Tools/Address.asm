@@ -127,11 +127,15 @@ Address_OldInt13hAddressToIdeAddress:
 ALIGN JUMP_ALIGN
 ConvertLCHStoLBARegisterValues:
 	; cylToSeek*headsPerCyl (18-bit result)
-	mov		ax, cx					; Copy Cylinder number to AX
-	; We could save a byte here by using CWD instead of the XOR DH, DH in eMOVZX
-	; but I'm not sure how that would affect speed.
+	mov		ax, LBA_ASSIST_SPT		; Load Sectors per Track
+	xchg	cx, ax					; Cylinder number to AX, Sectors per Track to CX
 
-	eMOVZX	dx, BYTE [di+DPT.bLbaHeads]
+%ifdef USE_386
+	movzx	dx, [di+DPT.bLbaHeads]
+%else
+	cwd
+	mov		dl, [di+DPT.bLbaHeads]
+%endif
 	mul		dx						; DX:AX = cylToSeek*headsPerCyl
 
 	; +=headToSeek (18-bit result)
@@ -140,7 +144,6 @@ ConvertLCHStoLBARegisterValues:
 	adc		dl, dh
 
 	; *=sectPerTrack (18-bit by 6-bit multiplication with 24-bit result)
-	mov		cx, LBA_ASSIST_SPT		; Load Sectors per Track
 	xchg	ax, dx					; Hiword to AX, loword to DX
 	mul		cl						; AX = hiword * Sectors per Track
 	mov		bh, al					; Backup hiword * Sectors per Track

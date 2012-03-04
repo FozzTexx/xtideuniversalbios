@@ -19,7 +19,7 @@ SECTION .text
 ;		DS:SI:	Ptr to Disk Address Packet
 ;	Returns with INTPACK:
 ;		AH:		Int 13h return status
-;		CF:		0 if succesfull, 1 if error
+;		CF:		0 if successful, 1 if error
 ;	Return with Disk Address Packet in INTPACK:
 ;		.wSectorCount	Number of sectors written successfully
 ;--------------------------------------------------------------------

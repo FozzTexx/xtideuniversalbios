@@ -28,7 +28,7 @@ g_szFddFiveQuarter:		db  "5",ONE_QUARTER,NULL
 	%endif
 %endif
 
-; The following strings are used by DetectPrint_StartDetectWithMasterOrSlaveStringInAXandIdeVarsInCSBP
+; The following strings are used by DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP
 ; To support an optimization in that code, these strings must start on the same 256 byte page,
 ; which is checked at assembly time below.
 ;
@@ -48,7 +48,7 @@ g_szDetectPort:			db	"%x",NULL					   	; IDE Master at 1F0h:
 
 %ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
 	%if ((g_szDetectEnd-$$) & 0xff00) <> ((g_szDetectStart-$$) & 0xff00)
-		%error "g_szDetect* strings must start on the same 256 byte page, required by DetectPrint_StartDetectWithMasterOrSlaveStringInAXandIdeVarsInCSBP.  Please move this block up or down within strings.asm"
+		%error "g_szDetect* strings must start on the same 256 byte page, required by DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP.  Please move this block up or down within strings.asm"
 	%endif
 %endif
 

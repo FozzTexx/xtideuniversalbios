@@ -23,7 +23,7 @@ SECTION .text
 ;		AX, BX, CX, DX
 ;--------------------------------------------------------------------
 .BootMenuPrintCfg_ForOurDrive:
-	eMOVZX	ax, BYTE [di+DPT.bIdevarsOffset]
+	eMOVZX	ax, [di+DPT.bIdevarsOffset]
 	xchg	bx, ax						; CS:BX now points to IDEVARS
 	; Fall to .PushAndFormatCfgString
 
@@ -39,17 +39,17 @@ SECTION .text
 ;--------------------------------------------------------------------
 .PushAddressingMode:
 	AccessDPT_GetUnshiftedAddressModeToALZF
-	;; 
-	;; This multiply both shifts the addressing mode bits down to low order bits, and 
+	;;
+	;; This multiply both shifts the addressing mode bits down to low order bits, and
 	;; at the same time multiplies by the size of the string displacement.  The result is in AH,
 	;; with AL clear, and so we exchange AL and AH after the multiply for the final result.
-	;; 
+	;;
 	mov		cl,(1<<(8-ADDRESSING_MODE_FIELD_POSITION)) * g_szAddressingModes_Displacement
 	mul		cl
 	xchg	al,ah
 	add		ax,g_szAddressingModes
 	push	ax
-		
+
 ;--------------------------------------------------------------------
 ; PushBlockMode
 ;	Parameters:
@@ -81,12 +81,12 @@ SECTION .text
 .PushBusType:
 	mov		al,g_szBusTypeValues_Displacement
 	mul		BYTE [cs:bx+IDEVARS.bDevice]
-		
+
 	shr		ax,1			; divide by 2 since IDEVARS.bDevice is multiplied by 2
-		
+
 	add		ax,g_szBusTypeValues
-	push	ax	
-				
+	push	ax
+
 ;--------------------------------------------------------------------
 ; PushIRQ
 ;	Parameters:
@@ -98,7 +98,7 @@ SECTION .text
 ;		AX, DX
 ;--------------------------------------------------------------------
 .PushIRQ:
-	mov		al, BYTE [cs:bx+IDEVARS.bIRQ]
+	mov		al, [cs:bx+IDEVARS.bIRQ]
 	cbw
 	push	ax
 

@@ -4,7 +4,7 @@
 %define INT13H_INC
 
 ; Hard Disk function (INT 13h) return status codes in AH
-RET_HD_SUCCESS			EQU		0h		; Operation succesfull, no error occurred
+RET_HD_SUCCESS			EQU		0h		; Operation successful, no error occurred
 RET_HD_INVALID			EQU		1h		; Invalid value passed or unsupported func
 RET_HD_ADDRMARK			EQU		2h		; Missing address mark
 RET_HD_WRITEPROT		EQU		3h		; Removable media is write protected

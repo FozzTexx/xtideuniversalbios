@@ -38,10 +38,10 @@ DriveXlate_ToOrBack:
 ALIGN JUMP_ALIGN
 SwapFloppyDriveOrHardDisk:
 	mov		ah, 80h					; Assume hard disk
-	mov		al, BYTE [RAMVARS.xlateVars+XLATEVARS.bHDSwap]
+	mov		al, [RAMVARS.xlateVars+XLATEVARS.bHDSwap]
 	test	dl, ah					; Hard disk?
 	jnz		SHORT SwapDrive			; If so, jump to swap
-	mov		al, BYTE [RAMVARS.xlateVars+XLATEVARS.bFDSwap]
+	mov		al, [RAMVARS.xlateVars+XLATEVARS.bFDSwap]
 	cbw
 	; Fall to SwapDrive
 

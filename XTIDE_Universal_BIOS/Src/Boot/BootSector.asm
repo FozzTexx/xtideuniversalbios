@@ -10,8 +10,8 @@ SECTION .text
 ;		DL:		Drive to boot from (translated, 00h or 80h)
 ;		DS:		RAMVARS segment
 ;	Returns:
-;		ES:BX:	Ptr to boot sector (if successfull)
-;		CF:		Set if boot sector loaded succesfully
+;		ES:BX:	Ptr to boot sector (if successful)
+;		CF:		Set if boot sector loaded successfully
 ;				Cleared if failed to load boot sector
 ;	Corrupts registers:
 ;		AX, CX, DH, SI, DI, (DL if failed to read boot sector)
@@ -45,8 +45,8 @@ BootSector_TryToLoadFromDriveDL:
 ;		DL:		Drive to boot from (translated, 00h or 80h)
 ;	Returns:
 ;		AH:		INT 13h error code
-;		ES:BX:	Ptr to boot sector (if successfull)
-;		CF:		Cleared if read successfull
+;		ES:BX:	Ptr to boot sector (if successful)
+;		CF:		Cleared if read successful
 ;				Set if any error
 ;	Corrupts registers:
 ;		AL, CX, DH, DI
@@ -72,7 +72,7 @@ ALIGN JUMP_ALIGN
 ;		DL:		Drive to boot from (translated, 00h or 80h)
 ;	Returns:
 ;		AH:		INT 13h error code
-;		CF:		Cleared if read successfull
+;		CF:		Cleared if read successful
 ;				Set if any error
 ;	Corrupts registers:
 ;		AL
@@ -95,7 +95,7 @@ ALIGN JUMP_ALIGN
 ;	Returns:
 ;		AH:		INT 13h error code
 ;		ES:BX:	Ptr to boot sector
-;		CF:		Cleared if read successfull
+;		CF:		Cleared if read successful
 ;				Set if any error
 ;	Corrupts registers:
 ;		AL, CX, DH

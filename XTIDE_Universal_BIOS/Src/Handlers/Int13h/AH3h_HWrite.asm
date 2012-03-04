@@ -23,7 +23,7 @@ SECTION .text
 ;	Returns with INTPACK:
 ;		AH:		Int 13h/40h floppy return status
 ;		AL:		Number of sectors actually written (only valid if CF set for someBIOSes)
-;		CF:		0 if successfull, 1 if error
+;		CF:		0 if successful, 1 if error
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH3h_HandlerForWriteDiskSectors:

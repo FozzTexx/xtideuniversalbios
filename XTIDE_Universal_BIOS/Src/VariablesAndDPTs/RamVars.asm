@@ -124,14 +124,12 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 RamVars_GetHardDiskCountFromBDAtoAX:
-	push	es
-
-	LOAD_BDA_SEGMENT_TO	es, ax
 	call	RamVars_GetCountOfKnownDrivesToAX
-	mov		cl, [es:BDA.bHDCount]
+	push	ds
+	LOAD_BDA_SEGMENT_TO	ds, cx
+	mov		cl, [BDA.bHDCount]
 	MAX_U	al, cl
-		
-	pop		es
+	pop		ds
 	ret
 
 ;--------------------------------------------------------------------
@@ -150,7 +148,7 @@ RamVars_GetCountOfKnownDrivesToAX:
 	and		al, 7fh
 	cbw
 	ret
-	
+
 ;--------------------------------------------------------------------
 ; RamVars_GetIdeControllerCountToCX
 ;	Parameters:
@@ -162,7 +160,7 @@ RamVars_GetCountOfKnownDrivesToAX:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 RamVars_GetIdeControllerCountToCX:
-	eMOVZX	cx, BYTE [cs:ROMVARS.bIdeCnt]
+	eMOVZX	cx, [cs:ROMVARS.bIdeCnt]
 	ret
 
 %ifdef MODULE_SERIAL_FLOPPY
@@ -176,10 +174,10 @@ RamVars_GetIdeControllerCountToCX:
 ;		SF:		Emulating drives (clear = yes, set = no)
 ;	Corrupts registers:
 ;		Nothing
-;--------------------------------------------------------------------		
+;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 RamVars_UnpackFlopCntAndFirstToAL:
 	mov		al, [RAMVARS.xlateVars+XLATEVARS.bFlopCntAndFirst]
-	sar		al, 1		
+	sar		al, 1
 	ret
 %endif

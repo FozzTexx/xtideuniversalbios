@@ -126,40 +126,40 @@ FloppyDrive_GetType:
 ;		AX:		Number of Floppy Drives
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-FloppyDrive_GetCountToAX:		
+FloppyDrive_GetCountToAX:
 %ifdef MODULE_SERIAL_FLOPPY
 	call	RamVars_UnpackFlopCntAndFirstToAL
 	js		.UseBIOSorBDA				; We didn't add in any drives, counts here are not valid
-		
-	adc		al,1						; adds in the drive count bit, and adds 1 for count vs. 0-index, 
+
+	adc		al,1						; adds in the drive count bit, and adds 1 for count vs. 0-index,
 	jmp		.FinishCalc					; need to clear AH on the way out, and add in minimum drive numbers
 
-.UseBIOSorBDA:	
+.UseBIOSorBDA:
 %endif
 	call	FloppyDrive_GetCountFromBIOS_or_BDA
 
-.FinishCalc:	
+.FinishCalc:
 	mov		ah, [cs:ROMVARS.bMinFddCnt]
 	MAX_U	al, ah
 	cbw
-		
+
 	ret
 
-ALIGN JUMP_ALIGN		
+ALIGN JUMP_ALIGN
 FloppyDrive_GetCountFromBIOS_or_BDA:
 	push	es
 
 ;--------------------------------------------------------------------
 ; Reads Floppy Drive Count from BIOS.
-; Does not work on most XT systems. Call FloppyDrive_GetCountFromBDA
+; Does not work on most XT systems. Call .GetCountFromBDA
 ; if this function fails.
 ;
-; GetCountFromBIOS
+; .GetCountFromBIOS
 ;	Parameters:
 ;		Nothing
 ;	Returns:
 ;		AL:		Number of Floppy Drives
-;		CF:		Cleared if successfull
+;		CF:		Cleared if successful
 ;				Set if BIOS function not supported
 ;	Corrupts registers:
 ;		ES
@@ -168,7 +168,6 @@ FloppyDrive_GetCountFromBIOS_or_BDA:
 ALIGN JUMP_ALIGN
 .GetCountFromBIOS:
 	push	di
-	push	es
 	push	bx
 	push	cx
 	push	dx
@@ -181,33 +180,31 @@ ALIGN JUMP_ALIGN
 	pop		dx
 	pop		cx
 	pop		bx
-	pop		es
 	pop		di
 %endif
 
 ;--------------------------------------------------------------------
 ; Reads Floppy Drive Count (0...4) from BIOS Data Area.
-; This function should be used only if FloppyDrive_GetCountFromBIOS fails.
+; This function should be used only if .GetCountFromBIOS fails.
 ;
-; GetCountFromBDA
+; .GetCountFromBDA
 ;	Parameters:
 ;		Nothing
 ;	Returns:
-;		CL:		Number of Floppy Drives
+;		AL:		Number of Floppy Drives
 ;	Corrupts registers:
-;		CH, ES
+;		AH, ES
 ;--------------------------------------------------------------------
 %ifndef USE_AT
 ALIGN JUMP_ALIGN
 .GetCountFromBDA:
 	LOAD_BDA_SEGMENT_TO	es, ax
 	mov		al, [es:BDA.wEquipment]			; Load Equipment WORD low byte
-	mov		ah, al							; Copy it to CH
+	mov		ah, al							; Copy it to AH
 	and		ax, 0C001h						; Leave bits 15..14 and 0
 	eROL_IM	ah, 2							; EW low byte bits 7..6 to 1..0
-	add		al, ah							; CL = Floppy Drive count
+	add		al, ah							; AL = Floppy Drive count
 %endif
 
 	pop		es
 	ret
-		
