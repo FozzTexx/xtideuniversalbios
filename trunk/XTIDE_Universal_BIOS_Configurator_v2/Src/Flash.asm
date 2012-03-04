@@ -85,7 +85,7 @@ Flash_SinglePageWithFlashvarsInSSBP:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 .GetSdpCommandFunctionToDXwithFlashvarsInSSBP:
-	eMOVZX	bx, BYTE [bp+FLASHVARS.bEepromSdpCommand]
+	eMOVZX	bx, [bp+FLASHVARS.bEepromSdpCommand]
 	mov		si, [cs:bx+.rgpSdpCommandToEepromTypeLookupTable]
 	mov		bl, [bp+FLASHVARS.bEepromType]
 	mov		dx, [cs:bx+si]

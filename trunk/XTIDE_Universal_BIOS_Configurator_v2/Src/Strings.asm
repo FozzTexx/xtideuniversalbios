@@ -21,10 +21,9 @@ g_szFormatItemNameWithValue:		db	"%25s%-10S",NULL
 
 
 g_szNo:								db	"No",NULL
-g_szYes:							db	"Yes",NULL
 g_szMultichoiceBooleanFlag:
 									db	"No",LF
-									db	"Yes",NULL
+g_szYes:							db	"Yes",NULL
 
 ; Exit messages
 g_szDlgExitToDos:		db	"Exit to DOS?",NULL
@@ -43,7 +42,7 @@ g_szErrEepromPolling:	db	"Timeout when polling EEPROM.",LF
 						db	"EEPROM was not flashed properly!",NULL
 g_szErrEepromVerify:	db	"EEPROM did not return the same byte that was written.",LF
 						db	"EEPROM was not flashed properly!",NULL
-g_szPCFlashSuccessfull:	db	"EEPROM was written successfully.",LF
+g_szPCFlashSuccessful:	db	"EEPROM was written successfully.",LF
 						db	"Press any key to reboot.",NULL
 g_szForeignFlash:		db	"EEPROM was written successfully.",NULL
 
@@ -373,10 +372,9 @@ g_szValueFlash28512:	db	"28512",NULL
 g_szMultichoiceSdpCommand:
 						db	"None",LF
 						db	"Enable",LF
-						db	"Disable",NULL
+g_szValueFlashDisable:	db	"Disable",NULL
 g_szValueFlashNone:		db	"None",NULL
 g_szValueFlashEnable:	db	"Enable",NULL
-g_szValueFlashDisable:	db	"Disable",NULL
 
 g_szMultichoicePageSize:
 						db	"1 byte",LF
@@ -385,14 +383,13 @@ g_szMultichoicePageSize:
 						db	"8 bytes",LF
 						db	"16 bytes",LF
 						db	"32 bytes",LF
-						db	"64 bytes",NULL
+g_szValueFlash64bytes:	db	"64 bytes",NULL
 g_szValueFlash1byte:	db	"1 byte",NULL
 g_szValueFlash2bytes:	db	"2 bytes",NULL
 g_szValueFlash4bytes:	db	"4 bytes",NULL
 g_szValueFlash8bytes:	db	"8 bytes",NULL
 g_szValueFlash16bytes:	db	"16 bytes",NULL
 g_szValueFlash32bytes:	db	"32 bytes",NULL
-g_szValueFlash64bytes:	db	"64 bytes",NULL
 
 g_szSelectionTimeout:	db		DOUBLE_BOTTOM_LEFT_CORNER,DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL,"%ASelection in %2u s",NULL
 

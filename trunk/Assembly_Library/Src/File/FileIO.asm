@@ -35,7 +35,7 @@ FileIO_OpenWithPathInDSSIandFileAccessInAL:
 ;		DS:SI:	Ptr to destination buffer
 ;	Returns:
 ;		AX:		DOS error code if CF set
-;		CF:		Clear if successfull
+;		CF:		Clear if successful
 ;				Set if error
 ;	Corrupts registers:
 ;		AX
@@ -58,9 +58,9 @@ FileIO_ReadDXCXbytesToDSSIusingHandleFromBX:
 ;		CX:		Number of bytes to read
 ;		DS:SI:	Ptr to destination buffer
 ;	Returns:
-;		AX:		Number of bytes actually read if successfull (0 if at EOF before call)
+;		AX:		Number of bytes actually read if successful (0 if at EOF before call)
 ;				DOS error code if CF set
-;		CF:		Clear if successfull
+;		CF:		Clear if successful
 ;				Set if error
 ;	Corrupts registers:
 ;		Nothing
@@ -82,7 +82,7 @@ FileIO_ReadCXbytesToDSSIusingHandleFromBX:
 ;		DS:SI:	Ptr to source buffer
 ;	Returns:
 ;		AX:		DOS error code if CF set
-;		CF:		Clear if successfull
+;		CF:		Clear if successful
 ;				Set if error
 ;	Corrupts registers:
 ;		AX
@@ -105,9 +105,9 @@ FileIO_WriteDXCXbytesFromDSSIusingHandleFromBX:
 ;		CX:		Number of bytes to write
 ;		DS:SI:	Ptr to source buffer
 ;	Returns:
-;		AX:		Number of bytes actually written if successfull (EOF check)
+;		AX:		Number of bytes actually written if successful (EOF check)
 ;				DOS error code if CF set
-;		CF:		Clear if successfull
+;		CF:		Clear if successful
 ;				Set if error
 ;	Corrupts registers:
 ;		Nothing
@@ -130,7 +130,7 @@ FileIO_WriteCXbytesFromDSSIusingHandleFromBX:
 ;		DS:SI:	Ptr to transfer buffer
 ;	Returns:
 ;		AX:		DOS error code if CF set
-;		CF:		Clear if successfull
+;		CF:		Clear if successful
 ;				Set if error
 ;	Corrupts registers:
 ;		AX
@@ -199,7 +199,7 @@ NormalizeDSSI:
 ;	Returns:
 ;		DX:AX:	Signed file size (if CF cleared)
 ;		AX:		DOS error code (if CF set)
-;		CF:		Clear if successfull
+;		CF:		Clear if successful
 ;				Set if error
 ;	Corrupts registers:
 ;		Nothing
@@ -256,7 +256,7 @@ FileIO_CloseUsingHandleFromBX:
 ;	Returns:
 ;		DX:AX:	New file position in bytes from start of file (if CF cleared)
 ;		AX:		DOS error code (if CF set)
-;		CF:		Clear if successfull
+;		CF:		Clear if successful
 ;				Set if error
 ;	Corrupts registers:
 ;		Nothing

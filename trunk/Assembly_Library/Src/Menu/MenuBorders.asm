@@ -117,7 +117,7 @@ MenuBorders_AdjustDisplayContextForDrawingBorders:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MenuBorders_GetNumberOfMiddleCharactersToDX:
-	eMOVZX	dx, BYTE [bp+MENUINIT.bWidth]
+	eMOVZX	dx, [bp+MENUINIT.bWidth]
 	sub		dx, BYTE MENU_HORIZONTAL_BORDER_LINES
 	ret
 
@@ -135,7 +135,7 @@ MenuBorders_GetNumberOfMiddleCharactersToDX:
 ALIGN JUMP_ALIGN
 RefreshTitleBorders:
 	call	DrawTopBorderLine
-	eMOVZX	cx, BYTE [bp+MENUINIT.bTitleLines]
+	eMOVZX	cx, [bp+MENUINIT.bTitleLines]
 	jmp		SHORT DrawTextBorderLinesByCXtimes
 
 ;--------------------------------------------------------------------
@@ -151,7 +151,7 @@ RefreshTitleBorders:
 ALIGN JUMP_ALIGN
 RefreshInformationBorders:
 	call	DrawSeparationBorderLine
-	eMOVZX	cx, BYTE [bp+MENUINIT.bInfoLines]
+	eMOVZX	cx, [bp+MENUINIT.bInfoLines]
 	jmp		SHORT DrawTextBorderLinesByCXtimes
 
 ;--------------------------------------------------------------------

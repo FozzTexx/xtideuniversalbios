@@ -84,7 +84,7 @@ iend
 ALIGN JUMP_ALIGN
 GetWordFromUser:
 	lds		si, [bp+DIALOG.fpDialogIO]
-	eMOVZX	bx, BYTE [si+WORD_DIALOG_IO.bNumericBase]
+	eMOVZX	bx, [si+WORD_DIALOG_IO.bNumericBase]
 ALIGN JUMP_ALIGN
 .GetUserInputIntilValidOrCancelled:
 	call	Keyboard_ReadUserInputtedWordWhilePrinting

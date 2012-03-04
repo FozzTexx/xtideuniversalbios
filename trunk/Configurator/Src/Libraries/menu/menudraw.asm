@@ -60,7 +60,7 @@ ALIGN JUMP_ALIGN
 MenuDraw_NewlineStrClrLn:
 	push	cx
 	call	MenuCrsr_GetCursor				; Get current cursor to DX
-	eMOVZX	cx, BYTE [bp+MENUVARS.bWidth]	; Load menu width
+	eMOVZX	cx, [bp+MENUVARS.bWidth]		; Load menu width
 	add		cl, [bp+MENUVARS.bInitX]		; Add menu start X coord
 	sub		cl, W_OFF_CRSR_STR & 0FFh		; Subtract right borders
 	sub		cl, dl							; Subtract current X coord
@@ -163,7 +163,7 @@ MenuDraw_AllItemsNoBord:
 	jz		MenuDraw_NothingToDraw			;  If not, return
 	call	MenuCrsr_Point1stItem			; Set cursor position
 	mov		cx, [bp+MENUVARS.wItemTop]		; Load idx of first menuitem to draw
-	eMOVZX	dx, BYTE [bp+MENUVARS.bVisCnt]	; Load number of visible menuitems
+	eMOVZX	dx, [bp+MENUVARS.bVisCnt]		; Load number of visible menuitems
 	MIN_U	dx, [bp+MENUVARS.wItemCnt]		; Limit to item count
 	add		dx, cx							; One past last menuitem to draw
 ALIGN JUMP_ALIGN
@@ -265,7 +265,7 @@ MenuDraw_TitleBorders:
 	call	MenuCrsr_PointTitleBrdr			; Set cursor
 	call	MenuDraw_TopBorder				; Draw top border
 	call	MenuDraw_NewlineBrdr			; Change line
-	eMOVZX	cx, BYTE [bp+MENUVARS.bTitleH]	; Load number of title strings
+	eMOVZX	cx, [bp+MENUVARS.bTitleH]		; Load number of title strings
 	jcxz	.Return							; Return if no title strings
 ALIGN JUMP_ALIGN
 .LineLoop:
@@ -283,7 +283,7 @@ ALIGN JUMP_ALIGN
 MenuDraw_InfoBorders:
 	xor		dx, dx							; Zero DX
 	call	MenuCrsr_PointNfoBrdr			; Set cursor
-	eMOVZX	cx, BYTE [bp+MENUVARS.bInfoH]	; Load number of info strings
+	eMOVZX	cx, [bp+MENUVARS.bInfoH]		; Load number of info strings
 	test	BYTE [bp+MENUVARS.bFlags], FLG_MNU_HIDENFO	; Information hidden?
 	jnz		SHORT .JumpToBottomBorder
 	jcxz	MenuDraw_BottomBorder			; Any info strings?
@@ -319,7 +319,7 @@ MenuDraw_ItemBorders:
 	jz		SHORT .Return					;  If not, return
 	xor		dx, dx							; Zero DX
 	call	MenuCrsr_PointItemBrdr			; Set cursor
-	eMOVZX	cx, BYTE [bp+MENUVARS.bVisCnt]	; Load max number of item strings
+	eMOVZX	cx, [bp+MENUVARS.bVisCnt]		; Load max number of item strings
 ALIGN JUMP_ALIGN
 .LineLoop:
 	push	cx
@@ -373,7 +373,7 @@ ALIGN JUMP_ALIGN
 MenuDraw_BorderChars:
 	mov		dl, bh							; Leftmost
 	PRINT_CHAR
-	eMOVZX	cx, BYTE [bp+MENUVARS.bWidth]
+	eMOVZX	cx, [bp+MENUVARS.bWidth]
 	times 2 dec cx							; Subtract borders
 	mov		dl, bl							; Middle
 	call	Print_Repeat
@@ -437,7 +437,7 @@ ALIGN JUMP_ALIGN
 MenuDraw_GetScrollChar:
 	mov		dh, B_V						; Assume no scroll bars needed
 	mov		ax, [bp+MENUVARS.wItemCnt]	; Load menuitem count to AX
-	eMOVZX	bx, BYTE [bp+MENUVARS.bVisCnt]	; Load visible menuitems to BX
+	eMOVZX	bx, [bp+MENUVARS.bVisCnt]	; Load visible menuitems to BX
 	cmp		ax, bx						; Need scroll bars?
 	jbe		.Return						;  If not, return
 

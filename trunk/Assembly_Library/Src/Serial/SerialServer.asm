@@ -2,12 +2,12 @@
 ; Description	:	Serial Server Support
 
 %include "SerialServer.inc"
-		
+
 ; Section containing code
 SECTION .text
 
 ;--------------------------------------------------------------------
-; SerialServer_SendReceive:		
+; SerialServer_SendReceive:
 ;	Parameters:
 ;       DX:		Packed I/O port and baud rate
 ;		ES:SI:	Ptr to buffer (for data transfer commands)
@@ -19,8 +19,8 @@ SECTION .text
 ;	Corrupts registers:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
-SerialServer_SendReceive:		
-		
+SerialServer_SendReceive:
+
 		push	si
 		push	di
 		push	bp
@@ -36,14 +36,16 @@ SerialServer_SendReceive:
 
 		mov		al,[bp+SerialServer_Command.bSectorCount]
 		mov		ah,[bp+SerialServer_Command.bCommand]
-		
+
 ;
 ; Command byte and sector count live at the top of the stack, pop/push are used to access
 ;
 		push	ax				; save sector count for return value
 		push	ax				; working copy on the top of the stack
 
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS	; DF already cleared in Int13h.asm
 		cld
+%endif
 
 ;----------------------------------------------------------------------
 ;
@@ -120,7 +122,7 @@ SerialServer_SendReceive:
 		test	al,al			; if no sectors to be transferred, wait for the ACK checksum on the command
 		jz		.zeroSectors
 %endif
-		
+
 ;
 ; Top of the read/write loop, one iteration per sector
 ;
@@ -277,10 +279,10 @@ SerialServer_OutputWithParameters_ReturnCodeInAL:
 		sti						;  all paths here will already have interrupts turned back on
 %endif
 		mov		ah, al			;  for success, AL will already be zero
-		
+
 		pop		bx				;  recover "ax" (command and count) from stack
 		pop		cx				;  recover saved sector count
-		mov		ch, 0
+		xor		ch, ch
 		sub		cl, bl			; subtract off the number of sectors that remained
 
 		pop		bp
@@ -365,12 +367,7 @@ SerialServer_WriteProtocol:
 		jmp		.writeByte2Ready
 
 .writeTimeout1:
-%ifndef USE_186
-		mov		ax,.writeByte1Ready
-		push	ax				; return address for ret at end of SC_writeTimeout2
-%else
-		push	.writeByte1Ready
-%endif
+		ePUSH_T	ax, .writeByte1Ready	; return address for ret at end of SC_writeTimeout2
 ;;; fall-through
 
 ;--------------------------------------------------------------------
@@ -380,7 +377,7 @@ SerialServer_WriteProtocol:
 ;		AH:		UART_LineStatus bit to test (20h for write, or 1h for read)
 ;               One entry point fills in AH with 20h for write
 ;		DX:		Port address (OK if already incremented to UART_lineStatus)
-;       BX:		
+;       BX:
 ;       Stack:	2 words on the stack below the command/count word
 ;	Returns:
 ;       Returns when desired UART_LineStatus bit is cleared
@@ -429,7 +426,7 @@ SerialServer_WaitAndPoll_Read:
 		pop		bx
 		pop		ax
 %endif
-		
+
 .WaitAndPoll:
 %ifndef SERIALSERVER_TIMER_LOCATION
 		call	Timer_SetCFifTimeout
@@ -440,7 +437,7 @@ SerialServer_WaitAndPoll_Read:
 		call	TimerTicks_GetTimeoutTicksLeftToAXfromDSBX
 		pop		bx
 		pop		ax
-%endif		
+%endif
 		jc		SerialServer_OutputWithParameters_ErrorAndPop4Words
 		in		al,dx
 		test	al,ah

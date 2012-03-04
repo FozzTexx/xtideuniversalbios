@@ -161,9 +161,9 @@ File_Close:
 ;		CX:		Number of bytes to read
 ;		ES:DI:	Ptr to destination buffer
 ;	Returns:
-;		AX:		Number of bytes actually read if successfull (EOF check)
+;		AX:		Number of bytes actually read if successful (EOF check)
 ;				DOS error code if CF set
-;		CF:		Clear if successfull
+;		CF:		Clear if successful
 ;				Set if error
 ;	Corrupts registers:
 ;		Nothing
@@ -193,9 +193,9 @@ File_Read:
 ;		CX:		Number of bytes to write
 ;		ES:DI:	Ptr to source buffer
 ;	Returns:
-;		AX:		Number of bytes actually written if successfull (EOF check)
+;		AX:		Number of bytes actually written if successful (EOF check)
 ;				DOS error code if CF set
-;		CF:		Clear if successfull
+;		CF:		Clear if successful
 ;				Set if error
 ;	Corrupts registers:
 ;		Nothing
@@ -223,7 +223,7 @@ File_Write:
 ;		CX:DX:	New offset (signed)
 ;	Returns:
 ;		AX:		DOS error code if CF set
-;		CF:		Clear if successfull
+;		CF:		Clear if successful
 ;				Set if error
 ;	Corrupts registers:
 ;		Nothing
@@ -372,7 +372,7 @@ ALIGN JUMP_ALIGN
 ;		DS:DX	Ptr to destination ASCIZ path name
 ;	Returns:
 ;		AX:		DOS Error code
-;		CF:		Clear if successfull
+;		CF:		Clear if successful
 ;				Set if error
 ;	Corrupts registers:
 ;		Nothing

@@ -1,9 +1,5 @@
-; File name		:	menuprog.asm
 ; Project name	:	Menu library
-; Created date	:	23.11.2009
-; Last update	:	23.11.2009
-; Author		:	Tomi Tilli
-; Description	:	ASM library to menu system.
+; Description	:	ASM library for menu system.
 ;					Contains functions for displaying progress bar dialog.
 
 ;--------------- Equates -----------------------------
@@ -109,14 +105,14 @@ MenuProg_Show:
 ALIGN JUMP_ALIGN
 MenuProg_DrawBar:
 	; Calculate number of chars to draw
-	eMOVZX	cx, BYTE [bp+MENUVARS.bWidth]	; Dialog width to CX
+	eMOVZX	cx, [bp+MENUVARS.bWidth]		; Dialog width to CX
 	sub		cl, 4							; Sub borders, CX=bar width
 	mul		cl								; AX=bar with * percentage
 	mov		bx, 100							; Prepare to div by 100
 	div		bl								; AL=Full char cnt
 	sub		cl, al							; CX=Empty char cnt
 	mov		bl, al							; BX=full char cnt
-	
+
 	; Draw full chars
 	mov		dl, FULL_BLCK					; Load full block char
 	xchg	bx, cx							; CX=full chars, BX=empty chars
@@ -179,8 +175,7 @@ ALIGN JUMP_ALIGN
 	; Start task
 	push	ds
 	push	si
-	mov		si, [bp+PDLGVARS.fpUser]	; Load offset to user ptr
-	mov		ds, [bp+PDLGVARS.fpUser+2]	; Load segment to user ptr
+	lds		si, [bp+PDLGVARS.fpUser]	; Load user defined ptr
 	xor		ax, ax						; Zero percent
 ALIGN JUMP_ALIGN
 .TaskLoop:

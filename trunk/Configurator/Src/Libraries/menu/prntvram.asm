@@ -1,9 +1,5 @@
-; File name		:	prntvram.asm
 ; Project name	:	Print library
-; Created date	:	7.12.2009
-; Last update	:	7.12.2009
-; Author		:	Tomi Tilli
-; Description	:	ASM library to for character and string
+; Description	:	ASM library for character and string
 ;					printing using direct access to VRAM.
 ;
 ;					NOT WORKING!!!
@@ -26,7 +22,7 @@ SECTION .text
 
 ;--------------------------------------------------------------------
 ; Return pointer to VRAM for current cursor position.
-; 
+;
 ; PrntVram_GetPtr
 ;	Parameters:
 ;		Nothing
@@ -42,7 +38,7 @@ PrntVram_GetPtr:
 	mov		es, ax							; Copy zero to ES (BDA segment)
 
 	; Calculate offset to VRAM
-	eMOVZX	di, BYTE [es:BDA.bVidPageIdx]	; Load page index
+	eMOVZX	di, [es:BDA.bVidPageIdx]		; Load page index
 	shl		di, 1							; Shift for word lookup
 	mov		ax, [es:di+BDA.rgwVidCurPos]	; Load cursor position
 	shl		ax, 1							; Cursor offsets to WORD offsets
@@ -69,7 +65,7 @@ ALIGN JUMP_ALIGN
 ; Prints character. All character printing functions must
 ; use this macro to print characters (so printing implementation
 ; can be easily modified when needed).
-; 
+;
 ; PRINT_CHAR
 ;	Parameters:
 ;		DL:		Character to print
@@ -116,7 +112,7 @@ PtnrVram_IncCursor:
 	cmp		al, [es:BDA.wVidColumns]
 	pop		es
 	je		.IncRow
-	
+
 	; Inc column only
 	push	dx
 	push	cx
@@ -146,7 +142,7 @@ ALIGN JUMP_ALIGN
 ; Prints string. All string printing functions must
 ; use this macro to print strings (so printing implementation
 ; can be easily modified when needed).
-; 
+;
 ; PRINT_STR
 ;	Parameters:
 ;		DS:DX:		Ptr to STOP terminated string
@@ -166,7 +162,7 @@ ALIGN JUMP_ALIGN
 ; Prints string and returns number of characters printed.
 ; All string printing functions must use this macro to print strings
 ; (so printing implementation can be easily modified when needed).
-; 
+;
 ; PRINT_STR_LEN
 ;	Parameters:
 ;		DS:DX:		Ptr to STOP terminated string
@@ -193,12 +189,12 @@ ALIGN JUMP_ALIGN
 	lodsb							; Load char from [DS:SI] to AL
 	cmp		al, 20h					; Printable character?
 	jb		.Bios					;  If not, use BIOS functions
-	
+
 	push	dx
 	mov		al, dl
 	PRINT_CHAR
 	pop		dx
-	
+
 	;stosb							; Store char to [ES:DI]
 	inc		dx						; Increment chars printed
 	;inc		di						; Skip attribute

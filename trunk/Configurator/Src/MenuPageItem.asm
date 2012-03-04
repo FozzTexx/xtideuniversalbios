@@ -1,4 +1,4 @@
-; Project name	:	XTIDE Univeral BIOS Configurator
+; Project name	:	XTIDE Universal BIOS Configurator
 ; Description	:	Functions to access MENUPAGEITEM structs.
 
 ; Section containing code
@@ -20,7 +20,7 @@ ALIGN JUMP_ALIGN
 MenuPageItem_PrintInfo:
 	push	cs
 	pop		es
-	eMOVZX	cx, BYTE [bp+MENUVARS.bInfoH]	; Info line count to CX
+	eMOVZX	cx, [bp+MENUVARS.bInfoH]		; Info line count to CX
 	call	MenuPageItem_PrintCommonInfoLines
 	mov		di, [di+MENUPAGEITEM.szInfo]	; ES:DI now points to info string
 	jmp		MenuDraw_MultilineStr
@@ -110,7 +110,7 @@ MenuPageItem_DisplaySpecialFunctionDialog:
 ;		DS:DI:	Ptr to MENUPAGEITEM
 ;		SS:BP:	Ptr to MENUVARS
 ;	Returns:
-;		CF:		Set if user data inputted succesfully
+;		CF:		Set if user data inputted successfully
 ;				Cleared if cancel
 ;	Corrupts registers:
 ;		AX, BX, CX, DX, ES
@@ -146,7 +146,7 @@ MenuPageItem_GetByteFromUserWithoutMarkingUnsaved:
 ;		DS:DI:	Ptr to MENUPAGEITEM
 ;		SS:BP:	Ptr to MENUVARS
 ;	Returns:
-;		CF:		Set if user data inputted succesfully
+;		CF:		Set if user data inputted successfully
 ;				Cleared if cancel
 ;	Corrupts registers:
 ;		AX, BX, CX, DX, ES
@@ -182,7 +182,7 @@ MenuPageItem_GetWordFromUserWithoutMarkingUnsaved:
 ;		DS:DI:	Ptr to MENUPAGEITEM
 ;		SS:BP:	Ptr to MENUVARS
 ;	Returns:
-;		CF:		Set if user data inputted succesfully
+;		CF:		Set if user data inputted successfully
 ;				Cleared if cancel
 ;	Corrupts registers:
 ;		AX, BX, CX, DX, ES
@@ -215,7 +215,7 @@ MenuPageItem_GetHexByteFromUserWithoutMarkingUnsaved:
 ;		DS:DI:	Ptr to MENUPAGEITEM
 ;		SS:BP:	Ptr to MENUVARS
 ;	Returns:
-;		CF:		Set if user data inputted succesfully
+;		CF:		Set if user data inputted successfully
 ;				Cleared if cancel
 ;	Corrupts registers:
 ;		AX, BX, CX, DX, ES
@@ -246,7 +246,7 @@ MenuPageItem_GetHexWordFromUserWithoutMarkingUnsaved:
 ;	Parameters:
 ;		SS:BP:	Ptr to MENUVARS
 ;	Returns:
-;		CF:		Set since user data inputted succesfully
+;		CF:		Set since user data inputted successfully
 ;	Corrupts registers:
 ;		AX, BX, CX, DX
 ;--------------------------------------------------------------------
@@ -268,7 +268,7 @@ MenuPageItem_MarkSettingsAsUnsaved:
 ;		SS:BP:	Ptr to MENUVARS
 ;	Returns:
 ;		AX:		16-bit unsigned word inputted by user
-;		CF:		Set if user data inputted succesfully
+;		CF:		Set if user data inputted successfully
 ;				Cleared if cancel
 ;	Corrupts registers:
 ;		BX, CX, DX, ES
@@ -296,7 +296,7 @@ MenuPageItem_ShowWordDialog:
 ;		DS:DI:	Ptr to MENUPAGEITEM
 ;		SS:BP:	Ptr to MENUVARS
 ;	Returns:
-;		CF:		Set if user data inputted succesfully
+;		CF:		Set if user data inputted successfully
 ;				Cleared if cancel
 ;	Corrupts registers:
 ;		AX, BX, CX, DX, ES

@@ -211,7 +211,7 @@ MenuMsg_WriteLine:
 	push	di
 	call	MenuMsg_GetTokenForLine			; Get ptr to first token, length to AX
 	jnc		.EndOfString					; Return if no tokens
-	eMOVZX	dx, BYTE [bp+MENUVARS.bWidth]	; Menu width
+	eMOVZX	dx, [bp+MENUVARS.bWidth]		; Menu width
 	sub		dl, SIZE_MSG_HBRDR				; To line length
 	mov		bl, ' '							; Space character
 ALIGN JUMP_ALIGN

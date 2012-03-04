@@ -36,7 +36,7 @@ String_ConvertDSSItoLowerCase:
 ;		AX:		Word converted from string
 ;		CX:		Number of characters processed
 ;		SI:		Updated
-;		CF:		Cleared if successfull
+;		CF:		Cleared if successful
 ;				Set if error during conversion
 ;	Corrupts registers:
 ;		Nothing

@@ -1,8 +1,4 @@
-; File name		:	Flash.asm
 ; Project name	:	XTIDE Univeral BIOS Configurator
-; Created date	:	30.4.2010
-; Last update	:	2.5.2010
-; Author		:	Tomi Tilli
 ; Description	:	Function for flashing the EEPROM.
 
 ; Section containing code
@@ -45,7 +41,7 @@ Flash_CopyCurrentContentsForComparison:
 ;--------------------------------------------------------------------
 ; Verifies that all data has been written successfully.
 ;
-; Flash_WasDataWriteSuccessfull
+; Flash_WasDataWriteSuccessful
 ;	Parameters:
 ;		Nothing
 ;	Returns:
@@ -55,7 +51,7 @@ Flash_CopyCurrentContentsForComparison:
 ;		CX, ES
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-Flash_WasDataWriteSuccessfull:
+Flash_WasDataWriteSuccessful:
 	push	ds
 	push	di
 	push	si
@@ -217,7 +213,7 @@ Flash_WriteSdpDisableCommand:
 ;		AH:		Last byte written
 ;		ES:BP:	Ptr to EEPROM last write location
 ;	Returns:
-;		CF:		Cleared if polling successfull
+;		CF:		Cleared if polling successful
 ;				Set if polling timeout
 ;	Corrupts registers:
 ;		AX, CX

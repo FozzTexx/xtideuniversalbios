@@ -11,7 +11,7 @@
 
 #define PIPENAME "\\\\.\\pipe\\xtide"
 
-class SerialAccess 
+class SerialAccess
 {
 public:
 	void Connect( char *name, struct baudRate *p_baudRate )
@@ -21,7 +21,7 @@ public:
 		baudRate = p_baudRate;
 
 		pipe = NULL;
-	
+
 		if( !name )
 		{
 			for( int t = 1; t <= 30 && !name; t++ )
@@ -37,11 +37,11 @@ public:
 		if( name[0] == '\\' && name[1] == '\\' )
 		{
 			log( 0, "Opening named pipe %s (simulating %s baud)", name, baudRate->display );
-		
+
 			pipe = CreateNamedPipeA( name, PIPE_ACCESS_DUPLEX, PIPE_TYPE_BYTE|PIPE_REJECT_REMOTE_CLIENTS, 2, 1024, 1024, 0, NULL );
 			if( pipe == INVALID_HANDLE_VALUE )
 				log( -1, "Could not CreateNamedPipe " PIPENAME );
-		
+
 			if( !ConnectNamedPipe( pipe, NULL ) )
 				log( -1, "Could not ConnectNamedPipe" );
 
@@ -59,11 +59,11 @@ public:
 				DCB dcb;
 
 				log( 0, "Opening %s (%s baud)", name, baudRate->display );
-			
+
 				pipe = CreateFileA( name, GENERIC_READ|GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0 );
 				if( pipe == INVALID_HANDLE_VALUE )
 					log( -1, "Could not Open \"%s\"", name );
-			
+
 				FillMemory(&dcb, sizeof(dcb), 0);
 				FillMemory(&timeouts, sizeof(timeouts), 0);
 
@@ -82,7 +82,7 @@ public:
 						if( comProp.dwMaxBaud != BAUD_USER )
 							msg = "\n    On this COM port, baud rate is limited to 115.2K";
 					}
-					log( -1, "Could not SetCommState: baud rate selected may not be availabele%s", msg );
+					log( -1, "Could not SetCommState: baud rate selected may not be available%s", msg );
 				}
 
 				if( !SetCommTimeouts( pipe, &timeouts ) )
@@ -93,7 +93,7 @@ public:
 				char logbuff[ 1024 ];
 
 				EnumerateCOMPorts( logbuff, 1024 );
-				
+
 				log( -1, "Serial port '%s' not found, detected COM ports: %s", name, logbuff );
 			}
 		}

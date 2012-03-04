@@ -145,7 +145,7 @@ InitializeDialogInputInDSSIfromMenuitemInESDI:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Menuitem_StoreValueFromAXtoMenuitemInDSSI:
-	eMOVZX	bx, BYTE [si+MENUITEM.bType]
+	eMOVZX	bx, [si+MENUITEM.bType]
 	cmp		bl, TYPE_MENUITEM_HEX
 	ja		SHORT .InvalidItemType
 
@@ -206,11 +206,11 @@ ALIGN JUMP_ALIGN
 .TranslateChoiceToValueUsingLookupTable:
 ;
 ; if the lookup pointer is NULL, no translation is needed
-; 
+;
 	mov		bx, [si+MENUITEM.itemValue+ITEM_VALUE.rgwChoiceToValueLookup]
 	test	bx, bx
 	jz		.StoreByteOrWordValueFromAXtoESDIwithItemInDSSI
-		
+
 	shl		ax, 1			; Shift for WORD lookup
 	add		bx, ax
 	mov		ax, [bx]		; Lookup complete
@@ -233,9 +233,9 @@ ALIGN JUMP_ALIGN
 	push	bx
 	mov		bx,[si+MENUITEM.itemValue+ITEM_VALUE.fnValueWriter]
 	test	bx,bx
-	jz		SHORT .NoWriter	
+	jz		SHORT .NoWriter
 
-	call	bx		
+	call	bx
 
 .NoWriter:
 	pop		bx
@@ -312,7 +312,7 @@ Menuitem_GetValueToAXfromMenuitemInDSSI:
 	jz		SHORT .NoConvertWordToByteValue
 	xor		ah, ah				; conversion needs to happen before call to the reader,
 								; in case the reader unpacks the byte to a word
-		
+
 .NoConvertWordToByteValue:
 	mov		bx, [si+MENUITEM.itemValue+ITEM_VALUE.fnValueReader]
 	test	bx,bx
@@ -320,7 +320,7 @@ Menuitem_GetValueToAXfromMenuitemInDSSI:
 
 	call	bx
 
-.NoReader:		
+.NoReader:
 	pop		bx
 	pop		di
 	pop		es

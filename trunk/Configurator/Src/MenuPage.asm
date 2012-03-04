@@ -1,8 +1,4 @@
-; File name		:	MenuPage.asm
-; Project name	:	XTIDE Univeral BIOS Configurator
-; Created date	:	15.4.2010
-; Last update	:	27.4.2010
-; Author		:	Tomi Tilli
+; Project name	:	XTIDE Universal BIOS Configurator
 ; Description	:	Functions to access MENUPAGE structs.
 
 ; Section containing code
@@ -112,7 +108,7 @@ ALIGN JUMP_ALIGN
 MenuPage_IterateMenuPageItems:
 	push	cx
 	push	bx
-	eMOVZX	cx, BYTE [si+MENUPAGE.bItemCnt]
+	eMOVZX	cx, [si+MENUPAGE.bItemCnt]
 	lea		bx, [si+MENUPAGE.rgMenuPageItem]
 ALIGN JUMP_ALIGN
 .IterationLoop:
