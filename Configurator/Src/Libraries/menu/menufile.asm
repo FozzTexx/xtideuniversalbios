@@ -1,10 +1,5 @@
-; File name		:	menufile.asm
 ; Project name	:	Menu library
-; Created date	:	20.11.2009
-; Last update	:	6.1.2011
-; Author		:	Tomi Tilli,
-;				:	Krister Nordvall (Optimizations)
-; Description	:	ASM library to menu system.
+; Description	:	ASM library for menu system.
 ;					Contains functions for displaying file dialog.
 
 ;--------------- Equates -----------------------------
@@ -275,8 +270,7 @@ ALIGN JUMP_ALIGN
 	call	File_ChangeDir					; Change directory
 ALIGN JUMP_ALIGN
 .ChangeDone:
-	mov		dx, [bp+FDLGVARS.fpFileSrch]	; Load ptr to file search str
-	mov		ds, [bp+FDLGVARS.fpFileSrch+2]
+	lds		dx, [bp+FDLGVARS.fpFileSrch]	; Load ptr to file search str
 	call	MenuFile_GetItemCnt				; Get file count from new dir
 	pop		ds
 	xor		dx, dx							; Redraw only necessary
@@ -313,7 +307,7 @@ ALIGN JUMP_ALIGN
 	push	di
 	mov		di, [bp+MSGVARS.wStrOff]		; Load string offset
 	mov		es, [bp+MSGVARS.wStrSeg]		; Load string segment
-	eMOVZX	cx, BYTE [bp+MENUVARS.bInfoH]	; Load info line count to CX
+	eMOVZX	cx, [bp+MENUVARS.bInfoH]		; Load info line count to CX
 	call	MenuDraw_MultilineStr			; Draw multiline str
 	pop		di
 	pop		es

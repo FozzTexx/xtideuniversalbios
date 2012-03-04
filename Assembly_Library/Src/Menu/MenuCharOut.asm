@@ -60,7 +60,7 @@ ALIGN JUMP_ALIGN
 PrintCRandAdjustOffsetForStartOfLine:
 	mov		al, CR
 	call	DisplayCharOut_BiosTeletypeOutput
-	eMOVZX	ax, BYTE [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.wCharOutParam]
+	eMOVZX	ax, [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.wCharOutParam]
 	add		di, ax
 ReturnSinceNoNeedToStartLineWithControlCharacter:
 	ret

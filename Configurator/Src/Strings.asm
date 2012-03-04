@@ -1,8 +1,4 @@
-; File name		:	Strings.asm
-; Project name	:	XTIDE Univeral BIOS Configurator
-; Created date	:	16.4.2010
-; Last update	:	2.5.2010
-; Author		:	Tomi Tilli
+; Project name	:	XTIDE Universal BIOS Configurator
 ; Description	:	Strings used in this program.
 
 ; Section containing initialized data
@@ -21,8 +17,8 @@ g_szDlgSaveChanges:	db	"Do you want to save changes to BIOS image file?",STOP
 g_szFlashProgress:		db	"Writing EEPROM: %u / %u B.",STOP
 g_szFlashTimeout:		db	"Timeout error when polling EEPROM!",STOP
 g_szFlashVerifyErr:		db	"Data verification failed!",STOP
-g_szFlashDoneReboot:	db	"EEPROM written succesfully. Press any key to reboot.",STOP
-g_szFlashDoneContinue:	db	"EEPROM written succesfully.",STOP
+g_szFlashDoneReboot:	db	"EEPROM written successfully. Press any key to reboot.",STOP
+g_szFlashDoneContinue:	db	"EEPROM written successfully.",STOP
 
 
 ; Strings for menu title
@@ -43,7 +39,7 @@ g_szItemMainConfigure:	db	"Configure XTIDE Universal BIOS",STOP
 g_szDlgMainLoadROM:		db	"Successfully loaded XTIDE Universal BIOS from EEPROM.",STOP
 g_szDlgMainLoadStngs:	db	"Successfully loaded settings from EEPROM.",STOP
 
-g_szNfoMainExitToDOS:	db	"Quits XTIDE Univeral BIOS Configurator.",STOP
+g_szNfoMainExitToDOS:	db	"Quits XTIDE Universal BIOS Configurator.",STOP
 g_szNfoMainLoadFile:	db	"Load BIOS file to be configured or flashed.",STOP
 g_szNfoMainLoadROM:		db	"Load BIOS from EEPROM to be reconfigured.",STOP
 g_szNfoMainLoadStngs:	db	"Load old XTIDE Universal BIOS settings from EEPROM.",STOP

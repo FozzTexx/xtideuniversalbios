@@ -1,12 +1,8 @@
 ###############################################################################
-# Generic makefile for building binary files.                                 #
-# v. 1.1.0 (28.7.2007 ... 5.10.2010)                                          #
-# (C) Tomi Tilli                                                              #
-# aitotat@gmail.com                                                           #
+# Makefile to build XTIDE Universal BIOS Configurator v2.                     #
 #                                                                             #
 # Valid makefile targets are:                                                 #
 # all		Removes existing files and builds binary file in \Build           #
-# build		Builds binary file in \Build                                      #
 # clean		Removes all files from \Build                                     #
 #                                                                             #
 # Build directory must be created manually if it does not exist.              #
@@ -53,14 +49,13 @@ LIBS += ../XTIDE_Universal_BIOS/Inc/
 HEADERS += $(LIBS)
 
 
-
 #################################################################
 # Assembler preprocessor defines.                               #
 #################################################################
 DEFINES = EXCLUDE_FROM_XTIDECFG
 DEFINES_XT = ELIMINATE_CGA_SNOW
 DEFINES_XTPLUS = USE_186 ELIMINATE_CGA_SNOW
-DEFINES_AT = USE_186 USE_286 USE_AT
+DEFINES_AT = USE_286 USE_AT
 
 
 ###################
@@ -112,7 +107,6 @@ ASFLAGS += -O9					# Optimize operands to their shortest forms
 
 .PHONY: all at xtplus xt clean release
 
-# Make clean debug and release versions
 all: clean xt
 	@echo All done!
 
@@ -122,7 +116,7 @@ at:
 
 xtplus:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XTPLUS) -l"$(TARGET)_xtp.lst" -o"$(TARGET)_xtp.$(EXTENSION)"
-	@echo XT plus version "$(TARGET)_xtp.$(EXTENSION)" built.
+	@echo XT Plus version "$(TARGET)_xtp.$(EXTENSION)" built.
 
 xt:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XT) -l"$(TARGET)_xt.lst" -o"$(TARGET).$(EXTENSION)"

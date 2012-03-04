@@ -1,9 +1,5 @@
-; File name		:	MenuPageItemFormat.asm
-; Project name	:	XTIDE Univeral BIOS Configurator
-; Created date	:	15.4.2010
-; Last update	:	30.4.2010
-; Author		:	Tomi Tilli
-; Description	:	Functions for formatting 
+; Project name	:	XTIDE Universal BIOS Configurator
+; Description	:	Functions for formatting
 ;					menuitem names from MENUPAGEITEM.
 
 ; Section containing code
@@ -24,7 +20,7 @@ ALIGN JUMP_ALIGN
 MenuPageItemFormat_LookupString:
 	mov		si, [di+MENUPAGEITEM.rgszLookup]	; Load offset to string lookup table
 	mov		bx, [di+MENUPAGEITEM.pValue]		; Ptr to value containing lookup index
-	eMOVZX	bx, BYTE [bx]						; BX=lookup index (values are already shifted for WORD lookup)
+	eMOVZX	bx, [bx]							; BX=lookup index (values are already shifted for WORD lookup)
 	push	WORD [bx+si]						; Push offset to string to print
 	mov		dh, 4								; Total of 4 bytes for formatting params
 	mov		si, .szStringName					; Offset to format string
@@ -45,7 +41,7 @@ MenuPageItemFormat_LookupString:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MenuPageItemFormat_NameForAnyType:
-	eMOVZX	bx, BYTE [di+MENUPAGEITEM.bType]	; Load menuitem type
+	eMOVZX	bx, [di+MENUPAGEITEM.bType]			; Load menuitem type
 	jmp		[cs:bx+.rgfnPrintBasedOnType]
 ALIGN WORD_ALIGN
 .rgfnPrintBasedOnType:
@@ -131,7 +127,7 @@ MenuPageItemFormat_NameForSpecialFunction:
 ALIGN JUMP_ALIGN
 MenuPageItemFormat_NameWithUnsignedByteValue:
 	mov		si, [di+MENUPAGEITEM.pValue]		; DS:SI points to value
-	eMOVZX	ax, BYTE [si]						; Load byte to AX
+	eMOVZX	ax, [si]							; Load byte to AX
 	push	ax									; Push byte
 	jmp		SHORT MenuPageItemFormat_NameWithUnsignedValuePushed
 ALIGN JUMP_ALIGN
@@ -160,7 +156,7 @@ MenuPageItemFormat_NameWithUnsignedValuePushed:
 ALIGN JUMP_ALIGN
 MenuPageItemFormat_NameWithByteHexadecimalValue:
 	mov		si, [di+MENUPAGEITEM.pValue]		; DS:SI points to value
-	eMOVZX	ax, BYTE [si]						; Load byte to AX
+	eMOVZX	ax, [si]							; Load byte to AX
 	push	ax									; Push byte
 	jmp		SHORT MenuPageItemFormat_NameWithHexadecimalValuePushed
 ALIGN JUMP_ALIGN

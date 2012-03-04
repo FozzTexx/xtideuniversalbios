@@ -1,8 +1,4 @@
-; File name		:	IdeControllerMenu.asm
-; Project name	:	XTIDE Univeral BIOS Configurator
-; Created date	:	23.4.2010
-; Last update	:	27.4.2010
-; Author		:	Tomi Tilli
+; Project name	:	XTIDE Universal BIOS Configurator
 ; Description	:	Menu for configuring IDEVARS.
 
 ; Section containing initialized data
@@ -118,7 +114,7 @@ iend
 SECTION .text
 
 ;--------------------------------------------------------------------
-; Stores IDEVARS specific pointers to IDE Controller Menu 
+; Stores IDEVARS specific pointers to IDE Controller Menu
 ; MENUPAGEITEM structs.
 ;
 ; IdeControllerMenu_SetIdevarsOffset
@@ -132,7 +128,7 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 IdeControllerMenu_SetIdevarsOffset:
-	eMOVZX	cx, BYTE [g_MenuPageIdeVars+MENUPAGE.bItemCnt]
+	eMOVZX	cx, [g_MenuPageIdeVars+MENUPAGE.bItemCnt]
 	dec		cx
 	mov		bx, g_MenuPageItemIdeMaster+MENUPAGEITEM.pValue
 ALIGN JUMP_ALIGN

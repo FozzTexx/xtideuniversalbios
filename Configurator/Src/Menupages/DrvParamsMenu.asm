@@ -1,8 +1,4 @@
-; File name		:	DrvParamsMenu.asm
-; Project name	:	XTIDE Univeral BIOS Configurator
-; Created date	:	26.4.2010
-; Last update	:	27.4.2010
-; Author		:	Tomi Tilli
+; Project name	:	XTIDE Universal BIOS Configurator
 ; Description	:	Menu for configuring DRVPARAMS.
 
 ; Section containing initialized data
@@ -108,7 +104,7 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 DrvParamsMenu_SetDrvParamsOffset:
-	eMOVZX	cx, BYTE [g_MenuPageDrvParams+MENUPAGE.bItemCnt]
+	eMOVZX	cx, [g_MenuPageDrvParams+MENUPAGE.bItemCnt]
 	dec		cx
 	mov		bx, g_MenuPageItemDrvBlockMode+MENUPAGEITEM.pValue
 ALIGN JUMP_ALIGN

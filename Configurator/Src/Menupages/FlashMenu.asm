@@ -1,9 +1,9 @@
-; Project name	:	XTIDE Univeral BIOS Configurator
+; Project name	:	XTIDE Universal BIOS Configurator
 ; Description	:	Flash menu.
 
 
 ; Flash error codes returned from progress bar task function
-ERR_FLASH_SUCCESSFULL	EQU		0
+ERR_FLASH_SUCCESSFUL	EQU		0
 ERR_FLASH_POLL_TIMEOUT	EQU		1
 
 
@@ -131,7 +131,7 @@ ALIGN JUMP_ALIGN
 FlashMenu_ActivatePageSize:
 	call	MenuPageItem_GetByteFromUserWithoutMarkingUnsaved
 	jnc		SHORT .Cancel
-	eMOVZX	bx, BYTE [g_cfgVars+CFGVARS.bPageSize]
+	eMOVZX	bx, [g_cfgVars+CFGVARS.bPageSize]
 	eBSR	ax, bx					; AX = Index of highest order bit
 	mov		cx, 1
 	xchg	ax, cx
@@ -184,7 +184,7 @@ FlashMenu_InitializeFlashVars:
 	; Total number of pages to write
 	xor		dx, dx
 	mov		ax, [g_cfgVars+CFGVARS.wEepromSize]		; DX:AX = Bytes to write
-	eMOVZX	cx, BYTE [g_cfgVars+CFGVARS.bPageSize]
+	eMOVZX	cx, [g_cfgVars+CFGVARS.bPageSize]
 	div		cx										; AX = Total number of pages
 	mov		[g_cfgVars+CFGVARS.flashVars+FLASHVARS.wTotalPages], ax
 	mov		[g_cfgVars+CFGVARS.flashVars+FLASHVARS.wPagesLeft], ax
@@ -254,7 +254,7 @@ FlashMenu_FlashProgressBarTask:
 	retf
 ALIGN JUMP_ALIGN
 .FlashComplete:
-	mov		ax, ERR_FLASH_SUCCESSFULL
+	mov		ax, ERR_FLASH_SUCCESSFUL
 	retf
 .Timeout:
 	mov		ax, ERR_FLASH_POLL_TIMEOUT
@@ -277,7 +277,7 @@ FlashMenu_UpdateProgressBarTitle:
 	push	si
 	mov		ax, [si+FLASHVARS.wTotalPages]
 	sub		ax, [si+FLASHVARS.wPagesLeft]			; AX=Pages written
-	eMOVZX	dx, BYTE [g_cfgVars+CFGVARS.bPageSize]
+	eMOVZX	dx, [g_cfgVars+CFGVARS.bPageSize]
 	mul		dx										; AX=Bytes written
 
 	push	WORD [g_cfgVars+CFGVARS.wEepromSize]	; EEPROM size
@@ -310,8 +310,8 @@ FlashMenu_FlashAllPagesBeforeUpdate:
 	mov		bp, si
 	mov		dx, [si+FLASHVARS.wPagesBeforeDraw]
 	call	FlashMenu_GetPointersToPageToFlash
-	eMOVZX	ax, BYTE [g_cfgVars+CFGVARS.bSdpCommand]
-	eMOVZX	cx, BYTE [g_cfgVars+CFGVARS.bPageSize]
+	eMOVZX	ax, [g_cfgVars+CFGVARS.bSdpCommand]
+	eMOVZX	cx, [g_cfgVars+CFGVARS.bPageSize]
 ALIGN JUMP_ALIGN
 .PageLoop:
 	call	Flash_WritePage
@@ -404,7 +404,7 @@ ALIGN JUMP_ALIGN
 FlashMenu_ProcessFlashResults:
 	cmp		ax, ERR_FLASH_POLL_TIMEOUT
 	je		SHORT FlashMenu_PollingTimeoutErrorDuringFlashing
-	call	Flash_WasDataWriteSuccessfull
+	call	Flash_WasDataWriteSuccessful
 	jne		SHORT FlashMenu_DataVerifyErrorAfterFlashing
 	; Fall to FlashMenu_EepromFlashedSuccessfully
 

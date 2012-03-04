@@ -237,21 +237,21 @@ ALIGN JUMP_ALIGN
 	mov		bx, g_MenuitemMasterSlaveUserCHS
 	call	.EnableMenuitemFromCSBX
 	mov		bx, g_MenuitemMasterSlaveUserLBA
-	jmp		.EnableMenuitemFromCSBX	
+	jmp		.EnableMenuitemFromCSBX
 
 ALIGN JUMP_ALIGN
 .EnableCHSandDisableLBA:
 	mov		bx, g_MenuitemMasterSlaveUserCHS
 	call	.EnableMenuitemFromCSBX
 	mov		bx, g_MenuitemMasterSlaveUserLBA
-	jmp		.DisableMenuitemFromCSBX	
+	jmp		.DisableMenuitemFromCSBX
 
 ALIGN JUMP_ALIGN
 .DisableCHSandEnableLBA:
 	mov		bx, g_MenuitemMasterSlaveUserLBA
 	call	.EnableMenuitemFromCSBX
 	mov		bx, g_MenuitemMasterSlaveUserCHS
-	jmp		.DisableMenuitemFromCSBX	
+	jmp		.DisableMenuitemFromCSBX
 
 
 ;--------------------------------------------------------------------
@@ -307,7 +307,7 @@ ALIGN JUMP_ALIGN
 	jnz		SHORT .DisableMenuitemFromCSBX
 	test	ax, FLG_DRVPARAMS_USERLBA
 	jz		SHORT .DisableMenuitemFromCSBX
-	jmp		SHORT .EnableMenuitemFromCSBX
+	; Fall to .EnableMenuitemFromCSBX
 
 
 ;--------------------------------------------------------------------

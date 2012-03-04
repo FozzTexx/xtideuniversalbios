@@ -1,8 +1,4 @@
-; File name		:	ConfigurationMenu.asm
-; Project name	:	XTIDE Univeral BIOS Configurator
-; Created date	:	21.4.2010
-; Last update	:	2.5.2010
-; Author		:	Tomi Tilli
+; Project name	:	XTIDE Universal BIOS Configurator
 ; Description	:	XTIDE Universal BIOS configuration menu.
 
 ; Section containing initialized data
@@ -225,7 +221,7 @@ ConfigurationMenu_ActivateFullMode:
 ;		DS:DI	Ptr to MENUPAGEITEM
 ;		SS:BP:	Ptr to MENUVARS
 ;	Returns:
-;		CF:		Set if user data inputted succesfully
+;		CF:		Set if user data inputted successfully
 ;				Cleared if cancel
 ;	Corrupts registers:
 ;		AX, BX, CX, DX
@@ -244,7 +240,7 @@ ConfigurationMenu_ActivateControllerCount:
 ;		DS:DI	Ptr to MENUPAGEITEM
 ;		SS:BP:	Ptr to MENUVARS
 ;	Returns:
-;		CF:		Set if user data inputted succesfully
+;		CF:		Set if user data inputted successfully
 ;				Cleared if cancel
 ;	Corrupts registers:
 ;		AX, BX, CX, DX
@@ -357,7 +353,7 @@ ALIGN JUMP_ALIGN
 ConfigurationMenu_ShowAdditionalIdeControllers:
 	call	ConfigurationMenu_GetNumberOfIdeControllers
 	dec		cx					; First always visible
-	jcxz	.Return
+	jz		.Return
 	mov		bx, g_MenuPageItemCfgIde2+MENUPAGEITEM.bFlags
 ALIGN JUMP_ALIGN
 .FlagLoop:
@@ -380,11 +376,10 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 ConfigurationMenu_GetNumberOfIdeControllers:
+	mov		cx, 1				; Assume one controller for Lite mode
 	test	WORD [g_cfgVars+CFGVARS.rgbEepromBuffers+ROMVARS.wFlags], FLG_ROMVARS_FULLMODE
-	jz		SHORT .ReturnOneControllerForLiteMode
-	eMOVZX	cx, BYTE [g_cfgVars+CFGVARS.rgbEepromBuffers+ROMVARS.bIdeCnt]
-	ret
-ALIGN JUMP_ALIGN
-.ReturnOneControllerForLiteMode:
-	mov		cx, 1
+	jz		SHORT .Return
+	mov		cl, [g_cfgVars+CFGVARS.rgbEepromBuffers+ROMVARS.bIdeCnt]
+ALIGN JUMP_ALIGN, ret
+.Return:
 	ret

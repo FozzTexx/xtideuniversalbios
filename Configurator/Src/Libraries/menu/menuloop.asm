@@ -1,9 +1,5 @@
-; File name		:	menuloop.asm
 ; Project name	:	Menu library
-; Created date	:	11.11.2009
-; Last update	:	25.5.2010
-; Author		:	Tomi Tilli
-; Description	:	ASM library to menu system.
+; Description	:	ASM library for menu system.
 ;					Contains event dispatching loop.
 
 ;--------------- Equates -----------------------------
@@ -142,7 +138,7 @@ MenuLoop_ProcessKey:
 	jne		.Dispatch			; If not menukey, jump to dispatch
 
 	; Jump to process menu key
-	mov		di, CNT_MENU_KEYS-1	; Convert CX...	
+	mov		di, CNT_MENU_KEYS-1	; Convert CX...
 	sub		di, cx				; ...to lookup index
 	shl		di, 1				; Prepare for word lookup
 	jmp		[cs:di+.rgwMenuKeyJmp]
@@ -185,7 +181,7 @@ ALIGN JUMP_ALIGN
 	test	BYTE [bp+MENUVARS.bFlags], FLG_MNU_NOARRW	; Message dialog mode?
 	jnz		.TextScrollUp					;  If so, go to text scrolling
 %endif
-	mov		ax, [bp+MENUVARS.wItemSel]		; Load selected index 
+	mov		ax, [bp+MENUVARS.wItemSel]		; Load selected index
 	test	ax, ax							; Already at top?
 	jz		.KeyEnd							;  If so, go to end
 	mov		dx, ax							; Copy selected index to DX
@@ -221,7 +217,7 @@ ALIGN JUMP_ALIGN
 	cmp		ax, [bp+MENUVARS.wItemCnt]		; Already at bottom?
 	je		.KeyHome						;  If so, go to beginning
 	mov		[bp+MENUVARS.wItemSel], ax		; Store new menuitem index
-	eMOVZX	bx, BYTE [bp+MENUVARS.bVisCnt]	; Load number of visible items
+	eMOVZX	bx, [bp+MENUVARS.bVisCnt]		; Load number of visible items
 	add		bx, [bp+MENUVARS.wItemTop]		; BX to one past last visible index
 	cmp		ax, bx							; Need to scroll?
 	jae		.ScrollDown
@@ -234,7 +230,7 @@ ALIGN JUMP_ALIGN
 %ifdef USE_MENU_DIALOGS
 ALIGN JUMP_ALIGN
 .TextScrollDown:
-	eMOVZX	ax, BYTE [bp+MENUVARS.bVisCnt]	; Load visible items
+	eMOVZX	ax, [bp+MENUVARS.bVisCnt]		; Load visible items
 	add		ax, [bp+MENUVARS.wItemTop]		; Add topmost menuitem index
 	cmp		ax, [bp+MENUVARS.wItemCnt]		; Already at the bottom?
 	jae		.Return							;  If so, return
@@ -260,7 +256,7 @@ ALIGN JUMP_ALIGN
 	sub		bl, [bp+MENUVARS.bVisCnt]		; BX to first menuitem to draw
 	sbb		bh, 0
 	mov		[bp+MENUVARS.wItemTop], bx		; Store first menuitem to draw
-	jnc		.ScrollMenu	
+	jnc		.ScrollMenu
 	mov		WORD [bp+MENUVARS.wItemTop], 0	; Overflow, start with 0
 	jmp		.ScrollMenu
 
@@ -283,7 +279,7 @@ ALIGN JUMP_ALIGN
 	div		BYTE [bp+MENUVARS.bVisCnt]		; AL=Current page index
 	inc		ax								; Increment page
 	mul		BYTE [bp+MENUVARS.bVisCnt]		; AX=First menuitem on page
-	eMOVZX	bx, BYTE [bp+MENUVARS.bVisCnt]	; Load number of visible items
+	eMOVZX	bx, [bp+MENUVARS.bVisCnt]		; Load number of visible items
 	add		bx, ax							; BX now one past last visible
 	cmp		bx, [bp+MENUVARS.wItemCnt]		; Went over last?
 	jae		.KeyEnd							;  If so, select last menuitem
@@ -330,6 +326,6 @@ ALIGN WORD_ALIGN
 	dw		.KeyHome	; KEY_HOME
 	dw		.KeyEnd		; KEY_END
 ; Scan code to jump index translation table
-.rgbKeyToIdx:	
+.rgbKeyToIdx:
 	db	KEY_ENTER,	KEY_ESC,	KEY_UP,		KEY_DOWN,
 	db	KEY_PGUP,	KEY_PGDN,	KEY_HOME,	KEY_END

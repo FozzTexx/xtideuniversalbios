@@ -35,7 +35,7 @@ MenuitemPrint_PrintQuickInfoFromDSSI:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MenuitemPrint_NameWithPossibleValueFromDSSI:
-	eMOVZX	bx, BYTE [si+MENUITEM.bType]
+	eMOVZX	bx, [si+MENUITEM.bType]
 	cmp		bl, TYPE_MENUITEM_ACTION
 	ja		SHORT .PrintNameAndValueFromDSSI
 	; Fall to .PrintNameWithoutValueFromDSSI
@@ -146,7 +146,7 @@ ALIGN JUMP_ALIGN
 ;		DI:		Updated
 ;	Corrupts registers:
 ;		AX, BX, CX
-;--------------------------------------------------------------------	
+;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MenuitemPrint_WriteLookupValueStringToBufferInESDIfromUnshiftedItemInDSSI:
 	call	Menuitem_GetValueToAXfromMenuitemInDSSI
@@ -169,16 +169,16 @@ MenuitemPrint_WriteLookupValueStringToBufferInESDIfromRawItemInDSSI:
 ;		DI:		Updated
 ;	Corrupts registers:
 ;		AX, BX, CX
-;--------------------------------------------------------------------	
+;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 PrintLookupValueFromAXtoBufferInESDI:
 	push	si
 	test	byte [si+MENUITEM.bFlags], FLG_MENUITEM_CHOICESTRINGS
-	jnz		.lookupChoice	
-		
+	jnz		.lookupChoice
+
 	add		ax, [si+MENUITEM.itemValue+ITEM_VALUE.rgszValueToStringLookup]
 	xchg	bx, ax
-.found:	
+.found:
 	mov		si, [bx]
 .errorReturn:
 	call	String_CopyDSSItoESDIandGetLengthToCX
@@ -186,19 +186,19 @@ PrintLookupValueFromAXtoBufferInESDI:
 	ret
 
 ;
-; With FLG_MENUITEM_CHOICESTRINGS, the array at .rgszChoiceToStringLookup is based on the 
+; With FLG_MENUITEM_CHOICESTRINGS, the array at .rgszChoiceToStringLookup is based on the
 ; Choice number (offset within .rgwChoiceToValueLookup) instead of the value stored.
 ; Here, we scan the .rgwChoiceToValueLookup array until we find the value there, and then
-; use the same offset in .rgszChoiceToStringLookup.  If we don't find the value, we 
-; return an "Error!" string instead.  
+; use the same offset in .rgszChoiceToStringLookup.  If we don't find the value, we
+; return an "Error!" string instead.
 ;
 ; Note that the pointer array at .rgszChoiceToStringLookup must be NULL terminated.  Since the
 ; value could be zero, we don't use the .rgwChoiceToValueLookup array to find the end.
 ;
 .lookupChoice:
-	mov		bx,[si+MENUITEM.itemValue+ITEM_VALUE.rgszChoiceToStringLookup]		
+	mov		bx,[si+MENUITEM.itemValue+ITEM_VALUE.rgszChoiceToStringLookup]
 	mov		si,[si+MENUITEM.itemValue+ITEM_VALUE.rgwChoiceToValueLookup]
-		
+
 .wordLoop:
 	cmp		ax,[si]
 	jz		.found
@@ -221,7 +221,7 @@ PrintLookupValueFromAXtoBufferInESDI:
 ;		DI:		Updated
 ;	Corrupts registers:
 ;		AX, BX, CX
-;--------------------------------------------------------------------	
+;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MenuitemPrint_WriteUnsignedValueStringToBufferInESDIfromItemInDSSI:
 	mov		bx, di
@@ -243,7 +243,7 @@ MenuitemPrint_WriteUnsignedValueStringToBufferInESDIfromItemInDSSI:
 ;		DI:		Updated
 ;	Corrupts registers:
 ;		AX, BX, CX
-;--------------------------------------------------------------------	
+;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 MenuitemPrint_WriteHexValueStringToBufferInESDIfromItemInDSSI:
 	mov		bx, di

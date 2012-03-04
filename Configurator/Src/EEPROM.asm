@@ -1,8 +1,4 @@
-; File name		:	EEPROM.asm
 ; Project name	:	XTIDE Univeral BIOS Configurator
-; Created date	:	19.4.2010
-; Last update	:	2.5.2010
-; Author		:	Tomi Tilli
 ; Description	:	Functions for managing EEPROM contents.
 
 ; Section containing code
@@ -24,7 +20,7 @@ EEPROM_LoadBiosFromROM:
 	push	si
 	call	EEPROM_FindXtideUniversalBiosROM
 	xor		si, si									; Load from beginning of ROM
-	eMOVZX	cx, BYTE [es:ROMVARS.bRomSize]
+	eMOVZX	cx, [es:ROMVARS.bRomSize]
 	eSHL_IM	cx, 9									; *= 512 for byte count
 	call	EEPROM_LoadBytesFromROM
 	pop		si

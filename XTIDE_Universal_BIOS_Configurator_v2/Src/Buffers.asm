@@ -144,7 +144,7 @@ ALIGN JUMP_ALIGN
 Buffers_AppendZeroesIfNeeded:
 	push	es
 
-	eMOVZX	di, BYTE [cs:g_cfgVars+CFGVARS.bEepromType]
+	eMOVZX	di, [cs:g_cfgVars+CFGVARS.bEepromType]
 	mov		cx, [cs:di+g_rgwEepromTypeToSizeInWords]
 	sub		cx, [cs:g_cfgVars+CFGVARS.wImageSizeInWords]	; CX = WORDs to append
 	jle		SHORT .NoNeedToAppendZeroes

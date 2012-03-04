@@ -1,7 +1,7 @@
 ; Project name	:	Emulation library
-; Description	:	Macros for emulating later x86 instruction with older
+; Description	:	Macros for emulating later x86 instructions with older
 ;					processors.
-;					Macros are used so optimized builds could be done
+;					Macros are used so optimized builds can be done
 ;					easily for different processors.
 ;
 ;					This file must be first to be included to
@@ -9,25 +9,32 @@
 %ifndef EMULATE_INC
 %define EMULATE_INC
 
-; Defines for processor support. Unsupported instructions will be
-; emulated using macros.
-; If using 286, define USE_186 and USE_286
-; If using 386, define USE_186, USE_286 and USE_386
+; Defines for processor support (should be set in makefile).
+; Unsupported instructions will be emulated using macros.
 ; If AT class PC is used (instead of XT), define USE_AT
+
 ;%define USE_186				; Define to use 18x/V20/V30 instructions
 ;%define USE_286				; Define to use 286 instructions
 ;%define USE_386				; Define to use 386 instructions
 ;%define USE_AT					; Define for AT class machine
-; Above defines should be set on makefile!
 
-CPU 8086						; Allow 8088/8086 instructions only
-%ifdef USE_186
-CPU 186							; Allow instructions up to 188/186/V20/V30
-%elifdef USE_286
-CPU 286							; Allow instructions up to 286
-%elifdef USE_386
-CPU 386							; Allow instructions up to 386
+%ifdef USE_386
+	%define USE_286				; Define to use 286 instructions
 %endif
+%ifdef USE_286
+	%define USE_186				; Define to use 18x/V20/V30 instructions
+%endif
+
+%ifdef USE_386
+	CPU 386						; Allow instructions up to 386
+%elifdef USE_286
+	CPU 286						; Allow instructions up to 286
+%elifdef USE_186
+	CPU 186						; Allow instructions up to 188/186/V20/V30
+%else
+	CPU 8086					; Allow 8088/8086 instructions only
+%endif
+
 BITS 16							; Set 16 bit code generation
 
 ; Alignments for jump targets.

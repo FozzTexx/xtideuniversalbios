@@ -172,7 +172,7 @@ CreateStringFromCurrentDirectoryContentsToESDI:
 	CALL_DISPLAY_LIBRARY PrepareOffScreenBufferInESBXwithLengthInCX	; ES:DI now points to buffer
 
 	lds		si, [bp+DIALOG.fpDialogIO]
-	eMOVZX	cx, BYTE [si+FILE_DIALOG_IO.bFileAttributes]
+	eMOVZX	cx, [si+FILE_DIALOG_IO.bFileAttributes]
 	lds		si, [si+FILE_DIALOG_IO.fpFileFilterString]
 	call	Directory_UpdateDTAForFirstMatchForDSSIwithAttributesInCX
 
@@ -517,7 +517,7 @@ ParseSelectionFromItemLineInDSSI:
 	call	Memory_CopyCXbytesFromDSSItoESDI
 	xor		ax, ax
 	stosb						; Terminate with NULL
-	jmp		SHORT CloseFileDialogAfterSuccessfullSelection
+	jmp		SHORT CloseFileDialogAfterSuccessfulSelection
 
 ;--------------------------------------------------------------------
 ; .ChangeToUpdir
@@ -616,7 +616,7 @@ HandleFunctionKeyForCreatingNewFileOrDirectory:
 	add		sp, BYTE STRING_DIALOG_IO_size
 	test	al, al		; User cancellation?
 	jnz		SHORT ReturnWithoutHandlingKeystroke
-	jmp		CloseFileDialogAfterSuccessfullSelection
+	jmp		CloseFileDialogAfterSuccessfulSelection
 
 ALIGN JUMP_ALIGN
 .InitializeStringDialogIoInDSSIforInputtingFileName:
@@ -645,10 +645,10 @@ ALIGN JUMP_ALIGN
 HandleFunctionKeyForSelectingDirectoryInsteadOfFile:
 	test	al, FLG_FILEDIALOG_DIRECTORY
 	jz		SHORT ReturnWithoutHandlingKeystroke
-	; Fall to CloseFileDialogAfterSuccessfullSelection
+	; Fall to CloseFileDialogAfterSuccessfulSelection
 
 ;--------------------------------------------------------------------
-; CloseFileDialogAfterSuccessfullSelection
+; CloseFileDialogAfterSuccessfulSelection
 ;	Parameters:
 ;		SS:BP:	Ptr to DIALOG
 ;	Returns:
@@ -657,7 +657,7 @@ HandleFunctionKeyForSelectingDirectoryInsteadOfFile:
 ;		All, except BP
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-CloseFileDialogAfterSuccessfullSelection:
+CloseFileDialogAfterSuccessfulSelection:
 	lds		di, [bp+DIALOG.fpDialogIO]
 	mov		BYTE [di+FILE_DIALOG_IO.bUserCancellation], FALSE
 	jmp		MenuInit_CloseMenuWindow

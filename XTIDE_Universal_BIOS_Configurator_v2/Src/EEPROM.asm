@@ -90,7 +90,7 @@ EEPROM_LoadXtideUniversalBiosFromRomToRamBufferAndReturnSizeInDXCX:
 ALIGN JUMP_ALIGN
 .GetXtideUniversalBiosSizeFromEStoDXCX:
 	xor		dx, dx
-	eMOVZX	cx, BYTE [es:ROMVARS.bRomSize]
+	eMOVZX	cx, [es:ROMVARS.bRomSize]
 	eSHL_IM	cx, 9				; *= 512 for byte count
 	ret
 
@@ -198,7 +198,7 @@ EEPROM_LoadFromRomToRamComparisonBuffer:
 	mov		ds, [cs:g_cfgVars+CFGVARS.wEepromSegment]
 	xor		si, si
 	call	Buffers_GetFlashComparisonBufferToESDI
-	eMOVZX	bx, BYTE [cs:g_cfgVars+CFGVARS.bEepromType]
+	eMOVZX	bx, [cs:g_cfgVars+CFGVARS.bEepromType]
 	mov		cx, [cs:bx+g_rgwEepromTypeToSizeInWords]
 	cld
 	rep movsw

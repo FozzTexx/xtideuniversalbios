@@ -26,7 +26,7 @@ BiosFile_LoadFileFromDSSItoRamBuffer:
 	mov		ax, FLG_CFGVARS_FILELOADED
 	call	Buffers_NewBiosWithSizeInDXCXandSourceInAXhasBeenLoadedForConfiguration
 	call	FileIO_CloseUsingHandleFromBX
-	call	DisplayFileLoadedSuccesfully
+	call	DisplayFileLoadedSuccessfully
 	jmp		SHORT .Return
 
 .DisplayErrorMessage:
@@ -42,9 +42,9 @@ ALIGN JUMP_ALIGN
 ;	Parameters:
 ;		DS:SI:	Name of file to open
 ;	Returns:
-;		BX:		File handle (if succesfull)
-;		DX:CX:	File size (if succesfull)
-;		CF:		Clear if successfull
+;		BX:		File handle (if successful)
+;		DX:CX:	File size (if successful)
+;		CF:		Clear if successful
 ;				Set if error
 ;	Corrupts registers:
 ;		AX
@@ -79,7 +79,7 @@ ALIGN JUMP_ALIGN
 ;		DX:CX:	File size
 ;		DS:SI:	File name
 ;	Returns:
-;		CF:		Clear if successfull
+;		CF:		Clear if successful
 ;				Set if error
 ;	Corrupts registers:
 ;		AX, SI, DI, DS
@@ -166,7 +166,7 @@ BiosFile_SaveRamBufferToFileInDSSI:
 
 	call	FileIO_CloseUsingHandleFromBX
 	call	Buffers_ClearUnsavedChanges
-	call	DisplayFileSavedSuccesfully
+	call	DisplayFileSavedSuccessfully
 	jmp		SHORT .Return
 
 .DisplayErrorMessage:
@@ -180,8 +180,8 @@ ALIGN JUMP_ALIGN
 
 
 ;--------------------------------------------------------------------
-; DisplayFileLoadedSuccesfully
-; DisplayFileSavedSuccesfully
+; DisplayFileLoadedSuccessfully
+; DisplayFileSavedSuccessfully
 ; DisplayFailedToLoadFile
 ; DisplayFailedToSaveFile
 ; DisplayFileTooBig
@@ -193,12 +193,12 @@ ALIGN JUMP_ALIGN
 ;		AX, DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-DisplayFileLoadedSuccesfully:
+DisplayFileLoadedSuccessfully:
 	mov		dx, g_szDlgMainLoadFile
 	jmp		Dialogs_DisplayNotificationFromCSDX
 
 ALIGN JUMP_ALIGN
-DisplayFileSavedSuccesfully:
+DisplayFileSavedSuccessfully:
 	mov		dx, g_szDlgMainSaveFile
 	jmp		Dialogs_DisplayNotificationFromCSDX
 

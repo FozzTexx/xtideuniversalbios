@@ -272,7 +272,7 @@ ALIGN JUMP_ALIGN
 	mov		al, [cs:g_cfgVars+CFGVARS.bSdpCommand]
 	mov		[si+FLASHVARS.bEepromSdpCommand], al
 
-	eMOVZX	bx, BYTE [cs:g_cfgVars+CFGVARS.bEepromPage]
+	eMOVZX	bx, [cs:g_cfgVars+CFGVARS.bEepromPage]
 	mov		ax, [cs:bx+g_rgwEepromPageToSizeInBytes]
 	mov		[si+FLASHVARS.wEepromPageSize], ax
 
@@ -313,7 +313,7 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 .GetSelectedEepromSizeInWordsToAX:
-	eMOVZX	bx, BYTE [cs:g_cfgVars+CFGVARS.bEepromType]
+	eMOVZX	bx, [cs:g_cfgVars+CFGVARS.bEepromType]
 	mov		ax, [cs:bx+g_rgwEepromTypeToSizeInWords]
 	ret
 
@@ -329,7 +329,7 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 .DisplayFlashingResultsFromFlashvarsInDSBX:
-	eMOVZX	bx, BYTE [bx+FLASHVARS.flashResult]
+	eMOVZX	bx, [bx+FLASHVARS.flashResult]
 	jmp		[cs:bx+.rgfnFlashResultMessage]
 
 ALIGN WORD_ALIGN
@@ -369,7 +369,7 @@ ALIGN JUMP_ALIGN
 	jmp		Dialogs_DisplayNotificationFromCSDX
 ALIGN JUMP_ALIGN
 .DisplayRebootMessageAndReboot:
-	mov		dx, g_szPCFlashSuccessfull
+	mov		dx, g_szPCFlashSuccessful
 	call	Dialogs_DisplayNotificationFromCSDX
 	xor		ax, ax			; Cold boot flag
 	jmp		Reboot_ComputerWithBootFlagInAX
