@@ -25,11 +25,11 @@ DetectDrives_FromAllIDEControllers:
 
 	mov		cx, g_szDetectMaster
 	mov		bh, MASK_DRVNHEAD_SET								; Select Master drive
-	call	StartDetectionWithDriveSelectByteInBHandStringInAX	; Detect and create DPT + BOOTNFO
+	call	StartDetectionWithDriveSelectByteInBHandStringInCX	; Detect and create DPT + BOOTNFO
 
 	mov		cx, g_szDetectSlave
 	mov		bh, MASK_DRVNHEAD_SET | FLG_DRVNHEAD_DRV
-	call	StartDetectionWithDriveSelectByteInBHandStringInAX
+	call	StartDetectionWithDriveSelectByteInBHandStringInCX
 
 	pop		cx
 
@@ -71,19 +71,19 @@ DetectDrives_FromAllIDEControllers:
 
 	mov		al, [es:BDA.bHDCount]
 	add		cl, al						; Add our drives to the system count
-	mov		[es:BDA.bHDCount], cl		
-	or		al, 80h						; Or in hard disk flag		
-	mov		[RAMVARS.bFirstDrv], al		; Store first drive number		
+	mov		[es:BDA.bHDCount], cl
+	or		al, 80h						; Or in hard disk flag
+	mov		[RAMVARS.bFirstDrv], al		; Store first drive number
 
-.AddFloppies:		
-%ifdef MODULE_SERIAL_FLOPPY		
+.AddFloppies:
+%ifdef MODULE_SERIAL_FLOPPY
 ;----------------------------------------------------------------------
 ;
 ; Add in any emulated serial floppy drives, finalize our packed Count and First variables
 ;
 	dec		ch
 	mov		al, ch
-	js		.NoFloppies						; if no drives are present, we store 0ffh		
+	js		.NoFloppies						; if no drives are present, we store 0ffh
 
 	call	FloppyDrive_GetCountFromBIOS_or_BDA
 
@@ -91,13 +91,13 @@ DetectDrives_FromAllIDEControllers:
 
 	add		al, ch							; Add our drives to existing drive count
 	cmp		al, 3							; For BDA, max out at 4 drives (ours is zero based)
-	jl		.MaxBDAFloppiesExceeded
-	mov		al, 3							
+	jb		.MaxBDAFloppiesExceeded
+	mov		al, 3
 .MaxBDAFloppiesExceeded:
 	eROR_IM	al, 2							; move to bits 6-7
 	inc		ax								; low order bit, indicating floppy drive exists
 
-	mov		ah, [es:BDA.wEquipment]			; Load Equipment WORD low byte	
+	mov		ah, [es:BDA.wEquipment]			; Load Equipment WORD low byte
 	and		ah, 03eh						; Mask off drive number and drives present bit
 	or		al, ah							; Or in new values
 	mov		[es:BDA.wEquipment], al			; and store
@@ -110,13 +110,13 @@ DetectDrives_FromAllIDEControllers:
 
 	shr		ch, 1							; number of drives, 1 or 2 only, to CF flag (clear=1, set=2)
 	rcl		al, 1							; starting drive number in upper 7 bits, number of drives in low bit
-.NoFloppies:	
+.NoFloppies:
 	mov		[RAMVARS.xlateVars+XLATEVARS.bFlopCntAndFirst], al
 %endif
-		
+
 	ret
 
-%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS		
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
 	%if FLG_ROMVARS_SERIAL_SCANDETECT != 8
 		%error "DetectDrives is currently coded to assume that FLG_ROMVARS_SERIAL_SCANDETECT is the same bit as the ALT key code in the BDA.  Changes in the code will be needed if these values are no longer the same."
 	%endif
@@ -124,7 +124,7 @@ DetectDrives_FromAllIDEControllers:
 
 
 ;--------------------------------------------------------------------
-; StartDetectionWithDriveSelectByteInBHandStringInAX
+; StartDetectionWithDriveSelectByteInBHandStringInCX
 ;	Parameters:
 ;		BH:		Drive Select byte for Drive and Head Register
 ;		CX:		Offset to "Master" or "Slave" string
@@ -136,8 +136,8 @@ DetectDrives_FromAllIDEControllers:
 ;	Corrupts registers:
 ;		AX, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
-StartDetectionWithDriveSelectByteInBHandStringInAX:
-	call	DetectPrint_StartDetectWithMasterOrSlaveStringInAXandIdeVarsInCSBP
+StartDetectionWithDriveSelectByteInBHandStringInCX:
+	call	DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP
 	; Fall to .ReadAtaInfoFromHardDisk
 
 ;--------------------------------------------------------------------

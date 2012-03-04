@@ -14,7 +14,7 @@ SECTION .text
 ;		SS:BP:	Ptr to IDEREGS_AND_INTPACK
 ;	Returns with INTPACK:
 ;		AH:		Int 13h return status
-;		CF:		0 if succesfull, 1 if error
+;		CF:		0 if successful, 1 if error
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH10h_HandlerForCheckDriveReady:

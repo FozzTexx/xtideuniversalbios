@@ -17,7 +17,7 @@ SECTION .text
 ;		ES:		BDA Segment
 ;	Returns:
 ;		DL:		Drive number for new drive
-;		DS:DI:	Ptr to Disk Parameter Table (if succesfull)
+;		DS:DI:	Ptr to Disk Parameter Table (if successful)
 ;		CF:		Cleared if DPT created successfully
 ;				Set if any error
 ;	Corrupts registers:
@@ -201,34 +201,34 @@ CreateDPT_FromAtaInformation:
 
 ;----------------------------------------------------------------------
 ; Update drive counts (hard and floppy)
-;----------------------------------------------------------------------	
-		
+;----------------------------------------------------------------------
+
 %ifdef MODULE_SERIAL_FLOPPY
 ;
 ; These two instructions serve two purposes:
 ; 1. If the drive is a floppy drive (CF set), then we effectively increment the counter.
-; 2. If this is a hard disk, and there have been any floppy drives previously added, then the hard disk is 
+; 2. If this is a hard disk, and there have been any floppy drives previously added, then the hard disk is
 ;    effectively discarded.  This is more of a safety check then code that should ever normally be hit (see below).
-;    Since the floppy DPT's come after the hard disk DPT's, without expensive (code size) code to relocate a DPT, 
+;    Since the floppy DPT's come after the hard disk DPT's, without expensive (code size) code to relocate a DPT,
 ;    this was necessary.  Now, this situation shouldn't happen in normal operation, for a couple of reasons:
-; 		A. xtidecfg always puts configured serial ports at the end fo the IDEVARS list
+; 		A. xtidecfg always puts configured serial ports at the end of the IDEVARS list
 ;       B. the auto serial code is always executed last
 ;       C. the serial server always returns floppy drives last
 ;
 	adc		byte [RAMVARS.xlateVars+XLATEVARS.bFlopCreateCnt], 0
-	jnz		.AllDone	
+	jnz		.AllDone
 %else
 ;
 ; Even without floppy support enabled, we shouldn't try to mount a floppy image as a hard disk, which
-; could lead to unpredictable results since no MBR will be present, etc.  The server doesn't know that 
+; could lead to unpredictable results since no MBR will be present, etc.  The server doesn't know that
 ; floppies are supported, so it is important to still fail here if a floppy is seen during the drive scan.
 ;
 	jc		.AllDone
 %endif
 
 	inc		BYTE [RAMVARS.bDrvCnt]		; Increment drive count to RAMVARS
-		
-.AllDone:				
+
+.AllDone:
 	clc
 	ret
 

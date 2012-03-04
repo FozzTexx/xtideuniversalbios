@@ -53,7 +53,7 @@ IdeTransfer_StartWithCommandInAL:
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
 ;		AH:		BIOS Error code
 ;		CX:		Number of successfully transferred sectors
-;		CF:		0 if transfer succesfull
+;		CF:		0 if transfer successful
 ;				1 if any error
 ;	Corrupts registers:
 ;		AL, BX, DX, SI, ES
@@ -120,7 +120,7 @@ ReturnWithTransferErrorInAH:
 ;	Returns:
 ;		AH:		BIOS Error code
 ;		CX:		Number of successfully transferred sectors
-;		CF:		0 if transfer succesfull
+;		CF:		0 if transfer successful
 ;				1 if any error
 ;	Corrupts registers:
 ;		AL, BX, DX, SI, ES

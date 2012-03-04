@@ -18,7 +18,7 @@ SECTION .text
 ;	Returns with INTPACK:
 ;		AH:		Int 13h return status
 ;		DS:SI:	Ptr to Extended Drive Information Table
-;		CF:		0 if succesfull, 1 if error
+;		CF:		0 if successful, 1 if error
 ;--------------------------------------------------------------------
 AH48h_HandlerForGetExtendedDriveParameters:
 	call	AccessDPT_GetPointerToDRVPARAMStoCSBX

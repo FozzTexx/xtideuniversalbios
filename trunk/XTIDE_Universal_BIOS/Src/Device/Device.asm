@@ -5,7 +5,7 @@
 SECTION .text
 
 
-%macro TEST_USIGN_DPT_AND_JUMP_IF_SERIAL_DEVICE 1
+%macro TEST_USING_DPT_AND_JUMP_IF_SERIAL_DEVICE 1
 	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE
 	jnz		SHORT %1
 %endmacro
@@ -41,7 +41,7 @@ Device_FinalizeDPT:
 	; needs to check IDEVARS vs. checking the DPT as the serial bit in the DPT is set in the Finalize routine
 	CMP_USING_IDEVARS_IN_CSBP_AND_JUMP_IF DEVICE_SERIAL_PORT, .FinalizeDptForSerialPortDevice
 	jmp		IdeDPT_Finalize
-.FinalizeDptForSerialPortDevice: 
+.FinalizeDptForSerialPortDevice:
 	jmp		SerialDPT_Finalize
 
 %else	; IDE or JR-IDE/ISA
@@ -62,7 +62,7 @@ Device_FinalizeDPT:
 %ifdef MODULE_JRIDE
 	%ifdef MODULE_SERIAL				; IDE + JR-IDE/ISA + Serial
 	Device_ResetMasterAndSlaveController:
-		TEST_USIGN_DPT_AND_JUMP_IF_SERIAL_DEVICE ReturnSuccessForSerialPort
+		TEST_USING_DPT_AND_JUMP_IF_SERIAL_DEVICE ReturnSuccessForSerialPort
 		CMP_USING_DPT_AND_JUMP_IF_JRIDE_DEVICE .ResetJrIDE
 		jmp		IdeCommand_ResetMasterAndSlaveController
 
@@ -74,7 +74,7 @@ Device_FinalizeDPT:
 
 %elifdef MODULE_SERIAL					; IDE + Serial
 Device_ResetMasterAndSlaveController:
-	TEST_USIGN_DPT_AND_JUMP_IF_SERIAL_DEVICE ReturnSuccessForSerialPort
+	TEST_USING_DPT_AND_JUMP_IF_SERIAL_DEVICE ReturnSuccessForSerialPort
 	jmp		IdeCommand_ResetMasterAndSlaveController
 
 %else									; IDE
@@ -151,7 +151,7 @@ Device_IdentifyToBufferInESSIwithDriveSelectByteInBH:
 %ifdef MODULE_JRIDE
 	%ifdef MODULE_SERIAL				; IDE + JR-IDE/ISA + Serial
 	Device_OutputCommandWithParameters:
-		TEST_USIGN_DPT_AND_JUMP_IF_SERIAL_DEVICE .OutputCommandToSerialPort
+		TEST_USING_DPT_AND_JUMP_IF_SERIAL_DEVICE .OutputCommandToSerialPort
 		CMP_USING_DPT_AND_JUMP_IF_JRIDE_DEVICE .OutputCommandToJrIDE
 		jmp		IdeCommand_OutputWithParameters
 
@@ -163,7 +163,7 @@ Device_IdentifyToBufferInESSIwithDriveSelectByteInBH:
 
 %elifdef MODULE_SERIAL					; IDE + Serial
 Device_OutputCommandWithParameters:
-	TEST_USIGN_DPT_AND_JUMP_IF_SERIAL_DEVICE .OutputCommandToSerialPort
+	TEST_USING_DPT_AND_JUMP_IF_SERIAL_DEVICE .OutputCommandToSerialPort
 	jmp		IdeCommand_OutputWithParameters
 
 %else									; IDE
@@ -197,7 +197,7 @@ ALIGN JUMP_ALIGN
 %ifdef MODULE_JRIDE
 	%ifdef MODULE_SERIAL				; IDE + JR-IDE/ISA + Serial
 	Device_SelectDrive:
-		TEST_USIGN_DPT_AND_JUMP_IF_SERIAL_DEVICE ReturnSuccessForSerialPort
+		TEST_USING_DPT_AND_JUMP_IF_SERIAL_DEVICE ReturnSuccessForSerialPort
 		CMP_USING_DPT_AND_JUMP_IF_JRIDE_DEVICE .SelectJrIdeDrive
 		jmp		IdeCommand_SelectDrive
 
@@ -209,7 +209,7 @@ ALIGN JUMP_ALIGN
 
 %elifdef MODULE_SERIAL					; IDE + Serial
 Device_SelectDrive:
-	TEST_USIGN_DPT_AND_JUMP_IF_SERIAL_DEVICE ReturnSuccessForSerialPort
+	TEST_USING_DPT_AND_JUMP_IF_SERIAL_DEVICE ReturnSuccessForSerialPort
 	jmp		IdeCommand_SelectDrive
 
 %else									; IDE

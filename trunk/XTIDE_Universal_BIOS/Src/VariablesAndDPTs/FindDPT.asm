@@ -7,7 +7,7 @@ SECTION .text
 ;--------------------------------------------------------------------
 ; Checks if drive is handled by this BIOS, and return DPT pointer.
 ;
-; FindDPT_ForDriveNumberInDL		
+; FindDPT_ForDriveNumberInDL
 ;	Parameters:
 ;		DL:		Drive number
 ;		DS:		RAMVARS segment
@@ -20,10 +20,10 @@ SECTION .text
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-FindDPT_ForDriveNumberInDL:		
+FindDPT_ForDriveNumberInDL:
 	xchg	di, ax								; Save the contents of AX in DI
 
-; 
+;
 ; Check Our Hard Disks
 ;
 	mov		ax, [RAMVARS.wDrvCntAndFirst]		; Drive count to AH, First number to AL
@@ -32,43 +32,43 @@ FindDPT_ForDriveNumberInDL:
 %ifdef MODULE_SERIAL_FLOPPY
 	cmp		dl, ah								; Above last supported?
 	jae		SHORT .HardDiskNotHandledByThisBIOS
-		
+
 	cmp		dl, al								; Below first supported?
 	jae		SHORT .CalcDPTForDriveNumber
 
-ALIGN JUMP_ALIGN				
-.HardDiskNotHandledByThisBIOS:	
+ALIGN JUMP_ALIGN
+.HardDiskNotHandledByThisBIOS:
 ;
 ; Check Our Floppy Disks
-; 
+;
 	call	RamVars_UnpackFlopCntAndFirstToAL
 	js		SHORT .DiskIsNotHandledByThisBIOS
-				
+
 	cbw											; Always 0h (no floppy drive covered above)
 	adc		ah, al								; Add in first drive number and number of drives
 
 	cmp		ah, dl								; Check second drive if two, first drive if only one
 	jz		SHORT .CalcDPTForDriveNumber
 	cmp		al, dl								; Check first drive in all cases, redundant but OK to repeat
-	jnz		SHORT .DiskIsNotHandledByThisBIOS			
+	jnz		SHORT .DiskIsNotHandledByThisBIOS
 %else
-	cmp		dl, ah								; Above last supported?		
+	cmp		dl, ah								; Above last supported?
 	jae		SHORT .DiskIsNotHandledByThisBIOS
-		
+
 	cmp		dl, al								; Below first supported?
-	jb		SHORT .DiskIsNotHandledByThisBIOS			
+	jb		SHORT .DiskIsNotHandledByThisBIOS
 %endif
 	; fall-through to CalcDPTForDriveNumber
 
 ;--------------------------------------------------------------------
 ; Finds Disk Parameter Table for drive number.
-; Note intended to be called except by FindDPT_ForDriveNumber
+; Not intended to be called except by FindDPT_ForDriveNumberInDL
 ;
 ; CalcDPTForDriveNumber
 ;	Parameters:
 ;		DL:		Drive number
 ;		DS:		RAMVARS segment
-;       DI:     Saved copy of AX from entry at FindDPT_ForDriveNumber
+;       DI:     Saved copy of AX from entry at FindDPT_ForDriveNumberInDL
 ;	Returns:
 ;		DS:DI:	Ptr to DPT
 ;       CF:     Clear
@@ -81,39 +81,39 @@ ALIGN JUMP_ALIGN
 
 %ifdef MODULE_SERIAL_FLOPPY
 	mov		ax, [RAMVARS.wDrvCntAndFirst]
-		
+
 	test	dl, dl
 	js		.harddisk
 
 	call	RamVars_UnpackFlopCntAndFirstToAL
 	add		dl, ah						; add in end of hard disk DPT list, floppies start immediately after
-		
-ALIGN JUMP_ALIGN				
+
+ALIGN JUMP_ALIGN
 .harddisk:
 	sub		dl, al						; subtract off beginning of either hard disk or floppy list (as appropriate)
 %else
 	sub		dl, [RAMVARS.bFirstDrv]		; subtract off beginning of hard disk list
 %endif
 
-.CalcDPTForNewDrive:				
+.CalcDPTForNewDrive:
 	mov		al, LARGEST_DPT_SIZE
-		
+
 	mul		dl
-	add		ax, BYTE RAMVARS_size		; Clears CF (will not oveflow)
+	add		ax, BYTE RAMVARS_size		; Clears CF (will not overflow)
 
 	pop		dx
 
 	xchg	di, ax						; Restore AX from entry at FindDPT_ForDriveNumber, put DPT pointer in DI
 	ret
 
-ALIGN JUMP_ALIGN		
-.DiskIsNotHandledByThisBIOS:			
+ALIGN JUMP_ALIGN
+.DiskIsNotHandledByThisBIOS:
 ;
 ; Drive not found...
 ;
 	xor		ax, ax								; Clear DPT pointer
-	stc											; Is not supported by our BIOS		
-		
+	stc											; Is not supported by our BIOS
+
 	xchg	di, ax								; Restore AX from save at top
 	ret
 
@@ -135,9 +135,9 @@ FindDPT_ForIdevarsOffsetInDL:
 	jmp		SHORT FindDPT_IterateAllDPTs				; look for the first drive on this controller, if any
 
 ;--------------------------------------------------------------------
-; Iteration routine for FindDPT_ForIdevarsOffsetInDL, 
+; Iteration routine for FindDPT_ForIdevarsOffsetInDL,
 ; for use with IterateAllDPTs
-; 
+;
 ; Returns when DPT is found on the controller with Idevars offset in DL
 ;
 ; IterateFindFirstDPTforIdevars
@@ -147,11 +147,11 @@ FindDPT_ForIdevarsOffsetInDL:
 ;		CF:		Clear if wanted DPT found
 ;				Set if wrong DPT
 ;--------------------------------------------------------------------
-IterateFindFirstDPTforIdevars:		
+IterateFindFirstDPTforIdevars:
 	cmp		dl, [di+DPT.bIdevarsOffset]			; Clears CF if matched
 	je		.done
 	stc											; Set CF for not found
-.done:	
+.done:
 	ret
 
 
@@ -170,21 +170,21 @@ IterateFindFirstDPTforIdevars:
 ALIGN JUMP_ALIGN
 FindDPT_ForNewDriveToDSDI:
 	push	dx
-		
+
 %ifdef MODULE_SERIAL_FLOPPY
 	mov		dx, [RAMVARS.wDrvCntAndFlopCnt]
 	add		dl, dh
 %else
 	mov		dl, [RAMVARS.bDrvCnt]
 %endif
-		
+
 	jmp		short FindDPT_ForDriveNumberInDL.CalcDPTForNewDrive
 
 ;--------------------------------------------------------------------
 ; IterateToDptWithFlagsHighInBL
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT to examine
-;       BL:		Bit(s) to test in DPT.bFlagsHigh 
+;       BL:		Bit(s) to test in DPT.bFlagsHigh
 ;	Returns:
 ;		CF:		Clear if wanted DPT found
 ;				Set if wrong DPT
@@ -192,11 +192,11 @@ FindDPT_ForNewDriveToDSDI:
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-IterateToDptWithFlagsHighInBL:		
-	test	BYTE [di+DPT.bFlagsHigh], bl		; Clears CF
+IterateToDptWithFlagsHighInBL:
+	test	[di+DPT.bFlagsHigh], bl				; Clears CF
 	jnz		SHORT .ReturnRightDPT
 	stc
-.ReturnRightDPT:		
+.ReturnRightDPT:
 	ret
 
 ;--------------------------------------------------------------------
@@ -211,12 +211,12 @@ IterateToDptWithFlagsHighInBL:
 ;		SI
 ;--------------------------------------------------------------------
 %ifdef MODULE_SERIAL
-ALIGN JUMP_ALIGN		
-FindDPT_ToDSDIforSerialDevice:			
+ALIGN JUMP_ALIGN
+FindDPT_ToDSDIforSerialDevice:
 	mov		bl, FLGH_DPT_SERIAL_DEVICE
 ; fall-through
 %endif
-				
+
 ;--------------------------------------------------------------------
 ; FindDPT_ToDSDIforFlagsHigh
 ;	Parameters:
@@ -230,7 +230,7 @@ FindDPT_ToDSDIforSerialDevice:
 ;		SI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-FindDPT_ToDSDIforFlagsHighInBL:		
+FindDPT_ToDSDIforFlagsHighInBL:
 	mov		si, IterateToDptWithFlagsHighInBL
 	; Fall to IterateAllDPTs
 
@@ -256,12 +256,9 @@ FindDPT_IterateAllDPTs:
 	push	cx
 
 	mov		di, RAMVARS_size			; Point DS:DI to first DPT
-		
-	mov		cl, [RAMVARS.bDrvCnt]
-	xor		ch, ch						; Clears CF  
-		
+	eMOVZX	cx, [RAMVARS.bDrvCnt]
 	jcxz	.NotFound					; Return if no drives
-		
+
 ALIGN JUMP_ALIGN
 .LoopWhileDPTsLeft:
 	call	si							; Is wanted DPT?

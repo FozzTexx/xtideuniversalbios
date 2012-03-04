@@ -70,7 +70,7 @@ HEADERS += $(LIBS)
 DEFINES = INCLUDE_MENU_LIBRARY EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS MODULE_EBIOS MODULE_STRINGS_COMPRESSED
 DEFINES_XT = ELIMINATE_CGA_SNOW MODULE_SERIAL MODULE_SERIAL_FLOPPY
 DEFINES_XTPLUS = ELIMINATE_CGA_SNOW USE_186 MODULE_SERIAL MODULE_SERIAL_FLOPPY
-DEFINES_AT = USE_186 USE_286 USE_AT MODULE_SERIAL MODULE_SERIAL_FLOPPY
+DEFINES_AT = USE_286 USE_AT MODULE_SERIAL MODULE_SERIAL_FLOPPY
 DEFINES_XT_LARGE = $(DEFINES_XT) MODULE_JRIDE
 DEFINES_XTPLUS_LARGE = $(DEFINES_XTPLUS) MODULE_JRIDE
 DEFINES_AT_LARGE = $(DEFINES_AT) MODULE_JRIDE
@@ -86,7 +86,7 @@ ROMSIZE = 8192
 ROMSIZE_LARGE = 15360
 
 # Add -D in front of every preprocessor define declaration
-DEFS = $(DEFINES:%=-D%) 
+DEFS = $(DEFINES:%=-D%)
 DEFS_XT = $(DEFINES_XT:%=-D%) -DROMSIZE=$(ROMSIZE)
 DEFS_XTPLUS = $(DEFINES_XTPLUS:%=-D%) -DROMSIZE=$(ROMSIZE)
 DEFS_AT = $(DEFINES_AT:%=-D%) -DROMSIZE=$(ROMSIZE)
@@ -131,15 +131,14 @@ ASFLAGS += -O9					# Optimize operands to their shortest forms
 # Build process. Actual work is done here. #
 ############################################
 
-# Make clean debug and release versions
 all: clean small large
 	@echo All done!
 
 small: at xtplus xt jride_8k
-	@echo All  8 kiB binaries built!
+	@echo All 8 kiB binaries built!
 
 large: at_large xtplus_large xt_large
-	@echo All 15 kiB binaries build!
+	@echo All 15 kiB binaries built!
 
 at:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_AT) -l"$(TARGET)_at.lst" -o"$(TARGET)_at.bin"
@@ -151,11 +150,11 @@ at_large:
 
 xtplus:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XTPLUS) -l"$(TARGET)_xtp.lst" -o"$(TARGET)_xtp.bin"
-	@echo * 8k XT plus version "$(TARGET)_xtp.bin" built.
+	@echo * 8k XT Plus version "$(TARGET)_xtp.bin" built.
 
 xtplus_large:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XTPLUS_LARGE) -l"$(TARGET)_xtpl.lst" -o"$(TARGET)_xtpl.bin"
-	@echo *15k XT plus version "$(TARGET)_xtpl.bin" built.
+	@echo *15k XT Plus version "$(TARGET)_xtpl.bin" built.
 
 xt:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XT) -l"$(TARGET)_xt.lst" -o"$(TARGET)_xt.bin"
@@ -175,7 +174,7 @@ clean:
 	@$(RM) $(BUILD_DIR)\*.*
 	@echo Deleted "(*.*)" from "$(BUILD_DIR)/"
 
-checksum:  all
+checksum: all
 	@perl ..\tools\checksum.pl $(TARGET)_atl.bin $(ROMSIZE_LARGE)
 	@perl ..\tools\checksum.pl $(TARGET)_xtpl.bin $(ROMSIZE_LARGE)
 	@perl ..\tools\checksum.pl $(TARGET)_xtl.bin $(ROMSIZE_LARGE)

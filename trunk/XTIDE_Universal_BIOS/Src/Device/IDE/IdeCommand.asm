@@ -129,7 +129,7 @@ IDEDEVICE%+Command_OutputWithParameters:
 
 	; Output Sector Address High (only used by LBA48)
 %ifdef MODULE_EBIOS
-	eMOVZX	ax, BYTE [bp+IDEPACK.bLbaLowExt]	; Zero sector count
+	eMOVZX	ax, [bp+IDEPACK.bLbaLowExt]		; Zero sector count
 	mov		cx, [bp+IDEPACK.wLbaMiddleAndHighExt]
 	call	IDEDEVICE%+OutputSectorCountAndAddress
 %endif

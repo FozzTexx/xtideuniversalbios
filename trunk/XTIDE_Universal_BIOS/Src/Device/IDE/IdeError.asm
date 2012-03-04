@@ -22,7 +22,7 @@ IDEDEVICE%+Error_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL:
 	INPUT_TO_AL_FROM_IDE_REGISTER	ERROR_REGISTER_in
 
 %ifndef ASSEMBLE_SHARED_IDE_DEVICE_FUNCTIONS	; JR-IDE/ISA
-	jmp		ContinueFromMemIdeError
+	jmp		ContinueFromMemIdeError		; What's this supposed to do? *FIXME*
 %else
 ContinueFromMemIdeError:
 	xchg	al, ah			; Status Register now in AL, Error Register now in AH

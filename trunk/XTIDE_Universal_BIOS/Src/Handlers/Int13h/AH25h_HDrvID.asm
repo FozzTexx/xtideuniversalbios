@@ -17,7 +17,7 @@ SECTION .text
 ;		ES:BX:	Ptr to buffer to receive 512-byte drive information
 ;	Returns with INTPACK:
 ;		AH:		Int 13h return status
-;		CF:		0 if succesfull, 1 if error
+;		CF:		0 if successful, 1 if error
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH25h_HandlerForGetDriveInformation:
@@ -39,7 +39,7 @@ AH25h_HandlerForGetDriveInformation:
 ;		ES:SI:	Ptr to buffer to receive 512-byte drive information
 ;	Returns with INTPACK:
 ;		AH:		Int 13h return status
-;		CF:		0 if succesfull, 1 if error
+;		CF:		0 if successful, 1 if error
 ;	Corrupts registers:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
@@ -52,7 +52,7 @@ AH25h_GetDriveInformationToBufferInESSI:
 
 	call	AccessDPT_GetDriveSelectByteToAL
 	mov		bh, al
-	eMOVZX	ax, BYTE [di+DPT.bIdevarsOffset]
+	eMOVZX	ax, [di+DPT.bIdevarsOffset]
 	xchg	bp, ax
 	call	Device_IdentifyToBufferInESSIwithDriveSelectByteInBH
 

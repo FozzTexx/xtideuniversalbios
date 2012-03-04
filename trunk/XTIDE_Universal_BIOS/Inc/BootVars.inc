@@ -9,7 +9,7 @@ BOOT_READ_RETRY_TIMES		EQU		3
 
 
 
-; Pre-boot variables. These do not exist after successfull boot to OS.
+; Pre-boot variables. These do not exist after successful boot to OS.
 ; Segment is always 0000h, same as BDA segment
 struc BOOTVARS
 					resb	7C00h
@@ -94,7 +94,7 @@ endstruc
 %else
 	mov		ss, ax
 	lss		sp, [ss:BOOTVARS.dwPostStack]
-%endif	
+%endif
 %endmacro
 
 

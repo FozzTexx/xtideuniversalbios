@@ -12,7 +12,7 @@
 ;					to be compiled since other files are included to this
 ;					file (so no linker needed, Nasm does it all).
 
-ORG 000h						; Code start offset 0000h
+	ORG 0							; Code start offset 0000h
 
 %define MENUEVENT_INLINE_OFFSETS    ; Only one menu required, save space and inline offsets
 
@@ -200,7 +200,7 @@ iend
 	%include "IdeCommand.asm"
 	%include "IdeTransfer.asm"		; Must be included after IdeCommand.asm
 	%include "IdeWait.asm"
-	%include "IdeError.asm"			; Must be included after IdeWait.asm		
+	%include "IdeError.asm"			; Must be included after IdeWait.asm
 	%include "IdeDPT.asm"
 	%include "IdeIO.asm"
 	%include "IdeIrq.asm"
@@ -214,7 +214,7 @@ iend
 	%include "IdeCommand.asm"
 	%include "MemIdeTransfer.asm"	; Must be included after IdeCommand.asm
 	%include "IdeWait.asm"
-	%include "IdeError.asm"			; Must be included after IdeWait.asm		
+	%include "IdeError.asm"			; Must be included after IdeWait.asm
 %undef IDEDEVICE
 %endif
 

@@ -25,28 +25,28 @@ Int13h_DiskFunctionsHandler:
 	CREATE_FRAME_INTPACK_TO_SSBP	EXTRA_BYTES_FOR_INTPACK
 
 	call	RamVars_GetSegmentToDS
-		
+
 	call	DriveXlate_ToOrBack
 	mov		[RAMVARS.xlateVars+XLATEVARS.bXlatedDrv], dl
-		
+
 	call	FindDPT_ForDriveNumberInDL				; DS:DI points to our DPT, or NULL if not our drive
 	jnc		SHORT .OurFunction						; DPT found, this is one of our drives, and thus our function
 
-	cmp		ah, 0
-	jz		short .OurFunction						; we handle all function 0h requests (resets)
+	test	ah, ah
+	jz		SHORT .OurFunction						; we handle all function 0h requests (resets)
 	cmp		ah, 8
-	jnz		SHORT Int13h_DirectCallToAnotherBios	; non-8h function, handled by foreign bios
+	jne		SHORT Int13h_DirectCallToAnotherBios	; non-8h function, handled by foreign bios
 
 %ifndef MODULE_SERIAL_FLOPPY
-; With floppy support, we handle all traffic for function 08h, as we need to wrap both hard disk and 
-; floppy drive counts.  Without floppy support, we handle only hard disk traffic for function 08h, 
+; With floppy support, we handle all traffic for function 08h, as we need to wrap both hard disk and
+; floppy drive counts.  Without floppy support, we handle only hard disk traffic for function 08h,
 ; and thus need the check below.
 ;
-	test	dl, dl								
+	test	dl, dl
 	jns		SHORT Int13h_DirectCallToAnotherBios
-%endif		
-				
-.OurFunction:	
+%endif
+
+.OurFunction:
 	; Jump to correct BIOS function
 	eMOVZX	bx, ah
 	shl		bx, 1
@@ -140,7 +140,7 @@ ALIGN JUMP_ALIGN
 Int13h_ReturnSuccessForFloppy:
 	test	dl, dl
 	js		short Int13h_UnsupportedFunction
-	mov		ah, 0
+	xor		ah, ah
 	jmp		short Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 %endif
 
@@ -171,7 +171,7 @@ ALIGN JUMP_ALIGN
 Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH:
 %ifdef MODULE_SERIAL_FLOPPY
 	mov		al, [bp+IDEPACK.intpack+INTPACK.dl]
-Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH_ALHasDriveNumber:	
+Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH_ALHasDriveNumber:
 	call	Int13h_SetErrorCodeToBdaAndToIntpackInSSBPfromAH_ALHasDriveNumber
 %else
 	call	Int13h_SetErrorCodeToBdaAndToIntpackInSSBPfromAH
@@ -190,7 +190,7 @@ Int13h_ReturnFromHandlerWithoutStoringErrorCode:
 ;		DS:		RAMVARS segment
 ;	Returns:
 ;		Depends on function
-;       NOTE: ES:DI needs to be returned from the previous interrupt 
+;       NOTE: ES:DI needs to be returned from the previous interrupt
 ;		      handler, for floppy DPT in function 08h
 ;	Corrupts registers:
 ;		None
@@ -250,11 +250,11 @@ Int13h_SetErrorCodeToBdaAndToIntpackInSSBPfromAH_ALHasDriveNumber:
 	mov		bl, BDA.bFDRetST & 0xff
 .HardDisk:
 	LOAD_BDA_SEGMENT_TO	ds, di
-	mov		[bx], ah		
+	mov		[bx], ah
 %else
 Int13h_SetErrorCodeToBdaAndToIntpackInSSBPfromAH:
 	; Store error code to BDA
-	LOAD_BDA_SEGMENT_TO	ds, di		
+	LOAD_BDA_SEGMENT_TO	ds, di
 	mov		[BDA.bHDLastSt], ah
 %endif
 

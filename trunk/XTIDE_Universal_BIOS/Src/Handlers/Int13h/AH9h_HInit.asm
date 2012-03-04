@@ -14,7 +14,7 @@ SECTION .text
 ;		SS:BP:	Ptr to IDEPACK
 ;	Returns with INTPACK:
 ;		AH:		Int 13h return status
-;		CF:		0 if succesfull, 1 if error
+;		CF:		0 if successful, 1 if error
 ;--------------------------------------------------------------------
 AH9h_HandlerForInitializeDriveParameters:
 %ifndef USE_186
@@ -35,7 +35,7 @@ AH9h_HandlerForInitializeDriveParameters:
 ;		SS:BP:	Ptr to IDEPACK
 ;	Returns:
 ;		AH:		Int 13h return status
-;		CF:		0 if succesfull, 1 if error
+;		CF:		0 if successful, 1 if error
 ;	Corrupts registers:
 ;		AL, BX, DX
 ;--------------------------------------------------------------------
@@ -44,21 +44,21 @@ AH9h_InitializeDriveForUse:
 	push	cx
 
 %ifdef MODULE_SERIAL
-	; 
-	; no need to do this for serial deveices, and we use the DPT_RESET flag bits
+	;
+	; no need to do this for serial devices, and we use the DPT_RESET flag bits
 	; to store the drive type for serial floppy drives (MODULE_SERIAL_FLOPPY)
 	;
 	xor		ah, ah
 	test	byte [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE	; Clears CF
-	jnz		.ReturnNotSuccessfull
+	jnz		.ReturnNotSuccessful
 %endif
-		
+
 	; Try to select drive and wait until ready
 	or		BYTE [di+DPT.bFlagsHigh], MASKH_DPT_RESET		; Everything uninitialized
 	call	AccessDPT_GetDriveSelectByteToAL
 	mov		[bp+IDEPACK.bDrvAndHead], al
 	call	Device_SelectDrive
-	jc		SHORT .ReturnNotSuccessfull
+	jc		SHORT .ReturnNotSuccessful
 	and		BYTE [di+DPT.bFlagsHigh], ~FLGH_DPT_RESET_nDRDY	; Clear since success
 
 	; Initialize CHS parameters if LBA is not used
@@ -79,10 +79,10 @@ AH9h_InitializeDriveForUse:
 	; Initialize block mode transfers
 .InitializeBlockMode:
 	call	InitializeBlockMode
-	jc		SHORT .ReturnNotSuccessfull
+	jc		SHORT .ReturnNotSuccessful
 	and		BYTE [di+DPT.bFlagsHigh], ~FLGH_DPT_RESET_nSETBLOCK	; Keeps CF clear
 
-.ReturnNotSuccessfull:
+.ReturnNotSuccessful:
 	pop		cx
 	pop		si
 	ret
@@ -95,7 +95,7 @@ AH9h_InitializeDriveForUse:
 ;		SS:BP:	Ptr to IDEPACK
 ;	Returns:
 ;		AH:		BIOS Error code
-;		CF:		Cleared if succesfull
+;		CF:		Cleared if successful
 ;				Set if any error
 ;	Corrupts registers:
 ;		AL, BX, CX, DX
@@ -120,7 +120,7 @@ InitializeDeviceParameters:
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
 ;	Returns:
 ;		AH:		BIOS Error code
-;		CF:		Cleared if succesfull
+;		CF:		Cleared if successful
 ;				Set if any error
 ;	Corrupts registers:
 ;		AL, BX, CX, DX, SI
@@ -145,7 +145,7 @@ SetWriteCache:
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
 ;	Returns:
 ;		AH:		BIOS Error code
-;		CF:		Cleared if succesfull
+;		CF:		Cleared if successful
 ;				Set if any error
 ;	Corrupts registers:
 ;		AL, BX, CX, DX

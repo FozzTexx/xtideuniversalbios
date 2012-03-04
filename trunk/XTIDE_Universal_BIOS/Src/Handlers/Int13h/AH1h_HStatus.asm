@@ -22,15 +22,19 @@ AH1h_HandlerForReadDiskStatus:
 
 %ifdef MODULE_SERIAL_FLOPPY
 	test	dl, dl
-	jns		.HardDisk
-	mov		ah, [BDA.bFDRetST]		; Unlike for hard disks below, floppy version does not clear the status
+	js		.HardDisk
+	mov		ah, [BDA.bFDRetST]	; Unlike for hard disks below, floppy version does not clear the status
 	jmp		.done
-.HardDisk:	
+.HardDisk:
 %endif
-		
-	xchg	ah, [BDA.bHDLastSt]		; Load and clear last error
-									; Note that AH is cleared with the LOAD_BDA_SEGMENT above
-				
+
+	xchg	ah, [BDA.bHDLastSt]	; Load and clear last error (AH is cleared with the LOAD_BDA_SEGMENT_TO above)
+
 .done:
+%ifndef USE_186
 	call	Int13h_SetErrorCodeToIntpackInSSBPfromAH
 	jmp		Int13h_ReturnFromHandlerWithoutStoringErrorCode
+%else
+	push	Int13h_ReturnFromHandlerWithoutStoringErrorCode
+	jmp		Int13h_SetErrorCodeToIntpackInSSBPfromAH
+%endif

@@ -23,7 +23,7 @@ SECTION .text
 ;		CH:		Parameter to LBA High / Cylinder High Register (subcommand specific)
 ;	Returns with INTPACK:
 ;		AH:		Int 13h return status
-;		CF:		0 if succesfull, 1 if error
+;		CF:		0 if successful, 1 if error
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH23h_HandlerForSetControllerFeatures:
@@ -50,7 +50,7 @@ AH23h_HandlerForSetControllerFeatures:
 ;		SS:BP:	Ptr to IDEPACK
 ;	Returns:
 ;		AH:		Int 13h return status
-;		CF:		0 if succesfull, 1 if error
+;		CF:		0 if successful, 1 if error
 ;	Corrupts registers:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
