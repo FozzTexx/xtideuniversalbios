@@ -89,9 +89,9 @@ Some menu items appear only when needed to make configuring easier.
   * EEPROM type [default=2864]
    Selects EEPROM type. XTIDE rev1 uses 2864 (8 kiB) EEPROM. Select 2864mod if you have done the A0-A3 address line swap mod to your XTIDE.
   * SDP command [default=Enable]
-   Selects Software Data Protect command to be written before every page. You should set if to Enable if the EEPROM supports is.
+   Selects Software Data Protect command to be written before every page. You should set it to Enable if the EEPROM supports SDP.
   * Page size [default=1]
-   Large page makes flashing faster. You'll probably want to select largerst that your EEPROM supports. Slow XT systems might not be fast enough for largest page sizes.
+   Large page makes flashing faster. You'll probably want to select largest that your EEPROM supports. Slow XT systems might not be fast enough for large page sizes.
   * EEPROM address [default=D000h]
    Segment address where the EEPROM locates. Supported versions of XTIDE Universal BIOS will be detected automatically.
   * Generate checksum byte [default=Yes]
@@ -107,23 +107,25 @@ Some menu items appear only when needed to make configuring easier.
   * Boot settings
    Opens submenu for boot related settings such as should boot menu be enabled etc.
   * Full operating mode [default=No for XT builds, Yes for AT builds]
-   "Full operating mode" reserves a bit of Conventional memory for XTIDE Universal BIOS variables. Disabling this will reduce maximum number of IDE controllers to 2 and place the variables to memory area reserved for IBM ROM Basic. You should always enable this unless:
-    # You want to use IBM ROM Basic or any software that requires that memory area.
-    # You have any Tandy 1000 model with 640k or less RAM (see "kiB to steal from RAM" for a fix).
+   "Full operating mode" reserves a bit of Conventional memory for XTIDE Universal BIOS variables. Disabling this will reduce maximum number of IDE controllers to 2 and place the variables to memory area reserved for IBM ROM Basic (30:0h). You should always enable this unless:
+    # You don't need to use IBM ROM Basic or any BIOS or software that requires that memory area.
+    # You have any Tandy 1000 model with 640k or less RAM (see "kiB to steal from RAM" for a way around this problem).
     # You really need the 1k of Conventional memory that "Full operating mode" requires.
   * kiB to steal from RAM [default=1]
    This menuitem will appear only when "Full operating mode" is enabled. Leave this to 1 unless you really need to enable "Full operating mode" on any Tandy 1000 model with 640k or less RAM. Setting this to 33 (almost always enough) or 65 (always enough) in such case will reserve the top of RAM to Tandy video circuitry thus disabling sharing of conventional memory with video circuitry.
+  * IDE controllers
+   Number of IDE controllers to be searched by XTIDE Universal BIOS. The maximum is 4 if Full operation mode" is enabled. Otherwise the maximum is 2.
 
 == Menuitems on "Boot settings" submenu ==
   * Display Mode [default=Default]
-   This setting allows you to force display mode change before boot menu is displayed. This setting will work even if boot menu is disabled and will leave the specified display mode set when booting to OS. Forcing display mode can be handy if you have composite monitor (use 40 column modes for better readability) or black&white analog monitor (use 80 column black&white modes for better readability).
+   This setting allows you to force display mode change before boot menu is displayed. This setting will work even if boot menu is disabled and will leave the specified display mode set when booting to OS. Forcing display mode can be handy if you have composite monitor (use 40 column modes for better readability) or black&white VGA monitor (use 80 column black&white mode for better readability).
   * Number of Floppy Drives [default=Auto]
    In some systems number of floppy drives cannot be properly auto detected. This settings allows you to specify it manually so all drives can be displayed on boot menu.
   * Scan for Serial Devices [default=No]
   * Boot Menu [default=Yes]
    You can disable boot menu if you don't like it for some reason. Normal Drive A, then C, then INT 18h (ROM Basic, ROM DOS or boot error) boot order is used when boot menu is disabled.
   * Default boot drive [default=80h]
-   Specifies what drive is highlighted on boot menu by default.
+   Specifies what drive is highlighted on boot menu by default. Default of 80h means first hard drive in the system.
   * Selection timeout [default=540]
    Specifies the duration before auto selecting default boot drive from boot menu. 1 tick = 54.9 ms so default duration of 540 is about 30 seconds.
   * Swap boot drive numbers [default=yes]
@@ -135,9 +137,9 @@ Some menu items appear only when needed to make configuring easier.
    Moves back to "Configure XTIDE Universal BIOS" submenu.
   * Master Drive
   * Slave Drive
-   Opens submenu for Master/Slave Drive specific settings on this IDE Controller.
+   Opens submenu for Master/Slave Drive specific settings for this IDE Controller.
   * Device Type [default=XTIDE for XT builds, 16-bit for AT builds]
-   Type of device. 16-bit will support all standard IDE controllers, including VLB controllers. 32-bit will use 32-bit transfers on VLB controllers but those controllers usually require native support for full speed. Other devices include XTIDE rev1 (and rev2 slow mode), XTIDE mod with swapped A0 and A3 address lines (XTIDE rev2 fast mode), JR-IDE/ISA (IDE_JR8K.BIN and 16 kiB builds only) and support for virtual devices through serial port.
+   Type of device. 16-bit will support all standard IDE controllers, including VLB controllers. 32-bit will use 32-bit transfers on VLB controllers but those controllers usually require native support for full speed. Other devices include XTIDE rev1 (and rev2 slow mode), XTIDE mod with swapped A0 and A3 address lines (XTIDE rev2 fast mode), JR-IDE/ISA (IDE_JR8K.BIN and 15 kiB builds only) and support for virtual devices through serial port.
   * Base (cmd block) address [default=300h for XT builds, 1F0h for AT builds (Primary IDE)]
    Command block (base port) address where the IDE Controller is located. JR-IDE/ISA does not use this setting.
   * Control block address [default=308h for XT builds, 3F0h for AT builds (Primary IDE)]
@@ -158,8 +160,8 @@ Some menu items appear only when needed to make configuring easier.
   * User specified CHS [default=no]
    Specify CHS parameters manually. This will force the drive to CHS addressing and EBIOS functions will be disabled.
   * User specified LBA [default=no]
-   Specify drive capacity manually (starting from 8.4 GB). All versions of MS-DOS 7.x seem to have compatibility problems with very large drives so you might need to reduce drive capacity. Use FreeDOS if you want to use full capacity of the drive.
+   Specify drive capacity manually (starting from 8.4 GB). All versions of MS-DOS 7.x (Windows 9x) seem to have compatibility problems with very large drives so you might need to reduce drive capacity. Use FreeDOS if you want to use full capacity of the drive.
   * Cylinders, Heads and Sectors per track
-   These will appear when "User specified CHS" is enabled. Maximum values of 16383 Cylinders, 16 Heads and 63 Sectors per track will provide capacity of 7.8 GiB/8.4 GB that is the maximum that MS-DOS 4.xx to 6.xx supports. Note that this will force CHS addressing so once formatted, there will be data corruption if you try to access the drive with system using LBA addressing.
+   These will appear when "User specified CHS" is enabled. Maximum values of 16383 Cylinders, 16 Heads and 63 Sectors per track will provide capacity of 7.8 GiB/8.4 GB that is the maximum that MS-DOS 3.31 to 6.22 supports. Note that this will force CHS addressing so once formatted, there will be data corruption if you try to access the drive with system using LBA addressing.
   * Millions of sectors
-   This will appear when "User specified LBA" is enabled. You can specify the drive capacity in millions of sectors. Note that MS-DOS 7.x or FreeDOS is required to access more than 7.8 GiB/8.4 GB.-
+   This will appear when "User specified LBA" is enabled. You can specify the drive capacity in millions of sectors. Note that MS-DOS 7.x (Windows 9x) or FreeDOS is required to access more than 7.8 GiB/8.4 GB.
