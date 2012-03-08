@@ -10,7 +10,6 @@ XTIDE Universal BIOS makes possible to use modern large ATA hard disks or Compac
 XTIDE Universal BIOS can be used on any IBM PC, XT, AT and 100% compatible system. On AT systems you can use any 16-ISA or VLB IDE or Multi I/O controller. For XT systems you can use XTIDE rev1 (not available anymore), [http://www.vintage-computer.com/vcforum/showwiki.php?title=XTIDE+Rev2 XTIDE rev2] or [http://www.retrotronics.org/tiki/tiki-index.php JR-IDE/ISA].
 
 
-
 == Features ==
 
 Some of the features included in XTIDE Universal BIOS are...
@@ -45,7 +44,6 @@ All XT builds (including XT+) can be used on AT systems but XT builds have few d
 XT builds are preconfigured for XTIDE rev1 at port 300h and IDE_JR8K.BIN is preconfigured for JR-IDE/ISA. AT builds are configured to search standard Primary and Secondary IDE drives, XTIDE rev1 at port 300h and 4th stardard IDE controller at port 168h (found on many sound cards). Interrupts are disabled by default on all builds.
 
 ----
-
 = Installing XTIDE Universal BIOS =
 
 == Hardware supporting XTIDE Universal BIOS ROM ==
@@ -66,9 +64,7 @@ XTIDE Universal BIOS comes with DOS utility called XTIDECFG.COM. It configures X
 
 CTRL can be held down to skip XTIDE Universal BIOS initialization. Right time to press CTRL down is when POST OK beep is heard or just before all memory is tested.
 
-
 ----
-
 = Using XTIDECFG.COM (XTIDE Universal BIOS configuration and flashing program) =
 
 XTIDECFG.COM is intended to be user friendly. At the bottom of the screen appears quick information for each menu item. Pressing F1 displays more detailed help for menu item (some menu items do not have detailed help available). Up, Down, PgUp, PgDn, Home and End keys are used for menu navigation. Enter selects menuitem and Esc resumes to previous menu.
@@ -122,7 +118,7 @@ Some menu items appear only when needed to make configuring easier.
   * IDE controllers
    Number of IDE controllers to be searched by XTIDE Universal BIOS. The maximum is 4 if Full operation mode" is enabled. Otherwise the maximum is 2.
 
-== Menuitems on "Boot settings" submenu ==
+=== Menuitems on "Boot settings" submenu ===
   * Display Mode [default=Default]
    This setting allows you to force display mode change before boot menu is displayed. This setting will work even if boot menu is disabled and will leave the specified display mode set when booting to OS. Forcing display mode can be handy if you have composite monitor (use 40 column modes for better readability) or black&white VGA monitor (use 80 column black&white mode for better readability).
   * Number of Floppy Drives [default=Auto]
@@ -138,7 +134,7 @@ Some menu items appear only when needed to make configuring easier.
    MS-DOS and old operating systems can only boot from first floppy or hard disk drive. Swapping boot drive numbers allows booting from all drives in the system.
 
 
-== Menuitems on "xxx IDE Controller" submenus ==
+=== Menuitems on "xxx IDE Controller" submenus ===
   * Back to Configuration Menu
    Moves back to "Configure XTIDE Universal BIOS" submenu.
   * Master Drive
@@ -157,7 +153,7 @@ Some menu items appear only when needed to make configuring easier.
   * COM Port [default=COM1]
   * Baud Rate [default=9600]
 
-== Menuitems for "Master/Slave Drive" submenus ==
+=== Menuitems for "Master/Slave Drive" submenus ===
   * Back to IDE Controller Menu
   * Block Mode Transfers [default=Yes]
    Block Mode Transfers will speed up the transfer rates. This should be leaved enabled but there is at least one old hard drive with buggy block mode support when interrupts are enabled (Quantum, maybe 100MB).
@@ -173,7 +169,6 @@ Some menu items appear only when needed to make configuring easier.
    This will appear when "User specified LBA" is enabled. You can specify the drive capacity in millions of sectors. Note that MS-DOS 7.x (Windows 9x) or FreeDOS is required to access more than 7.8 GiB/8.4 GB.
 
 ----
-
 = Boot menu =
 
 Using boot menu is optional. Boot menu allows to boot from any floppy or hard disk drive. Drive can be selected with Up and Down arrows. Home, End, PgUp and PgDn keys can speed up selection if there are many drives in the boot menu. Press Enter to boot from selected drive.
@@ -199,8 +194,8 @@ Boot menu can display a little bit information about the drive.
    This shows the drive capacity. This is the same as reported by the drive unless you have specified CHS or LBA manually. Capacity is read from INT 13h AH=08h for drives not handled by XTIDE Universal BIOS.
   * Addr.
    This shows the current addressing mode:
-    * L-CHS is used for drives with 1024 or less cylinders (504 MiB / 528 MB or less). L-CHS is the fastest mode since no address translations are required.
-    * P-CHS addressing is used for drives with 1025 or more cylinders without LBA support. It is unlikely such drives exists so P-CHS addressing is used if you manually specify CHS parameters with 1025 or more heads. P-CHS addressing is only a bit slower than L-CHS addressing.
+    * L-CHS is used for drives with 1024 or less cylinders (504 MiB / 528 MB and smaller drives). L-CHS is the fastest mode since no address translations are required.
+    * P-CHS addressing is used for drives without LBA support and 1025 or more cylinders. It is unlikely such drives exists so P-CHS addressing is used if you manually specify CHS parameters with 1025 or more heads. P-CHS addressing is only a bit slower than L-CHS addressing.
     * LBA28 is used when drive supports LBA and has capacity at most 128 GiB / 137 GB.
     * LBA48 is used for drives larger than 128 GiB / 137 GB.
    LBA modes are the slowest but the difference cannot be noticed on any AT system. There is no performance differences between LBA28 and LBA48. EBIOS functions (support for drives larger than 7.8 GiB / 8.4 GB) is available only when LBA addressing is used.
@@ -214,3 +209,66 @@ Boot menu can display a little bit information about the drive.
    Shows the status from drive initialization. This should always be zero. If it is something else, then something has gone wrong.
 
 ----
+= Performance problems =
+
+== MS-DOS DIR command takes very long time ==
+This is completely normal on systems with slow CPUs and large partitions. Calculating free space first time is simply very slow process in such case.
+
+It was very rare to have partitions larger than 32 MB on XT systems so there weren't long delays then. Now XTIDE and JR-IDE/ISA makes possible to use very large modern drives on such slow systems. MS-DOS 3.31 allows partitions up to 512 MiB and MS-DOS 4.00 to 6.22 allows partitions up to 2 GiB. Those are enormous for XT systems and the slow 8088 or even the V20 take some time to calculate free space with FAT file system.
+
+It might be a good idea to use small partition for OS and frequently used utilities and large partition(s) for games and less needed data. You should experiment what feels the best size for the small partition. Please do let me know the results if you do some testing.
+
+It is very likely that this same problem will occur if you decide to use MS-DOS 7.x (Windows 9x) of FreeDOS and a large FAT-32 partition on a slow 386 or even 486.
+
+== XTIDE Universal BIOS v2.x.x has worse transfer rates than v1.1.5! ==
+There are three reasons for this:
+  * Virtual device support, XTIDE A0-A3 address line swap mod and memory mapping support for JR-IDE/ISA require some generalizations in code that results in more comparisons, jumps and function calls than before. These slow down the execution especially on slow CPUs.
+  * V2.0.0 has some improvements in error detection that also makes the CPU to do more work.
+  * V2.0.0 disable Drive Internal Cache by default. MS-DOS does not access hard drives directly and there are no BIOS function to flush cache so data corruption is likely when using modern drives with large internal caches unless the write cache is disabled. Disabling the write cache has much less hit on performance that you might think so it it not good idea to enable.
+
+If you are happy with v1.1.5 then go ahead and use it. I think most people will find that v2.0.0 is worth the upgrade even if transfer rates are a bit slower.
+
+== Importance of Shadow RAM ==
+Always enable Shadow RAM and cache is your systems supports them! They might speed up much more than you think. This is especially true on Pentium systems.
+
+Pentium will fetch at least 8 bytes (since it has 64-bit wide bus) before it can start to execute the instructions. Even if you have placed the ROM on a 16-bit ISA or 32-bit VLB or PCI card the ROM itself is only 8-bits wide. So the ROM must be read 8 times before CPU can start executing instructions. And if those 8 times are read from 8 MHz ISA with wait states. Believe it or not, this all can slow transfer rates on a mighty Pentium to the level of fast XT system.
+
+So always enable Shadow RAM to copy the ROM to RAM to get full bus width and you might also want to enable cache for ROM areas to compensate for RAM latencies and slower clock rate. The Shadow RAM is the more important of the two.
+
+You should be aware that you most likely need to disable Shadow RAM when you flash the EEPROM. Another thing to note is that JR-IDE/ISA does not work is Shadow RAM or ROM area caching is enabled. You wouldn't want to connect drives to 8-bit bus on a 32-bit system anyway. You can use the JR-IDE/ISA if you just need the 512 kiB FLASH.
+
+----
+= IDE controllers on VLB and PCI bus =
+
+16-bit ISA IDE controllers are basically very simple ISA to PATA adapters so they all perform alike. ISA is not fast enough for anything above PIO-0 transfer method (with theoretical maximum of 3.3 MB/s).
+
+VLB and PCI IDE controllers are much more complex since they have an actual controller between bus and IDE drive. This controller can buffer the data so CPU can read 32-bits at a time. Early VLB controller are limited to PIO-2 but later VLB controllers and (all?) PCI controllers also support PIO modes 3 and 4. These later VLB multi I/O cards have two IDE connectors so you should use one of those even if you don't need the other IDE connector.
+
+Unfortunately many of the controllers work only at PIO-0 by default. Some VLB multi I/O cards have jumpers to set transfer rates but most require controller specific programming to enable higher PIO modes. It is possible that your VLB multi I/O card don't offer any advantages over ISA multi I/O cards if your BIOS does not support the IDE controller on the VLB card. There are DOS drivers for many VLB IDE controllers so BIOS support isn't necessity.
+
+XTIDE Universal BIOS does not support any specific VLB controllers at the moment. I'm planning to add native support for Vision QD6580 controller soon (for real this time).
+
+----
+= Known problems =
+
+== Known bugs in XTIDE Universal BIOS ==
+  * Will be updated during beta testing.
+
+
+== Problems with Compact Flash cards and microdrives ==
+
+CF cards and microdrives are IDE devices and should work as any hard disk. Unfortunately there are many CF cards and microdrives with limitations. Some of them only work as a master drive and not as a slave drive. Some of them requires MBR to be re-created before they can be booted.
+
+MBR can be re-created with FDISK /MBR switch. You can also use any low-level data wipe utility to clear non-bootable MBR. MBR will then be created automatically when partitioning the drive.
+
+----
+= Contact information =
+
+[http://www.vintage-computer.com/vcforum/showthread.php?17986-XTIDE-Universal-BIOS XTIDE Universal BIOS thread can be found at Vintage Computer Forums]. I recommend to post there but you can also send email to aitotat (at) gmail.com.
+
+When reporting bugs or other problems, please post the following information:
+  * Computer specs (at least CPU and RAM but details about expansion cards and how they are configured might be useful)
+  * Operating system and version (for example MS-DOS 6.22)
+  * Hard disk(s) you are using with XTIDE Universal BIOS
+  * Hard disk(s) not handled by XTIDE Universal BIOS (if any)
+  * Reset status that boot menu shows if problem is related to specific drive
