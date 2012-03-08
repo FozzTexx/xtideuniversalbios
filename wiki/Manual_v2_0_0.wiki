@@ -165,3 +165,28 @@ Some menu items appear only when needed to make configuring easier.
    These will appear when "User specified CHS" is enabled. Maximum values of 16383 Cylinders, 16 Heads and 63 Sectors per track will provide capacity of 7.8 GiB/8.4 GB that is the maximum that MS-DOS 3.31 to 6.22 supports. Note that this will force CHS addressing so once formatted, there will be data corruption if you try to access the drive with system using LBA addressing.
   * Millions of sectors
    This will appear when "User specified LBA" is enabled. You can specify the drive capacity in millions of sectors. Note that MS-DOS 7.x (Windows 9x) or FreeDOS is required to access more than 7.8 GiB/8.4 GB.
+
+----
+
+= Boot menu =
+
+Using boot menu is optional. Boot menu allows to boot from any floppy or hard disk drive. Drive can be selected with Up and Down arrows. Home, End, PgUp and PgDn keys can speed up selection if there are many drives in the boot menu. Press Enter to boot from selected drive.
+
+
+== Drive swapping ==
+
+DOS requires that it is loaded from first floppy drive (00h) or first hard disk (80h) in the system. XTIDE Universal BIOS can translate drive numbers to make booting possible from any floppy drive or hard disk. Drive number translation is implemented with simple swapping method: selected drive will be swapped with first drive and vice versa. For example drive 82h on boot menu would be translated to 80h and 80h would be translated to 82h. Drive swapping for floppy drives and hard disks are handled separately so it is possible to install DOS from any floppy drive to any hard disk. Drive number translation can be disabled with XTIDECFG.COM (see "Swap boot drive numbers" on Menuitems on "Boot settings" submenu).
+
+
+== Boot menu hotkeys ==
+
+Keys A to Z work as a hotkeys for boot menu drives. Hotkeys have another benefit: they allow to install DOS from any floppy drive to any hard disk. Select hard disk from menu but do not press Enter. Press any floppy drive hotkey instead to boot from floppy while maintaining selected hard disk translation.
+
+
+== Boot menu drive information ==
+
+Boot menu can display a little bit information about the drive.
+
+  * Drive capacity
+
+----
