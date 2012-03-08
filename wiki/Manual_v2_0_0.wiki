@@ -1,0 +1,99 @@
+#summary Instructions for XTIDE Universal BIOS v2.0.0
+*Table of Contents*
+<wiki:toc max_depth="3" />
+----
+
+= Introduction =
+
+XTIDE Universal BIOS makes possible to use modern large ATA hard disks or Compact Flash cards on old PC's. You can then enjoy quiet or noiseless drives with more capacity than you'll ever need for old computers.
+
+XTIDE Universal BIOS can be used on any IBM PC, XT, AT and 100% compatible system. On AT systems you can use any 16-ISA or VLB IDE or Multi I/O controller. For XT systems you can use XTIDE rev1 (not available anymore), [http://www.vintage-computer.com/vcforum/showwiki.php?title=XTIDE+Rev2 XTIDE rev2] or [http://www.retrotronics.org/tiki/tiki-index.php JR-IDE/ISA].
+
+
+
+== Features ==
+
+Some of the features included in XTIDE Universal BIOS are...
+  * Supports up to 4 IDE controllers
+  * Support for virtual drives using serial port
+  * Supports drives with any capacity (MS-DOS 7.x or FreeDOS is required to access more than 8.4 GB)
+  * PIO transfers with block mode support
+  * Hard disk autodetection
+  * Autodetected capacity, both CHS and LBA, can be overridden to make drive appear smaller than it is
+  * Boot menu for selecting any floppy drive or hard disk to boot from, including hard disks that are not handled by XTIDE Universal BIOS
+  * Compact Flash and Microdrive support
+  * Support for most 8-, 16-, and 32-bit IDE controllers
+...and many more.
+
+
+== Different builds ==
+
+At the moment there are different builds included in the XTIDE Universal BIOS zip file.
+  * IDE_XT.BIN, IDE_JR8K.BIN and IDE_XTL.BIN (XT build)
+   XT build uses only instructions supported by 8086/8088 making it the only build that can be used on any PC, including the original IBM PC model 5150. IDE_XT.BIN is 8 kiB image and IDE_XTL.BIN is 16 kiB image with support for JR-IDE/ISA. IDE_JR8K.BIN has JR-IDE/ISA support but serial port features are removed to reduce the size to 8 kiB.
+  * IDE_XTP.BIN and IDE_XTPL.BIN (XT+ build)
+   XT+ build has the same features as the XT build but XT+ build uses instructions introduced in 80186/80188. Those instructions are supported by all later x86 CPUs, including NEC V20/V30. 8-bit transfers rates will be better thanks to INS and OUTS instructions. IDE_XTP.BIN is 8 kiB image and IDE_XTPL.BIN is 16 kiB image with support for JR-IDE/ISA.
+  * IDE_AT.BIN (AT build)
+   AT build is meant for all AT class machines (16-bit or 32-bit bus). AT build supports OS hooks to allow operating system to do some processing while drive seeks the requested data (if interrupts are enabled).
+
+Normal XT builds are preconfigured for XTIDE rev1 at port 300h and IDE_JR8K.BIN is preconfigured for JR-IDE/ISA. AT builds are configured to search standard Primary and Secondary IDE drives, XTIDE rev1 at port 300h and 4th stardard IDE controller at port 168h (found on many sound cards). Interrupts are disabled by default on all builds.
+
+----
+
+= Installing XTIDE Universal BIOS =
+
+== Hardware supporting XTIDE Universal BIOS ROM ==
+
+The most convenient way to use XTIDE Universal BIOS is to use [http://www.vintage-computer.com/vcforum/showwiki.php?title=XTIDE+Rev2 XTIDE card]. It can be used on any PC with free 8-bit ISA slot. You might not want to connect any drives to it in 16- or 32-bit systems since 8-bit transfer will be very slow. Using XTIDE card allows EEPROM flashing so it is really easy to update XTIDE Universal BIOS.
+
+Another option is to use any card with free ROM socket for 8 kiB or larger ROMs. Official XTIDE builds are meant for 8 kiB and 16 kiB ROMs but you can burn it on larger ROM if you append enough zeroes to the end (only append zeroes so checksum does not change). Many network cards have unused ROM sockets but there are also few multi I/O cards and IDE controllers with ROM sockets. The network card remains fully usable even if you place XTIDE Universal BIOS ROM on it.
+
+You don't need EPROM/EEPROM programmer if you already have XTIDE card. XTIDE card can be used to flash additional EEPROMs (8 kiB 2864) that can be moved to EPROM (8 kiB 2764) sockets.
+
+
+== Configuring and flashing ==
+
+XTIDE Universal BIOS comes with DOS utility called XTIDECFG.COM. It configures XTIDE Universal BIOS and also works as a generic EEPROM flasher supporting EEPROM sizes up to 32 kiB. IXTIDECFG.COM allows saving changes to BIOS images so that they can be programmed with other programming software or device.
+
+
+== Other things to know ==
+
+CTRL can be held down to skip XTIDE Universal BIOS initialization. Right time to press CTRL down is when POST OK beep is heard or just before all memory is tested.
+
+
+----
+
+= Using XTIDECFG.COM (XTIDE Universal BIOS configuration and flashing program) =
+
+XTIDECFG.COM is intended to be user friendly. At the bottom of the screen appears quick information for each menu item. Pressing F1 displays more detailed help for menu item (some menu items do not have detailed help available). Up, Down, PgUp, PgDn, Home and End keys are used for menu navigation. Enter selects menuitem and Esc resumes to previous menu.
+
+Some menu items appear only when needed to make configuring easier.
+
+
+== Menuitems on "Main Menu" ==
+  * Exit to DOS
+   Exits to DOS. If any changes are made, then dialog is displayed about saving the changes. You can also exit to DOS by pressing Esc at the main menu.
+  * Load BIOS from file
+   Loads any (not just XTIDE Universal BIOS) file to be flashed.
+  * Configure XTIDE Universal BIOS
+   This menuitem appears only when supported version of XTIDE Universal BIOS is loaded to be configured.
+  * Flash EEPROM
+   This menuitem appears when file is loaded.
+
+== Menuitems on "Configure XTIDE Universal BIOS" submenu ==
+  * Back to Main Menu
+  * Primary IDE Controller
+  * Secondary IDE Controller
+  * Tertiary IDE Controller
+  * Quaternary IDE Controller
+   Each "xxx IDE Controller" submenu displays IDE controller specific settings. "IDE controllers" menuitem specifies the visible "xxx IDE Controller" submenus.
+  * Boot settings
+   Opens submenu for boot related settings such as should boot menu be enabled etc.
+  * Full operating mode [default=No for XT builds, Yes for AT builds]
+   "Full operating mode" reserves a bit of Conventional memory for XTIDE Universal BIOS variables. Disabling this will reduce maximum number of IDE controllers to 2 and place the variables to memory area reserved for IBM ROM Basic. You should always enable this unless:
+  # You want to use IBM ROM Basic or any software that requires that memory area.
+  # You have any Tandy 1000 model with 640k or less RAM.
+  # You really need the 1k of Conventional memory that "Full operating mode" requires.
+  * kiB to steal from RAM [default=1]
+   This menuitem will appear only when "Full operating mode" is enabled. Leave this to 1 unless you really need to enable "Full operating mode" on any Tandy 1000 model with 640k or less RAM. Setting this to 33 (mostly enough) or 65 (always enough) in such case will reserve the top of RAM to Tandy video circuitry thus disabling sharing of conventional memory with video circuitry.
+
