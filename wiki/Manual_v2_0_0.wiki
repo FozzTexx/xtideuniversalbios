@@ -57,7 +57,7 @@ You don't need EPROM/EEPROM programmer if you already have XTIDE card. XTIDE car
 
 == Configuring and flashing ==
 
-XTIDE Universal BIOS comes with DOS utility called XTIDECFG.COM. It configures XTIDE Universal BIOS and also works as a generic EEPROM flasher supporting EEPROM sizes up to 32 kiB. IXTIDECFG.COM allows saving changes to BIOS images so that they can be programmed with other programming software or device.
+XTIDE Universal BIOS comes with DOS utility called XTIDECFG.COM. It configures XTIDE Universal BIOS and also works as a generic EEPROM flasher supporting EEPROM sizes up to 32 kiB. XTIDECFG.COM allows saving changes to BIOS images so that they can be programmed with other programming software or device.
 
 
 == Other things to know ==
@@ -214,7 +214,7 @@ Boot menu can display a little bit information about the drive.
 == MS-DOS DIR command takes very long time ==
 This is completely normal on systems with slow CPUs and large partitions. Calculating free space first time is simply very slow process in such case.
 
-It was very rare to have partitions larger than 32 MB on XT systems so there weren't long delays then. Now XTIDE and JR-IDE/ISA makes possible to use very large modern drives on such slow systems. MS-DOS 3.31 allows partitions up to 512 MiB and MS-DOS 4.00 to 6.22 allows partitions up to 2 GiB. Those are enormous for XT systems and the slow 8088 or even the V20 take some time to calculate free space with FAT file system.
+It was very rare to have partitions larger than 32 MiB on XT systems so there weren't long delays then. Now XTIDE and JR-IDE/ISA makes possible to use very large modern drives on such slow systems. MS-DOS 3.31 allows partitions up to 512 MiB and MS-DOS 4.00 to 6.22 allows partitions up to 2 GiB. Those are enormous for XT systems and the slow 8088 or even the V20 take some time to calculate free space with FAT file system.
 
 It might be a good idea to use small partition for OS and frequently used utilities and large partition(s) for games and less needed data. You should experiment what feels the best size for the small partition. Please do let me know the results if you do some testing.
 
@@ -223,26 +223,29 @@ It is very likely that this same problem will occur if you decide to use MS-DOS 
 == XTIDE Universal BIOS v2.x.x has worse transfer rates than v1.1.5! ==
 There are three reasons for this:
   * Virtual device support, XTIDE A0-A3 address line swap mod and memory mapping support for JR-IDE/ISA require some generalizations in code that results in more comparisons, jumps and function calls than before. These slow down the execution especially on slow CPUs.
-  * V2.0.0 has some improvements in error detection that also makes the CPU to do more work.
-  * V2.0.0 disable Drive Internal Cache by default. MS-DOS does not access hard drives directly and there are no BIOS function to flush cache so data corruption is likely when using modern drives with large internal caches unless the write cache is disabled. Disabling the write cache has much less hit on performance that you might think so it it not good idea to enable.
+  * v2 has some improvements in error handling that also makes the CPU to do more work.
+  * v2 disable Drive Internal Cache by default. MS-DOS does not access hard drives directly and there are no BIOS function to flush cache so data corruption is likely when using modern drives with large internal caches unless the write cache is disabled. Disabling the write cache has much less hit on performance that you might think so it it not good idea to enable the write cache.
 
-If you are happy with v1.1.5 then go ahead and use it. I think most people will find that v2.0.0 is worth the upgrade even if transfer rates are a bit slower.
+If you are happy with v1.1.5 then go ahead and use it. I think most people will find that v2 is worth the upgrade even though the transfer rates are a bit slower.
 
 == Importance of Shadow RAM ==
-Always enable Shadow RAM and cache is your systems supports them! They might speed up much more than you think. This is especially true on Pentium systems.
+Always enable Shadow RAM and ROM area caching if your systems supports them! They might speed up much more than you think. This is especially true on Pentium systems.
 
-Pentium will fetch at least 8 bytes (since it has 64-bit wide bus) before it can start to execute the instructions. Even if you have placed the ROM on a 16-bit ISA or 32-bit VLB or PCI card the ROM itself is only 8-bits wide. So the ROM must be read 8 times before CPU can start executing instructions. And if those 8 times are read from 8 MHz ISA with wait states. Believe it or not, this all can slow transfer rates on a mighty Pentium to the level of fast XT system.
+Pentium will fetch at least 8 bytes (since it has 64-bit wide bus) before it can start to execute the instructions. Even if you have placed the ROM on a 16-bit ISA or 32-bit VLB or PCI card the ROM itself is only 8-bits wide. So the ROM must be read 8 times before CPU can start executing instructions. And if those 8 times are read from 8 MHz ISA with wait states... Believe it or not, this can slow the transfer rates on a mighty Pentium to the level of fast XT system.
 
 So always enable Shadow RAM to copy the ROM to RAM to get full bus width and you might also want to enable cache for ROM areas to compensate for RAM latencies and slower clock rate. The Shadow RAM is the more important of the two.
 
-You should be aware that you most likely need to disable Shadow RAM when you flash the EEPROM. Another thing to note is that JR-IDE/ISA does not work is Shadow RAM or ROM area caching is enabled. You wouldn't want to connect drives to 8-bit bus on a 32-bit system anyway. You can use the JR-IDE/ISA if you just need the 512 kiB FLASH.
+You should be aware that you most likely need to disable Shadow RAM when you flash the EEPROM. Another thing to note is that JR-IDE/ISA does not work if Shadow RAM or ROM area caching is enabled. You wouldn't want to connect drives to 8-bit bus on a 32-bit system anyway. You can use the JR-IDE/ISA if you just need the 512 kiB FLASH.
+
+== Configuring hints ==
+CHS addressing modes are a bit faster than LBA addressing modes so you might want to manually specify CHS parameters for XT systems.
 
 ----
 = IDE controllers on VLB and PCI bus =
 
 16-bit ISA IDE controllers are basically very simple ISA to PATA adapters so they all perform alike. ISA is not fast enough for anything above PIO-0 transfer method (with theoretical maximum of 3.3 MB/s).
 
-VLB and PCI IDE controllers are much more complex since they have an actual controller between bus and IDE drive. This controller can buffer the data so CPU can read 32-bits at a time. Early VLB controller are limited to PIO-2 but later VLB controllers and (all?) PCI controllers also support PIO modes 3 and 4. These later VLB multi I/O cards have two IDE connectors so you should use one of those even if you don't need the other IDE connector.
+VLB and PCI IDE controllers are more complex since they have an actual controller between bus and IDE drive. This controller can buffer the data so CPU can read 32-bits at a time. Early VLB controller are limited to PIO-2 but later VLB controllers and (all?) PCI controllers also support PIO modes 3 and 4. These later VLB multi I/O cards have two IDE connectors so you should use one of those even if you don't need the other IDE connector.
 
 Unfortunately many of the controllers work only at PIO-0 by default. Some VLB multi I/O cards have jumpers to set transfer rates but most require controller specific programming to enable higher PIO modes. It is possible that your VLB multi I/O card don't offer any advantages over ISA multi I/O cards if your BIOS does not support the IDE controller on the VLB card. There are DOS drivers for many VLB IDE controllers so BIOS support isn't necessity.
 
