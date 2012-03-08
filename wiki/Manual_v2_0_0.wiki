@@ -28,12 +28,12 @@ Some of the features included in XTIDE Universal BIOS are...
 
 == Different builds ==
 
-At the moment there are different builds included in the XTIDE Universal BIOS zip file.
+At the moment there are different builds included in the XTIDE Universal BIOS zip file. 15 kiB builds (*L.BIN) include support for JR-IDE/ISA but are otherwise the same as 8 kiB builds.
   * IDE_XT.BIN, IDE_JR8K.BIN and IDE_XTL.BIN (XT build)
-   XT build uses only instructions supported by 8086/8088 making it the only build that can be used on any PC, including the original IBM PC model 5150. IDE_XT.BIN is 8 kiB image and IDE_XTL.BIN is 16 kiB image with support for JR-IDE/ISA. IDE_JR8K.BIN has JR-IDE/ISA support but serial port features are removed to reduce the size to 8 kiB.
+   XT build uses only instructions supported by 8086/8088 making it the only build that can be used on any PC, including the original IBM PC model 5150. IDE_JR8K.BIN has JR-IDE/ISA support but serial port features are removed to reduce the size to 8 kiB.
   * IDE_XTP.BIN and IDE_XTPL.BIN (XT+ build)
-   XT+ build has the same features as the XT build but XT+ build uses instructions introduced in 80186/80188. Those instructions are supported by all later x86 CPUs, including NEC V20/V30. 8-bit transfers rates will be better thanks to INS and OUTS instructions. IDE_XTP.BIN is 8 kiB image and IDE_XTPL.BIN is 16 kiB image with support for JR-IDE/ISA.
-  * IDE_AT.BIN (AT build)
+   XT+ build has the same features as the XT build but XT+ build uses instructions introduced in 80186/80188. Those instructions are supported by all later x86 CPUs, including NEC V20/V30. 8-bit transfers rates will be better thanks to INS and OUTS instructions.
+  * IDE_AT.BIN and IDE_ATL.BIN (AT build)
    AT build is meant for all AT class machines (16-bit or 32-bit bus). AT build supports OS hooks to allow operating system to do some processing while drive seeks the requested data (if interrupts are enabled).
 
 Normal XT builds are preconfigured for XTIDE rev1 at port 300h and IDE_JR8K.BIN is preconfigured for JR-IDE/ISA. AT builds are configured to search standard Primary and Secondary IDE drives, XTIDE rev1 at port 300h and 4th stardard IDE controller at port 168h (found on many sound cards). Interrupts are disabled by default on all builds.
