@@ -28,7 +28,7 @@ Some of the features included in XTIDE Universal BIOS are...
 
 == Different builds ==
 
-At the moment there are different builds included in the XTIDE Universal BIOS zip file. 15 kiB builds (*L.BIN) include support for JR-IDE/ISA but are otherwise the same as 8 kiB builds.
+At the moment there are different builds included in the XTIDE Universal BIOS zip file. 15 kiB builds (xxxL.BIN) include support for JR-IDE/ISA but are otherwise the same as 8 kiB builds.
   * IDE_XT.BIN, IDE_JR8K.BIN and IDE_XTL.BIN (XT build)
    XT build uses only instructions supported by 8086/8088 making it the only build that can be used on any PC, including the original IBM PC model 5150. IDE_JR8K.BIN has JR-IDE/ISA support but serial port features are removed to reduce the size to 8 kiB.
   * IDE_XTP.BIN and IDE_XTPL.BIN (XT+ build)
@@ -87,7 +87,7 @@ Some menu items appear only when needed to make configuring easier.
 == Menuitems on "Flash EEPROM" submenu ==
   * Start flashing
   * EEPROM type [default=2864]
-   Selects EEPROM type. XTIDE rev1 uses 2864 (8 kiB) EEPROM. Select 2864mod if you have done the A0<->A3 address line swap mod to your XTIDE.
+   Selects EEPROM type. XTIDE rev1 uses 2864 (8 kiB) EEPROM. Select 2864mod if you have done the A0-A3 address line swap mod to your XTIDE.
   * SDP command [default=Enable]
    Selects Software Data Protect command to be written before every page. You should set if to Enable if the EEPROM supports is.
   * Page size [default=1]
@@ -162,4 +162,4 @@ Some menu items appear only when needed to make configuring easier.
   * Cylinders, Heads and Sectors per track
    These will appear when "User specified CHS" is enabled. Maximum values of 16383 Cylinders, 16 Heads and 63 Sectors per track will provide capacity of 7.8 GiB/8.4 GB that is the maximum that MS-DOS 4.xx to 6.xx supports. Note that this will force CHS addressing so once formatted, there will be data corruption if you try to access the drive with system using LBA addressing.
   * Millions of sectors
-   This will appear when "User specified LBA" is enabled. You can specify the drive capacity in millions of sectors. Note that MS-DOS 7.x or FreeDOS is required to access more than 7.8 GiB/8.4 GB.
+   This will appear when "User specified LBA" is enabled. You can specify the drive capacity in millions of sectors. Note that MS-DOS 7.x or FreeDOS is required to access more than 7.8 GiB/8.4 GB.-
