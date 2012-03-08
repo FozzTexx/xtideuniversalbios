@@ -36,7 +36,13 @@ At the moment there are different builds included in the XTIDE Universal BIOS zi
   * IDE_AT.BIN and IDE_ATL.BIN (AT build)
    AT build is meant for all AT class machines (16-bit or 32-bit bus). AT build supports OS hooks to allow operating system to do some processing while drive seeks the requested data (if interrupts are enabled).
 
-Normal XT builds are preconfigured for XTIDE rev1 at port 300h and IDE_JR8K.BIN is preconfigured for JR-IDE/ISA. AT builds are configured to search standard Primary and Secondary IDE drives, XTIDE rev1 at port 300h and 4th stardard IDE controller at port 168h (found on many sound cards). Interrupts are disabled by default on all builds.
+All XT builds (including XT+) can be used on AT systems but XT builds have few differences to make them better suited for XT systems:
+  * XT builds prevent CGA snow on boot menu but this slows down drawing the menu.
+  * XT builds have much simpler method for detecting is INT 40h Floppy Drive handler installed.
+  * Jump targets are not aligned on XT builds.
+  * XT builds have different default settings (see below).
+
+XT builds are preconfigured for XTIDE rev1 at port 300h and IDE_JR8K.BIN is preconfigured for JR-IDE/ISA. AT builds are configured to search standard Primary and Secondary IDE drives, XTIDE rev1 at port 300h and 4th stardard IDE controller at port 168h (found on many sound cards). Interrupts are disabled by default on all builds.
 
 ----
 
@@ -182,11 +188,29 @@ DOS requires that it is loaded from first floppy drive (00h) or first hard disk 
 
 Keys A to Z work as a hotkeys for boot menu drives. Hotkeys have another benefit: they allow to install DOS from any floppy drive to any hard disk. Select hard disk from menu but do not press Enter. Press any floppy drive hotkey instead to boot from floppy while maintaining selected hard disk translation.
 
+F8 calls software interrupt 18h. This starts IBM ROM Basic, ROM DOS or most usually error message from motherboard BIOS when there is no ROM to boot from.
+
 
 == Boot menu drive information ==
 
 Boot menu can display a little bit information about the drive.
 
-  * Drive capacity
+  * Capacity
+   This shows the drive capacity. This is the same as reported by the drive unless you have specified CHS or LBA manually. Capacity is read from INT 13h AH=08h for drives not handled by XTIDE Universal BIOS.
+  * Addr.
+   This shows the current addressing mode:
+    * L-CHS is used for drives with 1024 or less cylinders (504 MiB / 528 MB or less). L-CHS is the fastest mode since no address translations are required.
+    * P-CHS addressing is used for drives with 1025 or more cylinders without LBA support. It is unlikely such drives exists so P-CHS addressing is used if you manually specify CHS parameters with 1025 or more heads. P-CHS addressing is only a bit slower than L-CHS addressing.
+    * LBA28 is used when drive supports LBA and has capacity at most 128 GiB / 137 GB.
+    * LBA48 is used for drives larger than 128 GiB / 137 GB.
+   LBA modes are the slowest but the difference cannot be noticed on any AT system. There is no performance differences between LBA28 and LBA48. EBIOS functions (support for drives larger than 7.8 GiB / 8.4 GB) is available only when LBA addressing is used.
+  * Block
+   Shows the size of block in sectors. The larger the better. 1 means that block mode is disabled or not supported. CF cards usually support block mode commands but do not allow blocks larger than 1 sector.
+  * Bus
+   Shows the bus/device type configured in "Device Type" menuitem on "xxx IDE Controller" submenu.
+  * IRQ
+   Shows the IRQ channel if enabled.
+  * Reset
+   Shows the status from drive initialization. This should always be zero. If it is something else, then something has gone wrong.
 
 ----
