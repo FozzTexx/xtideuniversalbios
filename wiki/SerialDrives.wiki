@@ -1,0 +1,124 @@
+#summary Instructions for emulating Serial Drives with the XTIDE Universal BIOS
+#labels Featured,Phase-Deploy
+*Table of Contents*
+<wiki:toc max_depth="3" />
+----
+= Introduction =
+
+With version 2, the XTIDE Universal BIOS can emulate floppy and hard disks over a serial connection.  By doing so, aging hardware can be bootstrapped from a floppy image, or even run without a physical hard disk.  No special hardware is required, the BIOS can work with any standard COM port that is installed on the machine.  And with high speed COM ports, performance can approach the performance of vintage hard disks.
+
+== System Requirements ==
+
+To use this feature, you will need:
+	
+* Client PC
+  Standard or High Speed COM Port
+  XTIDE Universal BIOS option ROM installed
+
+* Server PC
+  Standard or High Speed COM Port (USB add-ons serial ports work great)
+  Windows XP or later (In the future, support for additional platforms may be added)
+  Flat Disk Images of floppy disks or hard disks
+  Command line SerDrive server utility, included with the XTIDE Universal BIOS distribution
+
+* [http://en.wikipedia.org/wiki/Null_modem Null Modem cable] between the two machines
+
+== Getting Started ==
+
+1. Connect the two machines via the serial connection.
+
+2. Open a command prompt, and run the SerDrive utility on the server.  Arguments are described below.  In its simplest form:
+	C:/> SerDrive MyImage.img
+   If you do not already have an image, you can obtain boot floppies of FreeDOS from.
+   SerDrive will use the first available COM port by default, at a speed of 9600 baud (which is reliable, but relatively slow, you will likely want to increase this for continued use).
+
+3. Boot the client computer.  During drive detection, hold down the Alt key, and at the end of drive detection, the BIOS will display “Serial Master on COM Detect”.  The BIOS will now scan the available COM ports on the client, looking for a server.
+
+If a server is found, the floppy and/or hard disk emulated will appear in the boot menu for the BIOS.  You can now proceed as normal.
+
+SerDrive is stateless, and flushes writes to the image files immediately.  You can start and stop the server at will, although this is not recommended.   If the server is stopped and a disk access is attempted by the client, that request will result in an error on the client.  Also, changing the image file without also rebooting the client may result in unexpected behavior and possible data loss.
+
+= Performance =
+
+= Configuring with XTIDECFG =
+
+Holding down the Alt key is a bootstrapping feature, which is always available.  In addition, xtidecfg can be used to configure the BIOS to always look on a particular COM port for a server, or to automatically scan on each boot (as if the Alt key had been pressed).
+
+Note that serial ports must be the last configured IDE controller.  Xtidecfg will move any serial ports to the end of the list if this is not already done.  This is done so that serial floppy disks, if any are presented, will be last on the list of drives.
+
+= SerDrive Command Line Arguments =
+
+Usage: SerDrive [options] imagefile [[slave-options] slave-imagefile]
+
+  -g [cyl:head:sect]  Geometry in cylinders, sectors per cylinder, and heads
+                      -g also implies CHS addressing mode (default is LBA28)
+
+  -n [megabytes]      Create new disk with given size or use -g geometry
+                      Maximum size is 137438 MB (LBA28 limit)
+                      Floppy images can also be created, such as "360K"
+                      (default is a 32 MB disk, with CHS geometry 65:16:63)
+
+  -p [pipename]       Named Pipe mode for emulators
+                      (must begin with "\\", default is "\\.\pipe\xtide")
+
+  -c COMPortNumber    COM Port to use (default is first found)
+                      Available COM ports on this system are:
+                          (none)
+
+  -b BaudRate         Baud rate to use on the COM port, with client machine
+                      rate multiplier in effect:
+                          None:  2400,  4800,  9600,  28.8K,  57.6K, 115.2K
+                          2x:    4800,  9600, 19200,  57.6K, 115.2K, 230.4K
+                          4x:    9600, 19200, 38400, 115.2K, 230.4K, 460.8K
+                          and for completeness:               76.8K, 153.6K
+                      (default is 9600, 115.2K when in named pipe mode)
+
+  -t                  Disable timeout, useful for long delays when debugging
+
+  -r                  Read Only disk, do not allow writes
+
+  -v [level]          Reporting level 1-6, with increasing information
+
+On the client computer, a serial port can be configured for use as a hard disk
+with xtidecfg.com.  Or one can hold down the ALT key at the end of the normal
+IDE hard disk scan and the XTIDE Universal BIOS will scan COM1-7, at each of
+the six speeds given above for BaudRate.  Note that hardware rate multipliers
+must be taken into account on the server end, but are invisible on the client.
+
+Floppy images may also be used.  Image size must be exactly the same size
+as a 2.88MB, 1.44MB, 1.2MB, 720KB, 360KB, 320KB, 180KB, or 160KB disk.
+Floppy images must be the last disks discovered by the BIOS, and only
+two floppy drives are supported by the BIOS at a time.
+
+= High Speed Operation =
+
+Normal COM ports top out their speed somewhere between the reliable 9600 baud and the unreliable theoretical maximum of 115.2K baud.  This includes COM ports that are included on the motherboard of even modern PCs.  COM ports with FIFOs can usually achieve the 115.2K speed.  In addition, High Speed COM ports were introduced with a clock multiplier, resulting in top speeds of 230.4K and 460.8K.  Many USB COM ports on the market can achieve 500K or higher speeds.
+
+The BIOS supports speeds up to 460.8K baud.  To achieve this speed, you will need:
+
+* COM port on the client machine capable of high speed operation.  Believe it or not, one can still buy new ISA High Speed COM ports that accomplish this, that can even be used in old 8-bit machines.  Serial cards that have been tested:
+
+ In addition, the XTIDE mk II has a high speed COM port installed for this purpose.
+
+* COM port on the server machine capable of high speed operation.  Most motherboard based COM ports can NOT attain high speed.  However, most USB COM ports can attain high speed.  USB serial ports that have been tested:
+
+Care must be taken when configuring the serial connection - the clock multiplier is not detectable by the client PC.  With a 4x clock multiplier, the client PC should be set to 115.2K baud, while the matching server needs to be set to 460.8K baud.
+
+= Disk Image Format =
+
+Disk image files, at this time, are flat hard disk images.  Sectors are laid out on disk, starting with sector 0, and proceeding in LBA order (literally 512-byte sector 0, then 1, then 2, etc.).  No meta-data about the size of the disk or disk geometry is stored in the file. Alo no compression of unused sectors is done.  SerDrive's "-n" switch can be used to create images of the proper size, with all sectors initialized to zeros.
+
+In the future, support for additional disk image formats may be added.
+
+== Image Utilities ==
+
+[http://www.winimage.com/winimage.htm WinImage] is a good tool that can manipulate image files - it can view, inject, and extract files from a file system stored on the image.   
+
+Other possible tools include [http://hp.vector.co.jp/authors/VA013937/editdisk/index_e.html DiskExplorer] and GNU has a set of tools called [http://www.gnu.org/software/mtools Mtools], although I have not seen a good port of those to Win32. 
+
+== Emulators ==
+
+Floppy and hard disk image files can be shared between the XTIDE Universal BIOS and other emulators, such as [http://bochs.sourceforge.net Bochs].  One nice feature of this is that bootable images can be created and tested in an emulated enivornment, copmlete with multiple floppy and CD-ROM drives, and then the resulting image can be used with physical hardware through the BIOS.
+
+Bochs was heavily used in the development of the serial code, as its debugger offers control over the emulated system that is hard to accomplish on actual hardware.  You can run the XTIDE Universal BIOS in Bochs as an installed option ROM, and interface with Bochs' emulate IDE hard disks and serial ports.  To support serial ports, SerDrive's "-p" switch can be used to run over a Win32 named pipe instead of a physical COM port, and Bochs can be set to emulate a COM port over a named pipe.  In addition, it can be set to emulate a specific baud rate from the client (Bochs), using the standard "-b" switch.  The "-t" switch is useful to prevent the server from timing out on operations, if a breakpoint is hit in the BIOS code.
+
