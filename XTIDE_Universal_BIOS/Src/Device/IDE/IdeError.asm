@@ -28,10 +28,10 @@ ContinueFromMemIdeError:
 	xchg	al, ah			; Status Register now in AL, Error Register now in AH
 
 	; I don't think anything actually reads these from BDA
-	push	ds
-	LOAD_BDA_SEGMENT_TO	ds, dx
-	mov		[HDBDA.wHDStAndErr], ax
-	pop		ds
+	;push	ds
+	;LOAD_BDA_SEGMENT_TO	ds, dx
+	;mov		[HDBDA.wHDStAndErr], ax
+	;pop		ds
 
 	; Fall to GetBiosErrorCodeToAHfromStatusAndErrorRegistersInAX
 
