@@ -57,8 +57,8 @@ Note that at high speed, write performance for serial drives is slightly worse t
 To help measure performance, SerDrive's "-v" switch with a value of 1 or higher will also display performance measurements for transfers of more than 100 sectors at a time.
 
 Performance number Notes:
-  * Serial drive theoretical max taken by dividing bit rate by 10, allowing for start and stop bits.  Wikibooks has a discussion of [http://en.wikibooks.org/wiki/Serial_Programming:RS-232_Connections#Data_Transmission_Rates Data Transmission Rates] based on RS-232 serial communications overhead, in the Wikibook [http://en.wikibooks.org/wiki/Serial_Programming:RS-232_Connection _Serial Programming/RS-232 Connections_].
-  * Floppy disk characteristics from Scott Mueller's [http://books.google.com/books?id=E1p2FDL7P5QC&pg=PA649 _Upgrading and Repairing PCs_], Page 649.
+  * Serial drive theoretical max taken by dividing bit rate by 10, allowing for start and stop bits.  Wikibooks has a discussion of [http://en.wikibooks.org/wiki/Serial_Programming:RS-232_Connections#Data_Transmission_Rates Data Transmission Rates] based on RS-232 serial communications overhead, in the Wikibook _[http://en.wikibooks.org/wiki/Serial_Programming:RS-232_Connection Serial Programming/RS-232 Connections]_.
+  * Floppy disk characteristics from Scott Mueller's _[http://books.google.com/books?id=E1p2FDL7P5QC&pg=PA649 Upgrading and Repairing PCs]_, Page 649.
   * IBM PC XT Hard Disk performance as calculated based on maximum throughput and sector interleave by Steve Gibson in [http://books.google.com/books?id=CD8EAAAAMBAJ&pg=PA36 "The Ways and Means of Faster Data Throughput"], _InfoWorld_, March 7, 1988, Page 36.
 
 
