@@ -19,53 +19,27 @@ DriveXlate_ToOrBack:
 	test	BYTE [cs:ROMVARS.wFlags], FLG_ROMVARS_DRVXLAT
 	jz		SHORT .Return			; Return if translation disabled
 	xchg	di, ax					; Backup AX
-	call	SwapFloppyDriveOrHardDisk
-	xchg	ax, di
-.Return:
-	ret
 
-
-;--------------------------------------------------------------------
-; SwapFloppyDriveOrHardDisk
-;	Parameters:
-;		DL:		Drive number to be possibly swapped
-;		DS:		RAMVARS segment
-;	Returns:
-;		DL:		Translated drive number
-;	Corrupts registers:
-;		AX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-SwapFloppyDriveOrHardDisk:
 	mov		ah, 80h					; Assume hard disk
 	mov		al, [RAMVARS.xlateVars+XLATEVARS.bHDSwap]
 	test	dl, ah					; Hard disk?
-	jnz		SHORT SwapDrive			; If so, jump to swap
+	jnz		SHORT .SwapDrive		; If so, jump to swap
 	mov		al, [RAMVARS.xlateVars+XLATEVARS.bFDSwap]
 	cbw
-	; Fall to SwapDrive
 
-;--------------------------------------------------------------------
-; SwapDrive
-;	Parameters:
-;		AL:		Drive number to swap to 00h/80h
-;		AH:		00h/80h to be swapped to stored drive number
-;		DL:		Drive number to be possibly swapped
-;	Returns:
-;		DL:		Translated drive number
-;	Corrupts registers:
-;		AL
-;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-SwapDrive:
-	cmp		ah, dl				; Swap DL from 00h/80h to xxh?
+.SwapDrive:
+	cmp		ah, dl					; Swap DL from 00h/80h to xxh?
 	je		SHORT .SwapToXXhInAL
-	cmp		al, dl				; Swap DL from xxh to 00h/80h?
-	jne		SHORT .Return
+	cmp		al, dl					; Swap DL from xxh to 00h/80h?
+	jne		SHORT .RestoreAXandReturn
 	mov		al, ah
 ALIGN JUMP_ALIGN
 .SwapToXXhInAL:
 	mov		dl, al
+ALIGN JUMP_ALIGN
+.RestoreAXandReturn:
+	xchg	ax, di					; Restore AX
 ALIGN JUMP_ALIGN, ret
 .Return:
 	ret

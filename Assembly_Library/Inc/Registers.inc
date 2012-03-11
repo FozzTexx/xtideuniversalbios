@@ -5,8 +5,8 @@
 
 struc INTPACK
 %ifdef USE_386
-	.gs				resb	2
-	.fs				resb	2
+;	.gs				resb	2
+;	.fs				resb	2
 %endif
 	.es				resb	2
 	.ds				resb	2
@@ -59,8 +59,8 @@ FLG_FLAGS_OF		EQU (1<<11)
 	push	ds
 	push	es
 %ifdef USE_386
-	push	fs
-	push	gs
+;	push	fs
+;	push	gs
 %endif
 	mov		bp, sp
 %endmacro
@@ -76,8 +76,8 @@ FLG_FLAGS_OF		EQU (1<<11)
 ;--------------------------------------------------------------------
 %macro RESTORE_INTPACK_FROM_SSBP 0
 %ifdef USE_386
-	pop		gs
-	pop		fs
+;	pop		gs
+;	pop		fs
 %endif
 	pop		es
 	pop		ds
@@ -102,8 +102,8 @@ FLG_FLAGS_OF		EQU (1<<11)
 	push	ds
 	push	es
 %ifdef USE_386
-	push	fs
-	push	gs
+;	push	fs
+;	push	gs
 %endif
 	sub		sp, BYTE %1
 	mov		bp, sp
@@ -122,8 +122,8 @@ FLG_FLAGS_OF		EQU (1<<11)
 %macro RESTORE_FRAME_INTPACK_FROM_SSBP 1
 	add		sp, BYTE %1
 %ifdef USE_386
-	pop		gs
-	pop		fs
+;	pop		gs
+;	pop		fs
 %endif
 	pop		es
 	pop		ds

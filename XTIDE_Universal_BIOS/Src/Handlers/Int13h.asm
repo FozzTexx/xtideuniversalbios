@@ -29,22 +29,8 @@ Int13h_DiskFunctionsHandler:
 	call	DriveXlate_ToOrBack
 	mov		[RAMVARS.xlateVars+XLATEVARS.bXlatedDrv], dl
 
-	call	FindDPT_ForDriveNumberInDL				; DS:DI points to our DPT, or NULL if not our drive
-	jnc		SHORT .OurFunction						; DPT found, this is one of our drives, and thus our function
-
-	test	ah, ah
-	jz		SHORT .OurFunction						; we handle all function 0h requests (resets)
-	cmp		ah, 8
-	jne		SHORT Int13h_DirectCallToAnotherBios	; non-8h function, handled by foreign bios
-
-%ifndef MODULE_SERIAL_FLOPPY
-; With floppy support, we handle all traffic for function 08h, as we need to wrap both hard disk and
-; floppy drive counts.  Without floppy support, we handle only hard disk traffic for function 08h,
-; and thus need the check below.
-;
-	test	dl, dl
-	jns		SHORT Int13h_DirectCallToAnotherBios
-%endif
+	call	FindDPT_ForDriveNumberInDL	; DS:DI points to our DPT, or NULL if not our drive
+	jc		SHORT .NotOurDrive			; DPT not found so this is not one of our drives
 
 .OurFunction:
 	; Jump to correct BIOS function
@@ -64,13 +50,27 @@ ALIGN JUMP_ALIGN
 .JumpToEbiosFunction:
 	test	BYTE [di+DPT.bFlagsLow], FLG_DRVNHEAD_LBA
 	jz		SHORT Int13h_UnsupportedFunction	; No eINT 13h for CHS drives
-	cmp		ah, 48h
-	ja		SHORT Int13h_UnsupportedFunction
 	sub		bl, 41h<<1					; BX = Offset to eINT 13h jump table
 	jb		SHORT Int13h_UnsupportedFunction
+	cmp		ah, 48h
+	ja		SHORT Int13h_UnsupportedFunction
 	jmp		[cs:bx+g_rgwEbiosFunctionJumpTable]
 %endif
 
+ALIGN JUMP_ALIGN
+.NotOurDrive:
+	test	ah, ah
+	jz		SHORT .OurFunction			; We handle all function 0h requests (resets)
+
+%ifndef MODULE_SERIAL_FLOPPY
+; Without floppy support, we handle only hard disk traffic for function 08h.
+	test	dl, dl
+	jns		SHORT Int13h_DirectCallToAnotherBios
+%endif
+; With floppy support, we handle all traffic for function 08h, as we need to wrap both hard disk and floppy drive counts.
+	cmp		ah, 8
+	je		SHORT .OurFunction
+	; Fall to Int13h_DirectCallToAnotherBios
 
 ;--------------------------------------------------------------------
 ; Int13h_UnsupportedFunction
@@ -102,8 +102,8 @@ Int13h_DirectCallToAnotherBios:
 	; Store returned values to INTPACK
 	pop		bp	; Standard INT 13h functions never uses BP as return register
 %ifdef USE_386
-	mov		[bp+IDEPACK.intpack+INTPACK.gs], gs
-	mov		[bp+IDEPACK.intpack+INTPACK.fs], fs
+;	mov		[bp+IDEPACK.intpack+INTPACK.gs], gs
+;	mov		[bp+IDEPACK.intpack+INTPACK.fs], fs
 %endif
 	mov		[bp+IDEPACK.intpack+INTPACK.es], es
 	mov		[bp+IDEPACK.intpack+INTPACK.ds], ds

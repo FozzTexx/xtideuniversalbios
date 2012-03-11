@@ -110,7 +110,6 @@ ALIGN JUMP_ALIGN
 .CheckZeroOffsetFor128Sectors:
 	cmp		al, 128
 	ja		SHORT InvalidNumberOfSectorsRequested
-	mov		ah, RET_HD_BOUNDARY
 	test	si, si								; Offset must be zero to xfer 128 sectors
 	jnz		SHORT CannotAlignPointerProperly
 	ret		; Continue with transfer
@@ -119,8 +118,10 @@ InvalidDAP:
 InvalidNumberOfSectorsRequested:
 Prepare_ReturnFromInt13hWithInvalidFunctionError:
 	mov		ah, RET_HD_INVALID
-ZeroSectorsRequestedSoNoErrors:
+	SKIP2B	f
 CannotAlignPointerProperly:
+	mov		ah, RET_HD_BOUNDARY
+ZeroSectorsRequestedSoNoErrors:
 	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 
 
