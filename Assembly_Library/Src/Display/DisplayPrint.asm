@@ -91,6 +91,38 @@ DisplayPrint_SignedWordFromAXWithBaseInBX:
 	; Fall to DisplayPrint_WordFromAXWithBaseInBX
 %endif
 
+
+%ifndef MODULE_STRINGS_COMPRESSED
+;--------------------------------------------------------------------
+; DisplayPrint_QWordFromSSBPwithBaseInBX
+;	Parameters:
+;		SS:BP:	QWord to display
+;		BX:		Integer base (binary=2, octal=8, decimal=10, hexadecimal=16)
+;		DS:		BDA segment (zero)
+;		ES:DI:	Ptr to cursor location in video RAM
+;	Returns:
+;		DI:		Updated offset to video RAM
+;	Corrupts registers:
+;		AX, DX, [SS:BP]
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+DisplayPrint_QWordFromSSBPwithBaseInBX:
+	push	cx
+	push	bx
+
+	mov		cx, bx				; CX = Integer base
+	xor		bx, bx				; BX = Character count
+ALIGN JUMP_ALIGN
+.DivideLoop:
+	call	Math_DivQWatSSBPbyCX; Divide by base
+	push	dx					; Push remainder
+	inc		bx					; Increment character count
+	cmp		WORD [bp], BYTE 0	; All divided?
+	jne		SHORT .DivideLoop	;  If not, loop
+	mov		cx, bx				; Character count to CX
+	jmp		SHORT PrintAllPushedDigits
+
+
 ;--------------------------------------------------------------------
 ; DisplayPrint_WordFromAXWithBaseInBX
 ;	Parameters:
@@ -103,9 +135,6 @@ DisplayPrint_SignedWordFromAXWithBaseInBX:
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
-
-%ifndef MODULE_STRINGS_COMPRESSED
-
 ALIGN JUMP_ALIGN
 DisplayPrint_WordFromAXWithBaseInBX:
 	push	cx
@@ -121,7 +150,8 @@ ALIGN JUMP_ALIGN
 	test	ax, ax				; All divided?
 	jnz		SHORT .DivideLoop	;  If not, loop
 
-	mov		bx, .rgcDigitToCharacter
+PrintAllPushedDigits:
+	mov		bx, g_rgcDigitToCharacter
 ALIGN JUMP_ALIGN
 .PrintNextDigit:
 	pop		ax					; Pop digit
@@ -132,7 +162,7 @@ ALIGN JUMP_ALIGN
 	pop		bx
 	pop		cx
 	ret
-.rgcDigitToCharacter:	db	"0123456789ABCDEF"
+g_rgcDigitToCharacter:	db	"0123456789ABCDEF"
 
 %endif	; MODULE_STRINGS_COMPRESSED
 

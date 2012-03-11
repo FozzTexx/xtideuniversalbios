@@ -63,6 +63,9 @@ struc DISPLAY_LIB
 	.PrintSignedWordFromAXWithBaseInBX				resb	2
 %endif
 	.PrintWordFromAXwithBaseInBX					resb	2
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
+	.PrintQWordFromSSBPwithBaseInBX					resb	2
+%endif
 	.PrintCharBufferFromBXSIwithLengthInCX			resb	2
 	.PrintNullTerminatedStringFromBXSI				resb	2
 	.PrintNullTerminatedStringFromCSSI				resb	2

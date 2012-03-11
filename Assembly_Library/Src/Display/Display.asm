@@ -81,6 +81,9 @@ Display_FormatNullTerminatedStringFromCSSI:
 	%define PrintSignedWordFromAXWithBaseInBX				DisplayPrint_SignedWordFromAXWithBaseInBX
 %endif
 	%define PrintWordFromAXwithBaseInBX						DisplayPrint_WordFromAXWithBaseInBX
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
+	%define PrintQWordFromSSBPwithBaseInBX					DisplayPrint_QWordFromSSBPwithBaseInBX
+%endif
 	%define PrintCharBufferFromBXSIwithLengthInCX			DisplayPrint_CharacterBufferFromBXSIwithLengthInCX
 	%define PrintNullTerminatedStringFromBXSI				DisplayPrint_NullTerminatedStringFromBXSI
 	%define PrintNullTerminatedStringFromCSSI				DisplayPrint_NullTerminatedStringFromCSSI
