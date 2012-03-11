@@ -1,8 +1,4 @@
-; File name		:	ATA_ID.inc
-; Project name	:	IDE BIOS
-; Created date	:	30.10.2009
-; Last update	:	12.3.2010
-; Author		:	Tomi Tilli
+; Project name	:	XTIDE Universal BIOS
 ; Description	:	ATA Identify Drive information.
 %ifndef ATA_ID_INC
 %define ATA_ID_INC
@@ -56,6 +52,8 @@ struc ATA1
 	.bMDMASupp	resb 1	; 63[0-7]F, Multiword DMA transfer modes supported
 	.bMDMAAct	resb 1	; 63[8-15]V, Multiword DMA transfer mode active
 endstruc
+
+A1_MODEL_NUMBER_LENGTH	EQU	40		; 40 ASCII characters
 
 ; ATA-1 Word 0, General configuration
 A1_wGenCfg_NONMAG		EQU	(1<<15)	; Reserved for non-magnetic drives

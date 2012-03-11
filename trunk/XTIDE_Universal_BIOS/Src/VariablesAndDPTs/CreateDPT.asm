@@ -86,17 +86,33 @@ CreateDPT_FromAtaInformation:
 	test	BYTE [es:si+ATA1.wCaps+1], A1_wCaps_LBA>>8
 	jz		SHORT .StoreCHSfromAXBHBL		; Small old drive with CHS addressing only
 
-	; Check if 48-bit LBA supported
-	test	BYTE [es:si+ATA6.wSetSup83+1], A6_wSetSup83_LBA48>>8
-	jz		SHORT .StoreLBA28addressing
-	or		BYTE [di+DPT.bFlagsLow], ADDRESSING_MODE_LBA48<<ADDRESSING_MODE_FIELD_POSITION
-.StoreLBA28addressing:
-	or		BYTE [di+DPT.bFlagsLow], ADDRESSING_MODE_LBA28<<ADDRESSING_MODE_FIELD_POSITION
+	; Store LBA 28/48 addressing and total sector count
 	call	AtaID_GetTotalSectorCountToBXDXAXfromAtaInfoInESSI
-	mov		[di+DPT.twLbaSectors], ax
-	mov		[di+DPT.twLbaSectors+2], dx
-	mov		[di+DPT.twLbaSectors+4], bx
-	call	AtaID_GetLbaAssistedCHStoDXAXBLBH
+	call	StoreLbaAddressingAndTotalSectorCountFromBXDXAX
+
+	; Replace sector count with user defined if necessary
+	call	AccessDPT_GetPointerToDRVPARAMStoCSBX
+	test	BYTE [cs:bx+DRVPARAMS.wFlags], FLG_DRVPARAMS_USERLBA
+	jz		SHORT .KeepTotalSectorsFromAtaID
+	mov		ax, [cs:bx+DRVPARAMS.dwMaximumLBA]
+	mov		dx, [cs:bx+DRVPARAMS.dwMaximumLBA+2]
+	xor		bx, bx
+
+	; Compare user defined and ATA-ID sector count and select smaller
+	cmp		bx, [di+DPT.twLbaSectors+4]
+	jb		SHORT .StoreUserDefinedSectorCountToDPT
+	cmp		dx, [di+DPT.twLbaSectors+2]
+	jb		SHORT .StoreUserDefinedSectorCountToDPT
+	ja		SHORT .KeepTotalSectorsFromAtaID
+	cmp		ax, [di+DPT.twLbaSectors]
+	jae		SHORT .KeepTotalSectorsFromAtaID
+.StoreUserDefinedSectorCountToDPT:
+	call	StoreLbaAddressingAndTotalSectorCountFromBXDXAX
+
+	; Calculate L-CHS for old INT 13h
+.KeepTotalSectorsFromAtaID:
+	mov		bx, [di+DPT.twLbaSectors+4]		; Restore BX
+	call	AccessDPT_ConvertSectorCountFromBXDXAXtoLbaAssistedCHSinDXAXBLBH
 	mov		[di+DPT.bLbaHeads], bl
 	jmp		SHORT .StoreBlockMode
 
@@ -232,3 +248,29 @@ CreateDPT_FromAtaInformation:
 	clc
 	ret
 
+
+;--------------------------------------------------------------------
+; StoreLbaAddressingAndTotalSectorCountFromBXDXAX
+;	Parameters:
+;		BX:DX:AX:	Total Sector Count
+;		DS:DI:		Ptr to Disk Parameter Table
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		CX
+;--------------------------------------------------------------------
+StoreLbaAddressingAndTotalSectorCountFromBXDXAX:
+	mov		[di+DPT.twLbaSectors], ax
+	mov		[di+DPT.twLbaSectors+2], dx
+	mov		[di+DPT.twLbaSectors+4], bx
+
+	and		BYTE [di+DPT.bFlagsLow], ~MASKL_DPT_ADDRESSING_MODE
+	test	bx, bx
+	jnz		SHORT .SetLba48AddressingToDPT
+	test	dh, 0F0h
+	jz		SHORT .SetLba28AddressingToDPT
+.SetLba48AddressingToDPT:
+	or		BYTE [di+DPT.bFlagsLow], ADDRESSING_MODE_LBA48<<ADDRESSING_MODE_FIELD_POSITION
+.SetLba28AddressingToDPT:
+	or		BYTE [di+DPT.bFlagsLow], ADDRESSING_MODE_LBA28<<ADDRESSING_MODE_FIELD_POSITION
+	ret
