@@ -23,6 +23,7 @@ struc ROMVARS
 	.bMinFddCnt			resb	1	; Minimum number of Floppy Drives
 	.bStealSize			resb	1	; Number of 1kB blocks stolen from 640kB base RAM
 
+	.ideVarsBegin:
 	.ideVars0			resb	IDEVARS_size
 	.ideVars1			resb	IDEVARS_size
 	.ideVars2			resb	IDEVARS_size
@@ -31,7 +32,18 @@ struc ROMVARS
 %ifdef MODULE_SERIAL
 	.ideVarsSerialAuto	resb	IDEVARS_size
 %endif
+
+	.ideVarsEnd:
 endstruc
+
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
+	%if ROMVARS.ideVarsEnd & 0xff00 <> 0
+		%error ".ideVars structures must fit within the first 256 bytes of the ROM image"
+	%endif
+	%if (ROMVARS.ideVarsEnd - ROMVARS.ideVarsBegin) = 0
+		%error "there must be at lesat one .ideVars structure, it would be bizarre if this were not true, but it is assumed in the ah0h reset code."
+	%endif
+%endif
 
 ; Bit defines for ROMVARS.wFlags
 FLG_ROMVARS_FULLMODE				EQU	(1<<0)	; Full operating mode (steals base RAM, supports EBIOS etc.)

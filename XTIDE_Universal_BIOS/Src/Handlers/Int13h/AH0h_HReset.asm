@@ -157,8 +157,13 @@ ResetHardDisksHandledByOurBIOS:
 
 	mov		dl, ROMVARS.ideVars0						; starting Idevars offset
 
-	call	RamVars_GetIdeControllerCountToCX			; get count of ide controllers
-	jcxz	.done										; just in case bIdeCnt is zero (shouldn't be)
+    ; Get count of ALL Idevars structures, not just the ones that are configured.  This may seem odd, 
+    ; but it catches the .ideVarsSerialAuto structure, which would not be scanned if the count from
+	; RamVars_GetIdeControllerCountToCX was used.  Unused controllers won't make a difference, since no DPT
+	; will point to them.  Performance isn't an issue, as this is a reset operation.
+    ;
+	mov		cx, (ROMVARS.ideVarsEnd - ROMVARS.ideVarsBegin) / IDEVARS_size
+
 .loop:
 	call	FindDPT_ForIdevarsOffsetInDL				; look for the first drive on this controller, if any
 	jc		.notFound
