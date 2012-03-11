@@ -39,6 +39,29 @@ SerDrive is stateless, and flushes writes to the image files immediately.  You c
 
 = Performance =
 
+Really, emulating a disk drive over a serial link?  That has to be pretty slow, right?
+
+It depends.  Using high speed UARTs at a speed of 460K, performance is on par with floppy disk drives of the vintage era, without any of the seek time or interleave factors to slow it down (we're assuming the server PC is very fast and is caching heavily used sectors in memory).  With this level of throughput, serial drives are slower than a vintage hard disk, but not by much, and the system is completely usable.
+
+Using slow speed UARTs, at a speed of 38.4K, which is commonly the top speed for vintage serial ports, the serial drives are quite slow.  However, if this is used infrequently, say when it is needed to bootstrap an OS in order to format a locally attached hard disk, the delay can be worth it, and less hassle than finding a working floppy disk drive and floppy disk with the required image.
+
+Here's how various drives compare:
+
+|| || *5.25" DSDD Floppy* || *3.5" HD Floppy* || *Original IBM PC XT Hard Disk* || *38.4K Baud Serial Drive* || *460K Baud Serial Drive* ||
+|| Theoretical Max, Bytes per Second || 31K  || 62K || 87K || 4.8K || 3.8K || 46K ||
+|| Observed Speed, Bytes per Second || || || || 3.7K || 42K Read, 37K Write ||
+|| Time to Boot MS-DOS 3.3, Seconds || || || || || ||
+
+Note that at high speed, write performance for serial drives is slightly worse than read performance - the BIOS code is optimized for read performance.
+
+To help measure performance, SerDrive's "-v" switch with a value of 1 or higher will also display performance measurements for transfers of more than 100 sectors at a time.
+
+Performance number Notes:
+  * Serial drive theoretical max taken by dividing bit rate by 10, allowing for start and stop bits.  Wikibooks has a discussion of [http://en.wikibooks.org/wiki/Serial_Programming:RS-232_Connections#Data_Transmission_Rates Data Transmission Rates] based on RS-232 serial communications overhead, in the Wikibook [http://en.wikibooks.org/wiki/Serial_Programming:RS-232_Connection _Serial Programming/RS-232 Connections_].
+  * Floppy disk characteristics from Scott Mueller's [http://books.google.com/books?id=E1p2FDL7P5QC&pg=PA649 _Upgrading and Repairing PCs_], Page 649.
+  * IBM PC XT Hard Disk performance as calculated based on maximum throughput and sector interleave by Steve Gibson in [http://books.google.com/books?id=CD8EAAAAMBAJ&pg=PA36 "The Ways and Means of Faster Data Throughput"], _InfoWorld_, March 7, 1988, Page 36.
+
+
 = Configuring with XTIDECFG =
 
 Holding down the Alt key is a bootstrapping feature, which is always available.  In addition, xtidecfg can be used to configure the BIOS to always look on a particular COM port for a server, or to automatically scan on each boot (as if the Alt key had been pressed).  See the [Manual_V2_0_0 XTIDE V2.0.0 documentaiton for more details].
@@ -69,12 +92,14 @@ COM Port to use (default is first found).  The usage message will also list the 
 
 Baud rate to use on the COM port.  If the client machine has a hardware rate multipler (for high speed operation), then that will impact this setting:
 
-|| Rate Multiplier || Available Baud Rates ||
+|| *Rate Multiplier* || *Available Baud Rates for SerDrive* ||
 || None ||  2400,  4800,  9600,  28.8K,  57.6K, 115.2K ||
 || 2x || 4800,  9600, 19200,  57.6K, 115.2K, 230.4K ||
 || 4x || 9600, 19200, 38400, 115.2K, 230.4K, 460.8K ||
 
-And for completeness, 76.8K and 153.6K can also be set.  The default baud rate is 9600 (115.2K when used in named pipe mode)
+And for completeness, 76.8K and 153.6K can also be set.  The default baud rate is 9600 (115.2K when used in named pipe mode).
+
+Note that in Windows' Device Manager, a high speed COM port may still show that it's maximum speed is 128K baud.  Do not be alarmed, this setting has no impact on what SerDrive does with the Windows API, where the higher speeds are available.  No manual setup of the serial port is required before SerDrive runs.
 
 * _Disable Operation Timeout:_ -t * 
 
@@ -87,6 +112,8 @@ Treat the disk as a Read Only disk, SerDrive will not allow writes.
 * _Verbose:_ -v [level] *
 
 Reporting level 1-6, with increasing information as the number increases.  This switch can be very useful for seeing the secot-by-secotr traffic between the PC and the hard disk.
+
+The "-v" switch with a value of 1 or higher will also display performance measurements for block transfers of more than 100 sectors.
 
 * _ImageFiles:_ ImageFileName *
 
@@ -114,6 +141,8 @@ The BIOS supports speeds up to 460.8K baud.  To achieve this speed, you will nee
      * [http://www.iogear.com/product/GUC232A/ IOGear GUC232A], although beware that the specs only list up to 230Kbps, in limited practice it has worked up to 460K.
 
 Care must be taken when configuring the serial connection - the clock multiplier is not detectable by the client PC.  With a 4x clock multiplier, the client PC should be set to 115.2K baud, while the matching server needs to be set to 460.8K baud.
+
+Note that in Windows' Device Manager, a high speed COM port may still show that it's maximum speed is 128K baud.  Do not be alarmed, this setting has no impact on what SerDrive does with the Windows API, where the higher speeds are available.  No manual setup of the serial port is required before SerDrive runs.
 
 = Disk Image Format =
 
