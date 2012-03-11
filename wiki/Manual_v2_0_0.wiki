@@ -46,6 +46,13 @@ XT builds are preconfigured for XTIDE rev1 at port 300h and IDE_JR8K.BIN is prec
 ----
 = Installing XTIDE Universal BIOS =
 
+== Important if you are upgrading from XTIDE Universal BIOS v1.x.x. ==
+
+There is a bug related to generating L-CHS parameters for LBA drives. Generated parameters can be different than what should be based on Phoenix Enhanced Disk Drive Specification. That specification is what most BIOSes follow. If you want to swap drives between systems, both of them must use the same L-CHS parameters. XTIDE Universal BIOS v2 now uses the Phoenix specification (will be verified during beta testing) so the parameters can be different than those from XTIDE Universal BIOS v1.
+
+IMPORTANT! That means you need to create new partitions and format the drives after upgrading to XTIDE Universal BIOS v2.x.x.
+
+
 == Hardware supporting XTIDE Universal BIOS ROM ==
 
 The most convenient way to use XTIDE Universal BIOS is to use [http://www.vintage-computer.com/vcforum/showwiki.php?title=XTIDE+Rev2 XTIDE card]. It can be used on any PC with free 8-bit ISA slot. You might not want to connect any drives to it in 16- or 32-bit systems since 8-bit transfer will be very slow. Using XTIDE card allows EEPROM flashing so it is really easy to update XTIDE Universal BIOS.
