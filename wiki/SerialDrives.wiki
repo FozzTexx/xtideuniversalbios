@@ -24,18 +24,24 @@ To use this feature, you will need:
 
 == Getting Started ==
 
-* 1. Connect the two machines via the serial connection. *
+=== 1. Connect ===
 
-* 2. Open a command prompt, and run the SerDrive utility on the server. *  Arguments are described below.  In its simplest form:
-	{{{ C:/> SerDrive MyImage.img }}}
-If you do not already have an image, you can obtain boot floppies of FreeDOS from.
+Connect the two machines via the serial cable.
+
+=== 2. Start the Server ===
+
+Open a command prompt, and run the SerDrive utility on the server.  Switches are described below.  In its simplest form:
+	{{{ C:/> SerDrive ImageFile.img }}}
+If you do not already have an image, you can obtain boot floppies of FreeDOS at [http://www.fdos.org/bootdisks/ www.fdos.org] and possibly at the FreeDOS home page at [http://www.freedos.org www.freedos.org] (although they tend to distribute FreeDOS as a CD-ROM image).
 SerDrive will use the first available COM port by default, at a speed of 9600 baud (which is reliable, but relatively slow, you will likely want to increase this for continued use).
 
-* 3. Boot the client computer.  During drive detection, hold down the Alt key, and at the end of drive detection, the BIOS will display "Serial Master on COM Detect". *  The BIOS will now scan the available COM ports on the client (COM 1-7), looking for a server.
+=== 3. Boot the Client ===
+
+Boot the client computer.  * During drive detection, hold down the Alt key, and at the end of drive detection, the BIOS will display "Serial Master on COM Detect". *  The BIOS will now scan the available COM ports on the client (COM 1-7), looking for a server.  You can also configure the BIOS with XTIDECFG to always boot from the serial port (see below).
 
 If a server is found, the floppy and/or hard disk emulated will appear in the boot menu for the BIOS.  You can now proceed as normal.
 
-SerDrive is stateless, and flushes writes to the image files immediately.  You can start and stop the server at will, although this is not recommended.   If the server is stopped and a disk access is attempted by the client, that request will result in an error on the client.  Also, changing the image file without also rebooting the client may result in unexpected behavior and possible data loss.
+If you have problems, start by adding the {{{-v}}} switch to SerDrive and it will report on each connection request and sector transferred.  If that still doesn't work, you may want to try a basic serial communications program to see if you can send and receive characters across the serial port.  Depending on your version of Windows, it may include a serial communications program, or you could try a program such as [http://www.kermitproject.org/ Kermit].
 
 = Performance =
 
@@ -43,24 +49,27 @@ Really, emulating a disk drive over a serial link?  That has to be pretty slow, 
 
 It depends.  Using high speed UARTs at a speed of 460K, performance is on par with floppy disk drives of the vintage era, without any of the seek time or interleave factors to slow it down (we're assuming the server PC is very fast and is caching heavily used sectors in memory).  With this level of throughput, serial drives are slower than a vintage hard disk, but not by much, and the system is completely usable.
 
-Using slow speed UARTs, at a speed of 38.4K, which is commonly the top speed for vintage serial ports, the serial drives are quite slow.  However, if this is used infrequently, say when it is needed to bootstrap an OS in order to format a locally attached hard disk, the delay can be worth it, and less hassle than finding a working floppy disk drive and floppy disk with the required image.
+And then there is the bootstrap scenario.  Imagine you find yourself with a PC without a working floppy disk drive, or the system floppy disk you want to boot is unreadable.  With only a standard COM port, common back in the day, you can still boot this machine and FDISK and/or FORMAT an attached hard disk.  It will take some time, no question about it, the top speed of many of these vintage COM ports was 38.4K.  But it will eventually boot.
 
-Here's how various drives compare:
+Here's how various drives compare on performance, including the serial drives:
 
 || || *5.25" DSDD Floppy* || *3.5" HD Floppy* || *Original IBM PC XT Hard Disk* || *38.4K Baud Serial Drive* || *460K Baud Serial Drive* ||
-|| Theoretical Max, Bytes per Second || 31K  || 62K || 87K || 3.8K || 46K ||
-|| Observed Speed, Bytes per Second || || || || 3.7K || 42K Read, 37K Write ||
-|| Time to Boot MS-DOS 3.3, Seconds || || || || || ||
+|| Theoretical Max Speed, Bytes per Second      || 31K  || 62K  || 87K || 3.8K || 46K ||
+|| Observed Speed, Bytes per Second             ||      || 42K  ||     || 3.7K || 42K Read, 37K Write ||
+|| Time to Boot MS-DOS 3.3, Seconds             ||      || 14.5 ||     || 30.5 || 3.6 ||
+|| Time to Burst Read 274,688 bytes, Seconds    ||      || 6.6  ||     || 72.1 || 6.9 ||
+
+So, how can boot time be so much faster with the serial connection than a floppy disk, yet burst read speed be worse?  There is a lot of overhead with seeking between tracks, waiting for the motor to spin the desired sector under the read head, etc. that goes away with the serial connection.  Even at a baud rate of 38.4K, 30 seconds is of course slow to boot, but completely reasonable for a boostrapping scenario.
 
 Note that at high speed, write performance for serial drives is slightly worse than read performance - the BIOS code is optimized for read performance.
 
-To help measure performance, SerDrive's "-v" switch with a value of 1 or higher will also display performance measurements for transfers of more than 100 sectors at a time.
+To help measure performance, SerDrive's {{{-v}}} switch with a value of 1 or higher will also display performance measurements for transfers of more than 100 sectors at a time.
 
 Performance number Notes:
   * Serial drive theoretical max taken by dividing bit rate by 10, allowing for start and stop bits.  Wikibooks has a discussion of [http://en.wikibooks.org/wiki/Serial_Programming:RS-232_Connections#Data_Transmission_Rates Data Transmission Rates] based on RS-232 serial communications overhead, in the Wikibook _[http://en.wikibooks.org/wiki/Serial_Programming:RS-232_Connection Serial Programming/RS-232 Connections]_.
-  * Floppy disk characteristics from Scott Mueller's _[http://books.google.com/books?id=E1p2FDL7P5QC&pg=PA649 Upgrading and Repairing PCs]_, Page 649.
+  * Floppy disk characteristics from Scott Mueller's _[http://books.google.com/books?id=E1p2FDL7P5QC&pg=PA649 Upgrading and Repairing PCs]_, 15th Anniversary Edition (2004), Page 649.
   * IBM PC XT Hard Disk performance as calculated based on maximum throughput and sector interleave by Steve Gibson in [http://books.google.com/books?id=CD8EAAAAMBAJ&pg=PA36 "The Ways and Means of Faster Data Throughput"], _InfoWorld_, March 7, 1988, Page 36.
-
+  * Observed speeds and timings done on an original 4.77 MHz 8088 based IBM PC 5150.
 
 = Configuring with XTIDECFG =
 
@@ -72,23 +81,25 @@ Note that a serial port controller must be the last configured IDE controller.  
 
 * {{{ Usage: SerDrive [options] imagefile [[slave-options] slave-imagefile] }}} *
 
-* _Specify Disk Geometry:_ -g [cyl:head:sect] *
+You can stop SerDrive by pressing Ctrl-C.  SerDrive is stateless, and flushes writes to the image files immediately.  You can start and stop the server at will, although this is not recommended.   If the server is stopped and a disk access is attempted by the client, that request will result in an error on the client.  Also, changing the image file without also rebooting the client may result in unexpected behavior and possible data loss.
 
-Geometry in cylinders, sectors per cylinder, and heads.  -g also implies CHS addressing mode (default is LBA28).
+* _Specify Disk Geometry:_ {{{-g}}} [cyl:head:sect] *
 
-* _Create New Disk Image:_ -n [megabytes] *
+Geometry in cylinders, sectors per cylinder, and heads.  {{{-g}}} also implies CHS addressing mode (default is LBA28).
+
+* _Create New Disk Image:_ {{{-n}}} [megabytes] *
 
 Create new disk with given size or use -g geometry.  Maximum size is 137438 MB (the LBA28 size limit).  Floppy images can also be created, such as "360K".  Default disk size is 32 MB disk, with a CHS geometry 65:16:63.
 
-* _Emulator Pipe Mode:_ -p [pipename] *
+* _Emulator Pipe Mode:_ {{{-p}}} [pipename] *
 
 Named Pipe mode for emulators.  Pipe name must begin with "\\", default is "\\.\pipe\xtide".
 
-* _Specify COM Port:_ -c COMPortNumber *
+* _Specify COM Port:_ {{{-c}}} COMPortNumber *
 
 COM Port to use (default is first found).  The usage message will also list the available COM ports on this system.
 
-* _Specify Baud Rate:_ -b BaudRate *
+* _Specify Baud Rate:_ {{{-b}}} BaudRate *
 
 Baud rate to use on the COM port.  If the client machine has a hardware rate multipler (for high speed operation), then that will impact this setting:
 
@@ -101,19 +112,19 @@ And for completeness, 76.8K and 153.6K can also be set.  The default baud rate i
 
 Note that in Windows' Device Manager, a high speed COM port may still show that it's maximum speed is 128K baud.  Do not be alarmed, this setting has no impact on what SerDrive does with the Windows API, where the higher speeds are available.  No manual setup of the serial port is required before SerDrive runs.
 
-* _Disable Operation Timeout:_ -t * 
+* _Disable Operation Timeout:_ {{{-t}}} * 
 
 Disable timeout, useful for long delays when debugging.
 
-* _Read Only Disk:_ -r *
+* _Read Only Disk:_ {{{-r}}} *
 
 Treat the disk as a Read Only disk, SerDrive will not allow writes.
 
-* _Verbose:_ -v [level] *
+* _Verbose:_ {{{-v}}} [level] *
 
 Reporting level 1-6, with increasing information as the number increases.  This switch can be very useful for seeing the secot-by-secotr traffic between the PC and the hard disk.
 
-The "-v" switch with a value of 1 or higher will also display performance measurements for block transfers of more than 100 sectors.
+The {{{-v}}} switch with a value of 1 or higher will also display performance measurements for block transfers of more than 100 sectors.
 
 * _ImageFiles:_ ImageFileName *
 
@@ -160,5 +171,5 @@ Other possible tools include [http://hp.vector.co.jp/authors/VA013937/editdisk/i
 
 Floppy and hard disk image files can be shared between the XTIDE Universal BIOS and other emulators, such as [http://bochs.sourceforge.net Bochs].  One nice feature of this is that bootable images can be created and tested in an emulated enivornment, copmlete with multiple floppy and CD-ROM drives, and then the resulting image can be used with physical hardware through the BIOS.
 
-Bochs was heavily used in the development of the serial code, as its debugger offers control over the emulated system that is hard to accomplish on actual hardware.  You can run the XTIDE Universal BIOS in Bochs as an installed option ROM, and interface with Bochs' emulate IDE hard disks and serial ports.  To support serial ports, SerDrive's "-p" switch can be used to run over a Win32 named pipe instead of a physical COM port, and Bochs can be set to emulate a COM port over a named pipe.  In addition, it can be set to emulate a specific baud rate from the client (Bochs), using the standard "-b" switch.  The "-t" switch is useful to prevent the server from timing out on operations, if a breakpoint is hit in the BIOS code.
+Bochs was used in the development of the serial code, as its debugger offers control over the emulated system that is hard to accomplish on actual hardware.  You can run the XTIDE Universal BIOS in Bochs as an installed option ROM, and interface with Bochs' emulate IDE hard disks and serial ports.  To support serial ports, SerDrive's {{{-p}}} switch can be used to run over a Win32 named pipe instead of a physical COM port, and Bochs can be set to emulate a COM port over a named pipe.  In addition, it can be set to emulate a specific baud rate from the client (Bochs), using the standard {{{-b}}} switch.  The {{{-t}}} switch is useful to prevent the server from timing out on operations, if a breakpoint is hit in the BIOS code.
 
