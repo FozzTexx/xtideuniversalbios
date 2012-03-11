@@ -21,9 +21,8 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH25h_HandlerForGetDriveInformation:
-	mov		al, 1			; Read 1 sector
-	call	Prepare_BufferToESSIforOldInt13hTransfer
-	mov		ah, COMMAND_IDENTIFY_DEVICE
+	mov		ax, (COMMAND_IDENTIFY_DEVICE << 8 | 1)		; Read 1 sector
+	call	Prepare_BufferToESSIforOldInt13hTransfer	; Preserves AX
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRQ, FLG_STATUS_DRQ)
 %ifdef USE_186
 	push	Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH

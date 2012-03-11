@@ -41,7 +41,7 @@ endstruc
 		%error ".ideVars structures must fit within the first 256 bytes of the ROM image"
 	%endif
 	%if (ROMVARS.ideVarsEnd - ROMVARS.ideVarsBegin) = 0
-		%error "there must be at lesat one .ideVars structure, it would be bizarre if this were not true, but it is assumed in the ah0h reset code."
+		%error "there must be at least one .ideVars structure, it would be bizarre if this were not true, but it is assumed in the ah0h reset code."
 	%endif
 %endif
 

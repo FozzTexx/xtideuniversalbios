@@ -168,7 +168,10 @@ jride_8k:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_JRIDE_8K) -l"$(TARGET)_jr8k.lst" -o"$(TARGET)_jr8k.bin"
 	@echo * 8k JR-IDE/ISA version "$(TARGET)_jr8k.bin" built.
 
-strings: src\StringsCompressed.asm
+strings: src\Strings.asm
+	@$(AS) src\Strings.asm $(ASFLAGS) $(DEFS_XT) -DCHECK_FOR_UNUSED_ENTRYPOINTS -DMODULE_STRINGS_COMPRESSED_PRECOMPRESS -o build\Strings.bin -l build\StringsPrecompress.lst
+	@perl ..\tools\StringsCompress.pl < build\StringsPrecompress.lst > src\StringsCompressed.asm
+	@echo StringsCompressed.asm updated!
 
 clean:
 	@$(RM) $(BUILD_DIR)\*.*
@@ -182,11 +185,6 @@ checksum: all
 	@perl ..\tools\checksum.pl $(TARGET)_xtp.bin $(ROMSIZE)
 	@perl ..\tools\checksum.pl $(TARGET)_xt.bin $(ROMSIZE)
 	@perl ..\tools\checksum.pl $(TARGET)_jr8k.bin $(ROMSIZE)
-
-src\StringsCompressed.asm: src\Strings.asm
-	@$(AS) src\Strings.asm $(ASFLAGS) $(DEFS_XT) -DCHECK_FOR_UNUSED_ENTRYPOINTS -DMODULE_STRINGS_COMPRESSED_PRECOMPRESS -o build\Strings.bin -l build\StringsPrecompress.lst
-	@perl ..\tools\StringsCompress.pl < build\StringsPrecompress.lst > src\StringsCompressed.asm
-	@echo StringsCompressed.asm updated!
 
 xt_unused: xt
 	$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XT) -o"$(TARGET)_xt_unused.asm" -E -DCHECK_FOR_UNUSED_ENTRYPOINTS

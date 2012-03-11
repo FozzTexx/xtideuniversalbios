@@ -8,6 +8,39 @@
 ; Section containing code
 SECTION .text
 
+; POST drive detection strings
+g_szRomAt:		db	"%s @ %x",LF,CR,NULL
+
+; Boot loader strings
+g_szTryToBoot:			db	"Booting from %s %x",ANGLE_QUOTE_RIGHT,"%x",LF,CR,NULL
+g_szBootSectorNotFound:	db	"Boot sector "
+g_szNotFound:			db	"not found",LF,CR,NULL
+g_szReadError:			db	"Error %x!",LF,CR,NULL
+
+g_szAddressingModes:
+g_szLCHS:		db	"L-CHS",NULL
+g_szPCHS:		db	"P-CHS",NULL
+g_szLBA28:		db	"LBA28",NULL
+g_szLBA48:		db	"LBA48",NULL
+g_szAddressingModes_Displacement equ (g_szPCHS - g_szAddressingModes)
+;
+; Ensure that addressing modes are correctly spaced in memory
+;
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
+	%if g_szLCHS <> g_szAddressingModes
+		%error "g_szAddressingModes Displacement Incorrect 1"
+	%endif
+	%if g_szPCHS <> g_szLCHS + g_szAddressingModes_Displacement
+		%error "g_szAddressingModes Displacement Incorrect 2"
+	%endif
+	%if g_szLBA28 <> g_szPCHS + g_szAddressingModes_Displacement
+		%error "g_szAddressingModes Displacement Incorrect 3"
+	%endif
+	%if g_szLBA48 <> g_szLBA28 + g_szAddressingModes_Displacement
+		%error "g_szAddressingModes Displacement Incorrect 4"
+	%endif
+%endif
+
 ; Boot Menu Floppy Disk strings
 ;
 ; The following strings are used by BootMenuPrint_RefreshInformation
@@ -52,58 +85,6 @@ g_szDetectPort:			db	"%x",NULL					   	; IDE Master at 1F0h:
 	%endif
 %endif
 
-; Boot Menu menuitem strings
-;
-; The following strings are used by BootMenuPrint_* routines.
-; To support optimizations in that code, these strings must start on the same 256 byte page,
-; which is checked at assembly time below.
-;
-g_szBootMenuPrintStart:
-g_szDriveNum:			db	"%x %s",NULL
-g_szDriveNumBOOTNFO:	db	"%x %z",NULL
-g_szFloppyDrv:			db	"Floppy Drive %c",NULL
-g_szBootMenuPrintEnd:
-g_szForeignHD:			db	"Foreign Hard Disk",NULL
-
-%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
-	%if ((g_szBootMenuPrintStart-$$) & 0xff00) <> ((g_szBootMenuPrintEnd-$$) & 0xff00)
-		%error "g_szBootMenuPrint* strings must start on the same 256 byte page, required by the BootMenuPrint_* routines.  Please move this block up or down within strings.asm"
-	%endif
-%endif
-
-; POST drive detection strings
-g_szRomAt:		db	"%s @ %x",LF,CR,NULL
-
-; Boot loader strings
-g_szTryToBoot:			db	"Booting from %s %x",ANGLE_QUOTE_RIGHT,"%x",LF,CR,NULL
-g_szBootSectorNotFound:	db	"Boot sector "
-g_szNotFound:			db	"not found",LF,CR,NULL
-g_szReadError:			db	"Error %x!",LF,CR,NULL
-
-g_szAddressingModes:
-g_szLCHS:		db	"L-CHS",NULL
-g_szPCHS:		db	"P-CHS",NULL
-g_szLBA28:		db	"LBA28",NULL
-g_szLBA48:		db	"LBA48",NULL
-g_szAddressingModes_Displacement equ (g_szPCHS - g_szAddressingModes)
-;
-; Ensure that addressing modes are correctly spaced in memory
-;
-%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
-	%if g_szLCHS <> g_szAddressingModes
-		%error "g_szAddressingModes Displacement Incorrect 1"
-	%endif
-	%if g_szPCHS <> g_szLCHS + g_szAddressingModes_Displacement
-		%error "g_szAddressingModes Displacement Incorrect 2"
-	%endif
-	%if g_szLBA28 <> g_szPCHS + g_szAddressingModes_Displacement
-		%error "g_szAddressingModes Displacement Incorrect 3"
-	%endif
-	%if g_szLBA48 <> g_szLBA28 + g_szAddressingModes_Displacement
-		%error "g_szAddressingModes Displacement Incorrect 4"
-	%endif
-%endif
-
 g_szBusTypeValues:
 g_szBusTypeValues_8Dual:		db		"D8 ",NULL
 g_szBusTypeValues_8Reversed:	db		"X8 ",NULL
@@ -137,6 +118,25 @@ g_szBusTypeValues_Displacement equ (g_szBusTypeValues_8Reversed - g_szBusTypeVal
 	%endif
 	%if g_szBusTypeValues_8MemMapped <> g_szBusTypeValues_Serial + g_szBusTypeValues_Displacement
 		%error "g_szBusTypeValues Displacement Incorrect 7"
+	%endif
+%endif
+
+; Boot Menu menuitem strings
+;
+; The following strings are used by BootMenuPrint_* routines.
+; To support optimizations in that code, these strings must start on the same 256 byte page,
+; which is checked at assembly time below.
+;
+g_szBootMenuPrintStart:
+g_szDriveNum:			db	"%x %s",NULL
+g_szDriveNumBOOTNFO:	db	"%x %z",NULL
+g_szFloppyDrv:			db	"Floppy Drive %c",NULL
+g_szBootMenuPrintEnd:
+g_szForeignHD:			db	"Foreign Hard Disk",NULL
+
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
+	%if ((g_szBootMenuPrintStart-$$) & 0xff00) <> ((g_szBootMenuPrintEnd-$$) & 0xff00)
+		%error "g_szBootMenuPrint* strings must start on the same 256 byte page, required by the BootMenuPrint_* routines.  Please move this block up or down within strings.asm"
 	%endif
 %endif
 
