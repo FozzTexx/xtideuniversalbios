@@ -263,7 +263,7 @@ XTIDE Universal BIOS does not support any specific VLB controllers at the moment
 = Known problems =
 
 == Known bugs in XTIDE Universal BIOS v2.0.0 beta 1==
-  * Boot menu displays full capacity when user has defined LBA.
+  * User Defined LBA seems to have problems in FreeDOS (format does not work).
 
 
 == Problems with Compact Flash cards and microdrives ==
