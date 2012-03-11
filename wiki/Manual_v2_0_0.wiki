@@ -236,6 +236,14 @@ There are three reasons for this:
 
 If you are happy with v1.1.5 then go ahead and use it. I think most people will find that v2 is worth the upgrade even though the transfer rates are a bit slower.
 
+Here is some transfer rate comparisons between v1.1.5 and v2.0.0β1. Results are from [http://www.brutman.com/iotest.zip IOTEST by Michael B. Brutman]. Test system is 486DX4-100 with VLB Multi I/O card. XTIDE Universal BIOSes are configured for 16-transfers.
+||Internal Cache||Shadow RAM||v1.1.5||v2.0.0β1||
+||Enabled||Disabled||1399.22||1185.50||KB/s
+||Enabled||Enabled||1931.79||1911.37||KB/s
+||Disabled||Disabled||1358.26||1145.48||KB/s
+||Disabled||Enabled||1873.80||1851.30||KB/s
+
+
 == Importance of Shadow RAM ==
 Always enable Shadow RAM and ROM area caching if your systems supports them! They might speed up much more than you think. This is especially true on Pentium systems.
 
