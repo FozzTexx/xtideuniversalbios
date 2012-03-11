@@ -14,7 +14,7 @@ XTIDE Universal BIOS can be used on any IBM PC, XT, AT and 100% compatible syste
 
 Some of the features included in XTIDE Universal BIOS are...
   * Supports up to 4 IDE controllers
-  * Support for virtual drives using serial port, [SerialDrives.wiki more information]
+  * Support for virtual drives using serial port, [http:SerialDrives.wiki more information]
   * Supports drives with any capacity (MS-DOS 7.x or FreeDOS is required to access more than 8.4 GB)
   * PIO transfers with block mode support
   * Hard disk autodetection
