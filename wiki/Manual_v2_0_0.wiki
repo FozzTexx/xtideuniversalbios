@@ -238,7 +238,7 @@ If you are happy with v1.1.5 then go ahead and use it. I think most people will 
 
 Here are some transfer rate comparisons between v1.1.5 and v2.0.0β1. Results are from [http://www.brutman.com/iotest.zip IOTEST by Michael B. Brutman].
 
-Test system is 486DX4-100 with VLB Multi I/O card. XTIDE Universal BIOSes are configured for 16-transfers.
+Test system is 486DX4 100 MHz with VLB Multi I/O card and 6 GB Hitachi Microdrive. XTIDE Universal BIOSes are configured for 16-transfers.
 ||Internal Cache||Shadow RAM||v1.1.5||v2.0.0β1||
 ||Enabled||Disabled||1399.22 KB/s||1185.50 KB/s||
 ||Enabled||Enabled||1931.79 KB/s||1911.37 KB/s||
