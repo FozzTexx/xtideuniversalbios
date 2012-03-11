@@ -27,7 +27,7 @@ To use this feature, you will need:
 * 1. Connect the two machines via the serial connection. *
 
 * 2. Open a command prompt, and run the SerDrive utility on the server. *  Arguments are described below.  In its simplest form:
-	C:/> SerDrive MyImage.img
+	{{{ C:/> SerDrive MyImage.img }}}
 If you do not already have an image, you can obtain boot floppies of FreeDOS from.
 SerDrive will use the first available COM port by default, at a speed of 9600 baud (which is reliable, but relatively slow, you will likely want to increase this for continued use).
 
@@ -47,7 +47,7 @@ Note that serial ports must be the last configured IDE controller.  Xtidecfg wil
 
 = SerDrive Command Line Arguments =
 
-* Usage: SerDrive [options] imagefile [[slave-options] slave-imagefile] *
+* {{{ Usage: SerDrive [options] imagefile [[slave-options] slave-imagefile] }}} *
 
 * _Specify Disk Geometry:_ -g [cyl:head:sect] *
 
@@ -111,7 +111,7 @@ The BIOS supports speeds up to 460.8K baud.  To achieve this speed, you will nee
 
   * COM port on the server machine capable of high speed operation.  Most motherboard based COM ports can NOT attain high speed.  However, most USB COM ports can attain high speed, check the product documentation if it states "Data Transfer Rate: 500kbps" or similar.  USB serial ports that have been tested with the BIOS:
      * [http://www.trendnet.com/products/proddetail.asp?prod=265_TU-S9&cat=32 TRENDNet TU-S9]
-     * [http://www.iogear.com/product/GUC232A/ IOGear GUC232A]
+     * [http://www.iogear.com/product/GUC232A/ IOGear GUC232A], although beware that the specs only list up to 230Kbps, in limited practice it has worked up to 460K.
 
 Care must be taken when configuring the serial connection - the clock multiplier is not detectable by the client PC.  With a 4x clock multiplier, the client PC should be set to 115.2K baud, while the matching server needs to be set to 460.8K baud.
 
