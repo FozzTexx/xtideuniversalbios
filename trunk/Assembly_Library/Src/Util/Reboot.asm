@@ -28,8 +28,12 @@ Reboot_AT:
 	mov		al, 0FEh				; System reset (AT+ keyboard controller)
 	out		64h, al					; Reset computer (AT+)
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-	mov		ax, 10
-	call	Delay_MicrosecondsFromAX
+	%ifdef INCLUDE_TIME_LIBRARY
+		mov		ax, 10
+		call	Delay_MicrosecondsFromAX
+	%else
+		JMP_DELAY
+	%endif
 %else
 	JMP_DELAY
 %endif
