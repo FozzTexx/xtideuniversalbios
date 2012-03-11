@@ -24,14 +24,14 @@ To use this feature, you will need:
 
 == Getting Started ==
 
-1. Connect the two machines via the serial connection.
+# * Connect the two machines via the serial connection. *
 
-2. Open a command prompt, and run the SerDrive utility on the server.  Arguments are described below.  In its simplest form:
+# * Open a command prompt, and run the SerDrive utility on the server. *  Arguments are described below.  In its simplest form:
 	C:/> SerDrive MyImage.img
 If you do not already have an image, you can obtain boot floppies of FreeDOS from.
 SerDrive will use the first available COM port by default, at a speed of 9600 baud (which is reliable, but relatively slow, you will likely want to increase this for continued use).
 
-3. Boot the client computer.  During drive detection, hold down the Alt key, and at the end of drive detection, the BIOS will display "Serial Master on COM Detect".  The BIOS will now scan the available COM ports on the client, looking for a server.
+# * Boot the client computer.  During drive detection, hold down the Alt key, and at the end of drive detection, the BIOS will display "Serial Master on COM Detect". *  The BIOS will now scan the available COM ports on the client (COM 1-7), looking for a server.
 
 If a server is found, the floppy and/or hard disk emulated will appear in the boot menu for the BIOS.  You can now proceed as normal.
 
@@ -47,21 +47,26 @@ Note that serial ports must be the last configured IDE controller.  Xtidecfg wil
 
 = SerDrive Command Line Arguments =
 
-Usage: SerDrive [options] imagefile [[slave-options] slave-imagefile]
+* Usage: SerDrive [options] imagefile [[slave-options] slave-imagefile] *
 
-== -g [cyl:head:sect] ==
+* -g [cyl:head:sect] *
+
 Geometry in cylinders, sectors per cylinder, and heads.  -g also implies CHS addressing mode (default is LBA28).
 
-== -n [megabytes] ==    
+* -n [megabytes] *
+
 Create new disk with given size or use -g geometry.  Maximum size is 137438 MB (the LBA28 size limit).  Floppy images can also be created, such as "360K".  Default disk size is 32 MB disk, with a CHS geometry 65:16:63.
 
-== -p [pipename] ==
+* -p [pipename] *
+
 Named Pipe mode for emulators.  Pipe name must begin with "\\", default is "\\.\pipe\xtide".
 
-== -c COMPortNumber ==
+*-c COMPortNumber *
+
 COM Port to use (default is first found).  The usage message will also list the available COM ports on this system.
 
-== -b BaudRate ==
+* -b BaudRate *
+
 Baud rate to use on the COM port.  If the client machine has a hardware rate multipler (for high speed operation), then that will impact this setting:
 
 || Rate Multiplier || Available Baud Rates ||
@@ -71,16 +76,20 @@ Baud rate to use on the COM port.  If the client machine has a hardware rate mul
 
 And for completeness, 76.8K and 153.6K can also be set.  The default baud rate is 9600 (115.2K when used in named pipe mode)
 
-== -t == 
+* -t * 
+
 Disable timeout, useful for long delays when debugging.
 
-== -r ==
+* -r *
+
 Treat the disk as a Read Only disk, SerDrive will not allow writes.
 
-== -v [level] ==
+* -v [level] *
+
 Reporting level 1-6, with increasing information as the number increases.  This switch can be very useful for seeing the secot-by-secotr traffic between the PC and the hard disk.
 
-== Image File ==
+* ImageFile *
+
 Finally, the image file name appears. Up to two image files can be used, each with their own settings for many of the switches above.
 
 Floppy images may also be used.  Image size must be exactly the same size
