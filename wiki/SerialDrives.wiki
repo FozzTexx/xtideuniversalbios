@@ -31,7 +31,7 @@ Connect the two machines via the serial cable.
 === 2. Start the Server ===
 
 Open a command prompt, and run the SerDrive utility on the server.  Switches are described below.  In its simplest form:
-	{{{ C:/> SerDrive ImageFile.img }}}
+	{{{ C:\> SerDrive ImageFile.img }}}
 If you do not already have an image, you can obtain boot floppies of FreeDOS at [http://www.fdos.org/bootdisks/ www.fdos.org] and possibly at the FreeDOS home page at [http://www.freedos.org www.freedos.org] (although they tend to distribute FreeDOS as a CD-ROM image).
 SerDrive will use the first available COM port by default, at a speed of 9600 baud (which is reliable, but relatively slow, you will likely want to increase this for continued use).
 
