@@ -48,7 +48,7 @@ Using slow speed UARTs, at a speed of 38.4K, which is commonly the top speed for
 Here's how various drives compare:
 
 || || *5.25" DSDD Floppy* || *3.5" HD Floppy* || *Original IBM PC XT Hard Disk* || *38.4K Baud Serial Drive* || *460K Baud Serial Drive* ||
-|| Theoretical Max, Bytes per Second || 31K  || 62K || 87K || 4.8K || 3.8K || 46K ||
+|| Theoretical Max, Bytes per Second || 31K  || 62K || 87K || 3.8K || 46K ||
 || Observed Speed, Bytes per Second || || || || 3.7K || 42K Read, 37K Write ||
 || Time to Boot MS-DOS 3.3, Seconds || || || || || ||
 
