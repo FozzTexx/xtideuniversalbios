@@ -41,7 +41,7 @@ SerDrive is stateless, and flushes writes to the image files immediately.  You c
 
 = Configuring with XTIDECFG =
 
-Holding down the Alt key is a bootstrapping feature, which is always available.  In addition, xtidecfg can be used to configure the BIOS to always look on a particular COM port for a server, or to automatically scan on each boot (as if the Alt key had been pressed).  See the [Manual_V2_0_0.wiki XTIDE V2.0.0 documentaiton for more details].
+Holding down the Alt key is a bootstrapping feature, which is always available.  In addition, xtidecfg can be used to configure the BIOS to always look on a particular COM port for a server, or to automatically scan on each boot (as if the Alt key had been pressed).  See the [Manual_V2_0_0 XTIDE V2.0.0 documentaiton for more details].
 
 Note that a serial port controller must be the last configured IDE controller.  Xtidecfg will move any serial ports to the end of the list if this is not already done.  This is done so that serial floppy disks, if any are present, will be last on the list of drives detected.
 

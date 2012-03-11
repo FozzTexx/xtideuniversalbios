@@ -124,7 +124,7 @@ Some menu items appear only when needed to make configuring easier.
   * Number of Floppy Drives [default=Auto]
    In some systems number of floppy drives cannot be properly auto detected. This settings allows you to specify it manually so all drives can be displayed on boot menu.
   * Scan for Serial Devices [default=No]
-   When enabled, the BIOS will scan COM1-7 for a Serial Drive server at the end of standard drive detection.  Even without this option enabled, holding down the ALT key at the end of drive detection will do the same thing (useful for bootstrapping scenarios).  The BIOS will display "Serial Master on COM Detect:" while it is scanning.  See the [SerialDrives.wiki Serial Drive] documentation for more information.
+   When enabled, the BIOS will scan COM1-7 for a Serial Drive server at the end of standard drive detection.  Even without this option enabled, holding down the ALT key at the end of drive detection will do the same thing (useful for bootstrapping scenarios).  The BIOS will display "Serial Master on COM Detect:" while it is scanning.  See the [SerialDrives Serial Drive] documentation for more information.
   * Boot Menu [default=Yes]
    You can disable boot menu if you don't like it for some reason. Normal Drive A, then C, then INT 18h (ROM Basic, ROM DOS or boot error) boot order is used when boot menu is disabled.
   * Default boot drive [default=80h]
@@ -142,7 +142,7 @@ Some menu items appear only when needed to make configuring easier.
   * Slave Drive
    Opens submenu for Master/Slave Drive specific settings for this IDE Controller.
   * Device Type [default=XTIDE for XT builds, 16-bit for AT builds]
-   Type of device. 16-bit will support all standard IDE controllers, including VLB controllers. 32-bit will use 32-bit transfers on VLB controllers but those controllers usually require native support for full speed. Other devices include XTIDE rev1 (and rev2 slow mode), XTIDE mod with swapped A0 and A3 address lines (XTIDE rev2 fast mode), JR-IDE/ISA (IDE_JR8K.BIN and 15 kiB builds only) and [SerialDrives.wiki support for virtual devices through serial port].  Note that a serial port controller must be the last configured IDE controller.  Xtidecfg will move any serial ports to the end of the list if this is not already done.  This is done so that serial floppy disks, if any are present, will be last on the list of drives detected.
+   Type of device. 16-bit will support all standard IDE controllers, including VLB controllers. 32-bit will use 32-bit transfers on VLB controllers but those controllers usually require native support for full speed. Other devices include XTIDE rev1 (and rev2 slow mode), XTIDE mod with swapped A0 and A3 address lines (XTIDE rev2 fast mode), JR-IDE/ISA (IDE_JR8K.BIN and 15 kiB builds only) and [SerialDrives support for virtual devices through serial port].  Note that a serial port controller must be the last configured IDE controller.  Xtidecfg will move any serial ports to the end of the list if this is not already done.  This is done so that serial floppy disks, if any are present, will be last on the list of drives detected.
   * Base (cmd block) address [default=300h for XT builds, 1F0h for AT builds (Primary IDE)]
    Command block (base port) address where the IDE Controller is located. JR-IDE/ISA does not use this setting.
   * Control block address [default=308h for XT builds, 3F0h for AT builds (Primary IDE)]
