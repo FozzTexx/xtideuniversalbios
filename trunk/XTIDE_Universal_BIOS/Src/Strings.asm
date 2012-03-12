@@ -61,30 +61,6 @@ g_szFddFiveQuarter:		db  "5",ONE_QUARTER,NULL
 	%endif
 %endif
 
-; The following strings are used by DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP
-; To support an optimization in that code, these strings must start on the same 256 byte page,
-; which is checked at assembly time below.
-;
-g_szDetectStart:
-g_szDetectMaster:		db	"Master",NULL
-g_szDetectSlave:		db	"Slave ",NULL
-g_szDetectOuter:		db	"IDE %s at %s: ",NULL
-;%%; %ifdef MODULE_SERIAL		;%%; is stripped off after string compression, %ifdef won't compress properly
-g_szDetectOuterSerial:	db	"Serial %s on %s: ",NULL
-g_szDetectCOM:			db  "COM%c%s",NULL
-g_szDetectCOMAuto:		db	" Detect",NULL
-g_szDetectCOMSmall:		db	"/%u%u00",NULL					; IDE Master at COM1/9600:
-g_szDetectCOMLarge:		db	"/%u.%uK",NULL					; IDE Master at COM1/19.2K:
-;%%; %endif						;%%; is stripped off after string compression, %ifdef won't compress properly
-g_szDetectEnd:
-g_szDetectPort:			db	"%x",NULL					   	; IDE Master at 1F0h:
-
-%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
-	%if ((g_szDetectEnd-$$) & 0xff00) <> ((g_szDetectStart-$$) & 0xff00)
-		%error "g_szDetect* strings must start on the same 256 byte page, required by DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP.  Please move this block up or down within strings.asm"
-	%endif
-%endif
-
 g_szBusTypeValues:
 g_szBusTypeValues_8Dual:		db		"D8 ",NULL
 g_szBusTypeValues_8Reversed:	db		"X8 ",NULL
@@ -121,6 +97,10 @@ g_szBusTypeValues_Displacement equ (g_szBusTypeValues_8Reversed - g_szBusTypeVal
 	%endif
 %endif
 
+g_szSelectionTimeout:	db		DOUBLE_BOTTOM_LEFT_CORNER,DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL,"%ASelection in %2-u s",NULL
+
+g_szDashForZero:		db		"- ",NULL
+
 ; Boot Menu menuitem strings
 ;
 ; The following strings are used by BootMenuPrint_* routines.
@@ -140,10 +120,6 @@ g_szForeignHD:			db	"Foreign Hard Disk",NULL
 	%endif
 %endif
 
-g_szSelectionTimeout:	db		DOUBLE_BOTTOM_LEFT_CORNER,DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL,"%ASelection in %2-u s",NULL
-
-g_szDashForZero:		db		"- ",NULL
-
 ; Boot menu bottom of screen strings
 g_szFDD:		db	"FDD     ",NULL
 g_szHDD:		db	"HDD     ",NULL
@@ -156,6 +132,30 @@ g_szCapacityNum:		db	"%5-u.%u %ciB",NULL
 g_szInformation:		db	"%s",LF,CR
 	db	"Addr.",SINGLE_VERTICAL,"Block",SINGLE_VERTICAL,"Bus",SINGLE_VERTICAL,  "IRQ",SINGLE_VERTICAL,"Reset",LF,CR
 	db	   "%s",SINGLE_VERTICAL, "%5-u",SINGLE_VERTICAL, "%s",SINGLE_VERTICAL," %2-I",SINGLE_VERTICAL,"%5-x" ,NULL
+
+; The following strings are used by DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP
+; To support an optimization in that code, these strings must start on the same 256 byte page,
+; which is checked at assembly time below.
+;
+g_szDetectStart:
+g_szDetectMaster:		db	"Master",NULL
+g_szDetectSlave:		db	"Slave ",NULL
+g_szDetectOuter:		db	"IDE %s at %s: ",NULL
+;%%; %ifdef MODULE_SERIAL		;%%; is stripped off after string compression, %ifdef won't compress properly
+g_szDetectOuterSerial:	db	"Serial %s on %s: ",NULL
+g_szDetectCOM:			db  "COM%c%s",NULL
+g_szDetectCOMAuto:		db	" Detect",NULL
+g_szDetectCOMSmall:		db	"/%u%u00",NULL					; IDE Master at COM1/9600:
+g_szDetectCOMLarge:		db	"/%u.%uK",NULL					; IDE Master at COM1/19.2K:
+;%%; %endif						;%%; is stripped off after string compression, %ifdef won't compress properly
+g_szDetectEnd:
+g_szDetectPort:			db	"%x",NULL					   	; IDE Master at 1F0h:
+
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
+	%if ((g_szDetectEnd-$$) & 0xff00) <> ((g_szDetectStart-$$) & 0xff00)
+		%error "g_szDetect* strings must start on the same 256 byte page, required by DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP.  Please move this block up or down within strings.asm"
+	%endif
+%endif
 
 ;------------------------------------------------------------------------------------------
 ;

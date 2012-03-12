@@ -24,14 +24,9 @@ SECTION .text
 ;		CF:		0 if successful, 1 if error
 ;--------------------------------------------------------------------
 AH8h_HandlerForReadDiskDriveParameters:
-	test	di,di
-	jnz		SHORT .OurDrive
+	test	di, di
+	jz		SHORT .NotOurDrive
 
-	call	Int13h_CallPreviousInt13hHandler
-	jnc		SHORT .MidGame
-	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
-
-.OurDrive:
 	call	AH8h_GetDriveParameters
 
 %ifdef MODULE_SERIAL_FLOPPY
@@ -66,6 +61,11 @@ AH8h_HandlerForReadDiskDriveParameters:
 %else
 	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 %endif
+
+.NotOurDrive:
+	call	Int13h_CallPreviousInt13hHandler
+	jnc		SHORT .MidGame
+	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 
 
 ;--------------------------------------------------------------------
@@ -113,9 +113,9 @@ AH8h_GetDriveParameters:
 	mov		dh, bl					; DH = Maximum head number
 
 %ifdef MODULE_SERIAL_FLOPPY
-	mov		bl,[di+DPT.bFlagsHigh]
+	mov		bl, [di+DPT.bFlagsHigh]
 %ifndef CHECK_FOR_UNUSED_ENTRYPOINTS             ; not sure why this is needed for preprocessor-only
-	eSHR_IM	bl,FLGH_DPT_SERIAL_FLOPPY_TYPE_FIELD_POSITION
+	eSHR_IM	bl, FLGH_DPT_SERIAL_FLOPPY_TYPE_FIELD_POSITION
 %endif
 %endif
 	ret

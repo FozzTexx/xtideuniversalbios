@@ -5,12 +5,12 @@
 SECTION .text
 
 ;--------------------------------------------------------------------
-; IdeIO_OutputALtoIdeRegisterInDL
 ; IdeIO_OutputALtoIdeControlBlockRegisterInDL
+; IdeIO_OutputALtoIdeRegisterInDL
 ;	Parameters:
 ;		AL:		Byte to output
-;		DL:		IDE Register				(IdeIO_OutputALtoIdeRegisterInDL)
-;				IDE Control Block Register	(IdeIO_OutputALtoIdeControlBlockRegisterInDL)
+;		DL:		IDE Control Block Register	(IdeIO_OutputALtoIdeControlBlockRegisterInDL)
+;				IDE Register				(IdeIO_OutputALtoIdeRegisterInDL)
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
 ;	Returns:
 ;		Nothing
@@ -18,13 +18,13 @@ SECTION .text
 ;		BX, DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-IdeIO_OutputALtoIdeRegisterInDL:
-	mov		bl, IDEVARS.wPort
-	SKIP2B	f	; cmp ax, <next instruction>
-	; Fall to IdeIO_OutputALtoIdeControlBlockRegisterInDL
-
 IdeIO_OutputALtoIdeControlBlockRegisterInDL:
 	mov		bl, IDEVARS.wPortCtrl
+	SKIP2B	f	; cmp ax, <next instruction>
+	; Fall to IdeIO_OutputALtoIdeRegisterInDL
+
+IdeIO_OutputALtoIdeRegisterInDL:
+	mov		bl, IDEVARS.wPort
 	call	GetPortToDXandTranslateA0andA3ifNecessary
 	out		dx, al
 	ret
@@ -62,8 +62,8 @@ IdeIO_InputToALfromIdeRegisterInDL:
 ALIGN JUMP_ALIGN
 GetPortToDXandTranslateA0andA3ifNecessary:
 	xor		bh, bh
-	xor		dh, dh							; DX now has IDE register offset
 	add		bl, [di+DPT.bIdevarsOffset]		; CS:BX now points port address
+	xor		dh, dh							; DX now has IDE register offset
 	add		dx, [cs:bx]
 	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_REVERSED_A0_AND_A3
 	jz		SHORT .ReturnPortInDX

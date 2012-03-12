@@ -26,8 +26,8 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AH4h_HandlerForVerifyDiskSectors:
-	call	Prepare_ByValidatingSectorsInALforOldInt13h
 	mov		ah, COMMAND_VERIFY_SECTORS
+	call	Prepare_ByValidatingSectorsInALforOldInt13h	; Preserves AX
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRQ, FLG_STATUS_DRDY)
 %ifdef USE_186
 	push	Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAHandTransferredSectorsFromCL

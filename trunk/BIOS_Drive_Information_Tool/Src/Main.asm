@@ -140,7 +140,6 @@ ALIGN JUMP_ALIGN
 DisplayOldInt13hInformationForDriveDL:
 	push	cx
 	push	dx
-	push	dx
 
 	call	Bios_ReadOldInt13hParametersFromDriveDL
 	call	Print_ErrorMessageFromAHifError
@@ -150,6 +149,7 @@ DisplayOldInt13hInformationForDriveDL:
 	mov		si, g_szSectors
 	call	Print_NullTerminatedStringFromSI
 	pop		dx
+	push	dx
 	call	Bios_ReadOldInt13hCapacityFromDriveDL
 	call	Print_ErrorMessageFromAHifError
 	jc		SHORT .SkipOldInt13hSinceError
@@ -162,7 +162,7 @@ DisplayOldInt13hInformationForDriveDL:
 	pop		cx
 	ret
 
-	
+
 ALIGN JUMP_ALIGN
 DisplayNewInt13hInformationFromDriveDL:
 	push	cx
