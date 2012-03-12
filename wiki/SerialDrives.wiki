@@ -73,7 +73,7 @@ Performance number Notes:
 
 = Configuring with XTIDECFG =
 
-Holding down the Alt key is a bootstrapping feature, which is always available.  In addition, xtidecfg can be used to configure the BIOS to always look on a particular COM port for a server, or to automatically scan on each boot (as if the Alt key had been pressed).  See the [Manual_V2_0_0 XTIDE V2.0.0 documentaiton for more details].
+Holding down the Alt key is a bootstrapping feature, which is always available.  In addition, xtidecfg can be used to configure the BIOS to always look on a particular COM port for a server, or to automatically scan on each boot (as if the Alt key had been pressed).  See the [Manual_V2_0_0 XTIDE V2.0.0 documentation for more details].
 
 Note that a serial port controller must be the last configured IDE controller.  Xtidecfg will move any serial ports to the end of the list if this is not already done.  This is done so that serial floppy disks, if any are present, will be last on the list of drives detected.
 
@@ -101,7 +101,7 @@ COM Port to use (default is first found).  The usage message will also list the 
 
 * _Specify Baud Rate:_ {{{-b}}} BaudRate *
 
-Baud rate to use on the COM port.  If the client machine has a hardware rate multipler (for high speed operation), then that will impact this setting:
+Baud rate to use on the COM port.  If the client machine has a hardware rate multiplier (for high speed operation), then that will impact this setting:
 
 || *Rate Multiplier* || *Available Baud Rates for SerDrive* ||
 || None ||  2400,  4800,  9600,  28.8K,  57.6K, 115.2K ||
@@ -122,7 +122,7 @@ Treat the disk as a Read Only disk, SerDrive will not allow writes.
 
 * _Verbose:_ {{{-v}}} [level] *
 
-Reporting level 1-6, with increasing information as the number increases.  This switch can be very useful for seeing the secot-by-secotr traffic between the PC and the hard disk.
+Reporting level 1-6, with increasing information as the number increases.  This switch can be very useful for seeing the sector-by-sector traffic between the PC and the hard disk.
 
 The {{{-v}}} switch with a value of 1 or higher will also display performance measurements for block transfers of more than 100 sectors.
 
@@ -157,7 +157,7 @@ Note that in Windows' Device Manager, a high speed COM port may still show that 
 
 = Disk Image Format =
 
-Disk image files, at this time, are flat hard disk images.  Sectors are laid out on disk, starting with sector 0, and proceeding in LBA order (literally 512-byte sector 0, then 1, then 2, etc.).  No meta-data about the size of the disk or disk geometry is stored in the file. Alo no compression of unused sectors is done.  SerDrive's "-n" switch can be used to create images of the proper size, with all sectors initialized to zeros.
+Disk image files, at this time, are flat hard disk images.  Sectors are laid out on disk, starting with sector 0, and proceeding in LBA order (literally 512-byte sector 0, then 1, then 2, etc.).  No meta-data about the size of the disk or disk geometry is stored in the file. Also no compression of unused sectors is done.  SerDrive's "-n" switch can be used to create images of the proper size, with all sectors initialized to zeros.
 
 In the future, support for additional disk image formats may be added.
 
@@ -169,7 +169,6 @@ Other possible tools include [http://hp.vector.co.jp/authors/VA013937/editdisk/i
 
 == Emulators ==
 
-Floppy and hard disk image files can be shared between the XTIDE Universal BIOS and other emulators, such as [http://bochs.sourceforge.net Bochs].  One nice feature of this is that bootable images can be created and tested in an emulated enivornment, copmlete with multiple floppy and CD-ROM drives, and then the resulting image can be used with physical hardware through the BIOS.
+Floppy and hard disk image files can be shared between the XTIDE Universal BIOS and other emulators, such as [http://bochs.sourceforge.net Bochs].  One nice feature of this is that bootable images can be created and tested in an emulated environment, complete with multiple floppy and CD-ROM drives, and then the resulting image can be used with physical hardware through the BIOS.
 
 Bochs was used in the development of the serial code, as its debugger offers control over the emulated system that is hard to accomplish on actual hardware.  You can run the XTIDE Universal BIOS in Bochs as an installed option ROM, and interface with Bochs' emulate IDE hard disks and serial ports.  To support serial ports, SerDrive's {{{-p}}} switch can be used to run over a Win32 named pipe instead of a physical COM port, and Bochs can be set to emulate a COM port over a named pipe.  In addition, it can be set to emulate a specific baud rate from the client (Bochs), using the standard {{{-b}}} switch.  The {{{-t}}} switch is useful to prevent the server from timing out on operations, if a breakpoint is hit in the BIOS code.
-
