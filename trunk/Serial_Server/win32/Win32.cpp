@@ -20,9 +20,14 @@ void usage(void)
 {
 	char *usageStrings[] = {
 		"SerDrive - XTIDE Universal BIOS Serial Drive Server",
-		"Version 2.0.0_wip, Built " __DATE__,
+		"Version 2.0.0 Beta1, Built " __DATE__,
 		"",
-		"usage: SerDrive [options] imagefile [[slave-options] slave-imagefile]",
+		"SerDrive is released under the GNU GPL v2.  SerDrive comes with ABSOLUTELY", 
+		"NO WARRANTY.  This is free software, and you are welcome to redistribute it",
+		"under certain conditions.  See LICENSE.TXT (included with this distribution)",
+		"for more details, or visit http://www.gnu.org/licenses/gpl-2.0.html.",
+		"",
+		"Usage: SerDrive [options] imagefile [[slave-options] slave-imagefile]",
 		"",
 		"  -g [cyl:head:sect]  Geometry in cylinders, sectors per cylinder, and heads",
 		"                      -g also implies CHS addressing mode (default is LBA28)",
