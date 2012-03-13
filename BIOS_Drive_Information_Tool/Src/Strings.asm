@@ -6,6 +6,7 @@
 SECTION .data
 
 g_szProgramName:	db	"BIOS Drive Information Tool v1.0.0",LF,CR
+					db	"Released under GNU GPL v2",LF,CR
 					db	"http://code.google.com/p/xtideuniversalbios/",LF,CR,NULL
 					
 g_szPressAnyKey:	db	LF,CR,"Press any key to display next drive.",LF,CR,NULL
