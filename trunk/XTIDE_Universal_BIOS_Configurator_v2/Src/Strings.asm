@@ -54,6 +54,8 @@ g_szItemMainLoadROM:	db	"Load BIOS from EEPROM",NULL
 g_szItemMainLoadStngs:	db	"Load old settings from EEPROM",NULL
 g_szItemMainConfigure:	db	"Configure XTIDE Universal BIOS",NULL
 g_szItemMainFlash:		db	"Flash EEPROM",NULL
+g_szItemMainLicense:	db  "Copyright and License Information",NULL
+g_szItemMainHomePage:	db  "Web Links",NULL
 
 g_szDlgMainLoadROM:		db	"Successfully loaded XTIDE Universal BIOS from EEPROM.",NULL
 g_szDlgMainLoadStngs:	db	"Successfully loaded settings from EEPROM.",NULL
@@ -65,14 +67,17 @@ g_szDlgMainSaveErr:		db	"Failed to save file!",NULL
 g_szDlgFileTitle:		db	"Select file to be flashed.",NULL
 g_szDlgFileFilter:		db	"*.*",NULL
 
-
 g_szNfoMainExitToDOS:	db	"Quits XTIDE Universal BIOS Configurator.",NULL
 g_szNfoMainLoadFile:	db	"Load BIOS file to be configured or flashed.",NULL
 g_szNfoMainLoadROM:		db	"Load BIOS from EEPROM to be reconfigured.",NULL
 g_szNfoMainLoadStngs:	db	"Load old XTIDE Universal BIOS settings from EEPROM.",NULL
 g_szNfoMainConfigure:	db	"Configure XTIDE Universal BIOS settings.",NULL
 g_szNfoMainFlash:		db	"Flash loaded BIOS image to EEPROM.",NULL
+g_szNfoMainLicense:		db	"XTIDE Universal BIOS and XTIDECFG Copyright 2009-2012 by Tomi Tilli. Released under GNU GPL v2, with ABSOLUTELY NO WARRANTY. More...",NULL
+g_szNfoMainHomePage:	db	"Visit http://code.google.com/p/ xtideuniversalbios (home page) and http://vintage-computer.com/ vcforum (support)",NULL
 
+g_szHelpMainLicense:	incbin	"Main_License.txt" 
+						db	NULL		
 
 ; Strings for XTIDE Universal BIOS configuration menu
 g_szItemCfgBackToMain:	db	"Back to Main Menu",NULL

@@ -9,19 +9,19 @@ g_MenupageForMainMenu:
 istruc MENUPAGE
 	at	MENUPAGE.fnEnter,			dw	MainMenu_EnterMenuOrModifyItemVisibility
 	at	MENUPAGE.fnBack,			dw	ExitToDosFromBackButton
-	at	MENUPAGE.wMenuitems,		dw	6
+	at	MENUPAGE.wMenuitems,		dw	8
 iend
 
-g_MenuitemMainMenuExitToDos:
+g_MenuitemMainMenuLicense:		
 istruc MENUITEM
-	at	MENUITEM.fnActivate,		dw	ExitToDosSelectedFromMenu
-	at	MENUITEM.szName,			dw	g_szItemMainExitToDOS
-	at	MENUITEM.szQuickInfo,		dw	g_szNfoMainExitToDOS
-	at	MENUITEM.szHelp,			dw	g_szNfoMainExitToDOS
-	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE
+	at	MENUITEM.fnActivate,		dw	Menuitem_DisplayHelpMessageFromDSSI
+	at	MENUITEM.szName,			dw	g_szItemMainLicense
+	at	MENUITEM.szQuickInfo,		dw	g_szNfoMainLicense
+	at	MENUITEM.szHelp,			dw	g_szHelpMainLicense
+	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE		
 	at	MENUITEM.bType,				db	TYPE_MENUITEM_ACTION
 iend
-
+		
 g_MenuitemMainMenuLoadBiosFromFile:
 istruc MENUITEM
 	at	MENUITEM.fnActivate,		dw	LoadBiosFromFile
@@ -71,6 +71,26 @@ istruc MENUITEM
 	at	MENUITEM.bFlags,			db	NULL
 	at	MENUITEM.bType,				db	TYPE_MENUITEM_PAGENEXT
 iend
+
+g_MenuitemMainMenuExitToDos:
+istruc MENUITEM
+	at	MENUITEM.fnActivate,		dw	ExitToDosSelectedFromMenu
+	at	MENUITEM.szName,			dw	g_szItemMainExitToDOS
+	at	MENUITEM.szQuickInfo,		dw	g_szNfoMainExitToDOS
+	at	MENUITEM.szHelp,			dw	g_szNfoMainExitToDOS
+	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE
+	at	MENUITEM.bType,				db	TYPE_MENUITEM_ACTION
+iend
+
+g_MenuitemMainMenuHomePage:		
+istruc MENUITEM
+	at	MENUITEM.fnActivate,		dw	Menuitem_DisplayHelpMessageFromDSSI
+	at	MENUITEM.szName,			dw	g_szItemMainHomePage
+	at	MENUITEM.szQuickInfo,		dw	g_szNfoMainHomePage
+	at	MENUITEM.szHelp,			dw	g_szNfoMainHomePage
+	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE		
+	at	MENUITEM.bType,				db	TYPE_MENUITEM_ACTION
+iend						
 
 
 ; Section containing code
@@ -216,3 +236,6 @@ LoadOldSettingsFromEeprom:
 	and		WORD [g_cfgVars+CFGVARS.wFlags], ~FLG_CFGVARS_UNSAVED
 	mov		dx, g_szDlgMainLoadStngs
 	jmp		Dialogs_DisplayNotificationFromCSDX
+
+
+	
