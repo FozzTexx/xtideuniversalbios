@@ -53,8 +53,10 @@ SerialCommand_FallThroughToSerialServer_SendReceive:
 
 %include "SerialServer.asm"
 
-%if SerialCommand_FallThroughToSerialServer_SendReceive <> SerialServer_SendReceive
-%error "SerialServer_SendReceive must be the first routine at the top of SerialServer.asm in the Assembly_Library"
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS		
+	%if SerialCommand_FallThroughToSerialServer_SendReceive <> SerialServer_SendReceive
+		%error "SerialServer_SendReceive must be the first routine at the top of SerialServer.asm in the Assembly_Library"
+	%endif
 %endif
 
 ALIGN JUMP_ALIGN		
@@ -162,8 +164,10 @@ SerialCommand_FallThroughToSerialServerScan_ScanForServer:
 		
 %include "SerialServerScan.asm"
 
-%if SerialCommand_FallThroughToSerialServerScan_ScanForServer <> SerialServerScan_ScanForServer
-%error "SerialServerScan_ScanForServer must be the first routine at the top of SerialServerScan.asm in the Assembly_Library"
-%endif				
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS				
+	%if SerialCommand_FallThroughToSerialServerScan_ScanForServer <> SerialServerScan_ScanForServer
+		%error "SerialServerScan_ScanForServer must be the first routine at the top of SerialServerScan.asm in the Assembly_Library"
+	%endif
+%endif
 
 

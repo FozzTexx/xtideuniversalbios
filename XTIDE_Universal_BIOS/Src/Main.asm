@@ -157,18 +157,34 @@ istruc ROMVARS
 %endif
 iend
 
+	; Strings are first to avoid them moving unnessarily when code is turned on and off with %ifdef's
+	; since some groups of strings need to be on the same 256-byte page.
+	;
+%ifdef MODULE_STRINGS_COMPRESSED
+	%define STRINGSCOMPRESSED_STRINGS
+	%include "StringsCompressed.asm" 
+%else
+	%include "Strings.asm"			; For BIOS message strings
+%endif
+
 	; Libraries, data, Initialization and drive detection
+
 	%include "AssemblyLibrary.asm"
+
+	; String compression tables need to come after the AssemblyLibrary (since they depend on addresses
+	; established in the assembly library), and are unncessary if strings are not compressed.
+	;
+%ifdef MODULE_STRINGS_COMPRESSED
+	%undef  STRINGSCOMPRESSED_STRINGS		
+	%define STRINGSCOMPRESSED_TABLES
+	%include "StringsCompressed.asm"
+%endif
+		
 	%include "Initialize.asm"		; For BIOS initialization
 	%include "Interrupts.asm"		; For Interrupt initialization
 	%include "RamVars.asm"			; For RAMVARS initialization and access
 	%include "CreateDPT.asm"		; For creating DPTs
 	%include "FindDPT.asm"			; For finding DPTs
-%ifdef MODULE_STRINGS_COMPRESSED
-	%include "StringsCompressed.asm"
-%else
-	%include "Strings.asm"			; For BIOS message strings
-%endif
 	%include "AccessDPT.asm"		; For accessing DPTs
 	%include "BootMenuInfo.asm"		; For creating BOOTMENUINFO structs
 	%include "AtaID.asm"			; For ATA Identify Device information

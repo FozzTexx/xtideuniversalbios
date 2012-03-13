@@ -28,7 +28,7 @@ SerialServer_SubCommand_Image_SendComplete		EQU		3
 ;       the ATA structure defines these in terms of word offsets.
 ;
 SerialServer_ATA_wServerVersion			EQU		(157*2)
-SerialServer_ATA_wFloppyFlagAndType		EQU		(158*2)
+SerialServer_ATA_wDriveFlags			EQU		(158*2)
 SerialServer_ATA_wPortAndBaud			EQU		(159*2)
 
 ;
