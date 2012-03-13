@@ -16,7 +16,6 @@ SECTION .text
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
-%ifndef EXCLUDE_FROM_XTIDECFG	; Not used in XTIDECFG
 ALIGN JUMP_ALIGN
 Math_DivQWatSSBPbyCX:
 	xor		dx, dx
@@ -36,7 +35,6 @@ Math_DivQWatSSBPbyCX:
 	div		cx
 	mov		[bp], ax
 	ret
-%endif
 
 
 ;--------------------------------------------------------------------
