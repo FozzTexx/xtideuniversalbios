@@ -94,36 +94,6 @@ DisplayPrint_SignedWordFromAXWithBaseInBX:
 
 %ifndef MODULE_STRINGS_COMPRESSED
 ;--------------------------------------------------------------------
-; DisplayPrint_QWordFromSSBPwithBaseInBX
-;	Parameters:
-;		SS:BP:	QWord to display
-;		BX:		Integer base (binary=2, octal=8, decimal=10, hexadecimal=16)
-;		DS:		BDA segment (zero)
-;		ES:DI:	Ptr to cursor location in video RAM
-;	Returns:
-;		DI:		Updated offset to video RAM
-;	Corrupts registers:
-;		AX, DX, [SS:BP]
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-DisplayPrint_QWordFromSSBPwithBaseInBX:
-	push	cx
-	push	bx
-
-	mov		cx, bx				; CX = Integer base
-	xor		bx, bx				; BX = Character count
-ALIGN JUMP_ALIGN
-.DivideLoop:
-	call	Math_DivQWatSSBPbyCX; Divide by base
-	push	dx					; Push remainder
-	inc		bx					; Increment character count
-	cmp		WORD [bp], BYTE 0	; All divided?
-	jne		SHORT .DivideLoop	;  If not, loop
-	mov		cx, bx				; Character count to CX
-	jmp		SHORT PrintAllPushedDigits
-
-
-;--------------------------------------------------------------------
 ; DisplayPrint_WordFromAXWithBaseInBX
 ;	Parameters:
 ;		AX:		Word to display
@@ -162,7 +132,39 @@ ALIGN JUMP_ALIGN
 	pop		bx
 	pop		cx
 	ret
+
 g_rgcDigitToCharacter:	db	"0123456789ABCDEF"
+
+;--------------------------------------------------------------------
+; DisplayPrint_QWordFromSSBPwithBaseInBX
+;	Parameters:
+;		SS:BP:	QWord to display
+;		BX:		Integer base (binary=2, octal=8, decimal=10, hexadecimal=16)
+;		DS:		BDA segment (zero)
+;		ES:DI:	Ptr to cursor location in video RAM
+;	Returns:
+;		DI:		Updated offset to video RAM
+;	Corrupts registers:
+;		AX, DX, [SS:BP]
+;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDECFG	; Not used in XTIDECFG
+ALIGN JUMP_ALIGN
+DisplayPrint_QWordFromSSBPwithBaseInBX:
+	push	cx
+	push	bx
+
+	mov		cx, bx				; CX = Integer base
+	xor		bx, bx				; BX = Character count
+ALIGN JUMP_ALIGN
+.DivideLoop:
+	call	Math_DivQWatSSBPbyCX; Divide by base
+	push	dx					; Push remainder
+	inc		bx					; Increment character count
+	cmp		WORD [bp], BYTE 0	; All divided?
+	jne		SHORT .DivideLoop	;  If not, loop
+	mov		cx, bx				; Character count to CX
+	jmp		SHORT PrintAllPushedDigits
+%endif	; EXCLUDE_FROM_XTIDECFG
 
 %endif	; MODULE_STRINGS_COMPRESSED
 

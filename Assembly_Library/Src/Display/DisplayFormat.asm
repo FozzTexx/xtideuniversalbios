@@ -347,7 +347,7 @@ s_FormatStringFromSegmentCS:
 	push	si
 	push	cx
 	mov		si, [bp]
-		
+
 	cmp		si, byte 07fh		;  well within the boundaries of ROMVARS_size
 	jb		.notFormatted
 
@@ -357,22 +357,22 @@ s_FormatStringFromSegmentCS:
 	inc		bp					; will be decremented after the call is done
 	inc		bp
 	jmp		.done
-		
-.notFormatted:	
+
+.notFormatted:
 	call	DisplayPrint_NullTerminatedStringFromCSSI
-		
+
 .done:
 	pop		cx
 	pop		si
-	ret		
+	ret
 
 ALIGN JUMP_ALIGN
-z_FormatStringFromSegmentZero:	
+z_FormatStringFromSegmentZero:
 	xchg	si, [bp]
 	xor		bx, bx
 	call	DisplayPrint_NullTerminatedStringFromBXSI
 	mov		si, [bp]
-	ret		
+	ret
 
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN
