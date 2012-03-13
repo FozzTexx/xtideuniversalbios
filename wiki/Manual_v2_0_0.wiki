@@ -5,20 +5,20 @@
 
 = Introduction =
 
-XTIDE Universal BIOS makes possible to use modern large ATA hard disks or Compact Flash cards on old PC's. You can then enjoy quiet or noiseless drives with more capacity than you'll ever need for old computers.
+XTIDE Universal BIOS makes it possible to use modern large ATA hard disks or Compact Flash cards on old PC's. You can then enjoy quiet or noiseless drives with more capacity than you'll ever need for old computers.
 
-XTIDE Universal BIOS can be used on any IBM PC, XT, AT and 100% compatible system. On AT systems you can use any 16-ISA or VLB IDE or Multi I/O controller. For XT systems you can use XTIDE rev1 (not available anymore), [http://www.vintage-computer.com/vcforum/showwiki.php?title=XTIDE+Rev2 XTIDE rev2] or [http://www.retrotronics.org/tiki/tiki-index.php JR-IDE/ISA].
+XTIDE Universal BIOS can be used on any IBM PC, XT, AT or 100% compatible system. On AT systems you can use any 16-bit ISA or VLB IDE or Multi I/O controller. For XT systems you can use XTIDE rev1 (not available anymore), [http://www.vintage-computer.com/vcforum/showwiki.php?title=XTIDE+Rev2 XTIDE rev2] or [http://www.retrotronics.org/tiki/tiki-index.php JR-IDE/ISA].
 
 
 == Features ==
 
 Some of the features included in XTIDE Universal BIOS are...
   * Supports up to 4 IDE controllers
-  * Support for virtual drives using serial port, [SerialDrives more information]
+  * Support for virtual drives via serial port, [SerialDrives more information]
   * Supports drives with any capacity (MS-DOS 7.x or FreeDOS is required to access more than 8.4 GB)
   * PIO transfers with block mode support
   * Hard disk autodetection
-  * Autodetected capacity, both CHS and LBA, can be overridden to make drive appear smaller than it is
+  * Autodetected capacity, both CHS and LBA, can be overridden to make drive appear smaller than it actually is
   * Boot menu for selecting any floppy drive or hard disk to boot from, including hard disks that are not handled by XTIDE Universal BIOS
   * Compact Flash and Microdrive support
   * Support for most 8-, 16-, and 32-bit IDE controllers
@@ -27,17 +27,17 @@ Some of the features included in XTIDE Universal BIOS are...
 
 == Different builds ==
 
-At the moment there are different builds included in the XTIDE Universal BIOS zip file. 15 kiB builds (xxxL.BIN) include support for JR-IDE/ISA but are otherwise the same as 8 kiB builds.
+There are currently several different builds included in the XTIDE Universal BIOS zip file. 15 kiB builds (xxxL.BIN) includes support for JR-IDE/ISA but are otherwise the same as 8 kiB builds.
   * IDE_XT.BIN, IDE_JR8K.BIN and IDE_XTL.BIN (XT build)
-   XT build uses only instructions supported by 8086/8088 making it the only build that can be used on any PC, including the original IBM PC model 5150. IDE_JR8K.BIN has JR-IDE/ISA support but serial port features are removed to reduce the size to 8 kiB.
+   XT build uses only instructions supported by the 8086/8088 CPUs making it the only build that can be used on any PC, including the original IBM PC model 5150. IDE_JR8K.BIN has JR-IDE/ISA support but serial port features are excluded to keep the size below 8 kiB.
   * IDE_XTP.BIN and IDE_XTPL.BIN (XT+ build)
-   XT+ build has the same features as the XT build but XT+ build uses instructions introduced in 80186/80188. Those instructions are supported by all later x86 CPUs, including NEC V20/V30. 8-bit transfers rates will be better thanks to INS and OUTS instructions.
+   XT+ build has the same features as the XT build but XT+ build uses instructions introduced in 80186/80188. Those instructions are supported by all later x86 CPUs, including NEC V20/V30. 8-bit transfer rates will be better thanks to INS and OUTS instructions.
   * IDE_AT.BIN and IDE_ATL.BIN (AT build)
-   AT build is meant for all AT class machines (16-bit or 32-bit bus). AT build supports OS hooks to allow operating system to do some processing while drive seeks the requested data (if interrupts are enabled).
+   AT build is meant for all AT class machines (16-bit or 32-bit bus). AT build supports OS hooks to allow the operating system to do some processing while the drive seeks the requested data (if interrupts are enabled).
 
-All XT builds (including XT+) can be used on AT systems but XT builds have few differences to make them better suited for XT systems:
+All XT builds (including XT+) can be used on AT systems but XT builds have a few differences that make them better suited for XT systems:
   * XT builds prevent CGA snow on boot menu but this slows down drawing the menu.
-  * XT builds have much simpler method for detecting is INT 40h Floppy Drive handler installed.
+  * XT builds use a much simpler method for detecting if an INT 40h Floppy Drive handler is installed.
   * Jump targets are not aligned on XT builds.
   * XT builds have different default settings (see below).
 
@@ -48,108 +48,108 @@ XT builds are preconfigured for XTIDE rev1 at port 300h and IDE_JR8K.BIN is prec
 
 == Important if you are upgrading from XTIDE Universal BIOS v1.x.x. ==
 
-There is a bug related to generating L-CHS parameters for LBA drives. Generated parameters can be different than what should be based on Phoenix Enhanced Disk Drive Specification. That specification is what most BIOSes follow. If you want to swap drives between systems, both of them must use the same L-CHS parameters. XTIDE Universal BIOS v2 now uses the Phoenix specification (will be verified during beta testing) so the parameters can be different than those from XTIDE Universal BIOS v1.
+The new v2.0.0 version, like most other BIOSes, adheres to the Phoenix Enhanced Disk Drive Specification. The older v1.x.x versions do NOT - they have a bug in that they may generate different L-CHS parameters for LBA drives. If you move a drive handled by a v1.x.x BIOS to another system or upgrade to v2.x.x you risk data corruption if different L-CHS parameters are used.
 
-IMPORTANT! That means you need to create new partitions and format the drives after upgrading to XTIDE Universal BIOS v2.x.x.
+IMPORTANT! This means that, after upgrading to XTIDE Universal BIOS v2.x.x, you need to re-create and format any partitions on drives handled by this BIOS.
 
 
 == Hardware supporting XTIDE Universal BIOS ROM ==
 
-The most convenient way to use XTIDE Universal BIOS is to use [http://www.vintage-computer.com/vcforum/showwiki.php?title=XTIDE+Rev2 XTIDE card]. It can be used on any PC with free 8-bit ISA slot. You might not want to connect any drives to it in 16- or 32-bit systems since 8-bit transfer will be very slow. Using XTIDE card allows EEPROM flashing so it is really easy to update XTIDE Universal BIOS.
+The most convenient way to use XTIDE Universal BIOS is to use an [http://www.vintage-computer.com/vcforum/showwiki.php?title=XTIDE+Rev2 XTIDE card]. It can be used on any PC with a free 8-bit ISA slot. You might not want to connect any drives to it in 16- or 32-bit systems since 8-bit transfers will be very slow. Using the XTIDE card allows EEPROM flashing so it is really easy to update XTIDE Universal BIOS.
 
-Another option is to use any card with free ROM socket for 8 kiB or larger ROMs. Official XTIDE builds are meant for 8 kiB and 16 kiB ROMs but you can burn it on larger ROM if you append enough zeroes to the end (only append zeroes so checksum does not change). Many network cards have unused ROM sockets but there are also few multi I/O cards and IDE controllers with ROM sockets. The network card remains fully usable even if you place XTIDE Universal BIOS ROM on it.
+Another option is to use any card with a free ROM socket for 8 kiB or larger ROMs. Official XTIDE builds are meant for 8 kiB and 16 kiB ROMs but you can burn it on a larger ROM if you append enough zeroes to the end (only append zeroes so checksum does not change). Many network cards have unused ROM sockets and there are also a few multi I/O cards and IDE controllers with ROM sockets. These cards remains fully usable even if you place a ROM with XTIDE Universal BIOS on them.
 
-You don't need EPROM/EEPROM programmer if you already have XTIDE card. XTIDE card can be used to flash additional EEPROMs (8 kiB 2864) that can be moved to EPROM (8 kiB 2764) sockets.
+You don't need an EPROM/EEPROM programmer if you already have an XTIDE card. The XTIDE card can be used to flash additional EEPROMs (8 kiB 2864) that can then be moved to EPROM (8 kiB 2764) sockets.
 
 
 == Configuring and flashing ==
 
-XTIDE Universal BIOS comes with DOS utility called XTIDECFG.COM. It configures XTIDE Universal BIOS and also works as a generic EEPROM flasher supporting EEPROM sizes up to 32 kiB. XTIDECFG.COM allows saving changes to BIOS images so that they can be programmed with other programming software or device.
+The XTIDE Universal BIOS comes with a DOS utility called XTIDECFG.COM. It's primary purpose is to configure and flash the XTIDE Universal BIOS but it can also be used as a generic EEPROM flasher supporting EEPROM sizes up to 32 kiB. XTIDECFG.COM also allows saving changes to XTIDE Universal BIOS images for later programming with other devices or programming software.
 
 
 == Other things to know ==
 
-CTRL can be held down to skip XTIDE Universal BIOS initialization. Right time to press CTRL down is when POST OK beep is heard or just before all memory is tested.
+CTRL can be held down to skip XTIDE Universal BIOS initialization. Press CTRL when the POST OK beep is heard or just before the memory test has completed.
 
 ----
 = Using XTIDECFG.COM (XTIDE Universal BIOS configuration and flashing program) =
 
-XTIDECFG.COM is intended to be user friendly. At the bottom of the screen appears quick information for each menu item. Pressing F1 displays more detailed help for menu item (some menu items do not have detailed help available). Up, Down, PgUp, PgDn, Home and End keys are used for menu navigation. Enter selects menuitem and Esc resumes to previous menu.
+XTIDECFG.COM is intended to be user friendly. At the bottom of the screen appears quick information for each menu item. Pressing F1 displays more detailed help for menu items (some menu items do not have detailed help available). Up, Down, PgUp, PgDn, Home and End keys are used for menu navigation. Enter selects the highlighted menu item and Esc returns to the previous menu.
 
 Some menu items appear only when needed to make configuring easier.
 
 
-== Menuitems on "Main Menu" ==
+== Menu items on "Main Menu" ==
   * Exit to DOS
-   Exits to DOS. If any changes are made, then dialog is displayed about saving the changes. You can also exit to DOS by pressing Esc at the main menu.
+   Exits to DOS. If you have made configuration changes, then a dialog will be displayed asking if you want to save them. You can also exit to DOS by pressing Esc at the main menu.
   * Load BIOS from file
    Loads any (not just XTIDE Universal BIOS) file to be flashed.
   * Load BIOS from EEPROM
-   Loads XTIDE Universal BIOS from EEPROM to be reconfigured if supported version of XTIDE Universal BIOS is found in system.
+   Loads XTIDE Universal BIOS from EEPROM to be reconfigured if a supported version of the BIOS is found in the system.
   * Load old settings from EEPROM
-   Loads current settings from EEPROM if supported version of XTIDE Universal BIOS is found in system.
+   Loads current settings from EEPROM if a supported version of the XTIDE Universal BIOS is found in the system.
   * Configure XTIDE Universal BIOS
-   This menuitem appears only when supported version of XTIDE Universal BIOS is loaded to be configured.
+   This is for configuring the XTIDE Universal BIOS. This menu item appears only when a supported version of the BIOS is loaded.
   * Flash EEPROM
-   This menuitem appears when file is loaded.
+   This menu item appears when a file has been loaded.
 
-== Menuitems on "Flash EEPROM" submenu ==
+== Menu items on "Flash EEPROM" submenu ==
   * Start flashing
   * EEPROM type [default=2864]
-   Selects EEPROM type. XTIDE rev1 uses 2864 (8 kiB) EEPROM. Select 2864mod if you have done the A0-A3 address line swap mod to your XTIDE.
+   Selects EEPROM type. XTIDE rev1 uses 2864 (8 kiB) EEPROM. Select 2864mod if you have done the A0-A3 address line swap mod (aka the Chuck(G) mod) to your XTIDE card.
   * SDP command [default=Enable]
    Selects Software Data Protect command to be written before every page. You should set it to Enable if the EEPROM supports SDP.
   * Page size [default=1]
-   Large page makes flashing faster. You'll probably want to select largest that your EEPROM supports. Slow XT systems might not be fast enough for large page sizes.
+   Larger page sizes makes flashing faster. You'll probably want to select the largest that your EEPROM supports. Slow XT systems might not be fast enough for large page sizes.
   * EEPROM address [default=D000h]
-   Segment address where the EEPROM locates. Supported versions of XTIDE Universal BIOS will be detected automatically.
+   Segment address where the EEPROM is located. Supported versions of XTIDE Universal BIOS will be detected automatically.
   * Generate checksum byte [default=Yes]
-   You'll want to enable this if you have done any changes to XTIDE Universal BIOS settings. This option will generate checksum byte to the end of EEPROM.
+   This option will generate a checksum byte at the end of the EEPROM. You'll want to enable this if you have done any changes to the XTIDE Universal BIOS settings.
 
-== Menuitems on "Configure XTIDE Universal BIOS" submenu ==
+== Menu items on "Configure XTIDE Universal BIOS" submenu ==
   * Back to Main Menu
   * Primary IDE Controller
   * Secondary IDE Controller
   * Tertiary IDE Controller
   * Quaternary IDE Controller
-   Each "xxx IDE Controller" submenu displays IDE controller specific settings. "IDE controllers" menuitem specifies the visible "xxx IDE Controller" submenus.
+   Each "xxx IDE Controller" submenu displays IDE controller specific settings. "IDE controllers" menu item specifies the visible "xxx IDE Controller" submenus.
   * Boot settings
    Opens submenu for boot related settings such as should boot menu be enabled etc.
   * Full operating mode [default=No for XT builds, Yes for AT builds]
-   "Full operating mode" reserves a bit of Conventional memory for XTIDE Universal BIOS variables. Disabling this will reduce maximum number of IDE controllers to 2 and place the variables to memory area reserved for IBM ROM Basic (30:0h). You should always enable this unless:
+   "Full operating mode" reserves a bit of Conventional memory for XTIDE Universal BIOS variables. Disabling this will reduce the maximum number of supported IDE controllers to 2 and place the variables in a memory area reserved for IBM ROM Basic (30:0h). You should always enable this option unless:
     # You don't need to use IBM ROM Basic or any BIOS or software that requires that memory area.
-    # You have any Tandy 1000 model with 640k or less RAM (see "kiB to steal from RAM" for a way around this problem).
+    # You have a Tandy 1000 with 640k or less RAM (see "kiB to steal from RAM" for a way around this problem).
     # You really need the 1k of Conventional memory that "Full operating mode" requires.
   * kiB to steal from RAM [default=1]
-   This menuitem will appear only when "Full operating mode" is enabled. Leave this to 1 unless you really need to enable "Full operating mode" on any Tandy 1000 model with 640k or less RAM. Setting this to 33 (almost always enough) or 65 (always enough) in such case will reserve the top of RAM to Tandy video circuitry thus disabling sharing of conventional memory with video circuitry.
+   This menu item will appear only when "Full operating mode" is enabled. Leave it at the default unless you need to enable "Full operating mode" on Tandy 1000 models with 640k or less RAM. Setting this to 33 (almost always enough) or 65 (always enough) will reserve the top of RAM to Tandy video circuitry in addition to the XTIDE Universal BIOS variables thus avoiding a conflict between the two.
   * IDE controllers
-   Number of IDE controllers to be searched by XTIDE Universal BIOS. The maximum is 4 if Full operation mode" is enabled. Otherwise the maximum is 2.
+   Number of IDE controllers to be searched by XTIDE Universal BIOS. The maximum is 4 if "Full operating mode" is enabled. Otherwise the maximum is 2.
 
-=== Menuitems on "Boot settings" submenu ===
+=== Menu items on "Boot settings" submenu ===
   * Display Mode [default=Default]
-   This setting allows you to force display mode change before boot menu is displayed. This setting will work even if boot menu is disabled and will leave the specified display mode set when booting to OS. Forcing display mode can be handy if you have composite monitor (use 40 column modes for better readability) or black&white VGA monitor (use 80 column black&white mode for better readability).
+   This setting allows you to force a display mode change before the boot menu is displayed. This setting will work even if the boot menu has been disabled and will leave the specified display mode set when booting to the OS. Forcing the display mode can be handy if you have a composite monitor (use 40 column modes for better readability) or a black&white VGA monitor (use 80 column black&white mode for better readability).
   * Number of Floppy Drives [default=Auto]
-   In some systems number of floppy drives cannot be properly auto detected. This settings allows you to specify it manually so all drives can be displayed on boot menu.
+   In some systems the number of floppy drives cannot be reliably autodetected. This setting allows you to specify it manually so all drives can be displayed on the boot menu.
   * Scan for Serial Devices [default=No]
-   When enabled, the BIOS will scan COM1-7 for a Serial Drive server at the end of standard drive detection.  Even without this option enabled, holding down the ALT key at the end of drive detection will do the same thing (useful for bootstrapping scenarios).  The BIOS will display "Serial Master on COM Detect:" while it is scanning.  See the [SerialDrives Serial Drive] documentation for more information.
+   When enabled, the BIOS will scan COM1-7 for a Serial Drive server at the end of standard drive detection. Even without this option enabled, holding down the ALT key at the end of drive detection will accomplish the same thing (useful for bootstrapping scenarios). The BIOS will display "Serial Master on COM Detect:" while it is scanning. See the [SerialDrives Serial Drive] documentation for more information.
   * Boot Menu [default=Yes]
-   You can disable boot menu if you don't like it for some reason. Normal Drive A, then C, then INT 18h (ROM Basic, ROM DOS or boot error) boot order is used when boot menu is disabled.
+   You can disable the boot menu if you don't like it for some reason. Normal Drive A, then C, then INT 18h (ROM Basic, ROM DOS or boot error) boot order is used when the boot menu is disabled.
   * Default boot drive [default=80h]
-   Specifies what drive is highlighted on boot menu by default. Default of 80h means first hard drive in the system.
+   Specifies what drive is highlighted on boot menu by default. The default of 80h means the first hard drive in the system.
   * Selection timeout [default=540]
-   Specifies the duration before auto selecting default boot drive from boot menu. 1 tick = 54.9 ms so default duration of 540 is about 30 seconds.
+   Specifies the duration in timer ticks before the default boot drive is automatically selected. 1 tick = 54.9 ms so the default of 540 is about 30 seconds.
   * Swap boot drive numbers [default=yes]
    MS-DOS and old operating systems can only boot from first floppy or hard disk drive. Swapping boot drive numbers allows booting from all drives in the system.
 
 
-=== Menuitems on "xxx IDE Controller" submenus ===
+=== Menu items on "xxx IDE Controller" submenus ===
   * Back to Configuration Menu
    Moves back to "Configure XTIDE Universal BIOS" submenu.
   * Master Drive
   * Slave Drive
    Opens submenu for Master/Slave Drive specific settings for this IDE Controller.
   * Device Type [default=XTIDE for XT builds, 16-bit for AT builds]
-   Type of device. 16-bit will support all standard IDE controllers, including VLB controllers. 32-bit will use 32-bit transfers on VLB controllers but those controllers usually require native support for full speed. Other devices include XTIDE rev1 (and rev2 slow mode), XTIDE mod with swapped A0 and A3 address lines (XTIDE rev2 fast mode), JR-IDE/ISA (IDE_JR8K.BIN and 15 kiB builds only) and [SerialDrives support for virtual devices through serial port].  Note that a serial port controller must be the last configured IDE controller.  Xtidecfg will move any serial ports to the end of the list if this is not already done.  This is done so that serial floppy disks, if any are present, will be last on the list of drives detected.
+   Type of device. 16-bit will support all standard IDE controllers, including VLB controllers. 32-bit will use 32-bit transfers on VLB controllers but those controllers usually require native support for full speed. Other devices include XTIDE rev1 (and rev2 slow mode), XTIDE mod with swapped A0 and A3 address lines (XTIDE rev2 fast mode), JR-IDE/ISA (IDE_JR8K.BIN and 15 kiB builds only) and [SerialDrives support for virtual devices through serial port]. Note that a serial port controller must be the last configured IDE controller. XTIDECFG will automatically move any serial ports to the end of the list if needed. This is done so that serial floppy disks, if any are present, will be last on the list of drives detected.
   * Base (cmd block) address [default=300h for XT builds, 1F0h for AT builds (Primary IDE)]
    Command block (base port) address where the IDE Controller is located. JR-IDE/ISA does not use this setting.
   * Control block address [default=308h for XT builds, 3F0h for AT builds (Primary IDE)]
@@ -161,56 +161,56 @@ Some menu items appear only when needed to make configuring easier.
   * COM Port [default=COM1]
   * Baud Rate [default=9600]
 
-=== Menuitems for "Master/Slave Drive" submenus ===
+=== Menu items for "Master/Slave Drive" submenus ===
   * Back to IDE Controller Menu
   * Block Mode Transfers [default=Yes]
-   Block Mode Transfers will speed up the transfer rates. This should be leaved enabled but there is at least one old hard drive with buggy block mode support when interrupts are enabled (Quantum, maybe 100MB).
+   Block Mode Transfers will speed up the transfer rates. This should be left enabled but there is at least one old hard drive with buggy block mode support when interrupts are enabled (Quantum, maybe 100MB).
   * Internal Write Cache [default=Disabled]
-   Leave to disabled unless you know what you are doing! Improper use of write cache can cause data corruption.
+   This should be left disabled unless you know what you are doing! Improper use of write cache can cause data corruption.
   * User specified CHS [default=no]
    Specify CHS parameters manually. This will force the drive to CHS addressing and EBIOS functions will be disabled.
   * User specified LBA [default=no]
    Specify drive capacity manually (starting from 8.4 GB). All versions of MS-DOS 7.x (Windows 9x) seem to have compatibility problems with very large drives so you might need to reduce drive capacity. Use FreeDOS if you want to use full capacity of the drive.
   * Cylinders, Heads and Sectors per track
-   These will appear when "User specified CHS" is enabled. Maximum values of 16383 Cylinders, 16 Heads and 63 Sectors per track will provide capacity of 7.8 GiB/8.4 GB that is the maximum that MS-DOS 3.31 to 6.22 supports. Note that this will force CHS addressing so once formatted, there will be data corruption if you try to access the drive with system using LBA addressing.
+   These will appear when "User specified CHS" is enabled. Maximum values of 16383 Cylinders, 16 Heads and 63 Sectors per track will provide a capacity of 7.8 GiB/8.4 GB, the maximum that MS-DOS 3.31 to 6.22 supports. Note that this will force CHS addressing so once formatted, there will be data corruption if you try to access the drive with systems using LBA addressing.
   * Millions of sectors
    This will appear when "User specified LBA" is enabled. You can specify the drive capacity in millions of sectors. Note that MS-DOS 7.x (Windows 9x) or FreeDOS is required to access more than 7.8 GiB/8.4 GB.
 
 ----
 = Boot menu =
 
-Using boot menu is optional. Boot menu allows to boot from any floppy or hard disk drive. Drive can be selected with Up and Down arrows. Home, End, PgUp and PgDn keys can speed up selection if there are many drives in the boot menu. Press Enter to boot from selected drive.
+Using the boot menu is optional. The boot menu allows the computer to boot from any floppy or hard disk drive. Drive can be selected with Up and Down arrows. Home, End, PgUp and PgDn keys can speed up selection if there are many drives in the boot menu. Press Enter to boot from selected drive.
 
 
 == Drive swapping ==
 
-DOS requires that it is loaded from first floppy drive (00h) or first hard disk (80h) in the system. XTIDE Universal BIOS can translate drive numbers to make booting possible from any floppy drive or hard disk. Drive number translation is implemented with simple swapping method: selected drive will be swapped with first drive and vice versa. For example drive 82h on boot menu would be translated to 80h and 80h would be translated to 82h. Drive swapping for floppy drives and hard disks are handled separately so it is possible to install DOS from any floppy drive to any hard disk. Drive number translation can be disabled with XTIDECFG.COM (see "Swap boot drive numbers" on Menuitems on "Boot settings" submenu).
+DOS requires that it is loaded from the first floppy drive (00h) or the first hard disk (80h) in the system. XTIDE Universal BIOS can translate drive numbers to make booting possible from any floppy drive or hard disk. Drive number translation is implemented with a simple swapping method: selected drive will be swapped with first drive and vice versa. For example drive 82h on boot menu would be translated to 80h and 80h would be translated to 82h. Drive swapping for floppy drives and hard disks are handled separately so it is possible to install DOS from any floppy drive to any hard disk. Drive number translation can be disabled with XTIDECFG.COM (see "Swap boot drive numbers" on Menu items on "Boot settings" submenu).
 
 
 == Boot menu hotkeys ==
 
-Keys A to Z work as a hotkeys for boot menu drives. Hotkeys have another benefit: they allow to install DOS from any floppy drive to any hard disk. Select hard disk from menu but do not press Enter. Press any floppy drive hotkey instead to boot from floppy while maintaining selected hard disk translation.
+Keys A to Z work as hotkeys for boot menu drives. Hotkeys have another benefit: they allow the installation of DOS from any floppy drive to any hard disk. Select hard disk from the menu but do not press Enter. Press any floppy drive hotkey instead to boot from floppy while maintaining selected hard disk translation.
 
-F8 calls software interrupt 18h. This starts IBM ROM Basic, ROM DOS or most usually error message from motherboard BIOS when there is no ROM to boot from.
+F8 calls software interrupt 18h. This starts IBM ROM Basic, ROM DOS or displays an error message from the motherboard BIOS when there is no ROM to boot from.
 
 
 == Boot menu drive information ==
 
-Boot menu can display a little bit information about the drive.
+The boot menu can display a little bit of information about the drive:
 
   * Capacity
    This shows the drive capacity. This is the same as reported by the drive unless you have specified CHS or LBA manually. Capacity is read from INT 13h AH=08h for drives not handled by XTIDE Universal BIOS.
   * Addr.
    This shows the current addressing mode:
     * L-CHS is used for drives with 1024 or less cylinders (504 MiB / 528 MB and smaller drives). L-CHS is the fastest mode since no address translations are required.
-    * P-CHS addressing is used for drives without LBA support and 1025 or more cylinders. It is unlikely such drives exists so P-CHS addressing is used if you manually specify CHS parameters with 1025 or more heads. P-CHS addressing is only a bit slower than L-CHS addressing.
-    * LBA28 is used when drive supports LBA and has capacity at most 128 GiB / 137 GB.
+    * P-CHS addressing is used for drives without LBA support and 1025 or more cylinders. It is unlikely such drives exists so P-CHS addressing is used if you manually specify CHS parameters with 1025 or more cylinders. P-CHS addressing is only a bit slower than L-CHS addressing.
+    * LBA28 is used when the drive supports LBA and has a capacity of at most 128 GiB / 137 GB.
     * LBA48 is used for drives larger than 128 GiB / 137 GB.
-   LBA modes are the slowest but the difference cannot be noticed on any AT system. There is no performance differences between LBA28 and LBA48. EBIOS functions (support for drives larger than 7.8 GiB / 8.4 GB) is available only when LBA addressing is used.
+   LBA modes are the slowest but the difference cannot be noticed on an AT system. There is no difference in performance between LBA28 and LBA48. EBIOS functions (support for drives larger than 7.8 GiB / 8.4 GB) is available only when LBA addressing is used.
   * Block
-   Shows the size of block in sectors. The larger the better. 1 means that block mode is disabled or not supported. CF cards usually support block mode commands but do not allow blocks larger than 1 sector.
+   Shows the maximum number of sectors supported in a single multi-sector transfer. The larger the better. 1 means that block mode is disabled or not supported. CF cards usually supports block mode commands but do not allow blocks larger than 1 sector.
   * Bus
-   Shows the bus/device type configured in "Device Type" menuitem on "xxx IDE Controller" submenu.
+   Shows the bus/device type configured in "Device Type" menu item on "xxx IDE Controller" submenu.
   * IRQ
    Shows the IRQ channel if enabled.
   * Reset
@@ -219,26 +219,26 @@ Boot menu can display a little bit information about the drive.
 ----
 = Performance problems =
 
-== MS-DOS DIR command takes very long time ==
-This is completely normal on systems with slow CPUs and large partitions. Calculating free space first time is simply very slow process in such case.
+== MS-DOS DIR command takes a very long time ==
+This is completely normal on systems with slow CPUs and large partitions. Calculating free space is simply a very slow process in such cases.
 
-It was very rare to have partitions larger than 32 MiB on XT systems so there weren't long delays then. Now XTIDE and JR-IDE/ISA makes possible to use very large modern drives on such slow systems. MS-DOS 3.31 allows partitions up to 512 MiB and MS-DOS 4.00 to 6.22 allows partitions up to 2 GiB. Those are enormous for XT systems and the slow 8088 or even the V20 take some time to calculate free space with FAT file system.
+It was very rare to have partitions larger than 32 MiB on XT systems so there weren't long delays then. Now XTIDE and JR-IDE/ISA makes it possible to use very large modern drives on such slow systems. MS-DOS 3.31 allows partitions up to 512 MiB and MS-DOS 4.00 to 6.22 allows partitions up to 2 GiB. Those are enormous sizes for XT systems and the slow 8088 or even the V20 take some time to calculate the free space on FAT file systems.
 
-It might be a good idea to use small partition for OS and frequently used utilities and large partition(s) for games and less needed data. You should experiment what feels the best size for the small partition. Please do let me know the results if you do some testing.
+It might be a good idea to use a small partition for OS and frequently used utilities and large partition(s) for games and less needed data. You should experiment with what size feels the best for the small partition. Please do let me know the results if you do some testing.
 
-It is very likely that this same problem will occur if you decide to use MS-DOS 7.x (Windows 9x) of FreeDOS and a large FAT-32 partition on a slow 386 or even 486.
+It is very likely that this same problem will occur if you decide to use MS-DOS 7.x (Windows 9x) or FreeDOS and a large FAT32 partition on a slow 386 or even 486.
 
 == XTIDE Universal BIOS v2.x.x has worse transfer rates than v1.1.5! ==
 There are three reasons for this:
-  * Virtual device support, XTIDE A0-A3 address line swap mod and memory mapping support for JR-IDE/ISA require some generalizations in code that results in more comparisons, jumps and function calls than before. These slow down the execution especially on slow CPUs.
-  * v2 has some improvements in error handling that also makes the CPU to do more work.
-  * v2 disable Drive Internal Cache by default. MS-DOS does not access hard drives directly and there are no BIOS function to flush cache so data corruption is likely when using modern drives with large internal caches unless the write cache is disabled. Disabling the write cache has much less hit on performance that you might think so it it not good idea to enable the write cache.
+  * Virtual device support, XTIDE A0-A3 address line swap mod and memory mapping support for JR-IDE/ISA require some generalizations in code that results in more comparisons, jumps and function calls than before. All this overhead makes transfers slower and it is especially noticeable on older and slower CPUs.
+  * v2 has some improvements in error handling that also makes the CPU do more work.
+  * v2 disables Drive Internal Cache by default. MS-DOS does not access hard drives directly and there are no BIOS function to flush the cache so data corruption is likely when using modern drives with large internal caches unless the write cache is disabled. Disabling the write cache has a much less hit on performance than you might think so it is not a good idea to enable the write cache.
 
 If you are happy with v1.1.5 then go ahead and use it. I think most people will find that v2 is worth the upgrade even though the transfer rates are a bit slower.
 
 Here are some transfer rate comparisons between v1.1.5 and v2.0.0β1. Results are from [http://www.brutman.com/iotest.zip IOTEST by Michael B. Brutman].
 
-Test system is 486DX4 100 MHz with VLB Multi I/O card and 6 GB Hitachi Microdrive. XTIDE Universal BIOSes are configured for 16-transfers.
+The test system is a 486DX4 100 MHz with a VLB Multi I/O card and a 6 GB Hitachi Microdrive. XTIDE Universal BIOSes are configured for 16-bit transfers.
 ||Internal Cache||Shadow RAM||v1.1.5||v2.0.0β1||
 ||Enabled||Disabled||1399.22 KB/s||1185.50 KB/s||
 ||Enabled||Enabled||1931.79 KB/s||1911.37 KB/s||
@@ -249,11 +249,11 @@ Test system is 486DX4 100 MHz with VLB Multi I/O card and 6 GB Hitachi Microdriv
 == Importance of Shadow RAM ==
 Always enable Shadow RAM and ROM area caching if your systems supports them! They might speed up much more than you think. This is especially true on Pentium systems.
 
-Pentium will fetch at least 8 bytes (since it has 64-bit wide bus) before it can start to execute the instructions. Even if you have placed the ROM on a 16-bit ISA or 32-bit VLB or PCI card the ROM itself is only 8-bits wide. So the ROM must be read 8 times before CPU can start executing instructions. And if those 8 times are read from 8 MHz ISA with wait states... Believe it or not, this can slow the transfer rates on a mighty Pentium to the level of fast XT system.
+Pentium will fetch at least 8 bytes (since it has a 64-bit wide bus) before it can start to execute the instructions. Even if you have placed the ROM on a 16-bit ISA or 32-bit VLB or PCI card the ROM itself is only 8-bits wide. So the ROM must be read 8 times before the CPU can start executing instructions. And if those 8 times are read from 8 MHz ISA with wait states... Believe it or not, this can slow the transfer rates on a mighty Pentium to the level of fast XT systems.
 
 So always enable Shadow RAM to copy the ROM to RAM to get full bus width and you might also want to enable cache for ROM areas to compensate for RAM latencies and slower clock rate. The Shadow RAM is the more important of the two.
 
-You should be aware that you most likely need to disable Shadow RAM when you flash the EEPROM. Another thing to note is that JR-IDE/ISA does not work if Shadow RAM or ROM area caching is enabled. You wouldn't want to connect drives to 8-bit bus on a 32-bit system anyway. You can use the JR-IDE/ISA if you just need the 512 kiB FLASH.
+You should be aware that you most likely need to disable Shadow RAM when you flash the EEPROM. Another thing to note is that JR-IDE/ISA does not work if Shadow RAM or ROM area caching is enabled. You wouldn't want to connect drives to an 8-bit bus on a 32-bit system anyway. You can use the JR-IDE/ISA if you just need the 512 kiB FLASH.
 
 == Configuring hints ==
 CHS addressing modes are a bit faster than LBA addressing modes so you might want to manually specify CHS parameters for XT systems.
@@ -261,13 +261,13 @@ CHS addressing modes are a bit faster than LBA addressing modes so you might wan
 ----
 = IDE controllers on VLB and PCI bus =
 
-16-bit ISA IDE controllers are basically very simple ISA to PATA adapters so they all perform alike. ISA is not fast enough for anything above PIO-0 transfer method (with theoretical maximum of 3.3 MB/s).
+16-bit ISA IDE controllers are basically very simple ISA to PATA adapters so they all perform alike. ISA is not fast enough for anything above PIO-0 transfer method (with a theoretical maximum of 3.3 MB/s).
 
-VLB and PCI IDE controllers are more complex since they have an actual controller between bus and IDE drive. This controller can buffer the data so CPU can read 32-bits at a time. Early VLB controller are limited to PIO-2 but later VLB controllers and (all?) PCI controllers also support PIO modes 3 and 4. These later VLB multi I/O cards have two IDE connectors so you should use one of those even if you don't need the other IDE connector.
+VLB and PCI IDE controllers are more complex since they have an actual controller between bus and IDE drive. This controller can buffer the data so the CPU can read 32-bits at a time. Early VLB controllers are limited to PIO-2 but later VLB controllers and (all?) PCI controllers also support PIO modes 3 and 4. These later VLB multi I/O cards have two IDE connectors so you should use one of those even if you don't need the other IDE connector.
 
-Unfortunately many of the controllers work only at PIO-0 by default. Some VLB multi I/O cards have jumpers to set transfer rates but most require controller specific programming to enable higher PIO modes. It is possible that your VLB multi I/O card don't offer any advantages over ISA multi I/O cards if your BIOS does not support the IDE controller on the VLB card. There are DOS drivers for many VLB IDE controllers so BIOS support isn't necessity.
+Unfortunately many of the controllers work only at PIO-0 by default. Some VLB multi I/O cards have jumpers to set transfer rates but most require controller specific programming to enable higher PIO modes. It is possible that your VLB multi I/O card don't offer any advantages over ISA multi I/O cards if your BIOS does not support the IDE controller on the VLB card. There are DOS drivers for many VLB IDE controllers so BIOS support isn't a necessity.
 
-XTIDE Universal BIOS does not support any specific VLB controllers at the moment. I'm planning to add native support for Vision QD6580 controller soon (for real this time).
+XTIDE Universal BIOS does not support any specific VLB controllers at the moment. I'm planning to add native support for Vision QD6580 controllers soon (for real this time).
 
 ----
 = Known problems =
@@ -278,9 +278,9 @@ XTIDE Universal BIOS does not support any specific VLB controllers at the moment
 
 == Problems with Compact Flash cards and microdrives ==
 
-CF cards and microdrives are IDE devices and should work as any hard disk. Unfortunately there are many CF cards and microdrives with limitations. Some of them only work as a master drive and not as a slave drive. Some of them requires MBR to be re-created before they can be booted.
+CF cards and microdrives are IDE devices and should work as any hard disk. Unfortunately there are many CF cards and microdrives with limitations. Some of them only work as a master drive but not as a slave drive. Some of them requires MBR to be re-created before they can be used for booting.
 
-MBR can be re-created with FDISK /MBR switch. You can also use any low-level data wipe utility to clear non-bootable MBR. MBR will then be created automatically when partitioning the drive.
+The MBR can be re-created with FDISK using the /MBR switch. You can also use any low-level data wipe utility to clear a non-bootable MBR. The MBR will then be created automatically when partitioning the drive.
 
 ----
 = Contact information =
