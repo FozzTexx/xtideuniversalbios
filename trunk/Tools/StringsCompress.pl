@@ -65,6 +65,7 @@ print ";;; This file only needs to be rebuilt if Strings.asm is changed.\n";
 print ";;;\n";
 print ";;;======================================================================\n\n";
 
+print "%ifdef STRINGSCOMPRESSED_STRINGS\n\n";
 
 #
 # On a first pass, look for our table directives.  $translate{...}, $format{...}, etc.
@@ -181,6 +182,9 @@ print ";;; end of input stream\n\n";
 # Output constants and the TranslatesAndFormats table
 #
 
+print "%endif ; STRINGSCOMPRESSED_STRINGS\n\n";
+print "%ifdef STRINGSCOMPRESSED_TABLES\n\n";
+
 print "StringsCompressed_NormalBase     equ   ".$normal_base."\n\n";
 
 print "StringsCompressed_FormatsBegin   equ   ".$format_begin."\n\n";
@@ -261,6 +265,8 @@ for( $t = $normal_base; $t < $normal_base + 0x40; $t++ )
 	}
 }
 print ";; alphabet used count: ".$used_count."\n";
+
+print "%endif ; STRINGSCOMPRESSED_TABLES\n\n";
 
 #--------------------------------------------------------------------------------
 #

@@ -204,7 +204,7 @@ int Image::parseGeometry( char *str, unsigned long *p_cyl, unsigned long *p_head
 // Words carved out of the vendor specific area for our use
 //
 #define ATA_wSerialServerVersion 157
-#define ATA_wSerialFloppyFlagAndType 158
+#define ATA_wSerialDriveFlags 158
 #define ATA_wSerialPortAndBaud 159
 
 // Defines used in the words above
@@ -213,8 +213,12 @@ int Image::parseGeometry( char *str, unsigned long *p_cyl, unsigned long *p_head
 
 #define ATA_wGenCfg_FIXED 0x40
 
-#define ATA_wSerialFloppyFlagAndType_Flag 0x10
-#define ATA_wSerialFloppyFlagAndType_TypePosition 5
+// These are all shifted by 1 bit to the right, so that SerialDPT_Finalize can shift them into proper position
+// and shift the high order bit into the carry flag to indicate a floppy drive is present.
+//
+#define ATA_wSerialDriveFlags_Floppy    0x88
+#define ATA_wSerialDriveFlags_Present   0x02
+#define ATA_wSerialDriveFlags_FloppyType_FieldPosition   4
 
 struct comPorts {
 	unsigned long port;
@@ -297,9 +301,10 @@ void Image::respondInquire( unsigned short *buff, unsigned short originalPortAnd
 	//
 	buff[ ATA_wSerialServerVersion ] = (SERIAL_SERVER_MAJORVERSION << 8) | SERIAL_SERVER_MINORVERSION;
 
+	buff[ ATA_wSerialDriveFlags ] = ATA_wSerialDriveFlags_Present;
 	if( floppy )
-		buff[ ATA_wSerialFloppyFlagAndType ] = 
-			ATA_wSerialFloppyFlagAndType_Flag | (floppyType << ATA_wSerialFloppyFlagAndType_TypePosition);
+		buff[ ATA_wSerialDriveFlags ] |= 
+			ATA_wSerialDriveFlags_Floppy | (floppyType << ATA_wSerialDriveFlags_FloppyType_FieldPosition);
 
 	// we always set this, so that the bulk of the BIOS will consider this disk as a hard disk
 	//

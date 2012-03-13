@@ -24,14 +24,14 @@ SerialDPT_Finalize:
 ; distinguish floppy disks presented by the server and not treat them as hard disks, even
 ; if the floppy support is disabled.
 ;
-		mov		al, [es:si+SerialServer_ATA_wFloppyFlagAndType]
-		or		al, FLGH_DPT_SERIAL_DEVICE
-		or		byte [di+DPT.bFlagsHigh], al
-
-		test	al, FLGH_DPT_SERIAL_FLOPPY           ; clears CF
-		jz		.notfloppy
-		stc		
-.notfloppy:		
+		mov		al, [es:si+SerialServer_ATA_wDriveFlags]
+		shl		al, 1
+		mov		byte [di+DPT.bFlagsHigh], al
 		
 		ret
 
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
+	%if FLGH_DPT_SERIAL_DEVICE != 0x4 || FLGH_DPT_SERIAL_FLOPPY != 0x10 || FLGH_DPT_SERIAL_FLOPPY_TYPE_MASK != 0xe0 || FLGH_DPT_SERIAL_FLOPPY_TYPE_FIELD_POSITION != 5
+		%error "The serial server passes FLGH values into SerialDPT_Finalize directly.  If the flag positions are changed, corresponding changes will need to be made in the serial server, and likely a version check put in to deal with servers talking to incompatible clients"
+	%endif
+%endif
