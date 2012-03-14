@@ -266,8 +266,11 @@ StoreLbaAddressingAndTotalSectorCountFromBXDXAX:
 
 	and		BYTE [di+DPT.bFlagsLow], ~MASKL_DPT_ADDRESSING_MODE
 	test	bx, bx
-	jnz		SHORT .SetLba48AddressingToDPT
-	test	dh, 0F0h
+	jnz		SHORT .SetLba48AddressingToDPT	; Must be LBA48
+
+	; Drives can report at most 0FFF FFFFh LBA28 sectors according to ATA specification.
+	; That is (2^28)-1 so we can simply check if DH is zero or not.
+	test	dh, dh
 	jz		SHORT .SetLba28AddressingToDPT
 .SetLba48AddressingToDPT:
 	or		BYTE [di+DPT.bFlagsLow], ADDRESSING_MODE_LBA48<<ADDRESSING_MODE_FIELD_POSITION
