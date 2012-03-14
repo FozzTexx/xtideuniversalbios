@@ -1,1 +1,0 @@
-Some old operating systems (DOS) can only boot from Floppy Drive A (00h) or first Hard Disk (80h, usually drive C). Drive Translation can be used to modify drive numbers so that selected drive will be mapped to 00h or 80h so that it can be booted.
