@@ -9,6 +9,8 @@
 # Also works with Open Watcom C/C++ Version 1.9
 #
 
+HEADERS = library/library.h win32/win32file.h win32/win32serial.h library/file.h library/flatimage.h
+
 CL = cl
 CLFLAGS = /Ox /DWIN32
 
@@ -17,16 +19,21 @@ WIN32OBJS = build/win32.obj build/checksum.obj build/serial.obj build/process.ob
 build/serdrive.exe:	$(WIN32OBJS)
 	@$(CL) /Febuild/serdrive.exe $(WIN32OBJS)
 
-build/%.obj:	win32/%.cpp
-	@$(CL) /c $(CLFLAGS) $< /Fo$@
+build/win32.obj:	win32/win32.cpp $(HEADERS)
+	@$(CL) /c $(CLFLAGS) win32/win32.cpp /Fobuild/win32.obj
 
-build/%.obj:	library/%.cpp
-	@$(CL) /c $(CLFLAGS) $< /Fo$@
+build/checksum.obj:	library/checksum.cpp $(HEADERS)
+	@$(CL) /c $(CLFLAGS) library/checksum.cpp /Fobuild/checksum.obj
 
-$(WIN32OBJS):	library/library.h win32/win32file.h win32/win32serial.h library/file.h library/flatimage.h
+build/serial.obj:	library/serial.cpp $(HEADERS)
+	@$(CL) /c $(CLFLAGS) library/serial.cpp /Fobuild/serial.obj
 
-build/checksum_test.exe:	library/checksum.cpp
-	@$(CL) /Febuild/checksum_test.exe /Ox library/checksum.cpp /Fobuild/checksum_test.obj -D CHECKSUM_TEST
+build/process.obj:	library/process.cpp $(HEADERS)
+	@$(CL) /c $(CLFLAGS) library/process.cpp /Fobuild/process.obj
+
+build/image.obj:	library/image.cpp $(HEADERS)
+	@$(CL) /c $(CLFLAGS) library/image.cpp /Fobuild/image.obj
+
 
 release:	build/serdrive.exe
 	@echo Compressing with UPX...
@@ -35,3 +42,8 @@ release:	build/serdrive.exe
 
 clean:
 	@del /q build\*.*
+
+
+build/checksum_test.exe:	library/checksum.cpp
+	@$(CL) /Febuild/checksum_test.exe /Ox library/checksum.cpp /Fobuild/checksum_test.obj -D CHECKSUM_TEST
+
