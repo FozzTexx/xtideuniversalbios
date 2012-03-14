@@ -344,8 +344,17 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 ValueReaderForUserLbaValue:
-	mov		ax, [es:di+2]		; SHR 16
-	eSHIFT_IM ax, 4, shr		; SHR 16 + 4 = 20
+	push	dx
+
+	mov		ax, [es:di]
+	mov		dx, [es:di+2]		; DX:AX now holds user defined LBA28 limit
+	add		ax, BYTE 1			; Increment by one
+	adc		dx, BYTE 0
+
+	xchg	ax, dx				; SHR 16
+	eSHIFT_IM ax, 4, shr		; SHR 4 => AX = DX:AX / (1024*1024)
+
+	pop		dx
 	ret
 
 
@@ -362,7 +371,15 @@ ValueReaderForUserLbaValue:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 ValueWriterForUserLbaValue:
+	push	dx
+
+	xor		dx, dx
 	eSHIFT_IM ax, 4, shl
-	mov		[es:di+2], ax
-	xor		ax, ax		; Store zero to [es:di]
-	ret
+	xchg	dx, ax			; DX:AX now holds AX * 1024 * 1024
+
+	sub		ax, BYTE 1		; Decrement DX:AX by one
+	sbb		dx, BYTE 0		; (necessary since maximum LBA28 sector count is 0FFF FFFFh)
+
+	mov		[es:di+2], dx	; Store DX by ourselves
+	pop		dx
+	ret						; AX will be stored by our menu system
