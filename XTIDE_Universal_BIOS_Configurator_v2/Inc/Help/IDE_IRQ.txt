@@ -1,1 +1,0 @@
-IRQ channel to use. All controllers managed by XTIDE Universal BIOS can use the same IRQ when MS-DOS is used. Other operating systems are likely to require different interrupts for each controller.

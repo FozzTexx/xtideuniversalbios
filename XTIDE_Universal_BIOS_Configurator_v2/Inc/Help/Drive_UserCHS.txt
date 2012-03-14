@@ -1,1 +1,0 @@
-Specify (P-)CHS parameters manually instead of autodetecting them. This can be used to limit drive size for old operating systems that do not support large hard disks. Some early IDE drives have buggy autodetecing so they require CHS to be specified manually. Limiting Cylinders will work for all drives but drives may not accept all values for Heads and Sectors per Track.

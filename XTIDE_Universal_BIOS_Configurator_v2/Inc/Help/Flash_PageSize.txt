@@ -1,1 +1,0 @@
-Larger page size will improve write performance but not all EEPROMs support large pages or page writing at all. Byte writing mode will be used when page size is set to 1. Byte writing mode is supported by every EEPROM. Large pages cannot be flashed with slow CPUs.

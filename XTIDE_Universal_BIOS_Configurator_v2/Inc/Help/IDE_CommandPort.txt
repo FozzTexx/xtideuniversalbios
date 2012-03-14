@@ -1,1 +1,0 @@
-IDE controller command block address is the usual address mentioned for IDE controllers. By default the primary IDE controller uses port 1F0h and secondary controller uses port 170h. XTIDE card uses port 300h by default.
