@@ -1,0 +1,101 @@
+XTIDE Universal BIOS v1.1.5 (28 November 2010)
+  * Errors are now being checked when calling previous INT 13h handler on AH=08h Read Disk Drive Parameters.
+    This fixes infinite drive checking loop on unofficial MS-DOS 7.10 installer.
+  * Better INT 40h handler detection to fix floppy drive detection with AMI 286/386 BIOS.
+  * AA55h signature no longer required when booting from floppy drives. This should make booter games work.
+
+
+XTIDE Universal BIOS v1.1.4 (24 August 2010)
+  * Correct number of drives is now returned from AH=08h when it is redirected to foreign BIOS.
+  * Interrupt controllers are now unmasked during drive reset.
+  * OS hooks are now enabled for all builds. IRQ waiting no longer uses HLT instruction to fix some EMM386 and VCPI issues.
+  * XT+ build is no more since it would now be the same as AT build
+
+
+XTIDE Universal BIOS v1.1.3 (1 August 2010)
+  * v1.1.1 broke booting from foreign drives, it is now fixed.
+  * Improved error handling a bit.
+  * Longer DRQ and IRQ timeouts to minimize write timouts with some (bad) CF cards.
+  * Default boot menu drive should now be properly selected.
+
+
+XTIDE Universal BIOS v1.1.2 (26 July 2010, no public release)
+  * Fixed a bug where Disk Parameter Table was accessed with wrong pointer register after writing last block.
+  * Cleaned AH=00h, Disk Controller Reset a bit.
+
+
+XTIDE Universal BIOS v1.1.1 (19 July 2010)
+*Booting is now possible from hard disks if floppy controller reset fails
+ since AH=00h, Disk Controller Reset now returns error code for the
+ requested drive only.
+*Now assembles with Yasm.
+
+
+XTIDE Universal BIOS v1.1.0 (first stable release, 2 May 2010)
+*Lite and full operating modes
+*Diagnostic cylinder no longer has to be reserved
+*Slave drives again work without master present
+*32-bit transfers for VLB and PCI IDE controllers
+*16- and 32-bit transfers are enabled on all builds
+*Boot menu hotkeys for all drives
+*Drive swapping is handled separately for floppy and hard disk drives so it
+ is now possible to install DOS to any hard disk from any floppy drive
+*INT 13h,AH=15h return value in DL now longer gets corrupted by drive swapping
+*Rewritten drive detection and lots of code cleaning
+*Longer timeout when detecting first drive
+*Minimum number of floppy drives can be specified if autodetection fails
+*Maybe other changes that i have forgotten
+
+XTIDE Universal BIOS v1.1.0 configuration and flashing program (idecfg.com)
+*Now works as a generic EEPROM flasher
+*Improvements to configuration menus
+*SDP can be completely disabled
+
+
+XTIDE Universal BIOS v1.0.0_RC2
+*No more boot menu slowdown when no XTIDE Universal BIOS
+ controlled drives present
+*Hard disks are now reset properly.
+ This fixes some Block Mode related bugs.
+*Major improvements for error handling
+*Small improvements for interrupt handling
+
+
+XTIDE Universal BIOS v1.0.0_RC1
+*Fixed 386+ stack exception bug
+*Stack is relocated for boot menu even if DPTs are not stored to 30:0h
+*Strings and boot menu are displayed properly on BIOSes that corrupts
+ AH when returning from INT 10h/AH=Eh
+*L-CHS addressing is now used for <=504MiB drives even if LBA is supported
+
+
+XTIDE Universal BIOS v1.0.0_b4
+*Boot menu with drive swapping
+*Block mode transfers
+*Cylinder limiting
+*Drive detection read errors are now properly detected
+*A little longer timeout value when detecting drives
+*Minor optimizations to save some bytes
+
+
+XTIDE Universal BIOS beta3
+*BIOS configuration and flashing program finally available
+*No more conflicts with other hard disk BIOSes
+*Slave drives should now be detected without master
+*Timeouts now use system timer
+*Variables can now be located to top of base memory
+*Completely rewritten interrupt handling
+*Minor optimizations to 8-bit transfers
+*CTRL can be held down to skip initialization
+*Late initialization to fix compatibility issues with old systems
+
+
+XTIDE Universal BIOS beta2
+*AT build and support for 16-bit IDE Controllers
+*XT+ build for 188/186/V20/V30/286 XTs
+*Auto detection for timeout values (AT+)
+*Minor optimizations
+
+
+XTIDE Universal BIOS beta1
+*Initial release
