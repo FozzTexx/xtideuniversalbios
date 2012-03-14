@@ -1,1 +1,0 @@
-Block Mode will speed up transfers since multiple sectors can be transferred before waiting next data request. Normally Block Mode should always be kept enabled but there is at least one drive with buggy Block Mode implementation.
