@@ -44,6 +44,7 @@ LIBS += ../Assembly_Library/Src/String/
 LIBS += ../Assembly_Library/Src/Time/
 LIBS += ../Assembly_Library/Src/Util/
 LIBS += ../XTIDE_Universal_BIOS/Inc/
+LIBS += ../XTIDE_Universal_BIOS/Src/VariablesAndDPTs/
 HEADERS += $(LIBS)
 
 

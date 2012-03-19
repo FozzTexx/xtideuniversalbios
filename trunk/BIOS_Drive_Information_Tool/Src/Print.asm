@@ -6,9 +6,25 @@
 SECTION .text
 
 ;--------------------------------------------------------------------
+; Print_SetCharacterOutputToSTDOUT
+;	Parameters:
+;		Nothing
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, BX, DI
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+Print_SetCharacterOutputToSTDOUT:
+	mov		bl, ATTRIBUTES_NOT_USED
+	mov		ax, DosCharOut
+	CALL_DISPLAY_LIBRARY	SetCharOutputFunctionFromAXwithAttribFlagInBL
+	ret
+
+;--------------------------------------------------------------------
 ; Use DOS standard output so strings can be redirected to a file.
 ;
-; Print_DosCharOut
+; DosCharOut
 ;	Parameters:
 ;		AL:		Character to output
 ;		DS:		BDA segment (zero)
@@ -19,7 +35,7 @@ SECTION .text
 ;		AX, DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-Print_DosCharOut:
+DosCharOut:
 	xchg	dx, ax
 	mov		ah, 02h		; DOS 1+ - WRITE CHARACTER TO STANDARD OUTPUT
 	int		21h			; Call DOS
@@ -50,6 +66,7 @@ ALIGN JUMP_ALIGN
 
 ;---------------------------------------------------------------------
 ; Print_DriveNumberFromDLusingFormatStringInSI
+; Print_VersionStringFromAXusingFormatStringInSI
 ; Print_BiosFunctionNumberFromAXusingFormatStringInSI
 ; Print_SectorSizeFromAXusingFormatStringInSI
 ;	Parameters:
@@ -63,6 +80,7 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 Print_DriveNumberFromDLusingFormatStringInSI:
 	eMOVZX	ax, dl
+Print_VersionStringFromAXusingFormatStringInSI:
 Print_BiosFunctionNumberFromAXusingFormatStringInSI:
 Print_SectorSizeFromAXusingFormatStringInSI:
 	mov		bp, sp
