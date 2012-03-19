@@ -272,15 +272,16 @@ XTIDE Universal BIOS does not support any specific VLB controllers at the moment
 ----
 = Known problems with fixes (XTIDE Universal BIOS v2.0.0 beta 1)=
 
-*Flashing sometimes fails on a Pentium system*
+===Flashing sometimes fails on a Pentium system===
 Set page size to maximum supported and try to reflash few times. Eventually it should work. It is currently unknown why flash fails.
 
-*FreeDOS Format.exe freezes*
+===FreeDOS Format.exe freezes===
 Known to happen with 0.90 dated 4-30-02 when using user defined LBA. Change FORMAT.EXE to newer. 0.91vdated 1-14-06 is known to work.
 
 
 = Other known problems =
   * Wrong MDA cursor gets displayed after exiting boot menu.
+  * Flash utility hung the PC when saving settings on one occasion (maybe because the FDD entry point was via the BIOS just over-written?)
 
 
 == Problems with Compact Flash cards and microdrives ==
