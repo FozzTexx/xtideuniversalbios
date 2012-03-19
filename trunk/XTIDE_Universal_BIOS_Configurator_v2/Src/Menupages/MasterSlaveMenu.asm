@@ -143,7 +143,7 @@ istruc MENUITEM
 	at	MENUITEM.bType,				db	TYPE_MENUITEM_UNSIGNED
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	NULL
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgDrvLbaSectors
-	at	MENUITEM.itemValue + ITEM_VALUE.wMinValue,					dw	((16383*16*63) / (1024 * 1024)) + 1	; One sector over 8.4 GB
+	at	MENUITEM.itemValue + ITEM_VALUE.wMinValue,					dw	1							; 512 MiB
 	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	10000000h / (1024 * 1024)	; Limit to 28-bit LBA
 	at	MENUITEM.itemValue + ITEM_VALUE.fnValueReader,				dw	ValueReaderForUserLbaValue
 	at	MENUITEM.itemValue + ITEM_VALUE.fnValueWriter,				dw	ValueWriterForUserLbaValue

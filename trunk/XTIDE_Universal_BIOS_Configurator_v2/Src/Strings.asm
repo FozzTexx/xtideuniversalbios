@@ -241,7 +241,7 @@ g_szDlgDrvCyls:			db	"Enter number of P-CHS cylinders (1...16383).",NULL
 g_szDlgDrvHeads:		db	"Enter number of P-CHS heads (1...16).",NULL
 g_szDlgDrvSect:			db	"Enter number of sectors per track (1...63).",NULL
 g_szDlgDrvUserLBA:		db	"Limit drive capacity?",NULL
-g_szDlgDrvLbaSectors:	db	"Enter maximum capacity in millions of sectors (16...256).",NULL
+g_szDlgDrvLbaSectors:	db	"Enter maximum capacity in millions of sectors (1...256).",NULL
 
 g_szNfoDrvBlockMode:	db	"Transfer multiple sectors per data request.",NULL
 g_szNfoDrvWriteCache:	db	"Hard Drive Internal Write Cache settings (WARNING!).",NULL
