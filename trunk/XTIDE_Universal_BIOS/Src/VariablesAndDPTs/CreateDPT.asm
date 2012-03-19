@@ -112,7 +112,7 @@ CreateDPT_FromAtaInformation:
 	; Calculate L-CHS for old INT 13h
 .KeepTotalSectorsFromAtaID:
 	mov		bx, [di+DPT.twLbaSectors+4]		; Restore BX
-	call	AccessDPT_ConvertSectorCountFromBXDXAXtoLbaAssistedCHSinDXAXBLBH
+	call	LbaAssist_ConvertSectorCountFromBXDXAXtoLbaAssistedCHSinDXAXBLBH
 	mov		[di+DPT.bLbaHeads], bl
 	jmp		SHORT .StoreBlockMode
 
