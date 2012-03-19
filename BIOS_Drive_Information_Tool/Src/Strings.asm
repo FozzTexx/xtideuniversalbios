@@ -5,7 +5,7 @@
 ; Section containing initialized data
 SECTION .data
 
-g_szProgramName:	db	"BIOS Drive Information Tool v1.0.0",LF,CR
+g_szProgramName:	db	"BIOS Drive Information Tool v1.0.1",LF,CR
 					db	"(C) 2012 by XTIDE Universal BIOS Team",LF,CR
 					db	"Released under GNU GPL v2",LF,CR
 					db	"http://code.google.com/p/xtideuniversalbios/",LF,CR,NULL
@@ -20,6 +20,9 @@ g_szFormatCHS:		db	" Cylinders    : %5-u, Heads: %3-u, Sectors: %2-u",LF,CR,NULL
 g_szChsSectors:		db	" CHS   sectors: ",NULL
 g_szLBA28:			db	" LBA28 sectors: ",NULL
 g_szLBA48:			db	" LBA48 sectors: ",NULL
+
+g_szXTUB:			db	"XTIDE Universal BIOS %s generates following L-CHS...",LF,CR,NULL
+g_szXTUBversion:	db	ROM_VERSION_STRING	; This one is NULL terminated
 
 g_szOldInfoHeader:	db	"Old INT 13h information from AH=08h and AH=15h...",LF,CR,NULL
 					;	Cylinders
