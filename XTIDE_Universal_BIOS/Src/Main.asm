@@ -18,6 +18,7 @@
 
 	; Included .inc files
 	%include "AssemblyLibrary.inc"	; Assembly Library. Must be included first!
+	%include "Version.inc"
 	%include "IntController.inc"	; For Interrupt Controller equates
 	%include "ATA_ID.inc"			; For ATA Drive Information structs
 	%include "IdeRegisters.inc"		; For ATA Registers, flags and commands
@@ -43,17 +44,9 @@ istruc ROMVARS
 	at	ROMVARS.wRomSign,	dw	0AA55h			; PC ROM signature
 	at	ROMVARS.bRomSize,	db	CNT_ROM_BLOCKS	; ROM size in 512B blocks
 	at	ROMVARS.rgbJump,	jmp	Initialize_FromMainBiosRomSearch
-	at	ROMVARS.rgbSign,	db	"XTIDE200"		; Signature for flash program
-	at	ROMVARS.szTitle
-		db	"-=XTIDE Universal BIOS"
-%ifdef USE_AT
-		db	" (AT)=-",NULL
-%elifdef USE_186
-		db	" (XT+)=-",NULL
-%else
-		db	" (XT)=-",NULL
-%endif
-	at	ROMVARS.szVersion,	db	"v2.0.0",BETA,"1 (",__DATE__,")",NULL
+	at	ROMVARS.rgbSign,	db	FLASH_SIGNATURE
+	at	ROMVARS.szTitle,	db	TITLE_STRING
+	at	ROMVARS.szVersion,	db	ROM_VERSION_STRING
 
 ;;; For OR'ing into wFlags below
 ;;;
@@ -186,6 +179,7 @@ iend
 	%include "CreateDPT.asm"		; For creating DPTs
 	%include "FindDPT.asm"			; For finding DPTs
 	%include "AccessDPT.asm"		; For accessing DPTs
+	%include "LbaAssist.asm"		; For generating L-CHS parameters to LBA drives
 	%include "BootMenuInfo.asm"		; For creating BOOTMENUINFO structs
 	%include "AtaID.asm"			; For ATA Identify Device information
 	%include "DetectDrives.asm"		; For detecting IDE drives

@@ -84,4 +84,24 @@ MAX_LCHS_CYLINDERS				EQU		1024
 LBA_ASSIST_SPT					EQU		63
 
 
+;--------------------------------------------------------------------
+; LIMIT_LBA_CYLINDERS_IN_DXAX_TO_LCHS_CYLINDERS
+;	Parameters:
+;		DX:AX:	Number of LBA cylinders
+;	Returns:
+;		AX:		Number of L-CHS cylinders
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+%macro LIMIT_LBA_CYLINDERS_IN_DXAX_TO_LCHS_CYLINDERS 0
+	test	dx, dx
+	jnz		SHORT %%LoadMaxValueToAX
+	cmp		ax, MAX_LCHS_CYLINDERS
+	jbe		SHORT %%NoNeedToModify
+%%LoadMaxValueToAX:
+	mov		ax, MAX_LCHS_CYLINDERS
+%%NoNeedToModify:
+%endmacro
+
+
 %endif ; CUSTOMDPT_INC
