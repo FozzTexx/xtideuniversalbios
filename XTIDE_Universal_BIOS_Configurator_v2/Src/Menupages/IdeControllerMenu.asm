@@ -171,17 +171,17 @@ istruc MENUITEM
 iend
 
 g_rgwChoiceToValueLookupForDevice:
-	dw	DEVICE_8BIT_DUAL_PORT_XTIDE
-	dw	DEVICE_XTIDE_WITH_REVERSED_A3_AND_A0
-	dw	DEVICE_8BIT_SINGLE_PORT
+	dw	DEVICE_XTIDE_REV1
+	dw	DEVICE_XTIDE_REV2
+	dw	DEVICE_FAST_XTIDE
 	dw	DEVICE_16BIT_ATA
 	dw	DEVICE_32BIT_ATA
 	dw	DEVICE_SERIAL_PORT
 	dw	DEVICE_JRIDE_ISA
 g_rgszValueToStringLookupForDevice:
-	dw	g_szValueCfgDeviceDual8b
-	dw	g_szValueCfgDeviceMod
-	dw	g_szValueCfgDeviceSingle8b
+	dw	g_szValueCfgDeviceRev1
+	dw	g_szValueCfgDeviceRev2
+	dw	g_szValueCfgDeviceFast
 	dw	g_szValueCfgDevice16b
 	dw	g_szValueCfgDevice32b
 	dw	g_szValueCfgDeviceSerial
