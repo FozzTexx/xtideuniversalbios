@@ -157,11 +157,11 @@ g_szHelpIdeSerialBaud:	incbin  "IDE_SerialBaud.txt"
 						db  NULL
 
 g_szMultichoiceCfgDevice:
-						db	"8-bit dual port (XTIDE)",LF
-						db	"XTIDE mod (A0<->A3)",LF
-						db	"8-bit single port",LF
-						db	"16-bit standard IDE",LF
-						db	"32-bit generic IDE",LF
+						db	"XTIDE rev 1",LF
+						db	"XTIDE rev 2 or modded rev 1",LF
+						db	"Fast XTIDE (CPLD v2 project)",LF
+						db	"16-bit ISA/VLB/PCI IDE",LF
+						db	"32-bit VLB/PCI IDE",LF
 						db	"Serial port virtual device",LF
 						db	"JR-IDE/ISA",NULL
 
@@ -214,9 +214,9 @@ g_szValueCfgBaud4800:	db		"4800",NULL
 g_szValueCfgBaud2400:	db		"2400",NULL
 
 
-g_szValueCfgDeviceDual8b:	db	"XTIDE",NULL
-g_szValueCfgDeviceMod:		db	"XTIDEmod",NULL
-g_szValueCfgDeviceSingle8b:	db	"8-bit",NULL
+g_szValueCfgDeviceRev1:		db	"XTIDE r1",NULL
+g_szValueCfgDeviceRev2:		db	"XTIDE r2",NULL
+g_szValueCfgDeviceFast:		db	"Fast XT",NULL
 g_szValueCfgDevice16b:		db	"16-bit",NULL
 g_szValueCfgDevice32b:		db	"32-bit",NULL
 g_szValueCfgDeviceSerial:	db	"Serial",NULL
