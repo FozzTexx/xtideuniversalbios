@@ -46,8 +46,11 @@ IdeDPT_Finalize:
 ;		Nothing
 ;--------------------------------------------------------------------
 IdeDPT_StoreReversedAddressLinesFlagIfNecessary:
-	cmp		BYTE [cs:bp+IDEVARS.bDevice], DEVICE_XTIDE_WITH_REVERSED_A3_AND_A0
+	cmp		BYTE [cs:bp+IDEVARS.bDevice], DEVICE_XTIDE_REV2
+	je		SHORT .SetFlagForSwappedA0andA3
+	cmp		BYTE [cs:bp+IDEVARS.bDevice], DEVICE_FAST_XTIDE
 	jne		SHORT .EndDPT
+.SetFlagForSwappedA0andA3:
 	or		BYTE [di+DPT.bFlagsHigh], FLGH_DPT_REVERSED_A0_AND_A3
 
 .EndDPT:
