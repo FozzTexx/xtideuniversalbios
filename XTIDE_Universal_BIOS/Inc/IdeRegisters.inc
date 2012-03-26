@@ -83,6 +83,10 @@ COMMAND_SET_FEATURES					EQU		0EFh
 ; Subcommands for COMMAND_SET_FEATURES
 FEATURE_ENABLE_WRITE_CACHE				EQU		02h
 FEATURE_DISABLE_WRITE_CACHE				EQU		82h		; Can also be used to flush cache
+FEATURE_SET_TRANSFER_MODE				EQU		03h		; Transfe mode goes to the Sector Count Register
+	PIO_DEFAULT_MODE					EQU		0h
+	PIO_DEFAULT_MODE_DISABLE_IORDY		EQU		1h
+	PIO_FLOW_CONTROL_MODE_xxx			EQU		(1<<3)	; Bits 2...0 hold the PIO mode
 
 
 %endif ; IDEREGISTERS_INC

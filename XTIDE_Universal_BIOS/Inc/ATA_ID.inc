@@ -3,6 +3,37 @@
 %ifndef ATA_ID_INC
 %define ATA_ID_INC
 
+; PIO Minimum Cycle Times (t0)
+; Timings for Advanced modes 3 and 4 can be read from ATA info WORDs 67 and 68
+PIO_0_MIN_CYCLE_TIME_NS		EQU		600
+PIO_1_MIN_CYCLE_TIME_NS		EQU		383
+PIO_2_MIN_CYCLE_TIME_NS		EQU		240
+PIO_3_MIN_CYCLE_TIME_NS		EQU		180
+PIO_4_MIN_CYCLE_TIME_NS		EQU		120
+
+; PIO Minimum Address Valid Times (t1)
+PIO_0_MIN_ADDRESS_VALID_NS	EQU		70
+PIO_1_MIN_ADDRESS_VALID_NS	EQU		50
+PIO_2_MIN_ADDRESS_VALID_NS	EQU		30
+PIO_3_MIN_ADDRESS_VALID_NS	EQU		30
+PIO_4_MIN_ADDRESS_VALID_NS	EQU		25
+
+; PIO Minimum Active Times (t2)
+PIO_0_MIN_ACTIVE_TIME_NS	EQU		165
+PIO_1_MIN_ACTIVE_TIME_NS	EQU		125
+PIO_2_MIN_ACTIVE_TIME_NS	EQU		100
+PIO_3_MIN_ACTIVE_TIME_NS	EQU		80
+PIO_4_MIN_ACTIVE_TIME_NS	EQU		70
+
+; PIO Minimum Recovery Times or Inactive Times (t2i) can be calculated
+; from Minimum Cycle Time (t0) - Minimum Active Time (t2) - Address Valid Time (t1). 
+; I'm not sure about this calculation so correct me if I'm wrong!
+; Recovery time should be calculated at run time since Cycle Time t0 can be
+; read from ATA information (ATA2+) but most drives just report the
+; Min Cycle Times listed above.
+
+
+
 ; ATA-1 Drive Information struct
 ; F = Fixed value
 ; V = Variable value
@@ -31,7 +62,7 @@ struc ATA1
 	.wCaps		resw 1	; 49FRX, Capabilities
 				resw 1	; 50R
 				resb 1	; 51[0-7]X
-	.bPIOTiming	resb 1	; 51[8-15]F, PIO data transfer cycle timing mode
+	.bPioMode	resb 1	; 51[8-15]F, PIO data transfer cycle timing mode (0, 1 or 2)
 				resb 1	; 52[0-7]X
 	.bDMATiming	resb 1	; 52[8-15]F, DMA data transfer cycle timing mode
 	.wFields	resw 1	; 53FVR, Field (next words) validity bits
@@ -161,6 +192,10 @@ A2_wFields_64to70		EQU	(1<<1)	; The fields reported in words 64-70 are valid
 
 ; ATA-2 Word 59 high byte, Block mode flags
 A2_bBlockFlgs_VALID		EQU	(1<<0)	; Multiple sector setting (bBlockSel) is valid
+
+; ATA-2 Word 64, Advanced PIO transfer modes supported
+A2_bPIOSupp_PIO3		EQU	(1<<0)
+A2_bPIOSupp_PIO4		EQU	(1<<1)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

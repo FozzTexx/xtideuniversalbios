@@ -18,8 +18,13 @@ struc BOOTVARS
 					resb	256		; Boot Menu stack
 	.rgbMnuStack:
 	.dwPostStack	resb	4		; POST stack pointer when entering INT 19h
+	.wMagicWord		resb	2		; I wish we didn't need this
 	.rgBootNfo:						; Array containing BOOTNFO structs
 endstruc
+
+; Magic WORD to detect when BOOTVARS is available.
+BOOTVARS_MAGIC_WORD			EQU		1110011001100111b
+
 
 
 ;--------------------------------------------------------------------

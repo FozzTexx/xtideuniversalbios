@@ -110,11 +110,11 @@ SECTION .text
 ;	Returns:
 ;		Nothing (falls to next push below)
 ;	Corrupts registers:
-;		AX
+;		AX, BX, DX, ES
 ;--------------------------------------------------------------------
 .PushResetStatus:
-	mov		al, [di+DPT.bFlagsHigh]
-	and		al, MASKH_DPT_RESET			;  ah already zero from last push
-	push	ax
+	call	BootMenuInfo_IsAvailable	; Load segment to ES
+	call	BootMenuInfo_ConvertDPTtoBX
+	push	WORD [es:bx+BOOTMENUINFO.wInitErrorFlags]
 
 ;;; fall-out to BootMenuPrint_HardDiskRefreshInformation.

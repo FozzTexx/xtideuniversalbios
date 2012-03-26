@@ -33,6 +33,7 @@
 	%include "BootMenu.inc"			; For Boot Menu
 	%include "IDE_8bit.inc"			; For IDE 8-bit data port macros
 	%include "DeviceIDE.inc"		; For IDE device equates
+	%include "Vision.inc"			; For QDI Vision QD65xx VLB IDE Controllers
 
 
 ; Section containing code
@@ -68,12 +69,18 @@ istruc ROMVARS
 	MAIN_FLG_MODULE_JRIDE	equ	0
 %endif
 
+%ifdef MODULE_ADVANCED_ATA
+	MAIN_FLG_MODULE_ADVATA	equ	FLG_ROMVARS_MODULE_ADVATA
+%else
+	MAIN_FLG_MODULE_ADVATA	equ	0
+%endif
+
 
 ;---------------------------;
 ; AT Build default settings ;
 ;---------------------------;
 %ifdef USE_AT
-	at	ROMVARS.wFlags,			dw	FLG_ROMVARS_FULLMODE | FLG_ROMVARS_DRVXLAT | MAIN_FLG_MODULE_SERIAL | MAIN_FLG_MODULE_EBIOS | MAIN_FLG_MODULE_JRIDE
+	at	ROMVARS.wFlags,			dw	FLG_ROMVARS_FULLMODE | FLG_ROMVARS_DRVXLAT | MAIN_FLG_MODULE_SERIAL | MAIN_FLG_MODULE_EBIOS | MAIN_FLG_MODULE_JRIDE | MAIN_FLG_MODULE_ADVATA
 	at	ROMVARS.wDisplayMode,	dw	DEFAULT_TEXT_MODE
 	at	ROMVARS.wBootTimeout,	dw	BOOT_MENU_DEFAULT_TIMEOUT
 	at	ROMVARS.bIdeCnt,		db	4						; Number of supported controllers
@@ -88,8 +95,8 @@ istruc ROMVARS
 	at	ROMVARS.ideVars0+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	db	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE
 	at	ROMVARS.ideVars0+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags,	db	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE
 
-	at	ROMVARS.ideVars1+IDEVARS.wPort,			dw	170h			; Controller Command Block base port
-	at	ROMVARS.ideVars1+IDEVARS.wPortCtrl,		dw	370h			; Controller Control Block base port
+	at	ROMVARS.ideVars1+IDEVARS.wPort,			dw	DEVICE_ATA_DEFAULT_SECONDARY_PORT
+	at	ROMVARS.ideVars1+IDEVARS.wPortCtrl,		dw	DEVICE_ATA_DEFAULT_SECONDARY_PORTCTRL
 	at	ROMVARS.ideVars1+IDEVARS.bDevice,		db	DEVICE_16BIT_ATA
 	at	ROMVARS.ideVars1+IDEVARS.bIRQ,			db	0
 	at	ROMVARS.ideVars1+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	db	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE
@@ -116,7 +123,7 @@ istruc ROMVARS
 ;-----------------------------------;
 ; XT and XT+ Build default settings ;
 ;-----------------------------------;
-	at	ROMVARS.wFlags,			dw	FLG_ROMVARS_DRVXLAT | MAIN_FLG_MODULE_SERIAL | MAIN_FLG_MODULE_EBIOS | MAIN_FLG_MODULE_JRIDE
+	at	ROMVARS.wFlags,			dw	FLG_ROMVARS_DRVXLAT | MAIN_FLG_MODULE_SERIAL | MAIN_FLG_MODULE_EBIOS | MAIN_FLG_MODULE_JRIDE | MAIN_FLG_MODULE_ADVATA
 	at	ROMVARS.wDisplayMode,	dw	DEFAULT_TEXT_MODE
 	at	ROMVARS.wBootTimeout,	dw	BOOT_MENU_DEFAULT_TIMEOUT
 	at	ROMVARS.bIdeCnt,		db	1						; Number of supported controllers
@@ -204,6 +211,10 @@ iend
 	%include "Timer.asm"			; For timeout and delay
 
 	; IDE Device support
+%ifdef MODULE_ADVANCED_ATA
+	%include "AdvAtaInit.asm"		; For initializing VLB and PCI controllers
+	%include "Vision.asm"			; QDI Vision QD6500 and QD6580 support
+%endif
 %define IDEDEVICE Ide
 %define ASSEMBLE_SHARED_IDE_DEVICE_FUNCTIONS
 	%include "IOMappedIDE.inc"		; Assembly IDE support for normal I/O mapped controllers

@@ -203,5 +203,3 @@ CreateBiosTablesForHardDisk:
 	jc		SHORT DetectDrives_DriveNotFound
 	call	BootMenuInfo_CreateForHardDisk
 	jmp		short DetectPrint_DriveNameFromBootnfoInESBX
-
-

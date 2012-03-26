@@ -37,54 +37,72 @@ AH9h_HandlerForInitializeDriveParameters:
 ;		AH:		Int 13h return status
 ;		CF:		0 if successful, 1 if error
 ;	Corrupts registers:
-;		AL, BX, DX
+;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
 AH9h_InitializeDriveForUse:
+	push	es
 	push	si
-	push	cx
+	call	ClearErrorFlagFromBootMenuInfo	; Do this for serial devices as well
 
 %ifdef MODULE_SERIAL
-	;
-	; no need to do this for serial devices, and we use the DPT_RESET flag bits
-	; to store the drive type for serial floppy drives (MODULE_SERIAL_FLOPPY)
-	;
+	; no need to do this for serial devices
 	xor		ah, ah
 	test	byte [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE	; Clears CF
-	jnz		.ReturnNotSuccessful
+	jnz		.ReturnWithErrorCodeInAH
+
+%else
+	; Clear Initialization Error flag from DPT
+	and		BYTE [di+DPT.bFlagsHigh], ~FLGH_DPT_INITERROR
 %endif
 
 	; Try to select drive and wait until ready
-	or		BYTE [di+DPT.bFlagsHigh], MASKH_DPT_RESET		; Everything uninitialized
 	call	AccessDPT_GetDriveSelectByteToAL
 	mov		[bp+IDEPACK.bDrvAndHead], al
 	call	Device_SelectDrive
-	jc		SHORT .ReturnNotSuccessful
-	and		BYTE [di+DPT.bFlagsHigh], ~FLGH_DPT_RESET_nDRDY	; Clear since success
+	mov		al, FLG_INIT_FAILED_TO_SELECT_DRIVE
+	call	SetErrorFlagFromALwithErrorCodeInAHtoBootMenuInfo
+	jc		SHORT .ReturnWithErrorCodeInAH
 
 	; Initialize CHS parameters if LBA is not used
 	call	InitializeDeviceParameters
-	jc		SHORT .SetWriteCache
-	and		BYTE [di+DPT.bFlagsHigh], ~FLGH_DPT_RESET_nINITPRMS
+	mov		al, FLG_INIT_FAILED_TO_INITIALIZE_CHS_PARAMETERS
+	call	SetErrorFlagFromALwithErrorCodeInAHtoBootMenuInfo
 
 	; Enable or Disable Write Cache
-.SetWriteCache:
 	call	SetWriteCache
+	mov		al, FLG_INIT_FAILED_TO_SET_WRITE_CACHE
+	call	SetErrorFlagFromALwithErrorCodeInAHtoBootMenuInfo
 
 	; Recalibrate drive by seeking to cylinder 0
 .RecalibrateDrive:
 	call	AH11h_RecalibrateDrive
-	jc		SHORT .InitializeBlockMode
-	and		BYTE [di+DPT.bFlagsHigh], ~FLGH_DPT_RESET_nRECALIBRATE
+	mov		al, FLG_INIT_FAILED_TO_RECALIBRATE_DRIVE
+	call	SetErrorFlagFromALwithErrorCodeInAHtoBootMenuInfo
 
 	; Initialize block mode transfers
 .InitializeBlockMode:
 	call	InitializeBlockMode
-	jc		SHORT .ReturnNotSuccessful
-	and		BYTE [di+DPT.bFlagsHigh], ~FLGH_DPT_RESET_nSETBLOCK	; Keeps CF clear
+	mov		al, FLG_INIT_FAILED_TO_SET_BLOCK_MODE
+	call	SetErrorFlagFromALwithErrorCodeInAHtoBootMenuInfo
 
-.ReturnNotSuccessful:
-	pop		cx
+%ifdef MODULE_ADVANCED_ATA
+; Initialize fastest supported PIO mode
+.InitializePioMode:
+	call	InitializePioMode
+	mov		al, FLG_INIT_FAILED_TO_SET_PIO_MODE
+	call	SetErrorFlagFromALwithErrorCodeInAHtoBootMenuInfo
+%endif
+
+	; There might have been several errors so just return
+	; one error code for them all
+	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_INITERROR
+	jz		SHORT .ReturnWithErrorCodeInAH
+	mov		ah, RET_HD_RESETFAIL
+	stc
+
+.ReturnWithErrorCodeInAH:
 	pop		si
+	pop		es
 	ret
 
 
@@ -139,6 +157,30 @@ SetWriteCache:
 	db		FEATURE_ENABLE_WRITE_CACHE		; ENABLE_WRITE_CACHE
 
 
+%ifdef MODULE_ADVANCED_ATA
+;--------------------------------------------------------------------
+; InitializePioMode
+;	Parameters:
+;		DS:DI:	Ptr to DPT (in RAMVARS segment)
+;	Returns:
+;		AH:		BIOS Error code
+;		CF:		Cleared if successful
+;				Set if any error
+;	Corrupts registers:
+;		AL, BX, CX, DX
+;--------------------------------------------------------------------
+InitializePioMode:
+	xor		dx, dx						; Parameter to Sector Count Register = 0 = PIO_DEFAULT_MODE
+	mov		al, [di+DPT_ATA.bPioMode]
+	cmp		al, 3						; PIO mode 3 and above require IORDY
+	jb		SHORT .SetTransferMode
+	or		dl, al
+.SetTransferMode:
+	mov		si, FEATURE_SET_TRANSFER_MODE
+	jmp		AH23h_SetControllerFeatures
+%endif
+
+
 ;--------------------------------------------------------------------
 ; InitializeBlockMode
 ;	Parameters:
@@ -159,6 +201,54 @@ InitializeBlockMode:
 	test	BYTE [cs:bx+DRVPARAMS.wFlags], FLG_DRVPARAMS_BLOCKMODE
 	eCMOVNZ	al, [di+DPT_ATA.bMaxBlock]	; Load max block size
 	jmp		AH24h_SetBlockSize
+
+
+;--------------------------------------------------------------------
+; ClearErrorFlagFromBootMenuInfo
+;	Parameters:
+;		DS:DI:	Ptr to DPT
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		BX, ES
+;--------------------------------------------------------------------
+ClearErrorFlagFromBootMenuInfo:
+	call	BootMenuInfo_IsAvailable	; Load BOOTMENUINFO segment to ES
+	jne		SHORT .DoNotStoreErrorFlags
+	call	BootMenuInfo_ConvertDPTtoBX
+	mov		WORD [es:bx+BOOTMENUINFO.wInitErrorFlags], 0	; Must clear whole WORD!
+.DoNotStoreErrorFlags:
+	ret
+
+
+;--------------------------------------------------------------------
+; SetErrorFlagFromALwithErrorCodeInAHtoBootMenuInfo
+;	Parameters:
+;		AH:		BIOS Error Code
+;		AL:		Error flag to set
+;		DS:DI:	Ptr to DPT
+;	Returns:
+;		CF:		Clear if no error
+;				Set if error flag was set
+;	Corrupts registers:
+;		BX, ES
+;--------------------------------------------------------------------
+SetErrorFlagFromALwithErrorCodeInAHtoBootMenuInfo:
+	jnc		SHORT NoErrorFlagToSet
+	cmp		ah, RET_HD_INVALID
+	jbe		SHORT .IgnoreInvalidCommandError
+
+	call	BootMenuInfo_IsAvailable
+	jne		SHORT .BootvarsNotAvailableSoDoNotSetErrorFlag
+
+	call	BootMenuInfo_ConvertDPTtoBX
+	or		[es:bx+BOOTMENUINFO.wInitErrorFlags], al
+.BootvarsNotAvailableSoDoNotSetErrorFlag:
+	or		BYTE [di+DPT.bFlagsHigh], FLGH_DPT_INITERROR
+	stc
+	ret
+.IgnoreInvalidCommandError:
 ReturnSuccessSinceInitializationNotNeeded:
 	xor		ah, ah
+NoErrorFlagToSet:
 	ret

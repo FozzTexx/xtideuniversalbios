@@ -52,6 +52,7 @@ Initialize_FromMainBiosRomSearch:			; unused entrypoint ok
 ;		All
 ;--------------------------------------------------------------------
 Initialize_AndDetectDrives:
+	mov		WORD [es:BOOTVARS.wMagicWord], BOOTVARS_MAGIC_WORD
 	call	BootMenuPrint_InitializeDisplayContext
 	call	DetectPrint_RomFoundAtSegment
 	call	RamVars_Initialize
@@ -97,4 +98,5 @@ Initialize_AndDetectDrives:
 	call	Idepack_FakeToSSBP
 	call	AH0h_ResetAllOurHardDisksAtTheEndOfDriveInitialization
 	add		sp, BYTE EXTRA_BYTES_FOR_INTPACK
+	mov		WORD [es:BOOTVARS.wMagicWord], 0
 	ret

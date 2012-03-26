@@ -4,13 +4,12 @@
 ; Structure containing variables for PIO transfer functions.
 ; This struct must not be larger than IDEPACK without INTPACK.
 struc PIOVARS
-	.wWordsInBlock			resb	2	; 0, Block size in WORDs
-	.wWordsLeft				resb	2	; 2, WORDs left to transfer
-	.wWordsDone				resb	2	; 4, Number of sectors xferred
-							resb	1	; 6,
+	.wDataPort				resb	2	; 0, IDE Data Port
+	.fnXfer					resb	2	; 2, Offset to transfer function
+	.wSectorsInBlock		resb	2	; 4, Block size in sectors
+	.bSectorsLeft			resb	1	; 6, Sectors left to transfer
 							resb	1	; 7, IDEPACK.bDeviceControl
-	.wDataPort				resb	2	; 8, IDE Data Port
-	.fnXfer					resb	2	; 10, Offset to transfer function
+	.bSectorsDone			resb	1	; 8, Number of sectors xferred
 endstruc
 
 
@@ -68,12 +67,12 @@ ReadFromDrive:
 	jc		SHORT ReturnWithTransferErrorInAH
 	xchg	si, di								; ES:DI now points buffer
 
-	mov		cx, [bp+PIOVARS.wWordsInBlock]
+	mov		cx, [bp+PIOVARS.wSectorsInBlock]	; Max 128
 
 ALIGN JUMP_ALIGN
 .ReadNextBlockFromDrive:
 	mov		dx, [bp+PIOVARS.wDataPort]
-	cmp		[bp+PIOVARS.wWordsLeft], cx
+	cmp		[bp+PIOVARS.bSectorsLeft], cl
 	jbe		SHORT .ReadLastBlockFromDrive
 	call	[bp+PIOVARS.fnXfer]
 
@@ -83,15 +82,15 @@ ALIGN JUMP_ALIGN
 	jc		SHORT ReturnWithTransferErrorInAH
 	xchg	si, di								; ES:DI now points buffer
 
-	; Increment number of successfully read WORDs
-	mov		cx, [bp+PIOVARS.wWordsInBlock]
-	sub		[bp+PIOVARS.wWordsLeft], cx
-	add		[bp+PIOVARS.wWordsDone], cx
+	; Increment number of successfully read sectors
+	mov		cx, [bp+PIOVARS.wSectorsInBlock]
+	sub		[bp+PIOVARS.bSectorsLeft], cl
+	add		[bp+PIOVARS.bSectorsDone], cl
 	jmp		SHORT .ReadNextBlockFromDrive
 
 ALIGN JUMP_ALIGN
 .ReadLastBlockFromDrive:
-	mov		cx, [bp+PIOVARS.wWordsLeft]
+	mov		cl, [bp+PIOVARS.bSectorsLeft]		; CH is already zero
 	call	[bp+PIOVARS.fnXfer]					; Transfer possibly partial block
 
 	; Check for errors in last block
@@ -102,11 +101,8 @@ CheckErrorsAfterTransferringLastBlock:
 
 	; Return number of successfully read sectors
 ReturnWithTransferErrorInAH:
-	mov		cx, [bp+PIOVARS.wWordsDone]
-	jc		SHORT .ConvertTransferredWordsInCXtoSectors
-	add		cx, [bp+PIOVARS.wWordsLeft]			; Never sets CF
-.ConvertTransferredWordsInCXtoSectors:
-	xchg	cl, ch
+	mov		cl, [bp+PIOVARS.bSectorsDone]
+	mov		ch, 0								; Preserve CF
 	ret
 
 
@@ -136,12 +132,12 @@ WriteToDrive:
 	call	IdeWait_PollStatusFlagInBLwithTimeoutInBH
 	jc		SHORT ReturnWithTransferErrorInAH
 
-	mov		cx, [bp+PIOVARS.wWordsInBlock]
+	mov		cx, [bp+PIOVARS.wSectorsInBlock]	; Max 128
 
 ALIGN JUMP_ALIGN
 .WriteNextBlockToDrive:
 	mov		dx, [bp+PIOVARS.wDataPort]
-	cmp		[bp+PIOVARS.wWordsLeft], cx
+	cmp		[bp+PIOVARS.bSectorsLeft], cl
 	jbe		SHORT .WriteLastBlockToDrive
 	call	[bp+PIOVARS.fnXfer]
 
@@ -149,15 +145,15 @@ ALIGN JUMP_ALIGN
 	call	IdeWait_IRQorDRQ					; Wait until ready to transfer
 	jc		SHORT ReturnWithTransferErrorInAH
 
-	; Increment number of successfully written WORDs
-	mov		cx, [bp+PIOVARS.wWordsInBlock]
-	sub		[bp+PIOVARS.wWordsLeft], cx
-	add		[bp+PIOVARS.wWordsDone], cx
+	; Increment number of successfully written sectors
+	mov		cx, [bp+PIOVARS.wSectorsInBlock]
+	sub		[bp+PIOVARS.bSectorsLeft], cl
+	add		[bp+PIOVARS.bSectorsDone], cl
 	jmp		SHORT .WriteNextBlockToDrive
 
 ALIGN JUMP_ALIGN
 .WriteLastBlockToDrive:
-	mov		cx, [bp+PIOVARS.wWordsLeft]
+	mov		cl, [bp+PIOVARS.bSectorsLeft]		; CH is already zero
 %ifdef USE_186
 	push	CheckErrorsAfterTransferringLastBlock
 	jmp		[bp+PIOVARS.fnXfer]					; Transfer possibly partial block
@@ -182,19 +178,22 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 InitializePiovarsInSSBPwithSectorCountInAH:
 	; Store sizes
-	xor		al, al
-	mov		[bp+PIOVARS.wWordsLeft], ax
-	mov		ah, [di+DPT_ATA.bSetBlock]
-	mov		[bp+PIOVARS.wWordsInBlock], ax
-	cbw
-	mov		[bp+PIOVARS.wWordsDone], ax			; Zero
+	mov		[bp+PIOVARS.bSectorsLeft], ah
+	eMOVZX	ax, BYTE [di+DPT_ATA.bSetBlock]
+	mov		[bp+PIOVARS.wSectorsInBlock], ax
+	mov		[bp+PIOVARS.bSectorsDone], ah		; Zero
 
 	; Get transfer function based on bus type
 	xchg	ax, bx								; Lookup table offset to AX
 	mov		bl, [di+DPT.bIdevarsOffset]			; CS:BX now points to IDEVARS
 	mov		dx, [cs:bx+IDEVARS.wPort]			; Load IDE Data port address
+%ifdef MODULE_ADVANCED_ATA
+	mov		bl, [di+DPT_ATA.bDevice]
+%else
 	mov		bl, [cs:bx+IDEVARS.bDevice]			; Load device type to BX
+%endif
 	add		bx, ax
+
 	mov		[bp+PIOVARS.wDataPort], dx
 	mov		ax, [cs:bx]							; Load offset to transfer function
 	mov		[bp+PIOVARS.fnXfer], ax
@@ -207,7 +206,7 @@ InitializePiovarsInSSBPwithSectorCountInAH:
 ; ReadBlockFrom16bitDataPort	Normal 16-bit IDE
 ; ReadBlockFrom32bitDataPort	VLB/PCI 32-bit IDE
 ;	Parameters:
-;		CX:		Block size in WORDs
+;		CX:		Block size in 512 byte sectors
 ;		DX:		IDE Data port address
 ;		ES:DI:	Normalized ptr to buffer to receive data
 ;	Returns:
@@ -217,7 +216,7 @@ InitializePiovarsInSSBPwithSectorCountInAH:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 ReadBlockFromXtideRev1:
-	eSHR_IM	cx, 2		; Loop unrolling
+	UNROLL_SECTORS_IN_CX_TO_QWORDS
 	mov		bx, 8		; Bit mask for toggling data low/high reg
 ALIGN JUMP_ALIGN
 .InswLoop:
@@ -232,7 +231,7 @@ ALIGN JUMP_ALIGN
 %ifndef USE_186			; 8086/8088 compatible WORD read
 ALIGN JUMP_ALIGN
 ReadBlockFromXtideRev2:
-	times 2 shr	cx, 1	; WORD count to QWORD count
+	UNROLL_SECTORS_IN_CX_TO_QWORDS
 ALIGN JUMP_ALIGN
 .ReadNextQword:
 	in		ax, dx		; Read 1st WORD
@@ -250,6 +249,7 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 ReadBlockFrom16bitDataPort:
+	xchg	cl, ch		; Sectors to WORDs
 	rep
 	db		6Dh			; INSW (we want this in XT build)
 	ret
@@ -257,7 +257,9 @@ ReadBlockFrom16bitDataPort:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 ReadBlockFrom32bitDataPort:
-	shr		cx, 1		; WORD count to DWORD count
+	db		0C1h		; SHL
+	db		0E1h		; CX
+	db		7			; 7	(Sectors to DWORDs)
 	rep
 	db		66h			; Override operand size to 32-bit
 	db		6Dh			; INSW/INSD
@@ -271,7 +273,7 @@ ReadBlockFrom32bitDataPort:
 ; WriteBlockTo16bitDataPort		Normal 16-bit IDE
 ; WriteBlockTo32bitDataPort		VLB/PCI 32-bit IDE
 ;	Parameters:
-;		CX:		Block size in WORDs
+;		CX:		Block size in 512-byte sectors
 ;		DX:		IDE Data port address
 ;		ES:SI:	Normalized ptr to buffer containing data
 ;	Returns:
@@ -283,7 +285,7 @@ ALIGN JUMP_ALIGN
 WriteBlockToXtideRev1:
 	push	ds
 	push	bx
-	eSHR_IM	cx, 2		; Loop unrolling
+	UNROLL_SECTORS_IN_CX_TO_QWORDS
 	mov		bx, 8		; Bit mask for toggling data low/high reg
 	push	es			; Copy ES...
 	pop		ds			; ...to DS
@@ -301,8 +303,8 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 WriteBlockToXtideRev2:
+	UNROLL_SECTORS_IN_CX_TO_QWORDS
 	push	ds
-	eSHR_IM	cx, 2		; Loop unrolling
 	push	es			; Copy ES...
 	pop		ds			; ...to DS
 ALIGN JUMP_ALIGN
@@ -319,7 +321,7 @@ ALIGN JUMP_ALIGN
 %ifndef USE_186			; 8086/8088 compatible WORD write
 ALIGN JUMP_ALIGN
 WriteBlockToFastXtide:
-	times 2 shr	cx, 1	; WORD count to QWORD count
+	UNROLL_SECTORS_IN_CX_TO_QWORDS
 	push	ds
 	push	es
 	pop		ds
@@ -341,6 +343,7 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 WriteBlockTo16bitDataPort:
+	xchg	cl, ch		; Sectors to WORDs
 	es					; Source is ES segment
 	rep
 	db		6Fh			; OUTSW (we want this in XT build)
@@ -349,7 +352,9 @@ WriteBlockTo16bitDataPort:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 WriteBlockTo32bitDataPort:
-	shr		cx, 1		; WORD count to DWORD count
+	db		0C1h		; SHL
+	db		0E1h		; CX
+	db		7			; 7	(Sectors to DWORDs)
 	es					; Source is ES segment
 	rep
 	db		66h			; Override operand size to 32-bit
