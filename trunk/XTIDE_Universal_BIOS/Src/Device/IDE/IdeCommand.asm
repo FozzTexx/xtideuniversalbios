@@ -55,6 +55,9 @@ IDEDEVICE%+Command_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 	mov		[di+DPT.wFlags], ax
 	mov		[di+DPT.bIdevarsOffset], bp
 	mov		BYTE [di+DPT_ATA.bSetBlock], 1	; Block = 1 sector
+%ifdef MODULE_ADVANCED_ATA
+	call	IdeDPT_StoreDeviceTypeFromIdevarsInCSBPtoDPTinDSDI
+%endif
 %ifdef ASSEMBLE_SHARED_IDE_DEVICE_FUNCTIONS
 	call	IdeDPT_StoreReversedAddressLinesFlagIfNecessary
 %endif

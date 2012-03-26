@@ -51,6 +51,7 @@ FLG_ROMVARS_DRVXLAT					EQU	(1<<2)	; Enable drive number translation
 FLG_ROMVARS_SERIAL_SCANDETECT 		EQU	(1<<3)	; Scan COM ports at the end of drive detection.  Can also be invoked
 												; by holding down the ALT key at the end of drive detection.
 												; (Conveniently, this is 8, a fact we exploit when testing the bit)
+FLG_ROMVARS_MODULE_ADVATA			EQU	(1<<4)	; Here in case the configuration needs to know functionality is present
 FLG_ROMVARS_MODULE_JRIDE			EQU	(1<<5)	; Here in case the configuration needs to know functionality is present
 FLG_ROMVARS_MODULE_SERIAL			EQU (1<<6)	; Here in case the configuration needs to know functionality is present
 FLG_ROMVARS_MODULE_EBIOS			EQU (1<<7)	; Here in case the configuration needs to know functionality is present
@@ -96,6 +97,8 @@ DEVICE_XTIDE_DEFAULT_PORT				EQU		300h
 DEVICE_XTIDE_DEFAULT_PORTCTRL			EQU		308h
 DEVICE_ATA_DEFAULT_PORT					EQU		1F0h
 DEVICE_ATA_DEFAULT_PORTCTRL				EQU		3F0h
+DEVICE_ATA_DEFAULT_SECONDARY_PORT		EQU		170h
+DEVICE_ATA_DEFAULT_SECONDARY_PORTCTRL	EQU		370h
 
 ; Device types for IDEVARS.bDevice
 ;

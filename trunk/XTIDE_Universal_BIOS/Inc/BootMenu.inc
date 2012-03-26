@@ -23,10 +23,30 @@ ROM_BOOT_HOTKEY_SCANCODE				EQU	42h	; F8
 MAX_HARD_DISK_NAME_LENGTH				EQU		30		; Bytes reserved for drive name
 
 struc BOOTMENUINFO
-	.szDrvName		resb	MAX_HARD_DISK_NAME_LENGTH
-					resb	2		; Zero word (ensures string terminates)
-					resb	4		; padding to make BOOTMENUINFO size an even multiple of DPT size
+	.szDrvName				resb	MAX_HARD_DISK_NAME_LENGTH
+							resb	2	; Zero word (ensures string terminates)
+	.wInitErrorFlags		resb	2	; Errors during initialization
+
+%ifdef MODULE_ADVANCED_ATA
+	.wIdeBasePort			resb	2	; IDE Base Port
+	.wMinPioActiveTimeNs	resb	2	; Minimum PIO Active Time in ns
+	.wMinPioRecoveryTimeNs	resb	2	; Minimum PIO Recovery Time in ns
+	.wControllerID			resb	2	; Controller specific ID WORD
+	.wControllerBasePort	resb	2	; Advanced Controller port (not IDE port)
+							resb	12	; padding to make BOOTMENUINFO size an even multiple of DPT size
+
+%else
+							resb	2	; padding to make BOOTMENUINFO size an even multiple of DPT size
+%endif
 endstruc
+
+; Flags for BOOTMENUINFO.wInitErrorFlags
+FLG_INIT_FAILED_TO_SELECT_DRIVE					EQU		(1<<0)
+FLG_INIT_FAILED_TO_INITIALIZE_CHS_PARAMETERS	EQU		(1<<1)
+FLG_INIT_FAILED_TO_SET_WRITE_CACHE				EQU		(1<<2)
+FLG_INIT_FAILED_TO_RECALIBRATE_DRIVE			EQU		(1<<3)
+FLG_INIT_FAILED_TO_SET_BLOCK_MODE				EQU		(1<<4)
+FLG_INIT_FAILED_TO_SET_PIO_MODE					EQU		(1<<5)
 
 DPT_BOOTMENUINFO_SIZE_MULTIPLIER  equ	BOOTMENUINFO_size / LARGEST_DPT_SIZE
 
