@@ -41,7 +41,7 @@ MemIdeTransfer_StartWithCommandInAL:
 	mov		[bp+MEMPIOVARS.wWordsDone], cx
 	mov		ch, [bp+IDEPACK.bSectorCount]
 	mov		[bp+MEMPIOVARS.wWordsLeft], cx
-	mov		ch, [di+DPT_ATA.bSetBlock]
+	mov		ch, [di+DPT_ATA.bBlockSize]
 	mov		[bp+MEMPIOVARS.wWordsInBlock], cx
 	mov		[bp+MEMPIOVARS.fpDPT], di
 	mov		[bp+MEMPIOVARS.fpDPT+2], ds

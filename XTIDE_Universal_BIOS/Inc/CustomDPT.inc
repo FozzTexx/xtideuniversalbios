@@ -39,9 +39,8 @@ FLGH_DPT_SERIAL_DEVICE			EQU	(1<<2)	; Serial Port Device
 FLGH_DPT_INTERRUPT_IN_SERVICE	EQU	(1<<3)	; Set when waiting for IRQ
 
 ; IDE device only
-FLGH_DPT_INITERROR				EQU	(1<<7)
 %ifdef MODULE_ADVANCED_ATA
-FLGH_DPT_IORDY					EQU	(1<<6)	; Controller and Drive supports IORDY
+FLGH_DPT_IORDY					EQU	(1<<7)	; Controller and Drive supports IORDY
 %endif
 
 ; Serial device only
@@ -60,12 +59,17 @@ ADDRESSING_MODE_LBA48			EQU		3	; 48-bit LBA Addressing Mode
 ; DPT for ATA devices
 struc DPT_ATA	; 10 + 2 bytes = 12 bytes
 	.dpt						resb	DPT_size
-
-	; Block size is specified in sectors (1, 2, 4, 8, 16, 32, 64 or 128)
-	.wSetAndMaxBlock:
-	.bSetBlock					resb	1	; Current block size (do not set to zero!)
-	.bMaxBlock					resb	1	; Maximum block size, 0 = block mode not supported
+	.bBlockSize					resb	1	; Current block size in sectors (do not set to zero!)
+	.bInitError					resb	1
 endstruc
+
+; Flags for BOOTMENUINFO.wInitErrorFlags
+FLG_INITERROR_FAILED_TO_SELECT_DRIVE				EQU		(1<<0)
+FLG_INITERROR_FAILED_TO_INITIALIZE_CHS_PARAMETERS	EQU		(1<<1)
+FLG_INITERROR_FAILED_TO_SET_WRITE_CACHE				EQU		(1<<2)
+FLG_INITERROR_FAILED_TO_RECALIBRATE_DRIVE			EQU		(1<<3)
+FLG_INITERROR_FAILED_TO_SET_BLOCK_MODE				EQU		(1<<4)
+FLG_INITERROR_FAILED_TO_SET_PIO_MODE				EQU		(1<<5)
 
 
 ; Additional variables needed to initialize and reset Advanced IDE Controllers.
