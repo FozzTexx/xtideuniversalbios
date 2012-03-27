@@ -29,9 +29,7 @@ IdeDPT_Finalize:
 ;		AX
 ;--------------------------------------------------------------------
 .StoreBlockMode:
-	mov		al, 1							; Block mode will be enabled on AH=9h
-	mov		ah, [es:si+ATA1.bBlckSize]		; Max block size in sectors
-	mov		[di+DPT_ATA.wSetAndMaxBlock], ax
+	mov		BYTE [di+DPT_ATA.bBlockSize], 1
 
 %ifdef MODULE_ADVANCED_ATA
 ;--------------------------------------------------------------------

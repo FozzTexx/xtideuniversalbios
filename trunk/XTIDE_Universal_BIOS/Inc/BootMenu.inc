@@ -31,18 +31,9 @@ struc BOOTMENUINFO
 							resb	6	; padding to make BOOTMENUINFO size an even multiple of DPT size
 %else
 							resb	2	; padding to make BOOTMENUINFO size an even multiple of DPT size
-%endif
-							
-							
+%endif				
 endstruc
 
-; Flags for BOOTMENUINFO.wInitErrorFlags
-FLG_INIT_FAILED_TO_SELECT_DRIVE					EQU		(1<<0)
-FLG_INIT_FAILED_TO_INITIALIZE_CHS_PARAMETERS	EQU		(1<<1)
-FLG_INIT_FAILED_TO_SET_WRITE_CACHE				EQU		(1<<2)
-FLG_INIT_FAILED_TO_RECALIBRATE_DRIVE			EQU		(1<<3)
-FLG_INIT_FAILED_TO_SET_BLOCK_MODE				EQU		(1<<4)
-FLG_INIT_FAILED_TO_SET_PIO_MODE					EQU		(1<<5)
 
 DPT_BOOTMENUINFO_SIZE_MULTIPLIER  equ	BOOTMENUINFO_size / LARGEST_DPT_SIZE
 

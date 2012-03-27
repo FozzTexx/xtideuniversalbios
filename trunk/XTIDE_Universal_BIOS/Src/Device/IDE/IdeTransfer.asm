@@ -179,7 +179,7 @@ ALIGN JUMP_ALIGN
 InitializePiovarsInSSBPwithSectorCountInAH:
 	; Store sizes
 	mov		[bp+PIOVARS.bSectorsLeft], ah
-	eMOVZX	ax, BYTE [di+DPT_ATA.bSetBlock]
+	eMOVZX	ax, BYTE [di+DPT_ATA.bBlockSize]
 	mov		[bp+PIOVARS.wSectorsInBlock], ax
 	mov		[bp+PIOVARS.bSectorsDone], ah		; Zero
 

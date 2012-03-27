@@ -39,19 +39,21 @@ AH24h_HandlerForSetMultipleBlocks:
 ;		AH:		Int 13h return status
 ;		CF:		0 if successful, 1 if error
 ;	Corrupts registers:
-;		AL, BX, CX, DX
+;		AL, CX, DX
 ;--------------------------------------------------------------------
 AH24h_SetBlockSize:
+	push	bx
+
 	push	ax
-	xchg	dx, ax			; DL = Block size (Sector Count Register)
-	or		BYTE [di+DPT.bFlagsHigh], FLGH_DPT_BLOCK_MODE_SUPPORTED	; Assume success
+	xchg	dx, ax		; DL = Block size (Sector Count Register)
 	mov		al, COMMAND_SET_MULTIPLE_MODE
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRDY, FLG_STATUS_DRDY)
 	call	Idepack_StoreNonExtParametersAndIssueCommandFromAL
 	pop		bx
-	jnc		.StoreBlockSize
-	mov		bl, 1	; Disable block mode
-	and		BYTE [di+DPT.bFlagsHigh], ~FLGH_DPT_BLOCK_MODE_SUPPORTED
-.StoreBlockSize:	; Store new block size to DPT and return
-	mov		[di+DPT_ATA.bSetBlock], bl
+	jnc		SHORT .StoreBlockSize
+	mov		bl, 1		; Block size 1 will always work
+.StoreBlockSize:		; Store new block size to DPT and return
+	mov		[di+DPT_ATA.bBlockSize], bl
+
+	pop		bx
 	ret

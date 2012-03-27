@@ -63,6 +63,7 @@ FLG_DEVCONTROL_SRST		EQU		(1<<2)	; Software Reset
 FLG_DEVCONTROL_nIEN		EQU		(1<<1)	; Negated Interrupt Enable (IRQ disabled when set)
 
 ; Commands for IDE Controller
+COMMAND_RECALIBRATE						EQU		10h
 COMMAND_READ_SECTORS					EQU		20h
 COMMAND_READ_SECTORS_EXT				EQU		24h		; LBA48
 COMMAND_WRITE_SECTORS					EQU		30h

@@ -42,7 +42,6 @@ AH9h_HandlerForInitializeDriveParameters:
 AH9h_InitializeDriveForUse:
 	push	es
 	push	si
-	call	ClearErrorFlagFromBootMenuInfo	; Do this for serial devices as well
 
 %ifdef MODULE_SERIAL
 	; no need to do this for serial devices
@@ -51,52 +50,52 @@ AH9h_InitializeDriveForUse:
 	jnz		.ReturnWithErrorCodeInAH
 
 %else
-	; Clear Initialization Error flag from DPT
-	and		BYTE [di+DPT.bFlagsHigh], ~FLGH_DPT_INITERROR
+	; Clear Initialization Error flags from DPT
+	mov		BYTE [di+DPT_ATA.bInitError], 0
 %endif
 
 	; Try to select drive and wait until ready
 	call	AccessDPT_GetDriveSelectByteToAL
 	mov		[bp+IDEPACK.bDrvAndHead], al
 	call	Device_SelectDrive
-	mov		al, FLG_INIT_FAILED_TO_SELECT_DRIVE
-	call	SetErrorFlagFromALwithErrorCodeInAHtoBootMenuInfo
+	mov		al, FLG_INITERROR_FAILED_TO_SELECT_DRIVE
+	call	SetErrorFlagFromALwithErrorCodeInAH
 	jc		SHORT .ReturnWithErrorCodeInAH
 
 	; Initialize CHS parameters if LBA is not used
 	call	InitializeDeviceParameters
-	mov		al, FLG_INIT_FAILED_TO_INITIALIZE_CHS_PARAMETERS
-	call	SetErrorFlagFromALwithErrorCodeInAHtoBootMenuInfo
+	mov		al, FLG_INITERROR_FAILED_TO_INITIALIZE_CHS_PARAMETERS
+	call	SetErrorFlagFromALwithErrorCodeInAH
 
 	; Enable or Disable Write Cache
 	call	SetWriteCache
-	mov		al, FLG_INIT_FAILED_TO_SET_WRITE_CACHE
-	call	SetErrorFlagFromALwithErrorCodeInAHtoBootMenuInfo
+	mov		al, FLG_INITERROR_FAILED_TO_SET_WRITE_CACHE
+	call	SetErrorFlagFromALwithErrorCodeInAH
 
 	; Recalibrate drive by seeking to cylinder 0
 .RecalibrateDrive:
 	call	AH11h_RecalibrateDrive
-	mov		al, FLG_INIT_FAILED_TO_RECALIBRATE_DRIVE
-	call	SetErrorFlagFromALwithErrorCodeInAHtoBootMenuInfo
+	mov		al, FLG_INITERROR_FAILED_TO_RECALIBRATE_DRIVE
+	call	SetErrorFlagFromALwithErrorCodeInAH
 
 	; Initialize block mode transfers
 .InitializeBlockMode:
 	call	InitializeBlockMode
-	mov		al, FLG_INIT_FAILED_TO_SET_BLOCK_MODE
-	call	SetErrorFlagFromALwithErrorCodeInAHtoBootMenuInfo
+	mov		al, FLG_INITERROR_FAILED_TO_SET_BLOCK_MODE
+	call	SetErrorFlagFromALwithErrorCodeInAH
 
 %ifdef MODULE_ADVANCED_ATA
 ; Initialize fastest supported PIO mode
 .InitializePioMode:
 	call	InitializePioMode
-	mov		al, FLG_INIT_FAILED_TO_SET_PIO_MODE
-	call	SetErrorFlagFromALwithErrorCodeInAHtoBootMenuInfo
+	mov		al, FLG_INITERROR_FAILED_TO_SET_PIO_MODE
+	call	SetErrorFlagFromALwithErrorCodeInAH
 %endif
 
 	; There might have been several errors so just return
 	; one error code for them all
-	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_INITERROR
-	jz		SHORT .ReturnWithErrorCodeInAH
+	cmp		BYTE [di+DPT_ATA.bInitError], 0
+	je		SHORT .ReturnWithErrorCodeInAH
 	mov		ah, RET_HD_RESETFAIL
 	stc
 
@@ -197,35 +196,28 @@ InitializePioMode:
 ;--------------------------------------------------------------------
 InitializeBlockMode:
 	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_BLOCK_MODE_SUPPORTED	; Clear CF
-	jz		SHORT ReturnSuccessSinceInitializationNotNeeded
-
+	jz		SHORT .BlockModeNotSupportedOrDisabled
 	call	AccessDPT_GetPointerToDRVPARAMStoCSBX
-	mov		al, 1						; Disable block mode
 	test	BYTE [cs:bx+DRVPARAMS.wFlags], FLG_DRVPARAMS_BLOCKMODE
-	eCMOVNZ	al, [di+DPT_ATA.bMaxBlock]	; Load max block size
-	jmp		AH24h_SetBlockSize
+	jz		SHORT .BlockModeNotSupportedOrDisabled
 
-
-;--------------------------------------------------------------------
-; ClearErrorFlagFromBootMenuInfo
-;	Parameters:
-;		DS:DI:	Ptr to DPT
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		BX, ES
-;--------------------------------------------------------------------
-ClearErrorFlagFromBootMenuInfo:
-	call	BootMenuInfo_IsAvailable	; Load BOOTMENUINFO segment to ES
-	jne		SHORT .DoNotStoreErrorFlags
-	call	BootMenuInfo_ConvertDPTtoBX
-	mov		WORD [es:bx+BOOTMENUINFO.wInitErrorFlags], 0	; Must clear whole WORD!
-.DoNotStoreErrorFlags:
+	; Try block sizes until we find largest possible supported by drive
+	mov		bl, 128
+.TryNextBlockSize:
+	mov		al, bl
+	call	AH24h_SetBlockSize
+	jnc		SHORT .SupportedBlockSizeFound
+	shr		bl, 1						; Try next size
+	jmp		SHORT .TryNextBlockSize
+.SupportedBlockSizeFound:
+	mov		[di+DPT_ATA.bBlockSize], bl
+.BlockModeNotSupportedOrDisabled:
+ReturnSuccessSinceInitializationNotNeeded:
 	ret
 
 
 ;--------------------------------------------------------------------
-; SetErrorFlagFromALwithErrorCodeInAHtoBootMenuInfo
+; SetErrorFlagFromALwithErrorCodeInAH
 ;	Parameters:
 ;		AH:		BIOS Error Code
 ;		AL:		Error flag to set
@@ -236,22 +228,15 @@ ClearErrorFlagFromBootMenuInfo:
 ;	Corrupts registers:
 ;		BX, ES
 ;--------------------------------------------------------------------
-SetErrorFlagFromALwithErrorCodeInAHtoBootMenuInfo:
-	jnc		SHORT NoErrorFlagToSet
+SetErrorFlagFromALwithErrorCodeInAH:
+	jnc		SHORT .NoErrorFlagToSet
 	cmp		ah, RET_HD_INVALID
 	jbe		SHORT .IgnoreInvalidCommandError
 
-	call	BootMenuInfo_IsAvailable
-	jne		SHORT .BootvarsNotAvailableSoDoNotSetErrorFlag
-
-	call	BootMenuInfo_ConvertDPTtoBX
-	or		[es:bx+BOOTMENUINFO.wInitErrorFlags], al
-.BootvarsNotAvailableSoDoNotSetErrorFlag:
-	or		BYTE [di+DPT.bFlagsHigh], FLGH_DPT_INITERROR
+	or		[di+DPT_ATA.bInitError], al
 	stc
 	ret
 .IgnoreInvalidCommandError:
-ReturnSuccessSinceInitializationNotNeeded:
 	xor		ah, ah
-NoErrorFlagToSet:
+.NoErrorFlagToSet:
 	ret

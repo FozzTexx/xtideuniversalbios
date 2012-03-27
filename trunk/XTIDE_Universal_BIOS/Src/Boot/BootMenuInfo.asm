@@ -64,23 +64,6 @@ BootMenuInfo_GetTotalSectorCount:
 
 
 ;--------------------------------------------------------------------
-; BootMenuInfo_IsAvailable
-;	Parameters:
-;		Nothing
-;	Returns:
-;		ES:		Segment to BOOTVARS with BOOTMENUINFOs
-;		ZF:		Set if BOOTVARS with BOOTMENUINFOs is available
-;				Cleared if not available (no longer initializing)
-;	Corrupts registers:
-;		BX
-;--------------------------------------------------------------------
-BootMenuInfo_IsAvailable:
-	LOAD_BDA_SEGMENT_TO	es, bx
-	cmp		WORD [es:BOOTVARS.wMagicWord], BOOTVARS_MAGIC_WORD
-	ret
-
-
-;--------------------------------------------------------------------
 ; Returns offset to BOOTMENUINFO based on DPT pointer.
 ;
 ; BootMenuInfo_ConvertDPTtoBX
@@ -89,15 +72,13 @@ BootMenuInfo_IsAvailable:
 ;	Returns:
 ;		BX:		Offset to BOOTMENUINFO struct
 ;	Corrupts registers:
-;		Nothing
+;		AX
 ;--------------------------------------------------------------------
 BootMenuInfo_ConvertDPTtoBX:
-	push	ax
 	mov		ax, di
 	sub		ax, BYTE RAMVARS_size					; subtract off base of DPTs
 	mov		bl, DPT_BOOTMENUINFO_SIZE_MULTIPLIER	; BOOTMENUINFO's are a whole number multiple of DPT size
 	mul		bl								
 	add		ax, BOOTVARS.rgBootNfo					; add base of BOOTMENUINFO
 	xchg	ax, bx
-	pop		ax
 	ret	

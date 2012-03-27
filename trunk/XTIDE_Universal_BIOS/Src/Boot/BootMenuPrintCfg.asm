@@ -64,7 +64,7 @@ SECTION .text
 	mov		ax, 1
 	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_BLOCK_MODE_SUPPORTED
 	jz		SHORT .PushBlockSizeFromAX
-	mov		al, [di+DPT_ATA.bSetBlock]
+	mov		al, [di+DPT_ATA.bBlockSize]
 .PushBlockSizeFromAX:
 	push	ax
 
@@ -113,8 +113,13 @@ SECTION .text
 ;		AX, BX, DX, ES
 ;--------------------------------------------------------------------
 .PushResetStatus:
-	call	BootMenuInfo_IsAvailable	; Load segment to ES
-	call	BootMenuInfo_ConvertDPTtoBX
-	push	WORD [es:bx+BOOTMENUINFO.wInitErrorFlags]
+	xor		ax, ax
+%ifdef MODULE_SERIAL
+	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE
+	jnz		SHORT .AlwaysSuccess
+	mov		al, [di+DPT_ATA.bInitError]
+.AlwaysSuccess:
+%endif
+	push	ax
 
 ;;; fall-out to BootMenuPrint_HardDiskRefreshInformation.

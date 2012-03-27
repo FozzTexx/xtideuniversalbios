@@ -54,7 +54,7 @@ IDEDEVICE%+Command_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 	eMOVZX	ax, bh
 	mov		[di+DPT.wFlags], ax
 	mov		[di+DPT.bIdevarsOffset], bp
-	mov		BYTE [di+DPT_ATA.bSetBlock], 1	; Block = 1 sector
+	mov		BYTE [di+DPT_ATA.bBlockSize], 1	; Block = 1 sector
 %ifdef MODULE_ADVANCED_ATA
 	call	IdeDPT_StoreDeviceTypeFromIdevarsInCSBPtoDPTinDSDI
 %endif
