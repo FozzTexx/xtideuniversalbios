@@ -6,7 +6,11 @@
 
 %define TITLE_STRING_START	"-=XTIDE Universal BIOS "
 %ifdef USE_AT
-	%define	TITLE_STRING_END	"(AT=-)",NULL
+	%ifdef USE_386
+		%define	TITLE_STRING_END	"(386=-)",NULL
+	%else
+		%define	TITLE_STRING_END	"(AT=-)",NULL
+	%endif
 %elifdef USE_186
 	%define	TITLE_STRING_END	"(XT+=-)",NULL
 %else
