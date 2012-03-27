@@ -75,38 +75,44 @@ AtaID_GetTotalSectorCountToBXDXAXfromAtaInfoInESSI:
 
 %ifdef MODULE_ADVANCED_ATA
 ;--------------------------------------------------------------------
-; AtaID_GetMaxPioModeToAXandMinCycleTimeToDX
+; AtaID_GetMaxPioModeToAXandMinCycleTimeToCX
 ;	Parameters:
 ;		ES:SI:	Ptr to 512-byte ATA information read from the drive
 ;	Returns:
-;		AX:		Max supported PIO mode
-;		DX:		Minimum Cycle Time in nanosecs
+;		AL:		Max supported PIO mode
+;		AH:		FLGH_DPT_IORDY if IORDY supported, zero otherwise
+;		CX:		Minimum Cycle Time in nanosecs
 ;	Corrupts registers:
 ;		BX
 ;--------------------------------------------------------------------
-AtaID_GetMaxPioModeToAXandMinCycleTimeToDX:
+AtaID_GetMaxPioModeToAXandMinCycleTimeToCX:
 	; Get PIO mode and cycle time for PIO 0...2
 	mov		bx, [es:si+ATA1.bPioMode]
 	shl		bx, 1					; Shift for WORD lookup
-	mov		dx, [cs:bx+.rgwPio0to2CycleTimeInNanosecs]
+	mov		cx, [cs:bx+.rgwPio0to2CycleTimeInNanosecs]
 	shr		bx, 1
-	xchg	ax, bx					; AL = PIO mode 0, 1 or 2
+	xchg	ax, bx					; AH = 0, AL = PIO mode 0, 1 or 2
+
+	; Check if IORDY is supported
+	test	BYTE [es:si+ATA2.wCaps+1], A2_wCaps_IORDY >> 8
+	jz		SHORT .ReturnPioTimings	; No PIO 3 or higher if no IORDY
+	mov		ah, FLGH_DPT_IORDY
 
 	; Check if Advanced PIO modes are supported (3 and above)
 	test	BYTE [es:si+ATA2.wFields], A2_wFields_64to70
 	jz		SHORT .ReturnPioTimings
 
 	; Get Advanced PIO mode
-	; (Hard Disks supports up to 4 but CF cards might support 5)
+	; (Hard Disks supports up to 4 but CF cards can support 5 and 6)
 	mov		bx, [es:si+ATA2.bPIOSupp]
 .CheckNextFlag:
 	inc		ax
 	shr		bx, 1
 	jnz		SHORT .CheckNextFlag
-	mov		dx, [es:si+ATA2.wPIOMinCyF]	; Advanced modes use IORDY
+	MIN_U	al, 6						; Make sure not above lookup tables
+	mov		cx, [es:si+ATA2.wPIOMinCyF]	; Advanced modes use IORDY
 .ReturnPioTimings:
 	ret
-
 
 .rgwPio0to2CycleTimeInNanosecs:
 	dw		PIO_0_MIN_CYCLE_TIME_NS
@@ -115,28 +121,22 @@ AtaID_GetMaxPioModeToAXandMinCycleTimeToDX:
 
 
 ;--------------------------------------------------------------------
-; AtaID_ConvertPioModeFromAXandMinCycleTimeFromDXtoActiveAndRecoveryTime
+; AtaID_GetRecoveryTimeToAXfromPioModeInBXandCycleTimeInCX
 ;	Parameters:
-;		AX:		Max supported PIO mode
-;		DX:		Minimum PIO Cycle Time in nanosecs
+;		BX:		PIO Mode
+;		CX:		PIO Cycle Time in nanosecs
 ;	Returns:
-;		CX:		Minimum Active time in nanosecs
-;		DX:		Minimum Recovery time in nanosecs
+;		AX:		Active Time in nanosecs
 ;	Corrupts registers:
-;		BX
+;		BX, CX
 ;--------------------------------------------------------------------
-AtaID_ConvertPioModeFromAXandMinCycleTimeFromDXtoActiveAndRecoveryTime:
-	; Subtract Address Valid Time (t1) from Cycle Time (t0)
-	mov		bx, ax
-	eMOVZX	cx, BYTE [cs:bx+.rgbPioModeToAddressValidTimeNs]
-	sub		dx, cx
-
-	; Subtract Active Time (t2) from previous result to get Recovery Time (t2i)
-	shl		bx, 1			; Shift PIO Mode for WORD lookup
-	mov		cx, [cs:bx+.rgwPioModeToActiveTimeNs]
-	sub		dx, cx
+AtaID_GetRecoveryTimeToAXfromPioModeInBXandCycleTimeInCX:
+	call	AtaID_GetActiveTimeToAXfromPioModeInBX
+	mov		bl, [cs:bx+.rgbPioModeToAddressValidTimeNs]
+	sub		cx, bx	; Cycle Time (t0) - Address Valid Time (t1)
+	sub		cx, ax	; - Active Time (t2)
+	xchg	ax, cx	; AX = Recovery Time (t2i)
 	ret
-
 
 .rgbPioModeToAddressValidTimeNs:
 	db		PIO_0_MIN_ADDRESS_VALID_NS
@@ -144,6 +144,24 @@ AtaID_ConvertPioModeFromAXandMinCycleTimeFromDXtoActiveAndRecoveryTime:
 	db		PIO_2_MIN_ADDRESS_VALID_NS
 	db		PIO_3_MIN_ADDRESS_VALID_NS
 	db		PIO_4_MIN_ADDRESS_VALID_NS
+	db		PIO_5_MIN_ADDRESS_VALID_NS
+	db		PIO_6_MIN_ADDRESS_VALID_NS
+
+
+;--------------------------------------------------------------------
+; AtaID_GetActiveTimeToAXfromPioModeInBX
+;	Parameters:
+;		BX:		PIO Mode
+;	Returns:
+;		AX:		Active Time in nanosecs
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+AtaID_GetActiveTimeToAXfromPioModeInBX:
+	shl		bx, 1
+	mov		ax, [cs:bx+.rgwPioModeToActiveTimeNs]
+	shr		bx, 1
+	ret
 
 .rgwPioModeToActiveTimeNs:
 	dw		PIO_0_MIN_ACTIVE_TIME_NS
@@ -151,5 +169,7 @@ AtaID_ConvertPioModeFromAXandMinCycleTimeFromDXtoActiveAndRecoveryTime:
 	dw		PIO_2_MIN_ACTIVE_TIME_NS
 	dw		PIO_3_MIN_ACTIVE_TIME_NS
 	dw		PIO_4_MIN_ACTIVE_TIME_NS
+	dw		PIO_5_MIN_ACTIVE_TIME_NS
+	dw		PIO_6_MIN_ACTIVE_TIME_NS
 
 %endif ; MODULE_ADVANCED_ATA

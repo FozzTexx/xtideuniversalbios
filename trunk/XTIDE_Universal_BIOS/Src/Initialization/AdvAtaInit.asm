@@ -6,28 +6,28 @@
 SECTION .text
 
 ;--------------------------------------------------------------------
-; AdvAtaInit_DetectControllerForIdeBaseInDX
+; AdvAtaInit_DetectControllerForIdeBaseInBX
 ;	Parameters:
-;		DX:		IDE Controller base port
+;		BX:		IDE Controller base port
 ;	Returns:
 ;		AX:		ID WORD specific for detected controller
 ;				Zero if no controller detected
-;		CX:		Controller base port (not IDE)
+;		DX:		Controller base port (not IDE)
 ;		CF:		Set if controller detected
 ;				Cleared if no controller
 ;	Corrupts registers:
 ;		BX
 ;--------------------------------------------------------------------
-AdvAtaInit_DetectControllerForIdeBaseInDX:
-	call	Vision_DetectAndReturnIDinAXandPortInCXifControllerPresent
-	jne		SHORT .NoAdvancedControllerForPortDX
-	call	Vision_DoesIdePortInDXbelongToControllerWithIDinAX
-	jne		SHORT .NoAdvancedControllerForPortDX
+AdvAtaInit_DetectControllerForIdeBaseInBX:
+	call	Vision_DetectAndReturnIDinAXandPortInDXifControllerPresent
+	jne		SHORT .NoAdvancedControllerForPortBX
+	call	Vision_DoesIdePortInBXbelongToControllerWithIDinAX
+	jne		SHORT .NoAdvancedControllerForPortBX
 
-	stc		; Advanced Controller found for port DX
+	stc		; Advanced Controller found for port BX
 	ret
 
-.NoAdvancedControllerForPortDX:
+.NoAdvancedControllerForPortBX:
 	xor		ax, ax
 	ret
 
@@ -37,11 +37,12 @@ AdvAtaInit_DetectControllerForIdeBaseInDX:
 ;	Parameters:
 ;		AX:		ID WORD specific for detected controller
 ;	Returns:
-;		AL:		Max supported PIO mode (if CF set)
+;		AL:		Max supported PIO mode
+;		AH:		FLGH_DPT_IORDY if IORDY supported, zero otherwise
 ;		CF:		Set if PIO limit necessary
 ;				Cleared if no need to limit timings
 ;	Corrupts registers:
-;		Nothing
+;		(AX if CF cleared)
 ;--------------------------------------------------------------------
 AdvAtaInit_GetControllerMaxPioModeToAL	equ	Vision_GetMaxPioModeToAL
 
@@ -57,79 +58,66 @@ AdvAtaInit_GetControllerMaxPioModeToAL	equ	Vision_GetMaxPioModeToAL
 ;		AX, BX, CX, DX
 ;--------------------------------------------------------------------
 AdvAtaInit_InitializeControllerForDPTinDSDI:
-	push	ds
+	push	bp
 	push	si
-	push	di
-
-	; PIO and Advanced Controller variables are stored to BOOTMENUINFO
-	; to keep the DPTs as small as possible.
-	call	GetMasterAndSlaveBootMenuInfosToSIandDI
-	cmp		WORD [BOOTVARS.wMagicWord], BOOTVARS_MAGIC_WORD
-	clc
-	jne		SHORT .BootMenuInfosAreNoLongerAvailable
 
 	; Call Controller Specific initialization function
-	mov		ax, [si+BOOTMENUINFO.wControllerID]
+	mov		ax, [di+DPT_ADVANCED_ATA.wControllerID]
 	test	ax, ax
-	jz		SHORT .NoAdvancedController
-	call	Vision_InitializeWithIDinAHandConfigInAL	; The only we support at the moment
+	jz		SHORT .NoAdvancedController	; Return with CF cleared
 
-.BootMenuInfosAreNoLongerAvailable:
+	; We only support Vision at the moment so no need to identify ID
+	call	AdvAtaInit_LoadMasterDPTtoDSSIifSlaveInDSDI
+	call	Vision_InitializeWithIDinAHandConfigInAL
+
 .NoAdvancedController:
-	pop		di
 	pop		si
-	pop		ds
+	pop		bp
 	ret
 
 
 ;--------------------------------------------------------------------
-; AdvAtaInit_GetMasterAndSlaveBootMenuInfosToSIandDI
+; AdvAtaInit_LoadMasterDPTtoDSSIifSlaveInDSDI
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT for Single or Slave Drive
 ;	Returns:
-;		DS:SI:	Ptr to Single or Master Drive BOOTMENUINFO
-;		DI:		Offset to Slave Drive BOOTMENUINFO
+;		DS:DI:	Ptr to DPT for Single or Slave Drive
+;		SI:		Offset to Master DPT if Slave Drive present
 ;				Zero if Slave Drive not present
 ;	Corrupts registers:
-;		BX, DX, (DS will change!)
+;		AX
 ;--------------------------------------------------------------------
-GetMasterAndSlaveBootMenuInfosToSIandDI:
-	call	BootMenuInfo_ConvertDPTtoBX
-	LOAD_BDA_SEGMENT_TO	ds, di, !				; Zero DI to assume no Slave Drive present
+AdvAtaInit_LoadMasterDPTtoDSSIifSlaveInDSDI:
+	; Must be Slave Drive if previous DPT has same IDEVARS offset
+	lea		si, [di-LARGEST_DPT_SIZE]	; DS:SI points to previous DPT
+	mov		al, [di+DPT.bIdevarsOffset]
+	cmp		al, [si+DPT.bIdevarsOffset]
+	je		SHORT .MasterAndSlaveDrivePresent
 
-	mov		dx, [bx+BOOTMENUINFO.wIdeBasePort]	; Load IDE Port from Single or Slave Drive
-	lea		si, [bx+BOOTMENUINFO_size]			; SI points to Slave Drive if present
-	cmp		dx, [si+BOOTMENUINFO.wIdeBasePort]
-	jne		SHORT .BootMenuInfoForSingleDriveInDSBX
-
-	mov		di, si								; Slave Drive detected, copy pointer to DS:DI
-.BootMenuInfoForSingleDriveInDSBX:
-	mov		si, bx
+	; We only have single drive so zero SI
+	xor		si, si
+.MasterAndSlaveDrivePresent:
 	ret
 
 
 ;--------------------------------------------------------------------
-; AdvAtaInit_SelectSlowestTimingsToBXandCX
+; AdvAtaInit_SelectSlowestCommonPioTimingsToBXandCXfromDSSIandDSDI
 ;	Parameters:
-;		DS:SI:	Ptr to BOOTMENUINFO for Master or Single Drive
-;		DI:		Offset to BOOTMENUINFO for Slave Drive
+;		DS:DI:	Ptr to DPT for Single or Slave Drive
+;		SI:		Offset to Master DPT if Slave Drive present
 ;				Zero if Slave Drive not present
 ;	Returns:
-;		BX:		Min Active Time in nanosecs
-;		CX:		Min Recovery Time in nanosecs
+;		BX:		Best common PIO mode
+;		CX:		Slowest common PIO Cycle Time in nanosecs
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-AdvAtaInit_SelectSlowestTimingsToBXandCX:
-	mov		bx, [si+BOOTMENUINFO.wMinPioActiveTimeNs]
-	mov		cx, [si+BOOTMENUINFO.wMinPioRecoveryTimeNs]
-	test	di, di
-	jz		SHORT .ReturnSlowestTimingInBXandCX	; No Slave Drive
-
-	; If Active Time is greater, then must be the Recovery Time as well
-	cmp		bx, [di+BOOTMENUINFO.wMinPioActiveTimeNs]
-	jbe		SHORT .ReturnSlowestTimingInBXandCX
-	mov		bx, [di+BOOTMENUINFO.wMinPioActiveTimeNs]
-	mov		cx, [di+BOOTMENUINFO.wMinPioRecoveryTimeNs]
-.ReturnSlowestTimingInBXandCX:
+AdvAtaInit_SelectSlowestCommonPioTimingsToBXandCXfromDSSIandDSDI:
+	eMOVZX	bx, BYTE [di+DPT_ADVANCED_ATA.bPioMode]
+	mov		cx, [di+DPT_ADVANCED_ATA.wMinPioCycleTime]
+	test	si, si
+	jz		SHORT .PioTimingsLoadedToAXandCX
+	MIN_U	bl, [si+DPT_ADVANCED_ATA.bPioMode]
+	MAX_U	cx, [si+DPT_ADVANCED_ATA.wMinPioCycleTime]
+.PioTimingsLoadedToAXandCX:
 	ret

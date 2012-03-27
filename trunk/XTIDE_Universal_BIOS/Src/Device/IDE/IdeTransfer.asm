@@ -188,7 +188,7 @@ InitializePiovarsInSSBPwithSectorCountInAH:
 	mov		bl, [di+DPT.bIdevarsOffset]			; CS:BX now points to IDEVARS
 	mov		dx, [cs:bx+IDEVARS.wPort]			; Load IDE Data port address
 %ifdef MODULE_ADVANCED_ATA
-	mov		bl, [di+DPT_ATA.bDevice]
+	mov		bl, [di+DPT_ADVANCED_ATA.bDevice]
 %else
 	mov		bl, [cs:bx+IDEVARS.bDevice]			; Load device type to BX
 %endif
