@@ -40,6 +40,9 @@ FLGH_DPT_INTERRUPT_IN_SERVICE	EQU	(1<<3)	; Set when waiting for IRQ
 
 ; IDE device only
 FLGH_DPT_INITERROR				EQU	(1<<7)
+%ifdef MODULE_ADVANCED_ATA
+FLGH_DPT_IORDY					EQU	(1<<6)	; Controller and Drive supports IORDY
+%endif
 
 ; Serial device only
 FLGH_DPT_SERIAL_FLOPPY						EQU	(1<<4)
@@ -62,30 +65,25 @@ struc DPT_ATA	; 10 + 2 bytes = 12 bytes
 	.wSetAndMaxBlock:
 	.bSetBlock					resb	1	; Current block size (do not set to zero!)
 	.bMaxBlock					resb	1	; Maximum block size, 0 = block mode not supported
-
-%ifdef MODULE_ADVANCED_ATA	; +2 extra bytes = 14 bytes
-	.bPioMode					resb	1
-	.bDevice					resb	1
-%endif
 endstruc
 
 
+; Additional variables needed to initialize and reset Advanced IDE Controllers.
+; EBDA must be reserved for DPTs when using these!
 %ifdef MODULE_ADVANCED_ATA
-; Temporary extension for DPT_ATA. Contents will be copied to BOOTMENUINFO and
-; then these variables will be overridden by next DPT.
 struc DPT_ADVANCED_ATA
 	.dpt_ata				resb	DPT_ATA_size
-	.wIdeBasePort			resb	2	; IDE Base Port
-	.wMinPioActiveTimeNs	resb	2	; Minimum PIO Active Time in ns
-	.wMinPioRecoveryTimeNs	resb	2	; Minimum PIO Recovery Time in ns
-	.wControllerID			resb	2	; Controller specific ID WORD
+	.wControllerID			resb	2	; Controller specific ID WORD (from Advanced Controller detection)
 	.wControllerBasePort	resb	2	; Advanced Controller port (not IDE port)
+	.wMinPioCycleTime		resb	2	; Minimum PIO Cycle Time in ns
+	.bPioMode				resb	1	; Best supported PIO mode
+	.bDevice				resb	1	; Device Type from IDEVARS (overrided when 32-bit controller detected)
 endstruc
 %endif
 
 
-%ifdef MODULE_SERIAL
 ; DPT for Serial devices
+%ifdef MODULE_SERIAL
 struc DPT_SERIAL
 	.dpt						resb	DPT_size
 
@@ -97,7 +95,11 @@ endstruc
 
 
 ; This is the common size for all DPTs. All DPTs must be equal size.
+%ifdef MODULE_ADVANCED_ATA
+LARGEST_DPT_SIZE				EQU		DPT_ADVANCED_ATA_size
+%else
 LARGEST_DPT_SIZE				EQU		DPT_ATA_size
+%endif
 
 
 ; Number of Sectors per Track is fixed to 63 for LBA assist calculation.

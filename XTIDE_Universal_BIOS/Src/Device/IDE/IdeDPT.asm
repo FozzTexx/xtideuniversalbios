@@ -57,14 +57,13 @@ IdeDPT_Finalize:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, CX, DX
+;		AX, BX, CX
 ;--------------------------------------------------------------------
 .StorePioMode:
-	call	AtaID_GetMaxPioModeToAXandMinCycleTimeToDX
-	call	AtaID_ConvertPioModeFromAXandMinCycleTimeFromDXtoActiveAndRecoveryTime
-	mov		[di+DPT_ATA.bPioMode], al
-	mov		[di+DPT_ADVANCED_ATA.wMinPioActiveTimeNs], cx
-	mov		[di+DPT_ADVANCED_ATA.wMinPioRecoveryTimeNs], dx
+	call	AtaID_GetMaxPioModeToAXandMinCycleTimeToCX
+	mov		[di+DPT_ADVANCED_ATA.wMinPioCycleTime], cx
+	mov		[di+DPT_ADVANCED_ATA.bPioMode], al
+	or		[di+DPT.bFlagsHigh], ah	
 
 ;--------------------------------------------------------------------
 ; .DetectAdvancedIdeController
@@ -78,23 +77,23 @@ IdeDPT_Finalize:
 ;		AX, BX, CX, DX
 ;--------------------------------------------------------------------
 .DetectAdvancedIdeController:
-	mov		dx, [cs:bp+IDEVARS.wPort]
-	mov		[di+DPT_ADVANCED_ATA.wIdeBasePort], dx
-	call	AdvAtaInit_DetectControllerForIdeBaseInDX
+	call	AccessDPT_GetIdeBasePortToBX
+	call	AdvAtaInit_DetectControllerForIdeBaseInBX
 	mov		[di+DPT_ADVANCED_ATA.wControllerID], ax	; Store zero if none detected
-	mov		[di+DPT_ADVANCED_ATA.wControllerBasePort], cx
+	mov		[di+DPT_ADVANCED_ATA.wControllerBasePort], dx
 	jnc		SHORT .NoAdvancedControllerDetected
 
 	; Use highest common PIO mode from controller and drive.
 	; Many VLB controllers support PIO modes up to 2.
 	call	AdvAtaInit_GetControllerMaxPioModeToAL
 	jnc		SHORT .ChangeTo32bitDevice
-	MIN_U	[di+DPT_ATA.bPioMode], al
+	and		BYTE [di+DPT.bFlagsHigh], ~FLGH_DPT_IORDY	; No IORDY supported if need to limit
+	MIN_U	[di+DPT_ADVANCED_ATA.bPioMode], al
 
 	; We have detected 32-bit controller so change Device Type since
 	; it might have been set to 16-bit on IDEVARS
 .ChangeTo32bitDevice:
-	mov		BYTE [di+DPT_ATA.bDevice], DEVICE_32BIT_ATA
+	mov		BYTE [di+DPT_ADVANCED_ATA.bDevice], DEVICE_32BIT_ATA
 
 .NoAdvancedControllerDetected:
 
@@ -135,6 +134,7 @@ IdeDPT_StoreReversedAddressLinesFlagIfNecessary:
 ;--------------------------------------------------------------------
 IdeDPT_StoreDeviceTypeFromIdevarsInCSBPtoDPTinDSDI:
 	mov		al, [cs:bp+IDEVARS.bDevice]
-	mov		[di+DPT_ATA.bDevice], al
+	mov		[di+DPT_ADVANCED_ATA.bDevice], al
 	ret
+
 %endif

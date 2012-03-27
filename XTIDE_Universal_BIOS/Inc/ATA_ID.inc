@@ -4,12 +4,15 @@
 %define ATA_ID_INC
 
 ; PIO Minimum Cycle Times (t0)
-; Timings for Advanced modes 3 and 4 can be read from ATA info WORDs 67 and 68
+; Timings for Advanced Modes (3 and above) can be read from ATA info WORDs 67 and 68
+; Those usually have the same Cycle Time as below
 PIO_0_MIN_CYCLE_TIME_NS		EQU		600
 PIO_1_MIN_CYCLE_TIME_NS		EQU		383
 PIO_2_MIN_CYCLE_TIME_NS		EQU		240
 PIO_3_MIN_CYCLE_TIME_NS		EQU		180
 PIO_4_MIN_CYCLE_TIME_NS		EQU		120
+PIO_5_MIN_CYCLE_TIME_NS		EQU		100		; CF specification
+PIO_6_MIN_CYCLE_TIME_NS		EQU		80		; CF specification
 
 ; PIO Minimum Address Valid Times (t1)
 PIO_0_MIN_ADDRESS_VALID_NS	EQU		70
@@ -17,6 +20,8 @@ PIO_1_MIN_ADDRESS_VALID_NS	EQU		50
 PIO_2_MIN_ADDRESS_VALID_NS	EQU		30
 PIO_3_MIN_ADDRESS_VALID_NS	EQU		30
 PIO_4_MIN_ADDRESS_VALID_NS	EQU		25
+PIO_5_MIN_ADDRESS_VALID_NS	EQU		25		; Could not find info
+PIO_6_MIN_ADDRESS_VALID_NS	EQU		25		; Could not find info
 
 ; PIO Minimum Active Times (t2)
 PIO_0_MIN_ACTIVE_TIME_NS	EQU		165
@@ -24,6 +29,8 @@ PIO_1_MIN_ACTIVE_TIME_NS	EQU		125
 PIO_2_MIN_ACTIVE_TIME_NS	EQU		100
 PIO_3_MIN_ACTIVE_TIME_NS	EQU		80
 PIO_4_MIN_ACTIVE_TIME_NS	EQU		70
+PIO_5_MIN_ACTIVE_TIME_NS	EQU		70		; Could not find info
+PIO_6_MIN_ACTIVE_TIME_NS	EQU		70		; Could not find info
 
 ; PIO Minimum Recovery Times or Inactive Times (t2i) can be calculated
 ; from Minimum Cycle Time (t0) - Minimum Active Time (t2) - Address Valid Time (t1). 

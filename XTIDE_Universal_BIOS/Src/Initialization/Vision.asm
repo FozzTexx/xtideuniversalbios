@@ -6,28 +6,28 @@
 SECTION .text
 
 ;--------------------------------------------------------------------
-; Vision_DetectAndReturnIDinAXandPortInCXifControllerPresent
+; Vision_DetectAndReturnIDinAXandPortInDXifControllerPresent
 ;	Parameters:
 ;		Nothing
 ;	Returns:
 ;		AX:		ID WORD specific for QDI Vision Controllers
 ;				(AL = QD65xx Config Register contents)
 ;				(AH = QDI Vision Controller ID (bits 4...7))
-;		CX:		Controller port (not IDE port)
+;		DX:		Controller port (not IDE port)
 ;		ZF:		Set if controller found
 ;				Cleared if supported controller not found (AX,DX = undefined)
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-Vision_DetectAndReturnIDinAXandPortInCXifControllerPresent:
+Vision_DetectAndReturnIDinAXandPortInDXifControllerPresent:
 	; Check QD65xx base port
-	mov		cx, QD65XX_BASE_PORT
+	mov		dx, QD65XX_BASE_PORT
 	in		al, QD65XX_BASE_PORT + QD65XX_CONFIG_REGISTER_in
 	call	IsConfigRegisterWithIDinAL
 	je		SHORT VisionControllerDetected
 
 	; Check QD65xx alternative base port
-	or		cl, QD65XX_ALTERNATIVE_BASE_PORT
+	or		dl, QD65XX_ALTERNATIVE_BASE_PORT
 	in		al, QD65XX_ALTERNATIVE_BASE_PORT + QD65XX_CONFIG_REGISTER_in
 	; Fall to IsConfigRegisterWithIDinAL
 
@@ -55,51 +55,46 @@ VisionControllerDetected:
 
 
 ;--------------------------------------------------------------------
-; Vision_DoesIdePortInDXbelongToControllerWithIDinAX
+; Vision_DoesIdePortInBXbelongToControllerWithIDinAX
 ;	Parameters:
-;		AX:		ID WORD specific for QDI Vision Controllers
-;				(AL = QD65xx Config Register contents)
-;				(AH = QDI Vision Controller ID (bits 4...7))
-;		CX:		Vision Controller port
-;		DX:		IDE base port to check
+;		AL:		QD65xx Config Register contents
+;		AH:		QDI Vision Controller ID (bits 4...7)
+;		BX:		IDE Base port to check
+;		DX:		Vision Controller port
 ;	Returns:
 ;		ZF:		Set if port belongs to controller
 ;				Cleared if port belongs to another controller
 ;	Corrupts registers:
-;		BX
+;		Nothing
 ;--------------------------------------------------------------------
-Vision_DoesIdePortInDXbelongToControllerWithIDinAX:
+Vision_DoesIdePortInBXbelongToControllerWithIDinAX:
 	cmp		ah, ID_QD6500 << 4
 	je		SHORT .DoesIdePortInDXbelongToQD6500
 
 	; QD6580 always have Primary IDE at 1F0h
 	; Secondary IDE at 170h can be enabled or disabled
-	cmp		dx, DEVICE_ATA_DEFAULT_PORT
+	cmp		bx, DEVICE_ATA_DEFAULT_PORT
 	je		SHORT .ReturnResultInZF
 
 	; Check if Secondary IDE channel is enabled
-	xchg	bx, ax		; Backup AX
-	xchg	dx, cx		; Swap ports
-
+	push	ax
 	add		dx, BYTE QD6580_CONTROL_REGISTER
 	in		al, dx
 	sub		dx, BYTE QD6580_CONTROL_REGISTER
-
-	xchg	cx, dx
-	xchg	ax, bx		; Restore AX, Control Register to BL
-	test	bl, FLG_QDCONTROL_SECONDARY_DISABLED_in
-	jz		SHORT .CompareDXtoSecondaryIDE
+	test	al, FLG_QDCONTROL_SECONDARY_DISABLED_in
+	pop		ax
+	jz		SHORT .CompareBXtoSecondaryIDE
 	ret
 
 	; QD6500 has only one IDE channel that can be at 1F0h or 170h
 .DoesIdePortInDXbelongToQD6500:
 	test	al, FLG_QDCONFIG_PRIMARY_IDE
-	jz		SHORT .CompareDXtoSecondaryIDE
-	cmp		dx, DEVICE_ATA_DEFAULT_PORT
+	jz		SHORT .CompareBXtoSecondaryIDE
+	cmp		bx, DEVICE_ATA_DEFAULT_PORT
 	ret
 
-.CompareDXtoSecondaryIDE:
-	cmp		dx, DEVICE_ATA_DEFAULT_SECONDARY_PORT
+.CompareBXtoSecondaryIDE:
+	cmp		bx, DEVICE_ATA_DEFAULT_SECONDARY_PORT
 .ReturnResultInZF:
 	ret
 
@@ -107,12 +102,15 @@ Vision_DoesIdePortInDXbelongToControllerWithIDinAX:
 ;--------------------------------------------------------------------
 ; Vision_GetMaxPioModeToAL
 ;	Parameters:
-;		AX:		ID WORD specific for QDI Vision Controllers
-;				(AH = QDI Vision Controller ID (bits 4...7))
+;		AL:		QD65xx Config Register contents
+;		AH:		QDI Vision Controller ID (bits 4...7)
 ;	Returns:
-;		AL:		Max supported PIO mode (if CF set)
+;		AL:		Max supported PIO mode
+;		AH:		FLGH_DPT_IORDY if IORDY supported, zero otherwise
 ;		CF:		Set if PIO limit necessary
 ;				Cleared if no need to limit timings
+;	Corrupts registers:
+;		(AX if CF cleared)
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
@@ -121,7 +119,7 @@ Vision_GetMaxPioModeToAL:
 	clc
 	jne		SHORT .NoNeedToLimitForQD6580
 
-	mov		al, 2	; Limit to PIO 2 because QD6500 supports PIO 3 but without IORDY
+	mov		ax, 2	; Limit to PIO 2 because QD6500 does not support IORDY
 	stc
 .NoNeedToLimitForQD6580:
 	ret
@@ -130,94 +128,107 @@ Vision_GetMaxPioModeToAL:
 ;--------------------------------------------------------------------
 ; Vision_InitializeWithIDinAHandConfigInAL
 ;	Parameters:
-;		AX:		ID WORD specific for QDI Vision Controllers
-;				(AL = QD65xx Config Register contents)
-;				(AH = QDI Vision Controller ID (bits 4...7))
-;		DS:SI:	Ptr to BOOTMENUINFO for Single or Master Drive
-;		DS:DI:	Ptr to BOOTMENUINFO for Slave Drive
-;				Zero if Slave not present
+;		AL:		QD65xx Config Register contents
+;		AH:		QDI Vision Controller ID (bits 4...7)
+;		DS:DI:	Ptr to DPT for Single or Slave Drive
+;		SI:		Offset to Master DPT if Slave Drive present
+;				Zero if Slave Drive not present
 ;	Returns:
 ;		CF:		Cleared if success
 ;				Set if error
 ;	Corrupts registers:
-;		AX, BX, CX, DX, SI, DI
+;		AX, BX, CX, DX, BP
 ;--------------------------------------------------------------------
 Vision_InitializeWithIDinAHandConfigInAL:
 	; QD6580 has a Control Register that needs to be programmed
-	mov		dx, [si+BOOTMENUINFO.wControllerBasePort]
+	mov		dx, [di+DPT_ADVANCED_ATA.wControllerBasePort]
 	cmp		ah, ID_QD6500 << 4
-	je		SHORT .GetPioTimingsInNanosecs
+	je		SHORT .CalculateTimingForQD6500
 
 	; Program QD6580 Control Register (not available on QD6500) to
 	; Enable or Disable Read-Ahead and Post-Write Buffer to match
 	; jumper setting on the multi I/O card.
-.ProgramControlRegisterForQD6580:
-	xchg	bx, ax									; Backup AX
+	xor		ax, ax
 	add		dx, BYTE QD6580_CONTROL_REGISTER
 	in		al, dx									; Read to get ATAPI jumper status
 	test	al, FLG_QDCONTROL_HDONLY_in
-	mov		al, MASK_QDCONTROL_FLAGS_TO_SET
-	jz		SHORT .SkipHdonlyBitSinceAtapiPossible
-	or		al, FLG_QDCONTROL_NONATAPI
-.SkipHdonlyBitSinceAtapiPossible:
+	eCMOVNZ	ah, FLG_QDCONTROL_NONATAPI				; Enable Read-Ahead and Post-Write Buffers
+	or		ah, MASK_QDCONTROL_FLAGS_TO_SET
+	mov		al, ah
 	out		dx, al
-	sub		dx, BYTE QD6580_CONTROL_REGISTER		; Back to base port
-	xchg	ax, bx									; Restore AX
-
-	; If we have Master and Slave drive in the system, we must select
-	; timings from the slower drive (this is why it is a bad idea to use
-	; fast and slow drive on the same IDE channel)
-.GetPioTimingsInNanosecs:
-	call	AdvAtaInit_SelectSlowestTimingsToBXandCX
+	sub		dx, BYTE QD6580_CONTROL_REGISTER
 
 	; Now we need to determine is the drive connected to the Primary or Secondary channel.
 	; QD6500 has only one channel that can be Primary at 1F0h or Secondary at 170h.
 	; QD6580 always has Primary channel at 1F0h. Secondary channel at 170h can be Enabled or Disabled.
-	cmp		ah, ID_QD6500 << 4
-	je		SHORT .CalculateTimingTicksForQD6500
-	cmp		WORD [si+BOOTMENUINFO.wIdeBasePort], DEVICE_ATA_DEFAULT_PORT
-	je		SHORT .CalculateTimingTicksForQD6580
+	call	AccessDPT_GetIdeBasePortToBX
+	cmp		bx, DEVICE_ATA_DEFAULT_PORT
+	je		SHORT .CalculateTimingTicksForQD6580	; Primary Channel so no need to modify DX
 	times 2 inc dx									; Secondary Channel IDE Timing Register
 
-	; Now we must translate the PIO timing nanosecs in CX and DX to VLB ticks
-	; suitable for QD65xx IDE Timing Register.
-	; Both of the controllers require slightly different calculations.
+	; QD6500 and QD6580 require slightly different calculations.
 .CalculateTimingTicksForQD6580:
-	mov		si, QD6580_MIN_ACTIVE_TIME_CLOCKS
-	mov		di, QD6580_MAX_ACTIVE_TIME_CLOCKS
-	jmp		SHORT .CalculateTimingForQD65xx
+	mov		bp, QD6580_MAX_ACTIVE_TIME_CLOCKS | (QD6580_MIN_ACTIVE_TIME_CLOCKS << 8)
+	jmp		SHORT .CalculateTimingsForQD65xx
 
-.CalculateTimingTicksForQD6500:
-	mov		si, QD6500_MIN_ACTIVE_TIME_CLOCKS
-	mov		di, QD6500_MAX_ACTIVE_TIME_CLOCKS
+.CalculateTimingForQD6500:
+	mov		bp, QD6500_MAX_ACTIVE_TIME_CLOCKS | (QD6500_MIN_ACTIVE_TIME_CLOCKS << 8)
 
-.CalculateTimingForQD65xx:
-	test	al, FLG_QDCONFIG_ID3		; Set ZF if 40 MHz VLB bus
-	mov		al, VLB_33MHZ_CYCLE_TIME	; Assume 33 MHz or slower VLB bus
-	xchg	ax, bx						; Active Time to AX
-	eCMOVZ	bl, VLB_40MHZ_CYCLE_TIME
+	; We need the PIO Cycle Time in CX to calculate Active and Recovery Times. 
+.CalculateTimingsForQD65xx:
+	call	AdvAtaInit_SelectSlowestCommonPioTimingsToBXandCXfromDSSIandDSDI
 
-	div		bl
+	; Calculate Active Time value for QD65xx IDE Timing Register
+	call	AtaID_GetActiveTimeToAXfromPioModeInBX
+	call	ConvertNanosecsFromAXwithLimitsInBPtoRegisterValue
+	xchg	bp, ax
+
+	; Calculate Recovery Time value for QD65xx IDE Timing Register
+	call	AtaID_GetRecoveryTimeToAXfromPioModeInBXandCycleTimeInCX
+	mov		bx, bp						; Active Time value now in BL
+	mov		bp, QD65xx_MAX_RECOVERY_TIME_CLOCKS | (QD65xx_MIN_RECOVERY_TIME_CLOCKS << 8)
+	call	ConvertNanosecsFromAXwithLimitsInBPtoRegisterValue
+
+	; Merge the values to a single byte to output
+	eSHIFT_IM	al, POSITON_QD65XXIDE_RECOVERY_TIME, shl
+	or		al, bl
+	out		dx, al
+	ret									; Return with CF cleared
+
+
+;--------------------------------------------------------------------
+; ConvertNanosecsFromAXwithLimitsInBPtoRegisterValue
+;	Parameters:
+;		AX:		Nanosecs to convert
+;		BP:		Low Byte:	Maximum allowed ticks
+;				High Byte:	Minimum allowed ticks
+;		DS:DI:	Ptr to DPT for Single or Slave Drive
+;	Returns:
+;		AL:		Timing value for QD65xx register
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+ConvertNanosecsFromAXwithLimitsInBPtoRegisterValue:
+	push	cx
+
+	; Get VLB Cycle Time in nanosecs
+	mov		cl, VLB_33MHZ_CYCLE_TIME	; Assume 33 MHz or slower VLB bus
+	test	BYTE [di+DPT_ADVANCED_ATA.wControllerID], FLG_QDCONFIG_ID3
+	eCMOVZ	cl, VLB_40MHZ_CYCLE_TIME
+
+	; Convert value in AX to VLB ticks
+	div		cl							; AL = VLB ticks
 	inc		ax							; Round up
-	xor		ah, ah
-	xchg	cx, ax						; CX = Active Time in VLB ticks
-	MAX_U	cx, si						; Limit ticks to valid values...
-	MIN_U	cx, di						; ...for QD65xx
 
-	div		bl
-	inc		ax							; Round up
-	xchg	bx, ax						; BL = Recovery Time in VLB ticks
-	mov		al, QD65xx_MAX_RECOVERY_TIME_CLOCKS
-	MAX_U	bl, QD65xx_MIN_RECOVERY_TIME_CLOCKS
-	MIN_U	bl, al
+	; Limit value to QD65xx limits
+	mov		cx, bp
+	MAX_U	al, ch						; Make sure not below minimum
+	MIN_U	al, cl						; Make sure not above maximum
 
 	; Not done yet, we need to invert the ticks since 0 is the slowest
 	; value on the timing register
-	sub		di, cx						; DI = Active Time value to program
-	sub		al, bl						; AL = Recovery Time value to program
+	sub		cl, al
+	xchg	ax, cx						; Return in AL
 
-	; Finally we can shift the values in places and program the Timing Register
-	eSHIFT_IM	al, POSITON_QD65XXIDE_RECOVERY_TIME, shl
-	or		ax, di
-	out		dx, al
-	ret									; Return with CF cleared
+	pop		cx
+	ret

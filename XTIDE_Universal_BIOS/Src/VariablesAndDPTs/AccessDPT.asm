@@ -4,6 +4,25 @@
 ; Section containing code
 SECTION .text
 
+%ifdef MODULE_ADVANCED_ATA
+;--------------------------------------------------------------------
+; AccessDPT_GetIdeBasePortToBX
+;	Parameters:
+;		DS:DI:	Ptr to Disk Parameter Table
+;	Returns:
+;		BX:		IDE Base Port Address
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+AccessDPT_GetIdeBasePortToBX:
+	eMOVZX	bx, [di+DPT.bIdevarsOffset]			; CS:BX points to IDEVARS
+	mov		bx, [cs:bx+IDEVARS.wPort]
+	ret
+
+%endif
+
+
 ;--------------------------------------------------------------------
 ; AccessDPT_GetDriveSelectByteToAL
 ;	Parameters:

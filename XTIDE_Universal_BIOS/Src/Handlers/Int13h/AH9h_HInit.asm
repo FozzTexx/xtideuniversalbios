@@ -170,12 +170,15 @@ SetWriteCache:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
 InitializePioMode:
-	xor		dx, dx						; Parameter to Sector Count Register = 0 = PIO_DEFAULT_MODE
-	mov		al, [di+DPT_ATA.bPioMode]
-	cmp		al, 3						; PIO mode 3 and above require IORDY
-	jb		SHORT .SetTransferMode
-	or		dl, al
-.SetTransferMode:
+	mov		dl, PIO_DEFAULT_MODE_DISABLE_IORDY
+	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_IORDY
+	jz		SHORT .IordyNotSupported
+
+	; Advanced PIO mode 3 and above
+	mov		dl, [di+DPT_ADVANCED_ATA.bPioMode]
+	or		dl, PIO_FLOW_CONTROL_MODE_xxx
+
+.IordyNotSupported:
 	mov		si, FEATURE_SET_TRANSFER_MODE
 	jmp		AH23h_SetControllerFeatures
 %endif

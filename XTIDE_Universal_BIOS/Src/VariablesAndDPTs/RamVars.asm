@@ -30,9 +30,13 @@ RamVars_Initialize:
 ;		AX
 ;--------------------------------------------------------------------
 .StealMemoryForRAMVARS:
+	; Always steal memory when using Advanced ATA module since it
+	; uses larger DPTs
+%ifndef MODULE_ADVANCED_ATA
 	mov		ax, LITE_MODE_RAMVARS_SEGMENT
 	test	BYTE [cs:ROMVARS.wFlags], FLG_ROMVARS_FULLMODE
 	jz		SHORT .InitializeRamvars	; No need to steal RAM
+%endif
 
 	LOAD_BDA_SEGMENT_TO	ds, ax, !		; Zero AX
 	mov		al, [cs:ROMVARS.bStealSize]

@@ -16,36 +16,18 @@ SECTION .text
 ;	Returns:
 ;		ES:BX:	Ptr to BOOTMENUINFO (if successful)
 ;	Corrupts registers:
-;		AX, CX, DX, DI
+;		AX, BX, CX, DX, DI
 ;--------------------------------------------------------------------
 BootMenuInfo_CreateForHardDisk:
 	call	BootMenuInfo_ConvertDPTtoBX			; ES:BX now points to new BOOTMENUINFO
-	push	ds									; Preserve RAMVARS...
-	push	si									; ...and SI
-
-	push	es									; ES to be copied to DS
-
-%ifdef MODULE_ADVANCED_ATA
-	; Copy DPT_ADVANCED_ATA to BOOTMENUINFO to keep DPTs small.
-	; DPT_ADVANCED_ATA has variables that are only needed during initialization.
-	mov		ax, [di+DPT_ADVANCED_ATA.wIdeBasePort]
-	mov		[es:bx+BOOTMENUINFO.wIdeBasePort], ax
-	mov		dx, [di+DPT_ADVANCED_ATA.wMinPioActiveTimeNs]
-	mov		[es:bx+BOOTMENUINFO.wMinPioActiveTimeNs], dx
-
-	mov		ax, [di+DPT_ADVANCED_ATA.wMinPioRecoveryTimeNs]
-	mov		cx, [di+DPT_ADVANCED_ATA.wControllerID]
-	mov		dx, [di+DPT_ADVANCED_ATA.wControllerBasePort]
-	pop		ds									; ES copied to DS
-	mov		[bx+BOOTMENUINFO.wMinPioRecoveryTimeNs], ax
-	mov		[bx+BOOTMENUINFO.wControllerID], cx
-	mov		[bx+BOOTMENUINFO.wControllerBasePort], dx
-
-%else
-	pop		ds									; ES copied to DS
-%endif
 
 	; Store Drive Name
+	push	ds									; Preserve RAMVARS
+	push	si
+
+	push	es									; ES copied to DS
+	pop		ds
+
 	add		si, BYTE ATA1.strModel				; DS:SI now points drive name
 	lea		di, [bx+BOOTMENUINFO.szDrvName]		; ES:DI now points to name destination
 	mov		cx, MAX_HARD_DISK_NAME_LENGTH / 2	; Max number of WORDs allowed
@@ -59,6 +41,7 @@ BootMenuInfo_CreateForHardDisk:
 
 	pop		si
 	pop		ds
+		
 	ret
 
 
@@ -71,6 +54,7 @@ BootMenuInfo_CreateForHardDisk:
 ;	Corrupts registers:
 ;		CX
 ;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
 BootMenuInfo_GetTotalSectorCount:
 	test	BYTE [di+DPT.bFlagsLow], FLG_DRVNHEAD_LBA
 	jnz		SHORT .ReturnFullCapacity
@@ -116,4 +100,4 @@ BootMenuInfo_ConvertDPTtoBX:
 	add		ax, BOOTVARS.rgBootNfo					; add base of BOOTMENUINFO
 	xchg	ax, bx
 	pop		ax
-	ret			
+	ret	
