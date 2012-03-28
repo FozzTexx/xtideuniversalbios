@@ -92,6 +92,8 @@ RamVars_Initialize:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 RamVars_GetSegmentToDS:
+
+%ifndef MODULE_ADVANCED_ATA	; Always in Full Mode when using Advanced ATA Module
 	test	BYTE [cs:ROMVARS.wFlags], FLG_ROMVARS_FULLMODE
 	jnz		SHORT .GetStolenSegmentToDS
 %ifndef USE_186
@@ -102,6 +104,7 @@ RamVars_GetSegmentToDS:
 	pop		ds
 %endif
 	ret
+%endif ; MODULE_ADVANCED_ATA
 
 ALIGN JUMP_ALIGN
 .GetStolenSegmentToDS:
@@ -149,8 +152,7 @@ ALIGN JUMP_ALIGN
 RamVars_GetCountOfKnownDrivesToAX:
 	mov		ax, [RAMVARS.wDrvCntAndFirst]
 	add		al, ah
-	and		al, 7fh
-	cbw
+	and		ax, BYTE 7fh
 	ret
 
 ;--------------------------------------------------------------------
