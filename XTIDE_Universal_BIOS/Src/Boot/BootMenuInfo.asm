@@ -54,7 +54,6 @@ BootMenuInfo_CreateForHardDisk:
 ;	Corrupts registers:
 ;		CX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 BootMenuInfo_GetTotalSectorCount:
 	test	BYTE [di+DPT.bFlagsLow], FLG_DRVNHEAD_LBA
 	jnz		SHORT .ReturnFullCapacity

@@ -14,7 +14,7 @@ SECTION .text
 ;	Corrupts registers:
 ;		All except segments
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuInit_DisplayMenuWithHandlerInBXandUserDataInDXAX:
 	push	es
 	push	ds
@@ -48,7 +48,7 @@ MenuInit_DisplayMenuWithHandlerInBXandUserDataInDXAX:
 ;	Corrupts registers:
 ;		All, except SS:BP
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuInit_EnterMenuWithHandlerInBXandUserDataInDXAX:
 	mov		[bp+MENU.fnEventHandler], bx
 	mov		[bp+MENU.dwUserData], ax
@@ -75,7 +75,7 @@ MenuInit_EnterMenuWithHandlerInBXandUserDataInDXAX:
 ;	Corrupts registers:
 ;		AX, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuInit_RefreshMenuWindow:
 	call	MenuBorders_RefreshAll			; Draw borders
 	call	MenuText_RefreshTitle			; Draw title strings
@@ -93,7 +93,7 @@ MenuInit_RefreshMenuWindow:
 ;		AX, BX, DX
 ;--------------------------------------------------------------------
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuInit_CloseMenuIfExitEventAllows:
 	call	MenuEvent_ExitMenu
 	jc		SHORT MenuInit_CloseMenuWindow
@@ -110,7 +110,7 @@ MenuInit_CloseMenuIfExitEventAllows:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuInit_CloseMenuWindow:
 	or		BYTE [bp+MENU.bFlags], FLG_MENU_EXIT
 	ret
@@ -126,7 +126,7 @@ MenuInit_CloseMenuWindow:
 ;	Corrupts registers:
 ;		AX, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuInit_HighlightItemFromAX:
 	sub		ax, [bp+MENUINIT.wHighlightedItem]
 	jmp		MenuScrollbars_MoveHighlightedItemByAX
@@ -141,7 +141,7 @@ MenuInit_HighlightItemFromAX:
 ;		Nothing
 ;--------------------------------------------------------------------
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuInit_GetHighlightedItemToAX:
 	mov		ax, [bp+MENUINIT.wHighlightedItem]
 	ret
@@ -161,17 +161,17 @@ MenuInit_GetHighlightedItemToAX:
 ;		Nothing
 ;--------------------------------------------------------------------
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuInit_SetTitleHeightFromAL:
 	mov		[bp+MENUINIT.bTitleLines], al
 	ret
 
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuInit_SetInformationHeightFromAL:
 	mov		[bp+MENUINIT.bInfoLines], al
 	ret
 
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuInit_SetTotalItemsFromAX:
 	mov		[bp+MENUINIT.wItems], ax
 	ret
@@ -190,13 +190,13 @@ MenuInit_SetTotalItemsFromAX:
 ;		Nothing
 ;--------------------------------------------------------------------
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuInit_SetUserDataFromDSSI:
 	mov		[bp+MENU.dwUserData], si
 	mov		[bp+MENU.dwUserData+2], ds
 	ret
 
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuInit_GetUserDataToDSSI:
 	lds		si, [bp+MENU.dwUserData]
 	ret

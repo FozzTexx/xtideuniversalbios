@@ -107,6 +107,23 @@ Buffers_ClearUnsavedChanges:
 	and		WORD [g_cfgVars+CFGVARS.wFlags], ~FLG_CFGVARS_UNSAVED
 	ret
 
+;--------------------------------------------------------------------		
+; Buffers_TestLoaded
+;	Parameters:
+;		SS:BP:	Menu handle
+;	Returns:
+;		CF:		Set = BIOS Loaded
+;	Corrupts registers:
+;		AX
+;--------------------------------------------------------------------				
+ALIGN JUMP_ALIGN
+Buffers_TestLoaded:
+	test	word [cs:g_cfgVars+CFGVARS.wFlags], FLG_CFGVARS_FILELOADED    ; Clears CF
+	jz		.done
+	stc
+.done:	
+	ret						
+
 
 ;--------------------------------------------------------------------
 ; Buffers_SaveChangesIfFileLoaded

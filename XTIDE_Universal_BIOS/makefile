@@ -192,6 +192,7 @@ checksum: all
 	@perl ..\tools\checksum.pl $(TARGET)_xtp.bin $(ROMSIZE)
 	@perl ..\tools\checksum.pl $(TARGET)_xt.bin $(ROMSIZE)
 	@perl ..\tools\checksum.pl $(TARGET)_jr8k.bin $(ROMSIZE)
+	@perl ..\tools\checksum.pl $(TARGET)_386.bin $(ROMSIZE)
 
 xt_unused: xt
 	$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XT) -o"$(TARGET)_xt_unused.asm" -E -DCHECK_FOR_UNUSED_ENTRYPOINTS

@@ -25,7 +25,6 @@ SECTION .text
 ;		AH:		Int 13h return status
 ;		CF:		0 if successful, 1 if error
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 AH23h_HandlerForSetControllerFeatures:
 	xchg	si, ax		; SI = Feature Number
 	mov		dx, [bp+IDEPACK.intpack+INTPACK.bx]
@@ -54,7 +53,6 @@ AH23h_HandlerForSetControllerFeatures:
 ;	Corrupts registers:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
-;ALIGN JUMP_ALIGN
 AH23h_SetControllerFeatures:
 	mov		al, COMMAND_SET_FEATURES
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_BSY, FLG_STATUS_BSY)

@@ -16,7 +16,7 @@ SECTION .text
 ;	Corrupts registers:
 ;		AX (unless used as a return register), DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 Menu_FunctionFromDI:
 	push	si
 	push	dx

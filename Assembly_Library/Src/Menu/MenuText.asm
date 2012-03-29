@@ -15,7 +15,7 @@ SECTION .text
 ;		AX, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuText_ClearTitleArea:
 	CALL_DISPLAY_LIBRARY PushDisplayContext		; Save cursor coordinates
 	call	PrepareToDrawTitleArea
@@ -23,7 +23,7 @@ MenuText_ClearTitleArea:
 	jmp		SHORT MenuText_ClearInformationArea.ClearCLlinesOfText
 %endif
 		
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuText_ClearInformationArea:
 	CALL_DISPLAY_LIBRARY PushDisplayContext		; Save cursor coordinates
 	call	MenuText_PrepareToDrawInformationArea
@@ -49,14 +49,14 @@ MenuText_ClearInformationArea:
 ;	Corrupts registers:
 ;		AX, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuText_RefreshTitle:
 	cmp		BYTE [bp+MENUINIT.bTitleLines], 0
 	jz		SHORT NothingToRefresh
 	call	PrepareToDrawTitleArea
 	jmp		MenuEvent_RefreshTitle
 
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuText_RefreshInformation:
 	cmp		BYTE [bp+MENUINIT.bInfoLines], 0
 	jz		SHORT NothingToRefresh
@@ -73,13 +73,13 @@ MenuText_RefreshInformation:
 ;	Corrupts registers:
 ;		AX, BX, DX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 PrepareToDrawTitleArea:
 	mov		si, ATTRIBUTE_CHARS.cTitle
 	call	MenuLocation_GetTitleTextTopLeftCoordinatesToAX
 	jmp		SHORT FinishPreparationsToDrawTitleOrInformationArea
 
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuText_PrepareToDrawInformationArea:
 	mov		si, ATTRIBUTE_CHARS.cInformation
 	call	MenuLocation_GetInformationTextTopLeftCoordinatesToAX
@@ -97,13 +97,13 @@ FinishPreparationsToDrawTitleOrInformationArea:
 ;	Corrupts registers:
 ;		AX, BX, DX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuText_RefreshAllItems:
 	push	cx
 
 	call	MenuScrollbars_GetActualVisibleItemsOnPageToCX
 	mov		ax, [bp+MENU.wFirstVisibleItem]
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 .ItemRefreshLoop:
 	call	MenuText_RefreshItemFromAX
 	inc		ax
@@ -123,7 +123,7 @@ NothingToRefresh:
 ;	Corrupts registers:
 ;		BX, DX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuText_RefreshItemFromAX:
 	push	cx
 	push	ax
@@ -150,7 +150,7 @@ MenuText_RefreshItemFromAX:
 ;	Corrupts registers:
 ;		AX, BX, DX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuText_AdjustDisplayContextForDrawingItemFromCX:
 	mov		ax, cx
 	call	GetItemTextAttributeTypeToSIforItemInCX
@@ -170,7 +170,7 @@ MenuText_AdjustDisplayContextForDrawingItemFromCX:
 ;	Corrupts registers:
 ;		AX, BX, DX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 AdjustDisplayContextForDrawingTextsAtCoordsInAXwithAttrTypeInSIandCharOutFunctionInDX:
 	CALL_DISPLAY_LIBRARY SetCursorCoordinatesFromAX
 
@@ -191,7 +191,7 @@ AdjustDisplayContextForDrawingTextsAtCoordsInAXwithAttrTypeInSIandCharOutFunctio
 ;	Corrupts registers:
 ;		AX, BX, DX, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 ClearPreviousItem:
 	CALL_DISPLAY_LIBRARY GetSoftwareCoordinatesToAX
 	xchg	bx, ax
@@ -216,7 +216,7 @@ ClearPreviousItem:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 GetItemTextAttributeTypeToSIforItemInCX:
 	mov		si, ATTRIBUTE_CHARS.cItem
 	test	BYTE [bp+MENU.bFlags], FLG_MENU_NOHIGHLIGHT
@@ -225,7 +225,7 @@ GetItemTextAttributeTypeToSIforItemInCX:
 	cmp		cx, [bp+MENUINIT.wHighlightedItem]
 	jne		SHORT .ReturnAttributeTypeInSI
 	sub		si, BYTE ATTRIBUTE_CHARS.cItem - ATTRIBUTE_CHARS.cHighlightedItem
-ALIGN JUMP_ALIGN, ret
+ALIGN MENU_JUMP_ALIGN, ret
 .ReturnAttributeTypeInSI:
 	ret
 
@@ -240,13 +240,13 @@ ALIGN JUMP_ALIGN, ret
 ;	Corrupts registers:
 ;		AX, CX, BX, DX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 DrawScrollbarCharacterForItemInCXifNecessary:
 	call	MenuScrollbars_AreScrollbarsNeeded
 	jc		SHORT .DrawScrollbarCharacter
 	ret
 
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 .DrawScrollbarCharacter:
 	call	MenuBorders_AdjustDisplayContextForDrawingBorders
 	mov		ax, cx

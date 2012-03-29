@@ -20,7 +20,6 @@ SECTION .text
 ;		AH:		Int 13h return status (from drive requested in DL)
 ;		CF:		0 if successful, 1 if error
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 AH0h_HandlerForDiskControllerReset:
 	eMOVZX	bx, dl						; Copy requested drive to BL, zero BH to assume no errors
 	call	ResetFloppyDrivesWithInt40h

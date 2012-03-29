@@ -13,7 +13,7 @@ SECTION .text
 ;	Corrupts registers:
 ;		AX, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuLoop_Enter:
 	call	KeystrokeProcessing
 	call	TimeoutProcessing
@@ -35,14 +35,14 @@ MenuLoop_Enter:
 ;	Corrupts registers:
 ;		All, except SS:BP
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 KeystrokeProcessing:
 	call	Keyboard_GetKeystrokeToAX
 	jnz		SHORT ProcessKeystrokeFromAX
 NoKeystrokeToProcess:
 	ret
 
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 TimeoutProcessing:
 	call	MenuTime_UpdateSelectionTimeout
 	jnc		NoKeystrokeToProcess
@@ -61,7 +61,7 @@ TimeoutProcessing:
 ;	Corrupts registers:
 ;		AX, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 ProcessKeystrokeFromAX:
 	xchg	cx, ax
 	call	MenuTime_StopSelectionTimeout
@@ -84,7 +84,7 @@ ProcessKeystrokeFromAX:
 ;	Corrupts registers:
 ;		BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 .ProcessMenuSystemKeystrokeFromAX:
 	cmp		al, ESC
 	je		SHORT .LeaveMenuWithoutSelectingItem
@@ -95,7 +95,7 @@ ALIGN JUMP_ALIGN
 	jz		SHORT MenuLoop_ProcessScrollingKeysFromAX
 	ret		; Return with CF cleared since keystroke not processed
 
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 .LeaveMenuWithoutSelectingItem:
 	call	MenuEvent_ExitMenu
 	jnc		SHORT .CancelMenuExit
@@ -105,7 +105,7 @@ ALIGN JUMP_ALIGN
 	stc
 	ret
 
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 .SelectItem:
 	mov		cx, [bp+MENUINIT.wHighlightedItem]
 	call	MenuEvent_ItemSelectedFromCX
@@ -127,7 +127,7 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuLoop_ProcessScrollingKeysFromAX:
 	xchg	ah, al
 	cmp		al, MENU_KEY_PGUP
@@ -147,7 +147,7 @@ MenuLoop_ProcessScrollingKeysFromAX:
 	xchg	ah, al
 	ret
 
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 .ChangeToPreviousPage:
 	call	MenuScrollbars_GetMaxVisibleItemsOnPageToCX
 	xchg	ax, cx
@@ -156,13 +156,13 @@ ALIGN JUMP_ALIGN
 	add		cx, ax
 	jge		SHORT .MoveHighlightedItemByAX	; No rotation for PgUp
 	; Fall to .SelectFirstItem
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 .SelectFirstItem:
 	mov		ax, [bp+MENUINIT.wHighlightedItem]
 	neg		ax
 	jmp		SHORT .MoveHighlightedItemByAX
 
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 .ChangeToNextPage:
 	call	MenuScrollbars_GetMaxVisibleItemsOnPageToCX
 	xchg	ax, cx
@@ -171,20 +171,20 @@ ALIGN JUMP_ALIGN
 	cmp		cx, [bp+MENUINIT.wItems]
 	jb		SHORT .MoveHighlightedItemByAX	; No rotation for PgDn
 	; Fall to .SelectLastItem
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 .SelectLastItem:
 	stc
 	mov		ax, [bp+MENUINIT.wItems]
 	sbb		ax, [bp+MENUINIT.wHighlightedItem]
 	jmp		SHORT .MoveHighlightedItemByAX
 
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 .DecrementSelectedItem:
 	mov		ax, -1
 	SKIP2B	cx	; mov cx, <next instruction>
 .IncrementSelectedItem:
 	mov		al, 1	; AH is already 0
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 .MoveHighlightedItemByAX:
 	call	MenuScrollbars_MoveHighlightedItemByAX
 	stc

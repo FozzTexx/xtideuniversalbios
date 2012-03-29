@@ -19,7 +19,6 @@ SECTION .text
 ;		AH:		Int 13h return status
 ;		CF:		0 if successful, 1 if error
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 AH25h_HandlerForGetDriveInformation:
 	mov		ax, (COMMAND_IDENTIFY_DEVICE << 8 | 1)		; Read 1 sector
 	call	Prepare_BufferToESSIforOldInt13hTransfer	; Preserves AX

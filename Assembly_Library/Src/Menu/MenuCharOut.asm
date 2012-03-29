@@ -20,7 +20,7 @@ SECTION .text
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuCharOut_MenuTeletypeOutputWithAutomaticLineChange:
 	call	CharOutLineSplitter_IsCursorAtTheEndOfTextLine
 	jnc		SHORT MenuCharOut_MenuTeletypeOutput
@@ -29,7 +29,7 @@ MenuCharOut_MenuTeletypeOutputWithAutomaticLineChange:
 	call	CharOutLineSplitter_MovePartialWordToNewTextLine
 	; Fall to MenuCharOut_MenuTextTeletypeOutputWithAttribute
 
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuCharOut_MenuTeletypeOutput:
 	cmp		al, CR
 	je		SHORT PrintCRandAdjustOffsetForStartOfLine
@@ -50,13 +50,13 @@ MenuCharOut_MenuTeletypeOutput:
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuCharOut_PrintLFCRandAdjustOffsetForStartOfLine:
 	mov		al, LF
 	call	DisplayCharOut_BiosTeletypeOutput
 	; Fall to PrintCRandAdjustOffsetForStartOfLine
 
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 PrintCRandAdjustOffsetForStartOfLine:
 	mov		al, CR
 	call	DisplayCharOut_BiosTeletypeOutput

@@ -16,75 +16,83 @@
 #include "../library/library.h"
 #include "../library/flatimage.h"
 
-void usage(void)
-{
-	char *usageStrings[] = {
-		"SerDrive - XTIDE Universal BIOS Serial Drive Server",
-		"Version 2.0.0 Beta1, Built " __DATE__,
-		"",
-		"SerDrive is released under the GNU GPL v2.  SerDrive comes with ABSOLUTELY", 
-		"NO WARRANTY.  This is free software, and you are welcome to redistribute it",
-		"under certain conditions.  See LICENSE.TXT (included with this distribution)",
-		"for more details, or visit http://www.gnu.org/licenses/gpl-2.0.html.",
-		"",
-		"Usage: SerDrive [options] imagefile [[slave-options] slave-imagefile]",
-		"",
-		"  -g [cyl:head:sect]  Geometry in cylinders, sectors per cylinder, and heads",
-		"                      -g also implies CHS addressing mode (default is LBA28)",
-		"",
-		"  -n [megabytes]      Create new disk with given size or use -g geometry",
-		"                      Maximum size is " USAGE_MAXSECTORS, 
-		"                      Floppy images can also be created, such as \"360K\"",
-		"                      (default is a 32 MB disk, with CHS geometry 65:16:63)",
-		"",
-		"  -p [pipename]       Named Pipe mode for emulators",
-		"                      (must begin with \"\\\\\", default is \"" PIPENAME "\")",
-		"",
-        "  -c COMPortNumber    COM Port to use (default is first found)",
-   	    "                      Available COM ports on this system are:",
-   	 "COM                          ",
-		"",
-		"  -b BaudRate         Baud rate to use on the COM port, with client machine",
-		"                      rate multiplier in effect:",
-		"                          None:  2400,  4800,  9600,  28.8K,  57.6K, 115.2K",
-		"                          2x:    4800,  9600, 19200,  57.6K, 115.2K, 230.4K",
-		"                          4x:    9600, 19200, 38400, 115.2K, 230.4K, 460.8K",
-		"                          and for completeness:               76.8K, 153.6K",
-		"                      (default is 9600, 115.2K when in named pipe mode)",
-		"",
-		"  -t                  Disable timeout, useful for long delays when debugging",
-		"",
-		"  -r                  Read Only disk, do not allow writes",
-		"",
-		"  -v [level]          Reporting level 1-6, with increasing information",
-		"",
-		"On the client computer, a serial port can be configured for use as a hard disk",
-		"with xtidecfg.com.  Or one can hold down the ALT key at the end of the normal",
-		"IDE hard disk scan and the XTIDE Universal BIOS will scan COM1-7, at each of",
-		"the six speeds given above for BaudRate.  Note that hardware rate multipliers",
-		"must be taken into account on the server end, but are invisible on the client.",
-		"",
-		"Floppy images may also be used.  Image size must be exactly the same size",
-		"as a 2.88MB, 1.44MB, 1.2MB, 720KB, 360KB, 320KB, 180KB, or 160KB disk.",
-		"Floppy images must be the last disks discovered by the BIOS, and only",
-		"two floppy drives are supported by the BIOS at a time.",
-		NULL };
+char *bannerStrings[] = {
+	"SerDrive - XTIDE Universal BIOS Serial Drive Server",
+	"Copyright (C) 2012 by XTIDE Universal BIOS Team",
+	"Released under GNU GPL v2, with ABSOLUTELY NO WARRANTY",
+	"Version 2.0.0 Beta1, Built " __DATE__,
+	"", 
+	NULL };
 
-	for( int t = 0; usageStrings[t]; t++ )
+char *usageStrings[] = {
+	"This is free software, and you are welcome to redistribute it under certain",
+	"conditions.  For more license details, see the LICENSE.TXT file included with",
+	"this distribution, visit the XTIDE Universal BIOS wiki (address below), or",
+ 	"http://www.gnu.org/licenses/gpl-2.0.html",
+	"",
+	"Visit the wiki on http://code.google.com/p/xtideuniversalbios for detailed",
+	"serial drive usage directions.",
+	"",
+	"Usage: SerDrive [options] imagefile [[slave-options] slave-imagefile]",
+	"",
+	"  -g [cyl:head:sect]  Geometry in cylinders, sectors per cylinder, and heads",
+	"                      -g also implies CHS addressing mode (default is LBA28)",
+	"",
+	"  -n [megabytes]      Create new disk with given size or use -g geometry",
+	"                      Maximum size is " USAGE_MAXSECTORS, 
+	"                      Floppy images can also be created, such as \"360K\"",
+	"                      (default is a 32 MB disk, with CHS geometry 65:16:63)",
+	"",
+	"  -p [pipename]       Named Pipe mode for emulators",
+	"                      (must begin with \"\\\\\", default is \"" PIPENAME "\")",
+	"",
+	"  -c COMPortNumber    COM Port to use (default is first found)",
+	"                      Available COM ports on this system are:",
+ "COM                          ",
+	"",
+	"  -b BaudRate         Baud rate to use on the COM port, with client machine",
+	"                      rate multiplier in effect:",
+	"                          None:  2400,  4800,  9600,  28.8K,  57.6K, 115.2K",
+	"                          2x:    4800,  9600, 19200,  57.6K, 115.2K, 230.4K",
+	"                          4x:    9600, 19200, 38400, 115.2K, 230.4K, 460.8K",
+	"                          and for completeness:               76.8K, 153.6K",
+	"                      (default is 9600, 115.2K when in named pipe mode)",
+	"",
+	"  -t                  Disable timeout, useful for long delays when debugging",
+	"",
+	"  -r                  Read Only disk, do not allow writes",
+	"",
+	"  -v [level]          Reporting level 1-6, with increasing information",
+	"",
+	"On the client computer, a serial port can be configured for use as a hard disk",
+	"with xtidecfg.com.  Or one can hold down the ALT key at the end of the normal",
+	"IDE hard disk scan and the XTIDE Universal BIOS will scan COM1-7, at each of",
+	"the six speeds given above for BaudRate.  Note that hardware rate multipliers",
+	"must be taken into account on the server end, but are invisible on the client.",
+	"",
+	"Floppy images may also be used.  Image size must be exactly the same size",
+	"as a 2.88MB, 1.44MB, 1.2MB, 720KB, 360KB, 320KB, 180KB, or 160KB disk.",
+	"Floppy images must be the last disks discovered by the BIOS, and only",
+	"two floppy drives are supported by the BIOS at a time.",
+	NULL };
+
+void usagePrint( char *strings[] )
+{
+	for( int t = 0; strings[t]; t++ )
 	{
-		if( !strncmp( usageStrings[t], "COM", 3 ) )
+		if( !strncmp( strings[t], "COM", 3 ) )
 		{
 			char logbuff[ 1024 ];
 
 			SerialAccess::EnumerateCOMPorts( logbuff, 1024 );
-			fprintf( stderr, "%s%s\n", usageStrings[t]+3, logbuff );
+			fprintf( stderr, "%s%s\n", strings[t]+3, logbuff );
 		}
 		else
-			fprintf( stderr, "%s\n", usageStrings[t] );
+			fprintf( stderr, "%s\n", strings[t] );
 	}
-
-	exit( 1 );
 }
+
+#define usage() { usagePrint( usageStrings ); exit(1); }
 
 int verbose = 0;
 
@@ -114,8 +122,12 @@ int main(int argc, char* argv[])
 	int imagecount = 0;
 	Image *images[2] = { NULL, NULL };
 
+	usagePrint( bannerStrings );
+
 	for( int t = 1; t < argc; t++ )
 	{
+		char *next = (t+1 < argc ? argv[t+1] : NULL );
+
 		if( argv[t][0] == '/' || argv[t][0] == '-' )
 		{
 		    char *c;
@@ -127,15 +139,21 @@ int main(int argc, char* argv[])
 			switch( argv[t][1] )
 			{
 			case 'c': case 'C':
-				a = atol( argv[++t] );
+				if( !next )
+					usage();
+				t++;
+				a = atol( next );
 				if( a < 1 )
 					usage();
 				sprintf( ComPortBuff, "COM%d", a );
 				ComPort = &ComPortBuff[0];
 				break;
 			case 'v': case 'V':
-			    if( atol(argv[t+1]) != 0 )
-					verbose = atol(argv[++t]);
+			    if( next && atol(next) != 0 )
+				{
+					t++;
+					verbose = atol(next);
+				}
 				else
 					verbose = 1;
 				break;
@@ -143,17 +161,21 @@ int main(int argc, char* argv[])
 				readOnly = 1;
 				break;
 			case 'p': case 'P':
-				if( argv[t+1][0] == '\\' && argv[t+1][1] == '\\' )
-					ComPort = argv[++t];
+				if( next && next[0] == '\\' && next[1] == '\\' )
+				{
+					t++;
+					ComPort = next;
+				}
 				else
 					ComPort = PIPENAME;
 				if( !baudRate )
 					baudRate = baudRateMatchString( "115200" );
 				break;			  
 			case 'g': case 'G':
-				if( atol(argv[t+1]) != 0 )
+				if( next && atol(next) != 0 )
 				{
-					if( !Image::parseGeometry( argv[++t], &cyl, &head, &sect ) )
+					t++;
+					if( !Image::parseGeometry( next, &cyl, &head, &sect ) )
 						usage();
 				}
 				useCHS = 1;
@@ -163,11 +185,13 @@ int main(int argc, char* argv[])
 				break;
 			case 'n': case 'N':
 				createFile = 1;
-				if( atol(argv[t+1]) != 0 )
+				if( next && atol(next) != 0 )
 				{
-					double size = atof(argv[++t]);
+					double size = atof(next);
 					struct floppyInfo *fi;
 					char *c;
+
+					t++;
 
 					size *= 2;
 					for( c = argv[t]; *c && *c != 'k' && *c != 'K'; c++ ) ;
@@ -192,8 +216,11 @@ int main(int argc, char* argv[])
 				timeoutEnabled = 0;
 				break;
 			case 'b': case 'B':
-				if( !(baudRate = baudRateMatchString( argv[++t] )) || !baudRate->rate )
-					log( -2, "Unknown Baud Rate \"%s\"", argv[t] );
+				if( !next )
+					usage();
+				t++;
+				if( !(baudRate = baudRateMatchString( next )) || !baudRate->rate )
+					log( -2, "Unknown Baud Rate \"%s\"", next );
 				break;
 			default:
 				log( -2, "Unknown Option: \"%s\"", argv[t] );

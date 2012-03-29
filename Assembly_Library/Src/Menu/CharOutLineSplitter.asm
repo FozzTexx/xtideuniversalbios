@@ -13,7 +13,7 @@ SECTION .text
 ;	Corrupts registers:
 ;		AX, DX, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 CharOutLineSplitter_PrepareForPrintingTextLines:
 	; Get first text line column offset to DX
 	call	CharOutLineSplitter_GetFirstBorderLineColumnOffsetToAX
@@ -40,7 +40,7 @@ CharOutLineSplitter_PrepareForPrintingTextLines:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 CharOutLineSplitter_GetFirstBorderLineColumnOffsetToAX:
 	call	MenuLocation_GetTitleBordersTopLeftCoordinatesToAX
 	xor		ah, ah
@@ -59,7 +59,7 @@ CharOutLineSplitter_GetFirstBorderLineColumnOffsetToAX:
 ;	Corrupts registers:
 ;		DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 CharOutLineSplitter_IsCursorAtTheEndOfTextLine:
 	push	ax
 
@@ -85,7 +85,7 @@ CharOutLineSplitter_IsCursorAtTheEndOfTextLine:
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 CharOutLineSplitter_MovePartialWordToNewTextLine:
 	push	si
 	push	cx
@@ -105,7 +105,7 @@ CharOutLineSplitter_MovePartialWordToNewTextLine:
 .GetOffsetToPartialWordToSIandSizeToCX:
 	mov		cx, di
 	mov		si, di
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 .ScanNextCharacter:		; Space will always be found since one comes after border
 	dec		si
 	dec		si

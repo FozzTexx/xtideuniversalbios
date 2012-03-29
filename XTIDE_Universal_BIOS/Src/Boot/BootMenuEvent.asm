@@ -15,7 +15,6 @@ SECTION .text
 ;	Corrupts registers:
 ;		All
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 BootMenuEvent_Handler:
 
 %ifdef MENUEVENT_INLINE_OFFSETS
@@ -65,7 +64,6 @@ ALIGN WORD_ALIGN
 ;	DS:SI:		Ptr to MENUINIT struct to initialize
 ; Returns:
 ;	DS:SI:		Ptr to initialized MENUINIT struct
-ALIGN JUMP_ALIGN
 .FirstEvent:	
 .InitializeMenuinitFromDSSI:
 	push	ds
@@ -84,14 +82,13 @@ ALIGN JUMP_ALIGN
 	stc
 	ret
 
-ALIGN JUMP_ALIGN
 .GetDefaultMenuitemToDX:
 	mov		dl, [cs:ROMVARS.bBootDrv]	; Default boot drive
 	call	BootMenu_IsDriveInSystem
 	jnc		SHORT .DoNotSetDefaultMenuitem
 	call	DriveXlate_SetDriveToSwap
 	jmp		BootMenu_GetMenuitemToDXforDriveInDL
-ALIGN JUMP_ALIGN
+
 .DoNotSetDefaultMenuitem:
 	xor		dx, dx						; Whatever appears first on boot menu
 	ret
@@ -100,7 +97,6 @@ ALIGN JUMP_ALIGN
 ; Parameters:
 ;	CX:			Index of new highlighted item
 ;	DX:			Index of previously highlighted item or NO_ITEM_HIGHLIGHTED
-ALIGN JUMP_ALIGN
 .ItemHighlightedFromCX:
 	push	cx
 	call	BootMenu_GetDriveToDXforMenuitemInCX_And_RamVars_GetSegmentToDS		
@@ -123,13 +119,12 @@ ALIGN JUMP_ALIGN
 ; Parameters:
 ;	AL:			ASCII character for the key
 ;	AH:			Keyboard library scan code for the key
-ALIGN JUMP_ALIGN
 .KeyStrokeInAX:
 	cmp		ah, ROM_BOOT_HOTKEY_SCANCODE
 	jne		SHORT .CheckDriveHotkeys
 	;; NOTE: carry flag will be clear after compare above that resulted in zero
 	jmp		Int19hMenu_JumpToBootSector_or_RomBoot   	
-ALIGN JUMP_ALIGN
+
 .CheckDriveHotkeys:
 	call	BootMenu_GetMenuitemToAXforAsciiHotkeyInAL
 	cmp		ax, [bp+MENUINIT.wItems]
@@ -146,7 +141,6 @@ ALIGN JUMP_ALIGN
 
 ; Parameters:
 ;	CX:			Index of selected item
-ALIGN JUMP_ALIGN
 .ItemSelectedFromCX:
 	CALL_MENU_LIBRARY Close
 

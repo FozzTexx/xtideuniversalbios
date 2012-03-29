@@ -29,14 +29,14 @@ SECTION .text
 ;	Corrupts registers:
 ;		BX, DH
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN UTIL_SIZE_JUMP_ALIGN
 Size_GetSizeToAXAndCharToDLfromBXDXAXwithMagnitudeInCX:
 %ifndef USE_186		; If 8086/8088
 	push	di
 %endif
 	push	si
 
-ALIGN JUMP_ALIGN
+ALIGN UTIL_SIZE_JUMP_ALIGN
 .MagnitudeConversionLoop:
 	ePUSH_T	di, .MagnitudeConversionLoop; DI corrupted only on 8086/8088 build
 	test	bx, bx						; Bits 32...47 in use?
@@ -79,12 +79,12 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN UTIL_SIZE_JUMP_ALIGN
 Size_DivideSizeInBXDXAXby1024andIncrementMagnitudeInCX:
 	push	cx
 	xor		si, si					; Zero remainder
 	mov		cl, 10					; Divide by 1024
-ALIGN JUMP_ALIGN
+ALIGN UTIL_SIZE_JUMP_ALIGN
 .ShiftLoop:
 	call	Size_DivideBXDXAXbyTwo
 	rcr		si, 1					; Update remainder
@@ -106,7 +106,7 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN UTIL_SIZE_JUMP_ALIGN
 Size_ConvertSectorCountInBXDXAXtoKiB:
 Size_DivideBXDXAXbyTwo:
 	shr		bx, 1					; Divide sector count by 2...

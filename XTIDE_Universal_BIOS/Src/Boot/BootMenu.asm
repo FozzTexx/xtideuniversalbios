@@ -15,7 +15,6 @@ SECTION .text
 ;	Corrupts registers:
 ;		All General Purpose Registers
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 BootMenu_DisplayAndReturnSelectionInDX:
 	call	DriveXlate_Reset
 	call	BootMenuPrint_TheBottomOfScreen
@@ -38,12 +37,10 @@ BootMenu_DisplayAndReturnSelectionInDX:
 ;	Corrupts registers:
 ;		AX, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 BootMenu_GetDriveToDXforMenuitemInCX_And_RamVars_GetSegmentToDS:
 	call	RamVars_GetSegmentToDS
 ;;; fall-through
 
-ALIGN JUMP_ALIGN
 BootMenu_GetDriveToDXforMenuitemInCX:
 	cmp		cl, NO_ITEM_HIGHLIGHTED
 	je		SHORT .ReturnFloppyDriveInDX	; Clear CF if branch taken
@@ -72,7 +69,6 @@ BootMenu_GetDriveToDXforMenuitemInCX:
 ;	Corrupts registers:
 ;		AX, BX, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 BootMenu_Enter:
 	mov		bx, BootMenuEvent_Handler
 	CALL_MENU_LIBRARY DisplayWithHandlerInBXandUserDataInDXAX
@@ -91,7 +87,6 @@ BootMenu_Enter:
 ;	Corrupts registers:
 ;		CX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 BootMenu_GetMenuitemCountToAX:
 	call	RamVars_GetHardDiskCountFromBDAtoAX
 	xchg	ax, cx
@@ -109,7 +104,6 @@ BootMenu_GetMenuitemCountToAX:
 ;	Corrupts registers:
 ;		AL, CX, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 BootMenu_GetHeightToAHwithItemCountInAL:
 	add		al, BOOT_MENU_HEIGHT_WITHOUT_ITEMS
 	xchg	cx, ax
@@ -118,7 +112,7 @@ BootMenu_GetHeightToAHwithItemCountInAL:
 	cmp		ah, cl
 	jb		SHORT .Return
 	mov		ah, cl
-ALIGN JUMP_ALIGN, ret
+
 .Return:
 	ret
 
@@ -132,7 +126,6 @@ ALIGN JUMP_ALIGN, ret
 ;	Corrupts registers:
 ;		CX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 BootMenu_GetMenuitemToAXforAsciiHotkeyInAL:
 	call	Char_ALtoUpperCaseLetter
 	cbw
@@ -143,7 +136,7 @@ BootMenu_GetMenuitemToAXforAsciiHotkeyInAL:
 	xchg	ax, cx
 	sub		al, 'A'						; Letter to Floppy Drive menuitem
 	ret
-ALIGN JUMP_ALIGN
+
 .StartFromHardDiskLetter:
 	sub		cl, al						; Hard Disk index
 	call	FloppyDrive_GetCountToAX
@@ -164,14 +157,13 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 BootMenu_GetLetterForFirstHardDiskToAL:
 	call	FloppyDrive_GetCountToAX
 	add		al, 'A'
 	cmp		al, 'C'
 	ja		.Return
 	mov		al, 'C'
-ALIGN JUMP_ALIGN, ret
+		
 .Return:
 	ret
 
@@ -185,7 +177,6 @@ ALIGN JUMP_ALIGN, ret
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 BootMenu_GetMenuitemToDXforDriveInDL:
 	xor		dh, dh						; Drive number now in DX
 	test	dl, dl
@@ -210,7 +201,6 @@ BootMenu_GetMenuitemToDXforDriveInDL:
 ;	Corrupts registers:
 ;		AX, CX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 BootMenu_IsDriveInSystem:
 	test	dl, dl								; Floppy drive?
 	jns		SHORT .IsFloppyDriveInSystem

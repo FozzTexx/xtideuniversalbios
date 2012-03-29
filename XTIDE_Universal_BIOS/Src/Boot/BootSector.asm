@@ -16,7 +16,6 @@ SECTION .text
 ;	Corrupts registers:
 ;		AX, CX, DH, SI, DI, (DL if failed to read boot sector)
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 BootSector_TryToLoadFromDriveDL:
 	call	BootPrint_TryToBootFromDL
 	call	LoadFirstSectorFromDriveDL
@@ -51,12 +50,11 @@ BootSector_TryToLoadFromDriveDL:
 ;	Corrupts registers:
 ;		AL, CX, DH, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 LoadFirstSectorFromDriveDL:
 	LOAD_BDA_SEGMENT_TO	es, bx				; ES:BX now points to...
 	mov		bx, BOOTVARS.rgbBootSect		; ...boot sector location
 	mov		di, BOOT_READ_RETRY_TIMES		; Initialize retry counter
-ALIGN JUMP_ALIGN
+
 .ReadRetryLoop:
 	call	.ResetBootDriveFromDL
 	call	.LoadFirstSectorFromDLtoESBX
@@ -77,7 +75,6 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		AL
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 .ResetBootDriveFromDL:
 	xor		ax, ax							; AH=0h, Disk Controller Reset
 	test	dl, dl							; Floppy drive?
@@ -100,7 +97,6 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		AL, CX, DH
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 .LoadFirstSectorFromDLtoESBX:
 	mov		ax, 0201h						; Read 1 sector
 	mov		cx, 1							; Cylinder 0, Sector 1

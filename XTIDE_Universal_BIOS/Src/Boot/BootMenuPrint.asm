@@ -14,7 +14,6 @@ SECTION .text
 ;	Corrupts registers:
 ;		AX, BX, DX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 BootMenuPrint_RefreshItem:
 	call	BootMenu_GetDriveToDXforMenuitemInCX_And_RamVars_GetSegmentToDS
 	jnc		BootMenuEvent_EventCompleted			; if no menu item selected, out we go
@@ -58,7 +57,6 @@ BootMenuPrint_RefreshItem:
 ;	Corrupts registers:
 ;		AX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 BootMenuPrint_TitleStrings:
 	mov		si, ROMVARS.szTitle
 	call	BootMenuPrint_NullTerminatedStringFromCSSIandSetCF
@@ -75,7 +73,6 @@ BootMenuPrint_TitleStrings:
 ;	Corrupts registers:
 ;		AX, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 BootMenuPrint_NullTerminatedStringFromCSSIandSetCF:
 ;
 ; We send all CSSI strings through the Format routine for the case of
@@ -98,7 +95,6 @@ BootMenuPrint_NullTerminatedStringFromCSSIandSetCF:
 ;	Corrupts registers:
 ;		AX, BX, CX, DX, SI, DI, ES
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 BootMenuPrint_RefreshInformation:
 	CALL_MENU_LIBRARY ClearInformationArea
 
@@ -187,7 +183,6 @@ BootMenuPrint_RefreshInformation:
 ;	Corrupts registers:
 ;		BX, CX, DX, SI, DI, ES
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 .HardDiskRefreshInformation:
 	jc		.HardDiskMenuitemInfoForForeignDrive		; Based on CF from FindDPT_ForDriveNumberInDL (way) above
 
@@ -228,7 +223,6 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		AX, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 BootMenuPrint_FormatCSSIfromParamsInSSBP:
 	CALL_DISPLAY_LIBRARY FormatNullTerminatedStringFromCSSI
 	stc				; Successful return from menu event
@@ -245,7 +239,6 @@ BootMenuPrint_FormatCSSIfromParamsInSSBP:
 ;	Corrupts registers:
 ;		AX, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 BootMenuPrint_ClearScreen:
 	call	BootMenuPrint_InitializeDisplayContext
 	xor		ax, ax
@@ -264,7 +257,6 @@ BootMenuPrint_ClearScreen:
 ;	Corrupts registers:
 ;		AX, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 BootMenuPrint_TheBottomOfScreen:
 	call	FloppyDrive_GetCountToAX
 	xchg	bx, ax					; Floppy Drive count to BL
@@ -350,7 +342,6 @@ BootMenuPrint_TheBottomOfScreen:
 ;	Corrupts registers:
 ;		AX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 PushHotkeyParamsAndFormat:
 	push	bp
 	mov		bp, sp
@@ -377,7 +368,6 @@ BootMenuPrint_FormatCSSIfromParamsInSSBP_Relay:
 ;	Corrupts registers:
 ;		AX, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 BootMenuPrint_InitializeDisplayContext:
 	CALL_DISPLAY_LIBRARY InitializeDisplayContext
 	ret

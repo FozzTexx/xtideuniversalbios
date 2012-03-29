@@ -14,7 +14,7 @@ SECTION .text
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN STRING_JUMP_ALIGN
 String_ConvertDSSItoLowerCase:
 	push	dx
 	push	ax
@@ -41,7 +41,7 @@ String_ConvertDSSItoLowerCase:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN STRING_JUMP_ALIGN
 String_ConvertWordToAXfromStringInDSSIwithBaseInBX:
 	push	di
 	push	dx
@@ -67,12 +67,12 @@ String_ConvertWordToAXfromStringInDSSIwithBaseInBX:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN STRING_JUMP_ALIGN
 String_CopyDSSItoESDIandGetLengthToCX:
 	push	ax
 
 	xor		cx, cx
-ALIGN JUMP_ALIGN
+ALIGN STRING_JUMP_ALIGN
 .CopyNextCharacter:
 	lodsb						; Load from DS:SI to AL
 	test	al, al				; NULL to end string?
@@ -81,7 +81,7 @@ ALIGN JUMP_ALIGN
 	inc		cx					; Increment number of characters written
 	jmp		SHORT .CopyNextCharacter
 
-ALIGN JUMP_ALIGN
+ALIGN STRING_JUMP_ALIGN
 .EndOfString:
 	pop		ax
 	ret
@@ -96,7 +96,7 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN STRING_JUMP_ALIGN
 String_GetLengthFromDSSItoCX:
 	push	ax
 	push	si

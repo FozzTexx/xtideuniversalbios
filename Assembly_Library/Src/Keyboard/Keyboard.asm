@@ -20,7 +20,7 @@ SECTION .text
 ;		DX
 ;--------------------------------------------------------------------
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-ALIGN JUMP_ALIGN
+ALIGN KEYBOARD_JUMP_ALIGN
 Keyboard_ReadUserInputtedWordWhilePrinting:
 	push	ds
 	push	si
@@ -70,7 +70,7 @@ Keyboard_ReadUserInputtedWordWhilePrinting:
 ;		AX
 ;--------------------------------------------------------------------
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-ALIGN JUMP_ALIGN
+ALIGN KEYBOARD_JUMP_ALIGN
 Keyboard_ReadUserInputtedStringToESDIWhilePrinting:
 	push	di
 	push	si
@@ -81,7 +81,7 @@ Keyboard_ReadUserInputtedStringToESDIWhilePrinting:
 	xor		bx, bx								; Zero character counter
 	dec		cx									; Decrement buffer size for NULL
 	cld
-ALIGN JUMP_ALIGN
+ALIGN KEYBOARD_JUMP_ALIGN
 .GetCharacterFromUser:
 	call	Keyboard_GetKeystrokeToAXandWaitIfNecessary	; Get ASCII to AL
 	call	.ProcessControlCharacter
@@ -120,7 +120,7 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		AX, BX, SI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN KEYBOARD_JUMP_ALIGN
 .PrepareDisplayContextForKeyboardInput:
 	pop		bx					; Pop return address to BX
 	mov		si, di
@@ -149,7 +149,7 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		AH
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN KEYBOARD_JUMP_ALIGN
 .ProcessControlCharacter:
 	cmp		al, CR								; ENTER to terminate string?
 	je		SHORT .EndCharacterInput
@@ -192,7 +192,7 @@ ALIGN JUMP_ALIGN
 ;		AX
 ;--------------------------------------------------------------------
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-ALIGN JUMP_ALIGN
+ALIGN KEYBOARD_JUMP_ALIGN
 Keyboard_PrintBackspace:
 	mov		al, BS
 	call	Keyboard_PrintInputtedCharacter
@@ -213,7 +213,7 @@ Keyboard_PrintBackspace:
 ;		AX
 ;--------------------------------------------------------------------
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-ALIGN JUMP_ALIGN
+ALIGN KEYBOARD_JUMP_ALIGN
 Keyboard_PlayBellForUnwantedKeystroke:
 	mov		al, BELL
 	; Fall to Keyboard_PrintInputtedCharacter
@@ -229,7 +229,7 @@ Keyboard_PlayBellForUnwantedKeystroke:
 ;		AX
 ;--------------------------------------------------------------------
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-ALIGN JUMP_ALIGN
+ALIGN KEYBOARD_JUMP_ALIGN
 Keyboard_PrintInputtedCharacter:
 	push	di
 	CALL_DISPLAY_LIBRARY PrintCharacterFromAL
@@ -249,7 +249,7 @@ Keyboard_PrintInputtedCharacter:
 ;		AX
 ;--------------------------------------------------------------------
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS	; Only used when debugging
-ALIGN JUMP_ALIGN
+ALIGN KEYBOARD_JUMP_ALIGN
 Keyboard_RemoveAllKeystrokesFromBuffer:
 	call	Keyboard_GetKeystrokeToAX
 	jnz		SHORT Keyboard_RemoveAllKeystrokesFromBuffer
@@ -271,17 +271,17 @@ Keyboard_RemoveAllKeystrokesFromBuffer:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN KEYBOARD_JUMP_ALIGN
 Keyboard_GetKeystrokeToAXandLeaveItToBuffer:
 	mov		ah, CHECK_FOR_KEYSTROKE
 	int		BIOS_KEYBOARD_INTERRUPT_16h
 	ret
-ALIGN JUMP_ALIGN
+ALIGN KEYBOARD_JUMP_ALIGN
 Keyboard_GetKeystrokeToAX:
 	call	Keyboard_GetKeystrokeToAXandLeaveItToBuffer
 	jz		SHORT Keyboard_GetKeystrokeToAXReturn
 	; Fall to Keyboard_GetKeystrokeToAXandWaitIfNecessary
-ALIGN JUMP_ALIGN
+ALIGN KEYBOARD_JUMP_ALIGN
 Keyboard_GetKeystrokeToAXandWaitIfNecessary:
 	xor		ah, ah						; GET_KEYSTROKE
 	int		BIOS_KEYBOARD_INTERRUPT_16h

@@ -150,7 +150,7 @@ DisplayFormat_ParseCharacters_FromAX:
 	mov		si,ax
 	; fall through to DisplayFormat_ParseCharacters
 
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayFormat_ParseCharacters:
 ;
 ; This routine is used to output all strings from the ROM.  The strings in ROMVARS are not compressed,
@@ -183,7 +183,7 @@ DisplayFormat_ParseCharacters:
 	jmp		.decode
 
 
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayFormatCompressed_TranslatesAndFormats:
 ;
 ; This routine is here (above DisplayFormat_ParseCharacters) to reduce the amount of code between

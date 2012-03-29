@@ -27,7 +27,7 @@ SECTION .text
 ;	Corrupts registers:
 ;		AX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuAttribute_SetToDisplayContextFromTypeInSI:
 	call	MenuAttribute_GetToAXfromTypeInSI
 	CALL_DISPLAY_LIBRARY SetCharacterAttributeFromAL
@@ -43,7 +43,7 @@ MenuAttribute_SetToDisplayContextFromTypeInSI:
 ;	Corrupts registers:
 ;		SI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuAttribute_GetToAXfromTypeInSI:
 	push	ds
 
@@ -58,12 +58,12 @@ MenuAttribute_GetToAXfromTypeInSI:
 	add		si, .rgcBlackAndWhiteAttributes
 	jmp		SHORT .LoadAttributeAndReturn
 
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 .LoadMonoAttribute:
 	add		si, .rgcMonochromeAttributes
 	jmp		SHORT .LoadAttributeAndReturn
 
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 .LoadColorAttribute:
 	add		si, .rgcColorAttributes
 .LoadAttributeAndReturn:

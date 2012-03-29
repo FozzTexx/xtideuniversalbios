@@ -13,7 +13,6 @@ SECTION .text
 ;	Corrupts registers:
 ;		AX, CX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 BootPrint_FailedToLoadFirstSector:
 	push	bp
 	mov		bp, sp
@@ -34,7 +33,6 @@ BootPrint_FailedToLoadFirstSector:
 ;	Corrupts registers:
 ;		AX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 BootPrint_TryToBootFromDL:
 	push	bp
 	mov		bp, sp
