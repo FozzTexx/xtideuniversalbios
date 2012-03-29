@@ -15,7 +15,7 @@ SECTION .text
 ;		AX, DX
 ;--------------------------------------------------------------------
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayPage_SetFromAL:
 	xor		ah, ah
 	mul		WORD [VIDEO_BDA.wBytesPerPage]		; AX = Offset to page
@@ -34,7 +34,7 @@ DisplayPage_SetFromAL:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayPage_GetColumnsToALandRowsToAH:
 	mov		al, [VIDEO_BDA.wColumns]		; 40 or 80
 	mov		ah, 25							; Always 25 rows on standard text modes
@@ -50,7 +50,7 @@ DisplayPage_GetColumnsToALandRowsToAH:
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayPage_SynchronizeToHardware:
 	xor		dx, dx
 	mov		ax, [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fpCursorPosition]

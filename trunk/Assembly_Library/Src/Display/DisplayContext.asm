@@ -13,7 +13,7 @@ SECTION .text
 ;	Corrupts registers:
 ;		AX, DX, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayContext_Initialize:
 	mov		WORD [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fnCharOut], DEFAULT_CHARACTER_OUTPUT
 	mov		BYTE [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bAttribute], SCREEN_BACKGROUND_ATTRIBUTE
@@ -78,7 +78,7 @@ DisplayContext_Initialize:
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayContext_SynchronizeToHardware:
 	call	DisplayPage_SynchronizeToHardware
 	call	DisplayCursor_SynchronizeShapeToHardware
@@ -94,7 +94,7 @@ DisplayContext_SynchronizeToHardware:
 ;	Corrupts registers:
 ;		AX, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayContext_Push:
 	mov		di, ds					; Backup DS
 	LOAD_BDA_SEGMENT_TO	ds, ax
@@ -120,7 +120,7 @@ DisplayContext_Push:
 ;	Corrupts registers:
 ;		AX, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayContext_Pop:
 	mov		di, ds					; Backup DS
 	LOAD_BDA_SEGMENT_TO	ds, ax
@@ -153,7 +153,7 @@ DisplayContext_Pop:
 ;		AX, DI
 ;--------------------------------------------------------------------
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayContext_PrepareOffScreenBufferInESBXwithLengthInCX:
 	push	ds
 
@@ -184,7 +184,7 @@ DisplayContext_PrepareOffScreenBufferInESBXwithLengthInCX:
 ;		AX
 ;--------------------------------------------------------------------
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayContext_SetCharacterPointerFromBXAX:
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fpCursorPosition], ax
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fpCursorPosition+2], bx
@@ -204,7 +204,7 @@ DisplayContext_SetCharacterPointerFromBXAX:
 ;		Nothing
 ;--------------------------------------------------------------------
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayContext_GetCharacterPointerToBXAX:
 	mov		ax, [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fpCursorPosition]
 	mov		bx, [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fpCursorPosition+2]
@@ -223,7 +223,7 @@ DisplayContext_GetCharacterPointerToBXAX:
 ;	Corrupts registers:
 ;		BL
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayContext_SetCharOutputFunctionFromAXwithAttribFlagInBL:
 	and		bl, FLG_CONTEXT_ATTRIBUTES
 	and		BYTE [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bFlags], ~FLG_CONTEXT_ATTRIBUTES
@@ -242,7 +242,7 @@ DisplayContext_SetCharOutputFunctionFromAXwithAttribFlagInBL:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayContext_SetCharacterAttributeFromAL:
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bAttribute], al
 	ret
@@ -258,7 +258,7 @@ DisplayContext_SetCharacterAttributeFromAL:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayContext_SetCharacterOutputParameterFromAX:
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.wCharOutParam], ax
 	ret
@@ -274,7 +274,7 @@ DisplayContext_SetCharacterOutputParameterFromAX:
 ;		Nothing
 ;--------------------------------------------------------------------
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS OR EXCLUDE_FROM_XTIDECFG	; This is currently unused (dead code)
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayContext_GetCharacterOutputParameterToDX:
 	mov		dx, [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.wCharOutParam]
 	ret
@@ -292,7 +292,7 @@ DisplayContext_GetCharacterOutputParameterToDX:
 ;		Nothing
 ;--------------------------------------------------------------------
 %ifndef MODULE_STRINGS_COMPRESSED
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayContext_GetCharacterOffsetToAXfromByteOffsetInAX:
 	test	BYTE [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bFlags], FLG_CONTEXT_ATTRIBUTES
 	jz		SHORT ReturnOffsetInAX
@@ -312,12 +312,12 @@ DisplayContext_GetCharacterOffsetToAXfromByteOffsetInAX:
 ;		Nothing
 ;--------------------------------------------------------------------
 %ifndef MODULE_STRINGS_COMPRESSED
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayContext_GetByteOffsetToAXfromCharacterOffsetInAX:
 	test	BYTE [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bFlags], FLG_CONTEXT_ATTRIBUTES
 	jz		SHORT ReturnOffsetInAX
 	sal		ax, 1		; WORD count to BYTE count
-ALIGN JUMP_ALIGN, ret
+ALIGN DISPLAY_JUMP_ALIGN, ret
 ReturnOffsetInAX:
 	ret
 %endif

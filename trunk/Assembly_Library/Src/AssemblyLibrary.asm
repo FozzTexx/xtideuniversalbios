@@ -6,6 +6,9 @@
 SECTION .text
 
 %ifdef INCLUDE_DISPLAY_LIBRARY
+  %ifndef DISPLAY_JUMP_ALIGN
+	%define DISPLAY_JUMP_ALIGN 1
+  %endif
 	%include "CgaSnow.asm"
 	%include "Display.asm"
 	%include "DisplayCharOut.asm"
@@ -28,10 +31,16 @@ SECTION .text
 %endif
 
 %ifdef INCLUDE_KEYBOARD_LIBRARY
+  %ifndef KEYBOARD_JUMP_ALIGN
+	%define KEYBOARD_JUMP_ALIGN 1
+  %endif		
 	%include "Keyboard.asm"
 %endif
 
 %ifdef INCLUDE_MENU_LIBRARY
+  %ifndef MENU_JUMP_ALIGN
+	%define MENU_JUMP_ALIGN 1
+  %endif				
 	%include "CharOutLineSplitter.asm"
 	%include "Menu.asm"
 	%include "MenuAttributes.asm"
@@ -60,6 +69,9 @@ SECTION .text
 %endif
 
 %ifdef INCLUDE_STRING_LIBRARY
+  %ifndef STRING_JUMP_ALIGN
+	%define STRING_JUMP_ALIGN 1
+  %endif				
 	%include "Char.asm"
 	%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 		%include "String.asm"
@@ -85,6 +97,9 @@ SECTION .text
 %endif
 
 %ifdef INCLUDE_UTIL_LIBRARY
+  %ifndef UTIL_SIZE_JUMP_ALIGN
+	%define UTIL_SIZE_JUMP_ALIGN 1
+  %endif		
 	%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 		%include "Bit.asm"
 	%endif

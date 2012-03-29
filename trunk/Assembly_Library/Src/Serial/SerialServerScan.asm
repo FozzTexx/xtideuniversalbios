@@ -24,7 +24,6 @@ SECTION .text
 ;	Corrupts registers:
 ;		AL, BX, CX, DX, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 SerialServerScan_ScanForServer:		
 		mov		cx, 1			; one sector, not scanning (default)
 
@@ -116,7 +115,6 @@ SerialServerScan_ScanForServer:
 ;	Corrupts registers:
 ;		AL, BX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 SerialServerScan_CheckForServer_PortAndBaudInDX:
 		push	bp				; setup fake SerialServer_Command
 

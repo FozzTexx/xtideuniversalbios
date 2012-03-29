@@ -16,7 +16,6 @@ SECTION .text
 ;		AH:		BIOS Error code
 ;		CF:		0 if successful, 1 if error
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 AH11h_HandlerForRecalibrate:
 %ifndef USE_186
 	call	AH11h_RecalibrateDrive

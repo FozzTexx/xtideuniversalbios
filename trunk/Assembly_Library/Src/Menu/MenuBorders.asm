@@ -21,7 +21,7 @@ SECTION .text
 ;	Corrupts registers:
 ;		AX, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuBorders_RefreshAll:
 %ifndef USE_186
 	call	MenuBorders_AdjustDisplayContextForDrawingBorders
@@ -51,7 +51,7 @@ MenuBorders_RefreshAll:
 ;	Corrupts registers:
 ;		AX, BX, DX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuBorders_RedrawBottomBorderLine:
 	call	MenuBorders_AdjustDisplayContextForDrawingBorders
 	call	MenuLocation_GetBottomBordersTopLeftCoordinatesToAX
@@ -70,7 +70,7 @@ MenuBorders_RedrawBottomBorderLine:
 ;		AX, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuBorders_RefreshItemBorders:
 	call	MenuBorders_AdjustDisplayContextForDrawingBorders
 	call	MenuLocation_GetItemBordersTopLeftCoordinatesToAX
@@ -90,7 +90,7 @@ MenuBorders_RefreshItemBorders:
 ;	Corrupts registers:
 ;		AX, BX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuBorders_AdjustDisplayContextForDrawingBorders:
 	mov		bl, ATTRIBUTES_ARE_USED
 	mov		ax, MenuCharOut_MenuTeletypeOutput
@@ -115,7 +115,7 @@ MenuBorders_AdjustDisplayContextForDrawingBorders:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuBorders_GetNumberOfMiddleCharactersToDX:
 	eMOVZX	dx, [bp+MENUINIT.bWidth]
 	sub		dx, BYTE MENU_HORIZONTAL_BORDER_LINES
@@ -132,7 +132,7 @@ MenuBorders_GetNumberOfMiddleCharactersToDX:
 ;	Corrupts registers:
 ;		AX, BX, CX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 RefreshTitleBorders:
 	call	DrawTopBorderLine
 	eMOVZX	cx, [bp+MENUINIT.bTitleLines]
@@ -148,7 +148,7 @@ RefreshTitleBorders:
 ;	Corrupts registers:
 ;		AX, BX, CX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 RefreshInformationBorders:
 	call	DrawSeparationBorderLine
 	eMOVZX	cx, [bp+MENUINIT.bInfoLines]
@@ -164,7 +164,7 @@ RefreshInformationBorders:
 ;	Corrupts registers:
 ;		AX, BX, CX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 RefreshItemBorders:
 	call	DrawSeparationBorderLine
 	call	MenuScrollbars_GetMaxVisibleItemsOnPageToCX
@@ -183,7 +183,7 @@ RefreshItemBorders:
 ;--------------------------------------------------------------------
 DrawTextBorderLinesByCXtimes:
 	jcxz	.NoBorderLinesToDraw
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 .DrawBordersWithFunctionInBX:
 	call	DrawTextBorderLine
 	loop	.DrawBordersWithFunctionInBX
@@ -206,18 +206,18 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		AX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 DrawTopBorderLine:
 	mov		si, g_rgbTopBorderCharacters
 	call	PrintBorderCharactersFromCSSI
 	jmp		SHORT PrintNewlineToEndBorderLine
 
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 DrawSeparationBorderLine:
 	mov		si, g_rgbSeparationBorderCharacters
 	jmp		SHORT PrintBorderCharactersFromCSSIandShadowCharacter
 
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 DrawBottomBorderLine:
 	mov		si, g_rgbBottomBorderCharacters
 	test	BYTE [bp+MENU.bFlags], FLG_MENU_TIMEOUT_COUNTDOWN
@@ -230,7 +230,7 @@ DrawBottomBorderLine:
 	add		dx, BYTE MENU_TIMEOUT_STRING_CHARACTERS
 	ret
 
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 DrawBottomShadowLine:
 	CALL_DISPLAY_LIBRARY GetSoftwareCoordinatesToAX
 	inc		ax			; Move one column left
@@ -242,7 +242,7 @@ DrawBottomShadowLine:
 	dec		dx			; ...DX
 	ret
 
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 DrawTextBorderLine:
 	mov		si, g_rgbTextBorderCharacters
 	; Fall to PrintBorderCharactersFromCSSIandShadowCharacter
@@ -258,7 +258,7 @@ DrawTextBorderLine:
 ;	Corrupts registers:
 ;		AX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 PrintBorderCharactersFromCSSIandShadowCharacter:
 	call	PrintBorderCharactersFromCSSI
 	push	dx
@@ -276,7 +276,7 @@ PrintBorderCharactersFromCSSIandShadowCharacter:
 ;	Corrupts registers:
 ;		AX, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 PrintNewlineToEndBorderLine:
 	CALL_DISPLAY_LIBRARY PrintNewlineCharacters
 	ret
@@ -292,7 +292,7 @@ PrintNewlineToEndBorderLine:
 ;	Corrupts registers:
 ;		AX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 PrintShadowCharactersByDXtimes:
 	CALL_DISPLAY_LIBRARY PushDisplayContext
 
@@ -322,7 +322,7 @@ PrintShadowCharactersByDXtimes:
 ;	Corrupts registers:
 ;		AX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 PrintBorderCharactersFromCSSI:
 	cs lodsb		; Load from [cs:si+BORDER_CHARS.cLeft] to AL
 	call	MenuBorders_PrintSingleBorderCharacterFromAL
@@ -345,12 +345,12 @@ PrintBorderCharactersFromCSSI:
 ;	Corrupts registers:
 ;		AX, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuBorders_PrintSingleBorderCharacterFromAL:
 	CALL_DISPLAY_LIBRARY PrintCharacterFromAL
 	ret
 
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuBorders_PrintMultipleBorderCharactersFromAL:
 	push	cx
 	mov		cx, dx
@@ -368,7 +368,7 @@ MenuBorders_PrintMultipleBorderCharactersFromAL:
 ;	Corrupts registers:
 ;		AX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 DrawTimeoutCounterString:
 	call	MenuTime_GetTimeoutSecondsLeftToAX
 	; Fall to .PrintTimeoutStringWithSecondsInAX

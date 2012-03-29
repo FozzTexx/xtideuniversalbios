@@ -16,7 +16,6 @@ SECTION .text
 ;		AH:		Int 13h return status
 ;		CF:		0 if successful, 1 if error
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 AHDh_HandlerForResetHardDisk:
 %ifndef USE_186
 	call	AHDh_ResetDrive

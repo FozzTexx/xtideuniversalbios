@@ -20,14 +20,14 @@ SECTION .text
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayCharOut_TeletypeOutputWithAttribute:
 	cmp		al, ' '							; Printable character?
 	jb		SHORT DisplayCharOut_BiosTeletypeOutput
 	WAIT_RETRACE_IF_NECESSARY_THEN stosw
 	ret
 
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayCharOut_TeletypeOutput:
 	cmp		al, ' '							; Printable character?
 	jae		SHORT DisplayCharOut_Character
@@ -44,7 +44,7 @@ DisplayCharOut_TeletypeOutput:
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayCharOut_BiosTeletypeOutput:
 	push	ax
 	call	DisplayCursor_SynchronizeCoordinatesToHardware
@@ -75,20 +75,20 @@ DisplayCharOut_BiosTeletypeOutput:
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayCharOut_Attribute:
 	xchg	al, ah				; Swap character and attribute
 	inc		di					; Skip character
 	WAIT_RETRACE_IF_NECESSARY_THEN stosb
 	ret
 
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayCharOut_Character:
 	WAIT_RETRACE_IF_NECESSARY_THEN stosb
 	inc		di					; Skip attribute
 	ret
 
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayCharOut_CharacterWithAttribute:
 	WAIT_RETRACE_IF_NECESSARY_THEN stosw
 	ret
@@ -106,7 +106,7 @@ DisplayCharOut_CharacterWithAttribute:
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayCharOut_WriteCharacterToBuffer:
 	cmp		WORD [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.wCharOutParam], BYTE 0
 	je		SHORT .BufferFull

@@ -15,7 +15,7 @@ SECTION .text
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuLocation_GetTextCoordinatesToAXforItemInAX:
 	sub		ax, [bp+MENU.wFirstVisibleItem]		; Item to line
 	xchg	al, ah								; Line to AH, clear AL
@@ -41,7 +41,7 @@ MenuLocation_GetItemBordersTopLeftCoordinatesToAX:
 	xor		ax, ax
 	jmp		SHORT AddItemBordersTopLeftCoordinatesToAX
 
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuLocation_GetTitleTextTopLeftCoordinatesToAX:
 	mov		ax, (MENU_TEXT_ROW_OFFSET<<8) | MENU_TEXT_COLUMN_OFFSET
 	SKIP2B	f	; cmp ax, <next instruction>
@@ -49,12 +49,12 @@ MenuLocation_GetTitleBordersTopLeftCoordinatesToAX:
 	xor		ax, ax
 	jmp		SHORT MenuLocation_AddTitleBordersTopLeftCoordinatesToAX
 
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuLocation_GetInformationTextTopLeftCoordinatesToAX:
 	mov		ax, (MENU_TEXT_ROW_OFFSET<<8) | MENU_TEXT_COLUMN_OFFSET
 	jmp		SHORT AddInformationBordersTopLeftCoordinatesToAX
 
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuLocation_GetBottomBordersTopLeftCoordinatesToAX:
 	xor		ax, ax
 	; Fall to .AddBottomBordersTopLeftCoordinatesToAX
@@ -76,18 +76,18 @@ MenuLocation_GetBottomBordersTopLeftCoordinatesToAX:
 .AddBottomBordersTopLeftCoordinatesToAX:
 	stc							; Compensate for Information top border
 	adc		ah, [bp+MENUINIT.bInfoLines]
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 AddInformationBordersTopLeftCoordinatesToAX:
 	push	cx
 	call	MenuScrollbars_GetMaxVisibleItemsOnPageToCX
 	inc		cx					; Compensate for Items top border
 	add		ah, cl
 	pop		cx
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 AddItemBordersTopLeftCoordinatesToAX:
 	stc							; Compensate for Title top border
 	adc		ah, [bp+MENUINIT.bTitleLines]
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuLocation_AddTitleBordersTopLeftCoordinatesToAX:
 	push	di
 	push	ax
@@ -111,7 +111,7 @@ MenuLocation_AddTitleBordersTopLeftCoordinatesToAX:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuLocation_GetMaxTextLineLengthToAX:
 	eMOVZX	ax, [bp+MENUINIT.bWidth]
 	sub		ax, BYTE MENU_HORIZONTAL_BORDER_LINES + MENU_TEXT_COLUMN_OFFSET

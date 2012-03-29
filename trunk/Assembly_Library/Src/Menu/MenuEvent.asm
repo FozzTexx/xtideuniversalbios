@@ -15,7 +15,7 @@ SECTION .text
 ;	Corrupts registers:
 ;		AX, BX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuEvent_InitializeMenuinit:
 	push	ss
 	pop		ds
@@ -34,7 +34,7 @@ MenuEvent_InitializeMenuinit:
 ;	Corrupts registers:
 ;		AX, BX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuEvent_ExitMenu:
 	mov		bl, MENUEVENT_ExitMenu
 	jmp		SHORT MenuEvent_SendFromBX
@@ -51,7 +51,7 @@ MenuEvent_ExitMenu:
 ;	Corrupts registers:
 ;		AX, BX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuEvent_IdleProcessing:
 	mov		bl, MENUEVENT_IdleProcessing
 	jmp		SHORT MenuEvent_SendFromBX
@@ -69,7 +69,7 @@ MenuEvent_IdleProcessing:
 ;	Corrupts registers:
 ;		AX, CX, BX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuEvent_RefreshTitle:
 	mov		bl, MENUEVENT_RefreshTitle
 	SKIP2B	cx	; mov cx, <next instruction>
@@ -92,7 +92,7 @@ MenuEvent_RefreshInformation:
 ;	Corrupts registers:
 ;		AX, BX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuEvent_RefreshItemFromCX:
 	mov		bl, MENUEVENT_RefreshItemFromCX
 	jmp		SHORT MenuEvent_SendFromBX
@@ -108,7 +108,7 @@ MenuEvent_RefreshItemFromCX:
 ;	Corrupts registers:
 ;		AX, BX, DX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuEvent_HighlightItemFromCX:
 	mov		dx, cx
 	xchg	dx, [bp+MENUINIT.wHighlightedItem]
@@ -135,7 +135,7 @@ MenuEvent_HighlightItemFromCX:
 ;	Corrupts registers:
 ;		AX, BX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuEvent_KeyStrokeInAX:
 	mov		bl, MENUEVENT_KeyStrokeInAX
 	SKIP2B	dx	; mov dx, <next instruction>
@@ -170,7 +170,7 @@ MenuEvent_ItemSelectedFromCX:
 ;	Corrupts registers:
 ;		BX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuEvent_SendFromBX:
 	push	es
 	push	ds

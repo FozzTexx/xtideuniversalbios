@@ -34,7 +34,7 @@ SECTION .text
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN STRING_JUMP_ALIGN
 Char_IsLowerCaseLetterInAL:
 	IS_BETWEEN_IMMEDIATES al, 'a', 'z'
 	ret
@@ -50,7 +50,7 @@ Char_IsLowerCaseLetterInAL:
 ;		Nothing
 ;--------------------------------------------------------------------
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-ALIGN JUMP_ALIGN
+ALIGN STRING_JUMP_ALIGN
 Char_IsUpperCaseLetterInAL:
 	IS_BETWEEN_IMMEDIATES al, 'A', 'Z'
 	ret
@@ -68,7 +68,7 @@ Char_IsUpperCaseLetterInAL:
 ;		Nothing
 ;--------------------------------------------------------------------
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-ALIGN JUMP_ALIGN
+ALIGN STRING_JUMP_ALIGN
 Char_IsHexadecimalDigitInAL:
 	call	Char_IsDecimalDigitInAL
 	jc		SHORT Char_CharIsValid
@@ -88,7 +88,7 @@ Char_IsHexadecimalDigitInAL:
 ;		Nothing
 ;--------------------------------------------------------------------
 %ifndef MODULE_STRINGS_COMPRESSED
-ALIGN JUMP_ALIGN
+ALIGN STRING_JUMP_ALIGN
 Char_IsDecimalDigitInAL:
 	IS_BETWEEN_IMMEDIATES al, '0', '9'
 	ret
@@ -107,7 +107,7 @@ Char_IsDecimalDigitInAL:
 ;		Nothing
 ;--------------------------------------------------------------------
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-ALIGN JUMP_ALIGN
+ALIGN STRING_JUMP_ALIGN
 Char_ConvertIntegerToALfromDigitInALwithBaseInBX:
 	push	dx
 	call	Char_GetFilterFunctionToDXforNumericBaseInBX
@@ -118,7 +118,7 @@ Char_ConvertIntegerToALfromDigitInALwithBaseInBX:
 	cmp		al, '9'					; Decimal digit
 	jbe		SHORT .ConvertToDecimalDigit
 	sub		al, 'a'-'0'-10			; Convert to hexadecimal integer
-ALIGN JUMP_ALIGN
+ALIGN STRING_JUMP_ALIGN
 .ConvertToDecimalDigit:
 	sub		al, '0'					; Convert to decimal integer
 	; Fall to Char_CharIsValid
@@ -136,13 +136,13 @@ ALIGN JUMP_ALIGN
 ;		Nothing
 ;--------------------------------------------------------------------
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-ALIGN JUMP_ALIGN
+ALIGN STRING_JUMP_ALIGN
 Char_CharIsValid:
 	stc
 	ret
 %endif
 
-ALIGN JUMP_ALIGN
+ALIGN STRING_JUMP_ALIGN
 Char_CharIsNotValid:
 	clc
 	ret
@@ -158,7 +158,7 @@ Char_CharIsNotValid:
 ;		Nothing
 ;--------------------------------------------------------------------
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-ALIGN JUMP_ALIGN
+ALIGN STRING_JUMP_ALIGN
 Char_ALtoLowerCaseLetter:
 	call	Char_IsUpperCaseLetterInAL	; Is upper case character?
 	jmp		SHORT Char_ALtoUpperCaseLetter.CheckCF
@@ -173,7 +173,7 @@ Char_ALtoLowerCaseLetter:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN STRING_JUMP_ALIGN
 Char_ALtoUpperCaseLetter:
 	call	Char_IsLowerCaseLetterInAL	; Is lower case character?
 .CheckCF:
@@ -204,7 +204,7 @@ Char_ChangeCaseInAL:
 ;		Nothing
 ;--------------------------------------------------------------------
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-ALIGN JUMP_ALIGN
+ALIGN STRING_JUMP_ALIGN
 Char_GetFilterFunctionToDXforNumericBaseInBX:
 	mov		dx, Char_IsDecimalDigitInAL
 	cmp		bl, 10

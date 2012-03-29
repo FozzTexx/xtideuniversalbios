@@ -32,13 +32,13 @@ SECTION .text
 ;	Corrupts registers:
 ;		Nothing (processing function can corrupt BX,DI,ES)
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN STRING_JUMP_ALIGN
 StringProcess_DSSIwithFunctionInDX:
 	push	si
 	push	ax
 
 	xor		cx, cx
-ALIGN JUMP_ALIGN
+ALIGN STRING_JUMP_ALIGN
 .ProcessNextCharacter:
 	lodsb
 	test	al, al				; NULL to end string
@@ -47,7 +47,7 @@ ALIGN JUMP_ALIGN
 	call	dx
 	jnc		SHORT .ProcessNextCharacter
 
-ALIGN JUMP_ALIGN
+ALIGN STRING_JUMP_ALIGN
 .EndOfString:
 	pop		ax
 	pop		si
@@ -64,7 +64,7 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		AL
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN STRING_JUMP_ALIGN
 StringProcess_ConvertToLowerCase:
 	call	Char_ALtoLowerCaseLetter
 	mov		[si-1], al
@@ -83,7 +83,7 @@ StringProcess_ConvertToLowerCase:
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN STRING_JUMP_ALIGN
 StringProcess_ConvertToWordInDIWithBaseInBX:
 	call	Char_ConvertIntegerToALfromDigitInALwithBaseInBX
 	cmc

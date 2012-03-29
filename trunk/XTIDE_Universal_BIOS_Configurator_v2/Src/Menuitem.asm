@@ -151,6 +151,15 @@ Menuitem_StoreValueFromAXtoMenuitemInDSSI:
 
 	call	GetConfigurationBufferToESDIforMenuitemInDSSI
 	add		di, [si+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset]
+		
+	push	bx
+	mov		bx,[si+MENUITEM.itemValue+ITEM_VALUE.fnValueWriter]
+	test	bx,bx
+	jz		SHORT .NoWriter
+	call	bx
+.NoWriter:
+	pop		bx
+		
 	jmp		[cs:bx+.rgfnJumpToStoreValueBasedOnItemType]
 .InvalidItemType:
 	ret
@@ -230,15 +239,6 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 .StoreByteOrWordValueFromAXtoESDIwithItemInDSSI:
-	push	bx
-	mov		bx,[si+MENUITEM.itemValue+ITEM_VALUE.fnValueWriter]
-	test	bx,bx
-	jz		SHORT .NoWriter
-
-	call	bx
-
-.NoWriter:
-	pop		bx
 	test	BYTE [si+MENUITEM.bFlags], FLG_MENUITEM_MASKVALUE
 	jz		SHORT .StoreByteOrWord
 	or		[es:di], ax

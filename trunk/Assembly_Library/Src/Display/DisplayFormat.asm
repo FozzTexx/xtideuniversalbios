@@ -17,7 +17,7 @@ SECTION .text
 ;	Corrupts registers:
 ;		AX, BX, CX, DX, BP
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayFormat_ParseCharacters:
 	call	ReadCharacterAndTestForNull
 	jz		SHORT ReturnFromFormat
@@ -68,7 +68,7 @@ ReturnFromFormat:
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 ParsePlaceholderSizeDigitFromALtoCX:
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fpCursorPosition], di
 	sub		al, '0'				; Digit '0'...'9' to integer 0...9
@@ -89,7 +89,7 @@ ParsePlaceholderSizeDigitFromALtoCX:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 ReadCharacterAndTestForNull:
 	cs lodsb								; Load from CS:SI to AL
 	test	al, al							; NULL to end string?
@@ -105,10 +105,10 @@ ReadCharacterAndTestForNull:
 ;	Corrupts registers:
 ;		AX, BX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 GetFormatSpecifierParserToAX:
 	mov		bx, .rgcFormatCharToLookupIndex
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 .CheckForNextSpecifierParser:
 	cmp		al, [cs:bx]
 	je		SHORT .ConvertIndexToFunctionOffset
@@ -117,7 +117,7 @@ ALIGN JUMP_ALIGN
 	jb		SHORT .CheckForNextSpecifierParser
 	mov		ax, c_FormatCharacter
 	ret
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 .ConvertIndexToFunctionOffset:
 	sub		bx, .rgcFormatCharToLookupIndex
 	shl		bx, 1				; Shift for WORD lookup
@@ -170,7 +170,7 @@ ALIGN WORD_ALIGN
 ;	Corrupts registers:
 ;		AX, BX, CX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 PrependOrAppendSpaces:
 	mov		ax, di
 	sub		ax, [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fpCursorPosition]
@@ -209,7 +209,7 @@ PrependOrAppendSpaces:
 ;	Corrupts registers:
 ;		AX, BX, CX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 .PrependWithSpaces:
 	xchg	ax, cx
 	neg		ax
@@ -247,7 +247,7 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		AX, CX, DX, SI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 .ReverseCopyCXbytesFromESSItoESDI:
 	test	BYTE [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bFlags], FLG_CONTEXT_ATTRIBUTES
 	jz		SHORT .CopyWithoutDisplayProcessing
@@ -255,7 +255,7 @@ ALIGN JUMP_ALIGN
 	WAIT_RETRACE_IF_NECESSARY_THEN rep movsb
 	dec		di					; Point to preceeding character instead of attribute
 	ret
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 .CopyWithoutDisplayProcessing:
 	eSEG_STR rep, es, movsb
 	ret
@@ -270,7 +270,7 @@ ALIGN JUMP_ALIGN
 ;		DI:		Updated
 ;	Corrupts registers:
 ;		AX, CX, DX
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 .ReversePrintAXspacesStartingFromESDI:
 	call	DisplayContext_GetCharacterOffsetToAXfromByteOffsetInAX
 	xchg	cx, ax				; CX = Spaces to prepend
@@ -291,7 +291,7 @@ ALIGN JUMP_ALIGN
 ;		AX, BX, DX
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 a_FormatAttributeForNextCharacter:
 	mov		bl, [bp]
 	xchg	bl, [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bAttribute]
@@ -306,27 +306,27 @@ a_FormatAttributeForNextCharacter:
 	ret
 %endif
 
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 A_FormatAttributeForRemainingString:
 	mov		al, [bp]
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bAttribute], al
 	ret
 
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 d_FormatSignedDecimalWord:
 	mov		ax, [bp]
 	mov		bx, 10
 	jmp		DisplayPrint_SignedWordFromAXWithBaseInBX
 %endif
 
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 u_FormatUnsignedDecimalWord:
 	mov		ax, [bp]
 	mov		bx, 10
 	jmp		DisplayPrint_WordFromAXWithBaseInBX
 
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 x_FormatHexadecimalWord:
 	mov		ax, [bp]
 	mov		bx, 16
@@ -334,7 +334,7 @@ x_FormatHexadecimalWord:
 	mov		al, 'h'
 	jmp		DisplayPrint_CharacterFromAL
 
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 I_FormatDashForZero:
 	mov		ax, [bp]
 	test	ax,ax
@@ -342,7 +342,7 @@ I_FormatDashForZero:
 	mov		[bp], word g_szDashForZero
 ;;; fall-through
 
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 s_FormatStringFromSegmentCS:
 	push	si
 	push	cx
@@ -366,7 +366,7 @@ s_FormatStringFromSegmentCS:
 	pop		si
 	ret
 
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 z_FormatStringFromSegmentZero:
 	xchg	si, [bp]
 	xor		bx, bx
@@ -375,7 +375,7 @@ z_FormatStringFromSegmentZero:
 	ret
 
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 S_FormatStringFromFarPointer:
 	mov		bx, [bp-2]
 	xchg	si, [bp]
@@ -386,13 +386,13 @@ S_FormatStringFromFarPointer:
 	ret
 %endif
 
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 c_FormatCharacter:
 	mov		al, [bp]
 	jmp		DisplayPrint_CharacterFromAL
 
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 t_FormatRepeatCharacter:
 	push	cx
 	mov		cx, [bp-2]
@@ -403,18 +403,18 @@ t_FormatRepeatCharacter:
 	dec		bp
 	ret
 
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 percent_FormatPercent:
 	mov		al, '%'
 	jmp		DisplayPrint_CharacterFromAL
 %endif
 
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 PrepareToPrependParameterWithSpaces:
 	neg		cx
 	; Fall to PrepareToAppendSpacesAfterParameter
 
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 PrepareToAppendSpacesAfterParameter:
 	add		sp, BYTE 2				; Remove return offset
 	jmp		ParseFormatSpecifier

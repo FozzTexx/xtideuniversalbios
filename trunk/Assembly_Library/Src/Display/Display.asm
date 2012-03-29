@@ -15,7 +15,7 @@ SECTION .text
 ;	Corrupts registers:
 ;		AX (unless used as a return register), DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 Display_FunctionFromDI:
 	push	es
 	push	ds
@@ -42,7 +42,7 @@ Display_FunctionFromDI:
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 Display_FormatNullTerminatedStringFromCSSI:
 	pop		ax					; Discard return address to inside Display_FunctionFromDI
 	call	DisplayPrint_FormattedNullTerminatedStringFromCSSI

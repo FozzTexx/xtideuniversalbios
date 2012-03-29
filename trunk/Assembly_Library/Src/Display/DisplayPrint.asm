@@ -41,7 +41,7 @@ SECTION .text
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayPrint_FormattedNullTerminatedStringFromCSSI:
 	push	bp
 	push	si
@@ -78,7 +78,7 @@ DisplayPrint_FormattedNullTerminatedStringFromCSSI:
 ;		AX, DX
 ;--------------------------------------------------------------------
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayPrint_SignedWordFromAXWithBaseInBX:
 	test	ax, ax
 	jns		SHORT DisplayPrint_WordFromAXWithBaseInBX
@@ -105,13 +105,13 @@ DisplayPrint_SignedWordFromAXWithBaseInBX:
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayPrint_WordFromAXWithBaseInBX:
 	push	cx
 	push	bx
 
 	xor		cx, cx
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 .DivideLoop:
 	xor		dx, dx				; DX:AX now holds the integer
 	div		bx					; Divide DX:AX by base
@@ -122,7 +122,7 @@ ALIGN JUMP_ALIGN
 
 PrintAllPushedDigits:
 	mov		bx, g_rgcDigitToCharacter
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 .PrintNextDigit:
 	pop		ax					; Pop digit
 	cs xlatb
@@ -148,14 +148,14 @@ g_rgcDigitToCharacter:	db	"0123456789ABCDEF"
 ;		AX, DX, [SS:BP]
 ;--------------------------------------------------------------------
 %ifndef EXCLUDE_FROM_XTIDECFG	; Not used in XTIDECFG
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayPrint_QWordFromSSBPwithBaseInBX:
 	push	cx
 	push	bx
 
 	mov		cx, bx				; CX = Integer base
 	xor		bx, bx				; BX = Character count
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 .DivideLoop:
 	call	Math_DivQWatSSBPbyCX; Divide by base
 	push	dx					; Push remainder
@@ -182,13 +182,13 @@ ALIGN JUMP_ALIGN
 ;		AX, DX
 ;--------------------------------------------------------------------
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayPrint_CharacterBufferFromBXSIwithLengthInCX:
 	jcxz	.NothingToPrintSinceZeroLength
 	push	si
 	push	cx
 
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 .PrintNextCharacter:
 	mov		ds, bx
 	lodsb
@@ -215,7 +215,7 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayPrint_ClearScreenWithCharInALandAttributeInAH:
 	push	di
 	push	cx
@@ -247,7 +247,7 @@ DisplayPrint_ClearScreenWithCharInALandAttributeInAH:
 ;		AX, DX
 ;--------------------------------------------------------------------
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayPrint_ClearAreaWithHeightInAHandWidthInAL:
 	push	si
 	push	cx
@@ -258,7 +258,7 @@ DisplayPrint_ClearAreaWithHeightInAHandWidthInAL:
 	xchg	si, ax							; Software (Y,X) coordinates now in SI
 	xor		cx, cx
 
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 .ClearRowLoop:
 	mov		cl, bl							; Area width now in CX
 	mov		al, SCREEN_BACKGROUND_CHARACTER
@@ -290,12 +290,12 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayPrint_RepeatCharacterFromALwithCountInCX:
 	jcxz	.NothingToRepeat
 	push	cx
 
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 .RepeatCharacter:
 	push	ax
 	call	DisplayPrint_CharacterFromAL
@@ -323,7 +323,7 @@ ALIGN JUMP_ALIGN
 ;;; Take care when using this routine with compressed strings (which is why it is disabled).
 ;;; All strings in CSSI should go through the DisplayFormatCompressed code to be decoded.
 ;;;
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayPrint_NullTerminatedStringFromCSSI:
 	push	bx
 	mov		bx, cs
@@ -349,14 +349,14 @@ DisplayPrint_NullTerminatedStringFromCSSI:
 ;		AX, DX
 ;--------------------------------------------------------------------
 %ifdef MODULE_STRINGS_COMPRESSED
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayPrint_Newline_FormatAdjustBP:
 	inc		bp					; we didn't need a parameter after all, readjust BP
 	inc		bp
 	; fall through to DisplayPrint_Newline
 %endif
 
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayPrint_Newline:
 	mov		al, LF
 	call	DisplayPrint_CharacterFromAL
@@ -375,7 +375,7 @@ DisplayPrint_Newline:
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayPrint_CharacterFromAL:
 	test	al,al
 	jz		DisplayPrint_Ret
@@ -395,13 +395,13 @@ DisplayPrint_CharacterFromAL:
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayPrint_NullTerminatedStringFromBXSI:
 	push	si
 	push	cx
 
 	xor		cx, cx
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 .PrintNextCharacter:
 	mov		ds, bx				; String segment to DS
 	lodsb
@@ -411,7 +411,7 @@ ALIGN JUMP_ALIGN
 	call	DisplayPrint_CharacterFromAL
 	jmp		SHORT .PrintNextCharacter
 
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 .EndOfString:
 	pop		cx
 	pop		si

@@ -23,7 +23,6 @@ SECTION .text
 ;			CX:DX:	0
 ;			CF:		1
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 AH15h_HandlerForReadDiskDriveSize:
 %ifdef MODULE_SERIAL_FLOPPY
 	mov		cl, 1										; 1 = floppy disk, no change detection

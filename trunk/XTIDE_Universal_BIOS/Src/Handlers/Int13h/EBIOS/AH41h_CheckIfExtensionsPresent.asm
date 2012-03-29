@@ -20,7 +20,6 @@ SECTION .text
 ;		CX:		Support bits
 ;		CF:		0 if successful, 1 if error
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 AH41h_HandlerForCheckIfExtensionsPresent:
 	cmp		WORD [bp+IDEPACK.intpack+INTPACK.bx], 55AAh
 	jne		SHORT .EbiosNotSupported

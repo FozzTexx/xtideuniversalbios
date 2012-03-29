@@ -108,7 +108,6 @@ FloppyDrive_IsInt40hInstalled:
 ;	Corrupts registers:
 ;		AX, CX, DX, DI, ES
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 FloppyDrive_GetType:
 	mov		ah, 08h			; Get Drive Parameters
 	xor		bx, bx			; FLOPPY_TYPE_525_OR_35_DD when function not supported
@@ -125,7 +124,6 @@ FloppyDrive_GetType:
 ;	Returns:
 ;		AX:		Number of Floppy Drives
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 FloppyDrive_GetCountToAX:
 %ifdef MODULE_SERIAL_FLOPPY
 	call	RamVars_UnpackFlopCntAndFirstToAL
@@ -145,7 +143,6 @@ FloppyDrive_GetCountToAX:
 
 	ret
 
-ALIGN JUMP_ALIGN
 FloppyDrive_GetCountFromBIOS_or_BDA:
 	push	es
 
@@ -165,7 +162,6 @@ FloppyDrive_GetCountFromBIOS_or_BDA:
 ;		ES
 ;--------------------------------------------------------------------
 %ifdef USE_AT
-ALIGN JUMP_ALIGN
 .GetCountFromBIOS:
 	push	di
 	push	bx
@@ -196,7 +192,6 @@ ALIGN JUMP_ALIGN
 ;		AH, ES
 ;--------------------------------------------------------------------
 %ifndef USE_AT
-ALIGN JUMP_ALIGN
 .GetCountFromBDA:
 	LOAD_BDA_SEGMENT_TO	es, ax
 	mov		al, [es:BDA.wEquipment]			; Load Equipment WORD low byte

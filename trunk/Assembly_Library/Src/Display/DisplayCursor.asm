@@ -14,7 +14,7 @@ SECTION .text
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayCursor_SetShapeFromAX:
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.wCursorShape], ax
 	ret
@@ -31,7 +31,7 @@ DisplayCursor_SetShapeFromAX:
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayCursor_SetCoordinatesFromAX:
 	xchg	dx, ax
 	mov		ax, [VIDEO_BDA.wColumns]		; Column count, 40 or 80
@@ -56,7 +56,7 @@ DisplayCursor_SetCoordinatesFromAX:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayCursor_GetSoftwareCoordinatesToAX:
 	mov		ax, [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fpCursorPosition]
 	sub		ax, [VIDEO_BDA.wPageOffset]
@@ -76,7 +76,7 @@ DisplayCursor_GetSoftwareCoordinatesToAX:
 ;	Corrupts registers:
 ;		DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayCursor_GetHardwareCoordinatesToAX:
 	push	cx
 	push	bx
@@ -100,7 +100,7 @@ DisplayCursor_GetHardwareCoordinatesToAX:
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayCursor_SynchronizeShapeToHardware:
 	mov		dx, [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.wCursorShape]
 	; Fall to .SetHardwareCursorShapeFromDX
@@ -137,7 +137,7 @@ DisplayCursor_SynchronizeShapeToHardware:
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN DISPLAY_JUMP_ALIGN
 DisplayCursor_SynchronizeCoordinatesToHardware:
 	call	DisplayCursor_GetSoftwareCoordinatesToAX
 	; Fall to .SetHardwareCursorCoordinatesFromAX

@@ -14,7 +14,7 @@ SECTION .text
 ;	Corrupts registers:
 ;		AX, BX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuTime_StartSelectionTimeoutWithTicksInAX:
 	push	ds
 	call	PointDSBXtoTimeoutCounter
@@ -33,7 +33,7 @@ MenuTime_StartSelectionTimeoutWithTicksInAX:
 ;	Corrupts registers:
 ;		AX, BX, DX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuTime_StopSelectionTimeout:
 	test	BYTE [bp+MENU.bFlags], FLG_MENU_TIMEOUT_COUNTDOWN
 	jz		SHORT TimeoutAlreadyStopped
@@ -51,7 +51,7 @@ MenuTime_StopSelectionTimeout:
 ;	Corrupts registers:
 ;		AX, BX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuTime_UpdateSelectionTimeout:
 	test	BYTE [bp+MENU.bFlags], FLG_MENU_TIMEOUT_COUNTDOWN
 	jz		SHORT .ReturnSinceTimeoutDisabled
@@ -65,7 +65,7 @@ MenuTime_UpdateSelectionTimeout:
 	stc
 	ret
 
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 .RedrawSinceNoTimeout:
 	call	MenuBorders_RedrawBottomBorderLine
 	clc
@@ -83,7 +83,7 @@ TimeoutAlreadyStopped:
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuTime_GetTimeoutSecondsLeftToAX:
 	push	ds
 	push	dx
@@ -116,7 +116,7 @@ MenuTime_GetTimeoutSecondsLeftToAX:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 PointDSBXtoTimeoutCounter:
 	push	ss
 	pop		ds

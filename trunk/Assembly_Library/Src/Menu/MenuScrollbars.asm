@@ -14,7 +14,7 @@ SECTION .text
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuScrollbars_AreScrollbarsNeeded:
 	xchg	ax, cx
 	call	MenuScrollbars_GetMaxVisibleItemsOnPageToCX
@@ -33,7 +33,7 @@ MenuScrollbars_AreScrollbarsNeeded:
 ;	Corrupts registers:
 ;		AH, CX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuScrollbars_GetScrollCharacterToALForLineInDI:
 	call	MenuScrollbars_GetMaxVisibleItemsOnPageToCX
 	; Get first thumb line to AX
@@ -44,12 +44,12 @@ MenuScrollbars_GetScrollCharacterToALForLineInDI:
 	jb		SHORT .ReturnTrackCharacter
 	call	.GetLastThumbLineToAX
 	cmp		ax, di				; After last thumb line?
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 .ReturnTrackCharacter:
 	mov		al, SCROLL_TRACK_CHARACTER
 	jb		SHORT .Return
 	mov		al, SCROLL_THUMB_CHARACTER
-ALIGN JUMP_ALIGN, ret
+ALIGN MENU_JUMP_ALIGN, ret
 .Return:
 	ret
 
@@ -63,7 +63,7 @@ ALIGN JUMP_ALIGN, ret
 ;	Corrupts registers:
 ;		CX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 .GetLastThumbLineToAX:
 	call	MenuScrollbars_GetLastVisibleItemOnPageToAX
 	; Fall to .CalculateFirstOrLastThumbLineToAX
@@ -79,7 +79,7 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		CX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 .CalculateFirstOrLastThumbLineToAX:
 	mul		cx
 	div		WORD [bp+MENUINIT.wItems]
@@ -96,7 +96,7 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		AX, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuScrollbars_MoveHighlightedItemByAX:
 	mov		cx, [bp+MENUINIT.wHighlightedItem]
 	add		cx, ax
@@ -119,7 +119,7 @@ MenuScrollbars_MoveHighlightedItemByAX:
 	sub		cx, dx
 	jae		SHORT .ScrollPageForNewItemInCX
 
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 .RotateNegativeItemInCX:
 	add		cx, dx
 	; Fall to .ScrollPageForNewItemInCX
@@ -134,7 +134,7 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		AX, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 .ScrollPageForNewItemInCX:
 	call	MenuScrollbars_IsItemInCXonVisiblePage
 	jc		SHORT .HighlightNewItemOnCX
@@ -153,18 +153,18 @@ ALIGN JUMP_ALIGN
 	jns		.DXisPositive
 	cwd		; This won't work if MaxFirstVisibleItem > 32767
 
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 .DXisPositive:
 	cmp		ax, dx
 	jb		.AXisLessThanDX
 	xchg	dx, ax
 
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 .AXisLessThanDX:
 	mov		[bp+MENU.wFirstVisibleItem], ax
 	call	MenuText_RefreshAllItems
 
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 .HighlightNewItemOnCX:
 	jmp		MenuEvent_HighlightItemFromCX
 
@@ -180,7 +180,7 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuScrollbars_IsItemInCXonVisiblePage:
 	cmp		[bp+MENU.wFirstVisibleItem], cx
 	ja		SHORT .ItemIsNotVisible
@@ -189,7 +189,7 @@ MenuScrollbars_IsItemInCXonVisiblePage:
 	cmp		cx, ax
 	ja		SHORT .ItemIsNotVisible
 	stc		; Item is visible
-ALIGN JUMP_ALIGN, ret
+ALIGN MENU_JUMP_ALIGN, ret
 .ItemIsNotVisible:
 	ret
 
@@ -203,7 +203,7 @@ ALIGN JUMP_ALIGN, ret
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuScrollbars_GetLastVisibleItemOnPageToAX:
 	xchg	cx, ax
 	call	MenuScrollbars_GetActualVisibleItemsOnPageToCX
@@ -222,13 +222,13 @@ MenuScrollbars_GetLastVisibleItemOnPageToAX:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuScrollbars_GetActualVisibleItemsOnPageToCX:
 	call	MenuScrollbars_GetMaxVisibleItemsOnPageToCX
 	cmp		cx, [bp+MENUINIT.wItems]
 	jb		SHORT .Return
 	mov		cx, [bp+MENUINIT.wItems]
-ALIGN JUMP_ALIGN, ret
+ALIGN MENU_JUMP_ALIGN, ret
 .Return:
 	ret
 
@@ -242,7 +242,7 @@ ALIGN JUMP_ALIGN, ret
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+ALIGN MENU_JUMP_ALIGN
 MenuScrollbars_GetMaxVisibleItemsOnPageToCX:
 	eMOVZX	cx, [bp+MENUINIT.bHeight]
 	sub		cl, [bp+MENUINIT.bTitleLines]

@@ -69,6 +69,7 @@ istruc MENUITEM
 	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoice,				dw	g_szMultichoiceBooleanFlag
 	at	MENUITEM.itemValue + ITEM_VALUE.rgszValueToStringLookup,	dw	g_rgszValueToStringLookupForFlagBooleans
 	at	MENUITEM.itemValue + ITEM_VALUE.wValueBitmask,				dw	FLG_DRVPARAMS_USERCHS
+	at	MENUITEM.itemValue + ITEM_VALUE.fnValueWriter,				dw	MasterSlaveMenu_WriteCHSFlag		
 iend
 
 g_MenuitemMasterSlaveCylinders:
@@ -84,6 +85,7 @@ istruc MENUITEM
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgDrvCyls
 	at	MENUITEM.itemValue + ITEM_VALUE.wMinValue,					dw	1
 	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	16383
+%define					MASTERSLAVE_CYLINDERS_DEFAULT					65
 iend
 
 g_MenuitemMasterSlaveHeads:
@@ -99,6 +101,7 @@ istruc MENUITEM
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgDrvHeads
 	at	MENUITEM.itemValue + ITEM_VALUE.wMinValue,					dw	1
 	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	16
+%define					MASTERSLAVE_HEADS_DEFAULT						16		
 iend
 
 g_MenuitemMasterSlaveSectors:
@@ -114,6 +117,7 @@ istruc MENUITEM
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgDrvSect
 	at	MENUITEM.itemValue + ITEM_VALUE.wMinValue,					dw	1
 	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	63
+%define					MASTERSLAVE_SECTORS_DEFAULT						63
 iend
 
 g_MenuitemMasterSlaveUserLBA:
@@ -130,6 +134,7 @@ istruc MENUITEM
 	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoice,				dw	g_szMultichoiceBooleanFlag
 	at	MENUITEM.itemValue + ITEM_VALUE.rgszValueToStringLookup,	dw	g_rgszValueToStringLookupForFlagBooleans
 	at	MENUITEM.itemValue + ITEM_VALUE.wValueBitmask,				dw	FLG_DRVPARAMS_USERLBA
+	at	MENUITEM.itemValue + ITEM_VALUE.fnValueWriter,				dw	MasterSlaveMenu_WriteLBAFlag				
 iend
 
 g_MenuitemMasterSlaveUserLbaValue:
@@ -147,6 +152,7 @@ istruc MENUITEM
 	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	10000000h / (1024 * 1024)	; Limit to 28-bit LBA
 	at	MENUITEM.itemValue + ITEM_VALUE.fnValueReader,				dw	ValueReaderForUserLbaValue
 	at	MENUITEM.itemValue + ITEM_VALUE.fnValueWriter,				dw	ValueWriterForUserLbaValue
+%define				MASTERSLAVE_USERLBA_DEFAULT						1
 iend
 
 
@@ -383,3 +389,59 @@ ValueWriterForUserLbaValue:
 	mov		[es:di+2], dx	; Store DX by ourselves
 	pop		dx
 	ret						; AX will be stored by our menu system
+
+;
+; No change to CHS flag, but we use this opportunity to change defaults stored in the CHS values if we are
+; changing in/out of user CHS settings (since we use these bytes in different ways with the LBA setting).
+;
+ALIGN JUMP_ALIGN		
+MasterSlaveMenu_WriteCHSFlag:
+		test	word [es:di], FLG_DRVPARAMS_USERCHS
+		jnz		.alreadySet
+
+		push	ax
+		push	di
+		push	si
+
+		mov		ax, MASTERSLAVE_CYLINDERS_DEFAULT
+		mov		si, g_MenuitemMasterSlaveCylinders
+		call	Menuitem_StoreValueFromAXtoMenuitemInDSSI
+		
+		mov		ax, MASTERSLAVE_HEADS_DEFAULT		
+		mov		si, g_MenuitemMasterSlaveHeads
+		call	Menuitem_StoreValueFromAXtoMenuitemInDSSI		
+
+		mov		ax, MASTERSLAVE_SECTORS_DEFAULT						
+		mov		si, g_MenuitemMasterSlaveSectors
+		call	Menuitem_StoreValueFromAXtoMenuitemInDSSI		
+		
+		pop		si						
+		pop		di
+		pop		ax
+
+.alreadySet:
+		ret
+
+;
+; No change to LBA flag, but we use this opportunity to change defaults stored in the LBA value if we are
+; changing in/out of user LBA settings (since we use these bytes in different ways with the CHS setting).
+;
+ALIGN JUMP_ALIGN						
+MasterSlaveMenu_WriteLBAFlag:
+		test	word [es:di], FLG_DRVPARAMS_USERLBA
+		jnz		.alreadySet
+
+		push	ax
+		push	di
+		push	si
+
+		mov		ax, MASTERSLAVE_USERLBA_DEFAULT
+		mov		si, g_MenuitemMasterSlaveUserLbaValue
+		call	Menuitem_StoreValueFromAXtoMenuitemInDSSI				
+
+		pop		si
+		pop		di
+		pop		ax
+						
+.alreadySet:
+		ret		
