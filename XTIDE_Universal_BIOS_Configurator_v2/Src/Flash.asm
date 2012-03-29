@@ -32,10 +32,12 @@ ALIGN JUMP_ALIGN
 	add		[bp+FLASHVARS.fpNextDestinationPage], ax
 
 	loop	.FlashNextPage
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
 %if FLASH_RESULT.success = 0	; Just in case this should ever change
 	mov		[bp+FLASHVARS.flashResult], cl
 %else
 	mov		BYTE [bp+FLASHVARS.flashResult], FLASH_RESULT.success
+%endif
 %endif
 	ret
 

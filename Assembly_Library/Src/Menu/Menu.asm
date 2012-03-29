@@ -49,7 +49,9 @@ Menu_FunctionFromDI:
 	%define ClearInformationArea							MenuText_ClearInformationArea
 	%define RefreshInformation								MenuText_RefreshInformation
 
+%ifndef EXCLUDE_FROM_XTIDECFG
 	%define StartSelectionTimeoutWithTicksInAX				MenuTime_StartSelectionTimeoutWithTicksInAX
+%endif
 
 %ifdef INCLUDE_MENU_DIALOGS
 	%define StartProgressTaskWithIoInDSSIandParamInDXAX		DialogProgress_StartProgressTaskWithIoInDSSIandParamInDXAX

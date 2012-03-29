@@ -68,12 +68,12 @@ Registers_CopyESDItoDSSI:
 ;		DS:SI or ES:DI:	Normalized pointer
 ;	Corrupts registers:
 ;		AX, CX
-; 
-; Inline of NORMALIZE_FAR_POINTER so that we can share the last 2/3 of the 
+;
+; Inline of NORMALIZE_FAR_POINTER so that we can share the last 2/3 of the
 ; routine with Registers_NormalizeFinish.
-; 
+;
 ;--------------------------------------------------------------------
-%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS OR EXCLUDE_FROM_XTIDECFG
 ALIGN JUMP_ALIGN
 Registers_NormalizeESSI:
 	mov			cx, si
@@ -86,8 +86,8 @@ Registers_NormalizeESDI:
 	and			di, byte 0fh
 ;;; fall-through
 
-ALIGN JUMP_ALIGN		
-Registers_NormalizeFinish:		
+ALIGN JUMP_ALIGN
+Registers_NormalizeFinish:
 	eSHR_IM		cx, 4
 	mov			ax, es
 	add			ax, cx

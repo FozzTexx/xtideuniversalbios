@@ -226,7 +226,7 @@ ReturnSuccessSinceInitializationNotNeeded:
 ;		CF:		Clear if no error
 ;				Set if error flag was set
 ;	Corrupts registers:
-;		BX, ES
+;		Nothing
 ;--------------------------------------------------------------------
 SetErrorFlagFromALwithErrorCodeInAH:
 	jnc		SHORT .NoErrorFlagToSet

@@ -20,8 +20,8 @@ PIO_1_MIN_ADDRESS_VALID_NS	EQU		50
 PIO_2_MIN_ADDRESS_VALID_NS	EQU		30
 PIO_3_MIN_ADDRESS_VALID_NS	EQU		30
 PIO_4_MIN_ADDRESS_VALID_NS	EQU		25
-PIO_5_MIN_ADDRESS_VALID_NS	EQU		25		; Could not find info
-PIO_6_MIN_ADDRESS_VALID_NS	EQU		25		; Could not find info
+PIO_5_MIN_ADDRESS_VALID_NS	EQU		15
+PIO_6_MIN_ADDRESS_VALID_NS	EQU		10
 
 ; PIO Minimum Active Times (t2)
 PIO_0_MIN_ACTIVE_TIME_NS	EQU		165
@@ -29,11 +29,11 @@ PIO_1_MIN_ACTIVE_TIME_NS	EQU		125
 PIO_2_MIN_ACTIVE_TIME_NS	EQU		100
 PIO_3_MIN_ACTIVE_TIME_NS	EQU		80
 PIO_4_MIN_ACTIVE_TIME_NS	EQU		70
-PIO_5_MIN_ACTIVE_TIME_NS	EQU		70		; Could not find info
-PIO_6_MIN_ACTIVE_TIME_NS	EQU		70		; Could not find info
+PIO_5_MIN_ACTIVE_TIME_NS	EQU		65
+PIO_6_MIN_ACTIVE_TIME_NS	EQU		55
 
 ; PIO Minimum Recovery Times or Inactive Times (t2i) can be calculated
-; from Minimum Cycle Time (t0) - Minimum Active Time (t2) - Address Valid Time (t1). 
+; from Minimum Cycle Time (t0) - Minimum Active Time (t2) - Address Valid Time (t1).
 ; I'm not sure about this calculation so correct me if I'm wrong!
 ; Recovery time should be calculated at run time since Cycle Time t0 can be
 ; read from ATA information (ATA2+) but most drives just report the
@@ -53,7 +53,7 @@ struc ATA1
 	.wHeadCnt	resw 1	; 3F, Number of heads
 	.wBpTrck	resw 1	; 4F, Number of unformatted bytes per track
 	.wBpSect	resw 1	; 5F, Number of unformatted bytes per sector
-	.wSPT		resw 1	; 6F, Number of sectors per track 
+	.wSPT		resw 1	; 6F, Number of sectors per track
 				resw 3	; 7...9X
 	.strSerial	resb 20	; 10...19F, Serial number (20 ASCII characters, 0000h=not specified)
 	.wBuffType	resw 1	; 20F, Buffer type
@@ -135,7 +135,7 @@ struc ATA2
 	.wHeadCnt	resw 1	; 3F, Number of logical heads
 				resw 1	; 4X
 				resw 1	; 5X
-	.wSPT		resw 1	; 6F, Number of logical sectors per track 
+	.wSPT		resw 1	; 6F, Number of logical sectors per track
 				resw 3	; 7...9X
 	.strSerial	resb 20	; 10...19F, Serial number (20 ASCII characters, 0000h=not specified)
 				resw 1	; 20X
@@ -165,13 +165,13 @@ struc ATA2
 	; Words 59-63 are always valid
 	.bBlockSel	resb 1	; 59[0-7]V, Current setting for number of sectors that
 						;           can be transferred per interrupt on R/W multiple command
-	.bBlockFlgs	resb 1	; 59[8-15]VR, bit 0 set if Multiple sector setting is valid	
+	.bBlockFlgs	resb 1	; 59[8-15]VR, bit 0 set if Multiple sector setting is valid
 	.dwLBACnt	resd 1	; 60...61F, Total number of user addressable sectors (LBA mode only)
 	.bSDMASupp	resb 1	; 62[0-7]F, Single word DMA transfer modes supported
 	.bSDMAAct	resb 1	; 62[8-15]V, Single word DMA transfer mode active
 	.bMDMASupp	resb 1	; 63[0-7]F, Multiword DMA transfer modes supported
 	.bMDMAAct	resb 1	; 63[8-15]V, Multiword DMA transfer mode active
-	
+
 	; Words 64-70 are valid only if bit1 is set in .wFields (ATA2+)
 	.bPIOSupp	resb 1	; 64[0-7]F, Advanced PIO Transfer Modes Supported
 				resb 1	; 64[8-15]R
@@ -219,7 +219,7 @@ struc ATA6
 				resw 1	; 3X, Obsolete (Number of logical heads)
 				resw 1	; 4X
 				resw 1	; 5X
-				resw 1	; 6X, Obsolete (Number of logical sectors per track) 
+				resw 1	; 6X, Obsolete (Number of logical sectors per track)
 				resw 2	; 7...8V, Reserved for assignment by the CompactFlash Association
 				resw 1	; 9X
 	.strSerial	resb 20	; 10...19F, Serial number (20 ASCII characters, 0000h=not specified)

@@ -130,3 +130,8 @@ release: xt
 	@echo Compressing with UPX...
 	@upx -qq --8086 --ultra-brute $(TARGET).$(EXTENSION)
 	@echo Done! XT version is ready for release.
+
+xt_unused: xt
+	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XT) -o"$(TARGET)_xt_unused.asm" -E -DCHECK_FOR_UNUSED_ENTRYPOINTS
+	@perl ..\tools\unused.pl $(TARGET)_xt.lst $(TARGET)_xt_unused.asm
+

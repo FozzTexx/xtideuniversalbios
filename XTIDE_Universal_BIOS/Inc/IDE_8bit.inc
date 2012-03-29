@@ -29,7 +29,7 @@
 ;
 ; XTIDE_INSW
 ;	Parameters:
-;		BX:		Bit mask for toggling XTIDE data low/high reg
+;		BL:		Bit mask for toggling XTIDE data low/high reg
 ;		DX:		XTIDE Data Low Register address
 ;		ES:DI:	Ptr to destination buffer
 ;	Returns:
@@ -40,15 +40,15 @@
 %macro XTIDE_INSW 0
 %ifdef USE_186	; INS instruction available
 	insb						; Load low byte from port DX to [ES:DI]
-	xor		dx, bx				; IDE Data Reg to XTIDE Data High Reg
+	xor		dl, bl				; IDE Data Reg to XTIDE Data High Reg
 	insb						; Load high byte from port DX to [ES:DI]
-	xor		dx, bx				; Restore to IDE Data Register
+	xor		dl, bl				; Restore to IDE Data Register
 %else	; If 8088/8086
 	in		al, dx				; Load low byte from port
-	xor		dx, bx				; IDE Data Reg to XTIDE Data High Reg
+	xor		dl, bl				; IDE Data Reg to XTIDE Data High Reg
 	stosb						; Store byte to [ES:DI]
 	in		al, dx				; Load high byte from port
-	xor		dx, bx				; Restore to IDE Data Register
+	xor		dl, bl				; Restore to IDE Data Register
 	stosb						; Store byte to [ES:DI]
 %endif
 %endmacro
@@ -59,7 +59,7 @@
 ;
 ; XTIDE_OUTSW
 ;	Parameters:
-;		BX:		Bit mask for toggling XTIDE data low/high reg
+;		BL:		Bit mask for toggling XTIDE data low/high reg
 ;		DX:		XTIDE Data Low Register address
 ;		DS:SI:	Ptr to source buffer
 ;	Returns:
@@ -70,16 +70,16 @@
 %macro XTIDE_OUTSW 0
 %ifdef USE_186	; OUTS instruction available
 	lodsb						; Load low byte from [DS:SI] to AL
-	xor		dx, bx				; IDE Data Reg to XTIDE Data High Reg
+	xor		dl, bl				; IDE Data Reg to XTIDE Data High Reg
 	outsb						; Output high byte from [DS:SI]
-	xor		dx, bx				; XTIDE Data High Reg to Data Low Reg
+	xor		dl, bl				; XTIDE Data High Reg to Data Low Reg
 	out		dx, al				; Output low byte from AL
 %else	; If 8088/8086
 	lodsw						; Load word from [DS:SI]
-	xor		dx, bx				; IDE Data Reg to XTIDE Data High Reg
+	xor		dl, bl				; IDE Data Reg to XTIDE Data High Reg
 	xchg	al, ah				; => AL=high byte, AH=low byte
 	out		dx, al				; Output high byte
-	xor		dx, bx				; XTIDE Data High Reg to Data Low Reg
+	xor		dl, bl				; XTIDE Data High Reg to Data Low Reg
 	mov		al, ah				; Copy low byte to AL
 	out		dx, al				; Output low byte
 %endif

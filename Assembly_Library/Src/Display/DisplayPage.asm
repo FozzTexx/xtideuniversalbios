@@ -14,7 +14,7 @@ SECTION .text
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
-%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS OR EXCLUDE_FROM_XTIDECFG
 ALIGN DISPLAY_JUMP_ALIGN
 DisplayPage_SetFromAL:
 	xor		ah, ah

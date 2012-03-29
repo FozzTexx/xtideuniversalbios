@@ -88,10 +88,9 @@ AtaID_GetTotalSectorCountToBXDXAXfromAtaInfoInESSI:
 AtaID_GetMaxPioModeToAXandMinCycleTimeToCX:
 	; Get PIO mode and cycle time for PIO 0...2
 	mov		bx, [es:si+ATA1.bPioMode]
+	mov		ax, bx					; AH = 0, AL = PIO mode 0, 1 or 2
 	shl		bx, 1					; Shift for WORD lookup
 	mov		cx, [cs:bx+.rgwPio0to2CycleTimeInNanosecs]
-	shr		bx, 1
-	xchg	ax, bx					; AH = 0, AL = PIO mode 0, 1 or 2
 
 	; Check if IORDY is supported
 	test	BYTE [es:si+ATA2.wCaps+1], A2_wCaps_IORDY >> 8
@@ -104,10 +103,10 @@ AtaID_GetMaxPioModeToAXandMinCycleTimeToCX:
 
 	; Get Advanced PIO mode
 	; (Hard Disks supports up to 4 but CF cards can support 5 and 6)
-	mov		bx, [es:si+ATA2.bPIOSupp]
+	mov		bl, [es:si+ATA2.bPIOSupp]
 .CheckNextFlag:
 	inc		ax
-	shr		bx, 1
+	shr		bl, 1
 	jnz		SHORT .CheckNextFlag
 	MIN_U	al, 6						; Make sure not above lookup tables
 	mov		cx, [es:si+ATA2.wPIOMinCyF]	; Advanced modes use IORDY

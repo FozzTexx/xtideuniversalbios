@@ -113,7 +113,7 @@ AdvAtaInit_LoadMasterDPTtoDSSIifSlaveInDSDI:
 ;		Nothing
 ;--------------------------------------------------------------------
 AdvAtaInit_SelectSlowestCommonPioTimingsToBXandCXfromDSSIandDSDI:
-	eMOVZX	bx, BYTE [di+DPT_ADVANCED_ATA.bPioMode]
+	eMOVZX	bx, [di+DPT_ADVANCED_ATA.bPioMode]
 	mov		cx, [di+DPT_ADVANCED_ATA.wMinPioCycleTime]
 	test	si, si
 	jz		SHORT .PioTimingsLoadedToAXandCX

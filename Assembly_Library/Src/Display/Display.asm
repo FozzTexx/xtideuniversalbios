@@ -67,7 +67,9 @@ Display_FormatNullTerminatedStringFromCSSI:
 	%define SetCharacterAttributeFromAL						DisplayContext_SetCharacterAttributeFromAL
 	%define SetCursorShapeFromAX							DisplayCursor_SetShapeFromAX
 	%define SetCursorCoordinatesFromAX						DisplayCursor_SetCoordinatesFromAX
+%ifndef EXCLUDE_FROM_XTIDECFG
 	%define SetNewPageFromAL								DisplayPage_SetFromAL
+%endif
 	%define SynchronizeDisplayContextToHardware				DisplayContext_SynchronizeToHardware
 
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS

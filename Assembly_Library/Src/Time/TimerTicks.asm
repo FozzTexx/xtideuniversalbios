@@ -23,11 +23,13 @@ SECTION .text
 ;		CX
 ;--------------------------------------------------------------------
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
+%ifndef EXCLUDE_FROM_XTIDECFG
 ALIGN JUMP_ALIGN
 TimerTicks_GetHoursToAXfromTicksInDXAX:
 	mov		cx, TICKS_PER_HOUR
 	div		cx		; Divide DX:AX by CX, Hours to AX, remainder ticks to DX
 	ret
+%endif ; EXCLUDE_FROM_XTIDECFG
 
 ALIGN JUMP_ALIGN
 TimerTicks_GetMinutesToAXfromTicksInDX:
@@ -36,7 +38,7 @@ TimerTicks_GetMinutesToAXfromTicksInDX:
 	mov		cx, TICKS_PER_MINUTE
 	div		cx		; Divide DX:AX by CX, Minutes to AX, remainder ticks to DX
 	ret
-%endif
+%endif ; EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 
 ALIGN JUMP_ALIGN
 TimerTicks_GetSecondsToAXfromTicksInDX:

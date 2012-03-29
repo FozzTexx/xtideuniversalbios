@@ -49,7 +49,9 @@ struc DISPLAY_LIB
 	.SetCharacterAttributeFromAL					resb	2
 	.SetCursorShapeFromAX							resb	2
 	.SetCursorCoordinatesFromAX						resb	2
+%ifndef EXCLUDE_FROM_XTIDECFG
 	.SetNewPageFromAL								resb	2
+%endif
 	.SynchronizeDisplayContextToHardware			resb	2
 
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
