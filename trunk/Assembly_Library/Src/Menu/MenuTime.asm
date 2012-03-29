@@ -14,6 +14,7 @@ SECTION .text
 ;	Corrupts registers:
 ;		AX, BX
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDECFG
 ALIGN MENU_JUMP_ALIGN
 MenuTime_StartSelectionTimeoutWithTicksInAX:
 	push	ds
@@ -22,6 +23,7 @@ MenuTime_StartSelectionTimeoutWithTicksInAX:
 	or		BYTE [bp+MENU.bFlags], FLG_MENU_TIMEOUT_COUNTDOWN
 	pop		ds
 	ret
+%endif
 
 
 ;--------------------------------------------------------------------

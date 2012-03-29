@@ -15,11 +15,11 @@ SECTION .text
 	%include "DisplayContext.asm"
 	%include "DisplayCursor.asm"
 	%include "DisplayPage.asm"
-	%include "DisplayPrint.asm"					; must come before DisplayFormat/DisplayFormatCompressed			
+	%include "DisplayPrint.asm"					; must come before DisplayFormat/DisplayFormatCompressed
 %ifdef MODULE_STRINGS_COMPRESSED
 	%include "DisplayFormatCompressed.asm"
 %else
-	%include "DisplayFormat.asm"		
+	%include "DisplayFormat.asm"
 %endif
 %endif
 
@@ -33,14 +33,14 @@ SECTION .text
 %ifdef INCLUDE_KEYBOARD_LIBRARY
   %ifndef KEYBOARD_JUMP_ALIGN
 	%define KEYBOARD_JUMP_ALIGN 1
-  %endif		
+  %endif
 	%include "Keyboard.asm"
 %endif
 
 %ifdef INCLUDE_MENU_LIBRARY
   %ifndef MENU_JUMP_ALIGN
 	%define MENU_JUMP_ALIGN 1
-  %endif				
+  %endif
 	%include "CharOutLineSplitter.asm"
 	%include "Menu.asm"
 	%include "MenuAttributes.asm"
@@ -71,7 +71,7 @@ SECTION .text
 %ifdef INCLUDE_STRING_LIBRARY
   %ifndef STRING_JUMP_ALIGN
 	%define STRING_JUMP_ALIGN 1
-  %endif				
+  %endif
 	%include "Char.asm"
 	%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 		%include "String.asm"
@@ -81,17 +81,19 @@ SECTION .text
 
 %ifdef INCLUDE_SERIAL_LIBRARY
 	%include "Serial.inc"
-%endif		
+%endif
 %ifdef INCLUDE_SERIALSERVER_LIBRARY
 	%include "SerialServer.asm"
 	%include "SerialServerScan.asm"
 	%define INCLUDE_TIME_LIBRARY
-%endif		
+%endif
 
 %ifdef INCLUDE_TIME_LIBRARY
 	%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 		%include "Delay.asm"
-		%include "SystemTimer.asm"
+		%ifndef EXCLUDE_FROM_XTIDECFG
+			%include "SystemTimer.asm"
+		%endif
 	%endif
 	%include "TimerTicks.asm"
 %endif
@@ -99,7 +101,7 @@ SECTION .text
 %ifdef INCLUDE_UTIL_LIBRARY
   %ifndef UTIL_SIZE_JUMP_ALIGN
 	%define UTIL_SIZE_JUMP_ALIGN 1
-  %endif		
+  %endif
 	%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 		%include "Bit.asm"
 	%endif

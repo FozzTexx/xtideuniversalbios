@@ -101,8 +101,12 @@ CheckErrorsAfterTransferringLastBlock:
 
 	; Return number of successfully read sectors
 ReturnWithTransferErrorInAH:
+%ifdef USE_386
+	movzx	cx, [bp+PIOVARS.bSectorsDone]
+%else
 	mov		cl, [bp+PIOVARS.bSectorsDone]
 	mov		ch, 0								; Preserve CF
+%endif
 	ret
 
 
@@ -179,7 +183,7 @@ ALIGN JUMP_ALIGN
 InitializePiovarsInSSBPwithSectorCountInAH:
 	; Store sizes
 	mov		[bp+PIOVARS.bSectorsLeft], ah
-	eMOVZX	ax, BYTE [di+DPT_ATA.bBlockSize]
+	eMOVZX	ax, [di+DPT_ATA.bBlockSize]
 	mov		[bp+PIOVARS.wSectorsInBlock], ax
 	mov		[bp+PIOVARS.bSectorsDone], ah		; Zero
 
@@ -217,7 +221,7 @@ InitializePiovarsInSSBPwithSectorCountInAH:
 ALIGN JUMP_ALIGN
 ReadBlockFromXtideRev1:
 	UNROLL_SECTORS_IN_CX_TO_QWORDS
-	mov		bx, 8		; Bit mask for toggling data low/high reg
+	mov		bl, 8		; Bit mask for toggling data low/high reg
 ALIGN JUMP_ALIGN
 .InswLoop:
 	XTIDE_INSW
@@ -286,7 +290,7 @@ WriteBlockToXtideRev1:
 	push	ds
 	push	bx
 	UNROLL_SECTORS_IN_CX_TO_QWORDS
-	mov		bx, 8		; Bit mask for toggling data low/high reg
+	mov		bl, 8		; Bit mask for toggling data low/high reg
 	push	es			; Copy ES...
 	pop		ds			; ...to DS
 ALIGN JUMP_ALIGN

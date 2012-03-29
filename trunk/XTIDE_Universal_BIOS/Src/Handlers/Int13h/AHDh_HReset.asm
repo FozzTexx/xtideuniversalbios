@@ -51,7 +51,7 @@ AHDh_ResetDrive:
 												; (error register has special values after reset)
 
 	; Initialize Master and Slave drives
-	eMOVZX	ax, BYTE [di+DPT.bIdevarsOffset]	; (AL) pointer to controller we are looking to reset
+	eMOVZX	ax, [di+DPT.bIdevarsOffset]			; (AL) pointer to controller we are looking to reset
 												; (AH) initialize error code, assume success
 
 	mov		si, IterateAndResetDrives			; Callback function for FindDPT_IterateAllDPTs
@@ -84,55 +84,30 @@ AHDh_ResetDrive:
 ;--------------------------------------------------------------------
 IterateAndResetDrives:
 	cmp		al, [di+DPT.bIdevarsOffset]			; The right controller?
-	jne		.done
-	push	ax
+	jne		.Done
 	push	cx
+	push	ax
 	call	AH9h_InitializeDriveForUse			; Reset Master and Slave (Master will come first in DPT list)
 
 %ifdef MODULE_ADVANCED_ATA
 	jc		SHORT .SkipControllerInitSinceError
-	call	InitializeAdvancedIdeControllers	; Done after drive init so drives are first set to advanced PIO mode, then the controller
-.SkipControllerInitSinceError:
-%endif
+	; Here we initialize the more advanced controllers (VLB and PCI) to get better performance for systems with 32-bit bus.
+	; This step is optional since the controllers use slowest possible settings by default if they are not initialized.
 
-	pop		cx
 	pop		ax
-	jnc		.done
+	push	ax
+	cmp		al, [di+LARGEST_DPT_SIZE+DPT.bIdevarsOffset]	; We check if next DPT is for the same IDE controller.
+	je		SHORT .SkipInitializationUntilNextDrive			; If it is, we skip the initialization.
+	call	AdvAtaInit_InitializeControllerForDPTinDSDI		; Done after drive init so drives are first set to advanced PIO mode, then the controller
+.SkipInitializationUntilNextDrive:
+.SkipControllerInitSinceError:
+%endif	; MODULE_ADVANCED_ATA
+
+	pop		ax
+	pop		cx
+	jnc		.Done
 	or		ah, (RET_HD_RESETFAIL << 1) | 1		; OR in Reset Failed error code and CF, will SHR into position later
-.done:
+.Done:
 	stc											; From IterateAllDPTs perspective, the DPT is never found (continue iteration)
 	ret
 
-
-%ifdef MODULE_ADVANCED_ATA
-;--------------------------------------------------------------------
-; Here we initialize the more advanced controllers (VLB and PCI)
-; to get better performance for systems with 32-bit bus.
-;
-; This step is optional since the controllers use slowest possible
-; settings by default if they are not initialized.
-;
-; InitializeAdvancedIdeController
-;	Parameters:
-;		DS:DI:	Ptr to DPT
-;	Returns:
-;		CF:		Cleared if success or no controller to initialize
-;				Set if error
-;	Corrupts registers:
-;		AX, BX, CX, DX
-;--------------------------------------------------------------------
-InitializeAdvancedIdeControllers:
-	; We want to initialize the advanced controller only after both
-	; Master and Slave drive are initialized to correct PIO mode.
-	; We check if next DPT is for the same IDE controller. If it is,
-	; we skip the initialization.
-	mov		al, [di+DPT.bIdevarsOffset]
-	cmp		al, [di++LARGEST_DPT_SIZE+DPT.bIdevarsOffset]
-	je		SHORT .SkipInitializationUntilNextDrive	; CF cleared
-
-	jmp		AdvAtaInit_InitializeControllerForDPTinDSDI
-.SkipInitializationUntilNextDrive:
-	clc
-	ret
-
-%endif	; MODULE_ADVANCED_ATA

@@ -90,7 +90,6 @@ endstruc
 %ifdef MODULE_SERIAL
 struc DPT_SERIAL
 	.dpt						resb	DPT_size
-
 	.wSerialPortAndBaud:
 	.bSerialPort				resb	1	; Serial connection I/O port address, divided by 4
 	.bSerialBaud				resb 	1	; Serial connection baud rate divisor
@@ -125,7 +124,7 @@ LBA_ASSIST_SPT					EQU		63
 	test	dx, dx
 	jnz		SHORT %%LoadMaxValueToAX
 	cmp		ax, MAX_LCHS_CYLINDERS
-	jbe		SHORT %%NoNeedToModify
+	jb		SHORT %%NoNeedToModify
 %%LoadMaxValueToAX:
 	mov		ax, MAX_LCHS_CYLINDERS
 %%NoNeedToModify:

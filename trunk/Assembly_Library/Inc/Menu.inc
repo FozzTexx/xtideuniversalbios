@@ -79,7 +79,9 @@ struc MENU_LIB
 	.ClearInformationArea						resb	2
 	.RefreshInformation							resb	2
 
+%ifndef EXCLUDE_FROM_XTIDECFG
 	.StartSelectionTimeoutWithTicksInAX			resb	2
+%endif
 
 %ifdef INCLUDE_MENU_DIALOGS
 	.StartProgressTaskWithIoInDSSIandParamInDXAX	resb	2

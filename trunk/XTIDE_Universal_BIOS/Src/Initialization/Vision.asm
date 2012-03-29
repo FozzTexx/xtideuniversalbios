@@ -44,13 +44,14 @@ Vision_DetectAndReturnIDinAXandPortInDXifControllerPresent:
 ;--------------------------------------------------------------------
 IsConfigRegisterWithIDinAL:
 	mov		ah, al
-	and		ah, MASK_QDCONFIG_CONTROLLER_ID
-	cmp		ah, ID_QD6500 << 4
+	and		al, MASK_QDCONFIG_CONTROLLER_ID
+	cmp		al, ID_QD6500 << 4
 	je		SHORT VisionControllerDetected
-	cmp		ah, ID_QD6580 << 4
+	cmp		al, ID_QD6580 << 4
 	je		SHORT VisionControllerDetected
-	cmp		ah, ID_QD6580_ALTERNATE << 4
+	cmp		al, ID_QD6580_ALTERNATE << 4
 VisionControllerDetected:
+	xchg	ah, al
 	ret
 
 
@@ -174,7 +175,7 @@ Vision_InitializeWithIDinAHandConfigInAL:
 .CalculateTimingForQD6500:
 	mov		bp, QD6500_MAX_ACTIVE_TIME_CLOCKS | (QD6500_MIN_ACTIVE_TIME_CLOCKS << 8)
 
-	; We need the PIO Cycle Time in CX to calculate Active and Recovery Times. 
+	; We need the PIO Cycle Time in CX to calculate Active and Recovery Times.
 .CalculateTimingsForQD65xx:
 	call	AdvAtaInit_SelectSlowestCommonPioTimingsToBXandCXfromDSSIandDSDI
 
