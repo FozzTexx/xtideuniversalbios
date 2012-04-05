@@ -316,14 +316,14 @@ when it starts in an interactive mode:
 
 <pre>
     Gnomovision version 69, Copyright (C) year name of author
-    Gnomovision comes with ABSOLUTELY NO WARRANTY; for details type `show w'.
+    Gnomovision comes with ABSOLUTELY NO WARRANTY; for details type 'show w'.
     This is free software, and you are welcome to redistribute it
-    under certain conditions; type `show c' for details.
+    under certain conditions; type 'show c' for details.
 </pre>
 
-The hypothetical commands `show w' and `show c' should show the appropriate
+The hypothetical commands 'show w' and 'show c' should show the appropriate
 parts of the General Public License.  Of course, the commands you use may
-be called something other than `show w' and `show c'; they could even be
+be called something other than 'show w' and 'show c'; they could even be
 mouse-clicks or menu items--whatever suits your program.
 
 You should also get your employer (if you work as a programmer) or your
@@ -332,7 +332,7 @@ necessary.  Here is a sample; alter the names:
 
 <pre>
   Yoyodyne, Inc., hereby disclaims all copyright interest in the program
-  `Gnomovision' (which makes passes at compilers) written by James Hacker.
+  'Gnomovision' (which makes passes at compilers) written by James Hacker.
 
   <signature of Ty Coon>, 1 April 1989
   Ty Coon, President of Vice
