@@ -9,7 +9,7 @@ g_MenupageForMainMenu:
 istruc MENUPAGE
 	at	MENUPAGE.fnEnter,			dw	MainMenu_EnterMenuOrModifyItemVisibility
 	at	MENUPAGE.fnBack,			dw	ExitToDosFromBackButton
-	at	MENUPAGE.wMenuitems,		dw	8
+	at	MENUPAGE.wMenuitems,		dw	9
 iend
 
 g_MenuitemMainMenuLicense:		
@@ -72,6 +72,16 @@ istruc MENUITEM
 	at	MENUITEM.bType,				db	TYPE_MENUITEM_PAGENEXT
 iend
 
+g_MenuitemMainMenuSaveFile:		
+istruc MENUITEM
+	at	MENUITEM.fnActivate,		dw	BiosFile_SaveUnsavedChanges
+	at	MENUITEM.szName,			dw	g_szItemMainSave
+	at	MENUITEM.szQuickInfo,		dw	g_szNfoMainSave
+	at	MENUITEM.szHelp,			dw	g_szNfoMainSave
+	at	MENUITEM.bFlags,			db	NULL
+	at	MENUITEM.bType,				db	TYPE_MENUITEM_ACTION
+iend		
+
 g_MenuitemMainMenuExitToDos:
 istruc MENUITEM
 	at	MENUITEM.fnActivate,		dw	ExitToDosSelectedFromMenu
@@ -112,6 +122,7 @@ MainMenu_EnterMenuOrModifyItemVisibility:
 	call	.EnableOrDisableXtideRomItems
 	call	.EnableOrDisableConfigureXtideUniversalBios
 	call	.EnableOrDisableFlashEeprom
+	call	.EnableOrDisableSave			
 	mov		si, g_MenupageForMainMenu
 	jmp		Menupage_ChangeToNewMenupageInDSSI
 
@@ -183,8 +194,27 @@ ALIGN JUMP_ALIGN
 	and		BYTE [g_MenuitemMainMenuFlashEeprom+MENUITEM.bFlags], ~FLG_MENUITEM_VISIBLE
 	ret
 
+;--------------------------------------------------------------------
+; .EnableOrDisableSave
+;	Parameters:
+;		DS:		CFGVARS segment
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN		
+.EnableOrDisableSave:	
+	test	WORD [g_cfgVars+CFGVARS.wFlags], FLG_CFGVARS_FILELOADED
+	jz		SHORT .DisableSave
+	or		BYTE [g_MenuitemMainMenuSaveFile+MENUITEM.bFlags], FLG_MENUITEM_VISIBLE
+	ret
 
-
+ALIGN JUMP_ALIGN				
+.DisableSave:
+	and		BYTE [g_MenuitemMainMenuSaveFile+MENUITEM.bFlags], ~FLG_MENUITEM_VISIBLE
+	ret
+				
 ;--------------------------------------------------------------------
 ; MENUITEM activation functions (.fnActivate)
 ;	Parameters:

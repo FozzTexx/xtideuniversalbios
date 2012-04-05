@@ -167,6 +167,24 @@ ALIGN JUMP_ALIGN
 FlashMenu_EnterMenuOrModifyItemVisibility:
 	push	cs
 	pop		ds
+
+	cmp		word [cs:g_cfgVars+CFGVARS.wEepromSegment], 0
+	jnz		.alreadySet
+
+	push	es
+	push	di
+	call	EEPROM_FindXtideUniversalBiosROMtoESDI
+	push	es
+	pop		ax
+	pop		di
+	pop		es
+	jc		.storeEepromSegment
+	mov		ax, DEFAULT_EEPROM_SEGMENT
+.storeEepromSegment:	
+	mov		word [cs:g_cfgVars+CFGVARS.wEepromSegment], ax
+		
+.alreadySet:	
+				
 	mov		si, g_MenupageForFlashMenu
 	jmp		Menupage_ChangeToNewMenupageInDSSI
 

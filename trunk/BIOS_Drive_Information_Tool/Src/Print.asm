@@ -166,7 +166,11 @@ Print_TotalSectorsFromBXDXAX:
 	CALL_DISPLAY_LIBRARY	PrintQWordFromSSBPwithBaseInBX
 	add		sp, BYTE 8
 
-	CALL_DISPLAY_LIBRARY	PrintNewlineCharacters
+	push	si
+	mov		si, g_szNewline
+	call	Print_NullTerminatedStringFromSI
+	pop		si
+		
 	ret
 
 
