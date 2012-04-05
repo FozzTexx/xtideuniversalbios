@@ -4,7 +4,7 @@
 ----
 = Introduction =
 
-With version 2, the XTIDE Universal BIOS can emulate floppy and hard disks over a serial connection.  By doing so, aging hardware can be bootstrapped from a floppy image, or even run without a physical hard disk.  No special hardware is required, the BIOS can work with any standard COM port that is installed on the machine.  And with high speed COM ports, performance can approach the performance of vintage hard disks.
+Stating with version 2, the XTIDE Universal BIOS can emulate floppy and hard disks over a serial connection.  By doing so, aging hardware can be bootstrapped from a floppy image, or even run without a physical hard disk.  No special hardware is required, the BIOS can work with any standard COM port that is installed on the machine.  And with high speed COM ports, performance can approach the performance of vintage hard disks.
 
 == System Requirements ==
 
@@ -32,12 +32,12 @@ Connect the two machines via the serial cable.
 
 Open a command prompt, and run the SerDrive utility on the server.  Switches are described below.  In its simplest form:
 	{{{ C:\> SerDrive ImageFile.img }}}
-If you do not already have an image, you can obtain boot floppies of FreeDOS at [http://www.fdos.org/bootdisks/ www.fdos.org] and possibly at the FreeDOS home page at [http://www.freedos.org www.freedos.org] (although they tend to distribute FreeDOS as a CD-ROM image).
+If you do not already have an image, you can obtain boot floppies of FreeDOS at [http://www.fdos.org/bootdisks/ www.fdos.org] and possibly at the FreeDOS home page at [http://www.freedos.org www.freedos.org] (although they tend to distribute FreeDOS as a CD-ROM image).  Be sure to use a newer version of FreeDOS Format, we have seen issues with version 0.90, that 0.91v corrected, and newer versions also have a debug switch for diagnosing problems.
 SerDrive will use the first available COM port by default, at a speed of 9600 baud (which is reliable, but relatively slow, you will likely want to increase this for continued use).
 
 === 3. Boot the Client ===
 
-Boot the client computer.  * During drive detection, hold down the Alt key, and at the end of drive detection, the BIOS will display "Serial Master on COM Detect". *  The BIOS will now scan the available COM ports on the client (COM 1-7), looking for a server.  You can also configure the BIOS with XTIDECFG to always boot from the serial port (see below).
+Boot the client computer.  * During drive detection, hold down the Alt key, and at the end of drive detection, the BIOS will display "Master at COM Detect". *  The BIOS will now scan the available COM ports on the client (COM 1-7), looking for a server.  You can also configure the BIOS with XTIDECFG to always boot from the serial port (see below).
 
 If a server is found, the floppy and/or hard disk emulated will appear in the boot menu for the BIOS.  You can now proceed as normal.
 
