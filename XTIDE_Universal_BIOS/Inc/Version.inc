@@ -1,5 +1,12 @@
+; /*
 ; Project name	:	XTIDE Universal BIOS
 ; Description	:	Version information.
+
+;--------------------------------------------------------------------------------
+;
+; Assembler Version
+;
+
 %ifndef VERSION_INC
 %define VERSION_INC
 
@@ -23,3 +30,19 @@
 
 
 %endif ; VERSION_INC
+
+%comment
+;*/
+
+//--------------------------------------------------------------------------------
+//
+// C/C++ Version
+//
+
+#define BETA " Beta "
+
+#define ROM_VERSION_STRING		"v2.0.0" BETA "1 (" __DATE__ ")"
+
+/*
+%endcomment
+;*/

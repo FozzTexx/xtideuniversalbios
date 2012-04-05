@@ -114,7 +114,7 @@ g_cfgVars:
 istruc CFGVARS
 	at	CFGVARS.pMenupage,			dw	g_MenupageForMainMenu
 	at	CFGVARS.wFlags,				dw	DEFAULT_CFGVARS_FLAGS
-	at	CFGVARS.wEepromSegment,		dw	DEFAULT_EEPROM_SEGMENT
+	at	CFGVARS.wEepromSegment,		dw	0
 	at	CFGVARS.bEepromType,		db	DEFAULT_EEPROM_TYPE
 	at	CFGVARS.bEepromPage,		db	DEFAULT_PAGE_SIZE
 	at	CFGVARS.bSdpCommand,		db	DEFAULT_SDP_COMMAND

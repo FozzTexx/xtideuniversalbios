@@ -54,6 +54,7 @@ g_szItemMainLoadROM:	db	"Load BIOS from EEPROM",NULL
 g_szItemMainLoadStngs:	db	"Load old settings from EEPROM",NULL
 g_szItemMainConfigure:	db	"Configure XTIDE Universal BIOS",NULL
 g_szItemMainFlash:		db	"Flash EEPROM",NULL
+g_szItemMainSave:		db	"Save BIOS back to original file",NULL		
 g_szItemMainLicense:	db  "Copyright and License Information",NULL
 g_szItemMainHomePage:	db  "Web Links",NULL
 
@@ -73,6 +74,7 @@ g_szNfoMainLoadROM:		db	"Load BIOS from EEPROM to be reconfigured.",NULL
 g_szNfoMainLoadStngs:	db	"Load old XTIDE Universal BIOS settings from EEPROM.",NULL
 g_szNfoMainConfigure:	db	"Configure XTIDE Universal BIOS settings.",NULL
 g_szNfoMainFlash:		db	"Flash loaded BIOS image to EEPROM.",NULL
+g_szNfoMainSave:		db	"Save BIOS changes back to original file from which it was loaded.",NULL
 g_szNfoMainLicense:		db	"XTIDE Universal BIOS and XTIDECFG Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team. Released under GNU GPL v2, with ABSOLUTELY NO WARRANTY. Press ENTER for more details...",NULL
 g_szNfoMainHomePage:	db	"Visit http://code.google.com/p/ xtideuniversalbios (home page) and http://vintage-computer.com/ vcforum (support)",NULL
 
