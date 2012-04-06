@@ -47,7 +47,7 @@
 
 %endif ; VERSION_INC
 
-%comment
+%if 0			; equivalent of a NASM comment block
 ;*/
 
 //--------------------------------------------------------------------------------
@@ -60,5 +60,5 @@
 #define ROM_VERSION_STRING		"v2.0.0" BETA "1 (" __DATE__ ")"
 
 /*
-%endcomment
+%endif
 ;*/
