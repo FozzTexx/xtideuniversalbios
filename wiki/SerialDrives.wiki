@@ -4,7 +4,7 @@
 ----
 = Introduction =
 
-Stating with version 2, the XTIDE Universal BIOS can emulate floppy and hard disks over a serial connection.  By doing so, aging hardware can be bootstrapped from a floppy image, or even run without a physical hard disk.  No special hardware is required, the BIOS can work with any standard COM port that is installed on the machine.  And with high speed COM ports, performance can approach the performance of vintage hard disks.
+Starting with version 2, the XTIDE Universal BIOS can emulate floppy and hard disks over a serial connection.  By doing so, aging hardware can be bootstrapped from a floppy image, or even run without a physical hard disk.  No special hardware is required, the BIOS can work with any standard COM port that is installed on the machine.  And with high speed COM ports, performance can approach the performance of vintage hard disks.
 
 == System Requirements ==
 
