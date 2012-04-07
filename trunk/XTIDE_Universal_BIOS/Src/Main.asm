@@ -30,7 +30,17 @@
 
 	ORG 0							; Code start offset 0000h
 
-%define MENUEVENT_INLINE_OFFSETS    ; Only one menu required, save space and inline offsets
+	; We must define included libraries before including "AssemblyLibrary.inc".
+%define	EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS	; Exclude unused library functions
+%ifdef MODULE_BOOT_MENU
+	%define MENUEVENT_INLINE_OFFSETS    ; Only one menu required, save space and inline offsets
+	%define INCLUDE_MENU_LIBRARY
+
+%else	; If no boot menu included
+	%define	INCLUDE_DISPLAY_LIBRARY
+	%define INCLUDE_TIME_LIBRARY
+%endif
+
 
 	; Included .inc files
 	%include "AssemblyLibrary.inc"	; Assembly Library. Must be included first!
@@ -209,17 +219,19 @@ iend
 	%include "DetectPrint.asm"		; For printing drive detection strings
 
 	; Boot menu
+%ifdef MODULE_BOOT_MENU
 	%include "BootMenu.asm"			; For Boot Menu operations
 	%include "BootMenuEvent.asm"	; For menu library event handling
 									; NOTE: BootMenuPrint needs to come immediately after BootMenuEvent
 									;       so that jump table entries in BootMenuEvent stay within 8-bits
 	%include "BootMenuPrint.asm"	; For printing Boot Menu strings, also includes "BootMenuPrintCfg.asm"
-	%include "BootPrint.asm"		; For printing boot information
-	%include "FloppyDrive.asm"		; Floppy Drive related functions
-	%include "BootSector.asm"		; For loading boot sector
+%endif
 
 	; Boot loader
+	%include "BootPrint.asm"		; For printing boot information
 	%include "Int19h.asm"			; For Int 19h, Boot Loader
+	%include "FloppyDrive.asm"		; Floppy Drive related functions
+	%include "BootSector.asm"		; For loading boot sector
 
 	; For all device types
 	%include "Idepack.asm"
