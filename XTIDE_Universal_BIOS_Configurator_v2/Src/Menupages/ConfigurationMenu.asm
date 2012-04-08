@@ -2,20 +2,20 @@
 ; Description	:	"Configure XTIDE Universal BIOS" menu structs and functions.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
-;		
+;
 
 ; Section containing initialized data
 SECTION .data
@@ -25,7 +25,7 @@ g_MenupageForConfigurationMenu:
 istruc MENUPAGE
 	at	MENUPAGE.fnEnter,			dw	ConfigurationMenu_EnterMenuOrModifyItemVisibility
 	at	MENUPAGE.fnBack,			dw	MainMenu_EnterMenuOrModifyItemVisibility
-	at	MENUPAGE.wMenuitems,		dw	9
+	at	MENUPAGE.wMenuitems,		dw	10
 iend
 
 g_MenuitemConfigurationBackToMainMenu:
@@ -134,6 +134,39 @@ istruc MENUITEM
 	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	MAX_ALLOWED_IDE_CONTROLLERS
 iend
 
+g_MenuitemConfigurationIdleTimeout:
+istruc MENUITEM
+	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiceSelectionForMenuitemInDSSI
+	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromRawItemInDSSI
+	at	MENUITEM.szName,			dw	g_szItemCfgIdleTimeout
+	at	MENUITEM.szQuickInfo,		dw	g_szNfoCfgIdleTimeout
+	at	MENUITEM.szHelp,			dw	g_szHelpCfgIdleTimeout
+	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE | FLG_MENUITEM_BYTEVALUE | FLG_MENUITEM_CHOICESTRINGS
+	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOICE
+	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	ROMVARS.bIdleTimeout
+	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgCfgIdleTimeout
+	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoice,				dw	g_szMultichoiceIdleTimeout
+	at	MENUITEM.itemValue + ITEM_VALUE.rgwChoiceToValueLookup,		dw	g_rgwChoiceToValueLookupForIdleTimeout
+	at	MENUITEM.itemValue + ITEM_VALUE.rgszChoiceToStringLookup,	dw	g_rgszChoiceToStringLookupForIdleTimeout
+iend
+
+g_rgwChoiceToValueLookupForIdleTimeout:
+	%assign i -12
+	%rep 21
+		%assign i i+12
+		dw	i		; i / 12 = 0 (disabled) or 1...20 minutes
+	%endrep
+	%rep 4
+		%assign i i+1
+		dw	i		; 241...244 = (i - 240) * 30 minutes
+	%endrep
+g_rgszChoiceToStringLookupForIdleTimeout:
+	%assign i 0
+	%rep 25
+		dw	g_szIdleTimeoutChoice%[i]
+		%assign i i+1
+	%endrep
+	;	dw	NULL	; Is this needed? *FIXME*
 
 ; Section containing code
 SECTION .text
@@ -296,8 +329,8 @@ LimitIdeControllersForLiteMode:
 ;----------------------------------------------------------------------
 ; ConfigurationMenu_CheckAndMoveSerialDrivesToBottom
 ;
-; Checks to ensure that serial adapters are at the end of the 
-; IDEVARS structures list, as serial floppies (if present) need to be 
+; Checks to ensure that serial adapters are at the end of the
+; IDEVARS structures list, as serial floppies (if present) need to be
 ; the last drives detected by the BIOS.  If there are other controllers
 ; after a serial controller, the other controllers are moved up on the list
 ; and the serial controller is placed at the end of the list.
@@ -308,8 +341,8 @@ LimitIdeControllersForLiteMode:
 ;		Nothing
 ;	Corrupts registers:
 ;		All
-;----------------------------------------------------------------------		
-ConfigurationMenu_CheckAndMoveSerialDrivesToBottom:		
+;----------------------------------------------------------------------
+ConfigurationMenu_CheckAndMoveSerialDrivesToBottom:
 	push	es
 	push	ds
 	push	di
@@ -318,40 +351,39 @@ ConfigurationMenu_CheckAndMoveSerialDrivesToBottom:
 	call	Buffers_GetIdeControllerCountToCX	; will also set ES:DI to point to file buffer
 	push	es
 	pop		ds
-	mov		ch, 0						; clearing high order of CX and notification flag 
-	mov		dx, cx						; (probably unncessary, CX should be less than 127, but just to be sure)
-	jcxz	.done						; probably unnecessary, but make sure there is at least one controller		
+	xor		ch, ch						; clearing high order of CX and notification flag
+	mov		dx, cx						; (probably unnecessary, CX should be less than 127, but just to be sure)
+	jcxz	.done						; probably unnecessary, but make sure there is at least one controller
 
-	add		di, ROMVARS.ideVars0		; add in offset of first idevars
-	mov		bx, di
+	lea		bx, [di+ROMVARS.ideVars0]	; add in offset of first idevars
 
 .outerLoop:
 	mov		di, bx						; start of idevars
 	xor		si, si						; first serial found
 	xor		ax, ax						; first non-serial found
 	mov		cl, dl						; idevars count
-	mov		ch, 0
+	xor		ch, ch
 
 .loop:
 	cmp		byte [di+IDEVARS.bDevice], DEVICE_SERIAL_PORT
 	jnz		.notSerial
 
-	test	si, si						; record the first serial controllert that we find
-	jnz		.next	
+	test	si, si						; record the first serial controller that we find
+	jnz		.next
 	mov		si, di
 	jmp		.next
 
 .notSerial:
 	mov		ax, di						; record the *last* non-serial controller that we find
 
-.next:	
+.next:
 	add		di, IDEVARS_size
 	loop	.loop
 
-	test	si,si						; no serial drives, nothing to do
+	test	si, si						; no serial drives, nothing to do
 	jz		.done
-	cmp		si,ax						; serial port is already later on the list than any other controllers
-	ja		.done						; (also takes care of the case where ther are no other controllers)
+	cmp		si, ax						; serial port is already later on the list than any other controllers
+	ja		.done						; (also takes care of the case where there are no other controllers)
 
 ;
 ; move serial to end of list, others up
@@ -370,8 +402,7 @@ ConfigurationMenu_CheckAndMoveSerialDrivesToBottom:
 
 	rep	movsb
 
-	mov		di, si						; move up all the idevars below the serial, by one slot
-	sub		di, IDEVARS_size
+	lea		di, [si-IDEVARS_size]		; move up all the idevars below the serial, by one slot
 
 	mov		cx, ax						; restore end pointer of list, subtract off end of serial idevars
 	sub		cx, si
@@ -386,16 +417,16 @@ ConfigurationMenu_CheckAndMoveSerialDrivesToBottom:
 	pop		ds
 	mov		cx, IDEVARS_size
 	; di is already at last IDEVARS position
-	
+
 	rep	movsb
 
-	add		sp, IDEVARS_size			
+	add		sp, IDEVARS_size
 
 	push	es
 	pop		ds
 
 	mov		dh, 1						; set flag that we have done a relocation
-	
+
 	jmp		.outerLoop
 
 .done:
@@ -406,9 +437,9 @@ ConfigurationMenu_CheckAndMoveSerialDrivesToBottom:
 
 	test	dh, dh
 	jz		.noWorkDone
-		
+
 	mov		dx, g_szSerialMoved
 	call	Dialogs_DisplayNotificationFromCSDX
 
-.noWorkDone:		
+.noWorkDone:
 	ret

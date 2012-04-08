@@ -7,7 +7,7 @@
 # large		Builds 15 kiB binaries only (without checksum)                                       #
 # clean		Removes all files from \Build                                                        #
 # checksum*	Builds all and then generates checksum byte to all binary files                      #
-# strings*	Compress src\strings.asm to src\StringsCompressed.asm                                #
+# strings*	Compress src\Strings.asm to src\StringsCompressed.asm                                #
 #                                                                                                #
 # * at the end of target name means that Perl is required for the job.                           #
 # Build directory must be created manually if it does not exist.                                 #
@@ -15,15 +15,15 @@
 #                                                                                                #
 # Following modules can be included or excluded:                                                 #
 # MODULE_ADVANCED_ATA       Native support for some VLB IDE controllers                          #
-# MODULE_BOOT_MENU          Boot Menu for selection drive to boot from                           #
-# MODULE_EBIOS              Enhanced functions for access drives over 8.4 GB                     #
+# MODULE_BOOT_MENU          Boot Menu for selection of drive to boot from                        #
+# MODULE_EBIOS              Enhanced functions for accessing drives over 8.4 GB                  #
 # MODULE_JRIDE              Support for JR-IDE/ISA                                               #
 # MODULE_SERIAL             Virtual hard disks using serial port                                 #
-# MODULE_SERIAL_FLOPPY      Virtual floppy drives using serial port                              #
-# MODULE_STRINGS_COMPRESSED Compressed strings to save space                                     #
+# MODULE_SERIAL_FLOPPY      Virtual floppy drives using serial port (requires MODULE_SERIAL)     #
+# MODULE_STRINGS_COMPRESSED Use compressed strings to save space                                 #
 #                                                                                                #
 # Not modules but these affect the assembly:                                                     #
-# ELIMINATE_CGA_SNOW        Prevents CGA snowing at the cost of few bytes                        #
+# ELIMINATE_CGA_SNOW        Prevents CGA snowing at the cost of a few bytes                      #
 # USE_186                   Use instructions supported by 80188/80186 and V20/V30 and later      #
 # USE_286                   Use instructions supported by 286 and later                          #
 # USE_386                   Use instructions supported by 386 and later                          #

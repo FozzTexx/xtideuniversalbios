@@ -2,18 +2,18 @@
 ; Description	:	Equates for IDE registers, flags and commands.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 ;
 
@@ -96,12 +96,13 @@ COMMAND_WRITE_MULTIPLE					EQU		0C5h	; Block mode
 COMMAND_WRITE_MULTIPLE_EXT				EQU		39h		; LBA48, Block mode
 COMMAND_IDENTIFY_DEVICE					EQU		0ECh
 COMMAND_SET_FEATURES					EQU		0EFh
+COMMAND_IDLE							EQU		0E3h
 
 
 ; Subcommands for COMMAND_SET_FEATURES
 FEATURE_ENABLE_WRITE_CACHE				EQU		02h
 FEATURE_DISABLE_WRITE_CACHE				EQU		82h		; Can also be used to flush cache
-FEATURE_SET_TRANSFER_MODE				EQU		03h		; Transfe mode goes to the Sector Count Register
+FEATURE_SET_TRANSFER_MODE				EQU		03h		; Transfer mode goes to the Sector Count Register
 	PIO_DEFAULT_MODE					EQU		0h
 	PIO_DEFAULT_MODE_DISABLE_IORDY		EQU		1h
 	PIO_FLOW_CONTROL_MODE_xxx			EQU		(1<<3)	; Bits 2...0 hold the PIO mode
