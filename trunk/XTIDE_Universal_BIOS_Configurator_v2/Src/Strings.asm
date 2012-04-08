@@ -2,20 +2,20 @@
 ; Description	:	All strings.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
-;		
+;
 
 ; Section containing initialized data
 SECTION .data
@@ -70,7 +70,7 @@ g_szItemMainLoadROM:	db	"Load BIOS from EEPROM",NULL
 g_szItemMainLoadStngs:	db	"Load old settings from EEPROM",NULL
 g_szItemMainConfigure:	db	"Configure XTIDE Universal BIOS",NULL
 g_szItemMainFlash:		db	"Flash EEPROM",NULL
-g_szItemMainSave:		db	"Save BIOS back to original file",NULL		
+g_szItemMainSave:		db	"Save BIOS back to original file",NULL
 g_szItemMainLicense:	db  "Copyright and License Information",NULL
 g_szItemMainHomePage:	db  "Web Links",NULL
 
@@ -91,11 +91,12 @@ g_szNfoMainLoadStngs:	db	"Load old XTIDE Universal BIOS settings from EEPROM.",N
 g_szNfoMainConfigure:	db	"Configure XTIDE Universal BIOS settings.",NULL
 g_szNfoMainFlash:		db	"Flash loaded BIOS image to EEPROM.",NULL
 g_szNfoMainSave:		db	"Save BIOS changes back to original file from which it was loaded.",NULL
-g_szNfoMainLicense:		db	"XTIDE Universal BIOS and XTIDECFG Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team. Released under GNU GPL v2, with ABSOLUTELY NO WARRANTY. Press ENTER for more details...",NULL
+g_szNfoMainLicense:		db	"XTIDE Universal BIOS and XTIDECFG Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team."
+						db	" Released under GNU GPL v2, with ABSOLUTELY NO WARRANTY. Press ENTER for more details...",NULL
 g_szNfoMainHomePage:	db	"Visit http://code.google.com/p/ xtideuniversalbios (home page) and http://vintage-computer.com/ vcforum (support)",NULL
 
-g_szHelpMainLicense:	incbin	"Main_License.txt" 
-						db	NULL		
+g_szHelpMainLicense:	incbin	"Main_License.txt"
+						db	NULL
 
 ; Strings for XTIDE Universal BIOS configuration menu
 g_szItemCfgBackToMain:	db	"Back to Main Menu",NULL
@@ -107,23 +108,83 @@ g_szItemCfgBootMenu:	db	"Boot settings",NULL
 g_szItemCfgFullMode:	db	"Full operating mode",NULL
 g_szItemCfgStealSize:	db	"kiB to steal from RAM",NULL
 g_szItemCfgIdeCnt:		db	"IDE controllers",NULL
+g_szItemCfgIdleTimeout:	db	"Power Management",NULL
 
 g_szDlgCfgFullMode:		db	"Enable full operating mode?",NULL
 g_szDlgCfgStealSize:	db	"How many kiB of base memory to steal for XTIDE Universal BIOS variables (1...255)?",NULL
 g_szDlgCfgIdeCnt:		db	"How many IDE controllers to manage (1...4)?",NULL
+g_szDlgCfgIdleTimeout:	db	"Select the amount of time before idling drives should enter standby mode.",NULL
 
 g_szNfoCfgIde:			db	"IDE controller and drive configuration.",NULL
 g_szNfoCfgBootMenu:		db	"Boot configuration.",NULL
 g_szNfoCfgFullMode:		db	"Full mode supports multiple controllers and has more features.",NULL
 g_szNfoCfgStealSize:	db	"How many kiB's to steal from Conventional memory for XTIDE Universal BIOS variables.",NULL
 g_szNfoCfgIdeCnt:		db	"Number of IDE controllers to manage.",NULL
+g_szNfoCfgIdleTimeout:	db	"Enable Power Management to set the harddrive(s) to spin down after idling a certain amount of time.",NULL
 
-g_szSerialMoved:		db  "A Serial Controller has been moved to the end of the Controller list. No further action is required. Serial Controllers must be placed at the end of the list.",NULL
+g_szSerialMoved:		db  "A Serial Controller has been moved to the end of the Controller list."
+						db	" No further action is required. Serial Controllers must be placed at the end of the list.",NULL
 
 g_szHelpCfgFullMode:	incbin	"Configuration_FullMode.txt"
 						db	NULL
 g_szHelpCfgStealSize:	incbin	"Configuration_StealSize.txt"
 						db	NULL
+g_szHelpCfgIdleTimeout:	db	"This option enables the standby timer for all harddrives handled by XTIDE Universal BIOS,"
+						db	" allowing the drives to spin down after idling the selected amount of time."
+						db	" Note that this does not work with old drives that lack the Power Management feature set."
+						db	" Also note that timeouts less than 5 minutes may cause unnecessary wear on the drives and is not recommended"
+						db	" (use for compatibility testing only).",NULL
+g_szMultichoiceIdleTimeout:
+							db	"Disabled",LF
+							db	"1 m",LF
+							db	"2 m",LF
+							db	"3 m",LF
+							db	"4 m",LF
+							db	"5 m",LF
+							db	"6 m",LF
+							db	"7 m",LF
+							db	"8 m",LF
+							db	"9 m",LF
+							db	"10 m",LF
+							db	"11 m",LF
+							db	"12 m",LF
+							db	"13 m",LF
+							db	"14 m",LF
+							db	"15 m",LF
+							db	"16 m",LF
+							db	"17 m",LF
+							db	"18 m",LF
+							db	"19 m",LF
+							db	"20 m",LF
+							db	"30 m",LF
+							db	"1 h",LF
+							db	"1 h 30 m",LF
+g_szIdleTimeoutChoice24:	db	"2 h",NULL
+
+g_szIdleTimeoutChoice0:		db	"Disabled",NULL
+g_szIdleTimeoutChoice1:		db	"1 m",NULL
+g_szIdleTimeoutChoice2:		db	"2 m",NULL
+g_szIdleTimeoutChoice3:		db	"3 m",NULL
+g_szIdleTimeoutChoice4:		db	"4 m",NULL
+g_szIdleTimeoutChoice5:		db	"5 m",NULL
+g_szIdleTimeoutChoice6:		db	"6 m",NULL
+g_szIdleTimeoutChoice7:		db	"7 m",NULL
+g_szIdleTimeoutChoice8:		db	"8 m",NULL
+g_szIdleTimeoutChoice9:		db	"9 m",NULL
+g_szIdleTimeoutChoice10:	db	"10 m",NULL
+g_szIdleTimeoutChoice11:	db	"11 m",NULL
+g_szIdleTimeoutChoice12:	db	"12 m",NULL
+g_szIdleTimeoutChoice13:	db	"13 m",NULL
+g_szIdleTimeoutChoice14:	db	"14 m",NULL
+g_szIdleTimeoutChoice15:	db	"15 m",NULL
+g_szIdleTimeoutChoice16:	db	"16 m",NULL
+g_szIdleTimeoutChoice17:	db	"17 m",NULL
+g_szIdleTimeoutChoice18:	db	"18 m",NULL
+g_szIdleTimeoutChoice19:	db	"19 m",NULL
+g_szIdleTimeoutChoice20:	db	"20 m",NULL
+g_szIdleTimeoutChoice21:	db	"30 m",NULL
+g_szIdleTimeoutChoice22:	db	"1 h",NULL
+g_szIdleTimeoutChoice23:	db	"1 h 30 m",NULL
 
 ; Strings for IDE Controller menu
 g_szItemBackToCfgMenu:	db	"Back to Configuration Menu",NULL
@@ -138,8 +199,8 @@ g_szItemSerialCOM:		db	"COM Port",NULL
 g_szItemSerialBaud:		db	"Baud Rate",NULL
 g_szItemSerialPort:		db	"COM Port I/O address",NULL
 
-g_szItemIdeSerialComPort:		db		"COM port",NULL
-g_szItemIdeSerialBaudRate:		db		"Baud rate",NULL
+g_szItemIdeSerialComPort:	db	"COM port",NULL
+g_szItemIdeSerialBaudRate:	db	"Baud rate",NULL
 
 g_szDlgDevice:			db	"Select controller type.",NULL
 g_szDlgIdeCmdPort:		db	"Enter IDE command block (base port) address.",NULL
@@ -156,7 +217,8 @@ g_szNfoIdeCtrlPort:		db	"IDE Controller Control Block address. Usually Cmd Block
 g_szNfoIdeEnIRQ:		db	"Interrupt or polling mode.",NULL
 g_szNfoIdeIRQ:			db	"IRQ channel to use.",NULL
 g_szNfoIdeSerialCOM:	db	"Select a COM port by number.",NULL
-g_szNfoIdeSerialBaud:	db	"Select the COM port's Baud Rate. The server must match this speed. Note that UART clock multipliers may impact the actual speed.",NULL
+g_szNfoIdeSerialBaud:	db	"Select the COM port's Baud Rate. The server must match this speed."
+						db	" Note that UART clock multipliers may impact the actual speed.",NULL
 g_szNfoIdeSerialPort:	db	"Select a COM port by custom I/O port address. Any address is valid up to 3f8h, but must be on an 8-byte boundary.",NULL
 
 g_szHelpIdeCmdPort:		incbin	"IDE_CommandPort.txt"
@@ -278,7 +340,7 @@ g_szHelpDrvUserCHS:		incbin	"Drive_UserCHS.txt"
 						db	NULL
 g_szHelpDrvUserLBA:		incbin	"Drive_UserLBA.txt"
 						db	NULL
-						
+
 g_szMultichoiseWrCache:	db	"Drive Default",LF
 						db	"Disable Write Cache",LF
 						db	"Enable Write Cache",NULL
@@ -310,7 +372,8 @@ g_szNfoBootDrive:		db	"Default drive on boot menu.",NULL
 g_szNfoDispMode:		db	"Display Mode for Boot Menu.",NULL
 g_szNfoBootFloppyDrvs:	db	"Number of Floppy Drives to display on boot menu.",NULL
 g_szNfoBootSwap:		db	"Drive Number Translation (swap first drive with selected).",NULL
-g_szNfoSerialDetect:	db	"Scans all standard COM ports for serial drives. This can also be invoked by holding down ALT at the end of normal drive detection.",NULL
+g_szNfoSerialDetect:	db	"Scans all standard COM ports for serial drives."
+						db	" This can also be invoked by holding down ALT at the end of normal drive detection.",NULL
 
 g_szHelpBootTimeout:	incbin	"Bootmenu_Timeout.txt"
 						db	NULL
@@ -414,9 +477,9 @@ g_szValueFlash8bytes:	db	"8 bytes",NULL
 g_szValueFlash16bytes:	db	"16 bytes",NULL
 g_szValueFlash32bytes:	db	"32 bytes",NULL
 
-g_szSelectionTimeout:	db		DOUBLE_BOTTOM_LEFT_CORNER,DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL,"%ASelection in %2u s",NULL
+g_szSelectionTimeout:	db	DOUBLE_BOTTOM_LEFT_CORNER,DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL,"%ASelection in %2u s",NULL
 
-g_szDashForZero:		db		"- ",NULL
+g_szDashForZero:		db	"- ",NULL
 
 g_szValueUnknownError:	db	"Error!",NULL
 

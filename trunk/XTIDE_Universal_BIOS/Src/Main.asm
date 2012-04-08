@@ -13,18 +13,18 @@
 ;					file (so no linker needed, Nasm does it all).
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 ;
 
@@ -113,6 +113,7 @@ istruc ROMVARS
 	at	ROMVARS.bBootDrv,		db	80h						; Boot Menu default drive
 	at	ROMVARS.bMinFddCnt, 	db	0						; Do not force minimum number of floppy drives
 	at	ROMVARS.bStealSize,		db	1						; Steal 1kB from base memory
+	at	ROMVARS.bIdleTimeout,	db	0						; Standby timer disabled by default
 
 	at	ROMVARS.ideVars0+IDEVARS.wPort,			dw	DEVICE_ATA_DEFAULT_PORT 		; Controller Command Block base port
 	at	ROMVARS.ideVars0+IDEVARS.wPortCtrl,		dw	DEVICE_ATA_DEFAULT_PORTCTRL 	; Controller Control Block base port
@@ -156,6 +157,7 @@ istruc ROMVARS
 	at	ROMVARS.bBootDrv,		db	80h						; Boot Menu default drive
 	at	ROMVARS.bMinFddCnt, 	db	1						; Assume at least 1 floppy drive present if autodetect fails
 	at	ROMVARS.bStealSize,		db	1						; Steal 1kB from base memory in full mode
+	at	ROMVARS.bIdleTimeout,	db	0						; Standby timer disabled by default
 
 	at	ROMVARS.ideVars0+IDEVARS.wPort,			dw	DEVICE_XTIDE_DEFAULT_PORT			; Controller Command Block base port
 	at	ROMVARS.ideVars0+IDEVARS.wPortCtrl,		dw	DEVICE_XTIDE_DEFAULT_PORTCTRL		; Controller Control Block base port
@@ -183,12 +185,12 @@ istruc ROMVARS
 %endif
 iend
 
-	; Strings are first to avoid them moving unnessarily when code is turned on and off with %ifdef's
+	; Strings are first to avoid them moving unnecessarily when code is turned on and off with %ifdef's
 	; since some groups of strings need to be on the same 256-byte page.
 	;
 %ifdef MODULE_STRINGS_COMPRESSED
 	%define STRINGSCOMPRESSED_STRINGS
-	%include "StringsCompressed.asm" 
+	%include "StringsCompressed.asm"
 %else
 	%include "Strings.asm"			; For BIOS message strings
 %endif
@@ -198,14 +200,14 @@ iend
 	%include "AssemblyLibrary.asm"
 
 	; String compression tables need to come after the AssemblyLibrary (since they depend on addresses
-	; established in the assembly library), and are unncessary if strings are not compressed.
+	; established in the assembly library), and are unnecessary if strings are not compressed.
 	;
 %ifdef MODULE_STRINGS_COMPRESSED
-	%undef  STRINGSCOMPRESSED_STRINGS		
+	%undef  STRINGSCOMPRESSED_STRINGS
 	%define STRINGSCOMPRESSED_TABLES
 	%include "StringsCompressed.asm"
 %endif
-		
+
 	%include "Initialize.asm"		; For BIOS initialization
 	%include "Interrupts.asm"		; For Interrupt initialization
 	%include "RamVars.asm"			; For RAMVARS initialization and access
