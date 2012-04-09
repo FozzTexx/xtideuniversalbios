@@ -7,11 +7,11 @@ This is a small tutorial on how to build XTIDE Universal BIOS on Windows.
 
 = Programs needed =
 
-[http://tortoisesvn.tigris.org/ TortoiseSVN]
-[http://tdm-gcc.tdragon.net/ MinGW] (only mingw32-make.exe is needed)
-[http://www.nasm.us/ NASM]
-[http://upx.sourceforge.net/ UPX] (optional)
-[http://strawberryperl.com/ Strawperry Perl] (optional)
+  * [http://tortoisesvn.tigris.org/ TortoiseSVN]
+  * [http://tdm-gcc.tdragon.net/ MinGW] (only mingw32-make.exe is needed)
+  * [http://www.nasm.us/ NASM]
+  * [http://upx.sourceforge.net/ UPX] (optional)
+  * [http://strawberryperl.com/ Strawperry Perl] (optional)
 
 
 == Install Tortoise SVN ==
