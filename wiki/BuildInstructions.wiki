@@ -24,9 +24,11 @@ First [http://tortoisesvn.net/downloads.html download and install TortoiseSVN]. 
 == Downloading sources ==
 
 Once the directory is created, open it and click right mouse button. You will find _SVN Checkout..._ from the menu.
-
+http://kotisivu.lumonetti.fi/ttilli/XTIDE/pictures/TortoiseMenu.png
 
 URL for the repository is http://xtideuniversalbios.googlecode.com/svn/trunk/. There is no need to alter other settings so just click OK. You have now downloaded all sources from XTIDE Universal BIOS project.
+http://kotisivu.lumonetti.fi/ttilli/XTIDE/pictures/SvnCheckout.png
+
 
 == Updating sources ==
 
