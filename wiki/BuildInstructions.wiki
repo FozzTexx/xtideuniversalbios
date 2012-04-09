@@ -1,0 +1,77 @@
+#summary How to build XTIDE Universal BIOS.
+
+= Introduction =
+
+This is a small tutorial on how to build XTIDE Universal BIOS on Windows.
+
+
+= Programs needed =
+
+TortoiseSVN
+[http://tdm-gcc.tdragon.net/]MinGW (only mingw32-make.exe is needed)
+NASM
+UPX (optional)
+Strawperry Perl (optional)
+
+
+== Install Tortoise SVN ==
+
+TortoiseSVN is a subversion client that is very easy to use since it integrates nicely to Windows. It is used to download XTIDE Universal BIOS sources. Anyone can download sources from coogle.code repository but you must be a project member to commit changed back to the repository.
+
+First download and install TortoiseSVN. You can use the default settings that the installer suggests. Next you need to create folder where you want to download the sources. We name the folder _XTIDE Universal BIOS sources_ in this example.
+
+=== Downloading sources ===
+
+Once the directory is created, open it and click right mouse button. You will find _SVN Checkout..._ from the menu.
+
+
+URL for the repository is http://xtideuniversalbios.googlecode.com/svn/trunk/. There is no need to alter other settings so just click OK. You have now downloaded all sources from XTIDE Universal BIOS project.
+
+=== Updating sources ===
+
+If you have already done all above and want to get latest sources, go to the source folder you have created. Click right mouse button and select _SVN Update_. Using TortoiseSVN is really this easy!
+
+
+== Install MinGW ==
+
+MinGW is a free C/C++ compiler suite for Windows. We only need make utility from it but installing the whole MinGW is easier since it will add path to the environment variables automatically. Download the bundle installer (tdm-gcc-4.6.1.exe when writing this) and install it with default settings. It will install the MinGW to C:\MinGW32. Keep this in mind since you'll want to install NASM to C:\MinGW\bin so there will be no need to change environment path.
+
+
+== Install NASM ==
+
+NASM is the assembler that is used to compile the sources. NASM v2.10 stable is what we are using when writing this. Download the nasm-2.10-win32.zip and extract nasm.exe to C:\MinGW32\bin (if you installed MinGW to C:\MinGW32\).
+
+
+== Install UPX (optional) ==
+
+UPX is used to compress XTIDE Universal BIOS configurator. It is only used to make release build. The only advantage is that it makes the executable size smaller.
+
+
+== Install Strawberry Perl (optional) ==
+
+Strawberry Perl is required to execute optional scripts when building XTIDE Universal BIOS. Scripts include string compression (not needed unless you modify the sources) and checksum calculation. Just run the Strawberry Perl installer with default settings.
+
+
+= Building XTIDE Universal BIOS =
+
+Open command line window and navigate to the folder where you downloaded the sources using TortoiseSVN. Then go to the _XTIDE_Universal_BIOS_ folder. Write _mingw32-make all_ and everything should be build.
+
+You might want to write _mingw32-make checksum_ if you installed Stawberry Perl. It will calculate checksum bytes to the binaries (You can use XTIDECFG.COM for that if you don't want to install Stawberry Perl).
+
+You will find the binaries in build\ folder.
+
+
+== Including and excluding optional modules ==
+
+This will be done soon.
+
+
+
+= Building Configurator (XTIDECFG.COM) =
+
+You should always use up to date configurator but note that configurator usually lags behind XTIDE Universal BIOS when new features are concerned.
+
+_mingw32-make all_ builds the XTIDECFG.COM. You should write _mingw32-make release_ if you installed UPX.
+
+Again you will find the binaries in build\ folder.
+
