@@ -21,6 +21,20 @@
 SECTION .text
 
 ;--------------------------------------------------------------------
+; BootMenuPrint_InitializeDisplayContext
+;	Parameters:
+;		Nothing
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, DI
+;--------------------------------------------------------------------
+BootMenuPrint_InitializeDisplayContext:
+	CALL_DISPLAY_LIBRARY InitializeDisplayContext
+	ret
+
+
+;--------------------------------------------------------------------
 ; Prints BIOS name and segment address where it is found.
 ;
 ; DetectPrint_RomFoundAtSegment
@@ -38,8 +52,7 @@ DetectPrint_RomFoundAtSegment:
 	ePUSH_T	ax, ROMVARS.szTitle			; Bios title string
 	push	cs							; BIOS segment
 
-DetectPrint_BootMenuPrint_FormatCSSIfromParamsInSSBP_Relay:
-	jmp		BootMenuPrint_FormatCSSIfromParamsInSSBP
+	jmp		DetectPrint_FormatCSSIfromParamsInSSBP
 
 
 ;--------------------------------------------------------------------
@@ -121,7 +134,7 @@ DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP:
 
 	mov		si, g_szDetectOuter				; Load SI with default wrapper string "IDE %s at %s: "
 
-	jmp		short DetectPrint_BootMenuPrint_FormatCSSIfromParamsInSSBP_Relay
+	jmp		SHORT DetectPrint_FormatCSSIfromParamsInSSBP
 
 
 ;--------------------------------------------------------------------
@@ -144,4 +157,89 @@ DetectPrint_DriveNameFromBootnfoInESBX:
 
 	pop		bx
 	pop		di
+	ret
+
+;--------------------------------------------------------------------
+; DetectPrint_FailedToLoadFirstSector
+;	Parameters:
+;		AH:		INT 13h error code
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, CX, SI, DI
+;--------------------------------------------------------------------
+DetectPrint_FailedToLoadFirstSector:
+	push	bp
+	mov		bp, sp
+	eMOVZX	cx, ah
+	push	cx					; Push INT 13h error code
+	mov		si, g_szReadError
+	jmp		SHORT DetectPrint_FormatCSSIfromParamsInSSBP
+
+
+;--------------------------------------------------------------------
+; DetectPrint_TryToBootFromDL
+;	Parameters:
+;		DL:		Drive to boot from (translated, 00h or 80h)
+;		DS:		RAMVARS segment
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, SI, DI
+;--------------------------------------------------------------------
+DetectPrint_TryToBootFromDL:
+	push	bp
+	mov		bp, sp
+
+	mov		ax, g_szHDD
+	test	dl, dl
+	js		SHORT .NotFDD
+	mov		ax, g_szFDD
+.NotFDD:
+	push	ax
+
+	call	DriveXlate_ToOrBack
+	push	dx					; Push untranslated drive number
+	call	DriveXlate_ToOrBack
+	push	dx					; Push translated drive number
+
+	mov		si, g_szTryToBoot
+	jmp		SHORT DetectPrint_FormatCSSIfromParamsInSSBP	
+
+
+;--------------------------------------------------------------------
+; DetectPrint_NullTerminatedStringFromCSSIandSetCF
+;	Parameters:
+;		CS:SI:	Ptr to NULL terminated string to print
+;	Returns:
+;		CF:		Set since menu event was handled successfully
+;	Corrupts registers:
+;		AX, DI
+;--------------------------------------------------------------------
+DetectPrint_NullTerminatedStringFromCSSIandSetCF:
+;
+; We send all CSSI strings through the Format routine for the case of
+; compressed strings, but this doesn't hurt in the non-compressed case either
+; (perhaps a little slower, but shouldn't be noticeable to the user)
+; and results in smaller code size.
+;
+	push	bp
+	mov		bp,sp
+	; Fall to BootMenuPrint_FormatCSSIfromParamsInSSBP
+
+;--------------------------------------------------------------------
+; DetectPrint_FormatCSSIfromParamsInSSBP
+;	Parameters:
+;		CS:SI:	Ptr to string to format
+;		BP:		SP before pushing parameters
+;	Returns:
+;		BP:		Popped from stack
+;		CF:		Set since menu event was handled successfully
+;	Corrupts registers:
+;		AX, DI
+;--------------------------------------------------------------------
+DetectPrint_FormatCSSIfromParamsInSSBP:
+	CALL_DISPLAY_LIBRARY FormatNullTerminatedStringFromCSSI
+	stc				; Successful return from menu event
+	pop		bp
 	ret

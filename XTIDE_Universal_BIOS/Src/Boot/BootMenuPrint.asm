@@ -60,7 +60,7 @@ BootMenuPrint_RefreshItem:
 	add		al, 'A'									; floppy drive letter (we always push this although
 	push	ax										; the hard disks don't ever use it, but it does no harm)
 
-	jmp		short BootMenuPrint_RefreshInformation.FormatRelay
+	jmp		SHORT BootMenuPrint_RefreshInformation.FormatRelay
 
 ;--------------------------------------------------------------------
 ; Prints Boot Menu title strings.
@@ -75,30 +75,10 @@ BootMenuPrint_RefreshItem:
 ;--------------------------------------------------------------------
 BootMenuPrint_TitleStrings:
 	mov		si, ROMVARS.szTitle
-	call	BootMenuPrint_NullTerminatedStringFromCSSIandSetCF
+	call	DetectPrint_NullTerminatedStringFromCSSIandSetCF
 	CALL_DISPLAY_LIBRARY PrintNewlineCharacters
 	mov		si, ROMVARS.szVersion
-	; Fall to BootMenuPrint_NullTerminatedStringFromCSSIandSetCF
-
-;--------------------------------------------------------------------
-; BootMenuPrint_NullTerminatedStringFromCSSIandSetCF
-;	Parameters:
-;		CS:SI:	Ptr to NULL terminated string to print
-;	Returns:
-;		CF:		Set since menu event was handled successfully
-;	Corrupts registers:
-;		AX, DI
-;--------------------------------------------------------------------
-BootMenuPrint_NullTerminatedStringFromCSSIandSetCF:
-;
-; We send all CSSI strings through the Format routine for the case of
-; compressed strings, but this doesn't hurt in the non-compressed case either
-; (perhaps a little slower, but shouldn't be noticeable to the user)
-; and results in smaller code size.
-;
-	push	bp
-	mov		bp,sp
-	jmp		short BootMenuPrint_RefreshInformation.FormatRelay
+	jmp		DetectPrint_NullTerminatedStringFromCSSIandSetCF
 
 
 ;--------------------------------------------------------------------
@@ -185,7 +165,7 @@ BootMenuPrint_RefreshInformation:
 	push	ax
 
 .FormatRelay:
-	jmp		short BootMenuPrint_FormatCSSIfromParamsInSSBP
+	jmp		DetectPrint_FormatCSSIfromParamsInSSBP
 
 
 ;--------------------------------------------------------------------
@@ -221,29 +201,10 @@ BootMenuPrint_RefreshInformation:
 	push	dx						; Magnitude character
 
 	test	di,di
-	jz		short BootMenuPrint_FormatCSSIfromParamsInSSBP
+	jz		SHORT BootMenuPrint_RefreshInformation.FormatRelay
 
 %include "BootMenuPrintCfg.asm"			; inline of code to fill out remainder of information string
-
-;;; fall-through to BootMenuPrint_FormatCSSIfromParamsInSSBP
-
-
-;--------------------------------------------------------------------
-; BootMenuPrint_FormatCSSIfromParamsInSSBP
-;	Parameters:
-;		CS:SI:	Ptr to string to format
-;		BP:		SP before pushing parameters
-;	Returns:
-;		BP:		Popped from stack
-;		CF:		Set since menu event was handled successfully
-;	Corrupts registers:
-;		AX, DI
-;--------------------------------------------------------------------
-BootMenuPrint_FormatCSSIfromParamsInSSBP:
-	CALL_DISPLAY_LIBRARY FormatNullTerminatedStringFromCSSI
-	stc				; Successful return from menu event
-	pop		bp
-	ret
+	jmp		DetectPrint_FormatCSSIfromParamsInSSBP
 
 
 ;--------------------------------------------------------------------
@@ -370,23 +331,7 @@ PushHotkeyParamsAndFormat:
 	push	si			; Description string
 	push	cx			; Key attribute for last space
 	mov		si, g_szHotkey
-
-BootMenuPrint_FormatCSSIfromParamsInSSBP_Relay:
-	jmp		SHORT BootMenuPrint_FormatCSSIfromParamsInSSBP
-
-
-;--------------------------------------------------------------------
-; BootMenuPrint_InitializeDisplayContext
-;	Parameters:
-;		Nothing
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, DI
-;--------------------------------------------------------------------
-BootMenuPrint_InitializeDisplayContext:
-	CALL_DISPLAY_LIBRARY InitializeDisplayContext
-	ret
+	jmp		DetectPrint_FormatCSSIfromParamsInSSBP
 
 
 FloppyTypes:
