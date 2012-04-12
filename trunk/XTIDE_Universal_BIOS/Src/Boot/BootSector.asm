@@ -33,7 +33,7 @@ SECTION .text
 ;		AX, CX, DH, SI, DI, (DL if failed to read boot sector)
 ;--------------------------------------------------------------------
 BootSector_TryToLoadFromDriveDL:
-	call	BootPrint_TryToBootFromDL
+	call	DetectPrint_TryToBootFromDL
 	call	LoadFirstSectorFromDriveDL
 	jc		SHORT .FailedToLoadFirstSector
 
@@ -45,12 +45,12 @@ BootSector_TryToLoadFromDriveDL:
 	stc
 	ret
 .FailedToLoadFirstSector:
-	call	BootPrint_FailedToLoadFirstSector
+	call	DetectPrint_FailedToLoadFirstSector
 	clc
 	ret
 .FirstHardDiskSectorNotBootable:
 	mov		si, g_szBootSectorNotFound
-	call	BootMenuPrint_NullTerminatedStringFromCSSIandSetCF
+	call	DetectPrint_NullTerminatedStringFromCSSIandSetCF
 	clc
 	ret
 

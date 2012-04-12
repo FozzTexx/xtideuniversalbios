@@ -198,7 +198,7 @@ StartDetectionWithDriveSelectByteInBHandStringInCX:
 ;--------------------------------------------------------------------
 DetectDrives_DriveNotFound:
 	mov		si, g_szNotFound
-	jmp		BootMenuPrint_NullTerminatedStringFromCSSIandSetCF
+	jmp		DetectPrint_NullTerminatedStringFromCSSIandSetCF
 
 
 ;--------------------------------------------------------------------
@@ -218,4 +218,4 @@ CreateBiosTablesForHardDisk:
 	call	CreateDPT_FromAtaInformation
 	jc		SHORT DetectDrives_DriveNotFound
 	call	BootMenuInfo_CreateForHardDisk
-	jmp		short DetectPrint_DriveNameFromBootnfoInESBX
+	jmp		SHORT DetectPrint_DriveNameFromBootnfoInESBX

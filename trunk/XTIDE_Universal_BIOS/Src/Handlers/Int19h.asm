@@ -42,7 +42,6 @@ Int19h_ResetHandler:
 ;	Returns:
 ;		Never returns (loads operating system)
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 Int19h_BootLoaderHandler:
 	sti
 	; Install INT 19h handler for proper reboot
@@ -91,8 +90,10 @@ Int19h_BootLoaderHandler:
 ;--------------------------------------------------------------------
 .SelectDriveToBootFrom:
 	call	RamVars_GetSegmentToDS
+%ifdef MODULE_BOOT_MENU
 	cmp		WORD [cs:ROMVARS.wfDisplayBootMenu], BYTE 0
 	jne		SHORT ProcessBootMenuSelectionsUntilBootableDriveSelected	; Display boot menu
+%endif
 	; Fall to BootFromDriveAthenTryDriveC
 
 ;--------------------------------------------------------------------
@@ -111,6 +112,7 @@ BootFromDriveAthenTryDriveC:
 	jmp		SHORT Int19hMenu_JumpToBootSector_or_RomBoot	; ROM Boot if error
 
 
+%ifdef MODULE_BOOT_MENU
 ;--------------------------------------------------------------------
 ; ProcessBootMenuSelectionsUntilBootableDriveSelected
 ;	Parameters:
@@ -125,6 +127,7 @@ ProcessBootMenuSelectionsUntilBootableDriveSelected:
 	jnc		SHORT ProcessBootMenuSelectionsUntilBootableDriveSelected	; Boot failure, show menu again
 	; Fall to Int19hMenu_JumpToBootSector_or_RomBoot
 	; (CF is set or we wouldn't be here, see "jnc" immediately above)
+%endif
 
 ;--------------------------------------------------------------------
 ; Int19hMenu_JumpToBootSector_or_RomBoot
@@ -142,7 +145,6 @@ ProcessBootMenuSelectionsUntilBootableDriveSelected:
 ;	Returns:
 ;		Never returns
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 Int19hMenu_JumpToBootSector_or_RomBoot:
 	mov		cx, es		; Preserve MBR segment (can't push because of stack change)
 	mov		ax, 0		; NOTE: can't use XOR (LOAD_BDA_SEGMENT_TO) as it impacts CF

@@ -129,15 +129,15 @@ istruc ROMVARS
 	at	ROMVARS.ideVars1+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	db	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE
 	at	ROMVARS.ideVars1+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags,	db	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE
 
-	at	ROMVARS.ideVars2+IDEVARS.wPort,			dw	DEVICE_XTIDE_DEFAULT_PORT			; Controller Command Block base port
-	at	ROMVARS.ideVars2+IDEVARS.wPortCtrl,		dw	DEVICE_XTIDE_DEFAULT_PORTCTRL		; Controller Control Block base port
-	at	ROMVARS.ideVars2+IDEVARS.bDevice,		db	DEVICE_XTIDE_REV1
+	at	ROMVARS.ideVars2+IDEVARS.wPort,			dw	1E8h
+	at	ROMVARS.ideVars2+IDEVARS.wPortCtrl,		dw	3E8h
+	at	ROMVARS.ideVars2+IDEVARS.bDevice,		db	DEVICE_16BIT_ATA
 	at	ROMVARS.ideVars2+IDEVARS.bIRQ,			db	0
 	at	ROMVARS.ideVars2+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	db	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE
 	at	ROMVARS.ideVars2+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags,	db	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE
 
-	at	ROMVARS.ideVars3+IDEVARS.wPort,			dw	168h			; Controller Command Block base port
-	at	ROMVARS.ideVars3+IDEVARS.wPortCtrl,		dw	368h			; Controller Control Block base port
+	at	ROMVARS.ideVars3+IDEVARS.wPort,			dw	168h
+	at	ROMVARS.ideVars3+IDEVARS.wPortCtrl,		dw	368h
 	at	ROMVARS.ideVars3+IDEVARS.bDevice,		db	DEVICE_16BIT_ATA
 	at	ROMVARS.ideVars3+IDEVARS.bIRQ,			db	0
 	at	ROMVARS.ideVars3+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	db	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE
@@ -230,7 +230,6 @@ iend
 %endif
 
 	; Boot loader
-	%include "BootPrint.asm"		; For printing boot information
 	%include "Int19h.asm"			; For Int 19h, Boot Loader
 	%include "FloppyDrive.asm"		; Floppy Drive related functions
 	%include "BootSector.asm"		; For loading boot sector
