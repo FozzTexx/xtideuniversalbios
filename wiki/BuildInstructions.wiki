@@ -1,5 +1,7 @@
 #summary How to build XTIDE Universal BIOS.
-
+*Table of Contents*
+<wiki:toc max_depth="3" />
+----
 = Introduction =
 
 This is a small tutorial on how to build XTIDE Universal BIOS on Windows.
@@ -14,7 +16,7 @@ This is a small tutorial on how to build XTIDE Universal BIOS on Windows.
   * [http://strawberryperl.com/ Strawperry Perl] (optional)
 
 
-
+----
 = Install Tortoise SVN =
 
 TortoiseSVN is a subversion client that is very easy to use since it integrates nicely to Windows. It is used to download XTIDE Universal BIOS sources. Anyone can download sources from coogle.code repository but you must be a project member to commit changes back to the repository.
@@ -59,7 +61,7 @@ UPX is used to compress XTIDE Universal BIOS configurator. It is needed only for
 Strawberry Perl is required to execute optional scripts when building XTIDE Universal BIOS. Scripts include string compression (not needed unless you modify the sources) and checksum calculation. Just run the Strawberry Perl installer with default settings.
 
 
-
+----
 = Building XTIDE Universal BIOS =
 
 Open command line window and go to the folder where you downloaded the sources with TortoiseSVN. Then go to the _XTIDE_Universal_BIOS_ folder. Write _mingw32-make all_ and everything should be build.
@@ -156,7 +158,7 @@ If you want to make your own 8k AT build, modify DEFINES_COMMON and DEFINES_AT t
 One more thing you might want to change is the size of large build. It is 15k by default (15360 bytes). If you want 16k binary, set ROMSIZE_LARGE to 16384. For 32k build set it to 32768.
 
 
-
+----
 = Building Configurator (XTIDECFG.COM) =
 
 You should always use up to date configurator but note that configurator usually lags behind XTIDE Universal BIOS when new features are concerned.
