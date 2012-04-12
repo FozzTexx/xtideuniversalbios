@@ -2,12 +2,12 @@
 # Makefile to build XTIDE Universal BIOS.                                                        #
 #                                                                                                #
 # Valid makefile targets are:                                                                    #
-# all		Removes existing files and builds binary files in \Build                             #
-# small		Builds 8 kiB binaries only (without checksum)                                        #
-# large		Builds 15 kiB binaries only (without checksum)                                       #
-# clean		Removes all files from \Build                                                        #
-# checksum*	Builds all and then generates checksum byte to all binary files                      #
-# strings*	Compress src\Strings.asm to src\StringsCompressed.asm                                #
+# all       Removes existing files and builds binary files in \Build                             #
+# small     Builds 8 kiB binaries only (without checksum)                                        #
+# large     Builds 15 kiB binaries only (without checksum)                                       #
+# clean     Removes all files from \Build                                                        #
+# checksum* Builds all and then generates checksum byte to all binary files                      #
+# strings*  Compress src\Strings.asm to src\StringsCompressed.asm                                #
 #                                                                                                #
 # * at the end of target name means that Perl is required for the job.                           #
 # Build directory must be created manually if it does not exist.                                 #
@@ -85,13 +85,16 @@ HEADERS += $(LIBS)
 #################################################################
 # Assembler preprocessor defines.                               #
 #################################################################
-DEFINES = MODULE_BOOT_MENU MODULE_EBIOS MODULE_STRINGS_COMPRESSED
+DEFINES_COMMON = MODULE_BOOT_MENU MODULE_EBIOS MODULE_STRINGS_COMPRESSED
+
 DEFINES_XT = ELIMINATE_CGA_SNOW MODULE_SERIAL MODULE_SERIAL_FLOPPY
 DEFINES_XTPLUS = ELIMINATE_CGA_SNOW USE_186 MODULE_SERIAL MODULE_SERIAL_FLOPPY
 DEFINES_AT = USE_286 USE_AT MODULE_SERIAL MODULE_SERIAL_FLOPPY
+
 DEFINES_XT_LARGE = $(DEFINES_XT) MODULE_JRIDE MODULE_ADVANCED_ATA
 DEFINES_XTPLUS_LARGE = $(DEFINES_XTPLUS) MODULE_JRIDE MODULE_ADVANCED_ATA
 DEFINES_AT_LARGE = $(DEFINES_AT) MODULE_JRIDE MODULE_ADVANCED_ATA
+
 DEFINES_JRIDE_8K = ELIMINATE_CGA_SNOW MODULE_JRIDE
 DEFINES_386_8K = USE_386 USE_AT MODULE_ADVANCED_ATA
 
@@ -105,7 +108,7 @@ ROMSIZE = 8192
 ROMSIZE_LARGE = 15360
 
 # Add -D in front of every preprocessor define declaration
-DEFS = $(DEFINES:%=-D%)
+DEFS = $(DEFINES_COMMON:%=-D%)
 DEFS_XT = $(DEFINES_XT:%=-D%) -DROMSIZE=$(ROMSIZE)
 DEFS_XTPLUS = $(DEFINES_XTPLUS:%=-D%) -DROMSIZE=$(ROMSIZE)
 DEFS_AT = $(DEFINES_AT:%=-D%) -DROMSIZE=$(ROMSIZE)
