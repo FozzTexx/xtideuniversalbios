@@ -68,9 +68,10 @@ Initialize_FromMainBiosRomSearch:			; unused entrypoint ok
 ;		All
 ;--------------------------------------------------------------------
 Initialize_AndDetectDrives:
-	call	BootMenuPrint_InitializeDisplayContext
+	call	DetectPrint_InitializeDisplayContext
 	call	DetectPrint_RomFoundAtSegment
 	call	RamVars_Initialize
+	call	BootVars_Initialize
 	call	Interrupts_InitializeInterruptVectors
 	call	DetectDrives_FromAllIDEControllers
 	; Fall to .StoreDptPointersToIntVectors

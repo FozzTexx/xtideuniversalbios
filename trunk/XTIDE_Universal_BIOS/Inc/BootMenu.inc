@@ -30,9 +30,6 @@ BOOT_MENU_WIDTH							EQU	40	; Menu width in characters (including shadow)
 BOOT_MENU_HEIGHT_WITHOUT_ITEMS			EQU	(BOOT_MENU_TITLE_LINES + BOOT_MENU_INFO_LINES + BOOT_MENU_SEPARATOR_LINES_PLUS_SHADOW)
 MENU_SCREEN_BOTTOM_LINES				EQU	1
 
-; Hotkeys
-ROM_BOOT_HOTKEY_SCANCODE				EQU	42h	; F8
-
 
 ; Boot Menu Information Table. These are generated for all XTIDE Universal
 ; BIOS drives. Available only until boot is successful.

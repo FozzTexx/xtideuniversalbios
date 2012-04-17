@@ -80,10 +80,12 @@ AH15h_HandlerForReadDiskDriveSize:
 ;	Corrupts registers:
 ;		CX
 ;--------------------------------------------------------------------
+%ifdef MODULE_BOOT_MENU
 AH15h_GetSectorCountFromForeignDriveToDXAX:
 	mov		ah, GET_DRIVE_PARAMETERS
 	call	Int13h_CallPreviousInt13hHandler
 	jmp		SHORT ConvertAH08hReturnValuesToSectorCount
+%endif
 
 AH15h_GetSectorCountToBXDXAX:
 	call	AH8h_GetDriveParameters

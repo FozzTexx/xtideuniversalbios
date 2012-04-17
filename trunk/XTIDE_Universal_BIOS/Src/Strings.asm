@@ -72,10 +72,11 @@ g_szRomAt:		db	"%s @ %x",LF,CR
 				db  "Released under GNU GPL v2",LF,CR,LF,CR,NULL
 
 ; Boot loader strings
-g_szTryToBoot:			db	"Booting from %s %x",ANGLE_QUOTE_RIGHT,"%x",LF,CR,NULL
+g_szTryToBoot:			db	"Booting %c",ANGLE_QUOTE_RIGHT,"%c",LF,CR,NULL
 g_szBootSectorNotFound:	db	"Boot sector "
 g_szNotFound:			db	"not found",LF,CR,NULL
 g_szReadError:			db	"Error %x!",LF,CR,NULL
+
 
 g_szAddressingModes:
 g_szLCHS:		db	"L-CHS",NULL
@@ -142,10 +143,12 @@ g_szSelectionTimeout:	db		DOUBLE_BOTTOM_LEFT_CORNER,DOUBLE_LEFT_HORIZONTAL_TO_SI
 g_szDashForZero:		db		"- ",NULL
 
 ; Boot menu bottom of screen strings
-g_szFDD:		db	"FDD     ",NULL
-g_szHDD:		db	"HDD     ",NULL
-g_szRomBoot:	db	"ROM Boot",NULL
-g_szHotkey:		db	"%A%c%c%A%s%A ",NULL
+g_szFDD:		db	"FDD [%c]",NULL			; "FDD [A]"
+g_szHDD:		db	"HDD [%c]",NULL			; "HDD [C]"
+g_szBootMenu:	db	"%sMnu",NULL			; "BootMnu"
+g_szRomBoot:	db	"Rom%s",NULL			; "RomBoot"
+g_szBoot:		db	"Boot",NULL
+g_szHotkey:		db	"%A%c%c%A%s%A ",NULL	; "C»HDD [A] ", "F2BootMnu " or "F8RomBoot "
 
 ; Boot Menu information strings
 g_szCapacity:			db	"Capacity : %s",NULL
@@ -226,5 +229,3 @@ g_szForeignHD:			db	"Foreign Hard Disk",NULL
 ; End of StringsCompress.pl information
 ;
 ;------------------------------------------------------------------------------------------
-
-

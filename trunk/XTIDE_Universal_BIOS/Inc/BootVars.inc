@@ -29,14 +29,27 @@ BOOT_READ_RETRY_TIMES		EQU		3
 ; Pre-boot variables. These do not exist after successful boot to OS.
 ; Segment is always 0000h, same as BDA segment
 struc BOOTVARS
-					resb	7C00h
-	.rgbAtaInfo:					; 7C00h, ATA Information for drive detection
-	.rgbBootSect	resb 	512		; 7C00h, Boot sector
-					resb	256		; Boot Menu stack
+						resb	7C00h
+	.rgbAtaInfo:						; 7C00h, ATA Information for drive detection
+	.rgbBootSect		resb 	512		; 7C00h, Boot sector
+						resb	256		; Boot Menu stack
 	.rgbMnuStack:
-	.dwPostStack	resb	4		; POST stack pointer when entering INT 19h
-	.rgBootNfo:						; Array containing BOOTNFO structs
+	.dwPostStack		resb	4		; POST stack pointer when entering INT 19h
+	.hotkeyVars			resb	HOTKEYVARS_size
+	.rgBootNfo:							; Array containing BOOTNFO structs
 endstruc
+
+struc HOTKEYVARS
+	.bScancode			resb	1		; Function hotkey scancode
+	.bFlags				resb	1		; Must be just before .bHddLetter! 
+	.wHddAndFddLetters:
+	.bHddLetter			resb	1		; Hard Drive letter hotkey (upper case)
+	.bFddLetter			resb	1		; Floppy Drive letter hotkey (upper case)
+endstruc
+
+; Bit defines for HOTKEYVARS.bFlags
+FLG_HOTKEY_HD_FIRST		EQU		(1<<0)	; First try to boot from HDD, then FDD
+
 
 
 ;--------------------------------------------------------------------
