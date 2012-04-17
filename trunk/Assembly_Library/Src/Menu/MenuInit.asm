@@ -45,7 +45,7 @@ MenuInit_DisplayMenuWithHandlerInBXandUserDataInDXAX:
 	call	Memory_ZeroSSBPwithSizeInCX
 
 	; Display menu
-	call	EnterMenuWithHandlerInBXandUserDataInDXAX
+	call	MenuInit_EnterMenuWithHandlerInBXandUserDataInDXAX
 
 	; Get menu selection and destroy menu variables from stack
 	mov		dx, [bp+MENUINIT.wHighlightedItem]
@@ -70,7 +70,7 @@ MenuInit_DisplayMenuWithHandlerInBXandUserDataInDXAX:
 ;		All, except SS:BP
 ;--------------------------------------------------------------------
 ALIGN MENU_JUMP_ALIGN
-EnterMenuWithHandlerInBXandUserDataInDXAX:
+MenuInit_EnterMenuWithHandlerInBXandUserDataInDXAX:
 	mov		[bp+MENU.fnEventHandler], bx
 	mov		[bp+MENU.dwUserData], ax
 	mov		[bp+MENU.dwUserData+2], dx
