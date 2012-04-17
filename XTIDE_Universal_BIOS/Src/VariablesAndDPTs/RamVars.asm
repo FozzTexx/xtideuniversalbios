@@ -145,7 +145,7 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		CX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
+%ifdef MODULE_BOOT_MENU
 RamVars_GetHardDiskCountFromBDAtoAX:
 	call	RamVars_GetCountOfKnownDrivesToAX
 	push	ds
@@ -154,6 +154,8 @@ RamVars_GetHardDiskCountFromBDAtoAX:
 	MAX_U	al, cl
 	pop		ds
 	ret
+%endif
+
 
 ;--------------------------------------------------------------------
 ; RamVars_GetCountOfKnownDrivesToAX

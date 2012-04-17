@@ -124,11 +124,13 @@ FloppyDrive_IsInt40hInstalled:
 ;	Corrupts registers:
 ;		AX, CX, DX, DI, ES
 ;--------------------------------------------------------------------
+%ifdef MODULE_BOOT_MENU
 FloppyDrive_GetType:
 	mov		ah, 08h			; Get Drive Parameters
 	xor		bx, bx			; FLOPPY_TYPE_525_OR_35_DD when function not supported
 	int		BIOS_DISKETTE_INTERRUPT_40h
 	ret
+%endif
 
 
 ;--------------------------------------------------------------------

@@ -33,11 +33,12 @@
 	; We must define included libraries before including "AssemblyLibrary.inc".
 %define	EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS	; Exclude unused library functions
 %ifdef MODULE_BOOT_MENU
-	%define MENUEVENT_INLINE_OFFSETS    ; Only one menu required, save space and inline offsets
+	%define MENUEVENT_INLINE_OFFSETS    	; Only one menu required, save space and inline offsets
 	%define INCLUDE_MENU_LIBRARY
 
 %else	; If no boot menu included
 	%define	INCLUDE_DISPLAY_LIBRARY
+	%define INCLUDE_KEYBOARD_LIBRARY
 	%define INCLUDE_TIME_LIBRARY
 %endif
 
@@ -56,6 +57,7 @@
 	%include "RomVars.inc"			; For ROMVARS and IDEVARS structs
 	%include "RamVars.inc"			; For RAMVARS struct
 	%include "BootVars.inc"			; For BOOTVARS struct
+	%include "HotkeyBar.inc"		; For Hotkeys
 	%include "BootMenu.inc"			; For Boot Menu
 	%include "IDE_8bit.inc"			; For IDE 8-bit data port macros
 	%include "DeviceIDE.inc"		; For IDE device equates
@@ -211,6 +213,8 @@ iend
 	%include "Initialize.asm"		; For BIOS initialization
 	%include "Interrupts.asm"		; For Interrupt initialization
 	%include "RamVars.asm"			; For RAMVARS initialization and access
+	%include "BootVars.asm"			; For initializing variabled used during init and boot
+	%include "FloppyDrive.asm"		; Floppy Drive related functions
 	%include "CreateDPT.asm"		; For creating DPTs
 	%include "FindDPT.asm"			; For finding DPTs
 	%include "AccessDPT.asm"		; For accessing DPTs
@@ -219,6 +223,7 @@ iend
 	%include "AtaID.asm"			; For ATA Identify Device information
 	%include "DetectDrives.asm"		; For detecting IDE drives
 	%include "DetectPrint.asm"		; For printing drive detection strings
+	%include "HotkeyBar.asm"		; For hotkeys during drive detection and boot menu
 
 	; Boot menu
 %ifdef MODULE_BOOT_MENU
@@ -231,7 +236,7 @@ iend
 
 	; Boot loader
 	%include "Int19h.asm"			; For Int 19h, Boot Loader
-	%include "FloppyDrive.asm"		; Floppy Drive related functions
+	%include "Int19hReset.asm"		; INT 19h handler for proper system reset
 	%include "BootSector.asm"		; For loading boot sector
 
 	; For all device types

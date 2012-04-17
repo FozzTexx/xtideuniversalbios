@@ -25,7 +25,7 @@
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html		
-;				
+;		
 
 %ifdef MODULE_STRINGS_COMPRESSED_PRECOMPRESS
 %include "Display.inc"
@@ -127,9 +127,9 @@ g_szRomAt:		; db	"%s @ %x",LF,CR
 
 
 ; Boot loader strings
-g_szTryToBoot:			; db	"Booting from %s %x",ANGLE_QUOTE_RIGHT,"%x",LF,CR,NULL
-              			; db	 42h,  6fh,  6fh,  74h,  69h,  6eh,  67h,  20h,  66h,  72h,  6fh,  6dh,  20h,  25h,  73h,  20h,  25h,  78h, 0afh,  25h,  78h,  0ah,  0dh,  00h    ; uncompressed
-              			  db	 48h,  75h,  75h,  7ah,  6fh,  74h, 0edh,  6ch,  78h,  75h, 0f3h,  3eh,  20h,  39h,  24h,  39h,  1bh                                              ; compressed
+g_szTryToBoot:			; db	"Booting %c",ANGLE_QUOTE_RIGHT,"%c",LF,CR,NULL
+              			; db	 42h,  6fh,  6fh,  74h,  69h,  6eh,  67h,  20h,  25h,  63h, 0afh,  25h,  63h,  0ah,  0dh,  00h    ; uncompressed
+              			  db	 48h,  75h,  75h,  7ah,  6fh,  74h, 0edh,  35h,  24h,  35h,  1bh                                  ; compressed
 
 g_szBootSectorNotFound:	; db	"Boot sector "
                        	; db	 42h,  6fh,  6fh,  74h,  20h,  73h,  65h,  63h,  74h,  6fh,  72h,  20h    ; uncompressed
@@ -142,6 +142,7 @@ g_szNotFound:			; db	"not found",LF,CR,NULL
 g_szReadError:			; db	"Error %x!",LF,CR,NULL
               			; db	 45h,  72h,  72h,  6fh,  72h,  20h,  25h,  78h,  21h,  0ah,  0dh,  00h    ; uncompressed
               			  db	 4bh,  78h,  78h,  75h, 0f8h,  39h,  25h,  1bh                            ; compressed
+
 
 
 g_szAddressingModes:
@@ -248,19 +249,27 @@ g_szDashForZero:		; db		"- ",NULL
 
 
 ; Boot menu bottom of screen strings
-g_szFDD:		; db	"FDD     ",NULL
-        		; db	 46h,  44h,  44h,  20h,  20h,  20h,  20h,  20h,  00h    ; uncompressed
-        		  db	 4ch,  4ah, 0cah,  20h,  20h,  20h,  00h                ; compressed
+g_szFDD:		; db	"FDD [%c]",NULL			; "FDD [A]"
+        		; db	 46h,  44h,  44h,  20h,  5bh,  25h,  63h,  5dh,  00h    ; uncompressed
+        		  db	 4ch,  4ah, 0cah,  61h,  35h, 0a3h                      ; compressed
 
-g_szHDD:		; db	"HDD     ",NULL
-        		; db	 48h,  44h,  44h,  20h,  20h,  20h,  20h,  20h,  00h    ; uncompressed
-        		  db	 4eh,  4ah, 0cah,  20h,  20h,  20h,  00h                ; compressed
+g_szHDD:		; db	"HDD [%c]",NULL			; "HDD [C]"
+        		; db	 48h,  44h,  44h,  20h,  5bh,  25h,  63h,  5dh,  00h    ; uncompressed
+        		  db	 4eh,  4ah, 0cah,  61h,  35h, 0a3h                      ; compressed
 
-g_szRomBoot:	; db	"ROM Boot",NULL
-            	; db	 52h,  4fh,  4dh,  20h,  42h,  6fh,  6fh,  74h,  00h    ; uncompressed
-            	  db	 58h,  55h, 0d3h,  48h,  75h,  75h, 0bah                ; compressed
+g_szBootMenu:	; db	"%sMnu",NULL			; "BootMnu"
+             	; db	 25h,  73h,  4dh,  6eh,  75h,  00h    ; uncompressed
+             	  db	 3eh,  53h,  74h, 0bbh                ; compressed
 
-g_szHotkey:		; db	"%A%c%c%A%s%A ",NULL
+g_szRomBoot:	; db	"Rom%s",NULL			; "RomBoot"
+            	; db	 52h,  6fh,  6dh,  25h,  73h,  00h    ; uncompressed
+            	  db	 58h,  75h,  73h,  1eh                ; compressed
+
+g_szBoot:		; db	"Boot",NULL
+         		; db	 42h,  6fh,  6fh,  74h,  00h    ; uncompressed
+         		  db	 48h,  75h,  75h, 0bah          ; compressed
+
+g_szHotkey:		; db	"%A%c%c%A%s%A ",NULL	; "C»HDD [A] ", "F2BootMnu " or "F8RomBoot "
            		; db	 25h,  41h,  25h,  63h,  25h,  63h,  25h,  41h,  25h,  73h,  25h,  41h,  20h,  00h    ; uncompressed
            		  db	 3dh,  35h,  35h,  3dh,  3eh,  3dh,  00h                                              ; compressed
 
@@ -370,8 +379,6 @@ g_szForeignHD:			; db	"Foreign Hard Disk",NULL
 ;
 ; End of StringsCompress.pl information
 ;
-;------------------------------------------------------------------------------------------
-
 ;;; end of input stream
 
 %endif ; STRINGSCOMPRESSED_STRINGS
@@ -454,7 +461,7 @@ StringsCompressed_TranslatesAndFormats:
 
 ;; translated usage stats
 ;; 33:1
-;; 32:31
+;; 32:22
 ;; 181:1
 ;; 53:2
 ;; 48:2
@@ -480,12 +487,12 @@ StringsCompressed_TranslatesAndFormats:
 ;; A:4
 ;; 2-u:1
 ;; 5-u:2
-;; x:7
-;; s:12
+;; x:5
+;; s:13
 ;; 5-x:1
 ;; nl:8
 ;; 2-I:1
-;; c:5
+;; c:9
 ;; u:6
 ;; z:1
 ;; total format: 11
@@ -512,7 +519,7 @@ StringsCompressed_TranslatesAndFormats:
 ;; 76,L:4
 ;; 77,M:4
 ;; 78,N:1
-;; 79,O:2
+;; 79,O:1
 ;; 80,P:2
 ;; 81,Q:1
 ;; 82,R:5
@@ -524,9 +531,9 @@ StringsCompressed_TranslatesAndFormats:
 ;; 88,X:1
 ;; 89,Y:
 ;; 90,Z:
-;; 91,[:
+;; 91,[:2
 ;; 92,\:
-;; 93,]:
+;; 93,]:2
 ;; 94,^:
 ;; 95,_:
 ;; 96,`:
@@ -535,7 +542,7 @@ StringsCompressed_TranslatesAndFormats:
 ;; 99,c:5
 ;; 100,d:6
 ;; 101,e:15
-;; 102,f:2
+;; 102,f:1
 ;; 103,g:2
 ;; 104,h:
 ;; 105,i:9
@@ -543,18 +550,18 @@ StringsCompressed_TranslatesAndFormats:
 ;; 107,k:4
 ;; 108,l:5
 ;; 109,m:1
-;; 110,n:10
+;; 110,n:11
 ;; 111,o:17
 ;; 112,p:3
 ;; 113,q:
-;; 114,r:12
+;; 114,r:11
 ;; 115,s:7
 ;; 116,t:12
-;; 117,u:3
+;; 117,u:4
 ;; 118,v:3
 ;; 119,w:1
 ;; 120,x:
 ;; 121,y:2
-;; alphabet used count: 42
+;; alphabet used count: 44
 %endif ; STRINGSCOMPRESSED_TABLES
 

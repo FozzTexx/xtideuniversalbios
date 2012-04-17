@@ -21,21 +21,6 @@
 SECTION .text
 
 ;--------------------------------------------------------------------
-; INT 19h handler that properly reboots the computer when
-; INT 19h is called.
-;
-; Int19h_ResetHandler
-;	Parameters:
-;		Nothing
-;	Returns:
-;		Never returns (reboots computer)
-;--------------------------------------------------------------------
-Int19h_ResetHandler:
-	mov		ax, BOOT_FLAG_WARM				; Skip memory tests
-	jmp		Reboot_ComputerWithBootFlagInAX
-
-
-;--------------------------------------------------------------------
 ; Int19h_BootLoaderHandler
 ;	Parameters:
 ;		Nothing
@@ -43,31 +28,33 @@ Int19h_ResetHandler:
 ;		Never returns (loads operating system)
 ;--------------------------------------------------------------------
 Int19h_BootLoaderHandler:
-	sti
-	; Install INT 19h handler for proper reboot
-	LOAD_BDA_SEGMENT_TO	es, ax
-	mov		al, BIOS_BOOT_LOADER_INTERRUPT_19h	; INT 19h interrupt vector offset
-	mov		si, Int19h_ResetHandler				; INT 19h handler to reboot the system
-	call	Interrupts_InstallHandlerToVectorInALFromCSSI
-	call	Initialize_AndDetectDrives			; Installs new boot menu loader
-	; Fall to .PrepareStackAndSelectDriveFromBootMenu
+	sti											; Allow timer interrupts
+	LOAD_BDA_SEGMENT_TO	es, ax					; Load BDA segment (zero) to ES
+	; Fall to .PrepareBootLoaderStack
+
 
 ;--------------------------------------------------------------------
-; .PrepareStackAndSelectDriveFromBootMenu
+; Drive detection and boot menu use lots of stack so it is
+; wise to relocate stack. Otherwise something important from
+; interrupt vectors are likely corrupted, likely our own DPTs if
+; they are located to 30:0h.
+;
+; .PrepareBootLoaderStack
 ;	Parameters:
 ;		ES:		BDA and interrupt vector segment (zero)
 ;	Returns:
 ;		Never returns (loads operating system)
 ;--------------------------------------------------------------------
-.PrepareStackAndSelectDriveFromBootMenu:
+.PrepareBootLoaderStack:
 	STORE_POST_STACK_POINTER
 	SWITCH_TO_BOOT_MENU_STACK
 	; Fall to .InitializeDisplay
 
+
 ;--------------------------------------------------------------------
 ; .InitializeDisplay
 ;	Parameters:
-;		Nothing
+;		ES:		BDA and interrupt vector segment (zero)
 ;	Returns:
 ;		Never returns (loads operating system)
 ;--------------------------------------------------------------------
@@ -78,59 +65,67 @@ Int19h_BootLoaderHandler:
 	je		SHORT .InitializeDisplayLibrary
 	int		BIOS_VIDEO_INTERRUPT_10h
 .InitializeDisplayLibrary:
-	call	BootMenuPrint_InitializeDisplayContext
-	; Fall to .SelectDriveToBootFrom
+	call	DetectPrint_InitializeDisplayContext
+	; Fall to .InitializeBiosAndDetectDrives
+
 
 ;--------------------------------------------------------------------
-; .SelectDriveToBootFrom
+; .InitializeBiosAndDetectDrives
 ;	Parameters:
-;		Nothing
+;		ES:		BDA and interrupt vector segment (zero)
+;	Returns:
+;		DS:		RAMVARS segment
+;--------------------------------------------------------------------
+	call	Initialize_AndDetectDrives	
+	; Fall to SelectDriveToBootFrom
+
+
+;--------------------------------------------------------------------
+; SelectDriveToBootFrom
+;	Parameters:
+;		DS:		RAMVARS segment
+;		ES:		BDA and interrupt vector segment (zero)
 ;	Returns:
 ;		Never returns (loads operating system)
 ;--------------------------------------------------------------------
-.SelectDriveToBootFrom:
-	call	RamVars_GetSegmentToDS
-%ifdef MODULE_BOOT_MENU
-	cmp		WORD [cs:ROMVARS.wfDisplayBootMenu], BYTE 0
-	jne		SHORT ProcessBootMenuSelectionsUntilBootableDriveSelected	; Display boot menu
-%endif
-	; Fall to BootFromDriveAthenTryDriveC
-
-;--------------------------------------------------------------------
-; BootFromDriveAthenTryDriveC
-;	Parameters:
-;		DS:		RAMVARS segment
-;	Returns:
-;		Never returns (loads operating system)
-;--------------------------------------------------------------------
-BootFromDriveAthenTryDriveC:
-	xor		dx, dx				; DL = 00h = Floppy Drive A
-	call	BootSector_TryToLoadFromDriveDL
-	jc		SHORT Int19hMenu_JumpToBootSector_or_RomBoot
-	mov		dl, 80h				; DL = 80h = First Hard Drive (usually C)
-	call	BootSector_TryToLoadFromDriveDL
-	jmp		SHORT Int19hMenu_JumpToBootSector_or_RomBoot	; ROM Boot if error
-
+SelectDriveToBootFrom:
+	call	HotkeyBar_UpdateDuringDriveDetection
 
 %ifdef MODULE_BOOT_MENU
-;--------------------------------------------------------------------
-; ProcessBootMenuSelectionsUntilBootableDriveSelected
-;	Parameters:
-;		DS:		RAMVARS segment
-;	Returns:
-;		Never returns
-;--------------------------------------------------------------------
-ProcessBootMenuSelectionsUntilBootableDriveSelected:
-	call	BootMenu_DisplayAndReturnSelectionInDX
-	call	DriveXlate_ToOrBack											; Translate drive number
-	call	BootSector_TryToLoadFromDriveDL
-	jnc		SHORT ProcessBootMenuSelectionsUntilBootableDriveSelected	; Boot failure, show menu again
-	; Fall to Int19hMenu_JumpToBootSector_or_RomBoot
-	; (CF is set or we wouldn't be here, see "jnc" immediately above)
+	mov		di, BOOTVARS.hotkeyVars+HOTKEYVARS.bScancode
+	cmp		BYTE [es:di], BOOT_MENU_HOTKEY_SCANCODE
+	jne		SHORT .DoNotDisplayBootMenu
+
+	; Stop blinking the Boot Menu hotkey and display menu
+	mov		BYTE [es:di], 0
+	call	HotkeyBar_DrawToTopOfScreen
+	call	BootMenu_DisplayAndStoreSelectionAsHotkey
+.DoNotDisplayBootMenu:
 %endif
 
+	; Check if ROM boot (INT 18h) wanted
+	cmp		BYTE [es:BOOTVARS.hotkeyVars+HOTKEYVARS.bScancode], ROM_BOOT_HOTKEY_SCANCODE
+	je		SHORT JumpToBootSector_or_RomBoot	; CF clear so ROM boot
+
+	; Try to boot from Primary boot drive (00h by default)
+	call	HotkeyBar_GetPrimaryBootDriveNumberToDL
+	call	TryToBootFromPrimaryOrSecondaryBootDevice
+	jc		SHORT JumpToBootSector_or_RomBoot
+
+	; Try to boot from Secondary boot device (80h by default)
+	call	HotkeyBar_GetSecondaryBootDriveNumberToDL
+	call	TryToBootFromPrimaryOrSecondaryBootDevice
+
+%ifdef MODULE_BOOT_MENU
+	; Force Boot Menu hotkey to display boot menu
+	mov		BYTE [es:BOOTVARS.hotkeyVars+HOTKEYVARS.bScancode], BOOT_MENU_HOTKEY_SCANCODE
+	jnc		SHORT SelectDriveToBootFrom
+%endif
+	; Fall to JumpToBootSector_or_RomBoot
+
+
 ;--------------------------------------------------------------------
-; Int19hMenu_JumpToBootSector_or_RomBoot
+; JumpToBootSector_or_RomBoot
 ;
 ; Switches back to the POST stack, clears the DS and ES registers,
 ; and either jumps to the MBR (Master Boot Record) that was just read,
@@ -139,13 +134,13 @@ ProcessBootMenuSelectionsUntilBootableDriveSelected:
 ;	Parameters:
 ;		DL:		Drive to boot from (translated, 00h or 80h)
 ;       CF:     Set for Boot Sector Boot 
-;               Clear for Rom Boot
+;               Clear for ROM Boot
 ;	   	ES:BX:	(if CF set) Ptr to boot sector
 ;
 ;	Returns:
 ;		Never returns
 ;--------------------------------------------------------------------
-Int19hMenu_JumpToBootSector_or_RomBoot:
+JumpToBootSector_or_RomBoot:
 	mov		cx, es		; Preserve MBR segment (can't push because of stack change)
 	mov		ax, 0		; NOTE: can't use XOR (LOAD_BDA_SEGMENT_TO) as it impacts CF
 	SWITCH_BACK_TO_POST_STACK
@@ -166,4 +161,24 @@ Int19hMenu_JumpToBootSector_or_RomBoot:
 
 ; Boot by calling INT 18h (ROM Basic of ROM DOS)
 .romboot:
-	int		BIOS_BOOT_FAILURE_INTERRUPT_18h	; Never returns		
+	int		BIOS_BOOT_FAILURE_INTERRUPT_18h	; Never returns	
+
+
+;--------------------------------------------------------------------
+; TryToBootFromPrimaryOrSecondaryBootDevice
+;	Parameters
+;		DL:		Drive selected as boot device
+;		DS:		RAMVARS segment
+;		ES:		BDA and interrupt vector segment (zero)
+;	Returns:
+;		DL:		Drive to boot from (translated, 00h or 80h)
+;       CF:     Set for Boot Sector Boot
+;               Clear for ROM Boot
+;	   	ES:BX:	(if CF set) Ptr to boot sector
+;	Corrupts registers:
+;		AX, CX, DH, SI, DI, (DL if failed to read boot sector)
+;--------------------------------------------------------------------
+TryToBootFromPrimaryOrSecondaryBootDevice:
+	call	DriveXlate_SetDriveToSwap
+	call	DriveXlate_ToOrBack
+	jmp		BootSector_TryToLoadFromDriveDL

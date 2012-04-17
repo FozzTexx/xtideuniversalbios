@@ -21,7 +21,7 @@
 SECTION .text
 
 ;--------------------------------------------------------------------
-; BootMenuPrint_InitializeDisplayContext
+; DetectPrint_InitializeDisplayContext
 ;	Parameters:
 ;		Nothing
 ;	Returns:
@@ -29,8 +29,22 @@ SECTION .text
 ;	Corrupts registers:
 ;		AX, DI
 ;--------------------------------------------------------------------
-BootMenuPrint_InitializeDisplayContext:
-	CALL_DISPLAY_LIBRARY InitializeDisplayContext
+DetectPrint_InitializeDisplayContext:
+	CALL_DISPLAY_LIBRARY	InitializeDisplayContext
+	ret
+
+
+;--------------------------------------------------------------------
+; DetectPrint_GetSoftwareCoordinatesToAX
+;	Parameters:
+;		Nothing
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, DI
+;--------------------------------------------------------------------
+DetectPrint_GetSoftwareCoordinatesToAX:
+	CALL_DISPLAY_LIBRARY	GetSoftwareCoordinatesToAX
 	ret
 
 
@@ -185,23 +199,24 @@ DetectPrint_FailedToLoadFirstSector:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, SI, DI
+;		AX, DH, SI, DI
 ;--------------------------------------------------------------------
 DetectPrint_TryToBootFromDL:
 	push	bp
 	mov		bp, sp
 
-	mov		ax, g_szHDD
-	test	dl, dl
-	js		SHORT .NotFDD
-	mov		ax, g_szFDD
-.NotFDD:
-	push	ax
+	call	DriveXlate_ToOrBack	; DL = Untranslated Drive number
+	mov		dh, dl
+	call	DriveXlate_ToOrBack	; DL = Translated Drive number
 
-	call	DriveXlate_ToOrBack
-	push	dx					; Push untranslated drive number
-	call	DriveXlate_ToOrBack
-	push	dx					; Push translated drive number
+	call	HotkeyBar_ConvertDriveNumberFromDLtoDriveLetter	; DL = Translated letter
+	xchg	dl, dh
+	call	HotkeyBar_ConvertDriveNumberFromDLtoDriveLetter	; DL = Untranslated letter
+	push	dx
+	xchg	dl, dh
+	push	dx
+
+	call	ConvertDriveLetterInDLtoDriveNumber	; Restore DL
 
 	mov		si, g_szTryToBoot
 	jmp		SHORT DetectPrint_FormatCSSIfromParamsInSSBP	
@@ -225,7 +240,7 @@ DetectPrint_NullTerminatedStringFromCSSIandSetCF:
 ;
 	push	bp
 	mov		bp,sp
-	; Fall to BootMenuPrint_FormatCSSIfromParamsInSSBP
+	; Fall to DetectPrint_FormatCSSIfromParamsInSSBP
 
 ;--------------------------------------------------------------------
 ; DetectPrint_FormatCSSIfromParamsInSSBP

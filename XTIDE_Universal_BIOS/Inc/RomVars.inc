@@ -36,7 +36,7 @@ struc ROMVARS
 	.wfDisplayBootMenu:				; Zero = no Boot Menu, non-zero = Boot Menu timeout
 	.wBootTimeout		resb	2	; Boot Menu selection timeout in system timer ticks
 	.bIdeCnt			resb	1	; Number of available IDE controllers
-	.bBootDrv			resb	1	; Boot Menu default drive
+	.bBootDrv			resb	1	; Default drive to boot from
 	.bMinFddCnt			resb	1	; Minimum number of Floppy Drives
 	.bStealSize			resb	1	; Number of 1kB blocks stolen from 640kB base RAM
 	.bIdleTimeout		resb	1	; Standby timer value

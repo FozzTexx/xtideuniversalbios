@@ -62,6 +62,11 @@ Interrupts_InitializeInterruptVectors:
 	mov		al, BIOS_DISK_INTERRUPT_13h			; INT 13h interrupt vector offset
 	mov		si, Int13h_DiskFunctionsHandler		; Interrupt handler offset
 	call	Interrupts_InstallHandlerToVectorInALFromCSSI
+
+	; Install INT 19h handler to properly reset the system
+	mov		al, BIOS_BOOT_LOADER_INTERRUPT_19h	; INT 19h interrupt vector offset
+	mov		si, Int19hReset_Handler				; INT 19h handler to reboot the system
+	call	Interrupts_InstallHandlerToVectorInALFromCSSI
 	; Fall to .InitializeHardwareIrqHandlers
 
 ;--------------------------------------------------------------------

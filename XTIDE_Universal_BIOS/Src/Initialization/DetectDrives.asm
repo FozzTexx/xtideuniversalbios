@@ -54,7 +54,6 @@ DetectDrives_FromAllIDEControllers:
 %ifdef MODULE_SERIAL
 	jcxz	.AddHardDisks					; Set to zero on .ideVarsSerialAuto iteration (if any)
 %endif
-
 	loop	.DriveDetectLoop
 
 %ifdef MODULE_SERIAL
@@ -154,6 +153,7 @@ DetectDrives_FromAllIDEControllers:
 ;--------------------------------------------------------------------
 StartDetectionWithDriveSelectByteInBHandStringInCX:
 	call	DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP
+	call	HotkeyBar_UpdateDuringDriveDetection
 	; Fall to .ReadAtaInfoFromHardDisk
 
 ;--------------------------------------------------------------------
