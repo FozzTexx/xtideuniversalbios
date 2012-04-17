@@ -81,11 +81,11 @@ struc DISPLAY_LIB
 endstruc
 %endif
 
-; Attribute flags for DISPLAY_LIB.SetCharacterOutputFunctionFromAXwithAttributeFlagInDL
+; Attribute flags for DISPLAY_LIB.SetCharacterOutputFunctionFromAXwithAttributeFlagInBL
 ATTRIBUTES_NOT_USED							EQU		0
 ATTRIBUTES_ARE_USED							EQU		FLG_CONTEXT_ATTRIBUTES
 
-; Character output functions for DISPLAY_LIB.SetCharacterOutputFunctionFromAXwithAttributeFlagInDL
+; Character output functions for DISPLAY_LIB.SetCharacterOutputFunctionFromAXwithAttributeFlagInBL
 TELETYPE_OUTPUT_WITH_ATTRIBUTE				EQU		DisplayCharOut_TeletypeOutputWithAttribute
 TELETYPE_OUTPUT_WITHOUT_ATTRIBUTE			EQU		DisplayCharOut_TeletypeOutput
 TELETYPE_OUTPUT_USING_BIOS					EQU		DisplayCharOut_BiosTeletypeOutput

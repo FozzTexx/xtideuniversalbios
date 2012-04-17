@@ -163,6 +163,12 @@ ALIGN JUMP_ALIGN
 %%Return:
 %endmacro
 
+%macro eCMOVNC 2
+	jc		SHORT %%Return
+	mov		%1, %2
+%%Return:
+%endmacro
+
 %macro eCMOVZ 2
 	jnz		SHORT %%Return
 	mov		%1, %2
@@ -185,6 +191,12 @@ ALIGN JUMP_ALIGN
 
 %macro eCMOVB 2
 	jnb		SHORT %%Return
+	mov		%1, %2
+%%Return:
+%endmacro
+
+%macro eCMOVS 2
+	jns		SHORT %%Return
 	mov		%1, %2
 %%Return:
 %endmacro
