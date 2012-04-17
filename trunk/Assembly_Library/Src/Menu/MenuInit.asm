@@ -35,19 +35,23 @@ ALIGN MENU_JUMP_ALIGN
 MenuInit_DisplayMenuWithHandlerInBXandUserDataInDXAX:
 	push	es
 	push	ds
-	LOAD_BDA_SEGMENT_TO ds, cx, !
-	push	WORD [BDA.wVidCurShape]
-	mov		cl, MENU_size
-	eENTER_STRUCT cx
+	xchg	cx, ax			; Backup user data
+	CALL_DISPLAY_LIBRARY	PushDisplayContext
 
+	; Create MENU struct to stack
+	mov		ax, MENU_size
+	eENTER_STRUCT	ax
+	xchg	ax, cx			; Restore user data to AX
 	call	Memory_ZeroSSBPwithSizeInCX
-	call	MenuInit_EnterMenuWithHandlerInBXandUserDataInDXAX
-	mov		dx, [bp+MENUINIT.wHighlightedItem]
 
-	eLEAVE_STRUCT MENU_size
-	pop		ax
-	CALL_DISPLAY_LIBRARY SetCursorShapeFromAX
-	CALL_DISPLAY_LIBRARY SynchronizeDisplayContextToHardware
+	; Display menu
+	call	EnterMenuWithHandlerInBXandUserDataInDXAX
+
+	; Get menu selection and destroy menu variables from stack
+	mov		dx, [bp+MENUINIT.wHighlightedItem]
+	eLEAVE_STRUCT	MENU_size
+
+	CALL_DISPLAY_LIBRARY	PopDisplayContext
 	xchg	ax, dx			; Return highlighted item in AX
 	pop		ds
 	pop		es
@@ -55,7 +59,7 @@ MenuInit_DisplayMenuWithHandlerInBXandUserDataInDXAX:
 
 
 ;--------------------------------------------------------------------
-; MenuInit_EnterMenuWithHandlerInBXandUserDataInDXAX
+; EnterMenuWithHandlerInBXandUserDataInDXAX
 ;	Parameters
 ;		DX:AX:	User specified data
 ;		BX:		Menu event handler
@@ -66,7 +70,7 @@ MenuInit_DisplayMenuWithHandlerInBXandUserDataInDXAX:
 ;		All, except SS:BP
 ;--------------------------------------------------------------------
 ALIGN MENU_JUMP_ALIGN
-MenuInit_EnterMenuWithHandlerInBXandUserDataInDXAX:
+EnterMenuWithHandlerInBXandUserDataInDXAX:
 	mov		[bp+MENU.fnEventHandler], bx
 	mov		[bp+MENU.dwUserData], ax
 	mov		[bp+MENU.dwUserData+2], dx
