@@ -201,6 +201,12 @@ ALIGN JUMP_ALIGN
 %%Return:
 %endmacro
 
+%macro eCMOVNS 2
+	js		SHORT %%Return
+	mov		%1, %2
+%%Return:
+%endmacro
+
 
 ;--------------------------------------------------------------------
 ; Conditional Set.
