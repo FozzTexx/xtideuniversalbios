@@ -205,6 +205,8 @@ DetectPrint_TryToBootFromDL:
 	push	bp
 	mov		bp, sp
 
+%ifdef MODULE_HOTKEYS
+
 	call	DriveXlate_ToOrBack	; DL = Untranslated Drive number
 	mov		dh, dl
 	call	DriveXlate_ToOrBack	; DL = Translated Drive number
@@ -216,7 +218,21 @@ DetectPrint_TryToBootFromDL:
 	xchg	dl, dh
 	push	dx
 
-	call	ConvertDriveLetterInDLtoDriveNumber	; Restore DL
+	call	HotkeyBar_ConvertDriveLetterInDLtoDriveNumber	; Restore DL
+
+%else
+	ePUSH_T	ax, ' '			; No drive translation so print space
+
+	; Get boot drive letters
+	call	FloppyDrive_GetCountToAX
+	mov		ah, 'A'			; AH = First Floppy Drive letter (always 'A')
+	add		al, ah
+	MAX_U	al, 'C'			; AL = First Hard Drive letter ('C', 'D', or 'E')
+	test	dl, dl
+	eCMOVNS	al, ah
+	push	ax
+
+%endif ; MODULE_HOTKEYS
 
 	mov		si, g_szTryToBoot
 	jmp		SHORT DetectPrint_FormatCSSIfromParamsInSSBP	

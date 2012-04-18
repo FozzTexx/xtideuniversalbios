@@ -42,7 +42,9 @@ Int13h_DiskFunctionsHandler:
 
 	call	RamVars_GetSegmentToDS
 
+%ifdef MODULE_HOTKEYS
 	call	DriveXlate_ToOrBack
+%endif
 	mov		[RAMVARS.xlateVars+XLATEVARS.bXlatedDrv], dl
 
 	call	FindDPT_ForDriveNumberInDL	; DS:DI points to our DPT, or NULL if not our drive

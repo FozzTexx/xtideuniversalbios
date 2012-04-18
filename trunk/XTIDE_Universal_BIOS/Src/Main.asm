@@ -46,6 +46,7 @@
 	; Included .inc files
 	%include "AssemblyLibrary.inc"	; Assembly Library. Must be included first!
 	%include "Version.inc"
+	%include "ModuleDependency.inc"	; Dependency checks for optional modules
 	%include "IntController.inc"	; For Interrupt Controller equates
 	%include "ATA_ID.inc"			; For ATA Drive Information structs
 	%include "IdeRegisters.inc"		; For ATA Registers, flags and commands
@@ -223,7 +224,12 @@ iend
 	%include "AtaID.asm"			; For ATA Identify Device information
 	%include "DetectDrives.asm"		; For detecting IDE drives
 	%include "DetectPrint.asm"		; For printing drive detection strings
+
+	; Hotkey Bar
+%ifdef MODULE_HOTKEYS
 	%include "HotkeyBar.asm"		; For hotkeys during drive detection and boot menu
+	%include "DriveXlate.asm"		; For swapping drive numbers
+%endif
 
 	; Boot menu
 %ifdef MODULE_BOOT_MENU
@@ -296,7 +302,6 @@ iend
 	%include "AH23h_HFeatures.asm"	; Required by Int13h_Jump.asm
 	%include "AH24h_HSetBlocks.asm"	; Required by Int13h_Jump.asm
 	%include "AH25h_HDrvID.asm"		; Required by Int13h_Jump.asm
-	%include "DriveXlate.asm"		; For swapping drive numbers
 	%include "Address.asm"			; For sector address translations
 	%include "Prepare.asm"			; For buffer pointer normalization
 %ifdef MODULE_EBIOS
