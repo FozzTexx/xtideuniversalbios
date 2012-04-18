@@ -90,7 +90,11 @@ RamVars_Initialize:
 ;--------------------------------------------------------------------
 .InitializeDriveTranslationAndReturn:
 	pop		es
+%ifdef MODULE_HOTKEYS
 	jmp		DriveXlate_Reset
+%else
+	ret
+%endif
 
 
 ;--------------------------------------------------------------------

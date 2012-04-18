@@ -304,6 +304,23 @@ HotkeyBar_RestoreCursorCoordinatesFromAX:
 
 
 ;--------------------------------------------------------------------
+; HotkeyBar_StoreHotkeyToBootvarsForDriveLetterInDL
+;	Parameters:
+;		DS:		RAMVARS segment
+;		ES:		BDA segment (zero)
+;		DL:		Drive Letter ('A'...)
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, CX, DI
+;--------------------------------------------------------------------
+HotkeyBar_StoreHotkeyToBootvarsForDriveLetterInDL:
+	eMOVZX	ax, dl
+	call	Char_ChangeCaseInAL	; Upper case drive letter to lower case keystroke
+	jmp		SHORT HotkeyBar_StoreHotkeyToBootvarsIfValidKeystrokeInAX
+
+
+;--------------------------------------------------------------------
 ; ScanHotkeysFromKeyBufferAndStoreToBootvars
 ;	Parameters:
 ;		DS:		RAMVARS segment
@@ -398,11 +415,11 @@ HotkeyBar_GetPrimaryBootDriveNumberToDL:
 GetBootDriveNumberFromLettersInDX:
 	test	BYTE [es:BOOTVARS.hotkeyVars+HOTKEYVARS.bFlags], FLG_HOTKEY_HD_FIRST
 	eCMOVZ	dl, dh
-	; Fall to ConvertDriveLetterInDLtoDriveNumber
+	; Fall to HotkeyBar_ConvertDriveLetterInDLtoDriveNumber
 
 
 ;--------------------------------------------------------------------
-; ConvertDriveLetterInDLtoDriveNumber
+; HotkeyBar_ConvertDriveLetterInDLtoDriveNumber
 ;	Parameters:
 ;		DS:		RAMVARS segment
 ;		DL:		Drive letter ('A'...)
@@ -411,7 +428,7 @@ GetBootDriveNumberFromLettersInDX:
 ;	Corrupts registers:
 ;		AX, DH
 ;--------------------------------------------------------------------
-ConvertDriveLetterInDLtoDriveNumber:
+HotkeyBar_ConvertDriveLetterInDLtoDriveNumber:
 	call	HotkeyBar_GetLetterForFirstHardDriveToAX
 	cmp		dl, al
 	jb		SHORT .ConvertLetterInDLtoFloppyDriveNumber

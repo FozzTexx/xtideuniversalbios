@@ -89,6 +89,7 @@ Int19h_BootLoaderHandler:
 ;		Never returns (loads operating system)
 ;--------------------------------------------------------------------
 SelectDriveToBootFrom:
+%ifdef MODULE_HOTKEYS
 	call	HotkeyBar_UpdateDuringDriveDetection
 
 %ifdef MODULE_BOOT_MENU
@@ -102,18 +103,30 @@ SelectDriveToBootFrom:
 	call	BootMenu_DisplayAndStoreSelectionAsHotkey
 .DoNotDisplayBootMenu:
 %endif
+%endif
 
 	; Check if ROM boot (INT 18h) wanted
 	cmp		BYTE [es:BOOTVARS.hotkeyVars+HOTKEYVARS.bScancode], ROM_BOOT_HOTKEY_SCANCODE
 	je		SHORT JumpToBootSector_or_RomBoot	; CF clear so ROM boot
 
 	; Try to boot from Primary boot drive (00h by default)
+%ifdef MODULE_HOTKEYS
 	call	HotkeyBar_GetPrimaryBootDriveNumberToDL
+%else
+	mov		dl, [cs:ROMVARS.bBootDrv]
+	and		dl, 80h		; Only 00h and 80h allowed when not using MODULE_HOTKEYS
+%endif
 	call	TryToBootFromPrimaryOrSecondaryBootDevice
 	jc		SHORT JumpToBootSector_or_RomBoot
 
 	; Try to boot from Secondary boot device (80h by default)
+%ifdef MODULE_HOTKEYS
 	call	HotkeyBar_GetSecondaryBootDriveNumberToDL
+%else
+	mov		dl, [cs:ROMVARS.bBootDrv]
+	and		dl, 80h
+	xor		dl, 80h
+%endif
 	call	TryToBootFromPrimaryOrSecondaryBootDevice
 
 %ifdef MODULE_BOOT_MENU
@@ -178,7 +191,12 @@ JumpToBootSector_or_RomBoot:
 ;	Corrupts registers:
 ;		AX, CX, DH, SI, DI, (DL if failed to read boot sector)
 ;--------------------------------------------------------------------
+%ifndef MODULE_HOTKEYS
+TryToBootFromPrimaryOrSecondaryBootDevice	EQU		BootSector_TryToLoadFromDriveDL
+
+%else
 TryToBootFromPrimaryOrSecondaryBootDevice:
 	call	DriveXlate_SetDriveToSwap
 	call	DriveXlate_ToOrBack
 	jmp		BootSector_TryToLoadFromDriveDL
+%endif

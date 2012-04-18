@@ -38,23 +38,30 @@ BootVars_Initialize:
 	add		ax, BOOTVARS_size
 	sub		ax, di
 	xchg	cx, ax
+
+%ifdef MODULE_HOTKEYS
 	call	Memory_ZeroESDIwithSizeInCX
 
 	; Store default drives to boot from
-	mov		di, BOOTVARS.hotkeyVars+HOTKEYVARS.wHddAndFddLetters
-	call	HotkeyBar_GetLetterForFirstHardDriveToAX
-	mov		ah, DEFAULT_FLOPPY_DRIVE_LETTER
-	mov		[es:di], ax
+	mov		dl, [cs:ROMVARS.bBootDrv]
 
-	; Check if boot drive is overridden in ROMVARs
-	mov		al, [cs:ROMVARS.bBootDrv]
-	test	al, al
-	js		SHORT .StoreUserHardDiskToBootFrom
-	inc		di
-	jmp		SHORT .AddToDefaultDrive
+;--------------------------------------------------------------------
+; BootVars_StoreHotkeyForDriveNumberInDL
+;	Parameters:
+;		DL:		Floppy or Hard Drive number
+;		DS:		RAMVARS Segment
+;		ES:		BDA Segment
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, CX, DI
+;--------------------------------------------------------------------
+BootVars_StoreHotkeyForDriveNumberInDL:
+	mov		WORD [es:BOOTVARS.hotkeyVars+HOTKEYVARS.wHddAndFddLetters], DEFAULT_HARD_DRIVE_LETTER | (DEFAULT_FLOPPY_DRIVE_LETTER<<8)
+	call	HotkeyBar_ConvertDriveNumberFromDLtoDriveLetter
+	jmp		HotkeyBar_StoreHotkeyToBootvarsForDriveLetterInDL
 
-.StoreUserHardDiskToBootFrom:
-	sub		al, 80h					; Clear HD bit
-.AddToDefaultDrive:
-	add		[es:di], al
-	ret
+%else
+	jmp		Memory_ZeroESDIwithSizeInCX
+
+%endif ; MODULE_HOTKEYS

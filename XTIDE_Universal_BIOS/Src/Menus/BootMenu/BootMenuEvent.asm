@@ -86,20 +86,6 @@ IsDriveDLinSystem:
 
 
 ;--------------------------------------------------------------------
-; ConvertKeystrokeToAXfromDriveLetterInDL
-;	Parameters:
-;		DL:		Drive Letter ('A'...)
-;	Returns:
-;		AX:		Hotkey keystroke
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-ConvertKeystrokeToAXfromDriveLetterInDL:
-	eMOVZX	ax, dl
-	jmp		Char_ChangeCaseInAL	; Upper case drive letter to lower case keystroke
-
-
-;--------------------------------------------------------------------
 ; BootMenuEvent_Handler
 ;	Common parameters for all events:
 ;		BX:			Menu event (anything from MENUEVENT struct)
@@ -227,9 +213,7 @@ EventItemHighlightedFromCX:
 	; We need to generate keystroke so selection two drives is possible.
 	; The secondary boot drive is selected by highlighting it using menu keys
 	; and the primary boot drive is selected by pressing drive letter hotkey.
-	call	HotkeyBar_ConvertDriveNumberFromDLtoDriveLetter
-	call	ConvertKeystrokeToAXfromDriveLetterInDL
-	call	HotkeyBar_StoreHotkeyToBootvarsIfValidKeystrokeInAX
+	call	BootVars_StoreHotkeyForDriveNumberInDL
 	call	RedrawHotkeyBarFromInsideMenuEventHandler
 
 	; Redraw changes in drive numbers
@@ -244,29 +228,6 @@ EventItemHighlightedFromCX:
 	CALL_MENU_LIBRARY	RefreshInformation
 	stc
 	ret
-
-
-;--------------------------------------------------------------------
-; EventItemSelectedFromCX
-;	Parameters
-;		CX:		Index of selected item
-;		DS:		Ptr to RAMVARS
-;		ES:		Ptr to BDA (zero)
-;		SS:BP:	Menu library handle
-;	Returns:
-;		CF:		Set if event processed
-;				Cleared if event not processed
-;	Corrupts registers:
-;		Does not matter
-;--------------------------------------------------------------------
-EventItemSelectedFromCX:
-	call	BootMenu_GetDriveToDXforMenuitemInCX
-	jnc		SHORT BootMenuEvent_Completed	; No menuitem selected
-
-	; Convert selected drive to hotkey keystroke
-	call	HotkeyBar_ConvertDriveNumberFromDLtoDriveLetter
-	call	ConvertKeystrokeToAXfromDriveLetterInDL
-	; Fall to EventKeyStrokeInAX
 
 
 ;--------------------------------------------------------------------
@@ -290,6 +251,28 @@ EventKeyStrokeInAX:
 	jnc		SHORT BootMenuEvent_Completed
 
 	; Hotkey is now stored to BOOTVARS and menu can be closed
+	jmp		SHORT CloseBootMenu
+
+
+;--------------------------------------------------------------------
+; EventItemSelectedFromCX
+;	Parameters
+;		CX:		Index of selected item
+;		DS:		Ptr to RAMVARS
+;		ES:		Ptr to BDA (zero)
+;		SS:BP:	Menu library handle
+;	Returns:
+;		CF:		Set if event processed
+;				Cleared if event not processed
+;	Corrupts registers:
+;		Does not matter
+;--------------------------------------------------------------------
+EventItemSelectedFromCX:
+	call	BootMenu_GetDriveToDXforMenuitemInCX
+	jnc		SHORT BootMenuEvent_Completed	; No menuitem selected
+
+	; Convert selected drive to hotkey keystroke
+	call	HotkeyBar_StoreHotkeyToBootvarsForDriveLetterInDL
 	; Fall to CloseBootMenu
 
 

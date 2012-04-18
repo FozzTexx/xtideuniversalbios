@@ -17,6 +17,7 @@
 # MODULE_ADVANCED_ATA       Native support for some VLB IDE controllers                          #
 # MODULE_BOOT_MENU          Boot Menu for selection of drive to boot from                        #
 # MODULE_EBIOS              Enhanced functions for accessing drives over 8.4 GB                  #
+# MODULE_HOTKEYS            Hotkey Bar to boot from any drive                                    #
 # MODULE_JRIDE              Support for JR-IDE/ISA                                               #
 # MODULE_SERIAL             Virtual hard disks using serial port                                 #
 # MODULE_SERIAL_FLOPPY      Virtual floppy drives using serial port (requires MODULE_SERIAL)     #
@@ -88,7 +89,7 @@ HEADERS += $(LIBS)
 #################################################################
 # Assembler preprocessor defines.                               #
 #################################################################
-DEFINES_COMMON = MODULE_STRINGS_COMPRESSED MODULE_EBIOS
+DEFINES_COMMON = MODULE_STRINGS_COMPRESSED MODULE_HOTKEYS MODULE_EBIOS
 
 DEFINES_XT = ELIMINATE_CGA_SNOW MODULE_SERIAL MODULE_SERIAL_FLOPPY
 DEFINES_XTPLUS = USE_186 ELIMINATE_CGA_SNOW MODULE_SERIAL MODULE_SERIAL_FLOPPY
