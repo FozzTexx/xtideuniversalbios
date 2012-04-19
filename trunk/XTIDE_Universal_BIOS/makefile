@@ -18,6 +18,7 @@
 # MODULE_BOOT_MENU          Boot Menu for selection of drive to boot from                        #
 # MODULE_EBIOS              Enhanced functions for accessing drives over 8.4 GB                  #
 # MODULE_HOTKEYS            Hotkey Bar to boot from any drive                                    #
+# MODULE_IRQ				IDE IRQ support                                                      #
 # MODULE_JRIDE              Support for JR-IDE/ISA                                               #
 # MODULE_SERIAL             Virtual hard disks using serial port                                 #
 # MODULE_SERIAL_FLOPPY      Virtual floppy drives using serial port (requires MODULE_SERIAL)     #
@@ -94,7 +95,7 @@ DEFINES_COMMON_LARGE = MODULE_BOOT_MENU MODULE_JRIDE MODULE_SERIAL MODULE_SERIAL
 
 DEFINES_XT = $(DEFINES_COMMON) ELIMINATE_CGA_SNOW MODULE_JRIDE MODULE_SERIAL MODULE_SERIAL_FLOPPY
 DEFINES_XTPLUS = $(DEFINES_COMMON) $(DEFINES_XT) USE_186
-DEFINES_AT = $(DEFINES_COMMON) USE_AT USE_286 MODULE_SERIAL MODULE_SERIAL_FLOPPY MODULE_ADVANCED_ATA
+DEFINES_AT = $(DEFINES_COMMON) USE_AT USE_286 MODULE_IRQ MODULE_SERIAL MODULE_SERIAL_FLOPPY MODULE_ADVANCED_ATA
 
 DEFINES_XT_LARGE = $(DEFINES_XT) $(DEFINES_COMMON_LARGE)
 DEFINES_XTPLUS_LARGE = $(DEFINES_XTPLUS) $(DEFINES_COMMON_LARGE)

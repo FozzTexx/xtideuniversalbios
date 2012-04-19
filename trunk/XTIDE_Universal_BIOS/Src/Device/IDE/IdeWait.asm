@@ -54,7 +54,9 @@ IDEDEVICE%+Wait_IRQorDRQ:
 ;--------------------------------------------------------------------
 IDEDEVICE%+Wait_IRQorStatusFlagInBLwithTimeoutInBH:
 %ifdef ASSEMBLE_SHARED_IDE_DEVICE_FUNCTIONS		; JR-IDE/ISA does not support IRQ
-	call	IdeIrq_WaitForIRQ
+	%ifdef MODULE_IRQ
+		call	IdeIrq_WaitForIRQ
+	%endif
 %endif
 	; Always fall to IdeWait_PollStatusFlagInBLwithTimeoutInBH for error processing
 

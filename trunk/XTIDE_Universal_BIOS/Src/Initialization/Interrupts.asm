@@ -66,6 +66,9 @@ Interrupts_InitializeInterruptVectors:
 	; Install INT 19h handler to properly reset the system
 	mov		al, BIOS_BOOT_LOADER_INTERRUPT_19h	; INT 19h interrupt vector offset
 	mov		si, Int19hReset_Handler				; INT 19h handler to reboot the system
+%ifndef MODULE_IRQ
+	; Fall to Interrupts_InstallHandlerToVectorInALFromCSSI
+%else
 	call	Interrupts_InstallHandlerToVectorInALFromCSSI
 	; Fall to .InitializeHardwareIrqHandlers
 
@@ -135,6 +138,7 @@ Interrupts_InitializeInterruptVectors:
 	add		al, BYTE HARDWARE_IRQ_0_INTERRUPT_08h		; Interrupt vector number
 	mov		si, IdeIrq_InterruptServiceRoutineForIrqs2to7
 	; Fall to Interrupts_InstallHandlerToVectorInALFromCSSI
+%endif ; MODULE_IRQ
 
 
 ;--------------------------------------------------------------------
@@ -157,6 +161,7 @@ Interrupts_InstallHandlerToVectorInALFromCSSI:
 	ret
 
 
+%ifdef MODULE_IRQ
 ;--------------------------------------------------------------------
 ; Interrupts_UnmaskInterruptControllerForDriveInDSDI
 ;	Parameters:
@@ -226,3 +231,5 @@ Interrupts_UnmaskInterruptControllerForDriveInDSDI:
 	pop		cx
 .Return:
 	ret
+
+%endif ; MODULE_IRQ

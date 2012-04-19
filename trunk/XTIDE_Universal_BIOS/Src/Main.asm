@@ -45,9 +45,8 @@
 
 	; Included .inc files
 	%include "AssemblyLibrary.inc"	; Assembly Library. Must be included first!
-	%include "Version.inc"
 	%include "ModuleDependency.inc"	; Dependency checks for optional modules
-	%include "IntController.inc"	; For Interrupt Controller equates
+	%include "Version.inc"
 	%include "ATA_ID.inc"			; For ATA Drive Information structs
 	%include "IdeRegisters.inc"		; For ATA Registers, flags and commands
 	%include "Int13h.inc"			; Equates for INT 13h functions
@@ -88,29 +87,29 @@ istruc ROMVARS
 	at	ROMVARS.bStealSize,		db	1						; Steal 1kB from base memory
 	at	ROMVARS.bIdleTimeout,	db	0						; Standby timer disabled by default
 
-	at	ROMVARS.ideVars0+IDEVARS.wPort,			dw	DEVICE_ATA_DEFAULT_PORT 		; Controller Command Block base port
-	at	ROMVARS.ideVars0+IDEVARS.wPortCtrl,		dw	DEVICE_ATA_DEFAULT_PORTCTRL 	; Controller Control Block base port
+	at	ROMVARS.ideVars0+IDEVARS.wPort,			dw	DEVICE_ATA_PRIMARY_PORT 		; Controller Command Block base port
+	at	ROMVARS.ideVars0+IDEVARS.wPortCtrl,		dw	DEVICE_ATA_PRIMARY_PORTCTRL 	; Controller Control Block base port
 	at	ROMVARS.ideVars0+IDEVARS.bDevice,		db	DEVICE_16BIT_ATA
 	at	ROMVARS.ideVars0+IDEVARS.bIRQ,			db	0
 	at	ROMVARS.ideVars0+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	db	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE
 	at	ROMVARS.ideVars0+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags,	db	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE
 
-	at	ROMVARS.ideVars1+IDEVARS.wPort,			dw	DEVICE_ATA_DEFAULT_SECONDARY_PORT
-	at	ROMVARS.ideVars1+IDEVARS.wPortCtrl,		dw	DEVICE_ATA_DEFAULT_SECONDARY_PORTCTRL
+	at	ROMVARS.ideVars1+IDEVARS.wPort,			dw	DEVICE_ATA_SECONDARY_PORT
+	at	ROMVARS.ideVars1+IDEVARS.wPortCtrl,		dw	DEVICE_ATA_SECONDARY_PORTCTRL
 	at	ROMVARS.ideVars1+IDEVARS.bDevice,		db	DEVICE_16BIT_ATA
 	at	ROMVARS.ideVars1+IDEVARS.bIRQ,			db	0
 	at	ROMVARS.ideVars1+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	db	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE
 	at	ROMVARS.ideVars1+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags,	db	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE
 
-	at	ROMVARS.ideVars2+IDEVARS.wPort,			dw	1E8h
-	at	ROMVARS.ideVars2+IDEVARS.wPortCtrl,		dw	3E8h
+	at	ROMVARS.ideVars2+IDEVARS.wPort,			dw	DEVICE_ATA_TERTIARY_PORT
+	at	ROMVARS.ideVars2+IDEVARS.wPortCtrl,		dw	DEVICE_ATA_TERTIARY_PORTCTRL
 	at	ROMVARS.ideVars2+IDEVARS.bDevice,		db	DEVICE_16BIT_ATA
 	at	ROMVARS.ideVars2+IDEVARS.bIRQ,			db	0
 	at	ROMVARS.ideVars2+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	db	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE
 	at	ROMVARS.ideVars2+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags,	db	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE
 
-	at	ROMVARS.ideVars3+IDEVARS.wPort,			dw	168h
-	at	ROMVARS.ideVars3+IDEVARS.wPortCtrl,		dw	368h
+	at	ROMVARS.ideVars3+IDEVARS.wPort,			dw	DEVICE_ATA_QUATERNARY_PORT
+	at	ROMVARS.ideVars3+IDEVARS.wPortCtrl,		dw	DEVICE_ATA_QUATERNARY_PORTCTRL
 	at	ROMVARS.ideVars3+IDEVARS.bDevice,		db	DEVICE_16BIT_ATA
 	at	ROMVARS.ideVars3+IDEVARS.bIRQ,			db	0
 	at	ROMVARS.ideVars3+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	db	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE
@@ -231,7 +230,9 @@ iend
 	%include "IdeError.asm"			; Must be included after IdeWait.asm
 	%include "IdeDPT.asm"
 	%include "IdeIO.asm"
+%ifdef MODULE_IRQ
 	%include "IdeIrq.asm"
+%endif
 %undef IDEDEVICE
 %undef ASSEMBLE_SHARED_IDE_DEVICE_FUNCTIONS
 

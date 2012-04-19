@@ -103,21 +103,18 @@ SelectDriveToBootFrom:
 	call	BootMenu_DisplayAndStoreSelectionAsHotkey
 .DoNotDisplayBootMenu:
 %endif
-%endif
 
 	; Check if ROM boot (INT 18h) wanted
-%ifdef MODULE_HOTKEYS
 	cmp		BYTE [es:BOOTVARS.hotkeyVars+HOTKEYVARS.bScancode], ROM_BOOT_HOTKEY_SCANCODE
 	je		SHORT JumpToBootSector_or_RomBoot	; CF clear so ROM boot
-%endif
 
-	; Try to boot from Primary boot drive (00h by default)
-%ifdef MODULE_HOTKEYS
+	; Get Primary boot drive number to DL
 	call	HotkeyBar_GetPrimaryBootDriveNumberToDL
 %else
-	mov		dl, [cs:ROMVARS.bBootDrv]
-	and		dl, 80h		; Only 00h and 80h allowed when not using MODULE_HOTKEYS
-%endif
+	call	GetPrimaryBootDriveToDLwhenNotUsingModuleHotkeys
+%endif	; MODULE_HOTKEYS
+
+	; Try to boot from Primary boot drive (00h by default)
 	call	TryToBootFromPrimaryOrSecondaryBootDevice
 	jc		SHORT JumpToBootSector_or_RomBoot
 
@@ -125,8 +122,7 @@ SelectDriveToBootFrom:
 %ifdef MODULE_HOTKEYS
 	call	HotkeyBar_GetSecondaryBootDriveNumberToDL
 %else
-	mov		dl, [cs:ROMVARS.bBootDrv]
-	and		dl, 80h
+	call	GetPrimaryBootDriveToDLwhenNotUsingModuleHotkeys
 	xor		dl, 80h
 %endif
 	call	TryToBootFromPrimaryOrSecondaryBootDevice
@@ -201,4 +197,21 @@ TryToBootFromPrimaryOrSecondaryBootDevice:
 	call	DriveXlate_SetDriveToSwap
 	call	DriveXlate_ToOrBack
 	jmp		BootSector_TryToLoadFromDriveDL
+%endif
+
+
+;--------------------------------------------------------------------
+; GetPrimaryBootDriveToDLwhenNotUsingModuleHotkeys
+;	Parameters
+;		Nothing
+;	Returns:
+;		DL:		Drive to boot from (00h or 80h)
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+%ifndef MODULE_HOTKEYS
+GetPrimaryBootDriveToDLwhenNotUsingModuleHotkeys:
+	mov		dl, [cs:ROMVARS.bBootDrv]
+	and		dl, 80h		; Only 00h and 80h allowed when not using MODULE_HOTKEYS
+	ret
 %endif
