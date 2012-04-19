@@ -210,7 +210,7 @@ DetectDrives_DriveNotFound:
 ;		CS:BP:	Ptr to IDEVARS for the drive
 ;		ES:SI	Ptr to ATA information for the drive
 ;		DS:		RAMVARS segment
-;		ES:		BDA/Bootnfo segment
+;		ES:		BDA segment
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
@@ -219,5 +219,5 @@ DetectDrives_DriveNotFound:
 CreateBiosTablesForHardDisk:
 	call	CreateDPT_FromAtaInformation
 	jc		SHORT DetectDrives_DriveNotFound
-	call	BootMenuInfo_CreateForHardDisk
-	jmp		SHORT DetectPrint_DriveNameFromBootnfoInESBX
+	call	DriveDetectInfo_CreateForHardDisk
+	jmp		SHORT DetectPrint_DriveNameFromDrvDetectInfoInESBX

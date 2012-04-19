@@ -32,8 +32,6 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 DriveXlate_ToOrBack:
-	test	BYTE [cs:ROMVARS.wFlags], FLG_ROMVARS_DRVXLAT
-	jz		SHORT .Return			; Return if translation disabled
 	xchg	di, ax					; Backup AX
 
 	mov		ah, 80h					; Assume hard disk
@@ -56,8 +54,6 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 .RestoreAXandReturn:
 	xchg	ax, di					; Restore AX
-ALIGN JUMP_ALIGN, ret
-.Return:
 	ret
 
 
@@ -72,7 +68,6 @@ ALIGN JUMP_ALIGN, ret
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 DriveXlate_Reset:
 	mov		WORD [RAMVARS.xlateVars+XLATEVARS.wFDandHDswap], 8000h
 	ret
@@ -90,14 +85,14 @@ DriveXlate_Reset:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 DriveXlate_SetDriveToSwap:
 	test	dl, dl				; Floppy drive?
-	js		SHORT .SetHardDiskToSwap
-.SetFloppyDriveToSwap:
+	js		SHORT .SetHardDriveToSwap
+
+	; Set Floppy Drive to swap
 	mov		[RAMVARS.xlateVars+XLATEVARS.bFDSwap], dl
 	ret
-ALIGN JUMP_ALIGN
-.SetHardDiskToSwap:
+
+.SetHardDriveToSwap:
 	mov		[RAMVARS.xlateVars+XLATEVARS.bHDSwap], dl
 	ret

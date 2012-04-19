@@ -31,40 +31,4 @@ BOOT_MENU_HEIGHT_WITHOUT_ITEMS			EQU	(BOOT_MENU_TITLE_LINES + BOOT_MENU_INFO_LIN
 MENU_SCREEN_BOTTOM_LINES				EQU	1
 
 
-; Boot Menu Information Table. These are generated for all XTIDE Universal
-; BIOS drives. Available only until boot is successful.
-MAX_HARD_DISK_NAME_LENGTH				EQU		30		; Bytes reserved for drive name
-
-struc BOOTMENUINFO
-	.szDrvName				resb	MAX_HARD_DISK_NAME_LENGTH
-							resb	2	; Zero word (ensures string terminates)
-	.wInitErrorFlags		resb	2	; Errors during initialization
-	
-%ifdef MODULE_ADVANCED_ATA
-							resb	6	; padding to make BOOTMENUINFO size an even multiple of DPT size
-%else
-							resb	2	; padding to make BOOTMENUINFO size an even multiple of DPT size
-%endif				
-endstruc
-
-
-DPT_BOOTMENUINFO_SIZE_MULTIPLIER  equ	BOOTMENUINFO_size / LARGEST_DPT_SIZE
-
-%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
-
-%if MAX_HARD_DISK_NAME_LENGTH % 2 <> 0
-	%error "MAX_HARD_DISK_NAME_LENGTH needs to be a multiple of 2, memory is moved with word operations."
-%endif
-
-%if BOOTMENUINFO_size % LARGEST_DPT_SIZE <> 0
-	%error "BOOTMENUINFO's size must be an even multiple of DPT's size.  Add or remove padding at the bottom of BOOTMENUINFO to bring the two sizes into alignment.  As BOOTMENUINFO is only used at boot time, with plenty of memory to consume, it is OK to waste some space here."
-%endif
-
-%if BOOTMENUINFO.szDrvName <> 0
-	%error "BOOTMENUINFO.szDrvName is assumed to be the first member of struc BOOTMENUINFO, in BootMenuPrint_RefreshItem"
-%endif
-
-%endif
-
-
 %endif ; BOOTMENU_INC

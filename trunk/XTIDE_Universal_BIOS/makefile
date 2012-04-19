@@ -90,17 +90,18 @@ HEADERS += $(LIBS)
 # Assembler preprocessor defines.                               #
 #################################################################
 DEFINES_COMMON = MODULE_STRINGS_COMPRESSED MODULE_HOTKEYS MODULE_EBIOS
+DEFINES_COMMON_LARGE = MODULE_BOOT_MENU MODULE_JRIDE MODULE_SERIAL MODULE_SERIAL_FLOPPY
 
-DEFINES_XT = ELIMINATE_CGA_SNOW MODULE_SERIAL MODULE_SERIAL_FLOPPY
-DEFINES_XTPLUS = USE_186 ELIMINATE_CGA_SNOW MODULE_SERIAL MODULE_SERIAL_FLOPPY
-DEFINES_AT = USE_AT USE_286 MODULE_SERIAL MODULE_SERIAL_FLOPPY MODULE_ADVANCED_ATA
+DEFINES_XT = $(DEFINES_COMMON) ELIMINATE_CGA_SNOW MODULE_JRIDE MODULE_SERIAL MODULE_SERIAL_FLOPPY
+DEFINES_XTPLUS = $(DEFINES_COMMON) $(DEFINES_XT) USE_186
+DEFINES_AT = $(DEFINES_COMMON) USE_AT USE_286 MODULE_SERIAL MODULE_SERIAL_FLOPPY MODULE_ADVANCED_ATA
 
-DEFINES_XT_LARGE = $(DEFINES_XT) MODULE_BOOT_MENU MODULE_JRIDE MODULE_ADVANCED_ATA
-DEFINES_XTPLUS_LARGE = $(DEFINES_XTPLUS) MODULE_BOOT_MENU MODULE_JRIDE MODULE_ADVANCED_ATA
-DEFINES_AT_LARGE = $(DEFINES_AT) MODULE_BOOT_MENU MODULE_JRIDE MODULE_ADVANCED_ATA
+DEFINES_XT_LARGE = $(DEFINES_XT) $(DEFINES_COMMON_LARGE)
+DEFINES_XTPLUS_LARGE = $(DEFINES_XTPLUS) $(DEFINES_COMMON_LARGE)
+DEFINES_AT_LARGE = $(DEFINES_AT) $(DEFINES_COMMON_LARGE)
 
-DEFINES_JRIDE_8K = ELIMINATE_CGA_SNOW MODULE_JRIDE
-DEFINES_386_8K = USE_AT USE_386 MODULE_ADVANCED_ATA
+DEFINES_XT_TINY = MODULE_STRINGS_COMPRESSED
+DEFINES_386_8K = $(DEFINES_AT) USE_386
 
 
 ###################
@@ -112,14 +113,13 @@ ROMSIZE = 8192
 ROMSIZE_LARGE = 15360
 
 # Add -D in front of every preprocessor define declaration
-DEFS = $(DEFINES_COMMON:%=-D%)
 DEFS_XT = $(DEFINES_XT:%=-D%) -DROMSIZE=$(ROMSIZE)
 DEFS_XTPLUS = $(DEFINES_XTPLUS:%=-D%) -DROMSIZE=$(ROMSIZE)
 DEFS_AT = $(DEFINES_AT:%=-D%) -DROMSIZE=$(ROMSIZE)
 DEFS_XT_LARGE = $(DEFINES_XT_LARGE:%=-D%) -DROMSIZE=$(ROMSIZE_LARGE)
 DEFS_XTPLUS_LARGE = $(DEFINES_XTPLUS_LARGE:%=-D%) -DROMSIZE=$(ROMSIZE_LARGE)
 DEFS_AT_LARGE = $(DEFINES_AT_LARGE:%=-D%) -DROMSIZE=$(ROMSIZE_LARGE)
-DEFS_JRIDE_8K = $(DEFINES_JRIDE_8K:%=-D%) -DROMSIZE=$(ROMSIZE)
+DEFS_XT_TINY = $(DEFINES_XT_TINY:%=-D%) -DROMSIZE=$(ROMSIZE)
 DEFS_386_8K = $(DEFINES_386_8K:%=-D%) -DROMSIZE=$(ROMSIZE)
 
 # Add -I in front of all header directories
@@ -148,7 +148,6 @@ RM = -del /Q
 
 # Assembly compiler flags
 ASFLAGS = -f bin				# Produce binary object files
-ASFLAGS += $(DEFS)				# Preprocessor defines
 ASFLAGS += $(IHEADERS)			# Set header file directory paths
 ASFLAGS += -Worphan-labels		# Warn about labels without colon
 ASFLAGS += -Ox					# Optimize operands to their shortest forms
@@ -161,10 +160,10 @@ ASFLAGS += -Ox					# Optimize operands to their shortest forms
 all: clean small large
 	@echo All done!
 
-small: at xtplus xt jride_8k 386_8k
+small: xt_tiny xt xtplus at 386_8k
 	@echo All 8 kiB binaries built!
 
-large: at_large xtplus_large xt_large
+large: xt_large xtplus_large at_large
 	@echo All 15 kiB binaries built!
 
 at:
@@ -191,9 +190,9 @@ xt_large:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XT_LARGE) -l"$(TARGET)_xtl.lst" -o"$(TARGET)_xtl.bin"
 	@echo *15k XT version "$(TARGET)_xtl.bin" built.
 
-jride_8k:
-	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_JRIDE_8K) -l"$(TARGET)_jr8k.lst" -o"$(TARGET)_jr8k.bin"
-	@echo * 8k JR-IDE/ISA version "$(TARGET)_jr8k.bin" built.
+xt_tiny:
+	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XT_TINY) -l"$(TARGET)_tiny.lst" -o"$(TARGET)_tiny.bin"
+	@echo * Tiny XT version "$(TARGET)_tiny.bin" built.
 
 386_8k:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_386_8K) -l"$(TARGET)_386.lst" -o"$(TARGET)_386.bin"
@@ -209,13 +208,13 @@ clean:
 	@echo Deleted "(*.*)" from "$(BUILD_DIR)/"
 
 checksum: all
-	@perl ..\tools\checksum.pl $(TARGET)_atl.bin $(ROMSIZE_LARGE)
-	@perl ..\tools\checksum.pl $(TARGET)_xtpl.bin $(ROMSIZE_LARGE)
-	@perl ..\tools\checksum.pl $(TARGET)_xtl.bin $(ROMSIZE_LARGE)
-	@perl ..\tools\checksum.pl $(TARGET)_at.bin $(ROMSIZE)
-	@perl ..\tools\checksum.pl $(TARGET)_xtp.bin $(ROMSIZE)
+	@perl ..\tools\checksum.pl $(TARGET)_tiny.bin $(ROMSIZE)
 	@perl ..\tools\checksum.pl $(TARGET)_xt.bin $(ROMSIZE)
-	@perl ..\tools\checksum.pl $(TARGET)_jr8k.bin $(ROMSIZE)
+	@perl ..\tools\checksum.pl $(TARGET)_xtp.bin $(ROMSIZE)
+	@perl ..\tools\checksum.pl $(TARGET)_at.bin $(ROMSIZE)
+	@perl ..\tools\checksum.pl $(TARGET)_xtl.bin $(ROMSIZE_LARGE)
+	@perl ..\tools\checksum.pl $(TARGET)_xtpl.bin $(ROMSIZE_LARGE)
+	@perl ..\tools\checksum.pl $(TARGET)_atl.bin $(ROMSIZE_LARGE)
 	@perl ..\tools\checksum.pl $(TARGET)_386.bin $(ROMSIZE)
 
 xt_unused: xt

@@ -41,7 +41,7 @@ BootMenuPrint_RefreshItem:
 	call	FindDPT_ForDriveNumberInDL
 	jc		.notOurs
 
-	call	BootMenuInfo_ConvertDPTtoBX
+	call	DriveDetectInfo_ConvertDPTtoBX
 	mov		si, g_szDriveNumBOOTNFO					; special g_szDriveNum that prints from BDA
 	jmp		.go
 
@@ -185,7 +185,7 @@ BootMenuPrint_RefreshInformation:
 
 .HardDiskMenuitemInfoForOurDrive:
 	ePUSH_T ax, g_szInformation							; Add substring for our hard disk information
-	call	BootMenuInfo_GetTotalSectorCount			; Get Total LBA Size
+	call	GetTotalSectorCount
 	jmp		.ConvertSectorCountInBXDXAXtoSizeAndPushForFormat
 
 .HardDiskMenuitemInfoForForeignDrive:
@@ -217,3 +217,20 @@ FloppyTypes:
 	db		1440  / FloppyTypes.rgbCapacityMultiplier    ;  type 4
 	db		2880  / FloppyTypes.rgbCapacityMultiplier    ;  type 5
 	db		2880  / FloppyTypes.rgbCapacityMultiplier    ;  type 6
+
+
+;--------------------------------------------------------------------
+; GetTotalSectorCount
+;	Parameters:
+;		DS:DI:		DPT Pointer
+;	Returns:
+;		BX:DX:AX:	48-bit sector count
+;	Corrupts registers:
+;		CX
+;--------------------------------------------------------------------
+GetTotalSectorCount:
+	test	BYTE [di+DPT.bFlagsLow], FLG_DRVNHEAD_LBA
+	jnz		SHORT .ReturnFullCapacity
+	jmp		AH15h_GetSectorCountToBXDXAX
+.ReturnFullCapacity:
+	jmp		AccessDPT_GetLbaSectorCountToBXDXAX

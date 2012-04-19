@@ -80,7 +80,7 @@ struc DPT_ATA	; 10 + 2 bytes = 12 bytes
 	.bInitError					resb	1
 endstruc
 
-; Flags for BOOTMENUINFO.wInitErrorFlags
+; Flags for DPT_ATA.bInitError
 FLG_INITERROR_FAILED_TO_SELECT_DRIVE				EQU		(1<<0)
 FLG_INITERROR_FAILED_TO_INITIALIZE_CHS_PARAMETERS	EQU		(1<<1)
 FLG_INITERROR_FAILED_TO_SET_WRITE_CACHE				EQU		(1<<2)

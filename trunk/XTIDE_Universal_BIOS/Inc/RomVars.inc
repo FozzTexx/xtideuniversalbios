@@ -65,14 +65,19 @@ endstruc
 
 ; Bit defines for ROMVARS.wFlags
 FLG_ROMVARS_FULLMODE				EQU	(1<<0)	; Full operating mode (steals base RAM, supports EBIOS etc.)
-FLG_ROMVARS_DRVXLAT					EQU	(1<<2)	; Enable drive number translation
 FLG_ROMVARS_SERIAL_SCANDETECT 		EQU	(1<<3)	; Scan COM ports at the end of drive detection.  Can also be invoked
 												; by holding down the ALT key at the end of drive detection.
 												; (Conveniently, this is 8, a fact we exploit when testing the bit)
-FLG_ROMVARS_MODULE_ADVATA			EQU	(1<<4)	; Here in case the configuration needs to know functionality is present
-FLG_ROMVARS_MODULE_JRIDE			EQU	(1<<5)	; Here in case the configuration needs to know functionality is present
-FLG_ROMVARS_MODULE_SERIAL			EQU (1<<6)	; Here in case the configuration needs to know functionality is present
-FLG_ROMVARS_MODULE_EBIOS			EQU (1<<7)	; Here in case the configuration needs to know functionality is present
+
+FLG_ROMVARS_MODULE_ADVANCED_ATA			EQU	(1<<8)	; Here in case the configuration needs to know functionality is present
+FLG_ROMVARS_MODULE_BOOT_MENU			EQU	(1<<9)	; Here in case the configuration needs to know functionality is present
+FLG_ROMVARS_MODULE_EBIOS				EQU	(1<<10)	; Here in case the configuration needs to know functionality is present
+FLG_ROMVARS_MODULE_HOTKEYS				EQU	(1<<11)	; Here in case the configuration needs to know functionality is present
+FLG_ROMVARS_MODULE_JRIDE				EQU (1<<12)	; Here in case the configuration needs to know functionality is present
+FLG_ROMVARS_MODULE_SERIAL				EQU (1<<13)	; Here in case the configuration needs to know functionality is present
+FLG_ROMVARS_MODULE_SERIAL_FLOPPY		EQU (1<<14)	; Here in case the configuration needs to know functionality is present
+FLG_ROMVARS_MODULE_STRINGS_COMPRESSED	EQU (1<<15)	; Here in case the configuration needs to know functionality is present
+
 
 ; Boot Menu Display Modes (see Assembly Library Display.inc for standard modes)
 DEFAULT_TEXT_MODE		EQU	4

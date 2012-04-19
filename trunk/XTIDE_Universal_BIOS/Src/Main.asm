@@ -51,18 +51,13 @@
 	%include "ATA_ID.inc"			; For ATA Drive Information structs
 	%include "IdeRegisters.inc"		; For ATA Registers, flags and commands
 	%include "Int13h.inc"			; Equates for INT 13h functions
-%ifdef MODULE_EBIOS
-	%include "EBIOS.inc"			; Equates for EBIOS functions
-%endif
 	%include "CustomDPT.inc"		; For Disk Parameter Table
 	%include "RomVars.inc"			; For ROMVARS and IDEVARS structs
 	%include "RamVars.inc"			; For RAMVARS struct
 	%include "BootVars.inc"			; For BOOTVARS struct
-	%include "HotkeyBar.inc"		; For Hotkeys
-	%include "BootMenu.inc"			; For Boot Menu
 	%include "IDE_8bit.inc"			; For IDE 8-bit data port macros
 	%include "DeviceIDE.inc"		; For IDE device equates
-	%include "Vision.inc"			; For QDI Vision QD65xx VLB IDE Controllers
+
 
 
 ; Section containing code
@@ -78,40 +73,15 @@ istruc ROMVARS
 	at	ROMVARS.szTitle,	db	TITLE_STRING
 	at	ROMVARS.szVersion,	db	ROM_VERSION_STRING
 
-;;; For OR'ing into wFlags below
-;;;
-%ifdef MODULE_SERIAL
-	MAIN_FLG_MODULE_SERIAL	equ	FLG_ROMVARS_MODULE_SERIAL
-%else
-	MAIN_FLG_MODULE_SERIAL	equ	0
-%endif
-
-%ifdef MODULE_EBIOS
-	MAIN_FLG_MODULE_EBIOS	equ	FLG_ROMVARS_MODULE_EBIOS
-%else
-	MAIN_FLG_MODULE_EBIOS	equ	0
-%endif
-
-%ifdef MODULE_JRIDE
-	MAIN_FLG_MODULE_JRIDE	equ	FLG_ROMVARS_MODULE_JRIDE
-%else
-	MAIN_FLG_MODULE_JRIDE	equ	0
-%endif
-
-%ifdef MODULE_ADVANCED_ATA
-	MAIN_FLG_MODULE_ADVATA	equ	FLG_ROMVARS_MODULE_ADVATA
-%else
-	MAIN_FLG_MODULE_ADVATA	equ	0
-%endif
-
-
 ;---------------------------;
 ; AT Build default settings ;
 ;---------------------------;
 %ifdef USE_AT
-	at	ROMVARS.wFlags,			dw	FLG_ROMVARS_FULLMODE | FLG_ROMVARS_DRVXLAT | MAIN_FLG_MODULE_SERIAL | MAIN_FLG_MODULE_EBIOS | MAIN_FLG_MODULE_JRIDE | MAIN_FLG_MODULE_ADVATA
+	at	ROMVARS.wFlags,			dw	FLG_ROMVARS_FULLMODE | MASK_ROMVARS_INCLUDED_MODULES
 	at	ROMVARS.wDisplayMode,	dw	DEFAULT_TEXT_MODE
-	at	ROMVARS.wBootTimeout,	dw	BOOT_MENU_DEFAULT_TIMEOUT
+%ifdef MODULE_BOOT_MENU
+		at	ROMVARS.wBootTimeout,	dw	BOOT_MENU_DEFAULT_TIMEOUT
+%endif
 	at	ROMVARS.bIdeCnt,		db	4						; Number of supported controllers
 	at	ROMVARS.bBootDrv,		db	80h						; Boot Menu default drive
 	at	ROMVARS.bMinFddCnt, 	db	0						; Do not force minimum number of floppy drives
@@ -153,9 +123,11 @@ istruc ROMVARS
 ;-----------------------------------;
 ; XT and XT+ Build default settings ;
 ;-----------------------------------;
-	at	ROMVARS.wFlags,			dw	FLG_ROMVARS_DRVXLAT | MAIN_FLG_MODULE_SERIAL | MAIN_FLG_MODULE_EBIOS | MAIN_FLG_MODULE_JRIDE | MAIN_FLG_MODULE_ADVATA
+	at	ROMVARS.wFlags,			dw	MASK_ROMVARS_INCLUDED_MODULES
 	at	ROMVARS.wDisplayMode,	dw	DEFAULT_TEXT_MODE
-	at	ROMVARS.wBootTimeout,	dw	BOOT_MENU_DEFAULT_TIMEOUT
+%ifdef MODULE_BOOT_MENU
+		at	ROMVARS.wBootTimeout,	dw	BOOT_MENU_DEFAULT_TIMEOUT
+%endif
 	at	ROMVARS.bIdeCnt,		db	1						; Number of supported controllers
 	at	ROMVARS.bBootDrv,		db	80h						; Boot Menu default drive
 	at	ROMVARS.bMinFddCnt, 	db	1						; Assume at least 1 floppy drive present if autodetect fails
@@ -164,12 +136,7 @@ istruc ROMVARS
 
 	at	ROMVARS.ideVars0+IDEVARS.wPort,			dw	DEVICE_XTIDE_DEFAULT_PORT			; Controller Command Block base port
 	at	ROMVARS.ideVars0+IDEVARS.wPortCtrl,		dw	DEVICE_XTIDE_DEFAULT_PORTCTRL		; Controller Control Block base port
-%ifdef MODULE_JRIDE
-	at	ROMVARS.ideVars0+IDEVARS.bDevice,		db	DEVICE_JRIDE_ISA
-%else
 	at	ROMVARS.ideVars0+IDEVARS.bDevice,		db	DEVICE_XTIDE_REV1
-%endif
-	at	ROMVARS.ideVars0+IDEVARS.bIRQ,			db	0				; IRQ
 	at	ROMVARS.ideVars0+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	db	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE
 	at	ROMVARS.ideVars0+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags,	db	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE
 
@@ -220,7 +187,7 @@ iend
 	%include "FindDPT.asm"			; For finding DPTs
 	%include "AccessDPT.asm"		; For accessing DPTs
 	%include "LbaAssist.asm"		; For generating L-CHS parameters to LBA drives
-	%include "BootMenuInfo.asm"		; For creating BOOTMENUINFO structs
+	%include "DrvDetectInfo.asm"	; For creating DRVDETECTINFO structs
 	%include "AtaID.asm"			; For ATA Identify Device information
 	%include "DetectDrives.asm"		; For detecting IDE drives
 	%include "DetectPrint.asm"		; For printing drive detection strings

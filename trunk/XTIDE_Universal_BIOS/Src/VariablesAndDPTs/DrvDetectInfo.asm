@@ -22,20 +22,20 @@
 SECTION .text
 
 ;--------------------------------------------------------------------
-; Creates new BOOTMENUINFO struct for detected hard disk.
+; Creates new DRVDETECTINFO struct for detected hard disk.
 ;
-; BootMenuInfo_CreateForHardDisk
+; DriveDetectInfo_CreateForHardDisk
 ;	Parameters:
 ;		DL:		Drive number
 ;		DS:DI:	Ptr to Disk Parameter Table
 ;		ES:SI:	Ptr to 512-byte ATA information read from the drive
 ;	Returns:
-;		ES:BX:	Ptr to BOOTMENUINFO (if successful)
+;		ES:BX:	Ptr to DRVDETECTINFO (if successful)
 ;	Corrupts registers:
 ;		AX, BX, CX, DX, DI
 ;--------------------------------------------------------------------
-BootMenuInfo_CreateForHardDisk:
-	call	BootMenuInfo_ConvertDPTtoBX			; ES:BX now points to new BOOTMENUINFO
+DriveDetectInfo_CreateForHardDisk:
+	call	DriveDetectInfo_ConvertDPTtoBX		; ES:BX now points to new DRVDETECTINFO
 
 	; Store Drive Name
 	push	ds									; Preserve RAMVARS
@@ -45,7 +45,7 @@ BootMenuInfo_CreateForHardDisk:
 	pop		ds
 
 	add		si, BYTE ATA1.strModel				; DS:SI now points drive name
-	lea		di, [bx+BOOTMENUINFO.szDrvName]		; ES:DI now points to name destination
+	lea		di, [bx+DRVDETECTINFO.szDrvName]		; ES:DI now points to name destination
 	mov		cx, MAX_HARD_DISK_NAME_LENGTH / 2	; Max number of WORDs allowed
 .CopyNextWord:
 	lodsw
@@ -62,40 +62,21 @@ BootMenuInfo_CreateForHardDisk:
 
 
 ;--------------------------------------------------------------------
-; BootMenuInfo_GetTotalSectorCount
-;	Parameters:
-;		DS:DI:		DPT Pointer
-;	Returns:
-;		BX:DX:AX:	48-bit sector count
-;	Corrupts registers:
-;		CX
-;--------------------------------------------------------------------
-%ifdef MODULE_BOOT_MENU
-BootMenuInfo_GetTotalSectorCount:
-	test	BYTE [di+DPT.bFlagsLow], FLG_DRVNHEAD_LBA
-	jnz		SHORT .ReturnFullCapacity
-	jmp		AH15h_GetSectorCountToBXDXAX
-.ReturnFullCapacity:
-	jmp		AccessDPT_GetLbaSectorCountToBXDXAX
-%endif
-
-
-;--------------------------------------------------------------------
-; Returns offset to BOOTMENUINFO based on DPT pointer.
+; Returns offset to DRVDETECTINFO based on DPT pointer.
 ;
-; BootMenuInfo_ConvertDPTtoBX
+; DriveDetectInfo_ConvertDPTtoBX
 ;	Parameters:
 ;		DS:DI:	DPT Pointer
 ;	Returns:
-;		BX:		Offset to BOOTMENUINFO struct
+;		BX:		Offset to DRVDETECTINFO struct
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
-BootMenuInfo_ConvertDPTtoBX:
+DriveDetectInfo_ConvertDPTtoBX:
 	mov		ax, di
 	sub		ax, BYTE RAMVARS_size					; subtract off base of DPTs
-	mov		bl, DPT_BOOTMENUINFO_SIZE_MULTIPLIER	; BOOTMENUINFO's are a whole number multiple of DPT size
+	mov		bl, DPT_DRVDETECTINFO_SIZE_MULTIPLIER	; DRVDETECTINFO are a whole number multiple of DPT size
 	mul		bl								
-	add		ax, BOOTVARS.rgBootNfo					; add base of BOOTMENUINFO
+	add		ax, BOOTVARS.rgDrvDetectInfo			; add base of DRVDETECTINFO
 	xchg	ax, bx
 	ret	
