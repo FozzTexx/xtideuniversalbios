@@ -90,7 +90,7 @@ Vision_DoesIdePortInBXbelongToControllerWithIDinAX:
 
 	; QD6580 always have Primary IDE at 1F0h
 	; Secondary IDE at 170h can be enabled or disabled
-	cmp		bx, DEVICE_ATA_DEFAULT_PORT
+	cmp		bx, DEVICE_ATA_PRIMARY_PORT
 	je		SHORT .ReturnResultInZF
 
 	; Check if Secondary IDE channel is enabled
@@ -107,11 +107,11 @@ Vision_DoesIdePortInBXbelongToControllerWithIDinAX:
 .DoesIdePortInDXbelongToQD6500:
 	test	al, FLG_QDCONFIG_PRIMARY_IDE
 	jz		SHORT .CompareBXtoSecondaryIDE
-	cmp		bx, DEVICE_ATA_DEFAULT_PORT
+	cmp		bx, DEVICE_ATA_PRIMARY_PORT
 	ret
 
 .CompareBXtoSecondaryIDE:
-	cmp		bx, DEVICE_ATA_DEFAULT_SECONDARY_PORT
+	cmp		bx, DEVICE_ATA_SECONDARY_PORT
 .ReturnResultInZF:
 	ret
 
@@ -179,7 +179,7 @@ Vision_InitializeWithIDinAHandConfigInAL:
 	; QD6500 has only one channel that can be Primary at 1F0h or Secondary at 170h.
 	; QD6580 always has Primary channel at 1F0h. Secondary channel at 170h can be Enabled or Disabled.
 	call	AccessDPT_GetIdeBasePortToBX
-	cmp		bx, DEVICE_ATA_DEFAULT_PORT
+	cmp		bx, DEVICE_ATA_PRIMARY_PORT
 	je		SHORT .CalculateTimingTicksForQD6580	; Primary Channel so no need to modify DX
 	times 2 inc dx									; Secondary Channel IDE Timing Register
 

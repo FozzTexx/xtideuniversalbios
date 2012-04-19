@@ -69,10 +69,11 @@ FLG_ROMVARS_SERIAL_SCANDETECT 		EQU	(1<<3)	; Scan COM ports at the end of drive 
 												; by holding down the ALT key at the end of drive detection.
 												; (Conveniently, this is 8, a fact we exploit when testing the bit)
 
-FLG_ROMVARS_MODULE_ADVANCED_ATA			EQU	(1<<8)	; Here in case the configuration needs to know functionality is present
-FLG_ROMVARS_MODULE_BOOT_MENU			EQU	(1<<9)	; Here in case the configuration needs to know functionality is present
-FLG_ROMVARS_MODULE_EBIOS				EQU	(1<<10)	; Here in case the configuration needs to know functionality is present
-FLG_ROMVARS_MODULE_HOTKEYS				EQU	(1<<11)	; Here in case the configuration needs to know functionality is present
+FLG_ROMVARS_MODULE_ADVANCED_ATA			EQU	(1<<7)	; Here in case the configuration needs to know functionality is present
+FLG_ROMVARS_MODULE_BOOT_MENU			EQU	(1<<8)	; Here in case the configuration needs to know functionality is present
+FLG_ROMVARS_MODULE_EBIOS				EQU	(1<<9)	; Here in case the configuration needs to know functionality is present
+FLG_ROMVARS_MODULE_HOTKEYS				EQU	(1<<10)	; Here in case the configuration needs to know functionality is present
+FLG_ROMVARS_MODULE_IRQ					EQU	(1<<11)	; Here in case the configuration needs to know functionality is present
 FLG_ROMVARS_MODULE_JRIDE				EQU (1<<12)	; Here in case the configuration needs to know functionality is present
 FLG_ROMVARS_MODULE_SERIAL				EQU (1<<13)	; Here in case the configuration needs to know functionality is present
 FLG_ROMVARS_MODULE_SERIAL_FLOPPY		EQU (1<<14)	; Here in case the configuration needs to know functionality is present
@@ -117,11 +118,20 @@ endstruc
 ; Default values for Port and PortCtrl, shared with the configurator
 ;
 DEVICE_XTIDE_DEFAULT_PORT				EQU		300h
-DEVICE_XTIDE_DEFAULT_PORTCTRL			EQU		308h
-DEVICE_ATA_DEFAULT_PORT					EQU		1F0h
-DEVICE_ATA_DEFAULT_PORTCTRL				EQU		3F0h
-DEVICE_ATA_DEFAULT_SECONDARY_PORT		EQU		170h
-DEVICE_ATA_DEFAULT_SECONDARY_PORTCTRL	EQU		370h
+DEVICE_XTIDE_DEFAULT_PORTCTRL			EQU		DEVICE_XTIDE_DEFAULT_PORT + 8h
+
+DEVICE_ATA_PRIMARY_PORT					EQU		1F0h
+DEVICE_ATA_PRIMARY_PORTCTRL				EQU		DEVICE_ATA_PRIMARY_PORT + 200h
+
+DEVICE_ATA_SECONDARY_PORT				EQU		170h
+DEVICE_ATA_SECONDARY_PORTCTRL			EQU		DEVICE_ATA_SECONDARY_PORT + 200h
+
+DEVICE_ATA_TERTIARY_PORT				EQU		1E8h
+DEVICE_ATA_TERTIARY_PORTCTRL			EQU		DEVICE_ATA_TERTIARY_PORT + 200h
+
+DEVICE_ATA_QUATERNARY_PORT				EQU		168h
+DEVICE_ATA_QUATERNARY_PORTCTRL			EQU		DEVICE_ATA_QUATERNARY_PORT + 200h
+
 
 ; Device types for IDEVARS.bDevice
 ;
