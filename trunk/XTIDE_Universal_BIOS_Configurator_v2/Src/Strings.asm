@@ -355,7 +355,7 @@ g_szItemBootTimeout:	db	"Selection timeout",NULL
 g_szItemBootDrive:		db	"Default boot drive",NULL
 g_szItemBootDispMode:	db	"Display Mode",NULL
 g_szItemBootFloppyDrvs:	db	"Number of Floppy Drives",NULL
-g_szItemBootSwap:		db	"Swap boot drive numbers",NULL
+;g_szItemBootSwap:		db	"Swap boot drive numbers",NULL
 g_szItemSerialDetect:	db	"Scan for Serial Drives",NULL
 
 g_szDlgBootEnableMenu:	db	"Enable Boot Menu?",NULL
@@ -363,7 +363,7 @@ g_szDlgBootTimeout:		db	"Enter Boot Menu selection timeout in BIOS timer ticks (
 g_szDlgBootDrive:		db	"Enter default drive number (0xh for Floppy Drives, 8xh for Hard Disks, FFh for ROM boot).",NULL
 g_szDlgBootDispMode:	db	"Select display mode for Boot Menu.",NULL
 g_szDlgBootFloppyDrvs:	db	"Select number of Floppy Drives to display on boot menu.",NULL
-g_szDlgBootSwap:		db	"Enable drive number translation?",NULL
+;g_szDlgBootSwap:		db	"Enable drive number translation?",NULL
 g_szDlgSerialDetect:	db	"Scan for serial drives?",NULL
 
 g_szNfoBootEnableMenu:	db	"Enable to display boot drive selection menu.",NULL
@@ -371,7 +371,7 @@ g_szNfoBootTimeout:		db	"Menu item selection timeout in BIOS timer ticks. 1 tick
 g_szNfoBootDrive:		db	"Default drive on boot menu.",NULL
 g_szNfoDispMode:		db	"Display Mode for Boot Menu.",NULL
 g_szNfoBootFloppyDrvs:	db	"Number of Floppy Drives to display on boot menu.",NULL
-g_szNfoBootSwap:		db	"Drive Number Translation (swap first drive with selected).",NULL
+;g_szNfoBootSwap:		db	"Drive Number Translation (swap first drive with selected).",NULL
 g_szNfoSerialDetect:	db	"Scans all standard COM ports for serial drives."
 						db	" This can also be invoked by holding down ALT at the end of normal drive detection.",NULL
 
@@ -381,8 +381,8 @@ g_szHelpBootDrive:		incbin	"Bootmenu_DefaultDrive.txt"
 						db	NULL
 g_szHelpBootFloppyDrvs:	incbin	"Bootmenu_FloppyDrives.txt"
 						db	NULL
-g_szHelpBootSwap:		incbin	"Bootmenu_SwapDrives.txt"
-						db	NULL
+;g_szHelpBootSwap:		incbin	"Bootmenu_SwapDrives.txt"
+;						db	NULL
 g_szHelpSerialDetect:	incbin  "Bootmenu_SerialDetect.txt"
 						db  NULL
 

@@ -180,7 +180,7 @@ iend
 	%include "Initialize.asm"		; For BIOS initialization
 	%include "Interrupts.asm"		; For Interrupt initialization
 	%include "RamVars.asm"			; For RAMVARS initialization and access
-	%include "BootVars.asm"			; For initializing variabled used during init and boot
+	%include "BootVars.asm"			; For initializing variables used during init and boot
 	%include "FloppyDrive.asm"		; Floppy Drive related functions
 	%include "CreateDPT.asm"		; For creating DPTs
 	%include "FindDPT.asm"			; For finding DPTs

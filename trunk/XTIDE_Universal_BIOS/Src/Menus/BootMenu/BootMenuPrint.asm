@@ -2,20 +2,20 @@
 ; Description	:	Functions for printing boot menu strings.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ; GNU General Public License for more details.
-; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html				
-;		
+; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+;
 
 ; Section containing code
 SECTION .text
@@ -144,7 +144,7 @@ BootMenuPrint_RefreshInformation:
 ;   4  FLOPPY_TYPE_35_HD           3 1/2   1.44M
 ;   5  3.5" ED on some BIOSes      3 1/2   2.88M
 ;   6  FLOPPY_TYPE_35_ED		   3 1/2   2.88M
-;   >6 Unknwon, handled above
+;   >6 Unknown, handled above
 ;
 ;--------------------------------------------------------------------
 .PrintKnownFloppyType:
@@ -158,9 +158,9 @@ BootMenuPrint_RefreshInformation:
 .ThreeHalf:
 	push	ax											; "5 1/4" or "3 1/2"
 
+	xor		bh, bh
 	mov		al,FloppyTypes.rgbCapacityMultiplier
-	mov		bh, 0
-	mul		byte [cs:bx+FloppyTypes.rgbCapacity - 1]    ; -1 since 0 is handled above and not in the table
+	mul		BYTE [cs:bx+FloppyTypes.rgbCapacity - 1]    ; -1 since 0 is handled above and not in the table
 
 .PushAXAndOutput:
 	push	ax
@@ -201,7 +201,7 @@ BootMenuPrint_RefreshInformation:
 	push	cx						; Tenths
 	push	dx						; Magnitude character
 
-	test	di,di
+	test	di, di
 	jz		SHORT BootMenuPrint_RefreshInformation.FormatRelay
 
 %include "BootMenuPrintCfg.asm"			; inline of code to fill out remainder of information string

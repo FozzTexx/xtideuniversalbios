@@ -2,20 +2,20 @@
 ; Description	:	Int 13h function AH=9h, Initialize Drive Parameters.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
-;		
+;
 
 ; Section containing code
 SECTION .text
@@ -43,7 +43,7 @@ AH9h_HandlerForInitializeDriveParameters:
 
 
 ;--------------------------------------------------------------------
-; Initialized drive to be ready for use.
+; Initialize drive to be ready for use.
 ;
 ; AH9h_InitializeDriveForUse
 ;	Parameters:
@@ -56,87 +56,36 @@ AH9h_HandlerForInitializeDriveParameters:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
 AH9h_InitializeDriveForUse:
+	xor		ax, ax
+
+	; Clear Initialization Error flags from DPT
+	mov		[di+DPT_ATA.bInitError], al
+
+%ifdef MODULE_SERIAL
+	; No need to do this for serial devices
+	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE	; Clears CF
+	jz		SHORT .ContinueInitialization
+	ret		; With AH and CF cleared
+	.ContinueInitialization:
+%endif
+
 	push	es
 	push	si
 
-%ifdef MODULE_SERIAL
-	; no need to do this for serial devices
-	xor		ah, ah
-	test	byte [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE	; Clears CF
-	jnz		.ReturnWithErrorCodeInAH
-
-%else
-	; Clear Initialization Error flags from DPT
-	mov		BYTE [di+DPT_ATA.bInitError], 0
-%endif
-
+;;;	SelectDrive
 	; Try to select drive and wait until ready
 	call	AccessDPT_GetDriveSelectByteToAL
 	mov		[bp+IDEPACK.bDrvAndHead], al
 	call	Device_SelectDrive
+
 	mov		al, FLG_INITERROR_FAILED_TO_SELECT_DRIVE
-	call	SetErrorFlagFromALwithErrorCodeInAH
-	jc		SHORT .ReturnWithErrorCodeInAH
+	call	.SetErrorFlagFromALwithErrorCodeInAH
+	jc		.ReturnWithErrorCodeInAH
 
+;;;	InitializeDeviceParameters
 	; Initialize CHS parameters if LBA is not used
-	call	InitializeDeviceParameters
-	mov		al, FLG_INITERROR_FAILED_TO_INITIALIZE_CHS_PARAMETERS
-	call	SetErrorFlagFromALwithErrorCodeInAH
-
-	; Enable or Disable Write Cache
-	call	SetWriteCache
-	mov		al, FLG_INITERROR_FAILED_TO_SET_WRITE_CACHE
-	call	SetErrorFlagFromALwithErrorCodeInAH
-
-	; Recalibrate drive by seeking to cylinder 0
-.RecalibrateDrive:
-	call	AH11h_RecalibrateDrive
-	mov		al, FLG_INITERROR_FAILED_TO_RECALIBRATE_DRIVE
-	call	SetErrorFlagFromALwithErrorCodeInAH
-
-	; Initialize block mode transfers
-.InitializeBlockMode:
-	call	InitializeBlockMode
-	mov		al, FLG_INITERROR_FAILED_TO_SET_BLOCK_MODE
-	call	SetErrorFlagFromALwithErrorCodeInAH
-
-%ifdef MODULE_ADVANCED_ATA
-; Initialize fastest supported PIO mode
-.InitializePioMode:
-	call	InitializePioMode
-	mov		al, FLG_INITERROR_FAILED_TO_SET_PIO_MODE
-	call	SetErrorFlagFromALwithErrorCodeInAH
-%endif
-
-	; There might have been several errors so just return
-	; one error code for them all
-	cmp		BYTE [di+DPT_ATA.bInitError], 0
-	je		SHORT .ReturnWithErrorCodeInAH
-	mov		ah, RET_HD_RESETFAIL
-	stc
-
-.ReturnWithErrorCodeInAH:
-	pop		si
-	pop		es
-	ret
-
-
-;--------------------------------------------------------------------
-; InitializeDeviceParameters
-;	Parameters:
-;		DS:DI:	Ptr to DPT (in RAMVARS segment)
-;		SS:BP:	Ptr to IDEPACK
-;	Returns:
-;		AH:		BIOS Error code
-;		CF:		Cleared if successful
-;				Set if any error
-;	Corrupts registers:
-;		AL, BX, CX, DX
-;--------------------------------------------------------------------
-InitializeDeviceParameters:
-	; No need to initialize CHS parameters if LBA mode enabled
-	test	BYTE [di+DPT.bFlagsLow], FLG_DRVNHEAD_LBA	; Clear CF
-	jnz		SHORT ReturnSuccessSinceInitializationNotNeeded
+	test	BYTE [di+DPT.bFlagsLow], FLG_DRVNHEAD_LBA
+	jnz		SHORT .SkipInitializeDeviceParameters		; No need to initialize CHS parameters if LBA mode enabled
 
 	; Initialize Logical Sectors per Track and Max Head number
 	mov		ah, [di+DPT.bPchsHeads]
@@ -144,47 +93,58 @@ InitializeDeviceParameters:
 	mov		dl, [di+DPT.bPchsSectors]	; Sectors per Track
 	mov		al, COMMAND_INITIALIZE_DEVICE_PARAMETERS
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_BSY, FLG_STATUS_BSY)
-	jmp		Idepack_StoreNonExtParametersAndIssueCommandFromAL
+	call	Idepack_StoreNonExtParametersAndIssueCommandFromAL
 
+	mov		al, FLG_INITERROR_FAILED_TO_INITIALIZE_CHS_PARAMETERS
+	call	.SetErrorFlagFromALwithErrorCodeInAH
+.SkipInitializeDeviceParameters:
 
-;--------------------------------------------------------------------
-; SetWriteCache
-;	Parameters:
-;		DS:DI:	Ptr to DPT (in RAMVARS segment)
-;	Returns:
-;		AH:		BIOS Error code
-;		CF:		Cleared if successful
-;				Set if any error
-;	Corrupts registers:
-;		AL, BX, CX, DX, SI
-;--------------------------------------------------------------------
-SetWriteCache:
+;;;	SetWriteCache
+	; Enable or Disable Write Cache
 	call	AccessDPT_GetPointerToDRVPARAMStoCSBX
 	mov		bl, [cs:bx+DRVPARAMS.wFlags]
+	push	bx	; Save .wFlags for later use in InitializeBlockMode
 	and		bx, BYTE MASK_DRVPARAMS_WRITECACHE
-	jz		SHORT ReturnSuccessSinceInitializationNotNeeded		; DEFAULT_WRITE_CACHE
+	jz		SHORT .SkipSetWriteCache		; DEFAULT_WRITE_CACHE
 	mov		si, [cs:bx+.rgbWriteCacheCommands]
-	jmp		AH23h_SetControllerFeatures
+	call	AH23h_SetControllerFeatures
 
-.rgbWriteCacheCommands:
-	db		0								; DEFAULT_WRITE_CACHE
-	db		FEATURE_DISABLE_WRITE_CACHE		; DISABLE_WRITE_CACHE
-	db		FEATURE_ENABLE_WRITE_CACHE		; ENABLE_WRITE_CACHE
+	mov		al, FLG_INITERROR_FAILED_TO_SET_WRITE_CACHE
+	call	.SetErrorFlagFromALwithErrorCodeInAH
+.SkipSetWriteCache:
 
+;;;	RecalibrateDrive
+	; Recalibrate drive by seeking to cylinder 0
+	call	AH11h_RecalibrateDrive
+
+	mov		al, FLG_INITERROR_FAILED_TO_RECALIBRATE_DRIVE
+	call	.SetErrorFlagFromALwithErrorCodeInAH
+
+;;;	InitializeBlockMode
+	; Initialize block mode transfers
+	pop		ax	; Restore .wFlags saved in SetWriteCache
+	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_BLOCK_MODE_SUPPORTED
+	jz		SHORT .BlockModeNotSupportedOrDisabled
+	test	al, FLG_DRVPARAMS_BLOCKMODE
+	jz		SHORT .BlockModeNotSupportedOrDisabled
+
+	; Try block sizes until we find largest possible supported by drive
+	mov		bl, 128
+.TryNextBlockSize:
+	mov		al, bl
+	call	AH24h_SetBlockSize	; Stores block size to DPT
+	jnc		SHORT .SupportedBlockSizeFound
+	shr		bl, 1
+	jnc		SHORT .TryNextBlockSize
+
+	mov		al, FLG_INITERROR_FAILED_TO_SET_BLOCK_MODE
+	call	.SetErrorFlagFromALwithErrorCodeInAH
+.BlockModeNotSupportedOrDisabled:
+.SupportedBlockSizeFound:
 
 %ifdef MODULE_ADVANCED_ATA
-;--------------------------------------------------------------------
-; InitializePioMode
-;	Parameters:
-;		DS:DI:	Ptr to DPT (in RAMVARS segment)
-;	Returns:
-;		AH:		BIOS Error code
-;		CF:		Cleared if successful
-;				Set if any error
-;	Corrupts registers:
-;		AL, BX, CX, DX
-;--------------------------------------------------------------------
-InitializePioMode:
+;;;	InitializePioMode
+	; Initialize fastest supported PIO mode
 	mov		dl, PIO_DEFAULT_MODE_DISABLE_IORDY
 	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_IORDY
 	jz		SHORT .IordyNotSupported
@@ -195,45 +155,43 @@ InitializePioMode:
 
 .IordyNotSupported:
 	mov		si, FEATURE_SET_TRANSFER_MODE
-	jmp		AH23h_SetControllerFeatures
-%endif
+	call	AH23h_SetControllerFeatures
 
+	mov		al, FLG_INITERROR_FAILED_TO_SET_PIO_MODE
+	call	.SetErrorFlagFromALwithErrorCodeInAH
+%endif ; MODULE_ADVANCED_ATA
 
-;--------------------------------------------------------------------
-; InitializeBlockMode
-;	Parameters:
-;		DS:DI:	Ptr to DPT (in RAMVARS segment)
-;	Returns:
-;		AH:		BIOS Error code
-;		CF:		Cleared if successful
-;				Set if any error
-;	Corrupts registers:
-;		AL, BX, CX, DX
-;--------------------------------------------------------------------
-InitializeBlockMode:
-	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_BLOCK_MODE_SUPPORTED	; Clear CF
-	jz		SHORT .BlockModeNotSupportedOrDisabled
-	call	AccessDPT_GetPointerToDRVPARAMStoCSBX
-	test	BYTE [cs:bx+DRVPARAMS.wFlags], FLG_DRVPARAMS_BLOCKMODE
-	jz		SHORT .BlockModeNotSupportedOrDisabled
+%ifdef MODULE_FEATURE_SETS
+;;;	InitStandbyTimer
+	; Initialize the standby timer (if supported)
+	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_POWER_MANAGEMENT_SUPPORTED
+	jz		.NoPowerManagementSupport
 
-	; Try block sizes until we find largest possible supported by drive
-	mov		bl, 128
-.TryNextBlockSize:
-	mov		al, bl
-	call	AH24h_SetBlockSize
-	jnc		SHORT .SupportedBlockSizeFound
-	shr		bl, 1						; Try next size
-	jmp		SHORT .TryNextBlockSize
-.SupportedBlockSizeFound:
-	mov		[di+DPT_ATA.bBlockSize], bl
-.BlockModeNotSupportedOrDisabled:
-ReturnSuccessSinceInitializationNotNeeded:
+	mov		al, COMMAND_IDLE
+	mov		dl, [cs:ROMVARS.bIdleTimeout]
+	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_BSY, FLG_STATUS_BSY)
+	call	Idepack_StoreNonExtParametersAndIssueCommandFromAL
+
+	mov		al, FLG_INITERROR_FAILED_TO_INITIALIZE_STANDBY_TIMER
+	call	.SetErrorFlagFromALwithErrorCodeInAH
+.NoPowerManagementSupport:
+%endif ; MODULE_FEATURE_SETS
+
+	; There might have been several errors so just return one error code for them all
+	mov		ah, [di+DPT_ATA.bInitError]
+	test	ah, ah	; Clears CF
+	jz		SHORT .ReturnWithErrorCodeInAH
+	mov		ah, RET_HD_RESETFAIL
+	stc
+
+.ReturnWithErrorCodeInAH:
+	pop		si
+	pop		es
 	ret
 
 
 ;--------------------------------------------------------------------
-; SetErrorFlagFromALwithErrorCodeInAH
+; .SetErrorFlagFromALwithErrorCodeInAH
 ;	Parameters:
 ;		AH:		BIOS Error Code
 ;		AL:		Error flag to set
@@ -244,15 +202,22 @@ ReturnSuccessSinceInitializationNotNeeded:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-SetErrorFlagFromALwithErrorCodeInAH:
+.IgnoreInvalidCommandError:
+	xor		ah, ah	; Clears CF
+
+.SetErrorFlagFromALwithErrorCodeInAH:
 	jnc		SHORT .NoErrorFlagToSet
 	cmp		ah, RET_HD_INVALID
 	jbe		SHORT .IgnoreInvalidCommandError
 
 	or		[di+DPT_ATA.bInitError], al
 	stc
-	ret
-.IgnoreInvalidCommandError:
-	xor		ah, ah
 .NoErrorFlagToSet:
 	ret
+
+
+.rgbWriteCacheCommands:
+	db		0								; DEFAULT_WRITE_CACHE
+	db		FEATURE_DISABLE_WRITE_CACHE		; DISABLE_WRITE_CACHE
+	db		FEATURE_ENABLE_WRITE_CACHE		; ENABLE_WRITE_CACHE
+
