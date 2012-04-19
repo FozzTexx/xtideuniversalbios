@@ -32,9 +32,9 @@ SECTION .text
 ;--------------------------------------------------------------------
 BootVars_Initialize:
 	; Clear to zero
-	mov		al, BOOTMENUINFO_size
+	mov		al, DRVDETECTINFO_size
 	mul		BYTE [cs:ROMVARS.bIdeCnt]
-	mov		di, BOOTVARS.hotkeyVars	; We must not initialize anything before this!
+	mov		di, BOOTVARS.clearToZeroFromThisPoint	; We must not initialize anything before this!
 	add		ax, BOOTVARS_size
 	sub		ax, di
 	xchg	cx, ax

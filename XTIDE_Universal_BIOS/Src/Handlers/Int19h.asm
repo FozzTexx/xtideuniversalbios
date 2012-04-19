@@ -106,8 +106,10 @@ SelectDriveToBootFrom:
 %endif
 
 	; Check if ROM boot (INT 18h) wanted
+%ifdef MODULE_HOTKEYS
 	cmp		BYTE [es:BOOTVARS.hotkeyVars+HOTKEYVARS.bScancode], ROM_BOOT_HOTKEY_SCANCODE
 	je		SHORT JumpToBootSector_or_RomBoot	; CF clear so ROM boot
+%endif
 
 	; Try to boot from Primary boot drive (00h by default)
 %ifdef MODULE_HOTKEYS

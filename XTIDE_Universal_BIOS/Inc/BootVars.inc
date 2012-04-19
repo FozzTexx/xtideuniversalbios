@@ -21,7 +21,7 @@
 %ifndef BOOTVARS_INC
 %define BOOTVARS_INC
 
-
+; Number of times to retry booting before accepting error
 BOOT_READ_RETRY_TIMES		EQU		3
 
 
@@ -35,10 +35,16 @@ struc BOOTVARS
 						resb	256		; Boot Menu stack
 	.rgbMnuStack:
 	.dwPostStack		resb	4		; POST stack pointer when entering INT 19h
+
+	.clearToZeroFromThisPoint:
+%ifdef MODULE_HOTKEYS
 	.hotkeyVars			resb	HOTKEYVARS_size
-	.rgBootNfo:							; Array containing BOOTNFO structs
+%endif
+	
+	.rgDrvDetectInfo:					; Array containing DRVDETECTINFO structs
 endstruc
 
+%ifdef MODULE_HOTKEYS
 struc HOTKEYVARS
 	.bScancode			resb	1		; Function hotkey scancode
 	.bFlags				resb	1		; Must be just before .bHddLetter! 
@@ -50,6 +56,43 @@ endstruc
 ; Bit defines for HOTKEYVARS.bFlags
 FLG_HOTKEY_HD_FIRST		EQU		(1<<0)	; First try to boot from HDD, then FDD
 
+%endif ; MODULE_HOTKEY
+
+
+
+struc DRVDETECTINFO
+	.szDrvName				resb	MAX_HARD_DISK_NAME_LENGTH
+							resb	2	; Zero word (ensures string terminates)
+	.wInitErrorFlags		resb	2	; Errors during initialization
+	
+%ifdef MODULE_ADVANCED_ATA
+							resb	6	; padding to make DRVDETECTINFO size an even multiple of DPT size
+%else
+							resb	2	; padding to make DRVDETECTINFO size an even multiple of DPT size
+%endif				
+endstruc
+
+; Boot Menu Information Table. These are generated for all XTIDE Universal
+; BIOS drives. Available only until boot is successful.
+MAX_HARD_DISK_NAME_LENGTH			EQU		30		; Bytes reserved for drive name
+DPT_DRVDETECTINFO_SIZE_MULTIPLIER	EQU		DRVDETECTINFO_size / LARGEST_DPT_SIZE
+
+
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
+
+%if MAX_HARD_DISK_NAME_LENGTH % 2 <> 0
+	%error "MAX_HARD_DISK_NAME_LENGTH needs to be a multiple of 2, memory is moved with word operations."
+%endif
+
+%if DRVDETECTINFO_size % LARGEST_DPT_SIZE <> 0
+	%error "DRVDETECTINFO's size must be an even multiple of DPT's size.  Add or remove padding at the bottom of DRVDETECTINFO to bring the two sizes into alignment.  As DRVDETECTINFO is only used at boot time, with plenty of memory to consume, it is OK to waste some space here."
+%endif
+
+%if DRVDETECTINFO.szDrvName <> 0
+	%error "DRVDETECTINFO.szDrvName is assumed to be the first member of struc DRVDETECTINFO, in BootMenuPrint_RefreshItem"
+%endif
+
+%endif
 
 
 ;--------------------------------------------------------------------
