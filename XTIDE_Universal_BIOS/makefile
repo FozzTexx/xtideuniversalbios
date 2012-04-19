@@ -23,6 +23,7 @@
 # MODULE_SERIAL             Virtual hard disks using serial port                                 #
 # MODULE_SERIAL_FLOPPY      Virtual floppy drives using serial port (requires MODULE_SERIAL)     #
 # MODULE_STRINGS_COMPRESSED Use compressed strings to save space                                 #
+# MODULE_FEATURE_SETS       Power Management support                                             #
 #                                                                                                #
 # Not modules but these affect the assembly:                                                     #
 # ELIMINATE_CGA_SNOW        Prevents CGA snowing at the cost of a few bytes                      #
@@ -90,7 +91,7 @@ HEADERS += $(LIBS)
 #################################################################
 # Assembler preprocessor defines.                               #
 #################################################################
-DEFINES_COMMON = MODULE_STRINGS_COMPRESSED MODULE_HOTKEYS MODULE_EBIOS
+DEFINES_COMMON = MODULE_STRINGS_COMPRESSED MODULE_HOTKEYS MODULE_EBIOS MODULE_FEATURE_SETS
 DEFINES_COMMON_LARGE = MODULE_BOOT_MENU MODULE_JRIDE MODULE_SERIAL MODULE_SERIAL_FLOPPY
 
 DEFINES_XT = $(DEFINES_COMMON) ELIMINATE_CGA_SNOW MODULE_JRIDE MODULE_SERIAL MODULE_SERIAL_FLOPPY

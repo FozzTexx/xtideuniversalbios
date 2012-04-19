@@ -3,21 +3,21 @@
 ;					information to be displayed on boot menu.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ; GNU General Public License for more details.
-; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html				
+; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 ;
-				
+
 ; Section containing code
 SECTION .text
 
@@ -44,20 +44,20 @@ DriveDetectInfo_CreateForHardDisk:
 	push	es									; ES copied to DS
 	pop		ds
 
-	add		si, BYTE ATA1.strModel				; DS:SI now points drive name
-	lea		di, [bx+DRVDETECTINFO.szDrvName]		; ES:DI now points to name destination
+	add		si, BYTE ATA1.strModel				; DS:SI now points drive name (Clears CF)
+	lea		di, [bx+DRVDETECTINFO.szDrvName]	; ES:DI now points to name destination
 	mov		cx, MAX_HARD_DISK_NAME_LENGTH / 2	; Max number of WORDs allowed
 .CopyNextWord:
 	lodsw
 	xchg	al, ah								; Change endianness
 	stosw
 	loop	.CopyNextWord
-	xor		ax, ax								; Zero AX and clear CF
+	xchg	cx, ax								; Zero AX (CF already cleared from the ADD above)
 	stosw										; Terminate with NULL
 
 	pop		si
 	pop		ds
-		
+
 	ret
 
 
@@ -73,10 +73,9 @@ DriveDetectInfo_CreateForHardDisk:
 ;		AX
 ;--------------------------------------------------------------------
 DriveDetectInfo_ConvertDPTtoBX:
-	mov		ax, di
-	sub		ax, BYTE RAMVARS_size					; subtract off base of DPTs
+	lea		ax, [di-RAMVARS_size]					; subtract off base of DPTs
 	mov		bl, DPT_DRVDETECTINFO_SIZE_MULTIPLIER	; DRVDETECTINFO are a whole number multiple of DPT size
-	mul		bl								
+	mul		bl
 	add		ax, BOOTVARS.rgDrvDetectInfo			; add base of DRVDETECTINFO
-	xchg	ax, bx
-	ret	
+	xchg	bx, ax
+	ret

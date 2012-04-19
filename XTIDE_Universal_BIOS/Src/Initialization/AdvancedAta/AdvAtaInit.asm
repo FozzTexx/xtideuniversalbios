@@ -3,20 +3,20 @@
 ;					VLB and PCI IDE Controllers.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
-;		
+;
 
 ; Section containing code
 SECTION .text
@@ -74,21 +74,22 @@ AdvAtaInit_GetControllerMaxPioModeToAL	equ	Vision_GetMaxPioModeToAL
 ;		AX, BX, CX, DX
 ;--------------------------------------------------------------------
 AdvAtaInit_InitializeControllerForDPTinDSDI:
-	push	bp
-	push	si
-
 	; Call Controller Specific initialization function
 	mov		ax, [di+DPT_ADVANCED_ATA.wControllerID]
 	test	ax, ax
 	jz		SHORT .NoAdvancedController	; Return with CF cleared
 
+	push	bp
+	push	si
+
 	; We only support Vision at the moment so no need to identify ID
 	call	AdvAtaInit_LoadMasterDPTtoDSSIifSlaveInDSDI
 	call	Vision_InitializeWithIDinAHandConfigInAL
 
-.NoAdvancedController:
 	pop		si
 	pop		bp
+
+.NoAdvancedController:
 	ret
 
 
