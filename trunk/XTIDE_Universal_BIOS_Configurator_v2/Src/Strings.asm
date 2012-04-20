@@ -237,13 +237,14 @@ g_szHelpIdeSerialBaud:	incbin  "IDE_SerialBaud.txt"
 						db  NULL
 
 g_szMultichoiceCfgDevice:
-						db	"XTIDE rev 1",LF
-						db	"XTIDE rev 2 or modded rev 1",LF
+						db	"JR-IDE/ISA",LF
 						db	"Fast XTIDE (CPLD v2 project)",LF
+						db	"XTIDE rev 2 or modded rev 1",LF
+						db	"XTIDE rev 1",LF
 						db	"16-bit ISA/VLB/PCI IDE",LF
 						db	"32-bit VLB/PCI IDE",LF
-						db	"Serial port virtual device",LF
-						db	"JR-IDE/ISA",NULL
+						db	"Serial port virtual device",NULL
+
 
 g_szSerialCOMChoice:
 						db  "COM1 - address 3f8h",LF
@@ -294,13 +295,14 @@ g_szValueCfgBaud4800:	db		"4800",NULL
 g_szValueCfgBaud2400:	db		"2400",NULL
 
 
-g_szValueCfgDeviceRev1:		db	"XTIDE r1",NULL
-g_szValueCfgDeviceRev2:		db	"XTIDE r2",NULL
+g_szValueCfgDeviceJrIdeIsa:	db	"JR-ISA",NULL
 g_szValueCfgDeviceFast:		db	"Fast XT",NULL
+g_szValueCfgDeviceRev2:		db	"XTIDE r2",NULL
+g_szValueCfgDeviceRev1:		db	"XTIDE r1",NULL
 g_szValueCfgDevice16b:		db	"16-bit",NULL
 g_szValueCfgDevice32b:		db	"32-bit",NULL
 g_szValueCfgDeviceSerial:	db	"Serial",NULL
-g_szValueCfgDeviceJrIdeIsa:	db	"JR-ISA",NULL
+
 
 
 ; Strings for DRVPARAMS menu
@@ -350,28 +352,22 @@ g_szValueDrvWrCaEn:		db	"Enabled",NULL
 
 
 ; Strings for boot settings menu
-g_szItemBootEnableMenu:	db	"Boot Menu",NULL
 g_szItemBootTimeout:	db	"Selection timeout",NULL
 g_szItemBootDrive:		db	"Default boot drive",NULL
 g_szItemBootDispMode:	db	"Display Mode",NULL
 g_szItemBootFloppyDrvs:	db	"Number of Floppy Drives",NULL
-;g_szItemBootSwap:		db	"Swap boot drive numbers",NULL
 g_szItemSerialDetect:	db	"Scan for Serial Drives",NULL
 
-g_szDlgBootEnableMenu:	db	"Enable Boot Menu?",NULL
 g_szDlgBootTimeout:		db	"Enter Boot Menu selection timeout in BIOS timer ticks (2...1092).",NULL
-g_szDlgBootDrive:		db	"Enter default drive number (0xh for Floppy Drives, 8xh for Hard Disks, FFh for ROM boot).",NULL
-g_szDlgBootDispMode:	db	"Select display mode for Boot Menu.",NULL
-g_szDlgBootFloppyDrvs:	db	"Select number of Floppy Drives to display on boot menu.",NULL
-;g_szDlgBootSwap:		db	"Enable drive number translation?",NULL
+g_szDlgBootDrive:		db	"Enter default drive number (0xh for Floppy Drives, 8xh for Hard Disks).",NULL
+g_szDlgBootDispMode:	db	"Select display mode.",NULL
+g_szDlgBootFloppyDrvs:	db	"Select number of Floppy Drives in system.",NULL
 g_szDlgSerialDetect:	db	"Scan for serial drives?",NULL
 
-g_szNfoBootEnableMenu:	db	"Enable to display boot drive selection menu.",NULL
 g_szNfoBootTimeout:		db	"Menu item selection timeout in BIOS timer ticks. 1 tick = 54.9 ms.",NULL
 g_szNfoBootDrive:		db	"Default drive on boot menu.",NULL
-g_szNfoDispMode:		db	"Display Mode for Boot Menu.",NULL
-g_szNfoBootFloppyDrvs:	db	"Number of Floppy Drives to display on boot menu.",NULL
-;g_szNfoBootSwap:		db	"Drive Number Translation (swap first drive with selected).",NULL
+g_szNfoDispMode:		db	"Display mode to set when booting.",NULL
+g_szNfoBootFloppyDrvs:	db	"Number of Floppy Drives in system.",NULL
 g_szNfoSerialDetect:	db	"Scans all standard COM ports for serial drives."
 						db	" This can also be invoked by holding down ALT at the end of normal drive detection.",NULL
 
@@ -381,8 +377,6 @@ g_szHelpBootDrive:		incbin	"Bootmenu_DefaultDrive.txt"
 						db	NULL
 g_szHelpBootFloppyDrvs:	incbin	"Bootmenu_FloppyDrives.txt"
 						db	NULL
-;g_szHelpBootSwap:		incbin	"Bootmenu_SwapDrives.txt"
-;						db	NULL
 g_szHelpSerialDetect:	incbin  "Bootmenu_SerialDetect.txt"
 						db  NULL
 
