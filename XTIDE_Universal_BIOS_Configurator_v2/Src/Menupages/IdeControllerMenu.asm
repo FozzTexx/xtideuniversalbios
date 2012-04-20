@@ -187,21 +187,22 @@ istruc MENUITEM
 iend
 
 g_rgwChoiceToValueLookupForDevice:
-	dw	DEVICE_XTIDE_REV1
-	dw	DEVICE_XTIDE_REV2
-	dw	DEVICE_FAST_XTIDE
+	dw	DEVICE_8BIT_JRIDE_ISA
+	dw	DEVICE_8BIT_FAST_XTIDE
+	dw	DEVICE_8BIT_XTIDE_REV2
+	dw	DEVICE_8BIT_XTIDE_REV1
 	dw	DEVICE_16BIT_ATA
 	dw	DEVICE_32BIT_ATA
 	dw	DEVICE_SERIAL_PORT
-	dw	DEVICE_JRIDE_ISA
 g_rgszValueToStringLookupForDevice:
-	dw	g_szValueCfgDeviceRev1
-	dw	g_szValueCfgDeviceRev2
+	dw	g_szValueCfgDeviceJrIdeIsa
 	dw	g_szValueCfgDeviceFast
+	dw	g_szValueCfgDeviceRev2
+	dw	g_szValueCfgDeviceRev1
 	dw	g_szValueCfgDevice16b
 	dw	g_szValueCfgDevice32b
 	dw	g_szValueCfgDeviceSerial
-	dw	g_szValueCfgDeviceJrIdeIsa
+
 
 g_rgbChoiceToValueLookupForCOM:
 	dw	'1'
