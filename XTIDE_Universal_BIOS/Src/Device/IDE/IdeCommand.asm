@@ -30,7 +30,7 @@ SECTION .text
 ;	Corrupts registers:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
-IDEDEVICE%+Command_ResetMasterAndSlaveController:
+IdeCommand_ResetMasterAndSlaveController:
 	; HSR0: Set_SRST
 	call	AccessDPT_GetDeviceControlByteToAL
 	or		al, FLG_DEVCONTROL_SRST | FLG_DEVCONTROL_nIEN	; Set Reset bit
@@ -48,7 +48,7 @@ IDEDEVICE%+Command_ResetMasterAndSlaveController:
 
 	; HSR2: Check_status
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_MOTOR_STARTUP, FLG_STATUS_BSY)
-	jmp		IDEDEVICE%+Wait_PollStatusFlagInBLwithTimeoutInBH
+	jmp		IdeWait_PollStatusFlagInBLwithTimeoutInBH
 
 
 ;--------------------------------------------------------------------
@@ -64,27 +64,22 @@ IDEDEVICE%+Command_ResetMasterAndSlaveController:
 ;	Corrupts registers:
 ;		AL, BL, CX, DX, SI, DI, ES
 ;--------------------------------------------------------------------
-IDEDEVICE%+Command_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
+IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 	; Create fake DPT to be able to use Device.asm functions
 	call	FindDPT_ForNewDriveToDSDI
 	eMOVZX	ax, bh
 	mov		[di+DPT.wFlags], ax
 	mov		[di+DPT.bIdevarsOffset], bp
 	mov		BYTE [di+DPT_ATA.bBlockSize], 1	; Block = 1 sector
-%ifdef MODULE_ADVANCED_ATA
 	call	IdeDPT_StoreDeviceTypeFromIdevarsInCSBPtoDPTinDSDI
-%endif
-%ifdef ASSEMBLE_SHARED_IDE_DEVICE_FUNCTIONS
-	call	IdeDPT_StoreReversedAddressLinesFlagIfNecessary
-%endif
 
 	; Wait until drive motors have reached max speed
 	cmp		bp, BYTE ROMVARS.ideVars0
 	jne		SHORT .SkipLongWaitSinceDriveIsNotPrimaryMaster
-	test	al, FLG_DRVNHEAD_DRV
+	test	bh, FLG_DRVNHEAD_DRV
 	jnz		SHORT .SkipLongWaitSinceDriveIsNotPrimaryMaster
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_MOTOR_STARTUP, FLG_STATUS_BSY)
-	call	IDEDEVICE%+Wait_PollStatusFlagInBLwithTimeoutInBH
+	call	IdeWait_PollStatusFlagInBLwithTimeoutInBH
 .SkipLongWaitSinceDriveIsNotPrimaryMaster:
 
 	; Create IDEPACK without INTPACK
@@ -119,16 +114,16 @@ IDEDEVICE%+Command_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 ;		AL, BX, (CX), DX, (ES:SI for data transfer commands)
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-IDEDEVICE%+Command_OutputWithParameters:
+IdeCommand_OutputWithParameters:
 	push	bx						; Store status register bits to poll
 
 	; Select Master or Slave drive and output head number or LBA28 top bits
-	call	IDEDEVICE%+Command_SelectDrive
+	call	IdeCommand_SelectDrive
 	jc		SHORT .DriveNotReady
 
 	; Output Device Control Byte to enable or disable interrupts
 	mov		al, [bp+IDEPACK.bDeviceControl]
-%ifdef ASSEMBLE_SHARED_IDE_DEVICE_FUNCTIONS	; JR-IDE/ISA
+%ifdef MODULE_IRQ
 	test	al, FLG_DEVCONTROL_nIEN	; Interrupts disabled?
 	jnz		SHORT .DoNotSetInterruptInServiceFlag
 
@@ -150,29 +145,36 @@ IDEDEVICE%+Command_OutputWithParameters:
 %ifdef MODULE_EBIOS
 	eMOVZX	ax, [bp+IDEPACK.bLbaLowExt]		; Zero sector count
 	mov		cx, [bp+IDEPACK.wLbaMiddleAndHighExt]
-	call	IDEDEVICE%+OutputSectorCountAndAddress
+	call	OutputSectorCountAndAddress
 %endif
 
 	; Output Sector Address Low
 	mov		ax, [bp+IDEPACK.wSectorCountAndLbaLow]
 	mov		cx, [bp+IDEPACK.wLbaMiddleAndHigh]
-	call	IDEDEVICE%+OutputSectorCountAndAddress
+	call	OutputSectorCountAndAddress
 
 	; Output command
 	mov		al, [bp+IDEPACK.bCommand]
 	OUTPUT_AL_TO_IDE_REGISTER	COMMAND_REGISTER_out
 
 	; Wait until command completed
-	pop		bx						; Pop status and timeout for polling
-	cmp		bl, FLG_STATUS_DRQ		; Data transfer started?
-	je		SHORT IDEDEVICE%+Transfer_StartWithCommandInAL
-	test	BYTE [bp+IDEPACK.bDeviceControl], FLG_DEVCONTROL_nIEN
-	jz		SHORT .WaitForIrqOrRdy
-	jmp		IDEDEVICE%+Wait_PollStatusFlagInBLwithTimeoutInBH
+	pop		bx								; Pop status and timeout for polling
+	cmp		bl, FLG_STATUS_DRQ				; Data transfer started?
+	jne		SHORT .WaitUntilNonTransferCommandCompletes
+%ifdef MODULE_JRIDE
+	cmp		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_JRIDE_ISA
+	je		SHORT JrIdeTransfer_StartWithCommandInAL
+%endif
+	jmp		IdeTransfer_StartWithCommandInAL
 
-ALIGN JUMP_ALIGN
-.WaitForIrqOrRdy:
-	jmp		IDEDEVICE%+Wait_IRQorStatusFlagInBLwithTimeoutInBH
+.WaitUntilNonTransferCommandCompletes:
+%ifdef MODULE_IRQ
+	test	BYTE [bp+IDEPACK.bDeviceControl], FLG_DEVCONTROL_nIEN
+	jz		SHORT .PollStatusFlagInsteadOfWaitIrq
+	jmp		IdeWait_IRQorStatusFlagInBLwithTimeoutInBH
+.PollStatusFlagInsteadOfWaitIrq:
+%endif
+	jmp		IdeWait_PollStatusFlagInBLwithTimeoutInBH
 
 .DriveNotReady:
 	pop		bx							; Clean stack
@@ -191,21 +193,14 @@ ALIGN JUMP_ALIGN
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-IDEDEVICE%+Command_SelectDrive:
-	; Wait until neither Master or Slave Drive is busy.
-	; I don't think this wait is necessary.
-	;mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_BSY, FLG_STATUS_BSY)
-	;cmp		BYTE [bp+IDEPACK.bCommand], COMMAND_IDENTIFY_DEVICE
-	;eCMOVE	bh, TIMEOUT_IDENTIFY_DEVICE
-	;call	IDEDEVICE%+Wait_PollStatusFlagInBLwithTimeoutInBH
-
+IdeCommand_SelectDrive:
 	; Select Master or Slave Drive
 	mov		al, [bp+IDEPACK.bDrvAndHead]
 	OUTPUT_AL_TO_IDE_REGISTER	DRIVE_AND_HEAD_SELECT_REGISTER
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRDY, FLG_STATUS_DRDY)
 	cmp		BYTE [bp+IDEPACK.bCommand], COMMAND_IDENTIFY_DEVICE
 	eCMOVE	bh, TIMEOUT_IDENTIFY_DEVICE
-	call	IDEDEVICE%+Wait_PollStatusFlagInBLwithTimeoutInBH
+	call	IdeWait_PollStatusFlagInBLwithTimeoutInBH
 
 	; Ignore errors from IDE Error Register (set by previous command)
 	cmp		ah, RET_HD_TIMEOUT
@@ -231,7 +226,7 @@ IDEDEVICE%+Command_SelectDrive:
 ;		AL, BX, DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-IDEDEVICE%+OutputSectorCountAndAddress:
+OutputSectorCountAndAddress:
 	OUTPUT_AL_TO_IDE_REGISTER	SECTOR_COUNT_REGISTER
 
 	mov		al, ah

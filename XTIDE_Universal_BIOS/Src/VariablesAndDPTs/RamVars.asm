@@ -46,9 +46,7 @@ RamVars_Initialize:
 ;		AX
 ;--------------------------------------------------------------------
 .StealMemoryForRAMVARS:
-	; Always steal memory when using Advanced ATA module since it
-	; uses larger DPTs
-%ifndef MODULE_ADVANCED_ATA
+%ifndef USE_AT
 	mov		ax, LITE_MODE_RAMVARS_SEGMENT
 	test	BYTE [cs:ROMVARS.wFlags], FLG_ROMVARS_FULLMODE
 	jz		SHORT .InitializeRamvars	; No need to steal RAM
@@ -113,18 +111,18 @@ RamVars_Initialize:
 ALIGN JUMP_ALIGN
 RamVars_GetSegmentToDS:
 
-%ifndef MODULE_ADVANCED_ATA	; Always in Full Mode when using Advanced ATA Module
+%ifndef USE_AT	; Always in Full Mode for AT builds
 	test	BYTE [cs:ROMVARS.wFlags], FLG_ROMVARS_FULLMODE
 	jnz		SHORT .GetStolenSegmentToDS
-%ifndef USE_186
-	mov		di, LITE_MODE_RAMVARS_SEGMENT
-	mov		ds, di
-%else
-	push	LITE_MODE_RAMVARS_SEGMENT
-	pop		ds
-%endif
+	%ifndef USE_186
+		mov		di, LITE_MODE_RAMVARS_SEGMENT
+		mov		ds, di
+	%else
+		push	LITE_MODE_RAMVARS_SEGMENT
+		pop		ds
+	%endif
 	ret
-%endif ; MODULE_ADVANCED_ATA
+%endif
 
 ALIGN JUMP_ALIGN
 .GetStolenSegmentToDS:

@@ -17,8 +17,14 @@
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 ;
 
-%ifndef IO_MAPPED_IDE_INC
-%define IO_MAPPED_IDE_INC
+%ifndef IDE_IO_INC
+%define IDE_IO_INC
+
+JRIDE_SECTOR_ACCESS_WINDOW_OFFSET			EQU	3C00h	; 512 byte IDE Sector Access Window
+JRIDE_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET	EQU	3E00h	; 8 byte CS0 IDE Register Window
+JRIDE_CONTROL_BLOCK_REGISTER_WINDOW_OFFSET	EQU	3E08h	; 8 byte CS1 IDE Register Window
+JRIDE_SECTOR_ACCESS_WINDOW_SIZE				EQU	512		; 512 bytes
+
 
 ;--------------------------------------------------------------------
 ; OUTPUT_AL_TO_IDE_REGISTER_IN_DL
@@ -58,7 +64,6 @@
 
 ;--------------------------------------------------------------------
 ; INPUT_TO_AL_FROM_IDE_REGISTER
-; JUMP_TO_INPUT_TO_AL_FROM_IDE_REGISTER
 ;	Parameters:
 ;		%1:		IDE Register
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
@@ -74,12 +79,5 @@
 	call	IdeIO_InputToALfromIdeRegisterInDL
 %endmacro
 
-%macro JUMP_TO_INPUT_TO_AL_FROM_IDE_REGISTER 1
-%ifnidni %1, dl
-	mov		dl, %1
-%endif
-	jmp		IdeIO_InputToALfromIdeRegisterInDL
-%endmacro
 
-
-%endif ; IO_MAPPED_IDE_INC
+%endif ; IDE_IO_INC

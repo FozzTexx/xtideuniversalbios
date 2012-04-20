@@ -85,7 +85,7 @@ DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP:
 	mov		dx, [cs:bp+IDEVARS.bDevice-1]   ; for Serial: AL=port address>>2, AH=baud rate
 											;			  DL=COM number character, DH=.bDevice
 %ifdef MODULE_JRIDE
-	cmp		dh, DEVICE_JRIDE_ISA
+	cmp		dh, DEVICE_8BIT_JRIDE_ISA
 	eCMOVE	ax, cs							; Use segment address for JR-IDE/ISA
 %endif
 

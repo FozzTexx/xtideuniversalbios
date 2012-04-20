@@ -69,15 +69,18 @@ FLG_ROMVARS_SERIAL_SCANDETECT 		EQU	(1<<3)	; Scan COM ports at the end of drive 
 												; by holding down the ALT key at the end of drive detection.
 												; (Conveniently, this is 8, a fact we exploit when testing the bit)
 
-FLG_ROMVARS_MODULE_ADVANCED_ATA			EQU	(1<<7)	; Here in case the configuration needs to know functionality is present
-FLG_ROMVARS_MODULE_BOOT_MENU			EQU	(1<<8)	; Here in case the configuration needs to know functionality is present
-FLG_ROMVARS_MODULE_EBIOS				EQU	(1<<9)	; Here in case the configuration needs to know functionality is present
-FLG_ROMVARS_MODULE_HOTKEYS				EQU	(1<<10)	; Here in case the configuration needs to know functionality is present
-FLG_ROMVARS_MODULE_IRQ					EQU	(1<<11)	; Here in case the configuration needs to know functionality is present
-FLG_ROMVARS_MODULE_JRIDE				EQU (1<<12)	; Here in case the configuration needs to know functionality is present
-FLG_ROMVARS_MODULE_SERIAL				EQU (1<<13)	; Here in case the configuration needs to know functionality is present
-FLG_ROMVARS_MODULE_SERIAL_FLOPPY		EQU (1<<14)	; Here in case the configuration needs to know functionality is present
-FLG_ROMVARS_MODULE_STRINGS_COMPRESSED	EQU (1<<15)	; Here in case the configuration needs to know functionality is present
+; Here in case the configuration needs to know functionality is present
+FLG_ROMVARS_MODULE_FEATURE_SETS			EQU	(1<<5)
+FLG_ROMVARS_MODULE_8BIT_IDE				EQU	(1<<6)
+FLG_ROMVARS_MODULE_JRIDE				EQU (1<<7)
+FLG_ROMVARS_MODULE_ADVANCED_ATA			EQU	(1<<8)
+FLG_ROMVARS_MODULE_BOOT_MENU			EQU	(1<<9)
+FLG_ROMVARS_MODULE_EBIOS				EQU	(1<<10)
+FLG_ROMVARS_MODULE_HOTKEYS				EQU	(1<<11)
+FLG_ROMVARS_MODULE_IRQ					EQU	(1<<12)
+FLG_ROMVARS_MODULE_SERIAL				EQU (1<<13)
+FLG_ROMVARS_MODULE_SERIAL_FLOPPY		EQU (1<<14)
+FLG_ROMVARS_MODULE_STRINGS_COMPRESSED	EQU (1<<15)
 
 
 ; Boot Menu Display Modes (see Assembly Library Display.inc for standard modes)
@@ -118,30 +121,36 @@ endstruc
 ; Default values for Port and PortCtrl, shared with the configurator
 ;
 DEVICE_XTIDE_DEFAULT_PORT				EQU		300h
-DEVICE_XTIDE_DEFAULT_PORTCTRL			EQU		DEVICE_XTIDE_DEFAULT_PORT + 8h
+DEVICE_XTIDE_DEFAULT_PORTCTRL			EQU		(DEVICE_XTIDE_DEFAULT_PORT + 8h)
 
 DEVICE_ATA_PRIMARY_PORT					EQU		1F0h
-DEVICE_ATA_PRIMARY_PORTCTRL				EQU		DEVICE_ATA_PRIMARY_PORT + 200h
+DEVICE_ATA_PRIMARY_PORTCTRL				EQU		(DEVICE_ATA_PRIMARY_PORT + 200h)
 
 DEVICE_ATA_SECONDARY_PORT				EQU		170h
-DEVICE_ATA_SECONDARY_PORTCTRL			EQU		DEVICE_ATA_SECONDARY_PORT + 200h
+DEVICE_ATA_SECONDARY_PORTCTRL			EQU		(DEVICE_ATA_SECONDARY_PORT + 200h)
 
 DEVICE_ATA_TERTIARY_PORT				EQU		1E8h
-DEVICE_ATA_TERTIARY_PORTCTRL			EQU		DEVICE_ATA_TERTIARY_PORT + 200h
+DEVICE_ATA_TERTIARY_PORTCTRL			EQU		(DEVICE_ATA_TERTIARY_PORT + 200h)
 
 DEVICE_ATA_QUATERNARY_PORT				EQU		168h
-DEVICE_ATA_QUATERNARY_PORTCTRL			EQU		DEVICE_ATA_QUATERNARY_PORT + 200h
+DEVICE_ATA_QUATERNARY_PORTCTRL			EQU		(DEVICE_ATA_QUATERNARY_PORT + 200h)
 
 
 ; Device types for IDEVARS.bDevice
 ;
-DEVICE_XTIDE_REV1						EQU	(0<<1)
-DEVICE_XTIDE_REV2						EQU	(1<<1)	; Or rev 1 with swapped A0 and A3 (chuck mod)
-DEVICE_FAST_XTIDE						EQU	(2<<1)	; (CPLD v2 project)
-DEVICE_16BIT_ATA						EQU	(3<<1)
-DEVICE_32BIT_ATA						EQU	(4<<1)
-DEVICE_SERIAL_PORT						EQU	(5<<1)
-DEVICE_JRIDE_ISA						EQU	(6<<1)
+DEVICE_8BIT_JRIDE_ISA					EQU	(0<<1)	; JR-IDE/ISA (must be 0)
+DEVICE_8BIT_FAST_XTIDE					EQU	(1<<1)	; CPLD v2 project (must be 1 or 2)
+DEVICE_8BIT_XTIDE_REV2					EQU	(2<<1)	; Or rev 1 with swapped A0 and A3 (must be 1 or 2)
+DEVICE_8BIT_XTIDE_REV1					EQU	(3<<1)	; Must be 4
+COUNT_OF_8BIT_IDE_DEVICES				EQU	4
+
+DEVICE_16BIT_ATA						EQU	(COUNT_OF_8BIT_IDE_DEVICES<<1)
+DEVICE_32BIT_ATA						EQU	((COUNT_OF_8BIT_IDE_DEVICES+1)<<1)
+COUNT_OF_16BIT_IDE_DEVICES				EQU	2
+COUNT_OF_ALL_IDE_DEVICES				EQU	(COUNT_OF_8BIT_IDE_DEVICES + COUNT_OF_16BIT_IDE_DEVICES)
+
+DEVICE_SERIAL_PORT						EQU	(COUNT_OF_ALL_IDE_DEVICES<<1)
+
 
 
 ; Master/Slave drive specific parameters
