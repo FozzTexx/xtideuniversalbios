@@ -267,14 +267,17 @@ ALIGN JUMP_ALIGN
 %endif	; MODULE_8BIT_IDE
 
 ;--------------------------------------------------------------------
+%ifdef USE_186
 ALIGN JUMP_ALIGN
 ReadBlockFrom16bitDataPort:
 	xchg	cl, ch		; Sectors to WORDs
 	rep
 	db		6Dh			; INSW (we want this in XT build)
 	ret
+%endif
 
 ;--------------------------------------------------------------------
+%ifdef USE_AT
 ALIGN JUMP_ALIGN
 ReadBlockFrom32bitDataPort:
 	db		0C1h		; SHL
@@ -284,6 +287,7 @@ ReadBlockFrom32bitDataPort:
 	db		66h			; Override operand size to 32-bit
 	db		6Dh			; INSW/INSD
 	ret
+%endif
 
 
 ;--------------------------------------------------------------------
@@ -365,6 +369,7 @@ ALIGN JUMP_ALIGN
 %endif	; MODULE_8BIT_IDE
 
 ;--------------------------------------------------------------------
+%ifdef USE_186
 ALIGN JUMP_ALIGN
 WriteBlockTo16bitDataPort:
 	xchg	cl, ch		; Sectors to WORDs
@@ -372,8 +377,10 @@ WriteBlockTo16bitDataPort:
 	rep
 	db		6Fh			; OUTSW (we want this in XT build)
 	ret
+%endif
 
 ;--------------------------------------------------------------------
+%ifdef USE_AT
 ALIGN JUMP_ALIGN
 WriteBlockTo32bitDataPort:
 	db		0C1h		; SHL
@@ -384,6 +391,7 @@ WriteBlockTo32bitDataPort:
 	db		66h			; Override operand size to 32-bit
 	db		6Fh			; OUTSW/OUTSD
 	ret
+%endif
 
 
 
@@ -391,34 +399,40 @@ WriteBlockTo32bitDataPort:
 ALIGN WORD_ALIGN
 g_rgfnPioRead:
 %ifdef MODULE_8BIT_IDE
-		dw		ReadBlockFromXtideRev1		; DEVICE_XTIDE_REV1
+		dw		0							; 0, DEVICE_8BIT_JRIDE_ISA
 	%ifdef USE_186
-		dw		ReadBlockFrom16bitDataPort	; DEVICE_XTIDE_REV2
-		dw		ReadBlockFrom16bitDataPort	; DEVICE_FAST_XTIDE
+		dw		ReadBlockFrom16bitDataPort	; 1, DEVICE_FAST_XTIDE
+		dw		ReadBlockFrom16bitDataPort	; 2, DEVICE_8BIT_XTIDE_REV2
 	%else
-		dw		ReadBlockFromXtideRev2		; DEVICE_XTIDE_REV2
-		dw		ReadBlockFromXtideRev2		; DEVICE_FAST_XTIDE
+		dw		ReadBlockFromXtideRev2		; 1, DEVICE_FAST_XTIDE
+		dw		ReadBlockFromXtideRev2		; 2, DEVICE_8BIT_XTIDE_REV2
 	%endif
+		dw		ReadBlockFromXtideRev1		; 3, DEVICE_XTIDE_REV1
 
 %else
 		times	COUNT_OF_8BIT_IDE_DEVICES	dw	0
 %endif
-		dw		ReadBlockFrom16bitDataPort	; DEVICE_16BIT_ATA
-		dw		ReadBlockFrom32bitDataPort	; DEVICE_32BIT_ATA
+%ifdef USE_AT
+		dw		ReadBlockFrom16bitDataPort	; 4, DEVICE_16BIT_ATA
+		dw		ReadBlockFrom32bitDataPort	; 5, DEVICE_32BIT_ATA
+%endif
 
 
 g_rgfnPioWrite:
 %ifdef MODULE_8BIT_IDE
-		dw		WriteBlockToXtideRev1		; DEVICE_XTIDE_REV1
-		dw		WriteBlockToXtideRev2		; DEVICE_XTIDE_REV2
+		dw		0							; 0, DEVICE_8BIT_JRIDE_ISA
 	%ifdef USE_186
-		dw		WriteBlockTo16bitDataPort	; DEVICE_FAST_XTIDE
+		dw		WriteBlockTo16bitDataPort	; 1, DEVICE_FAST_XTIDE
 	%else
-		dw		WriteBlockToFastXtide		; DEVICE_FAST_XTIDE
+		dw		WriteBlockToFastXtide		; 1, DEVICE_FAST_XTIDE
 	%endif
+		dw		WriteBlockToXtideRev2		; 2, DEVICE_XTIDE_REV2
+		dw		WriteBlockToXtideRev1		; 3, DEVICE_XTIDE_REV1
 
 %else
 		times	COUNT_OF_8BIT_IDE_DEVICES	dw	0
 %endif
-		dw		WriteBlockTo16bitDataPort	; DEVICE_16BIT_ATA
-		dw		WriteBlockTo32bitDataPort	; DEVICE_32BIT_ATA
+%ifdef USE_AT
+		dw		WriteBlockTo16bitDataPort	; 4, DEVICE_16BIT_ATA
+		dw		WriteBlockTo32bitDataPort	; 5, DEVICE_32BIT_ATA
+%endif
