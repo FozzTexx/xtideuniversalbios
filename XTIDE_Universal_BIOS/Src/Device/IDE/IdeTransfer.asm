@@ -344,13 +344,13 @@ ALIGN JUMP_ALIGN
 	ret
 
 ;--------------------------------------------------------------------
-%ifndef USE_186			; 8086/8088 compatible WORD write
 ALIGN JUMP_ALIGN
 WriteBlockToFastXtide:
 	UNROLL_SECTORS_IN_CX_TO_QWORDS
 	push	ds
 	push	es
 	pop		ds
+	or		dl, (1<<4)	; Writes need A4 set
 ALIGN JUMP_ALIGN
 .ReadNextQword:
 	lodsw				; Load 1st WORD from [DS:SI]
@@ -364,12 +364,11 @@ ALIGN JUMP_ALIGN
 	loop	.ReadNextQword
 	pop		ds
 	ret
-%endif
 
 %endif	; MODULE_8BIT_IDE
 
 ;--------------------------------------------------------------------
-%ifdef USE_186
+%ifdef USE_AT
 ALIGN JUMP_ALIGN
 WriteBlockTo16bitDataPort:
 	xchg	cl, ch		; Sectors to WORDs
@@ -377,10 +376,8 @@ WriteBlockTo16bitDataPort:
 	rep
 	db		6Fh			; OUTSW (we want this in XT build)
 	ret
-%endif
 
 ;--------------------------------------------------------------------
-%ifdef USE_AT
 ALIGN JUMP_ALIGN
 WriteBlockTo32bitDataPort:
 	db		0C1h		; SHL
@@ -421,11 +418,7 @@ g_rgfnPioRead:
 g_rgfnPioWrite:
 %ifdef MODULE_8BIT_IDE
 		dw		0							; 0, DEVICE_8BIT_JRIDE_ISA
-	%ifdef USE_186
-		dw		WriteBlockTo16bitDataPort	; 1, DEVICE_FAST_XTIDE
-	%else
 		dw		WriteBlockToFastXtide		; 1, DEVICE_FAST_XTIDE
-	%endif
 		dw		WriteBlockToXtideRev2		; 2, DEVICE_XTIDE_REV2
 		dw		WriteBlockToXtideRev1		; 3, DEVICE_XTIDE_REV1
 
