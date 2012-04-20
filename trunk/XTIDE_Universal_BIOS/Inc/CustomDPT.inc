@@ -48,7 +48,6 @@ endstruc
 	FLGL_DPT_ENABLE_IRQ							EQU	(1<<7)
 
 	; Bit definitions for DPT.bFlagsHigh
-	FLGH_DPT_REVERSED_A0_AND_A3					EQU	(1<<0)	; XTIDE mod, Address lines 0 and 3 reversed
 	FLGH_DPT_BLOCK_MODE_SUPPORTED				EQU	(1<<1)	; Use block transfer commands (must be bit 1!)
 	FLGH_DPT_SERIAL_DEVICE						EQU	(1<<2)	; Serial Port Device
 	FLGH_DPT_INTERRUPT_IN_SERVICE				EQU	(1<<3)	; Set when waiting for IRQ
@@ -74,18 +73,9 @@ endstruc
 struc DPT_ATA	; 10 + 2 bytes = 12 bytes
 	.dpt					resb	DPT_size
 	.bBlockSize				resb	1	; Current block size in sectors (do not set to zero!)
-	.bInitError				resb	1
+	.bDevice				resb	1	; Device Type from IDEVARS (overrided when 32-bit controller detected)
 endstruc
 
-
-	; Flags for DPT_ATA.bInitError
-	FLG_INITERROR_FAILED_TO_SELECT_DRIVE				EQU (1<<0)
-	FLG_INITERROR_FAILED_TO_INITIALIZE_CHS_PARAMETERS	EQU (1<<1)
-	FLG_INITERROR_FAILED_TO_SET_WRITE_CACHE				EQU (1<<2)
-	FLG_INITERROR_FAILED_TO_RECALIBRATE_DRIVE			EQU (1<<3)
-	FLG_INITERROR_FAILED_TO_SET_BLOCK_MODE				EQU (1<<4)
-	FLG_INITERROR_FAILED_TO_SET_PIO_MODE				EQU (1<<5)
-	FLG_INITERROR_FAILED_TO_INITIALIZE_STANDBY_TIMER	EQU	(1<<6)
 
 ; Additional variables needed to initialize and reset Advanced IDE Controllers.
 ; EBDA must be reserved for DPTs when using these!
@@ -96,9 +86,18 @@ struc DPT_ADVANCED_ATA
 	.wControllerBasePort	resb	2	; Advanced Controller port (not IDE port)
 	.wMinPioCycleTime		resb	2	; Minimum PIO Cycle Time in ns
 	.bPioMode				resb	1	; Best supported PIO mode
-	.bDevice				resb	1	; Device Type from IDEVARS (overrided when 32-bit controller detected)
+	.bInitError				resb	1	; Flags for initialization errors
 endstruc
 %endif
+
+	; Flags for DPT_ADVANCED_ATA.bInitError
+	FLG_INITERROR_FAILED_TO_SELECT_DRIVE				EQU (1<<0)
+	FLG_INITERROR_FAILED_TO_INITIALIZE_CHS_PARAMETERS	EQU (1<<1)
+	FLG_INITERROR_FAILED_TO_SET_WRITE_CACHE				EQU (1<<2)
+	FLG_INITERROR_FAILED_TO_RECALIBRATE_DRIVE			EQU (1<<3)
+	FLG_INITERROR_FAILED_TO_SET_BLOCK_MODE				EQU (1<<4)
+	FLG_INITERROR_FAILED_TO_SET_PIO_MODE				EQU (1<<5)
+	FLG_INITERROR_FAILED_TO_INITIALIZE_STANDBY_TIMER	EQU	(1<<6)
 
 
 ; DPT for Serial devices

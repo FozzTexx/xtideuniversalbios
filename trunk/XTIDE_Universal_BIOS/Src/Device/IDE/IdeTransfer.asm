@@ -207,11 +207,7 @@ InitializePiovarsInSSBPwithSectorCountInAH:
 	xchg	ax, bx								; Lookup table offset to AX
 	mov		bl, [di+DPT.bIdevarsOffset]			; CS:BX now points to IDEVARS
 	mov		dx, [cs:bx+IDEVARS.wPort]			; Load IDE Data port address
-%ifdef MODULE_ADVANCED_ATA
-	mov		bl, [di+DPT_ADVANCED_ATA.bDevice]
-%else
-	mov		bl, [cs:bx+IDEVARS.bDevice]			; Load device type to BX
-%endif
+	mov		bl, [di+DPT_ATA.bDevice]
 	add		bx, ax
 
 	mov		[bp+PIOVARS.wDataPort], dx
@@ -234,6 +230,8 @@ InitializePiovarsInSSBPwithSectorCountInAH:
 ;	Corrupts registers:
 ;		AX, BX, CX
 ;--------------------------------------------------------------------
+%ifdef MODULE_8BIT_IDE
+
 ALIGN JUMP_ALIGN
 ReadBlockFromXtideRev1:
 	UNROLL_SECTORS_IN_CX_TO_QWORDS
@@ -265,6 +263,8 @@ ALIGN JUMP_ALIGN
 	loop	.ReadNextQword
 	ret
 %endif
+
+%endif	; MODULE_8BIT_IDE
 
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
@@ -301,6 +301,8 @@ ReadBlockFrom32bitDataPort:
 ;	Corrupts registers:
 ;		AX, CX
 ;--------------------------------------------------------------------
+%ifdef MODULE_8BIT_IDE
+
 ALIGN JUMP_ALIGN
 WriteBlockToXtideRev1:
 	push	ds
@@ -360,6 +362,8 @@ ALIGN JUMP_ALIGN
 	ret
 %endif
 
+%endif	; MODULE_8BIT_IDE
+
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 WriteBlockTo16bitDataPort:
@@ -386,24 +390,35 @@ WriteBlockTo32bitDataPort:
 ; Lookup tables to get transfer function based on bus type
 ALIGN WORD_ALIGN
 g_rgfnPioRead:
-	dw		ReadBlockFromXtideRev1		; DEVICE_XTIDE_REV1
-%ifdef USE_186
-	dw		ReadBlockFrom16bitDataPort	; DEVICE_XTIDE_REV2
-	dw		ReadBlockFrom16bitDataPort	; DEVICE_FAST_XTIDE
+%ifdef MODULE_8BIT_IDE
+		dw		ReadBlockFromXtideRev1		; DEVICE_XTIDE_REV1
+	%ifdef USE_186
+		dw		ReadBlockFrom16bitDataPort	; DEVICE_XTIDE_REV2
+		dw		ReadBlockFrom16bitDataPort	; DEVICE_FAST_XTIDE
+	%else
+		dw		ReadBlockFromXtideRev2		; DEVICE_XTIDE_REV2
+		dw		ReadBlockFromXtideRev2		; DEVICE_FAST_XTIDE
+	%endif
+
 %else
-	dw		ReadBlockFromXtideRev2		; DEVICE_XTIDE_REV2
-	dw		ReadBlockFromXtideRev2		; DEVICE_FAST_XTIDE
+		times	COUNT_OF_8BIT_IDE_DEVICES	dw	0
 %endif
-	dw		ReadBlockFrom16bitDataPort	; DEVICE_16BIT_ATA
-	dw		ReadBlockFrom32bitDataPort	; DEVICE_32BIT_ATA
+		dw		ReadBlockFrom16bitDataPort	; DEVICE_16BIT_ATA
+		dw		ReadBlockFrom32bitDataPort	; DEVICE_32BIT_ATA
+
 
 g_rgfnPioWrite:
-	dw		WriteBlockToXtideRev1		; DEVICE_XTIDE_REV1
-	dw		WriteBlockToXtideRev2		; DEVICE_XTIDE_REV2
-%ifdef USE_186
-	dw		WriteBlockTo16bitDataPort	; DEVICE_FAST_XTIDE
+%ifdef MODULE_8BIT_IDE
+		dw		WriteBlockToXtideRev1		; DEVICE_XTIDE_REV1
+		dw		WriteBlockToXtideRev2		; DEVICE_XTIDE_REV2
+	%ifdef USE_186
+		dw		WriteBlockTo16bitDataPort	; DEVICE_FAST_XTIDE
+	%else
+		dw		WriteBlockToFastXtide		; DEVICE_FAST_XTIDE
+	%endif
+
 %else
-	dw		WriteBlockToFastXtide		; DEVICE_FAST_XTIDE
+		times	COUNT_OF_8BIT_IDE_DEVICES	dw	0
 %endif
-	dw		WriteBlockTo16bitDataPort	; DEVICE_16BIT_ATA
-	dw		WriteBlockTo32bitDataPort	; DEVICE_32BIT_ATA
+		dw		WriteBlockTo16bitDataPort	; DEVICE_16BIT_ATA
+		dw		WriteBlockTo32bitDataPort	; DEVICE_32BIT_ATA

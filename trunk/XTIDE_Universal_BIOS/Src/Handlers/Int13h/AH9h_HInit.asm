@@ -58,8 +58,10 @@ AH9h_HandlerForInitializeDriveParameters:
 AH9h_InitializeDriveForUse:
 	xor		ax, ax
 
+%ifdef MODULE_ADVANCED_ATA
 	; Clear Initialization Error flags from DPT
-	mov		[di+DPT_ATA.bInitError], al
+	mov		[di+DPT_ADVANCED_ATA.bInitError], al
+%endif
 
 %ifdef MODULE_SERIAL
 	; No need to do this for serial devices
@@ -78,8 +80,10 @@ AH9h_InitializeDriveForUse:
 	mov		[bp+IDEPACK.bDrvAndHead], al
 	call	Device_SelectDrive
 
+%ifdef MODULE_ADVANCED_ATA
 	mov		al, FLG_INITERROR_FAILED_TO_SELECT_DRIVE
 	call	.SetErrorFlagFromALwithErrorCodeInAH
+%endif
 	jc		.ReturnWithErrorCodeInAH
 
 ;;;	InitializeDeviceParameters
@@ -95,8 +99,10 @@ AH9h_InitializeDriveForUse:
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_BSY, FLG_STATUS_BSY)
 	call	Idepack_StoreNonExtParametersAndIssueCommandFromAL
 
+%ifdef MODULE_ADVANCED_ATA
 	mov		al, FLG_INITERROR_FAILED_TO_INITIALIZE_CHS_PARAMETERS
 	call	.SetErrorFlagFromALwithErrorCodeInAH
+%endif
 .SkipInitializeDeviceParameters:
 
 ;;;	SetWriteCache
@@ -109,16 +115,20 @@ AH9h_InitializeDriveForUse:
 	mov		si, [cs:bx+.rgbWriteCacheCommands]
 	call	AH23h_SetControllerFeatures
 
+%ifdef MODULE_ADVANCED_ATA
 	mov		al, FLG_INITERROR_FAILED_TO_SET_WRITE_CACHE
 	call	.SetErrorFlagFromALwithErrorCodeInAH
+%endif
 .SkipSetWriteCache:
 
 ;;;	RecalibrateDrive
 	; Recalibrate drive by seeking to cylinder 0
 	call	AH11h_RecalibrateDrive
 
+%ifdef MODULE_ADVANCED_ATA
 	mov		al, FLG_INITERROR_FAILED_TO_RECALIBRATE_DRIVE
 	call	.SetErrorFlagFromALwithErrorCodeInAH
+%endif
 
 ;;;	InitializeBlockMode
 	; Initialize block mode transfers
@@ -137,8 +147,10 @@ AH9h_InitializeDriveForUse:
 	shr		bl, 1
 	jnc		SHORT .TryNextBlockSize
 
+%ifdef MODULE_ADVANCED_ATA
 	mov		al, FLG_INITERROR_FAILED_TO_SET_BLOCK_MODE
 	call	.SetErrorFlagFromALwithErrorCodeInAH
+%endif
 .BlockModeNotSupportedOrDisabled:
 .SupportedBlockSizeFound:
 
@@ -172,17 +184,21 @@ AH9h_InitializeDriveForUse:
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_BSY, FLG_STATUS_BSY)
 	call	Idepack_StoreNonExtParametersAndIssueCommandFromAL
 
+%ifdef MODULE_ADVANCED_ATA
 	mov		al, FLG_INITERROR_FAILED_TO_INITIALIZE_STANDBY_TIMER
 	call	.SetErrorFlagFromALwithErrorCodeInAH
+%endif
 .NoPowerManagementSupport:
 %endif ; MODULE_FEATURE_SETS
 
 	; There might have been several errors so just return one error code for them all
-	mov		ah, [di+DPT_ATA.bInitError]
+%ifdef MODULE_ADVANCED_ATA
+	mov		ah, [di+DPT_ADVANCED_ATA.bInitError]
 	test	ah, ah	; Clears CF
 	jz		SHORT .ReturnWithErrorCodeInAH
 	mov		ah, RET_HD_RESETFAIL
 	stc
+%endif
 
 .ReturnWithErrorCodeInAH:
 	pop		si
@@ -190,6 +206,7 @@ AH9h_InitializeDriveForUse:
 	ret
 
 
+%ifdef MODULE_ADVANCED_ATA
 ;--------------------------------------------------------------------
 ; .SetErrorFlagFromALwithErrorCodeInAH
 ;	Parameters:
@@ -210,14 +227,15 @@ AH9h_InitializeDriveForUse:
 	cmp		ah, RET_HD_INVALID
 	jbe		SHORT .IgnoreInvalidCommandError
 
-	or		[di+DPT_ATA.bInitError], al
+	or		[di+DPT_ADVANCED_ATA.bInitError], al
 	stc
 .NoErrorFlagToSet:
 	ret
+
+%endif
 
 
 .rgbWriteCacheCommands:
 	db		0								; DEFAULT_WRITE_CACHE
 	db		FEATURE_DISABLE_WRITE_CACHE		; DISABLE_WRITE_CACHE
 	db		FEATURE_ENABLE_WRITE_CACHE		; ENABLE_WRITE_CACHE
-

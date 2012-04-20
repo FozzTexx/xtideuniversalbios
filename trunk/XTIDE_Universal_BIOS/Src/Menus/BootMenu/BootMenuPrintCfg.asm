@@ -130,7 +130,11 @@ SECTION .text
 ;		AX, BX, DX, ES
 ;--------------------------------------------------------------------
 .PushResetStatus:
-	mov		al, [di+DPT_ATA.bInitError]
+%ifdef MODULE_ADVANCED_ATA
+	mov		al, [di+DPT_ADVANCED_ATA.bInitError]
 	push	ax
+%else
+	ePUSH_T	ax, 0
+%endif
 
 ;;; fall-out to BootMenuPrint_HardDiskRefreshInformation.

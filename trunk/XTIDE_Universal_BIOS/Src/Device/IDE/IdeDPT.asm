@@ -65,20 +65,6 @@ IdeDPT_Finalize:
 
 %ifdef MODULE_ADVANCED_ATA
 ;--------------------------------------------------------------------
-; .StoreDeviceType
-;	Parameters:
-;		DS:DI:	Ptr to Disk Parameter Table
-;		ES:SI:	Ptr to 512-byte ATA information read from the drive
-;		CS:BP:	Ptr to IDEVARS for the controller
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-.StoreDeviceType:
-	call	IdeDPT_StoreDeviceTypeFromIdevarsInCSBPtoDPTinDSDI
-
-;--------------------------------------------------------------------
 ; .StorePioModeAndTimings
 ;	Parameters:
 ;		DS:DI:	Ptr to Disk Parameter Table
@@ -123,35 +109,14 @@ IdeDPT_Finalize:
 	; We have detected 32-bit controller so change Device Type since
 	; it might have been set to 16-bit on IDEVARS
 .ChangeTo32bitDevice:
-	mov		BYTE [di+DPT_ADVANCED_ATA.bDevice], DEVICE_32BIT_ATA
+	mov		BYTE [di+DPT_ATA.bDevice], DEVICE_32BIT_ATA
 
 .NoAdvancedControllerDetected:
+	; Fall to IdeDPT_StoreDeviceTypeFromIdevarsInCSBPtoDPTinDSDI
 
-%endif ; MODULE_ADVANCED_ATA
-
-;--------------------------------------------------------------------
-; IdeDPT_StoreReversedAddressLinesFlagIfNecessary
-;	Parameters:
-;		DS:DI:	Ptr to Disk Parameter Table
-;		CS:BP:	Ptr to IDEVARS for the controller
-;	Returns:
-;		CF:		Always clear
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-IdeDPT_StoreReversedAddressLinesFlagIfNecessary:
-	cmp		BYTE [cs:bp+IDEVARS.bDevice], DEVICE_XTIDE_REV2
-	je		SHORT .SetFlagForSwappedA0andA3
-	cmp		BYTE [cs:bp+IDEVARS.bDevice], DEVICE_FAST_XTIDE
-	jne		SHORT .EndDPT
-.SetFlagForSwappedA0andA3:
-	or		BYTE [di+DPT.bFlagsHigh], FLGH_DPT_REVERSED_A0_AND_A3
-.EndDPT:
-	clc
-	ret
+%endif	; MODULE_ADVANCED_ATA
 
 
-%ifdef MODULE_ADVANCED_ATA
 ;--------------------------------------------------------------------
 ; IdeDPT_StoreDeviceTypeFromIdevarsInCSBPtoDPTinDSDI
 ;	Parameters:
@@ -164,7 +129,7 @@ IdeDPT_StoreReversedAddressLinesFlagIfNecessary:
 ;--------------------------------------------------------------------
 IdeDPT_StoreDeviceTypeFromIdevarsInCSBPtoDPTinDSDI:
 	mov		al, [cs:bp+IDEVARS.bDevice]
-	mov		[di+DPT_ADVANCED_ATA.bDevice], al
+	mov		[di+DPT_ATA.bDevice], al
+; End DPT
+	clc
 	ret
-
-%endif

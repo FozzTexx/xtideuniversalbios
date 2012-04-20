@@ -20,11 +20,10 @@
 ; Structure containing variables for PIO transfer functions.
 ; This struct must not be larger than IDEPACK without INTPACK.
 struc MEMPIOVARS
-	.wWordsInBlock			resb	2	; 0, Block size in WORDs
-	.wWordsLeft				resb	2	; 2, WORDs left to transfer
-	.wWordsDone				resb	2	; 4, Number of sectors xferred
-	; TODO: The above word vars could just as well be byte vars?
-							resb	1	; 6,
+	.wSectorsInBlock		resb	2	; 0, Block size in sectors
+	.bSectorsLeft			resb	1	; 2, Sectors left to transfer
+	.bSectorsDone			resb	1	; 3, Number of sectors xferred
+							resb	3	; 4, 5, 6
 							resb	1	; 7, IDEPACK.bDeviceControl
 	.fpDPT					resb	4	; 8, Far pointer to DPT
 endstruc
@@ -34,7 +33,7 @@ endstruc
 SECTION .text
 
 ;--------------------------------------------------------------------
-; MemIdeTransfer_StartWithCommandInAL
+; JrIdeTransfer_StartWithCommandInAL
 ;	Parameters:
 ;		AL:		IDE command that was used to start the transfer
 ;				(all PIO read and write commands including Identify Device)
@@ -49,16 +48,16 @@ SECTION .text
 ;		AL, BX, DX, SI, ES
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-MemIdeTransfer_StartWithCommandInAL:
+JrIdeTransfer_StartWithCommandInAL:
 	push	cs	; We push CS here (segment of SAW) and later pop it to DS (reads) or ES (writes)
 
-	; Initialize MEMPIOVARS
+	; Initialize PIOVARS
 	xor		cx, cx
-	mov		[bp+MEMPIOVARS.wWordsDone], cx
-	mov		ch, [bp+IDEPACK.bSectorCount]
-	mov		[bp+MEMPIOVARS.wWordsLeft], cx
-	mov		ch, [di+DPT_ATA.bBlockSize]
-	mov		[bp+MEMPIOVARS.wWordsInBlock], cx
+	mov		[bp+MEMPIOVARS.bSectorsDone], cl
+	mov		cl, [bp+IDEPACK.bSectorCount]
+	mov		[bp+MEMPIOVARS.bSectorsLeft], cl
+	mov		cl, [di+DPT_ATA.bBlockSize]
+	mov		[bp+MEMPIOVARS.wSectorsInBlock], cx
 	mov		[bp+MEMPIOVARS.fpDPT], di
 	mov		[bp+MEMPIOVARS.fpDPT+2], ds
 
@@ -92,41 +91,42 @@ ReadFromSectorAccessWindow:
 	call	WaitUntilReadyToTransferNextBlock
 	jc		SHORT ReturnWithMemoryIOtransferErrorInAH
 
-	mov		cx, [bp+MEMPIOVARS.wWordsInBlock]
+	mov		cx, [bp+MEMPIOVARS.wSectorsInBlock]
 
 ALIGN JUMP_ALIGN
 .ReadNextBlockFromDrive:
-	cmp		[bp+MEMPIOVARS.wWordsLeft], cx
+	cmp		[bp+MEMPIOVARS.bSectorsLeft], cl
 	jbe		SHORT .ReadLastBlockFromDrive
 	call	ReadSingleBlockFromSectorAccessWindowInDSSItoESDI
 	call	WaitUntilReadyToTransferNextBlock
 	jc		SHORT ReturnWithMemoryIOtransferErrorInAH
 
-	; Increment number of successfully read WORDs
-	mov		cx, [bp+MEMPIOVARS.wWordsInBlock]
-	sub		[bp+MEMPIOVARS.wWordsLeft], cx
-	add		[bp+MEMPIOVARS.wWordsDone], cx
+	; Increment number of successfully read sectors
+	mov		cx, [bp+MEMPIOVARS.wSectorsInBlock]
+	sub		[bp+MEMPIOVARS.bSectorsLeft], cl
+	add		[bp+MEMPIOVARS.bSectorsDone], cl
 	jmp		SHORT .ReadNextBlockFromDrive
 
 ALIGN JUMP_ALIGN
 .ReadLastBlockFromDrive:
-	mov		ch, [bp+MEMPIOVARS.wWordsLeft+1]	; Sectors left
+	mov		cl, [bp+MEMPIOVARS.bSectorsLeft]
 	call	ReadSingleBlockFromSectorAccessWindowInDSSItoESDI
 
 	; Check for errors in last block
 CheckErrorsAfterTransferringLastMemoryMappedBlock:
 	lds		di, [bp+MEMPIOVARS.fpDPT]			; DPT now in DS:DI
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRQ, FLG_STATUS_DRDY)
-	call	IDEDEVICE%+Wait_PollStatusFlagInBLwithTimeoutInBH
+	call	IdeWait_PollStatusFlagInBLwithTimeoutInBH
 
 	; Return number of successfully transferred sectors
 ReturnWithMemoryIOtransferErrorInAH:
 	lds		di, [bp+MEMPIOVARS.fpDPT]			; DPT now in DS:DI
-	mov		cx, [bp+MEMPIOVARS.wWordsDone]
-	jc		SHORT .ConvertTransferredWordsInCXtoSectors
-	add		cx, [bp+MEMPIOVARS.wWordsLeft]		; Never sets CF
-.ConvertTransferredWordsInCXtoSectors:
-	xchg	cl, ch
+%ifdef USE_386
+	movzx	cx, BYTE [bp+MEMPIOVARS.bSectorsDone]
+%else
+	mov		ch, 0
+	mov		cl, [bp+MEMPIOVARS.bSectorsDone]
+%endif
 	ret
 
 
@@ -156,32 +156,32 @@ WriteToSectorAccessWindow:
 	call	WaitUntilReadyToTransferNextBlock
 	jc		SHORT ReturnWithMemoryIOtransferErrorInAH
 
-	mov		cx, [bp+MEMPIOVARS.wWordsInBlock]
+	mov		cx, [bp+MEMPIOVARS.wSectorsInBlock]
 
 ALIGN JUMP_ALIGN
 .WriteNextBlockToDrive:
-	cmp		[bp+MEMPIOVARS.wWordsLeft], cx
+	cmp		[bp+MEMPIOVARS.bSectorsLeft], cl
 	jbe		SHORT .WriteLastBlockToDrive
 	call	WriteSingleBlockFromDSSIToSectorAccessWindowInESDI
 	call	WaitUntilReadyToTransferNextBlock
 	jc		SHORT ReturnWithMemoryIOtransferErrorInAH
 
 	; Increment number of successfully written WORDs
-	mov		cx, [bp+MEMPIOVARS.wWordsInBlock]
-	sub		[bp+MEMPIOVARS.wWordsLeft], cx
-	add		[bp+MEMPIOVARS.wWordsDone], cx
+	mov		cx, [bp+MEMPIOVARS.wSectorsInBlock]
+	sub		[bp+MEMPIOVARS.bSectorsLeft], cl
+	add		[bp+MEMPIOVARS.bSectorsDone], cl
 	jmp		SHORT .WriteNextBlockToDrive
 
 ALIGN JUMP_ALIGN
 .WriteLastBlockToDrive:
-	mov		ch, [bp+MEMPIOVARS.wWordsLeft+1]		; Sectors left
+	mov		cl, [bp+MEMPIOVARS.bSectorsLeft]
 	ePUSH_T	bx, CheckErrorsAfterTransferringLastMemoryMappedBlock
 	; Fall to WriteSingleBlockFromDSSIToSectorAccessWindowInESDI
 
 ;--------------------------------------------------------------------
 ; WriteSingleBlockFromDSSIToSectorAccessWindowInESDI
 ;	Parameters:
-;		CH:		Number of sectors in block
+;		CX:		Number of sectors in block
 ;		DS:SI:	Normalized ptr to source buffer
 ;		ES:DI:	Ptr to Sector Access Window
 ;	Returns:
@@ -193,7 +193,7 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 WriteSingleBlockFromDSSIToSectorAccessWindowInESDI:
 	mov		bx, di
-	eMOVZX	dx, ch
+	mov		dx, cx
 	xor		cl, cl
 ALIGN JUMP_ALIGN
 .WriteBlock:
@@ -208,7 +208,7 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ; ReadSingleBlockFromSectorAccessWindowInDSSItoESDI
 ;	Parameters:
-;		CH:		Number of sectors in block
+;		CX		Number of sectors in block
 ;		ES:DI:	Normalized ptr to buffer to receive data (destination)
 ;		DS:SI:	Ptr to Sector Access Window (source)
 ;	Returns:
@@ -220,7 +220,7 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 ReadSingleBlockFromSectorAccessWindowInDSSItoESDI:
 	mov		bx, si
-	eMOVZX	dx, ch
+	mov		dx, cx
 	xor		cl, cl
 ALIGN JUMP_ALIGN
 .ReadBlock:
@@ -246,8 +246,8 @@ ALIGN JUMP_ALIGN
 WaitUntilReadyToTransferNextBlock:
 	push	ds
 	push	di
-	lds		di, [bp+MEMPIOVARS.fpDPT]			; DPT now in DS:DI
-	call	IDEDEVICE%+Wait_IRQorDRQ			; Always polls
+	lds		di, [bp+MEMPIOVARS.fpDPT]	; DPT now in DS:DI
+	call	IdeWait_IRQorDRQ			; Always polls
 	pop		di
 	pop		ds
 	ret
@@ -256,4 +256,3 @@ WaitUntilReadyToTransferNextBlock:
 %if JRIDE_SECTOR_ACCESS_WINDOW_SIZE <> 512
 	%error "JRIDE_SECTOR_ACCESS_WINDOW_SIZE is no longer equal to 512. MemIdeTransfer.asm needs changes."
 %endif
-

@@ -31,11 +31,12 @@ SECTION .text
 ;	Corrupts registers:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
-IDEDEVICE%+Wait_IRQorDRQ:
+IdeWait_IRQorDRQ:
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRQ, FLG_STATUS_DRQ)
-%ifdef ASSEMBLE_SHARED_IDE_DEVICE_FUNCTIONS		; JR-IDE/ISA does not support IRQ
+
+%ifdef MODULE_IRQ
 	test	BYTE [bp+IDEPACK.bDeviceControl], FLG_DEVCONTROL_nIEN
-	jnz		SHORT IDEDEVICE%+Wait_PollStatusFlagInBLwithTimeoutInBH	; Interrupt disabled
+	jnz		SHORT IdeWait_PollStatusFlagInBLwithTimeoutInBH	; Interrupt disabled
 %endif
 	; Fall to IdeWait_IRQorStatusFlagInBLwithTimeoutInBH
 
@@ -52,11 +53,9 @@ IDEDEVICE%+Wait_IRQorDRQ:
 ;	Corrupts registers:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
-IDEDEVICE%+Wait_IRQorStatusFlagInBLwithTimeoutInBH:
-%ifdef ASSEMBLE_SHARED_IDE_DEVICE_FUNCTIONS		; JR-IDE/ISA does not support IRQ
-	%ifdef MODULE_IRQ
-		call	IdeIrq_WaitForIRQ
-	%endif
+IdeWait_IRQorStatusFlagInBLwithTimeoutInBH:
+%ifdef MODULE_IRQ
+	call	IdeIrq_WaitForIRQ
 %endif
 	; Always fall to IdeWait_PollStatusFlagInBLwithTimeoutInBH for error processing
 
@@ -73,12 +72,12 @@ IDEDEVICE%+Wait_IRQorStatusFlagInBLwithTimeoutInBH:
 ;	Corrupts registers:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
-IDEDEVICE%+Wait_PollStatusFlagInBLwithTimeoutInBH:
+IdeWait_PollStatusFlagInBLwithTimeoutInBH:
 	mov		ah, bl
 	mov		cl, bh
 	call	Timer_InitializeTimeoutWithTicksInCL
 	and		ah, ~FLG_STATUS_BSY
-	jz		SHORT IDEDEVICE%+PollBsyOnly
+	jz		SHORT PollBsyOnly
 	; Fall to PollBsyAndFlgInAH
 
 ;--------------------------------------------------------------------
@@ -93,19 +92,19 @@ IDEDEVICE%+Wait_PollStatusFlagInBLwithTimeoutInBH:
 ;	Corrupts registers:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
-IDEDEVICE%+PollBsyAndFlgInAH:
-	INPUT_TO_AL_FROM_IDE_REGISTER	STATUS_REGISTER_in	; Discard contents for first read
-ALIGN JUMP_ALIGN
+IdePollBsyAndFlgInAH:
+	call	IdeIO_InputStatusRegisterToAL		; Discard contents of first read
+
 .PollLoop:
-	INPUT_TO_AL_FROM_IDE_REGISTER	STATUS_REGISTER_in
+	call	IdeIO_InputStatusRegisterToAL
 	test	al, FLG_STATUS_BSY					; Controller busy?
 	jnz		SHORT .UpdateTimeout				;  If so, jump to timeout update
 	test	al, ah								; Test secondary flag
-	jnz		SHORT IDEDEVICE%+Error_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL
+	jnz		SHORT IdeError_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL
 .UpdateTimeout:
 	call	Timer_SetCFifTimeout
 	jnc		SHORT .PollLoop						; Loop if time left
-	call	IDEDEVICE%+Error_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL
+	call	IdeError_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL
 	jc		SHORT .ReturnErrorCodeInAH
 	mov		ah, RET_HD_TIMEOUT					; Expected bit never got set
 	stc
@@ -124,13 +123,13 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
-IDEDEVICE%+PollBsyOnly:
-	INPUT_TO_AL_FROM_IDE_REGISTER	STATUS_REGISTER_in	; Discard contents for first read
-ALIGN JUMP_ALIGN
+PollBsyOnly:
+	call	IdeIO_InputStatusRegisterToAL		; Discard contents of first read
+
 .PollLoop:
-	INPUT_TO_AL_FROM_IDE_REGISTER	STATUS_REGISTER_in
+	call	IdeIO_InputStatusRegisterToAL
 	test	al, FLG_STATUS_BSY					; Controller busy?
-	jz		SHORT IDEDEVICE%+Error_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL
+	jz		SHORT IdeError_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL
 	call	Timer_SetCFifTimeout				; Update timeout counter
 	jnc		SHORT .PollLoop						; Loop if time left (sets CF on timeout)
-	jmp		SHORT IDEDEVICE%+Error_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL
+	jmp		SHORT IdeError_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL

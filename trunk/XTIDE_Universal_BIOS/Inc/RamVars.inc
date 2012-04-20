@@ -21,7 +21,9 @@
 %define RAMVARS_INC
 
 ; Segment when RAMVARS is stored to top of interrupt vectors.
+%ifndef USE_AT
 LITE_MODE_RAMVARS_SEGMENT	EQU		30h
+%endif
 
 
 ; Variables for translating drive numbers.

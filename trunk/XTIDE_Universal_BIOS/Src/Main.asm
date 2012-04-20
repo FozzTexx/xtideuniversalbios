@@ -54,7 +54,7 @@
 	%include "RomVars.inc"			; For ROMVARS and IDEVARS structs
 	%include "RamVars.inc"			; For RAMVARS struct
 	%include "BootVars.inc"			; For BOOTVARS struct
-	%include "IDE_8bit.inc"			; For IDE 8-bit data port macros
+	%include "IdeIO.inc"			; Macros for IDE port I/O
 	%include "DeviceIDE.inc"		; For IDE device equates
 
 
@@ -135,7 +135,7 @@ istruc ROMVARS
 
 	at	ROMVARS.ideVars0+IDEVARS.wPort,			dw	DEVICE_XTIDE_DEFAULT_PORT			; Controller Command Block base port
 	at	ROMVARS.ideVars0+IDEVARS.wPortCtrl,		dw	DEVICE_XTIDE_DEFAULT_PORTCTRL		; Controller Control Block base port
-	at	ROMVARS.ideVars0+IDEVARS.bDevice,		db	DEVICE_XTIDE_REV1
+	at	ROMVARS.ideVars0+IDEVARS.bDevice,		db	DEVICE_8BIT_XTIDE_REV1
 	at	ROMVARS.ideVars0+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	db	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE
 	at	ROMVARS.ideVars0+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags,	db	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE
 
@@ -221,11 +221,11 @@ iend
 	%include "AdvAtaInit.asm"		; For initializing VLB and PCI controllers
 	%include "Vision.asm"			; QDI Vision QD6500 and QD6580 support
 %endif
-%define IDEDEVICE Ide
-%define ASSEMBLE_SHARED_IDE_DEVICE_FUNCTIONS
-	%include "IOMappedIDE.inc"		; Assembly IDE support for normal I/O mapped controllers
 	%include "IdeCommand.asm"
-	%include "IdeTransfer.asm"		; Must be included after IdeCommand.asm
+%ifdef MODULE_JRIDE
+	%include "JrIdeTransfer.asm"	; Must be included after IdeCommand.asm
+%endif
+	%include "IdeTransfer.asm"
 	%include "IdeWait.asm"
 	%include "IdeError.asm"			; Must be included after IdeWait.asm
 	%include "IdeDPT.asm"
@@ -233,21 +233,8 @@ iend
 %ifdef MODULE_IRQ
 	%include "IdeIrq.asm"
 %endif
-%undef IDEDEVICE
-%undef ASSEMBLE_SHARED_IDE_DEVICE_FUNCTIONS
 
-	; JR-IDE support
-%ifdef MODULE_JRIDE
-%define IDEDEVICE MemIde
-	%include "MemMappedIDE.inc"		; Assembly IDE support for memory mapped controllers
-	%include "IdeCommand.asm"
-	%include "MemIdeTransfer.asm"	; Must be included after IdeCommand.asm
-	%include "IdeWait.asm"
-	%include "IdeError.asm"			; Must be included after IdeWait.asm
-%undef IDEDEVICE
-%endif
-
-
+	; Serial Device support
 %ifdef MODULE_SERIAL				; Serial Port Device support
 	%include "SerialCommand.asm"
 	%include "SerialDPT.asm"
