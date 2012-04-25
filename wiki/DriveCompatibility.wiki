@@ -1,5 +1,4 @@
 #summary XTIDE Universal BIOS compatibility with hard disks, microdrives and CF cards
-#labels Featured
 <wiki:toc max_depth="1" />
 
 Note that compatibility problems are usually drive limitations and not XTIDE Universal BIOS issues.
