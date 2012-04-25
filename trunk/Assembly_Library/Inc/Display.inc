@@ -183,7 +183,8 @@ MONO_REVERSE_DARK_BLINK		EQU		0F8h	; (blinking dark green on green)
 %define CURSOR_XY(x, y)	( (x) | ((y)<<8) )
 
 ; Cursor shapes
-CURSOR_NORMAL				EQU		0607h		; Two line cursor near or at the bottom of cell (not valid for IBM MDA)
+CURSOR_NORMAL_COLOR			EQU		0607h		; Two line cursor near or at the bottom of cell (not valid for IBM MDA)
+CURSOR_NORMAL_MDA			EQU		0B0Ch		; Scanlines 11 and 12
 CURSOR_HIDDEN				EQU		2000h
 
 

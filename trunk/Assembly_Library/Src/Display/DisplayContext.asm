@@ -33,7 +33,7 @@ ALIGN DISPLAY_JUMP_ALIGN
 DisplayContext_Initialize:
 	mov		WORD [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fnCharOut], DEFAULT_CHARACTER_OUTPUT
 	mov		BYTE [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bAttribute], SCREEN_BACKGROUND_ATTRIBUTE
-	mov		ax, [VIDEO_BDA.wCursorShape]
+	call	DisplayCursor_GetDefaultCursorShapeToAX
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.wCursorShape], ax
 	; Fall to .DetectAndSetDisplaySegment
 

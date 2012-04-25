@@ -143,7 +143,7 @@ ALIGN KEYBOARD_JUMP_ALIGN
 	mov		si, di
 
 	CALL_DISPLAY_LIBRARY PushDisplayContext
-	mov		ax, CURSOR_NORMAL
+	call	DisplayCursor_GetDefaultCursorShapeToAX
 	CALL_DISPLAY_LIBRARY SetCursorShapeFromAX
 	CALL_DISPLAY_LIBRARY SynchronizeDisplayContextToHardware
 
