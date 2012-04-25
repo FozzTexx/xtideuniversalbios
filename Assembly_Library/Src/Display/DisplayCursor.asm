@@ -21,6 +21,23 @@
 SECTION .text
 
 ;--------------------------------------------------------------------
+; DisplayCursor_GetDefaultCursorShapeToAX
+;	Parameters:
+;		DS:		BDA segment (zero)
+;	Returns:
+;		AX:		Default text mode cursor shape
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+ALIGN DISPLAY_JUMP_ALIGN
+DisplayCursor_GetDefaultCursorShapeToAX:
+	mov		ax, CURSOR_NORMAL_COLOR				; CGA, EGA, VGA cursor
+	cmp		BYTE [VIDEO_BDA.bMode], MDA_TEXT_MODE
+	eCMOVE	ax, CURSOR_NORMAL_MDA				; MDA cursor
+	ret
+
+
+;--------------------------------------------------------------------
 ; DisplayCursor_SetShapeFromAX
 ;	Parameters:
 ;		AX:		Cursor shape (AH=Start scan line, AL=End scan line)
