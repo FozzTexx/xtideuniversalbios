@@ -1,4 +1,4 @@
-#summary XTIDE Universal BIOS results with [http://vintage-blog.peacon.co.uk/wiki/DOS_Disk_Tester DOS Disk Tester] (disktest.exe).
+#summary XTIDE Universal BIOS results with DOS Disk Tester.
 #labels Featured
 
 = Introduction =
