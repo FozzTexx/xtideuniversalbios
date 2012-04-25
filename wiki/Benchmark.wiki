@@ -1,0 +1,11 @@
+#summary XTIDE Universal BIOS results with [http://vintage-blog.peacon.co.uk/wiki/DOS_Disk_Tester DOS Disk Tester] (disktest.exe).
+#labels Featured
+
+= Introduction =
+
+XTIDE Universal BIOS results with [http://vintage-blog.peacon.co.uk/wiki/DOS_Disk_Tester DOS Disk Tester] (disktest.exe).
+
+
+||Drive Name||Capacity||Drive Type||PC||Controller||XTIDE Universal BIOS||OS||Buffers||DiskTest||Write Speed (KB/s)||Read Speed (KB/s)||8k random, 70% read (IOPS)||Sector random read (IOPS)||Access Time (ms)||Comments||
+||Hitachi HMS360606D5CF00||6 GB||Microdrive||IBM 5150 (8088 @ 4.77 MHz)||XTIDE rev1||v2.0.0β1||MS-DOS 6.22||Default||1.7||77.52||134.12||10.6||26.8||37||||
+||Hitachi HMS360606D5CF00||6 GB||Microdrive||IBM 5150 (8088 @ 4.77 MHz)||XTIDE rev1 with Chuck Mod||v2.0.0β1||MS-DOS 6.22||Default||1.7||127.48||241.37||13.5||26.9||37||||
