@@ -194,6 +194,12 @@ IdeCommand_OutputWithParameters:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 IdeCommand_SelectDrive:
+	; Wait until neither Master or Slave Drive is busy
+	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_BSY, FLG_STATUS_BSY)
+	cmp		BYTE [bp+IDEPACK.bCommand], COMMAND_IDENTIFY_DEVICE
+	eCMOVE	bh, TIMEOUT_IDENTIFY_DEVICE
+	call	IdeWait_PollStatusFlagInBLwithTimeoutInBH
+
 	; Select Master or Slave Drive
 	mov		al, [bp+IDEPACK.bDrvAndHead]
 	OUTPUT_AL_TO_IDE_REGISTER	DRIVE_AND_HEAD_SELECT_REGISTER

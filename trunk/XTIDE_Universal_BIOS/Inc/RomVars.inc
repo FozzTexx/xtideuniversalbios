@@ -33,7 +33,6 @@ struc ROMVARS
 
 	.wFlags				resb	2	; Word for ROM flags
 	.wDisplayMode		resb	2	; Display mode for boot menu
-	.wfDisplayBootMenu:				; Zero = no Boot Menu, non-zero = Boot Menu timeout
 	.wBootTimeout		resb	2	; Boot Menu selection timeout in system timer ticks
 	.bIdeCnt			resb	1	; Number of available IDE controllers
 	.bBootDrv			resb	1	; Default drive to boot from
