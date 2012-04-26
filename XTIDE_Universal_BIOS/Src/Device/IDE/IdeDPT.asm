@@ -46,10 +46,25 @@ IdeDPT_Finalize:
 ;--------------------------------------------------------------------
 .DetectPowerManagementSupport:
 	test	BYTE [es:si+ATA6.wSetSup82], A6_wSetSup82_POWERMAN
-	jz		.NoPowerManagementSupport
+	jz		SHORT .NoPowerManagementSupport
 	or		BYTE [di+DPT.bFlagsHigh], FLGH_DPT_POWER_MANAGEMENT_SUPPORTED
 .NoPowerManagementSupport:
 %endif ; MODULE_FEATURE_SETS
+
+
+;--------------------------------------------------------------------
+; .StoreDeviceType
+;	Parameters:
+;		DS:DI:	Ptr to Disk Parameter Table
+;		CS:BP:	Ptr to IDEVARS for the controller
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AL
+;--------------------------------------------------------------------
+.StoreDeviceType:
+	call	IdeDPT_StoreDeviceTypeFromIdevarsInCSBPtoDPTinDSDI
+
 
 ;--------------------------------------------------------------------
 ; .StoreBlockMode
@@ -62,6 +77,7 @@ IdeDPT_Finalize:
 ;--------------------------------------------------------------------
 .StoreBlockMode:
 	mov		BYTE [di+DPT_ATA.bBlockSize], 1
+
 
 %ifdef MODULE_ADVANCED_ATA
 ;--------------------------------------------------------------------
@@ -80,6 +96,7 @@ IdeDPT_Finalize:
 	mov		[di+DPT_ADVANCED_ATA.wMinPioCycleTime], cx
 	mov		[di+DPT_ADVANCED_ATA.bPioMode], al
 	or		[di+DPT.bFlagsHigh], ah
+
 
 ;--------------------------------------------------------------------
 ; .DetectAdvancedIdeController
@@ -110,11 +127,13 @@ IdeDPT_Finalize:
 	; it might have been set to 16-bit on IDEVARS
 .ChangeTo32bitDevice:
 	mov		BYTE [di+DPT_ATA.bDevice], DEVICE_32BIT_ATA
-
 .NoAdvancedControllerDetected:
-	; Fall to IdeDPT_StoreDeviceTypeFromIdevarsInCSBPtoDPTinDSDI
-
 %endif	; MODULE_ADVANCED_ATA
+
+
+; End DPT
+	clc
+	ret
 
 
 ;--------------------------------------------------------------------
@@ -130,6 +149,4 @@ IdeDPT_Finalize:
 IdeDPT_StoreDeviceTypeFromIdevarsInCSBPtoDPTinDSDI:
 	mov		al, [cs:bp+IDEVARS.bDevice]
 	mov		[di+DPT_ATA.bDevice], al
-; End DPT
-	clc
 	ret

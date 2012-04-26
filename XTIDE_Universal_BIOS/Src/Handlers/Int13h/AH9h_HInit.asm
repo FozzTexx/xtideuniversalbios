@@ -21,6 +21,27 @@
 SECTION .text
 
 ;--------------------------------------------------------------------
+; STORE_ERROR_FLAG_TO_DPT
+;	Parameters:
+;		%1:		Error flag to set
+;		AH:		BIOS Error Code
+;		DS:DI:	Ptr to DPT
+;		CF:		Set if error code in AH
+;	Returns:
+;		CF:		Clear if no error
+;				Set if error flag was set
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+%macro STORE_ERROR_FLAG_TO_DPT 1
+%ifdef MODULE_ADVANCED_ATA
+	mov		al, %1
+	call	SetErrorFlagFromALwithErrorCodeInAH
+%endif
+%endmacro
+
+
+;--------------------------------------------------------------------
 ; Int 13h function AH=9h, Initialize Drive Parameters.
 ;
 ; AH9h_HandlerForInitializeDriveParameters
@@ -56,7 +77,7 @@ AH9h_HandlerForInitializeDriveParameters:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
 AH9h_InitializeDriveForUse:
-	xor		ax, ax
+	xor		ax, ax				; Clear AH to assume no errors
 
 %ifdef MODULE_ADVANCED_ATA
 	; Clear Initialization Error flags from DPT
@@ -68,23 +89,23 @@ AH9h_InitializeDriveForUse:
 	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE	; Clears CF
 	jz		SHORT .ContinueInitialization
 	ret		; With AH and CF cleared
-	.ContinueInitialization:
+.ContinueInitialization:
 %endif
 
 	push	es
 	push	si
+
 
 ;;;	SelectDrive
 	; Try to select drive and wait until ready
 	call	AccessDPT_GetDriveSelectByteToAL
 	mov		[bp+IDEPACK.bDrvAndHead], al
 	call	Device_SelectDrive
+	STORE_ERROR_FLAG_TO_DPT		FLG_INITERROR_FAILED_TO_SELECT_DRIVE
+	jnc		SHORT .ContinueInitializationSinceDriveSelectedSuccesfully
+	jmp		.ReturnWithErrorCodeInAH
+.ContinueInitializationSinceDriveSelectedSuccesfully:
 
-%ifdef MODULE_ADVANCED_ATA
-	mov		al, FLG_INITERROR_FAILED_TO_SELECT_DRIVE
-	call	.SetErrorFlagFromALwithErrorCodeInAH
-%endif
-	jc		.ReturnWithErrorCodeInAH
 
 ;;;	InitializeDeviceParameters
 	; Initialize CHS parameters if LBA is not used
@@ -98,12 +119,9 @@ AH9h_InitializeDriveForUse:
 	mov		al, COMMAND_INITIALIZE_DEVICE_PARAMETERS
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_BSY, FLG_STATUS_BSY)
 	call	Idepack_StoreNonExtParametersAndIssueCommandFromAL
-
-%ifdef MODULE_ADVANCED_ATA
-	mov		al, FLG_INITERROR_FAILED_TO_INITIALIZE_CHS_PARAMETERS
-	call	.SetErrorFlagFromALwithErrorCodeInAH
-%endif
+	STORE_ERROR_FLAG_TO_DPT		FLG_INITERROR_FAILED_TO_INITIALIZE_CHS_PARAMETERS
 .SkipInitializeDeviceParameters:
+
 
 ;;;	SetWriteCache
 	; Enable or Disable Write Cache
@@ -114,21 +132,15 @@ AH9h_InitializeDriveForUse:
 	jz		SHORT .SkipSetWriteCache		; DEFAULT_WRITE_CACHE
 	mov		si, [cs:bx+.rgbWriteCacheCommands]
 	call	AH23h_SetControllerFeatures
-
-%ifdef MODULE_ADVANCED_ATA
-	mov		al, FLG_INITERROR_FAILED_TO_SET_WRITE_CACHE
-	call	.SetErrorFlagFromALwithErrorCodeInAH
-%endif
+	STORE_ERROR_FLAG_TO_DPT		FLG_INITERROR_FAILED_TO_SET_WRITE_CACHE
 .SkipSetWriteCache:
+
 
 ;;;	RecalibrateDrive
 	; Recalibrate drive by seeking to cylinder 0
 	call	AH11h_RecalibrateDrive
+	STORE_ERROR_FLAG_TO_DPT		FLG_INITERROR_FAILED_TO_RECALIBRATE_DRIVE
 
-%ifdef MODULE_ADVANCED_ATA
-	mov		al, FLG_INITERROR_FAILED_TO_RECALIBRATE_DRIVE
-	call	.SetErrorFlagFromALwithErrorCodeInAH
-%endif
 
 ;;;	InitializeBlockMode
 	; Initialize block mode transfers
@@ -146,13 +158,10 @@ AH9h_InitializeDriveForUse:
 	jnc		SHORT .SupportedBlockSizeFound
 	shr		bl, 1
 	jnc		SHORT .TryNextBlockSize
-
-%ifdef MODULE_ADVANCED_ATA
-	mov		al, FLG_INITERROR_FAILED_TO_SET_BLOCK_MODE
-	call	.SetErrorFlagFromALwithErrorCodeInAH
-%endif
+	STORE_ERROR_FLAG_TO_DPT		FLG_INITERROR_FAILED_TO_SET_BLOCK_MODE
 .BlockModeNotSupportedOrDisabled:
 .SupportedBlockSizeFound:
+
 
 %ifdef MODULE_ADVANCED_ATA
 ;;;	InitializePioMode
@@ -168,64 +177,69 @@ AH9h_InitializeDriveForUse:
 .IordyNotSupported:
 	mov		si, FEATURE_SET_TRANSFER_MODE
 	call	AH23h_SetControllerFeatures
-
-	mov		al, FLG_INITERROR_FAILED_TO_SET_PIO_MODE
-	call	.SetErrorFlagFromALwithErrorCodeInAH
+	STORE_ERROR_FLAG_TO_DPT		FLG_INITERROR_FAILED_TO_SET_PIO_MODE
 %endif ; MODULE_ADVANCED_ATA
+
 
 %ifdef MODULE_FEATURE_SETS
 ;;;	InitStandbyTimer
 	; Initialize the standby timer (if supported)
 	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_POWER_MANAGEMENT_SUPPORTED
-	jz		.NoPowerManagementSupport
+	jz		SHORT .NoPowerManagementSupport
 
 	mov		al, COMMAND_IDLE
 	mov		dl, [cs:ROMVARS.bIdleTimeout]
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_BSY, FLG_STATUS_BSY)
 	call	Idepack_StoreNonExtParametersAndIssueCommandFromAL
-
-%ifdef MODULE_ADVANCED_ATA
-	mov		al, FLG_INITERROR_FAILED_TO_INITIALIZE_STANDBY_TIMER
-	call	.SetErrorFlagFromALwithErrorCodeInAH
-%endif
+	STORE_ERROR_FLAG_TO_DPT		FLG_INITERROR_FAILED_TO_INITIALIZE_STANDBY_TIMER
 .NoPowerManagementSupport:
 %endif ; MODULE_FEATURE_SETS
 
+
 	; There might have been several errors so just return one error code for them all
+.ReturnWithErrorCodeInAH:
 %ifdef MODULE_ADVANCED_ATA
 	mov		ah, [di+DPT_ADVANCED_ATA.bInitError]
 	test	ah, ah	; Clears CF
-	jz		SHORT .ReturnWithErrorCodeInAH
+	jz		SHORT .ReturnWithSuccess
 	mov		ah, RET_HD_RESETFAIL
 	stc
+.ReturnWithSuccess:
 %endif
 
-.ReturnWithErrorCodeInAH:
 	pop		si
 	pop		es
 	ret
 
 
+.rgbWriteCacheCommands:
+	db		0								; DEFAULT_WRITE_CACHE
+	db		FEATURE_DISABLE_WRITE_CACHE		; DISABLE_WRITE_CACHE
+	db		FEATURE_ENABLE_WRITE_CACHE		; ENABLE_WRITE_CACHE
+
+
+
 %ifdef MODULE_ADVANCED_ATA
 ;--------------------------------------------------------------------
-; .SetErrorFlagFromALwithErrorCodeInAH
+; SetErrorFlagFromALwithErrorCodeInAH
 ;	Parameters:
 ;		AH:		BIOS Error Code
 ;		AL:		Error flag to set
 ;		DS:DI:	Ptr to DPT
+;		CF:		Set if error code in AH
+;				Clear if AH = 0
 ;	Returns:
 ;		CF:		Clear if no error
 ;				Set if error flag was set
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-.IgnoreInvalidCommandError:
+IgnoreInvalidCommandError:
 	xor		ah, ah	; Clears CF
-
-.SetErrorFlagFromALwithErrorCodeInAH:
+SetErrorFlagFromALwithErrorCodeInAH:
 	jnc		SHORT .NoErrorFlagToSet
 	cmp		ah, RET_HD_INVALID
-	jbe		SHORT .IgnoreInvalidCommandError
+	jbe		SHORT IgnoreInvalidCommandError
 
 	or		[di+DPT_ADVANCED_ATA.bInitError], al
 	stc
@@ -233,9 +247,3 @@ AH9h_InitializeDriveForUse:
 	ret
 
 %endif
-
-
-.rgbWriteCacheCommands:
-	db		0								; DEFAULT_WRITE_CACHE
-	db		FEATURE_DISABLE_WRITE_CACHE		; DISABLE_WRITE_CACHE
-	db		FEATURE_ENABLE_WRITE_CACHE		; ENABLE_WRITE_CACHE
