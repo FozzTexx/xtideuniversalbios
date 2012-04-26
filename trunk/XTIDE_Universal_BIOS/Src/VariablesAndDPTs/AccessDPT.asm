@@ -67,11 +67,15 @@ AccessDPT_GetDriveSelectByteToAL:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AccessDPT_GetDeviceControlByteToAL:
+%ifdef MODULE_IRQ
 	xor		al, al
 	test	BYTE [di+DPT.bFlagsLow], FLGL_DPT_ENABLE_IRQ
 	jnz		SHORT .EnableDeviceIrq
 	or		al, FLG_DEVCONTROL_nIEN	; Disable IRQ
 .EnableDeviceIrq:
+%else
+	mov		al, FLG_DEVCONTROL_nIEN	; Disable IRQ
+%endif
 	ret
 
 

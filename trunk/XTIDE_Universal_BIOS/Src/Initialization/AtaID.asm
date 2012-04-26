@@ -70,12 +70,16 @@ AtaID_GetTotalSectorCountToBXDXAXfromAtaInfoInESSI:
 ;		Nothing
 ;--------------------------------------------------------------------
 .GetLbaSectorCount:
+%ifdef MODULE_EBIOS
 	test	BYTE [di+ATA6.wSetSup83+1], A6_wSetSup83_LBA48>>8
 	jz		SHORT .GetLba28SectorCount
+
+	; Get LBA48 sector count
 	mov		ax, [di+ATA6.qwLBACnt]
 	mov		dx, [di+ATA6.qwLBACnt+2]
 	mov		bx, [di+ATA6.qwLBACnt+4]
 	ret
+%endif
 
 .GetLba28SectorCount:
 	mov		ax, [di+ATA1.dwLBACnt]
