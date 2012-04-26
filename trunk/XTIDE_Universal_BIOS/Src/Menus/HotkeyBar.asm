@@ -208,6 +208,7 @@ FormatFunctionHotkeyString:
 ;	Parameters:
 ;		CF:		Set if selected hotkey
 ;				Cleared if unselected hotkey
+;		ES:		BDA segment (zero)
 ;	Returns:
 ;		DX:		Description Attribute
 ;	Corrupts registers:
@@ -233,12 +234,21 @@ GetDescriptionAttributeToDX:
 %else	; No boot menu so use simpler attributes
 
 GetSelectedHotkeyDescriptionAttributeToDX:
-	mov		dl, MONO_REVERSE_BLINK
-	ret
+	mov		dx, (COLOR_ATTRIBUTE(COLOR_YELLOW, COLOR_CYAN) << 8) | MONO_REVERSE_BLINK
+	jmp		SHORT SelectAttributeFromDHorDLbasedOnVideoMode
 
 GetNonSelectedHotkeyDescriptionAttributeToDX:
-	mov		dl, MONO_REVERSE
+	mov		dx, (COLOR_ATTRIBUTE(COLOR_BLACK, COLOR_CYAN) << 8) | MONO_REVERSE
+SelectAttributeFromDHorDLbasedOnVideoMode:
+	mov		al, [es:BDA.bVidMode]
+	shr		al, 1
+	jnc		SHORT .AttributeLoadedToDL	; Black & White modes
+	shr		al, 1
+	jnz		SHORT .AttributeLoadedToDL	; MDA
+	mov		dl, dh
+.AttributeLoadedToDL:
 	ret
+
 %endif
 
 
