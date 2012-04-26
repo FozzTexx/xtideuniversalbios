@@ -89,7 +89,7 @@ IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 	; Prepare to output Identify Device command
 	mov		dl, 1						; Sector count (required by IdeTransfer.asm)
 	mov		al, COMMAND_IDENTIFY_DEVICE
-	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_IDENTIFY_DEVICE, FLG_STATUS_DRQ)
+	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRQ, FLG_STATUS_DRQ)
 	call	Idepack_StoreNonExtParametersAndIssueCommandFromAL
 
 	; Clean stack and return

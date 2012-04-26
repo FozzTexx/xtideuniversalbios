@@ -73,10 +73,12 @@ CreateDPT_FromAtaInformation:
 .StoreDriveSelectAndDriveControlByte:
 	mov		al, bh
 	and		ax, BYTE FLG_DRVNHEAD_DRV		; AL now has Master/Slave bit
+%ifdef MODULE_IRQ
 	cmp		[cs:bp+IDEVARS.bIRQ], ah		; Interrupts enabled?
 	jz		SHORT .StoreFlags				;  If not, do not set interrupt flag
 	or		al, FLGL_DPT_ENABLE_IRQ
 .StoreFlags:
+%endif
 	mov		[di+DPT.wFlags], ax
 	; Fall to .StoreAddressing
 
@@ -280,6 +282,7 @@ StoreLbaAddressingAndTotalSectorCountFromBXDXAX:
 	mov		[di+DPT.twLbaSectors+2], dx
 	mov		[di+DPT.twLbaSectors+4], bx
 
+%ifdef MODULE_EBIOS
 	and		BYTE [di+DPT.bFlagsLow], ~MASKL_DPT_ADDRESSING_MODE
 	test	bx, bx
 	jnz		SHORT .SetLba48AddressingToDPT	; Must be LBA48
@@ -291,5 +294,6 @@ StoreLbaAddressingAndTotalSectorCountFromBXDXAX:
 .SetLba48AddressingToDPT:
 	or		BYTE [di+DPT.bFlagsLow], ADDRESSING_MODE_LBA48<<ADDRESSING_MODE_FIELD_POSITION
 .SetLba28AddressingToDPT:
+%endif
 	or		BYTE [di+DPT.bFlagsLow], ADDRESSING_MODE_LBA28<<ADDRESSING_MODE_FIELD_POSITION
 	ret
