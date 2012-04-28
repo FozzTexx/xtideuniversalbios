@@ -94,12 +94,13 @@ struc IDEPACK
 	.bDeviceControl			resb	1	; Offset 7 shared with PIOVARS
 							resb	1
 
+%ifdef MODULE_EBIOS
 	; Parameters for 48-bit LBA
 	.bLbaLowExt				resb	1	; LBA48 31...24
 	.wLbaMiddleAndHighExt:
 	.bLbaMiddleExt			resb	1	; LBA48 39...32
 	.bLbaHighExt			resb	1	; LBA48 47...40
-
+%endif
 	.intpack				resb	INTPACK_size
 endstruc
 

@@ -46,6 +46,7 @@ endstruc
 
 %ifdef MODULE_HOTKEYS
 struc HOTKEYVARS
+	.wTimeToClose		resb	2		; Earliest system time when Hotkey Bar can be closed
 	.bScancode			resb	1		; Function hotkey scancode
 	.bFlags				resb	1		; Must be just before .bHddLetter! 
 	.wHddAndFddLetters:
