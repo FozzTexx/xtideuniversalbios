@@ -2,20 +2,20 @@
 ; Description	:	Memory mapped IDE Device transfer functions.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
-;				
+;
 
 ; Structure containing variables for PIO transfer functions.
 ; This struct must not be larger than IDEPACK without INTPACK.
@@ -92,20 +92,20 @@ ReadFromSectorAccessWindow:
 	jc		SHORT ReturnWithMemoryIOtransferErrorInAH
 
 	mov		cx, [bp+MEMPIOVARS.wSectorsInBlock]
+	cmp		[bp+MEMPIOVARS.bSectorsLeft], cl
+	jbe		SHORT .ReadLastBlockFromDrive
 
 ALIGN JUMP_ALIGN
 .ReadNextBlockFromDrive:
-	cmp		[bp+MEMPIOVARS.bSectorsLeft], cl
-	jbe		SHORT .ReadLastBlockFromDrive
 	call	ReadSingleBlockFromSectorAccessWindowInDSSItoESDI
 	call	WaitUntilReadyToTransferNextBlock
 	jc		SHORT ReturnWithMemoryIOtransferErrorInAH
 
 	; Increment number of successfully read sectors
 	mov		cx, [bp+MEMPIOVARS.wSectorsInBlock]
-	sub		[bp+MEMPIOVARS.bSectorsLeft], cl
 	add		[bp+MEMPIOVARS.bSectorsDone], cl
-	jmp		SHORT .ReadNextBlockFromDrive
+	sub		[bp+MEMPIOVARS.bSectorsLeft], cl
+	ja		SHORT .ReadNextBlockFromDrive
 
 ALIGN JUMP_ALIGN
 .ReadLastBlockFromDrive:
@@ -122,7 +122,7 @@ CheckErrorsAfterTransferringLastMemoryMappedBlock:
 ReturnWithMemoryIOtransferErrorInAH:
 	lds		di, [bp+MEMPIOVARS.fpDPT]			; DPT now in DS:DI
 %ifdef USE_386
-	movzx	cx, BYTE [bp+MEMPIOVARS.bSectorsDone]
+	movzx	cx, [bp+MEMPIOVARS.bSectorsDone]
 %else
 	mov		ch, 0
 	mov		cl, [bp+MEMPIOVARS.bSectorsDone]
@@ -157,20 +157,20 @@ WriteToSectorAccessWindow:
 	jc		SHORT ReturnWithMemoryIOtransferErrorInAH
 
 	mov		cx, [bp+MEMPIOVARS.wSectorsInBlock]
+	cmp		[bp+MEMPIOVARS.bSectorsLeft], cl
+	jbe		SHORT .WriteLastBlockToDrive
 
 ALIGN JUMP_ALIGN
 .WriteNextBlockToDrive:
-	cmp		[bp+MEMPIOVARS.bSectorsLeft], cl
-	jbe		SHORT .WriteLastBlockToDrive
 	call	WriteSingleBlockFromDSSIToSectorAccessWindowInESDI
 	call	WaitUntilReadyToTransferNextBlock
 	jc		SHORT ReturnWithMemoryIOtransferErrorInAH
 
 	; Increment number of successfully written WORDs
 	mov		cx, [bp+MEMPIOVARS.wSectorsInBlock]
-	sub		[bp+MEMPIOVARS.bSectorsLeft], cl
 	add		[bp+MEMPIOVARS.bSectorsDone], cl
-	jmp		SHORT .WriteNextBlockToDrive
+	sub		[bp+MEMPIOVARS.bSectorsLeft], cl
+	ja		SHORT .WriteNextBlockToDrive
 
 ALIGN JUMP_ALIGN
 .WriteLastBlockToDrive:
@@ -254,5 +254,5 @@ WaitUntilReadyToTransferNextBlock:
 
 
 %if JRIDE_SECTOR_ACCESS_WINDOW_SIZE <> 512
-	%error "JRIDE_SECTOR_ACCESS_WINDOW_SIZE is no longer equal to 512. MemIdeTransfer.asm needs changes."
+	%error "JRIDE_SECTOR_ACCESS_WINDOW_SIZE is no longer equal to 512. JrIdeTransfer.asm needs changes."
 %endif

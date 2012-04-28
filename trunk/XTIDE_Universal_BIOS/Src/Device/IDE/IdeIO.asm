@@ -2,20 +2,20 @@
 ; Description	:	IDE Register I/O functions.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
-;		
+;
 
 ; Section containing code
 SECTION .text
@@ -41,8 +41,8 @@ IdeIO_OutputALtoIdeControlBlockRegisterInDL:
 	add		dx, JRIDE_CONTROL_BLOCK_REGISTER_WINDOW_OFFSET
 	jmp		SHORT OutputToJrIdeRegister
 .OutputToIoMappedIde:
-%endif
-%endif
+%endif	; MODULE_JRIDE
+%endif	; MODULE_8BIT_IDE
 
 	mov		bl, IDEVARS.wPortCtrl
 	jmp		SHORT OutputALtoIdeRegisterInDLwithIdevarsOffsetToBasePortInBL
@@ -67,15 +67,19 @@ IdeIO_OutputALtoIdeRegisterInDL:
 	test	dh, dh
 	jnz		SHORT OutputALtoIOmappedIdeRegisterInDL
 
+%if JRIDE_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET & 0FFh = 0
+	mov		dh, JRIDE_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET >> 8
+%else
 	add		dx, JRIDE_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET
+%endif
 OutputToJrIdeRegister:
 	mov		bx, dx
 	mov		[cs:bx], al
 	ret
 ALIGN JUMP_ALIGN
 OutputALtoIOmappedIdeRegisterInDL:
-%endif
-%endif
+%endif	; MODULE_JRIDE
+%endif	; MODULE_8BIT_IDE
 
 	mov		bl, IDEVARS.wPort
 OutputALtoIdeRegisterInDLwithIdevarsOffsetToBasePortInBL:
@@ -115,13 +119,17 @@ IdeIO_InputToALfromIdeRegisterInDL:
 	test	dh, dh
 	jnz		SHORT .InputToALfromIOmappedIdeRegisterInDL
 
+%if JRIDE_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET & 0FFh = 0
+	mov		dh, JRIDE_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET >> 8
+%else
 	add		dx, JRIDE_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET
+%endif
 	mov		bx, dx
 	mov		al, [cs:bx]
 	ret
 .InputToALfromIOmappedIdeRegisterInDL:
-%endif
-%endif
+%endif	; MODULE_JRIDE
+%endif	; MODULE_8BIT_IDE
 	mov		bl, IDEVARS.wPort
 	call	GetIdePortToDX
 	in		al, dx
@@ -171,8 +179,8 @@ GetIdePortToDX:
 
 %else	; Only standard IDE devices
 	xor		bh, bh
+	add		bl, [di+DPT.bIdevarsOffset]			; CS:BX now points port address
 	xor		dh, dh
-	add		bl, [di+DPT.bIdevarsOffset]		; CS:BX now points port address
-	add		dx, [cs:bx]						; DX now has port address
+	add		dx, [cs:bx]							; DX now has port address
 	ret
 %endif
