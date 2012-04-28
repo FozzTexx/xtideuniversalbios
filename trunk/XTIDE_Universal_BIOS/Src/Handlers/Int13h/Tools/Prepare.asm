@@ -147,16 +147,22 @@ g_rgbReadCommandLookup:
 	db		COMMAND_READ_SECTORS		; 00b, CHS or LBA28 single sector
 	db		COMMAND_READ_SECTORS_EXT	; 01b, LBA48 single sector
 	db		COMMAND_READ_MULTIPLE		; 10b, CHS or LBA28 block mode
+%ifdef MODULE_EBIOS
 	db		COMMAND_READ_MULTIPLE_EXT	; 11b, LBA48 block mode
+%endif
 
 g_rgbWriteCommandLookup:
 	db		COMMAND_WRITE_SECTORS
 	db		COMMAND_WRITE_SECTORS_EXT
 	db		COMMAND_WRITE_MULTIPLE
+%ifdef MODULE_EBIOS
 	db		COMMAND_WRITE_MULTIPLE_EXT
+%endif
 
 g_rgbVerifyCommandLookup:
 	db		COMMAND_VERIFY_SECTORS
 	db		COMMAND_VERIFY_SECTORS_EXT
 	db		COMMAND_VERIFY_SECTORS
+%ifdef MODULE_EBIOS
 	db		COMMAND_VERIFY_SECTORS_EXT
+%endif

@@ -76,7 +76,20 @@ Int19h_BootLoaderHandler:
 ;	Returns:
 ;		DS:		RAMVARS segment
 ;--------------------------------------------------------------------
-	call	Initialize_AndDetectDrives	
+%ifdef MODULE_HOTKEYS
+	call	TimerTicks_ReadFromBdaToAX
+	add		ax, MIN_TIME_TO_DISPLAY_HOTKEY_BAR
+	mov		[es:BOOTVARS.hotkeyVars+HOTKEYVARS.wTimeToClose], ax
+%endif
+
+	call	Initialize_AndDetectDrives
+
+%ifdef MODULE_HOTKEYS
+.WaitUntilTimeToCloseHotkeyBar:
+	call	TimerTicks_ReadFromBdaToAX
+	cmp		ax, [es:BOOTVARS.hotkeyVars+HOTKEYVARS.wTimeToClose]
+	jb		SHORT .WaitUntilTimeToCloseHotkeyBar
+%endif
 	; Fall to SelectDriveToBootFrom
 
 

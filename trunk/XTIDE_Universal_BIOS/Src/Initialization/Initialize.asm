@@ -32,26 +32,31 @@ SECTION .text
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-Initialize_FromMainBiosRomSearch:			; unused entrypoint ok
-	pushf
-	push	es
+Initialize_FromMainBiosRomSearch:		; unused entrypoint ok
+	pushf								; To store IF
 	push	ds
-	ePUSHA
 
-	LOAD_BDA_SEGMENT_TO	es, ax
-	sti										; Enable interrupts
-	test	BYTE [es:BDA.bKBFlgs1], (1<<2)	; Clears ZF if CTRL is held down
+%ifndef USE_186
+	push	ax
+	LOAD_BDA_SEGMENT_TO	ds, ax
+%else
+	push	BYTE 0
+	pop		ds
+%endif
+
+	sti									; Enable interrupts for keystrokes
+	test	BYTE [BDA.bKBFlgs1], (1<<2)	; Clears ZF if CTRL is held down
 	jnz		SHORT .SkipRomInitialization
 
 	; Install INT 19h handler (boot loader) where drives are detected
-	mov		al, BIOS_BOOT_LOADER_INTERRUPT_19h
-	mov		si, Int19h_BootLoaderHandler
-	call	Interrupts_InstallHandlerToVectorInALFromCSSI
+	mov		WORD [BIOS_BOOT_LOADER_INTERRUPT_19h*4], Int19h_BootLoaderHandler
+	mov		[BIOS_BOOT_LOADER_INTERRUPT_19h*4+2], cs
 
 .SkipRomInitialization:
-	ePOPA
+%ifndef USE_186
+	pop		ax
+%endif
 	pop		ds
-	pop		es
 	popf
 	retf
 
@@ -65,7 +70,7 @@ Initialize_FromMainBiosRomSearch:			; unused entrypoint ok
 ;	Returns:
 ;		DS:		RAMVARS segment
 ;	Corrupts registers:
-;		All
+;		All, except ES
 ;--------------------------------------------------------------------
 Initialize_AndDetectDrives:
 	call	DetectPrint_InitializeDisplayContext
