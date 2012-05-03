@@ -25,24 +25,6 @@
 LITE_MODE_RAMVARS_SEGMENT	EQU		30h
 %endif
 
-
-; Variables for translating drive numbers.
-struc XLATEVARS
-%ifdef MODULE_SERIAL_FLOPPY
-	.bFlopCreateCnt:
-	.bFlopCntAndFirst	resb	1	; Normally, packed starting floppy drive number (high order 7 bits)
-									; and number of drives (low order bit, max 2 drives supported).
-									; During initialization, until the end of DetectDrives_FromAllIDEControllers,
-									; this byte contains the raw number of floppy drives seen (using .bFlopCreateCnt)
-%else
-						resb	1	; alignment
-%endif
-	.bXlatedDrv			resb	1	; Drive number after translation
-	.wFDandHDswap:
-	.bFDSwap			resb	1	; Floppy Drive to swap to 00h and vice versa
-	.bHDSwap			resb	1	; Hard Drive to swap to 80h and vice versa
-endstruc
-
 ; RAM Variables.
 ; Variables should be kept to minimum since they might be located
 ; at the top of interrupt vectors.
@@ -59,8 +41,31 @@ struc RAMVARS
 	.bDrvCnt			resb	1	; Number of drives handled by this BIOS
 
 	; Variables for drive number translation
-	.xlateVars		resb	XLATEVARS_size
+%ifdef MODULE_HOTKEYS
+	.xlateVars			resb	XLATEVARS_size
+%endif
 endstruc
+
+
+; Variables for translating drive numbers.
+%ifdef MODULE_HOTKEYS
+	struc XLATEVARS
+	%ifdef MODULE_SERIAL_FLOPPY
+		.bFlopCreateCnt:
+		.bFlopCntAndFirst	resb	1	; Normally, packed starting floppy drive number (high order 7 bits)
+										; and number of drives (low order bit, max 2 drives supported).
+										; During initialization, until the end of DetectDrives_FromAllIDEControllers,
+										; this byte contains the raw number of floppy drives seen (using .bFlopCreateCnt)
+	%else
+							resb	1	; alignment
+	%endif
+		.bXlatedDrv			resb	1	; Drive number after translation
+		.wFDandHDswap:
+		.bFDSwap			resb	1	; Floppy Drive to swap to 00h and vice versa
+		.bHDSwap			resb	1	; Hard Drive to swap to 80h and vice versa
+	endstruc
+%endif
+
 
 %ifdef MODULE_SERIAL_FLOPPY
   %ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
@@ -76,7 +81,7 @@ RAMVARS_SIGNATURE		EQU	"Xu"	; RAMVARS signature for .wSignature
 ; IDEPACK NOTE: The first six bytes of this structure are directly put on the 
 ; wire for MODULE_SERIAL, please do not change the order or insert other members.
 ;
-struc IDEPACK
+struc IDEPACK	; PIOVARS and MEMPIOVARS overwrite the first 7 bytes
 	.bFeatures				resb	1
 	.bDrvAndHead			resb	1	; LBA28 27...24
 
@@ -91,8 +96,8 @@ struc IDEPACK
 	.bLbaHigh				resb	1	; LBA 23...16
 
 	.bCommand				resb	1
-	.bDeviceControl			resb	1	; Offset 7 shared with PIOVARS
-							resb	1
+	.bDeviceControl			resb	1	; Offset 7 shared with PIOVARS and MEMPIOVARS
+							resb	1	; Used by PIOVARS and MEMPIOVARS
 
 %ifdef MODULE_EBIOS
 	; Parameters for 48-bit LBA
@@ -101,6 +106,7 @@ struc IDEPACK
 	.bLbaMiddleExt			resb	1	; LBA48 39...32
 	.bLbaHighExt			resb	1	; LBA48 47...40
 %endif
+
 	.intpack				resb	INTPACK_size
 endstruc
 

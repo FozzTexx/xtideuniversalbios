@@ -19,13 +19,12 @@
 
 ; Structure containing variables for PIO transfer functions.
 ; This struct must not be larger than IDEPACK without INTPACK.
-struc MEMPIOVARS
-	.wSectorsInBlock		resb	2	; 0, Block size in sectors
-	.bSectorsLeft			resb	1	; 2, Sectors left to transfer
-	.bSectorsDone			resb	1	; 3, Number of sectors xferred
-							resb	3	; 4, 5, 6
+struc MEMPIOVARS	; Must not be larger than 9 bytes! See IDEPACK in RamVars.inc.
+	.wSectorsInBlock		resb	2	; 0-1, Block size in sectors
+	.fpDPT					resb	4	; 2-5, Far pointer to DPT
+	.bSectorsLeft			resb	1	; 6, Sectors left to transfer
 							resb	1	; 7, IDEPACK.bDeviceControl
-	.fpDPT					resb	4	; 8, Far pointer to DPT
+	.bSectorsDone			resb	1	; 8, Number of sectors xferred
 endstruc
 
 
