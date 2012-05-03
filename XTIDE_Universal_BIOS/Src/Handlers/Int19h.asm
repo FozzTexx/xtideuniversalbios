@@ -28,8 +28,9 @@ SECTION .text
 ;		Never returns (loads operating system)
 ;--------------------------------------------------------------------
 Int19h_BootLoaderHandler:
-	sti											; Allow timer interrupts
-	LOAD_BDA_SEGMENT_TO	es, ax					; Load BDA segment (zero) to ES
+	sti									; Enable interrupts
+	cld									; String instructions to increment pointers
+	LOAD_BDA_SEGMENT_TO	es, ax			; Load BDA segment (zero) to ES
 	; Fall to .PrepareBootLoaderStack
 
 

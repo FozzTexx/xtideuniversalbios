@@ -44,8 +44,8 @@ Int13h_DiskFunctionsHandler:
 
 %ifdef MODULE_HOTKEYS
 	call	DriveXlate_ToOrBack
-%endif
 	mov		[RAMVARS.xlateVars+XLATEVARS.bXlatedDrv], dl
+%endif
 
 	call	FindDPT_ForDriveNumberInDL	; DS:DI points to our DPT, or NULL if not our drive
 	jc		SHORT .NotOurDrive			; DPT not found so this is not one of our drives
@@ -128,17 +128,25 @@ Int13h_DirectCallToAnotherBios:
 	mov		[bp+IDEPACK.intpack+INTPACK.di], di
 	mov		[bp+IDEPACK.intpack+INTPACK.si], si
 	mov		[bp+IDEPACK.intpack+INTPACK.bx], bx
+%ifdef MODULE_HOTKEYS
 	mov		[bp+IDEPACK.intpack+INTPACK.dh], dh
+%else
+	mov		[bp+IDEPACK.intpack+INTPACK.dx], dx
+%endif
 	mov		[bp+IDEPACK.intpack+INTPACK.cx], cx
 	mov		[bp+IDEPACK.intpack+INTPACK.ax], ax
 	pushf
 	pop		WORD [bp+IDEPACK.intpack+INTPACK.flags]
 	call	RamVars_GetSegmentToDS
-	cmp		dl, [RAMVARS.xlateVars+XLATEVARS.bXlatedDrv]
+
+%ifdef MODULE_HOTKEYS
+	cmp		dl, [RAMVARS.xlateVars+XLATEVARS.bXlatedDrv]	; DL is still drive number?
 	je		SHORT .ExchangeInt13hHandlers
-	mov		[bp+IDEPACK.intpack+INTPACK.dl], dl		; Something is returned in DL
+	mov		[bp+IDEPACK.intpack+INTPACK.dl], dl	; Something is returned in DL
 ALIGN JUMP_ALIGN
 .ExchangeInt13hHandlers:
+%endif
+
 %ifdef USE_186
 	push	Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 	jmp		SHORT ExchangeCurrentInt13hHandlerWithOldInt13hHandler
@@ -191,9 +199,11 @@ Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH:
 	mov		al, [bp+IDEPACK.intpack+INTPACK.dl]
 Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH_ALHasDriveNumber:
 	call	Int13h_SetErrorCodeToBdaAndToIntpackInSSBPfromAH_ALHasDriveNumber
+
 %else
 	call	Int13h_SetErrorCodeToBdaAndToIntpackInSSBPfromAH
 %endif
+
 Int13h_ReturnFromHandlerWithoutStoringErrorCode:
 	or		WORD [bp+IDEPACK.intpack+INTPACK.flags], FLG_FLAGS_IF	; Return with interrupts enabled
 	mov		sp, bp									; Now we can exit anytime
@@ -264,7 +274,7 @@ Int13h_SetErrorCodeToBdaAndToIntpackInSSBPfromAH_ALHasDriveNumber:
 	; Store error code to BDA
 	mov		bx, BDA.bHDLastSt
 	test	al, al
-	js		.HardDisk
+	js		SHORT .HardDisk
 	mov		bl, BDA.bFDRetST & 0xff
 .HardDisk:
 	LOAD_BDA_SEGMENT_TO	ds, di

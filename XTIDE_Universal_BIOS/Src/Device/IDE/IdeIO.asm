@@ -32,17 +32,17 @@ SECTION .text
 ;		BX, DX
 ;--------------------------------------------------------------------
 IdeIO_OutputALtoIdeControlBlockRegisterInDL:
-%ifdef MODULE_8BIT_IDE
-	mov		dh, [di+DPT_ATA.bDevice]
-%ifdef MODULE_JRIDE
-	test	dh, dh
-	jnz		SHORT .OutputToIoMappedIde
-
-	add		dx, JRIDE_CONTROL_BLOCK_REGISTER_WINDOW_OFFSET
-	jmp		SHORT OutputToJrIdeRegister
-.OutputToIoMappedIde:
-%endif	; MODULE_JRIDE
-%endif	; MODULE_8BIT_IDE
+	%ifdef MODULE_8BIT_IDE
+		mov		dh, [di+DPT_ATA.bDevice]
+		%ifdef MODULE_JRIDE
+			test	dh, dh
+			jnz		SHORT .OutputToIoMappedIde
+		
+			add		dx, JRIDE_CONTROL_BLOCK_REGISTER_WINDOW_OFFSET
+			jmp		SHORT OutputToJrIdeRegister
+		.OutputToIoMappedIde:
+		%endif	; MODULE_JRIDE
+	%endif	; MODULE_8BIT_IDE
 
 	mov		bl, IDEVARS.wPortCtrl
 	jmp		SHORT OutputALtoIdeRegisterInDLwithIdevarsOffsetToBasePortInBL
@@ -61,25 +61,25 @@ IdeIO_OutputALtoIdeControlBlockRegisterInDL:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 IdeIO_OutputALtoIdeRegisterInDL:
-%ifdef MODULE_8BIT_IDE
-	mov		dh, [di+DPT_ATA.bDevice]
-%ifdef MODULE_JRIDE
-	test	dh, dh
-	jnz		SHORT OutputALtoIOmappedIdeRegisterInDL
-
-%if JRIDE_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET & 0FFh = 0
-	mov		dh, JRIDE_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET >> 8
-%else
-	add		dx, JRIDE_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET
-%endif
-OutputToJrIdeRegister:
-	mov		bx, dx
-	mov		[cs:bx], al
-	ret
-ALIGN JUMP_ALIGN
-OutputALtoIOmappedIdeRegisterInDL:
-%endif	; MODULE_JRIDE
-%endif	; MODULE_8BIT_IDE
+	%ifdef MODULE_8BIT_IDE
+		mov		dh, [di+DPT_ATA.bDevice]
+		%ifdef MODULE_JRIDE
+			test	dh, dh
+			jnz		SHORT OutputALtoIOmappedIdeRegisterInDL
+		
+		%if JRIDE_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET & 0FFh = 0
+			mov		dh, JRIDE_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET >> 8
+		%else
+			add		dx, JRIDE_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET
+		%endif
+		OutputToJrIdeRegister:
+			mov		bx, dx
+			mov		[cs:bx], al
+			ret
+		ALIGN JUMP_ALIGN
+		OutputALtoIOmappedIdeRegisterInDL:
+		%endif	; MODULE_JRIDE
+	%endif	; MODULE_8BIT_IDE
 
 	mov		bl, IDEVARS.wPort
 OutputALtoIdeRegisterInDLwithIdevarsOffsetToBasePortInBL:
@@ -113,23 +113,23 @@ IdeIO_InputStatusRegisterToAL:
 ;		BX, DX
 ;--------------------------------------------------------------------
 IdeIO_InputToALfromIdeRegisterInDL:
-%ifdef MODULE_8BIT_IDE
-	mov		dh, [di+DPT_ATA.bDevice]
-%ifdef MODULE_JRIDE
-	test	dh, dh
-	jnz		SHORT .InputToALfromIOmappedIdeRegisterInDL
-
-%if JRIDE_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET & 0FFh = 0
-	mov		dh, JRIDE_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET >> 8
-%else
-	add		dx, JRIDE_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET
-%endif
-	mov		bx, dx
-	mov		al, [cs:bx]
-	ret
-.InputToALfromIOmappedIdeRegisterInDL:
-%endif	; MODULE_JRIDE
-%endif	; MODULE_8BIT_IDE
+	%ifdef MODULE_8BIT_IDE
+		mov		dh, [di+DPT_ATA.bDevice]
+		%ifdef MODULE_JRIDE
+			test	dh, dh
+			jnz		SHORT .InputToALfromIOmappedIdeRegisterInDL
+		
+		%if JRIDE_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET & 0FFh = 0
+			mov		dh, JRIDE_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET >> 8
+		%else
+			add		dx, JRIDE_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET
+		%endif
+			mov		bx, dx
+			mov		al, [cs:bx]
+			ret
+		.InputToALfromIOmappedIdeRegisterInDL:
+		%endif	; MODULE_JRIDE
+	%endif	; MODULE_8BIT_IDE
 	mov		bl, IDEVARS.wPort
 	call	GetIdePortToDX
 	in		al, dx

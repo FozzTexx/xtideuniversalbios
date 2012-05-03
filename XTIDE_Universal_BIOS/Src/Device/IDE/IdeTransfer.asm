@@ -19,10 +19,10 @@
 
 ; Structure containing variables for PIO transfer functions.
 ; This struct must not be larger than IDEPACK without INTPACK.
-struc PIOVARS
-	.wDataPort				resb	2	; 0, IDE Data Port
-	.fnXfer					resb	2	; 2, Offset to transfer function
-	.wSectorsInBlock		resb	2	; 4, Block size in sectors
+struc PIOVARS	; Must not be larger than 9 bytes! See IDEPACK in RamVars.inc.
+	.wDataPort				resb	2	; 0-1, IDE Data Port
+	.fnXfer					resb	2	; 2-3, Offset to transfer function
+	.wSectorsInBlock		resb	2	; 4-5, Block size in sectors
 	.bSectorsLeft			resb	1	; 6, Sectors left to transfer
 							resb	1	; 7, IDEPACK.bDeviceControl
 	.bSectorsDone			resb	1	; 8, Number of sectors xferred

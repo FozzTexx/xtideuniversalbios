@@ -21,8 +21,8 @@
 %define DEVICEIDE_INC
 
 ; Reset delays
-HSR0_RESET_WAIT_US		EQU		5		; Delay at least 5us
-HSR1_RESET_WAIT_US		EQU		2000	; Delay at least 2ms
+HSR0_RESET_WAIT_US		EQU		6		; Delay must be at least 5 us
+HSR1_RESET_WAIT_US		EQU		2100	; Delay must be at least 2 ms
 
 ; Polling timeout delays (system timer ticks, 1 tick = 54.9 ms)
 TIMEOUT_DRQ				EQU		255			;   14 s (some CF cards occasionally have long write delays)
@@ -33,8 +33,8 @@ TIMEOUT_MOTOR_STARTUP	EQU		(10000/55)	;   10 s
 TIMEOUT_BSY				EQU		TIMEOUT_MOTOR_STARTUP
 TIMEOUT_DRDY			EQU		TIMEOUT_MOTOR_STARTUP
 %else
-TIMEOUT_BSY				EQU		(2500/55)	; 2500 ms
-TIMEOUT_DRDY			EQU		(2500/55)	; 2500 ms
+TIMEOUT_BSY				EQU		(2600/55)	; 2600 ms
+TIMEOUT_DRDY			EQU		(2600/55)	; 2600 ms
 %endif
 
 %endif ; DEVICEIDE_INC
