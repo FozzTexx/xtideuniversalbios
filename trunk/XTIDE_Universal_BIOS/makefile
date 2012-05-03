@@ -202,7 +202,7 @@ xt_tiny:
 	@echo * 8k 386 version "$(TARGET)_386.bin" built.
 
 strings: src\Strings.asm
-	@$(AS) src\Strings.asm $(ASFLAGS) $(DEFS_XT) -DCHECK_FOR_UNUSED_ENTRYPOINTS -DMODULE_STRINGS_COMPRESSED_PRECOMPRESS -o build\Strings.bin -l build\StringsPrecompress.lst
+	@$(AS) src\Strings.asm $(ASFLAGS) $(DEFS_AT_LARGE) -DCHECK_FOR_UNUSED_ENTRYPOINTS -DMODULE_STRINGS_COMPRESSED_PRECOMPRESS -o build\Strings.bin -l build\StringsPrecompress.lst
 	@perl ..\tools\StringsCompress.pl < build\StringsPrecompress.lst > src\StringsCompressed.asm
 	@echo StringsCompressed.asm updated!
 

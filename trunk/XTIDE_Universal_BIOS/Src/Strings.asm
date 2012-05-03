@@ -24,6 +24,12 @@
 ; Section containing code
 SECTION .text
 
+; POST drive detection strings
+g_szDashForZero:	db	"- ",NULL	; Required by Display Library
+g_szRomAt:			db	LF,CR,"%s @ %x",LF,CR
+					db  "Released under GNU GPL v2",LF,CR,LF,CR,NULL
+
+
 ; The following strings are used by DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP
 ; To support an optimization in that code, these strings must start on the same 256 byte page,
 ; which is checked at assembly time below.
@@ -32,12 +38,12 @@ g_szDetectStart:
 g_szDetectMaster:		db	"Master",NULL
 g_szDetectSlave:		db	"Slave ",NULL
 g_szDetectOuter:		db	"%s at %s: ",NULL
-;%%; %ifdef MODULE_SERIAL		;%%; is stripped off after string compression, %ifdef won't compress properly
+%ifdef MODULE_SERIAL
 g_szDetectCOM:			db  "COM%c%s",NULL
 g_szDetectCOMAuto:		db	" Detect",NULL
 g_szDetectCOMSmall:		db	"/%u%u00",NULL					; IDE Master at COM1/9600:
 g_szDetectCOMLarge:		db	"/%u.%uK",NULL					; IDE Master at COM1/19.2K:
-;%%; %endif						;%%; is stripped off after string compression, %ifdef won't compress properly
+%endif
 g_szDetectEnd:
 g_szDetectPort:			db	"%x",NULL					   	; IDE Master at 1F0h:
 
@@ -46,6 +52,27 @@ g_szDetectPort:			db	"%x",NULL					   	; IDE Master at 1F0h:
 		%error "g_szDetect* strings must start on the same 256 byte page, required by DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP.  Please move this block up or down within strings.asm"
 	%endif
 %endif
+
+
+; Boot loader strings
+g_szTryToBoot:			db	"Booting %c",ANGLE_QUOTE_RIGHT,"%c",LF,CR,NULL
+g_szBootSectorNotFound:	db	"Boot sector "
+g_szNotFound:			db	"not found",LF,CR,NULL
+g_szReadError:			db	"Error %x!",LF,CR,NULL
+
+
+%ifdef MODULE_HOTKEYS
+
+; Hotkey Bar strings
+g_szFDD:		db	"FDD [%c]",NULL			; "FDD [A]"
+g_szHDD:		db	"HDD [%c]",NULL			; "HDD [C]"
+g_szBootMenu:	db	"%sMnu",NULL			; "BootMnu"
+g_szRomBoot:	db	"Rom%s",NULL			; "RomBoot"
+g_szBoot:		db	"Boot",NULL
+g_szHotkey:		db	"%A%c%c%A%s%A ",NULL	; "C»HDD [A] ", "F2BootMnu " or "F8RomBoot "
+
+
+%ifdef MODULE_BOOT_MENU
 
 ; Boot Menu Floppy Disk strings
 ;
@@ -66,16 +93,6 @@ g_szFddFiveQuarter:		db  "5",ONE_QUARTER,NULL
 		%error "g_szFdd* strings must start on the same 256 byte page, required by the BootMenuPrint_RefreshInformation routines for floppy drives.  Please move this block up or down within strings.asm"
 	%endif
 %endif
-
-; POST drive detection strings
-g_szRomAt:		db	"%s @ %x",LF,CR
-				db  "Released under GNU GPL v2",LF,CR,LF,CR,NULL
-
-; Boot loader strings
-g_szTryToBoot:			db	"Booting %c",ANGLE_QUOTE_RIGHT,"%c",LF,CR,NULL
-g_szBootSectorNotFound:	db	"Boot sector "
-g_szNotFound:			db	"not found",LF,CR,NULL
-g_szReadError:			db	"Error %x!",LF,CR,NULL
 
 
 g_szAddressingModes:
@@ -140,15 +157,8 @@ g_szBusTypeValues_Displacement equ (g_szBusTypeValues_8Reversed - g_szBusTypeVal
 
 g_szSelectionTimeout:	db		DOUBLE_BOTTOM_LEFT_CORNER,DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL,"%ASelection in %2-u s",NULL
 
-g_szDashForZero:		db		"- ",NULL
 
-; Boot menu bottom of screen strings
-g_szFDD:		db	"FDD [%c]",NULL			; "FDD [A]"
-g_szHDD:		db	"HDD [%c]",NULL			; "HDD [C]"
-g_szBootMenu:	db	"%sMnu",NULL			; "BootMnu"
-g_szRomBoot:	db	"Rom%s",NULL			; "RomBoot"
-g_szBoot:		db	"Boot",NULL
-g_szHotkey:		db	"%A%c%c%A%s%A ",NULL	; "C»HDD [A] ", "F2BootMnu " or "F8RomBoot "
+
 
 ; Boot Menu information strings
 g_szCapacity:			db	"Capacity : %s",NULL
@@ -156,6 +166,7 @@ g_szCapacityNum:		db	"%5-u.%u %ciB",NULL
 g_szInformation:		db	"%s",LF,CR
 	db	"Addr.",SINGLE_VERTICAL,"Block",SINGLE_VERTICAL,"Bus",SINGLE_VERTICAL,  "IRQ",SINGLE_VERTICAL,"Reset",LF,CR
 	db	   "%s",SINGLE_VERTICAL, "%5-u",SINGLE_VERTICAL, "%s",SINGLE_VERTICAL," %2-I",SINGLE_VERTICAL,"%5-x" ,NULL
+
 
 ; Boot Menu menuitem strings
 ;
@@ -175,7 +186,11 @@ g_szForeignHD:			db	"Foreign Hard Disk",NULL
 		%error "g_szBootMenuPrint* strings must start on the same 256 byte page, required by the BootMenuPrint_* routines.  Please move this block up or down within strings.asm"
 	%endif
 %endif
-		
+
+%endif ; MODULE_BOOT_MENU
+%endif ; MODULE_HOTKEYS
+
+
 ;------------------------------------------------------------------------------------------
 ;
 ; Tables for StringsCompress.pl
