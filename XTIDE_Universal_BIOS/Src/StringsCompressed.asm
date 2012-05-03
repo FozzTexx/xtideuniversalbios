@@ -34,6 +34,21 @@
 ; Section containing code
 SECTION .text
 
+; POST drive detection strings
+g_szDashForZero:	; db	"- ",NULL	; Required by Display Library
+                	; db	 2dh,  20h,  00h    ; uncompressed
+                	  db	 28h,  00h          ; compressed
+
+g_szRomAt:			; db	LF,CR,"%s @ %x",LF,CR
+          			; db	 0ah,  0dh,  25h,  73h,  20h,  40h,  20h,  25h,  78h,  0ah,  0dh    ; uncompressed
+          			  db	 3bh,  3eh,  20h, 0c6h,  39h,  3bh                                  ; compressed
+
+	; db  "Released under GNU GPL v2",LF,CR,LF,CR,NULL
+	; db   52h,  65h,  6ch,  65h,  61h,  73h,  65h,  64h,  20h,  75h,  6eh,  64h,  65h,  72h,  20h,  47h,  4eh,  55h,  20h,  47h,  50h,  4ch,  20h,  76h,  32h,  0ah,  0dh,  0ah,  0dh,  00h    ; uncompressed
+	  db   58h,  6bh,  72h,  6bh,  67h,  79h,  6bh, 0eah,  7bh,  74h,  6ah,  6bh, 0f8h,  4dh,  54h, 0dbh,  4dh,  56h, 0d2h,  7ch,  2ch,  3bh,  1bh                                              ; compressed
+
+
+
 ; The following strings are used by DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP
 ; To support an optimization in that code, these strings must start on the same 256 byte page,
 ; which is checked at assembly time below.
@@ -51,7 +66,7 @@ g_szDetectOuter:		; db	"%s at %s: ",NULL
                 		; db	 25h,  73h,  20h,  61h,  74h,  20h,  25h,  73h,  3ah,  20h,  00h    ; uncompressed
                 		  db	 3eh,  20h,  67h, 0fah,  3eh,  40h,  00h                            ; compressed
 
-%ifdef MODULE_SERIAL		;%%; is stripped off after string compression, %ifdef won't compress properly
+%ifdef MODULE_SERIAL
 g_szDetectCOM:			; db  "COM%c%s",NULL
               			; db   43h,  4fh,  4dh,  25h,  63h,  25h,  73h,  00h    ; uncompressed
               			  db   49h,  55h,  53h,  35h,  1eh                      ; compressed
@@ -68,7 +83,7 @@ g_szDetectCOMLarge:		; db	"/%u.%uK",NULL					; IDE Master at COM1/19.2K:
                    		; db	 2fh,  25h,  75h,  2eh,  25h,  75h,  4bh,  00h    ; uncompressed
                    		  db	 2ah,  37h,  29h,  37h,  91h                      ; compressed
 
-%endif						;%%; is stripped off after string compression, %ifdef won't compress properly
+%endif
 g_szDetectEnd:
 g_szDetectPort:			; db	"%x",NULL					   	; IDE Master at 1F0h:
                			; db	 25h,  78h,  00h    ; uncompressed
@@ -80,6 +95,57 @@ g_szDetectPort:			; db	"%x",NULL					   	; IDE Master at 1F0h:
 %error "g_szDetect* strings must start on the same 256 byte page, required by DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP.  Please move this block up or down within strings.asm"
 %endif
 %endif
+
+
+; Boot loader strings
+g_szTryToBoot:			; db	"Booting %c",ANGLE_QUOTE_RIGHT,"%c",LF,CR,NULL
+              			; db	 42h,  6fh,  6fh,  74h,  69h,  6eh,  67h,  20h,  25h,  63h, 0afh,  25h,  63h,  0ah,  0dh,  00h    ; uncompressed
+              			  db	 48h,  75h,  75h,  7ah,  6fh,  74h, 0edh,  35h,  24h,  35h,  1bh                                  ; compressed
+
+g_szBootSectorNotFound:	; db	"Boot sector "
+                       	; db	 42h,  6fh,  6fh,  74h,  20h,  73h,  65h,  63h,  74h,  6fh,  72h,  20h    ; uncompressed
+                       	  db	 48h,  75h,  75h, 0fah,  79h,  6bh,  69h,  7ah,  75h, 0f8h                ; compressed
+
+g_szNotFound:			; db	"not found",LF,CR,NULL
+             			; db	 6eh,  6fh,  74h,  20h,  66h,  6fh,  75h,  6eh,  64h,  0ah,  0dh,  00h    ; uncompressed
+             			  db	 74h,  75h, 0fah,  6ch,  75h,  7bh,  74h,  6ah,  1bh                      ; compressed
+
+g_szReadError:			; db	"Error %x!",LF,CR,NULL
+              			; db	 45h,  72h,  72h,  6fh,  72h,  20h,  25h,  78h,  21h,  0ah,  0dh,  00h    ; uncompressed
+              			  db	 4bh,  78h,  78h,  75h, 0f8h,  39h,  25h,  1bh                            ; compressed
+
+
+
+%ifdef MODULE_HOTKEYS
+
+; Hotkey Bar strings
+g_szFDD:		; db	"FDD [%c]",NULL			; "FDD [A]"
+        		; db	 46h,  44h,  44h,  20h,  5bh,  25h,  63h,  5dh,  00h    ; uncompressed
+        		  db	 4ch,  4ah, 0cah,  61h,  35h, 0a3h                      ; compressed
+
+g_szHDD:		; db	"HDD [%c]",NULL			; "HDD [C]"
+        		; db	 48h,  44h,  44h,  20h,  5bh,  25h,  63h,  5dh,  00h    ; uncompressed
+        		  db	 4eh,  4ah, 0cah,  61h,  35h, 0a3h                      ; compressed
+
+g_szBootMenu:	; db	"%sMnu",NULL			; "BootMnu"
+             	; db	 25h,  73h,  4dh,  6eh,  75h,  00h    ; uncompressed
+             	  db	 3eh,  53h,  74h, 0bbh                ; compressed
+
+g_szRomBoot:	; db	"Rom%s",NULL			; "RomBoot"
+            	; db	 52h,  6fh,  6dh,  25h,  73h,  00h    ; uncompressed
+            	  db	 58h,  75h,  73h,  1eh                ; compressed
+
+g_szBoot:		; db	"Boot",NULL
+         		; db	 42h,  6fh,  6fh,  74h,  00h    ; uncompressed
+         		  db	 48h,  75h,  75h, 0bah          ; compressed
+
+g_szHotkey:		; db	"%A%c%c%A%s%A ",NULL	; "C»HDD [A] ", "F2BootMnu " or "F8RomBoot "
+           		; db	 25h,  41h,  25h,  63h,  25h,  63h,  25h,  41h,  25h,  73h,  25h,  41h,  20h,  00h    ; uncompressed
+           		  db	 3dh,  35h,  35h,  3dh,  3eh,  3dh,  00h                                              ; compressed
+
+
+
+%ifdef MODULE_BOOT_MENU
 
 ; Boot Menu Floppy Disk strings
 ;
@@ -115,34 +181,6 @@ g_szFddFiveQuarter:		; db  "5",ONE_QUARTER,NULL
 %error "g_szFdd* strings must start on the same 256 byte page, required by the BootMenuPrint_RefreshInformation routines for floppy drives.  Please move this block up or down within strings.asm"
 %endif
 %endif
-
-; POST drive detection strings
-g_szRomAt:		; db	"%s @ %x",LF,CR
-          		; db	 25h,  73h,  20h,  40h,  20h,  25h,  78h,  0ah,  0dh    ; uncompressed
-          		  db	 3eh,  20h, 0c6h,  39h,  3bh                            ; compressed
-
-	; db  "Released under GNU GPL v2",LF,CR,LF,CR,NULL
-	; db   52h,  65h,  6ch,  65h,  61h,  73h,  65h,  64h,  20h,  75h,  6eh,  64h,  65h,  72h,  20h,  47h,  4eh,  55h,  20h,  47h,  50h,  4ch,  20h,  76h,  32h,  0ah,  0dh,  0ah,  0dh,  00h    ; uncompressed
-	  db   58h,  6bh,  72h,  6bh,  67h,  79h,  6bh, 0eah,  7bh,  74h,  6ah,  6bh, 0f8h,  4dh,  54h, 0dbh,  4dh,  56h, 0d2h,  7ch,  2ch,  3bh,  1bh                                              ; compressed
-
-
-; Boot loader strings
-g_szTryToBoot:			; db	"Booting %c",ANGLE_QUOTE_RIGHT,"%c",LF,CR,NULL
-              			; db	 42h,  6fh,  6fh,  74h,  69h,  6eh,  67h,  20h,  25h,  63h, 0afh,  25h,  63h,  0ah,  0dh,  00h    ; uncompressed
-              			  db	 48h,  75h,  75h,  7ah,  6fh,  74h, 0edh,  35h,  24h,  35h,  1bh                                  ; compressed
-
-g_szBootSectorNotFound:	; db	"Boot sector "
-                       	; db	 42h,  6fh,  6fh,  74h,  20h,  73h,  65h,  63h,  74h,  6fh,  72h,  20h    ; uncompressed
-                       	  db	 48h,  75h,  75h, 0fah,  79h,  6bh,  69h,  7ah,  75h, 0f8h                ; compressed
-
-g_szNotFound:			; db	"not found",LF,CR,NULL
-             			; db	 6eh,  6fh,  74h,  20h,  66h,  6fh,  75h,  6eh,  64h,  0ah,  0dh,  00h    ; uncompressed
-             			  db	 74h,  75h, 0fah,  6ch,  75h,  7bh,  74h,  6ah,  1bh                      ; compressed
-
-g_szReadError:			; db	"Error %x!",LF,CR,NULL
-              			; db	 45h,  72h,  72h,  6fh,  72h,  20h,  25h,  78h,  21h,  0ah,  0dh,  00h    ; uncompressed
-              			  db	 4bh,  78h,  78h,  75h, 0f8h,  39h,  25h,  1bh                            ; compressed
-
 
 
 g_szAddressingModes:
@@ -243,35 +281,7 @@ g_szSelectionTimeout:	; db		DOUBLE_BOTTOM_LEFT_CORNER,DOUBLE_LEFT_HORIZONTAL_TO_
                      	  db		 32h,  33h,  3dh,  59h,  6bh,  72h,  6bh,  69h,  7ah,  6fh,  75h, 0f4h,  6fh, 0f4h,  3ch,  20h, 0b9h                                              ; compressed
 
 
-g_szDashForZero:		; db		"- ",NULL
-                		; db		 2dh,  20h,  00h    ; uncompressed
-                		  db		 28h,  00h          ; compressed
 
-
-; Boot menu bottom of screen strings
-g_szFDD:		; db	"FDD [%c]",NULL			; "FDD [A]"
-        		; db	 46h,  44h,  44h,  20h,  5bh,  25h,  63h,  5dh,  00h    ; uncompressed
-        		  db	 4ch,  4ah, 0cah,  61h,  35h, 0a3h                      ; compressed
-
-g_szHDD:		; db	"HDD [%c]",NULL			; "HDD [C]"
-        		; db	 48h,  44h,  44h,  20h,  5bh,  25h,  63h,  5dh,  00h    ; uncompressed
-        		  db	 4eh,  4ah, 0cah,  61h,  35h, 0a3h                      ; compressed
-
-g_szBootMenu:	; db	"%sMnu",NULL			; "BootMnu"
-             	; db	 25h,  73h,  4dh,  6eh,  75h,  00h    ; uncompressed
-             	  db	 3eh,  53h,  74h, 0bbh                ; compressed
-
-g_szRomBoot:	; db	"Rom%s",NULL			; "RomBoot"
-            	; db	 52h,  6fh,  6dh,  25h,  73h,  00h    ; uncompressed
-            	  db	 58h,  75h,  73h,  1eh                ; compressed
-
-g_szBoot:		; db	"Boot",NULL
-         		; db	 42h,  6fh,  6fh,  74h,  00h    ; uncompressed
-         		  db	 48h,  75h,  75h, 0bah          ; compressed
-
-g_szHotkey:		; db	"%A%c%c%A%s%A ",NULL	; "C»HDD [A] ", "F2BootMnu " or "F8RomBoot "
-           		; db	 25h,  41h,  25h,  63h,  25h,  63h,  25h,  41h,  25h,  73h,  25h,  41h,  20h,  00h    ; uncompressed
-           		  db	 3dh,  35h,  35h,  3dh,  3eh,  3dh,  00h                                              ; compressed
 
 
 ; Boot Menu information strings
@@ -294,6 +304,7 @@ g_szInformation:		; db	"%s",LF,CR
 	; db	   "%s",SINGLE_VERTICAL, "%5-u",SINGLE_VERTICAL, "%s",SINGLE_VERTICAL," %2-I",SINGLE_VERTICAL,"%5-x" ,NULL
 	; db	    25h,  73h, 0b3h,  25h,  35h,  2dh,  75h, 0b3h,  25h,  73h, 0b3h,  20h,  25h,  32h,  2dh,  49h, 0b3h,  25h,  35h,  2dh,  78h,  00h    ; uncompressed
 	  db	    3eh,  23h,  38h,  23h,  3eh,  23h,  20h,  36h,  23h,  1ah                                                                            ; compressed
+
 
 
 ; Boot Menu menuitem strings
@@ -326,6 +337,10 @@ g_szForeignHD:			; db	"Foreign Hard Disk",NULL
 %error "g_szBootMenuPrint* strings must start on the same 256 byte page, required by the BootMenuPrint_* routines.  Please move this block up or down within strings.asm"
 %endif
 %endif
+
+%endif ; MODULE_BOOT_MENU
+%endif ; MODULE_HOTKEYS
+
 
 ;------------------------------------------------------------------------------------------
 ;
@@ -490,7 +505,7 @@ StringsCompressed_TranslatesAndFormats:
 ;; x:5
 ;; s:13
 ;; 5-x:1
-;; nl:8
+;; nl:9
 ;; 2-I:1
 ;; c:9
 ;; u:6
