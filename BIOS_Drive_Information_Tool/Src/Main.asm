@@ -235,9 +235,9 @@ DisplayNewInt13hInformationFromDriveDL:
 
 	test	WORD [si+EDRIVE_INFO.wFlags], FLG_CHS_INFORMATION_IS_VALID
 	jz		SHORT .SkipEbiosCHS
-	mov		ax, [si+EDRIVE_INFO.dwCylinders]
+	mov		cx, [si+EDRIVE_INFO.dwCylinders]
 	mov		dx, [si+EDRIVE_INFO.dwHeads]
-	mov		cx, [si+EDRIVE_INFO.dwSectorsPerTrack]
+	mov		ax, [si+EDRIVE_INFO.dwSectorsPerTrack]
 	call	Print_CHSfromCXDXAX
 .SkipEbiosCHS:
 
