@@ -114,7 +114,7 @@ ALIGN JUMP_ALIGN
 	; Check for errors in last block
 CheckErrorsAfterTransferringLastMemoryMappedBlock:
 	lds		di, [bp+MEMPIOVARS.fpDPT]			; DPT now in DS:DI
-	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRQ, FLG_STATUS_DRDY)
+	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRQ, FLG_STATUS_BSY)
 	call	IdeWait_PollStatusFlagInBLwithTimeoutInBH
 
 	; Return number of successfully transferred sectors

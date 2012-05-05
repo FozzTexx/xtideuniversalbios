@@ -220,17 +220,21 @@ g_szAddressingModes_Displacement equ (g_szPCHS - g_szAddressingModes)
 %endif
 
 g_szBusTypeValues:
-g_szBusTypeValues_8Dual:		; db		"D8 ",NULL
-                        		; db		 44h,  38h,  20h,  00h    ; uncompressed
-                        		  db		 4ah,  31h,  00h          ; compressed
+g_szBusTypeValues_8JrIde:		; db		"M8 ",NULL
+                         		; db		 4dh,  38h,  20h,  00h    ; uncompressed
+                         		  db		 53h,  31h,  00h          ; compressed
+
+g_szBusTypeValues_8Fast:		; db		"F8 ",NULL
+                        		; db		 46h,  38h,  20h,  00h    ; uncompressed
+                        		  db		 4ch,  31h,  00h          ; compressed
 
 g_szBusTypeValues_8Reversed:	; db		"X8 ",NULL
                             	; db		 58h,  38h,  20h,  00h    ; uncompressed
                             	  db		 5eh,  31h,  00h          ; compressed
 
-g_szBusTypeValues_8Single:		; db		"S8 ",NULL
-                          		; db		 53h,  38h,  20h,  00h    ; uncompressed
-                          		  db		 59h,  31h,  00h          ; compressed
+g_szBusTypeValues_8Dual:		; db		"D8 ",NULL
+                        		; db		 44h,  38h,  20h,  00h    ; uncompressed
+                        		  db		 4ah,  31h,  00h          ; compressed
 
 g_szBusTypeValues_16:			; db		" 16",NULL
                      			; db		 20h,  31h,  36h,  00h    ; uncompressed
@@ -244,34 +248,31 @@ g_szBusTypeValues_Serial:		; db		"SER",NULL
                          		; db		 53h,  45h,  52h,  00h    ; uncompressed
                          		  db		 59h,  4bh,  98h          ; compressed
 
-g_szBusTypeValues_8MemMapped:	; db		"M8 ",NULL
-                             	; db		 4dh,  38h,  20h,  00h    ; uncompressed
-                             	  db		 53h,  31h,  00h          ; compressed
 
-g_szBusTypeValues_Displacement equ (g_szBusTypeValues_8Reversed - g_szBusTypeValues)
+g_szBusTypeValues_Displacement equ (g_szBusTypeValues_8Fast - g_szBusTypeValues)
 ;
 ; Ensure that bus type strings are correctly spaced in memory
 ;
 %ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
-%if g_szBusTypeValues_8Dual <> g_szBusTypeValues
+%if g_szBusTypeValues_8JrIde <> g_szBusTypeValues
 %error "g_szBusTypeValues Displacement Incorrect 1"
 %endif
-%if g_szBusTypeValues_8Reversed <> g_szBusTypeValues + g_szBusTypeValues_Displacement
+%if g_szBusTypeValues_8Fast <> g_szBusTypeValues + g_szBusTypeValues_Displacement
 %error "g_szBusTypeValues Displacement Incorrect 2"
 %endif
-%if g_szBusTypeValues_8Single <> g_szBusTypeValues_8Reversed + g_szBusTypeValues_Displacement
+%if g_szBusTypeValues_8Reversed <> g_szBusTypeValues_8Fast + g_szBusTypeValues_Displacement
 %error "g_szBusTypeValues Displacement Incorrect 3"
 %endif
-%if g_szBusTypeValues_16 <> g_szBusTypeValues_8Single + g_szBusTypeValues_Displacement
+%if g_szBusTypeValues_8Dual <> g_szBusTypeValues_8Reversed + g_szBusTypeValues_Displacement
 %error "g_szBusTypeValues Displacement Incorrect 4"
 %endif
-%if g_szBusTypeValues_32 <> g_szBusTypeValues_16 + g_szBusTypeValues_Displacement
+%if g_szBusTypeValues_16 <> g_szBusTypeValues_8Dual + g_szBusTypeValues_Displacement
 %error "g_szBusTypeValues Displacement Incorrect 5"
 %endif
-%if g_szBusTypeValues_Serial <> g_szBusTypeValues_32 + g_szBusTypeValues_Displacement
+%if g_szBusTypeValues_32 <> g_szBusTypeValues_16 + g_szBusTypeValues_Displacement
 %error "g_szBusTypeValues Displacement Incorrect 6"
 %endif
-%if g_szBusTypeValues_8MemMapped <> g_szBusTypeValues_Serial + g_szBusTypeValues_Displacement
+%if g_szBusTypeValues_Serial <> g_szBusTypeValues_32 + g_szBusTypeValues_Displacement
 %error "g_szBusTypeValues Displacement Incorrect 7"
 %endif
 %endif
@@ -525,7 +526,7 @@ StringsCompressed_TranslatesAndFormats:
 ;; 67,C:4
 ;; 68,D:10
 ;; 69,E:2
-;; 70,F:3
+;; 70,F:4
 ;; 71,G:2
 ;; 72,H:4
 ;; 73,I:1
@@ -538,7 +539,7 @@ StringsCompressed_TranslatesAndFormats:
 ;; 80,P:2
 ;; 81,Q:1
 ;; 82,R:5
-;; 83,S:6
+;; 83,S:5
 ;; 84,T:
 ;; 85,U:2
 ;; 86,V:

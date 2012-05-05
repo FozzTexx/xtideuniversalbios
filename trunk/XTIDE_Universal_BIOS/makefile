@@ -28,6 +28,7 @@
 #                                                                                                #
 # Not modules but these affect the assembly:                                                     #
 # ELIMINATE_CGA_SNOW        Prevents CGA snowing at the cost of a few bytes                      #
+# RELOCATE_INT13H_STACK     Relocates INT 13h stack to top of stolen conventional memory         #
 # USE_186                   Use instructions supported by 80188/80186 and V20/V30 and later      #
 # USE_286                   Use instructions supported by 286 and later                          #
 # USE_386                   Use instructions supported by 386 and later                          #
@@ -97,7 +98,7 @@ DEFINES_COMMON_LARGE = MODULE_BOOT_MENU MODULE_SERIAL MODULE_SERIAL_FLOPPY
 
 DEFINES_XT = $(DEFINES_COMMON) ELIMINATE_CGA_SNOW MODULE_8BIT_IDE MODULE_JRIDE MODULE_SERIAL MODULE_SERIAL_FLOPPY
 DEFINES_XTPLUS = $(DEFINES_COMMON) $(DEFINES_XT) USE_186
-DEFINES_AT = $(DEFINES_COMMON) USE_AT USE_286 MODULE_IRQ MODULE_SERIAL MODULE_SERIAL_FLOPPY MODULE_ADVANCED_ATA
+DEFINES_AT = $(DEFINES_COMMON) USE_AT USE_286 RELOCATE_INT13H_STACK MODULE_IRQ MODULE_SERIAL MODULE_SERIAL_FLOPPY MODULE_ADVANCED_ATA
 
 DEFINES_XT_LARGE = $(DEFINES_XT) $(DEFINES_COMMON_LARGE)
 DEFINES_XTPLUS_LARGE = $(DEFINES_XTPLUS) $(DEFINES_COMMON_LARGE)

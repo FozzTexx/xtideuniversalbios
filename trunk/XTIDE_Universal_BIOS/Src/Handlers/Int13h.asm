@@ -22,6 +22,57 @@ SECTION .text
 
 ;--------------------------------------------------------------------
 ; Int 13h software interrupt handler.
+; This handler changes stack to top of stolen conventional memory
+; and then calls the actual INT 13h handler (Int13h_DiskFunctionsHandler).
+;
+; Int13h_DiskFunctionsHandlerWithStackChange
+;	Parameters:
+;		AH:		Bios function
+;		DL:		Drive number
+;		Other:	Depends on function
+;	Returns:
+;		Depends on function
+;--------------------------------------------------------------------
+%ifdef RELOCATE_INT13H_STACK
+ALIGN JUMP_ALIGN
+Int13h_DiskFunctionsHandlerWithStackChange:
+	push	ds
+	push	di
+	call	RamVars_GetSegmentToDS
+
+	; Store entry registers to RAMVARS
+	mov		[RAMVARS.fpInt13hEntryStack], sp
+	mov		[RAMVARS.fpInt13hEntryStack+2], ss
+	pop		WORD [RAMVARS.wStackChangeDI]
+	pop		WORD [RAMVARS.wStackChangeDS]
+
+	; Load new stack and restore DS and DI
+	mov		di, ds		; We do not want to overwrite DS and DI in stack
+	mov		ss, di
+	mov		sp, [RAMVARS.wNewStackOffset]
+	lds		di, [RAMVARS.dwStackChangeDSDI]
+
+	; Call INT 13h
+	pushf
+	push	cs
+	call	Int13h_DiskFunctionsHandler
+
+	; Restore stack (we must not corrupt FLAGS!)
+	cli
+%ifdef USE_386
+	lss		sp, [ss:RAMVARS.fpInt13hEntryStack]
+%else
+	mov		sp, [ss:RAMVARS.fpInt13hEntryStack]
+	mov		ss, [ss:RAMVARS.fpInt13hEntryStack+2]
+%endif
+	pop		di			; DI before stack change
+	pop		ds			; DS before stack change
+	retf	2			; Skip FLAGS from stack
+%endif ; RELOCATE_INT13H_STACK
+
+
+;--------------------------------------------------------------------
+; Int 13h software interrupt handler.
 ; Jumps to specific function defined in AH.
 ;
 ; Note to developers: Do not make recursive INT 13h calls!
@@ -39,14 +90,12 @@ Int13h_DiskFunctionsHandler:
 	sti									; Enable interrupts
 	cld									; String instructions to increment pointers
 	CREATE_FRAME_INTPACK_TO_SSBP	EXTRA_BYTES_FOR_INTPACK
-
 	call	RamVars_GetSegmentToDS
 
 %ifdef MODULE_HOTKEYS
 	call	DriveXlate_ToOrBack
 	mov		[RAMVARS.xlateVars+XLATEVARS.bXlatedDrv], dl
 %endif
-
 	call	FindDPT_ForDriveNumberInDL	; DS:DI points to our DPT, or NULL if not our drive
 	jc		SHORT .NotOurDrive			; DPT not found so this is not one of our drives
 
@@ -55,25 +104,25 @@ Int13h_DiskFunctionsHandler:
 	eMOVZX	bx, ah
 	shl		bx, 1
 	cmp		ah, 25h						; Possible EBIOS function?
-%ifdef MODULE_EBIOS
-	ja		SHORT .JumpToEbiosFunction
-%else
-	ja		SHORT Int13h_UnsupportedFunction
-%endif
+%ifndef MODULE_EBIOS
+	ja		SHORT UnsupportedFunction
 	jmp		[cs:bx+g_rgw13hFuncJump]	; Jump to BIOS function
 
-%ifdef MODULE_EBIOS
-	; Jump to correct EBIOS function
+%else ; If using MODULE_EBIOS
+	ja		SHORT .JumpToEbiosFunction
+	jmp		[cs:bx+g_rgw13hFuncJump]	; Jump to BIOS function
+
 ALIGN JUMP_ALIGN
 .JumpToEbiosFunction:
 	test	BYTE [di+DPT.bFlagsLow], FLG_DRVNHEAD_LBA
-	jz		SHORT Int13h_UnsupportedFunction	; No eINT 13h for CHS drives
+	jz		SHORT UnsupportedFunction	; No eINT 13h for CHS drives
 	sub		bl, 41h<<1					; BX = Offset to eINT 13h jump table
-	jb		SHORT Int13h_UnsupportedFunction
+	jb		SHORT UnsupportedFunction
 	cmp		ah, 48h
-	ja		SHORT Int13h_UnsupportedFunction
+	ja		SHORT UnsupportedFunction
 	jmp		[cs:bx+g_rgwEbiosFunctionJumpTable]
-%endif
+%endif	; MODULE_EBIOS
+
 
 ALIGN JUMP_ALIGN
 .NotOurDrive:
@@ -90,8 +139,9 @@ ALIGN JUMP_ALIGN
 	je		SHORT .OurFunction
 	; Fall to Int13h_DirectCallToAnotherBios
 
+
 ;--------------------------------------------------------------------
-; Int13h_UnsupportedFunction
+; UnsupportedFunction
 ; Int13h_DirectCallToAnotherBios
 ;	Parameters:
 ;		DL:		Translated drive number
@@ -105,7 +155,7 @@ ALIGN JUMP_ALIGN
 ;		Flags
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-Int13h_UnsupportedFunction:
+UnsupportedFunction:
 Int13h_DirectCallToAnotherBios:
 	call	ExchangeCurrentInt13hHandlerWithOldInt13hHandler
 	mov		bx, [bp+IDEPACK.intpack+INTPACK.bx]
@@ -155,6 +205,7 @@ ALIGN JUMP_ALIGN
 	jmp		SHORT Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 %endif
 
+
 %ifdef MODULE_SERIAL_FLOPPY
 ;--------------------------------------------------------------------
 ; Int13h_ReturnSuccessForFloppy
@@ -165,10 +216,11 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 Int13h_ReturnSuccessForFloppy:
 	test	dl, dl
-	js		short Int13h_UnsupportedFunction
+	js		SHORT UnsupportedFunction
 	xor		ah, ah
-	jmp		short Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
+	jmp		SHORT Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 %endif
+
 
 ;--------------------------------------------------------------------
 ; Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAHandTransferredSectorsFromCL
@@ -184,11 +236,13 @@ Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAHandTransferredSectorsFromCL:
 	mov		[bp+IDEPACK.intpack+INTPACK.al], cl
 	; Fall to Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 
+
 ;--------------------------------------------------------------------
 ; Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 ; Int13h_ReturnFromHandlerWithoutStoringErrorCode
 ;	Parameters:
 ;		AH:		BIOS Error code
+;		DS:		RAMVARS segment
 ;		SS:BP:	Ptr to IDEPACK
 ;	Returns:
 ;		All registers are loaded from INTPACK
@@ -205,8 +259,10 @@ Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH_ALHasDriveNumber:
 %endif
 
 Int13h_ReturnFromHandlerWithoutStoringErrorCode:
-	or		WORD [bp+IDEPACK.intpack+INTPACK.flags], FLG_FLAGS_IF	; Return with interrupts enabled
-	mov		sp, bp									; Now we can exit anytime
+	; Always return with interrupts enabled since there are programs that rely
+	; on INT 13h to enable interrupts.
+	or		BYTE [bp+IDEPACK.intpack+INTPACK.flags+1], (FLG_FLAGS_IF>>8)
+	mov		sp, bp	; This makes possible to exit anytime, no matter what is on stack
 	RESTORE_FRAME_INTPACK_FROM_SSBP		EXTRA_BYTES_FOR_INTPACK
 
 
@@ -279,11 +335,14 @@ Int13h_SetErrorCodeToBdaAndToIntpackInSSBPfromAH_ALHasDriveNumber:
 .HardDisk:
 	LOAD_BDA_SEGMENT_TO	ds, di
 	mov		[bx], ah
+	; Fall to Int13h_SetErrorCodeToIntpackInSSBPfromAH
+
 %else
 Int13h_SetErrorCodeToBdaAndToIntpackInSSBPfromAH:
 	; Store error code to BDA
 	LOAD_BDA_SEGMENT_TO	ds, di
 	mov		[BDA.bHDLastSt], ah
+	; Fall to Int13h_SetErrorCodeToIntpackInSSBPfromAH
 %endif
 
 	; Store error code to INTPACK
@@ -301,65 +360,65 @@ Int13h_SetErrorCodeToIntpackInSSBPfromAH:
 ; Jump table for correct BIOS function
 ALIGN WORD_ALIGN
 g_rgw13hFuncJump:
-	dw	AH0h_HandlerForDiskControllerReset				; 00h, Disk Controller Reset (All)
-	dw	AH1h_HandlerForReadDiskStatus					; 01h, Read Disk Status (All)
-	dw	AH2h_HandlerForReadDiskSectors					; 02h, Read Disk Sectors (All)
-	dw	AH3h_HandlerForWriteDiskSectors					; 03h, Write Disk Sectors (All)
-	dw	AH4h_HandlerForVerifyDiskSectors				; 04h, Verify Disk Sectors (All)
+	dw	AH0h_HandlerForDiskControllerReset			; 00h, Disk Controller Reset (All)
+	dw	AH1h_HandlerForReadDiskStatus				; 01h, Read Disk Status (All)
+	dw	AH2h_HandlerForReadDiskSectors				; 02h, Read Disk Sectors (All)
+	dw	AH3h_HandlerForWriteDiskSectors				; 03h, Write Disk Sectors (All)
+	dw	AH4h_HandlerForVerifyDiskSectors			; 04h, Verify Disk Sectors (All)
 %ifdef MODULE_SERIAL_FLOPPY
-	dw	Int13h_ReturnSuccessForFloppy					; 05h, Format Disk Track (XT, AT, EISA)
+	dw	Int13h_ReturnSuccessForFloppy				; 05h, Format Disk Track (XT, AT, EISA)
 %else
-	dw	Int13h_UnsupportedFunction						; 05h, Format Disk Track (XT, AT, EISA)
+	dw	UnsupportedFunction							; 05h, Format Disk Track (XT, AT, EISA)
 %endif
-	dw	Int13h_UnsupportedFunction						; 06h, Format Disk Track with Bad Sectors (XT)
-	dw	Int13h_UnsupportedFunction						; 07h, Format Multiple Cylinders (XT)
-	dw	AH8h_HandlerForReadDiskDriveParameters			; 08h, Read Disk Drive Parameters (All)
-	dw	AH9h_HandlerForInitializeDriveParameters		; 09h, Initialize Drive Parameters (All)
-	dw	Int13h_UnsupportedFunction						; 0Ah, Read Disk Sectors with ECC (XT, AT, EISA)
-	dw	Int13h_UnsupportedFunction						; 0Bh, Write Disk Sectors with ECC (XT, AT, EISA)
-	dw	AHCh_HandlerForSeek								; 0Ch, Seek (All)
-	dw	AHDh_HandlerForResetHardDisk					; 0Dh, Alternate Disk Reset (All)
-	dw	Int13h_UnsupportedFunction						; 0Eh, Read Sector Buffer (XT, PS/1), ESDI Undocumented Diagnostic (PS/2)
-	dw	Int13h_UnsupportedFunction						; 0Fh, Write Sector Buffer (XT, PS/1), ESDI Undocumented Diagnostic (PS/2)
-	dw	AH10h_HandlerForCheckDriveReady					; 10h, Check Drive Ready (All)
-	dw	AH11h_HandlerForRecalibrate						; 11h, Recalibrate (All)
-	dw	Int13h_UnsupportedFunction						; 12h, Controller RAM Diagnostic (XT)
-	dw	Int13h_UnsupportedFunction						; 13h, Drive Diagnostic (XT)
-	dw	Int13h_UnsupportedFunction						; 14h, Controller Internal Diagnostic (All)
-	dw	AH15h_HandlerForReadDiskDriveSize				; 15h, Read Disk Drive Size (AT+)
-	dw	Int13h_UnsupportedFunction						; 16h,
-	dw	Int13h_UnsupportedFunction						; 17h,
-	dw	Int13h_UnsupportedFunction						; 18h,
-	dw	Int13h_UnsupportedFunction						; 19h, Park Heads (PS/2)
-	dw	Int13h_UnsupportedFunction						; 1Ah, Format ESDI Drive (PS/2)
-	dw	Int13h_UnsupportedFunction						; 1Bh, Get ESDI Manufacturing Header (PS/2)
-	dw	Int13h_UnsupportedFunction						; 1Ch, ESDI Special Functions (PS/2)
-	dw	Int13h_UnsupportedFunction						; 1Dh,
-	dw	Int13h_UnsupportedFunction						; 1Eh,
-	dw	Int13h_UnsupportedFunction						; 1Fh,
-	dw	Int13h_UnsupportedFunction						; 20h,
-	dw	Int13h_UnsupportedFunction						; 21h, Read Disk Sectors, Multiple Blocks (PS/1)
-	dw	Int13h_UnsupportedFunction						; 22h, Write Disk Sectors, Multiple Blocks (PS/1)
-	dw	AH23h_HandlerForSetControllerFeatures			; 23h, Set Controller Features Register (PS/1)
-	dw	AH24h_HandlerForSetMultipleBlocks				; 24h, Set Multiple Blocks (PS/1)
-	dw	AH25h_HandlerForGetDriveInformation				; 25h, Get Drive Information (PS/1)
+	dw	UnsupportedFunction							; 06h, Format Disk Track with Bad Sectors (XT)
+	dw	UnsupportedFunction							; 07h, Format Multiple Cylinders (XT)
+	dw	AH8h_HandlerForReadDiskDriveParameters		; 08h, Read Disk Drive Parameters (All)
+	dw	AH9h_HandlerForInitializeDriveParameters	; 09h, Initialize Drive Parameters (All)
+	dw	UnsupportedFunction							; 0Ah, Read Disk Sectors with ECC (XT, AT, EISA)
+	dw	UnsupportedFunction							; 0Bh, Write Disk Sectors with ECC (XT, AT, EISA)
+	dw	AHCh_HandlerForSeek							; 0Ch, Seek (All)
+	dw	AHDh_HandlerForResetHardDisk				; 0Dh, Alternate Disk Reset (All)
+	dw	UnsupportedFunction							; 0Eh, Read Sector Buffer (XT, PS/1), ESDI Undocumented Diagnostic (PS/2)
+	dw	UnsupportedFunction							; 0Fh, Write Sector Buffer (XT, PS/1), ESDI Undocumented Diagnostic (PS/2)
+	dw	AH10h_HandlerForCheckDriveReady				; 10h, Check Drive Ready (All)
+	dw	AH11h_HandlerForRecalibrate					; 11h, Recalibrate (All)
+	dw	UnsupportedFunction							; 12h, Controller RAM Diagnostic (XT)
+	dw	UnsupportedFunction							; 13h, Drive Diagnostic (XT)
+	dw	UnsupportedFunction							; 14h, Controller Internal Diagnostic (All)
+	dw	AH15h_HandlerForReadDiskDriveSize			; 15h, Read Disk Drive Size (AT+)
+	dw	UnsupportedFunction							; 16h,
+	dw	UnsupportedFunction							; 17h,
+	dw	UnsupportedFunction							; 18h,
+	dw	UnsupportedFunction							; 19h, Park Heads (PS/2)
+	dw	UnsupportedFunction							; 1Ah, Format ESDI Drive (PS/2)
+	dw	UnsupportedFunction							; 1Bh, Get ESDI Manufacturing Header (PS/2)
+	dw	UnsupportedFunction							; 1Ch, ESDI Special Functions (PS/2)
+	dw	UnsupportedFunction							; 1Dh,
+	dw	UnsupportedFunction							; 1Eh,
+	dw	UnsupportedFunction							; 1Fh,
+	dw	UnsupportedFunction							; 20h,
+	dw	UnsupportedFunction							; 21h, Read Disk Sectors, Multiple Blocks (PS/1)
+	dw	UnsupportedFunction							; 22h, Write Disk Sectors, Multiple Blocks (PS/1)
+	dw	AH23h_HandlerForSetControllerFeatures		; 23h, Set Controller Features Register (PS/1)
+	dw	AH24h_HandlerForSetMultipleBlocks			; 24h, Set Multiple Blocks (PS/1)
+	dw	AH25h_HandlerForGetDriveInformation			; 25h, Get Drive Information (PS/1)
 
 %ifdef MODULE_EBIOS
 g_rgwEbiosFunctionJumpTable:
-	dw	AH41h_HandlerForCheckIfExtensionsPresent		; 41h, Check if Extensions Present (EBIOS)*
-	dw	AH42h_HandlerForExtendedReadSectors				; 42h, Extended Read Sectors (EBIOS)*
-	dw	AH43h_HandlerForExtendedWriteSectors			; 43h, Extended Write Sectors (EBIOS)*
-	dw	AH44h_HandlerForExtendedVerifySectors			; 44h, Extended Verify Sectors (EBIOS)*
-	dw	Int13h_UnsupportedFunction						; 45h, Lock and Unlock Drive (EBIOS)***
-	dw	Int13h_UnsupportedFunction						; 46h, Eject Media Request (EBIOS)***
-	dw	AH47h_HandlerForExtendedSeek					; 47h, Extended Seek (EBIOS)*
-	dw	AH48h_HandlerForGetExtendedDriveParameters		; 48h, Get Extended Drive Parameters (EBIOS)*
-;	dw	Int13h_UnsupportedFunction						; 49h, Get Extended Disk Change Status (EBIOS)***
-;	dw	Int13h_UnsupportedFunction						; 4Ah, Initiate Disk Emulation (Bootable CD-ROM)
-;	dw	Int13h_UnsupportedFunction						; 4Bh, Terminate Disk Emulation (Bootable CD-ROM)
-;	dw	Int13h_UnsupportedFunction						; 4Ch, Initiate Disk Emulation and Boot (Bootable CD-ROM)
-;	dw	Int13h_UnsupportedFunction						; 4Dh, Return Boot Catalog (Bootable CD-ROM)
-;	dw	Int13h_UnsupportedFunction						; 4Eh, Set Hardware Configuration (EBIOS)**
+	dw	AH41h_HandlerForCheckIfExtensionsPresent	; 41h, Check if Extensions Present (EBIOS)*
+	dw	AH42h_HandlerForExtendedReadSectors			; 42h, Extended Read Sectors (EBIOS)*
+	dw	AH43h_HandlerForExtendedWriteSectors		; 43h, Extended Write Sectors (EBIOS)*
+	dw	AH44h_HandlerForExtendedVerifySectors		; 44h, Extended Verify Sectors (EBIOS)*
+	dw	UnsupportedFunction							; 45h, Lock and Unlock Drive (EBIOS)***
+	dw	UnsupportedFunction							; 46h, Eject Media Request (EBIOS)***
+	dw	AH47h_HandlerForExtendedSeek				; 47h, Extended Seek (EBIOS)*
+	dw	AH48h_HandlerForGetExtendedDriveParameters	; 48h, Get Extended Drive Parameters (EBIOS)*
+;	dw	UnsupportedFunction							; 49h, Get Extended Disk Change Status (EBIOS)***
+;	dw	UnsupportedFunction							; 4Ah, Initiate Disk Emulation (Bootable CD-ROM)
+;	dw	UnsupportedFunction							; 4Bh, Terminate Disk Emulation (Bootable CD-ROM)
+;	dw	UnsupportedFunction							; 4Ch, Initiate Disk Emulation and Boot (Bootable CD-ROM)
+;	dw	UnsupportedFunction							; 4Dh, Return Boot Catalog (Bootable CD-ROM)
+;	dw	UnsupportedFunction							; 4Eh, Set Hardware Configuration (EBIOS)**
 ;
 ;   * = Enhanced Drive Access Support (minimum required EBIOS functions)
 ;  ** = Enhanced Disk Drive (EDD) Support

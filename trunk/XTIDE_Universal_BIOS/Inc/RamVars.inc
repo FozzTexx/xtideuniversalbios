@@ -29,6 +29,13 @@ LITE_MODE_RAMVARS_SEGMENT	EQU		30h
 ; Variables should be kept to minimum since they might be located
 ; at the top of interrupt vectors.
 struc RAMVARS
+%ifdef RELOCATE_INT13H_STACK
+	.fpInt13hEntryStack	resb	4
+	.dwStackChangeDSDI:
+	.wStackChangeDI		resb	2
+	.wStackChangeDS		resb	2
+	.wNewStackOffset	resb	2
+%endif
 	.fpOldI13h			resb	4	; Far pointer to old INT 13h handler
 	.wSignature			resb	2	; Sign for finding stolen 1 kiB
 	.bTimeoutTicksLeft	resb	1

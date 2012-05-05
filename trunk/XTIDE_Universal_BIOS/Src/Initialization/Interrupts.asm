@@ -60,7 +60,11 @@ Interrupts_InitializeInterruptVectors:
 .Int40hAlreadyInstalled:
 
 	mov		al, BIOS_DISK_INTERRUPT_13h			; INT 13h interrupt vector offset
-	mov		si, Int13h_DiskFunctionsHandler		; Interrupt handler offset
+	mov		si, Int13h_DiskFunctionsHandler
+%ifdef RELOCATE_INT13H_STACK
+	test	BYTE [cs:ROMVARS.wFlags], FLG_ROMVARS_FULLMODE
+	eCMOVNZ	si, Int13h_DiskFunctionsHandlerWithStackChange
+%endif
 	call	Interrupts_InstallHandlerToVectorInALFromCSSI
 
 	; Install INT 19h handler to properly reset the system

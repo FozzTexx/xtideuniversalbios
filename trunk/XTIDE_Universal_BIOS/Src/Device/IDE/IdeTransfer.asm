@@ -112,7 +112,7 @@ ALIGN JUMP_ALIGN
 	; Check for errors in last block
 	mov		di, si								; DS:DI now points DPT
 CheckErrorsAfterTransferringLastBlock:
-	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRQ, FLG_STATUS_DRDY)
+	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRQ, FLG_STATUS_BSY)
 	call	IdeWait_PollStatusFlagInBLwithTimeoutInBH
 
 	; Return number of successfully read sectors
@@ -303,14 +303,13 @@ ReadBlockFrom32bitDataPort:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, CX
+;		AX, BX, CX, DX
 ;--------------------------------------------------------------------
 %ifdef MODULE_8BIT_IDE
 
 ALIGN JUMP_ALIGN
 WriteBlockToXtideRev1:
 	push	ds
-	push	bx
 	UNROLL_SECTORS_IN_CX_TO_QWORDS
 	mov		bl, 8		; Bit mask for toggling data low/high reg
 	push	es			; Copy ES...
@@ -322,7 +321,6 @@ ALIGN JUMP_ALIGN
 	XTIDE_OUTSW
 	XTIDE_OUTSW
 	loop	.OutswLoop
-	pop		bx
 	pop		ds
 	ret
 

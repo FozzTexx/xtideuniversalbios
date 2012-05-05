@@ -120,37 +120,38 @@ g_szAddressingModes_Displacement equ (g_szPCHS - g_szAddressingModes)
 %endif
 
 g_szBusTypeValues:
-g_szBusTypeValues_8Dual:		db		"D8 ",NULL
+g_szBusTypeValues_8JrIde:		db		"M8 ",NULL
+g_szBusTypeValues_8Fast:		db		"F8 ",NULL
 g_szBusTypeValues_8Reversed:	db		"X8 ",NULL
-g_szBusTypeValues_8Single:		db		"S8 ",NULL
+g_szBusTypeValues_8Dual:		db		"D8 ",NULL
 g_szBusTypeValues_16:			db		" 16",NULL
 g_szBusTypeValues_32:			db		" 32",NULL
 g_szBusTypeValues_Serial:		db		"SER",NULL
-g_szBusTypeValues_8MemMapped:	db		"M8 ",NULL
-g_szBusTypeValues_Displacement equ (g_szBusTypeValues_8Reversed - g_szBusTypeValues)
+
+g_szBusTypeValues_Displacement equ (g_szBusTypeValues_8Fast - g_szBusTypeValues)
 ;
 ; Ensure that bus type strings are correctly spaced in memory
 ;
 %ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
-	%if g_szBusTypeValues_8Dual <> g_szBusTypeValues
+	%if g_szBusTypeValues_8JrIde <> g_szBusTypeValues
 		%error "g_szBusTypeValues Displacement Incorrect 1"
 	%endif
-	%if g_szBusTypeValues_8Reversed <> g_szBusTypeValues + g_szBusTypeValues_Displacement
+	%if g_szBusTypeValues_8Fast <> g_szBusTypeValues + g_szBusTypeValues_Displacement
 		%error "g_szBusTypeValues Displacement Incorrect 2"
 	%endif
-	%if g_szBusTypeValues_8Single <> g_szBusTypeValues_8Reversed + g_szBusTypeValues_Displacement
+	%if g_szBusTypeValues_8Reversed <> g_szBusTypeValues_8Fast + g_szBusTypeValues_Displacement
 		%error "g_szBusTypeValues Displacement Incorrect 3"
 	%endif
-	%if g_szBusTypeValues_16 <> g_szBusTypeValues_8Single + g_szBusTypeValues_Displacement
+	%if g_szBusTypeValues_8Dual <> g_szBusTypeValues_8Reversed + g_szBusTypeValues_Displacement
 		%error "g_szBusTypeValues Displacement Incorrect 4"
 	%endif
-	%if g_szBusTypeValues_32 <> g_szBusTypeValues_16 + g_szBusTypeValues_Displacement
+	%if g_szBusTypeValues_16 <> g_szBusTypeValues_8Dual + g_szBusTypeValues_Displacement
 		%error "g_szBusTypeValues Displacement Incorrect 5"
 	%endif
-	%if g_szBusTypeValues_Serial <> g_szBusTypeValues_32 + g_szBusTypeValues_Displacement
+	%if g_szBusTypeValues_32 <> g_szBusTypeValues_16 + g_szBusTypeValues_Displacement
 		%error "g_szBusTypeValues Displacement Incorrect 6"
 	%endif
-	%if g_szBusTypeValues_8MemMapped <> g_szBusTypeValues_Serial + g_szBusTypeValues_Displacement
+	%if g_szBusTypeValues_Serial <> g_szBusTypeValues_32 + g_szBusTypeValues_Displacement
 		%error "g_szBusTypeValues Displacement Incorrect 7"
 	%endif
 %endif
