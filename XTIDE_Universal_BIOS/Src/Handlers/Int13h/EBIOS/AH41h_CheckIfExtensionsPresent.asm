@@ -46,4 +46,4 @@ AH41h_HandlerForCheckIfExtensionsPresent:
 	and		BYTE [bp+IDEPACK.intpack+INTPACK.flags], ~FLG_FLAGS_CF	; Return with CF cleared
 	jmp		Int13h_ReturnFromHandlerWithoutStoringErrorCode
 .EbiosNotSupported:
-	jmp		Int13h_UnsupportedFunction
+	jmp		Int13h_DirectCallToAnotherBios

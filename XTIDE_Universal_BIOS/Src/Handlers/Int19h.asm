@@ -125,7 +125,7 @@ SelectDriveToBootFrom:
 	; Get Primary boot drive number to DL
 	call	HotkeyBar_GetPrimaryBootDriveNumberToDL
 %else
-	call	GetPrimaryBootDriveToDLwhenNotUsingModuleHotkeys
+	xor		dl, dl			; Try to boot from Floppy Drive A
 %endif	; MODULE_HOTKEYS
 
 	; Try to boot from Primary boot drive (00h by default)
@@ -136,8 +136,7 @@ SelectDriveToBootFrom:
 %ifdef MODULE_HOTKEYS
 	call	HotkeyBar_GetSecondaryBootDriveNumberToDL
 %else
-	call	GetPrimaryBootDriveToDLwhenNotUsingModuleHotkeys
-	xor		dl, 80h
+	mov		dl, 80h			; Try to boot from Hard Drive C
 %endif
 	call	TryToBootFromPrimaryOrSecondaryBootDevice
 
@@ -211,21 +210,4 @@ TryToBootFromPrimaryOrSecondaryBootDevice:
 	call	DriveXlate_SetDriveToSwap
 	call	DriveXlate_ToOrBack
 	jmp		BootSector_TryToLoadFromDriveDL
-%endif
-
-
-;--------------------------------------------------------------------
-; GetPrimaryBootDriveToDLwhenNotUsingModuleHotkeys
-;	Parameters
-;		Nothing
-;	Returns:
-;		DL:		Drive to boot from (00h or 80h)
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-%ifndef MODULE_HOTKEYS
-GetPrimaryBootDriveToDLwhenNotUsingModuleHotkeys:
-	mov		dl, [cs:ROMVARS.bBootDrv]
-	and		dl, 80h		; Only 00h and 80h allowed when not using MODULE_HOTKEYS
-	ret
 %endif
