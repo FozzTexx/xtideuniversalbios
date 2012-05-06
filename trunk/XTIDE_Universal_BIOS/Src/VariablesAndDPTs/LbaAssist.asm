@@ -28,29 +28,15 @@ SECTION .text
 ; this is how to fit a big drive into INT13's skimpy size requirements,
 ; with a maximum of 8.4G available.
 ;
-; total LBAs (as obtained by words 60+61)
-; divided by 63 (sectors per track) (save as value A)
-; Sub 1 from A
-; divide A by 1024 + truncate.
-; == total number of heads to use.
-; add 1
-; this value must be either 16, 32, 64, 128, or 256 (round up)
-; then take the value A above and divide by # of heads
-; to get the # of cylinders to use.
+; If cylinders > 8192
+;  Variable CH = Total Sectors / 63
+;  Divide (CH – 1) by 1024 (as an assembler bitwise right shift) and add 1
+;  Round the result up to the nearest of 16, 32, 64, 128 and 255. This is the value to be used for the number of heads.
+;  Divide CH by the number of heads. This is the value to be used for the number of cylinders.
 ;
-;
-; so a LBA28 drive will have 268,435,456 as maximum LBAs
-;
-; 10000000h / 63   = 410410h (total cylinders or tracks)
-;   410410h / 1024 = 1041h, which is way more than 256 heads, but 256 is max.
-;   410410h / 256  = 4104h cylinders
-;
-; there's a wealth of information at: http://www.mossywell.com/boot-sequence
+; There's a wealth of information at: http://www.mossywell.com/boot-sequence
 ; they show a slightly different approach to LBA assist calulations, but
-; the method here provides compatibility with phoenix BIOS
-;
-; we're using the values from 60+61 here because we're topping out at 8.4G
-; anyway, so there's no need to use the 48bit LBA values.
+; the method here provides compatibility with phoenix BIOS.
 ;
 ; LbaAssist_ConvertSectorCountFromBXDXAXtoLbaAssistedCHSinDXAXBLBH:
 ;	Parameters:
@@ -66,45 +52,52 @@ LbaAssist_ConvertSectorCountFromBXDXAXtoLbaAssistedCHSinDXAXBLBH:
 	push	bp
 	push	si
 
-	; Value A = Total sector count / 63
+	; Value CH = Total sector count / 63
 	xor		cx, cx
-	push	cx		; Push zero for bits 48...63
+	push	cx							; Push zero for bits 48...63
 	push	bx
 	push	dx
-	push	ax						; 64-bit sector count now in stack
+	push	ax							; 64-bit sector count now in stack
 	mov		cl, LBA_ASSIST_SPT
-	mov		bp, sp					; SS:BP now points sector count
-	call	Math_DivQWatSSBPbyCX	; Temporary value A now in stack
+	mov		bp, sp						; SS:BP now points sector count
+	call	Math_DivQWatSSBPbyCX		; Temporary value A now in stack
 
-	; BX = Number of heads =  A / 1024
+	; BX:DX:AX = Value CH - 1
 	mov		ax, [bp]
 	mov		dx, [bp+2]
 	mov		bx, [bp+4]
+	sub		ax, BYTE 1					; Subtract 1
+	sbb		dx, BYTE 0
+	sbb		bx, BYTE 0
+
+	; DX:AX = Number of heads = ((Value CH - 1) / 1024) + 1
 	call	Size_DivideSizeInBXDXAXby1024andIncrementMagnitudeInCX
+	add		ax, BYTE 1					; Add 1
+	adc		dx, bx						; BX = 0
 
-	; Heads must be 16, 32, 64, 128 or 256 (round up)
-	mov		bx, 256						; Max number of heads
+	; Heads must be 16, 32, 64, 128 or 255 (round up to the nearest)
 	test	dx, dx						; 65536 or more heads?
-	jnz		SHORT .GetNumberOfCylinders
-	mov		cx, 128						; Half BX for rounding up
-.FindMostSignificantBitForHeadSize:
+	jnz		SHORT .LimitHeadsTo255
+	mov		cx, 16						; Min number of heads
+.CompareNextValidNumberOfHeads:
 	cmp		ax, cx
-	jae		SHORT .GetNumberOfCylinders
-	shr		cx, 1
-	shr		bx, 1						; Halve number of heads
-	jmp		SHORT .FindMostSignificantBitForHeadSize
+	jbe		SHORT .NumberOfHeadsNowInCX
+	shl		cx, 1						; Double number of heads
+	test	ch, ch						; Reached 256 heads?
+	jnz		SHORT .CompareNextValidNumberOfHeads
+.LimitHeadsTo255:
+	mov		cx, 255
+.NumberOfHeadsNowInCX:
+	mov		bx, cx						; Number of heads are returned in BL
+	mov		bh, LBA_ASSIST_SPT			; Sectors per Track
 
-	; DX:AX = Number of cylinders = A / number of heads
-.GetNumberOfCylinders:
-	mov		cx, bx
+	; DX:AX = Number of cylinders = Value CH (without - 1) / number of heads
 	call	Math_DivQWatSSBPbyCX
 	mov		ax, [bp]
 	mov		dx, [bp+2]					; Cylinders now in DX:AX
 
 	; Return LBA assisted CHS
 	add		sp, BYTE 8					; Clean stack
-	sub		bl, bh						; Limit heads to 255
-	mov		bh, LBA_ASSIST_SPT
 	pop		si
 	pop		bp
 	ret
