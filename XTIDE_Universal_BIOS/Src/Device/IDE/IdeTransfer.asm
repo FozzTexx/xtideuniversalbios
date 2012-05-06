@@ -107,6 +107,7 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 .ReadLastBlockFromDrive:
 	mov		cl, [bp+PIOVARS.bSectorsLeft]		; CH is already zero
+	push	cx
 	call	[bp+PIOVARS.fnXfer]					; Transfer possibly partial block
 
 	; Check for errors in last block
@@ -114,6 +115,12 @@ ALIGN JUMP_ALIGN
 CheckErrorsAfterTransferringLastBlock:
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRQ, FLG_STATUS_BSY)
 	call	IdeWait_PollStatusFlagInBLwithTimeoutInBH
+	pop		cx	; [bp+PIOVARS.bSectorsLeft]
+	jc		SHORT ReturnWithTransferErrorInAH
+
+	; All rectors succesfully transferred
+	add		cx, [bp+PIOVARS.bSectorsDone]		; Never sets CF
+	ret
 
 	; Return number of successfully read sectors
 ReturnWithTransferErrorInAH:
@@ -174,6 +181,7 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 .WriteLastBlockToDrive:
 	mov		cl, [bp+PIOVARS.bSectorsLeft]		; CH is already zero
+	push	cx
 %ifdef USE_186
 	push	CheckErrorsAfterTransferringLastBlock
 	jmp		[bp+PIOVARS.fnXfer]					; Transfer possibly partial block

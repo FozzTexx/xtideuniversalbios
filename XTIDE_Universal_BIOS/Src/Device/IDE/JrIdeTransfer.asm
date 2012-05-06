@@ -109,6 +109,7 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 .ReadLastBlockFromDrive:
 	mov		cl, [bp+MEMPIOVARS.bSectorsLeft]
+	push	cx
 	call	ReadSingleBlockFromSectorAccessWindowInDSSItoESDI
 
 	; Check for errors in last block
@@ -116,6 +117,12 @@ CheckErrorsAfterTransferringLastMemoryMappedBlock:
 	lds		di, [bp+MEMPIOVARS.fpDPT]			; DPT now in DS:DI
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRQ, FLG_STATUS_BSY)
 	call	IdeWait_PollStatusFlagInBLwithTimeoutInBH
+	pop		cx	; [bp+MEMPIOVARS.bSectorsLeft]
+	jc		SHORT ReturnWithMemoryIOtransferErrorInAH
+
+	; All rectors succesfully transferred
+	add		cx, [bp+PIOVARS.bSectorsDone]		; Never sets CF
+	ret
 
 	; Return number of successfully transferred sectors
 ReturnWithMemoryIOtransferErrorInAH:
@@ -174,6 +181,7 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 .WriteLastBlockToDrive:
 	mov		cl, [bp+MEMPIOVARS.bSectorsLeft]
+	push	cx
 	ePUSH_T	bx, CheckErrorsAfterTransferringLastMemoryMappedBlock
 	; Fall to WriteSingleBlockFromDSSIToSectorAccessWindowInESDI
 
