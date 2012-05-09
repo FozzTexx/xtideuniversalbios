@@ -32,7 +32,7 @@ SECTION .text
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
-%ifndef EXCLUDE_FROM_XTIDECFG	; Not used in XTIDECFG
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS OR EXCLUDE_FROM_XTIDECFG
 ALIGN JUMP_ALIGN
 Math_DivQWatSSBPbyCX:
 	xor		dx, dx
@@ -66,9 +66,9 @@ Math_DivQWatSSBPbyCX:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS OR EXCLUDE_FROM_XTIDECFG
+%ifndef EXCLUDE_FROM_XTIDECFG
 ALIGN JUMP_ALIGN
-Math_DivDXAXbyCX:	; This is currently unused (dead code)
+Math_DivDXAXbyCX:
 	xor		bx, bx
 	xchg	bx, ax
 	xchg	dx, ax

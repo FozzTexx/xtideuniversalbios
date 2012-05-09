@@ -446,7 +446,6 @@ ALIGN JUMP_ALIGN
 	%elifidni %1, cx
 		times %2	%3		%1, 1
 	%else
-;		%if %2 > 7	; Original value
 		%if %2 > 3	; Size optimized value
 			push	cx
 			mov		cl, %2
@@ -461,6 +460,7 @@ ALIGN JUMP_ALIGN
 	%3		%1, %2
 %endif
 %endmacro
+
 %macro eSHR_IM 2
 	eSHIFT_IM	%1, %2, shr
 %endmacro
