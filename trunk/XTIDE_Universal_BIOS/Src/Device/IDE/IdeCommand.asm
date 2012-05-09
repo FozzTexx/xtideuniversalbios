@@ -78,7 +78,7 @@ IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 	jne		SHORT .SkipLongWaitSinceDriveIsNotPrimaryMaster
 	test	bh, FLG_DRVNHEAD_DRV
 	jnz		SHORT .SkipLongWaitSinceDriveIsNotPrimaryMaster
-	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_MOTOR_STARTUP, FLG_STATUS_BSY)
+	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_MOTOR_STARTUP, FLG_STATUS_DRDY)
 	call	IdeWait_PollStatusFlagInBLwithTimeoutInBH
 .SkipLongWaitSinceDriveIsNotPrimaryMaster:
 
@@ -194,11 +194,13 @@ IdeCommand_OutputWithParameters:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 IdeCommand_SelectDrive:
+%if 0
 	; Wait until neither Master or Slave Drive is busy
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_BSY, FLG_STATUS_BSY)
 	cmp		BYTE [bp+IDEPACK.bCommand], COMMAND_IDENTIFY_DEVICE
 	eCMOVE	bh, TIMEOUT_IDENTIFY_DEVICE
 	call	IdeWait_PollStatusFlagInBLwithTimeoutInBH
+%endif
 
 	; Select Master or Slave Drive
 	mov		al, [bp+IDEPACK.bDrvAndHead]

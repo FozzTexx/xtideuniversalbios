@@ -96,26 +96,23 @@ g_szFddFiveQuarter:		db  "5",ONE_QUARTER,NULL
 
 
 g_szAddressingModes:
-g_szLCHS:		db	"L-CHS",NULL
-g_szPCHS:		db	"P-CHS",NULL
-g_szLBA28:		db	"LBA28",NULL
-g_szLBA48:		db	"LBA48",NULL
-g_szAddressingModes_Displacement equ (g_szPCHS - g_szAddressingModes)
+g_szNORMAL:		db	"NORMAL",NULL
+g_szLARGE:		db	"LARGE ",NULL
+g_szLBA:		db	"LBA   ",NULL
+wantToRemoveThis:	db	"4",NULL	; String compression want '4' somewhere
+g_szAddressingModes_Displacement equ (g_szLARGE - g_szAddressingModes)
 ;
 ; Ensure that addressing modes are correctly spaced in memory
 ;
 %ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
-	%if g_szLCHS <> g_szAddressingModes
+	%if g_szNORMAL <> g_szAddressingModes
 		%error "g_szAddressingModes Displacement Incorrect 1"
 	%endif
-	%if g_szPCHS <> g_szLCHS + g_szAddressingModes_Displacement
+	%if g_szLARGE <> g_szNORMAL + g_szAddressingModes_Displacement
 		%error "g_szAddressingModes Displacement Incorrect 2"
 	%endif
-	%if g_szLBA28 <> g_szPCHS + g_szAddressingModes_Displacement
+	%if g_szLBA <> g_szLARGE + g_szAddressingModes_Displacement
 		%error "g_szAddressingModes Displacement Incorrect 3"
-	%endif
-	%if g_szLBA48 <> g_szLBA28 + g_szAddressingModes_Displacement
-		%error "g_szAddressingModes Displacement Incorrect 4"
 	%endif
 %endif
 
@@ -165,7 +162,7 @@ g_szSelectionTimeout:	db		DOUBLE_BOTTOM_LEFT_CORNER,DOUBLE_LEFT_HORIZONTAL_TO_SI
 g_szCapacity:			db	"Capacity : %s",NULL
 g_szCapacityNum:		db	"%5-u.%u %ciB",NULL
 g_szInformation:		db	"%s",LF,CR
-	db	"Addr.",SINGLE_VERTICAL,"Block",SINGLE_VERTICAL,"Bus",SINGLE_VERTICAL,  "IRQ",SINGLE_VERTICAL,"Reset",LF,CR
+	db	"Addr. ",SINGLE_VERTICAL,"Block",SINGLE_VERTICAL,"Bus",SINGLE_VERTICAL,  "IRQ",SINGLE_VERTICAL,"Reset",LF,CR
 	db	   "%s",SINGLE_VERTICAL, "%5-u",SINGLE_VERTICAL, "%s",SINGLE_VERTICAL," %2-I",SINGLE_VERTICAL,"%5-x" ,NULL
 
 
@@ -210,7 +207,7 @@ g_szForeignHD:			db	"Foreign Hard Disk",NULL
 ;$translate{ord('1')} = 11;
 ;$translate{ord('2')} = 12;
 ;$translate{ord('3')} = 13;
-;$translate{ord('4')} = 14;
+;$translate{ord('4')} = 14;	; Not used at the moment
 ;$translate{ord('5')} = 15;
 ;$translate{ord('6')} = 16;
 ;$translate{ord('8')} = 17;

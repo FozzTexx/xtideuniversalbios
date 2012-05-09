@@ -185,7 +185,7 @@ iend
 	%include "CreateDPT.asm"		; For creating DPTs
 	%include "FindDPT.asm"			; For finding DPTs
 	%include "AccessDPT.asm"		; For accessing DPTs
-	%include "LbaAssist.asm"		; For generating L-CHS parameters to LBA drives
+	%include "AtaGeometry.asm"		; For generating L-CHS parameters
 	%include "DrvDetectInfo.asm"	; For creating DRVDETECTINFO structs
 	%include "AtaID.asm"			; For ATA Identify Device information
 	%include "DetectDrives.asm"		; For detecting IDE drives

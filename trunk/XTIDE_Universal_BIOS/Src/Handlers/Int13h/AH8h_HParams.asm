@@ -100,6 +100,10 @@ AH8h_HandlerForReadDiskDriveParameters:
 ;--------------------------------------------------------------------
 AH8h_GetDriveParameters:
 	call	AccessDPT_GetLCHStoAXBLBH
+%ifdef RESERVE_DIAGNOSTIC_CYLINDER
+	dec		ax
+%endif
+	MIN_U	ax, MAX_LCHS_CYLINDERS
 	; Fall to .PackReturnValues
 
 ;--------------------------------------------------------------------

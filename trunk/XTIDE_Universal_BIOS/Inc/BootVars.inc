@@ -65,12 +65,16 @@ struc DRVDETECTINFO
 	.szDrvName				resb	MAX_HARD_DISK_NAME_LENGTH
 							resb	2	; Zero word (ensures string terminates)
 	.wInitErrorFlags		resb	2	; Errors during initialization
-	
-%ifdef MODULE_ADVANCED_ATA
-							resb	6	; padding to make DRVDETECTINFO size an even multiple of DPT size
-%else
-							resb	2	; padding to make DRVDETECTINFO size an even multiple of DPT size
-%endif				
+
+%if LARGEST_DPT_SIZE == 28
+							resb	22	; padding to make DRVDETECTINFO size an even multiple of DPT size
+%elif LARGEST_DPT_SIZE == 20
+							resb	6
+%elif LARGEST_DPT_SIZE == 18
+							resb	2
+%else	; LARGEST_DPT_SIZE == 10
+							resb	6
+%endif
 endstruc
 
 ; Boot Menu Information Table. These are generated for all XTIDE Universal

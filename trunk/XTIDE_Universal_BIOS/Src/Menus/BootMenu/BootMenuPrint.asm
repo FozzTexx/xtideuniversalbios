@@ -201,7 +201,7 @@ BootMenuPrint_RefreshInformation:
 	push	cx						; Tenths
 	push	dx						; Magnitude character
 
-	test	di, di
+	test	di, di					; Zero if foreign drive
 	jz		SHORT BootMenuPrint_RefreshInformation.FormatRelay
 
 %include "BootMenuPrintCfg.asm"			; inline of code to fill out remainder of information string
@@ -228,9 +228,8 @@ FloppyTypes:
 ;	Corrupts registers:
 ;		CX
 ;--------------------------------------------------------------------
-GetTotalSectorCount:
-	test	BYTE [di+DPT.bFlagsLow], FLG_DRVNHEAD_LBA
-	jnz		SHORT .ReturnFullCapacity
-	jmp		AH15h_GetSectorCountToBXDXAX
-.ReturnFullCapacity:
-	jmp		AccessDPT_GetLbaSectorCountToBXDXAX
+%ifdef MODULE_EBIOS
+GetTotalSectorCount		EQU		AccessDPT_GetLbaSectorCountToBXDXAX
+%else
+GetTotalSectorCount		EQU		AH15h_GetSectorCountToBXDXAX
+%endif

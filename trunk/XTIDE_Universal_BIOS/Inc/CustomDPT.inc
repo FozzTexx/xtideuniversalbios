@@ -22,48 +22,60 @@
 %define CUSTOMDPT_INC
 
 ; Base DPT for all device types
-struc DPT	; 10 bytes
+struc DPT	; 8 or 18 bytes
 	; General Disk Parameter Table related
 	.wFlags:
 	.bFlagsLow				resb	1
 	.bFlagsHigh				resb	1
 	.bIdevarsOffset			resb	1	; Offset to IDEVARS for this drive
 
-	; IDE Drive related
-	; .bLbaHeads and .twLbaSectors are used for LBA addressing only.
-	.bLbaHeads:				resb	1	; Number of LBA assisted heads (1...255)
-	.twLbaSectors			resb	2	; 48-bit sector count for LBA addressing
+	.bPchsHeads				resb	1	; (1...16)
+	.wLchsCylinders			resb	2	; (1...1027, yes 1027)
+	.wLchsHeadsAndSectors:
+	.bLchsHeads				resb	1	; (1...255)
+	.bLchsSectorsPerTrack	resb	1	; (1...63)
 
-	; .wPchsCylinders and .bPchsSectors are used for CHS addressing only.
-	.wPchsCylinders			resb	2	; Number of P-CHS Cylinders (1...16383)
-	.wPchsHeadsAndSectors:
-	.bPchsHeads				resb	1	; Number of P-CHS heads (1...16)
-	.bPchsSectors			resb	1	; Number of P-CHS Sectors per Track (1...63)
+%ifdef MODULE_EBIOS
+	.twLbaSectors			resb	6	; 48-bit sector count for LBA addressing
+	.wPchsCylinders			resb	2
+	.bPchsSectorsPerTrack	resb	1
+							resb	1
+%endif
 endstruc
 
 	; Bit definitions for DPT.bFlagsLow
-	MASKL_DPT_CHS_SHIFT_COUNT					EQU	(7<<0)	; Bits 0...2, P-CHS to L-CHS bit shift count (0...4)
-	FLGL_DPT_SLAVE								EQU	FLG_DRVNHEAD_DRV	; (1<<4), Drive is slave drive
-	MASKL_DPT_ADDRESSING_MODE					EQU	(3<<ADDRESSING_MODE_FIELD_POSITION)	; Bits 5..6, Addressing Mode (bit 6 == FLG_DRVNHEAD_LBA)
+	MASKL_DPT_CHS_SHIFT_COUNT			EQU	(3<<0)				; Bits 0...1, P-CHS to L-CHS bit shift count (0...3)
+	MASKL_DPT_ADDRESSING_MODE			EQU	(3<<ADDRESSING_MODE_FIELD_POSITION)	; Bits 2...3, NORMAL, LARGE or Assisted LBA addressing mode
+	FLGL_DPT_ASSISTED_LBA				EQU	(1<<(ADDRESSING_MODE_FIELD_POSITION+1))
+	FLGL_DPT_SLAVE						EQU	FLG_DRVNHEAD_DRV	; Bit 4, Drive is a Slave Drive
 %ifdef MODULE_IRQ
-	FLGL_DPT_ENABLE_IRQ							EQU	(1<<7)
+	FLGL_DPT_ENABLE_IRQ					EQU	(1<<5)				; Bit 5, Enable IRQ
 %endif
+%ifdef MODULE_EBIOS
+	FLGL_DPT_LBA_AND_EBIOS_SUPPORTED	EQU	FLG_DRVNHEAD_LBA	; Bit 6, Drive supports LBA and so EBIOS functions can be supported
+	FLGL_DPT_LBA48						EQU	(1<<7)				; Bit 7, Drive supports 48-bit LBA (Must be bit 7!)
+%endif
+
+	; Addressing modes for DPT.bFlagsLow
+	ADDRESSING_MODE_FIELD_POSITION		EQU		2
+	ADDRESSING_MODE_NORMAL				EQU		0
+	ADDRESSING_MODE_LARGE				EQU		1
+	ADDRESSING_MODE_ASSISTED_LBA		EQU		2	; 28-bit or 48-bit LBA
+
 
 	; Bit definitions for DPT.bFlagsHigh
-	FLGH_DPT_BLOCK_MODE_SUPPORTED				EQU	(1<<1)	; Use block transfer commands (must be bit 1!)
+	FLGH_DPT_BLOCK_MODE_SUPPORTED		EQU	(1<<1)	; Bit 1, Use block transfer commands (must be bit 1!)
 %ifdef MODULE_SERIAL
-	FLGH_DPT_SERIAL_DEVICE						EQU	(1<<2)	; Serial Port Device
+	FLGH_DPT_SERIAL_DEVICE				EQU	(1<<2)	; Bit 2, Serial Port Device
 %endif
 %ifdef MODULE_IRQ
-	FLGH_DPT_INTERRUPT_IN_SERVICE				EQU	(1<<3)	; Set when waiting for IRQ
+	FLGH_DPT_INTERRUPT_IN_SERVICE		EQU	(1<<3)	; Bit 3, Set when waiting for IRQ
 %endif
 %ifdef MODULE_FEATURE_SETS
-	FLGH_DPT_POWER_MANAGEMENT_SUPPORTED			EQU (1<<5)
+	FLGH_DPT_POWER_MANAGEMENT_SUPPORTED	EQU (1<<5)	; Bit 4, Drive supports power management
 %endif
-
-	; IDE device only
 %ifdef MODULE_ADVANCED_ATA
-	FLGH_DPT_IORDY								EQU	(1<<7)	; Controller and Drive supports IORDY
+	FLGH_DPT_IORDY						EQU	(1<<7)	; Bit 5, Controller and Drive supports IORDY
 %endif
 
 	; Serial device only
@@ -73,28 +85,21 @@ endstruc
 	FLGH_DPT_SERIAL_FLOPPY_TYPE_FIELD_POSITION	EQU	5
 %endif
 
-	; Addressing modes for DPT.wFlags
-	ADDRESSING_MODE_FIELD_POSITION				EQU		5
-	ADDRESSING_MODE_LCHS						EQU		0	; L-CHS Addressing Mode (NORMAL in many other BIOSes)
-	ADDRESSING_MODE_PCHS						EQU		1	; P-CHS Addressing Mode (LARGE in many other BIOSes)
-	ADDRESSING_MODE_LBA28						EQU		2	; 28-bit LBA Addressing Mode
-%ifdef MODULE_EBIOS
-	ADDRESSING_MODE_LBA48						EQU		3	; 48-bit LBA Addressing Mode
-%endif
 
 
 ; DPT for ATA devices
-struc DPT_ATA	; 10 + 2 bytes = 12 bytes
+struc DPT_ATA	; 8/18 bytes + 2 bytes = 10/20 bytes
 	.dpt					resb	DPT_size
 	.bBlockSize				resb	1	; Current block size in sectors (do not set to zero!)
 	.bDevice				resb	1	; Device Type from IDEVARS (overrided when 32-bit controller detected)
 endstruc
 
 
+
 ; Additional variables needed to initialize and reset Advanced IDE Controllers.
 ; EBDA must be reserved for DPTs when using these!
 %ifdef MODULE_ADVANCED_ATA
-struc DPT_ADVANCED_ATA
+struc DPT_ADVANCED_ATA	; 10/20 bytes + 8 bytes = 18/28 bytes
 	.dpt_ata				resb	DPT_ATA_size
 	.wControllerID			resb	2	; Controller specific ID WORD (from Advanced Controller detection)
 	.wControllerBasePort	resb	2	; Advanced Controller port (not IDE port)
@@ -116,7 +121,7 @@ endstruc
 
 ; DPT for Serial devices
 %ifdef MODULE_SERIAL
-struc DPT_SERIAL
+struc DPT_SERIAL	; 8/18 bytes + 2 bytes = 10/20 bytes
 	.dpt					resb	DPT_size
 	.wSerialPortAndBaud:
 	.bSerialPort			resb	1	; Serial connection I/O port address, divided by 4
@@ -137,26 +142,6 @@ endstruc
 	; 1024 cylinders, 256 heads, 63 sectors = 8.4 GB limit (but DOS does not support more than 255 heads)
 	MAX_LCHS_CYLINDERS			EQU		1024
 	LBA_ASSIST_SPT				EQU		63
-
-
-;--------------------------------------------------------------------
-; LIMIT_LBA_CYLINDERS_IN_DXAX_TO_LCHS_CYLINDERS
-;	Parameters:
-;		DX:AX:	Number of LBA cylinders
-;	Returns:
-;		AX:		Number of L-CHS cylinders
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-%macro LIMIT_LBA_CYLINDERS_IN_DXAX_TO_LCHS_CYLINDERS 0
-	test	dx, dx
-	jnz		SHORT %%LoadMaxValueToAX
-	cmp		ax, MAX_LCHS_CYLINDERS
-	jb		SHORT %%NoNeedToModify
-%%LoadMaxValueToAX:
-	mov		ax, MAX_LCHS_CYLINDERS
-%%NoNeedToModify:
-%endmacro
 
 
 %endif ; CUSTOMDPT_INC

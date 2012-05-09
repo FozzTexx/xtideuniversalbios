@@ -42,33 +42,34 @@ SECTION .text
 .BootMenuPrintCfg_ForOurDrive:
 	eMOVZX	ax, [di+DPT.bIdevarsOffset]
 	xchg	bx, ax						; CS:BX now points to IDEVARS
-	; Fall to .PushAndFormatCfgString
+	; Fall to .PushAddressingMode
 
 ;--------------------------------------------------------------------
-; PushAddressingMode
+; .PushAddressingMode
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT
 ;		CS:BX:	Ptr to IDEVARS
 ;	Returns:
 ;		Nothing (jumps to next push below)
 ;	Corrupts registers:
-;		AX, CX
+;		AX, CX, DX
 ;--------------------------------------------------------------------
 .PushAddressingMode:
-	AccessDPT_GetUnshiftedAddressModeToALZF
+	ACCESSDPT__GET_UNSHIFTED_ADDRESS_MODE_TO_AXZF
 	;;
 	;; This multiply both shifts the addressing mode bits down to low order bits, and
 	;; at the same time multiplies by the size of the string displacement.  The result is in AH,
 	;; with AL clear, and so we exchange AL and AH after the multiply for the final result.
 	;;
-	mov		cl,(1<<(8-ADDRESSING_MODE_FIELD_POSITION)) * g_szAddressingModes_Displacement
-	mul		cl
-	xchg	al,ah
-	add		ax,g_szAddressingModes
+	mov		cx, g_szAddressingModes_Displacement << (8-ADDRESSING_MODE_FIELD_POSITION)
+	mul		cx
+	xchg	al, ah		; AL = always zero after above multiplication
+	add		ax, g_szAddressingModes
 	push	ax
+	; Fall to .PushBlockMode
 
 ;--------------------------------------------------------------------
-; PushBlockMode
+; .PushBlockMode
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT
 ;		CS:BX:	Ptr to IDEVARS

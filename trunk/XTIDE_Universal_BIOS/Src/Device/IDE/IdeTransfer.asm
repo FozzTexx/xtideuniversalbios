@@ -118,7 +118,7 @@ CheckErrorsAfterTransferringLastBlock:
 	pop		cx	; [bp+PIOVARS.bSectorsLeft]
 	jc		SHORT ReturnWithTransferErrorInAH
 
-	; All rectors succesfully transferred
+	; All sectors succesfully transferred
 	add		cx, [bp+PIOVARS.bSectorsDone]		; Never sets CF
 	ret
 
@@ -370,8 +370,8 @@ ALIGN JUMP_ALIGN
 	loop	.ReadNextQword
 	pop		ds
 	ret
-
 %endif	; MODULE_8BIT_IDE
+
 
 ;--------------------------------------------------------------------
 %ifdef USE_AT
@@ -394,7 +394,7 @@ WriteBlockTo32bitDataPort:
 	db		66h			; Override operand size to 32-bit
 	db		6Fh			; OUTSW/OUTSD
 	ret
-%endif
+%endif ; USE_AT
 
 
 

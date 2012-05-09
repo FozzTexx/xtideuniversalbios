@@ -184,38 +184,35 @@ g_szFddFiveQuarter:		; db  "5",ONE_QUARTER,NULL
 
 
 g_szAddressingModes:
-g_szLCHS:		; db	"L-CHS",NULL
-         		; db	 4ch,  2dh,  43h,  48h,  53h,  00h    ; uncompressed
-         		  db	 52h,  28h,  49h,  4eh,  99h          ; compressed
+g_szNORMAL:		; db	"NORMAL",NULL
+           		; db	 4eh,  4fh,  52h,  4dh,  41h,  4ch,  00h    ; uncompressed
+           		  db	 54h,  55h,  58h,  53h,  47h,  92h          ; compressed
 
-g_szPCHS:		; db	"P-CHS",NULL
-         		; db	 50h,  2dh,  43h,  48h,  53h,  00h    ; uncompressed
-         		  db	 56h,  28h,  49h,  4eh,  99h          ; compressed
+g_szLARGE:		; db	"LARGE ",NULL
+          		; db	 4ch,  41h,  52h,  47h,  45h,  20h,  00h    ; uncompressed
+          		  db	 52h,  47h,  58h,  4dh,  4bh,  00h          ; compressed
 
-g_szLBA28:		; db	"LBA28",NULL
-          		; db	 4ch,  42h,  41h,  32h,  38h,  00h    ; uncompressed
-          		  db	 52h,  48h,  47h,  2ch,  11h          ; compressed
+g_szLBA:		; db	"LBA   ",NULL
+        		; db	 4ch,  42h,  41h,  20h,  20h,  20h,  00h    ; uncompressed
+        		  db	 52h,  48h, 0c7h,  20h,  00h                ; compressed
 
-g_szLBA48:		; db	"LBA48",NULL
-          		; db	 4ch,  42h,  41h,  34h,  38h,  00h    ; uncompressed
-          		  db	 52h,  48h,  47h,  2eh,  11h          ; compressed
+wantToRemoveThis:	; db	"4",NULL	; String compression want '4' somewhere
+                 	; db	 34h,  00h    ; uncompressed
+                 	  db	 0eh          ; compressed
 
-g_szAddressingModes_Displacement equ (g_szPCHS - g_szAddressingModes)
+g_szAddressingModes_Displacement equ (g_szLARGE - g_szAddressingModes)
 ;
 ; Ensure that addressing modes are correctly spaced in memory
 ;
 %ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
-%if g_szLCHS <> g_szAddressingModes
+%if g_szNORMAL <> g_szAddressingModes
 %error "g_szAddressingModes Displacement Incorrect 1"
 %endif
-%if g_szPCHS <> g_szLCHS + g_szAddressingModes_Displacement
+%if g_szLARGE <> g_szNORMAL + g_szAddressingModes_Displacement
 %error "g_szAddressingModes Displacement Incorrect 2"
 %endif
-%if g_szLBA28 <> g_szPCHS + g_szAddressingModes_Displacement
+%if g_szLBA <> g_szLARGE + g_szAddressingModes_Displacement
 %error "g_szAddressingModes Displacement Incorrect 3"
-%endif
-%if g_szLBA48 <> g_szLBA28 + g_szAddressingModes_Displacement
-%error "g_szAddressingModes Displacement Incorrect 4"
 %endif
 %endif
 
@@ -298,9 +295,9 @@ g_szInformation:		; db	"%s",LF,CR
                 		; db	 25h,  73h,  0ah,  0dh    ; uncompressed
                 		  db	 3eh,  3bh                ; compressed
 
-	; db	"Addr.",SINGLE_VERTICAL,"Block",SINGLE_VERTICAL,"Bus",SINGLE_VERTICAL,  "IRQ",SINGLE_VERTICAL,"Reset",LF,CR
-	; db	 41h,  64h,  64h,  72h,  2eh, 0b3h,  42h,  6ch,  6fh,  63h,  6bh, 0b3h,  42h,  75h,  73h, 0b3h,  49h,  52h,  51h, 0b3h,  52h,  65h,  73h,  65h,  74h,  0ah,  0dh    ; uncompressed
-	  db	 47h,  6ah,  6ah,  78h,  29h,  23h,  48h,  72h,  75h,  69h,  71h,  23h,  48h,  7bh,  79h,  23h,  4fh,  58h,  57h,  23h,  58h,  6bh,  79h,  6bh,  7ah,  3bh          ; compressed
+	; db	"Addr. ",SINGLE_VERTICAL,"Block",SINGLE_VERTICAL,"Bus",SINGLE_VERTICAL,  "IRQ",SINGLE_VERTICAL,"Reset",LF,CR
+	; db	 41h,  64h,  64h,  72h,  2eh,  20h, 0b3h,  42h,  6ch,  6fh,  63h,  6bh, 0b3h,  42h,  75h,  73h, 0b3h,  49h,  52h,  51h, 0b3h,  52h,  65h,  73h,  65h,  74h,  0ah,  0dh    ; uncompressed
+	  db	 47h,  6ah,  6ah,  78h,  29h,  20h,  23h,  48h,  72h,  75h,  69h,  71h,  23h,  48h,  7bh,  79h,  23h,  4fh,  58h,  57h,  23h,  58h,  6bh,  79h,  6bh,  7ah,  3bh          ; compressed
 
 	; db	   "%s",SINGLE_VERTICAL, "%5-u",SINGLE_VERTICAL, "%s",SINGLE_VERTICAL," %2-I",SINGLE_VERTICAL,"%5-x" ,NULL
 	; db	    25h,  73h, 0b3h,  25h,  35h,  2dh,  75h, 0b3h,  25h,  73h, 0b3h,  20h,  25h,  32h,  2dh,  49h, 0b3h,  25h,  35h,  2dh,  78h,  00h    ; uncompressed
@@ -361,7 +358,7 @@ g_szForeignHD:			; db	"Foreign Hard Disk",NULL
 ;$translate{ord('1')} = 11;    [StringsCompress Processed]
 ;$translate{ord('2')} = 12;    [StringsCompress Processed]
 ;$translate{ord('3')} = 13;    [StringsCompress Processed]
-;$translate{ord('4')} = 14;    [StringsCompress Processed]
+;$translate{ord('4')} = 14;	; Not used at the moment    [StringsCompress Processed]
 ;$translate{ord('5')} = 15;    [StringsCompress Processed]
 ;$translate{ord('6')} = 16;    [StringsCompress Processed]
 ;$translate{ord('8')} = 17;    [StringsCompress Processed]
@@ -477,7 +474,7 @@ StringsCompressed_TranslatesAndFormats:
 
 ;; translated usage stats
 ;; 33:1
-;; 32:22
+;; 32:26
 ;; 181:1
 ;; 53:2
 ;; 48:2
@@ -485,15 +482,15 @@ StringsCompressed_TranslatesAndFormats:
 ;; 46:3
 ;; 179:8
 ;; 44:1
-;; 50:3
+;; 50:2
 ;; 51:3
 ;; 47:2
 ;; 52:1
 ;; 172:2
 ;; 34:3
 ;; 49:1
-;; 56:6
-;; 45:3
+;; 56:4
+;; 45:1
 ;; 175:1
 ;; 171:2
 ;; 54:1
@@ -521,25 +518,25 @@ StringsCompressed_TranslatesAndFormats:
 ;; 62,>:
 ;; 63,?:
 ;; 64,@:1
-;; 65,A:3
-;; 66,B:9
-;; 67,C:4
+;; 65,A:4
+;; 66,B:8
+;; 67,C:2
 ;; 68,D:10
-;; 69,E:2
+;; 69,E:3
 ;; 70,F:4
-;; 71,G:2
-;; 72,H:4
+;; 71,G:3
+;; 72,H:2
 ;; 73,I:1
 ;; 74,J:
 ;; 75,K:1
 ;; 76,L:4
-;; 77,M:4
-;; 78,N:1
-;; 79,O:1
-;; 80,P:2
+;; 77,M:5
+;; 78,N:2
+;; 79,O:2
+;; 80,P:1
 ;; 81,Q:1
-;; 82,R:5
-;; 83,S:5
+;; 82,R:7
+;; 83,S:3
 ;; 84,T:
 ;; 85,U:2
 ;; 86,V:

@@ -35,12 +35,12 @@ AccessDPT_GetIdeBasePortToBX:
 	eMOVZX	bx, [di+DPT.bIdevarsOffset]			; CS:BX points to IDEVARS
 	mov		bx, [cs:bx+IDEVARS.wPort]
 	ret
-
-%endif
+%endif	; MODULE_ADVANCED_ATA
 
 
 ;--------------------------------------------------------------------
-; AccessDPT_GetDriveSelectByteToAL
+; AccessDPT_GetDriveSelectByteForOldInt13hToAL
+; AccessDPT_GetDriveSelectByteForEbiosToAL
 ;	Parameters:
 ;		DS:DI:	Ptr to Disk Parameter Table
 ;	Returns:
@@ -49,10 +49,26 @@ AccessDPT_GetIdeBasePortToBX:
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-AccessDPT_GetDriveSelectByteToAL:
-	mov		al, [di+DPT.wFlags]
-	and		al, FLG_DRVNHEAD_LBA | FLG_DRVNHEAD_DRV
+AccessDPT_GetDriveSelectByteForOldInt13hToAL:
+	mov		al, [di+DPT.bFlagsLow]
+	test	al, FLGL_DPT_ASSISTED_LBA
+	jnz		SHORT GetDriveSelectByteForAssistedLBAtoAL
+
+	and		al, FLG_DRVNHEAD_DRV	; Clear all but drive select bit
 	or		al, MASK_DRVNHEAD_SET	; Bits set to 1 for old drives
+	ret
+
+%ifdef MODULE_EBIOS
+ALIGN JUMP_ALIGN
+AccessDPT_GetDriveSelectByteForEbiosToAL:
+	mov		al, [di+DPT.wFlags]
+	; Fall to GetDriveSelectByteForAssistedLBAtoAL
+%endif ; MODULE_EBIOS
+
+ALIGN JUMP_ALIGN
+GetDriveSelectByteForAssistedLBAtoAL:
+	and		al, FLG_DRVNHEAD_DRV	; Master / Slave select
+	or		al, FLG_DRVNHEAD_LBA | MASK_DRVNHEAD_SET
 	ret
 
 
@@ -88,51 +104,15 @@ AccessDPT_GetDeviceControlByteToAL:
 ;		BL:		Number of L-CHS heads
 ;		BH:		Number of L-CHS sectors per track
 ;	Corrupts registers:
-;		CX, DX
-;--------------------------------------------------------------------
-AccessDPT_GetLCHStoAXBLBH:
-	; Return LBA-assisted CHS if LBA addressing used
-	test	BYTE [di+DPT.bFlagsLow], FLG_DRVNHEAD_LBA
-	jz		SHORT .ConvertPchsToLchs
-
-	call	AccessDPT_GetLbaSectorCountToBXDXAX
-	call	LbaAssist_ConvertSectorCountFromBXDXAXtoLbaAssistedCHSinDXAXBLBH
-	LIMIT_LBA_CYLINDERS_IN_DXAX_TO_LCHS_CYLINDERS
-	ret
-
-.ConvertPchsToLchs:
-	mov		ax, [di+DPT.wPchsCylinders]
-	mov		bx, [di+DPT.wPchsHeadsAndSectors]
-	; Fall to AccessDPT_ShiftPCHinAXBLtoLCH
-
-
-;--------------------------------------------------------------------
-; AccessDPT_ShiftPCHinAXBLtoLCH
-;	Parameters:
-;		AX:		P-CHS cylinders (1...16383)
-;		BL:		P-CHS heads (1...16)
-;	Returns:
-;		AX:		Number of L-CHS cylinders (1...1024)
-;		BL:		Number of L-CHS heads (1...255)
-;		CX:		Number of bits shifted (4 at most)
-;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-AccessDPT_ShiftPCHinAXBLtoLCH:
-	xor		cx, cx
-.ShiftLoop:
-	cmp		ax, MAX_LCHS_CYLINDERS		; Need to shift?
-	jbe		SHORT .Return				;  If not, return
-	inc		cx							; Increment shift count
-	shr		ax, 1						; Halve cylinders
-	shl		bl, 1						; Double heads
-	jnz		SHORT .ShiftLoop			; Falls through only on the last (4th) iteration and only if BL was 16 on entry
-	dec		bl							; DOS doesn't support drives with 256 heads so we limit heads to 255
-	; We can save a byte here by using DEC BX if we don't care about BH
-.Return:
+AccessDPT_GetLCHStoAXBLBH:
+	mov		ax, [di+DPT.wLchsCylinders]
+	mov		bx, [di+DPT.wLchsHeadsAndSectors]
 	ret
 
 
+%ifdef MODULE_EBIOS
 ;--------------------------------------------------------------------
 ; AccessDPT_GetLbaSectorCountToBXDXAX
 ;	Parameters:
@@ -147,6 +127,7 @@ AccessDPT_GetLbaSectorCountToBXDXAX:
 	mov		dx, [di+DPT.twLbaSectors+2]
 	mov		bx, [di+DPT.twLbaSectors+4]
 	ret
+%endif ; MODULE_EBIOS
 
 
 ;--------------------------------------------------------------------
@@ -170,22 +151,23 @@ AccessDPT_GetPointerToDRVPARAMStoCSBX:
 .ReturnPointerToDRVPARAMS:
 	ret
 
+
 ;--------------------------------------------------------------------
-; AccessDPT_GetUnshiftedAddressModeToALZF
+; ACCESSDPT__GET_UNSHIFTED_ADDRESS_MODE_TO_AXZF
 ;	Parameters:
 ;		DS:DI:	Ptr to Disk Parameter Table
 ;	Returns:
-;		AL:		Addressing Mode (L-CHS, P-CHS, LBA28, LBA48)
+;		AX:		Addressing Mode (ADDRESSING_MODE_NORMAL, ADDRESSING_MODE_LARGE or ADDRESSING_MODE_ASSISTED_LBA)
 ;               unshifted (still shifted where it is in bFlagsLow)
 ;       ZF:     Set based on value in AL
 ;	Corrupts registers:
-;		AL
+;		Nothing
 ;--------------------------------------------------------------------
 ;
 ; Converted to a macro since only called in two places, and the call/ret overhead
 ; is not worth it for these two instructions (4 bytes total)
 ;
-%macro AccessDPT_GetUnshiftedAddressModeToALZF 0
+%macro ACCESSDPT__GET_UNSHIFTED_ADDRESS_MODE_TO_AXZF 0
 	mov		al, [di+DPT.bFlagsLow]
-	and		al, MASKL_DPT_ADDRESSING_MODE
+	and		ax, BYTE MASKL_DPT_ADDRESSING_MODE
 %endmacro
