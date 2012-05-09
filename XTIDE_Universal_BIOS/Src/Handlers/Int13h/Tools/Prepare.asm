@@ -52,16 +52,12 @@ Prepare_ByLoadingDapToESSIandVerifyingForTransfer:
 
 	; Get EBIOS command index to BX
 	; LBA28 or LBA48 command
-	cwd
-	mov		al, [es:si+DAP.qwLBA+3]	; Load LBA48 byte 3 (bits 24...31)
-	and		al, 0F0h				; Clear LBA28 bits 24...27
-	or		ax, [es:si+DAP.qwLBA+4]	; Set bits from LBA bytes 4 and 5
-	cmp		dx, ax					; Set CF if any of bits 28...47 set
-	rcl		dx, 1					; DX = 0 for LBA28, DX = 1 for LBA48
 	call	Prepare_GetOldInt13hCommandIndexToBX
-	or		bx, dx					; Set block mode / single sector bit
+	mov		al, [di+DPT.bFlagsLow]
+	shl		al, 1					; Set CF if LBA48 supported
+	adc		bl, bh					; LBA48 EXT commands
 	ret
-%endif
+%endif ; MODULE_EBIOS
 
 
 ;--------------------------------------------------------------------
@@ -115,7 +111,6 @@ Prepare_BufferToESSIforOldInt13hTransfer:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 Prepare_ByValidatingSectorsInALforOldInt13h:
 	test	al, al
 	js		SHORT .CheckZeroOffsetFor128Sectors		; 128 or more

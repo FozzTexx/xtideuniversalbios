@@ -32,7 +32,6 @@ SECTION .text
 ;		DS:		RAMVARS segment
 ;		ES:		BDA Segment
 ;	Returns:
-;		DL:		Drive number for new drive
 ;		DS:DI:	Ptr to Disk Parameter Table (if successful)
 ;		CF:		Cleared if DPT created successfully
 ;				Set if any error
@@ -80,10 +79,10 @@ CreateDPT_FromAtaInformation:
 .StoreFlags:
 %endif
 	mov		[di+DPT.wFlags], ax
-	; Fall to .StoreAddressing
+	; Fall to .StoreCHSparametersAndAddressingMode
 
 ;--------------------------------------------------------------------
-; .StoreAddressing
+; .StoreCHSparametersAndAddressingMode
 ;	Parameters:
 ;		DS:DI:	Ptr to Disk Parameter Table
 ;		ES:SI:	Ptr to 512-byte ATA information read from the drive
@@ -93,22 +92,57 @@ CreateDPT_FromAtaInformation:
 ;	Corrupts registers:
 ;		AX, BX, CX, DX
 ;--------------------------------------------------------------------
-.StoreAddressing:
+.StoreCHSparametersAndAddressingMode:
 	; Check if CHS defined in ROMVARS
 	call	AccessDPT_GetPointerToDRVPARAMStoCSBX
-	test	byte [cs:bx+DRVPARAMS.wFlags], FLG_DRVPARAMS_USERCHS    ; User specified CHS?
-	jnz		SHORT .StoreUserDefinedPCHS
+	test	byte [cs:bx+DRVPARAMS.wFlags], FLG_DRVPARAMS_USERCHS    ; User specified P-CHS?
+	jz		SHORT .AutodetectPCHSvalues
 
+	; Use DRVPARAMS P-CHS values instead of autodetected
+	mov		ax, [cs:bx+DRVPARAMS.wCylinders]
+	mov		bx, [cs:bx+DRVPARAMS.wHeadsAndSectors]
+	call	AtaGeometry_GetLCHStoAXBLBHfromPCHSinAXBLBH
+	jmp		SHORT .StoreLCHStoDPT
+
+	; Get L-CHS parameters and addressing mode
+.AutodetectPCHSvalues:
+	call	AtaGeometry_GetLCHStoAXBLBHfromAtaInfoInESSI
+
+.StoreLCHStoDPT:
+	eSHL_IM	dl, ADDRESSING_MODE_FIELD_POSITION
+	or		cl, dl
+	or		[di+DPT.bFlagsLow], cl		; Shift count and addressing mode
+	mov		[di+DPT.wLchsCylinders], ax
+	mov		[di+DPT.wLchsHeadsAndSectors], bx
+
+	; Store P-CHS to DPT
+	call	AtaGeometry_GetPCHStoAXBLBHfromAtaInfoInESSI
+	mov		[di+DPT.bPchsHeads], bl
+%ifdef MODULE_EBIOS
+	mov		[di+DPT.wPchsCylinders], ax
+	mov		[di+DPT.bPchsSectorsPerTrack], bh
+	; Fall to .StoreNumberOfLbaSectors
+
+;--------------------------------------------------------------------
+; .StoreNumberOfLbaSectors
+;	Parameters:
+;		DS:DI:	Ptr to Disk Parameter Table
+;		ES:SI:	Ptr to 512-byte ATA information read from the drive
+;		CS:BP:	Ptr to IDEVARS for the controller
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, BX, CX, DX
+;--------------------------------------------------------------------
 	; Check if LBA supported
-	call	AtaID_GetPCHStoAXBLBHfromAtaInfoInESSI
 	test	BYTE [es:si+ATA1.wCaps+1], A1_wCaps_LBA>>8
-	jz		SHORT .StoreCHSfromAXBHBL		; Small old drive with CHS addressing only
+	jz		SHORT .NoLbaSupportedSoNoEBIOS
 
-	; Store LBA 28/48 addressing and total sector count
-	call	AtaID_GetTotalSectorCountToBXDXAXfromAtaInfoInESSI
-	call	StoreLbaAddressingAndTotalSectorCountFromBXDXAX
+	; Store LBA 28/48 total sector count
+	call	AtaGeometry_GetLbaSectorCountToBXDXAXfromAtaInfoInESSI
+	call	StoreLba48AddressingFromCLandTotalSectorCountFromBXDXAX
 
-	; Replace sector count with user defined if necessary
+	; Load user defined LBA
 	call	AccessDPT_GetPointerToDRVPARAMStoCSBX
 	test	BYTE [cs:bx+DRVPARAMS.wFlags], FLG_DRVPARAMS_USERLBA
 	jz		SHORT .KeepTotalSectorsFromAtaID
@@ -125,80 +159,12 @@ CreateDPT_FromAtaInformation:
 	cmp		ax, [di+DPT.twLbaSectors]
 	jae		SHORT .KeepTotalSectorsFromAtaID
 .StoreUserDefinedSectorCountToDPT:
-	call	StoreLbaAddressingAndTotalSectorCountFromBXDXAX
+	xor		cx, cx		; Always LBA28 for user defined values
+	call	StoreLba48AddressingFromCLandTotalSectorCountFromBXDXAX
 
-	; Calculate L-CHS for old INT 13h
 .KeepTotalSectorsFromAtaID:
-	mov		bx, [di+DPT.twLbaSectors+4]		; Restore BX
-	call	LbaAssist_ConvertSectorCountFromBXDXAXtoLbaAssistedCHSinDXAXBLBH
-	mov		[di+DPT.bLbaHeads], bl
-	jmp		SHORT .StoreBlockMode
-
-;--------------------------------------------------------------------
-; .StoreUserDefinedPCHS
-;	Parameters:
-;		DS:DI:	Ptr to Disk Parameter Table
-;		ES:SI:	Ptr to 512-byte ATA information read from the drive
-;		CS:BP:	Ptr to IDEVARS for the controller
-;	Returns:
-;		AX:		Number of P-CHS cylinders
-;		BH:		Number of P-CHS sectors per track
-;		BL:		Number of P-CHS heads
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-.StoreUserDefinedPCHS:
-	call	AccessDPT_GetPointerToDRVPARAMStoCSBX
-	mov		ax, [cs:bx+DRVPARAMS.wCylinders]
-	mov		bx, [cs:bx+DRVPARAMS.wHeadsAndSectors]
-	; Fall to .StoreCHSfromAXBHBL
-
-;--------------------------------------------------------------------
-; .StoreCHSfromAXBHBL
-;	Parameters:
-;		AX:		Number of P-CHS cylinders
-;		BH:		Number of P-CHS sectors per track
-;		BL:		Number of P-CHS heads
-;		DS:DI:	Ptr to Disk Parameter Table
-;		ES:SI:	Ptr to 512-byte ATA information read from the drive
-;		CS:BP:	Ptr to IDEVARS for the controller
-;	Returns:
-;		AX:		Number of P-CHS cylinders
-;		BH:		Number of P-CHS sectors per track
-;		BL:		Number of P-CHS heads
-;	Corrupts registers:
-;		CX
-;--------------------------------------------------------------------
-.StoreCHSfromAXBHBL:
-	push	ax
-	push	bx
-	call	AccessDPT_ShiftPCHinAXBLtoLCH	; Get number of bits to shift
-	pop		bx
-	pop		ax
-	jcxz	.StorePCHSfromAXDX				; Small drive so use L-CHS addressing
-
-	; Store P-CHS addressing mode and number of bits to shift in L-CHS to P-CHS translation
-	or		cl, ADDRESSING_MODE_PCHS<<ADDRESSING_MODE_FIELD_POSITION
-	or		[di+DPT.bFlagsLow], cl
-	; Fall to .StoreChsFromAXBLBH
-
-;--------------------------------------------------------------------
-; .StoreChsFromAXBLBH
-;	Parameters:
-;		AX:		Number of P-CHS cylinders
-;		BH:		Number of P-CHS sectors per track
-;		BL:		Number of P-CHS heads
-;		DS:DI:	Ptr to Disk Parameter Table
-;		ES:SI:	Ptr to 512-byte ATA information read from the drive
-;		CS:BP:	Ptr to IDEVARS for the controller
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-.StorePCHSfromAXDX:
-	mov		[di+DPT.wPchsCylinders], ax
-	mov		[di+DPT.wPchsHeadsAndSectors], bx
+.NoLbaSupportedSoNoEBIOS:
+%endif ; MODULE_EBIOS
 	; Fall to .StoreBlockMode
 
 ;--------------------------------------------------------------------
@@ -267,33 +233,24 @@ CreateDPT_FromAtaInformation:
 	ret
 
 
+%ifdef MODULE_EBIOS
 ;--------------------------------------------------------------------
-; StoreLbaAddressingAndTotalSectorCountFromBXDXAX
+; StoreLba48AddressingFromCLandTotalSectorCountFromBXDXAX
 ;	Parameters:
 ;		BX:DX:AX:	Total Sector Count
+;		CL:			FLGL_DPT_LBA48 if LBA48 supported
 ;		DS:DI:		Ptr to Disk Parameter Table
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		CX
+;		CL
 ;--------------------------------------------------------------------
-StoreLbaAddressingAndTotalSectorCountFromBXDXAX:
+StoreLba48AddressingFromCLandTotalSectorCountFromBXDXAX:
+	or		cl, FLGL_DPT_LBA_AND_EBIOS_SUPPORTED
+	and		BYTE [di+DPT.bFlagsLow], ~FLGL_DPT_LBA48
+	or		[di+DPT.bFlagsLow], cl
 	mov		[di+DPT.twLbaSectors], ax
 	mov		[di+DPT.twLbaSectors+2], dx
 	mov		[di+DPT.twLbaSectors+4], bx
-
-%ifdef MODULE_EBIOS
-	and		BYTE [di+DPT.bFlagsLow], ~MASKL_DPT_ADDRESSING_MODE
-	test	bx, bx
-	jnz		SHORT .SetLba48AddressingToDPT	; Must be LBA48
-
-	; Drives can report at most 0FFF FFFFh LBA28 sectors according to ATA specification.
-	; That is (2^28)-1 so we can simply check if DH is zero or not.
-	test	dh, dh
-	jz		SHORT .SetLba28AddressingToDPT
-.SetLba48AddressingToDPT:
-	or		BYTE [di+DPT.bFlagsLow], ADDRESSING_MODE_LBA48<<ADDRESSING_MODE_FIELD_POSITION
-.SetLba28AddressingToDPT:
-%endif
-	or		BYTE [di+DPT.bFlagsLow], ADDRESSING_MODE_LBA28<<ADDRESSING_MODE_FIELD_POSITION
 	ret
+%endif ; MODULE_EBIOS

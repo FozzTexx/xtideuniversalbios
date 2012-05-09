@@ -37,12 +37,11 @@ SECTION .text
 ;		CF:		0 if successful, 1 if error
 ;--------------------------------------------------------------------
 AH48h_HandlerForGetExtendedDriveParameters:
-	call	AccessDPT_GetPointerToDRVPARAMStoCSBX
-	push	bx
 	call	AccessDPT_GetLbaSectorCountToBXDXAX
-	pop		di			; CS:DI now points to DRVPARAMS
 
 	; Point DS:SI to Extended Drive Information Table to fill
+	push	ds
+	pop		es			; DPT now in ES:DI
 	mov		ds, [bp+IDEPACK.intpack+INTPACK.ds]
 	mov		cx, MINIMUM_EDRIVEINFO_SIZE
 	cmp		[si+EDRIVE_INFO.wSize], cx
@@ -50,7 +49,7 @@ AH48h_HandlerForGetExtendedDriveParameters:
 	je		SHORT .SkipEddConfigurationParameters
 
 	; We do not support EDD Configuration Parameters so set to FFFF:FFFFh
-	mov		cx, -1		; FFFFh
+	sub		cx, BYTE MINIMUM_EDRIVEINFO_SIZE+1	; CX => FFFFh
 	mov		[si+EDRIVE_INFO.fpEDDparams], cx
 	mov		[si+EDRIVE_INFO.fpEDDparams+2], cx
 	mov		cx, EDRIVE_INFO_size
@@ -58,7 +57,7 @@ AH48h_HandlerForGetExtendedDriveParameters:
 	; Fill Extended Drive Information Table in DS:SI
 .SkipEddConfigurationParameters:
 	mov		[si+EDRIVE_INFO.wSize], cx
-	mov		WORD [si+EDRIVE_INFO.wFlags], FLG_DMA_BOUNDARY_ERRORS_HANDLED_BY_BIOS
+	mov		WORD [si+EDRIVE_INFO.wFlags], FLG_DMA_BOUNDARY_ERRORS_HANDLED_BY_BIOS | FLG_CHS_INFORMATION_IS_VALID
 
 	; Store total sector count
 	mov		[si+EDRIVE_INFO.qwTotalSectors], ax
@@ -67,6 +66,20 @@ AH48h_HandlerForGetExtendedDriveParameters:
 	mov		[si+EDRIVE_INFO.qwTotalSectors+4], bx
 	mov		[si+EDRIVE_INFO.qwTotalSectors+6], ax	; Always zero
 	mov		WORD [si+EDRIVE_INFO.wSectorSize], 512
+
+	; Store P-CHS
+	eMOVZX	dx, BYTE [es:di+DPT.bPchsHeads]
+	xor		ax, ax									; Also a return code
+	mov		[si+EDRIVE_INFO.dwHeads], dx
+	mov		[si+EDRIVE_INFO.dwHeads+2], ax
+
+	mov		dl, [es:di+DPT.bPchsSectorsPerTrack]
+	mov		[si+EDRIVE_INFO.dwSectorsPerTrack], dx
+	mov		[si+EDRIVE_INFO.dwSectorsPerTrack+2], ax
+
+	mov		dx, [es:di+DPT.wPchsCylinders]
+	mov		[si+EDRIVE_INFO.dwCylinders], dx
+	mov		[si+EDRIVE_INFO.dwCylinders+2], ax
 
 .ReturnWithError:
 	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH

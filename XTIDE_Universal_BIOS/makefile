@@ -29,6 +29,7 @@
 # Not modules but these affect the assembly:                                                     #
 # ELIMINATE_CGA_SNOW        Prevents CGA snowing at the cost of a few bytes                      #
 # RELOCATE_INT13H_STACK     Relocates INT 13h stack to top of stolen conventional memory         #
+# RESERVE_DIAGNOSTIC_CYLINDER Reserve one L-CHS cylinder for compatibility with old BIOSes       #
 # USE_186                   Use instructions supported by 80188/80186 and V20/V30 and later      #
 # USE_286                   Use instructions supported by 286 and later                          #
 # USE_386                   Use instructions supported by 386 and later                          #
@@ -93,7 +94,7 @@ HEADERS += $(LIBS)
 #################################################################
 # Assembler preprocessor defines.                               #
 #################################################################
-DEFINES_COMMON = MODULE_STRINGS_COMPRESSED MODULE_HOTKEYS MODULE_EBIOS MODULE_FEATURE_SETS
+DEFINES_COMMON = MODULE_STRINGS_COMPRESSED MODULE_HOTKEYS MODULE_EBIOS MODULE_FEATURE_SETS RESERVE_DIAGNOSTIC_CYLINDER
 DEFINES_COMMON_LARGE = MODULE_BOOT_MENU MODULE_SERIAL MODULE_SERIAL_FLOPPY
 
 DEFINES_XT = $(DEFINES_COMMON) ELIMINATE_CGA_SNOW MODULE_8BIT_IDE MODULE_JRIDE MODULE_SERIAL MODULE_SERIAL_FLOPPY

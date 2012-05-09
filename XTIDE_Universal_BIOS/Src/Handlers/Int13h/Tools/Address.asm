@@ -46,15 +46,15 @@ Address_ExtractLCHSparametersFromOldInt13hAddress:
 
 
 ;---------------------------------------------------------------------
-; Converts LCHS parameters to IDE P-CHS parameters.
+; Converts LARGE addressing mode LCHS parameters to IDE P-CHS parameters.
 ; PCylinder	= (LCylinder << n) + (LHead / PHeadCount)
 ; PHead		= LHead % PHeadCount
 ; PSector	= LSector
 ;
-; Address_ConvertLCHStoPCHS:
+; ConvertLargeModeLCHStoPCHS:
 ;	Parameters:
 ;		BL:		Sector number (1...63)
-;		BH:		Head number (0...255)
+;		BH:		Head number (0...239)
 ;		CX:		Cylinder number (0...1023)
 ;		DS:DI:	Ptr to Disk Parameter Table
 ;	Returns:
@@ -65,7 +65,7 @@ Address_ExtractLCHSparametersFromOldInt13hAddress:
 ;		AX, DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-ConvertLCHStoPCHS:
+ConvertLargeModeLCHStoPCHS:
 	; LHead / PHeadCount and LHead % PHeadCount
 	eMOVZX	ax, bh					; Copy L-CHS Head number to AX
 	div		BYTE [di+DPT.bPchsHeads]; AL = LHead / PHeadCount, AH = LHead % PHeadCount
@@ -81,6 +81,7 @@ ConvertLCHStoPCHS:
 	xchg	cx, ax					; Move P-CHS Cylinder number to CX
 DoNotConvertLCHS:
 	ret
+
 
 ;--------------------------------------------------------------------
 ; Address_OldInt13hAddressToIdeAddress
@@ -101,22 +102,18 @@ DoNotConvertLCHS:
 ALIGN JUMP_ALIGN
 Address_OldInt13hAddressToIdeAddress:
 		call	Address_ExtractLCHSparametersFromOldInt13hAddress
+		ACCESSDPT__GET_UNSHIFTED_ADDRESS_MODE_TO_AXZF
 
-		AccessDPT_GetUnshiftedAddressModeToALZF
+;;; 0: ADDRESSING_MODE_NORMAL
+		jz		SHORT DoNotConvertLCHS
 
-;;; 0: ADDR_DPT_LCHS
-		jz		DoNotConvertLCHS
+;;; 1: ADDRESSING_MODE_LARGE
+		test	al, FLGL_DPT_ASSISTED_LBA
+		jz		SHORT ConvertLargeModeLCHStoPCHS
 
-;;; 1: ADDR_DPT_PCHS
-		;
-		; Since we are only checking for zero, we can do our math in the high order bits,
-		; in this case effectively subtracting 1 from the address mode.
-		;
-		sub		al,(1<<ADDRESSING_MODE_FIELD_POSITION)
-		jz		ConvertLCHStoPCHS
+;;; 2: ADDRESSING_MODE_ASSISTED_LBA
+		; Fall through to ConvertAssistedLBAModeLCHStoLBARegisterValues
 
-;;; 2: ADDR_DPT_LBA28 and 3: ADDR_DPT_LBA48
-		; Fall through to ConvertLCHStoLBARegisterValues
 
 ;---------------------------------------------------------------------
 ; Converts LCHS parameters to 28-bit LBA address.
@@ -124,12 +121,12 @@ Address_OldInt13hAddressToIdeAddress:
 ; LBA = ((cylToSeek*headsPerCyl+headToSeek)*sectPerTrack)+sectToSeek-1
 ;
 ; Returned address is in same registers that
-; Address_DoNotConvertLCHS and Address_ConvertLCHStoPCHS returns.
+; DoNotConvertLCHS and ConvertLargeModeLCHStoPCHS returns.
 ;
-; ConvertLCHStoLBARegisterValues:
+; ConvertAssistedLBAModeLCHStoLBARegisterValues:
 ;	Parameters:
 ;		BL:		Sector number (1...63)
-;		BH:		Head number (0...255)
+;		BH:		Head number (0...254)
 ;		CX:		Cylinder number (0...1023)
 ;		DS:DI:	Ptr to Disk Parameter Table
 ;	Returns:
@@ -140,26 +137,27 @@ Address_OldInt13hAddressToIdeAddress:
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-ConvertLCHStoLBARegisterValues:
+ConvertAssistedLBAModeLCHStoLBARegisterValues:
 	; cylToSeek*headsPerCyl (18-bit result)
+	; Max = 1023 * 255 = 260,865 = 3FB01h
 	mov		ax, LBA_ASSIST_SPT		; Load Sectors per Track
 	xchg	cx, ax					; Cylinder number to AX, Sectors per Track to CX
-
 %ifdef USE_386
-	movzx	dx, [di+DPT.bLbaHeads]
+	movzx	dx, [di+DPT.bLchsHeads]
 %else
 	cwd
-	mov		dl, [di+DPT.bLbaHeads]
+	mov		dl, [di+DPT.bLchsHeads]
 %endif
 	mul		dx						; DX:AX = cylToSeek*headsPerCyl
 
 	; +=headToSeek (18-bit result)
+	; Max = 260,865 + 254 = 261,119 = 3FBFFh
 	add		al, bh					; Add Head number to DX:AX
 	adc		ah, dh					; DH = Zero after previous multiplication
 	adc		dl, dh
 
 	; *=sectPerTrack (18-bit by 6-bit multiplication with 24-bit result)
+	; Max = 261,119 * 63 = 16,450,497 = FB03C1h
 	xchg	ax, dx					; Hiword to AX, loword to DX
 	mul		cl						; AX = hiword * Sectors per Track
 	mov		bh, al					; Backup hiword * Sectors per Track
@@ -168,6 +166,7 @@ ConvertLCHStoLBARegisterValues:
 	add		dl, bh					; DX:AX = (cylToSeek*headsPerCyl+headToSeek)*sectPerTrack
 
 	; +=sectToSeek-1 (24-bit result)
+	; Max = 16,450,497 + 63 - 1 = 16,450,559 = FB03FFh
 	xor		bh, bh					; Sector number now in BX
 	dec		bx						; sectToSeek-=1
 	add		ax, bx					; Add to loword

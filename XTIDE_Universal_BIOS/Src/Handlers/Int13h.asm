@@ -114,7 +114,7 @@ Int13h_DiskFunctionsHandler:
 
 ALIGN JUMP_ALIGN
 .JumpToEbiosFunction:
-	test	BYTE [di+DPT.bFlagsLow], FLG_DRVNHEAD_LBA
+	test	BYTE [di+DPT.bFlagsLow], FLGL_DPT_LBA_AND_EBIOS_SUPPORTED
 	jz		SHORT UnsupportedFunction	; No eINT 13h for CHS drives
 	sub		bl, 41h<<1					; BX = Offset to eINT 13h jump table
 	jb		SHORT UnsupportedFunction
