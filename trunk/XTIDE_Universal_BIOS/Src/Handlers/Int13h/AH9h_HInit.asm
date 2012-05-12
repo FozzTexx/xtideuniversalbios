@@ -34,10 +34,8 @@ SECTION .text
 ;		Nothing
 ;--------------------------------------------------------------------
 %macro STORE_ERROR_FLAG_TO_DPT 1
-%ifdef MODULE_ADVANCED_ATA
 	mov		al, %1
 	call	SetErrorFlagFromALwithErrorCodeInAH
-%endif
 %endmacro
 
 
@@ -81,7 +79,7 @@ AH9h_InitializeDriveForUse:
 
 %ifdef MODULE_ADVANCED_ATA
 	; Clear Initialization Error flags from DPT
-	mov		[di+DPT_ADVANCED_ATA.bInitError], al
+	mov		[di+DPT.bInitError], al
 %endif
 
 %ifdef MODULE_SERIAL
@@ -204,7 +202,7 @@ AH9h_InitializeDriveForUse:
 	; There might have been several errors so just return one error code for them all
 .ReturnWithErrorCodeInAH:
 %ifdef MODULE_ADVANCED_ATA
-	mov		ah, [di+DPT_ADVANCED_ATA.bInitError]
+	mov		ah, [di+DPT.bInitError]
 	test	ah, ah	; Clears CF
 	jz		SHORT .ReturnWithSuccess
 	mov		ah, RET_HD_RESETFAIL
@@ -224,7 +222,6 @@ AH9h_InitializeDriveForUse:
 
 
 
-%ifdef MODULE_ADVANCED_ATA
 ;--------------------------------------------------------------------
 ; SetErrorFlagFromALwithErrorCodeInAH
 ;	Parameters:
@@ -246,9 +243,7 @@ SetErrorFlagFromALwithErrorCodeInAH:
 	cmp		ah, RET_HD_INVALID
 	jbe		SHORT IgnoreInvalidCommandError
 
-	or		[di+DPT_ADVANCED_ATA.bInitError], al
+	or		[di+DPT.bInitError], al
 	stc
 .NoErrorFlagToSet:
 	ret
-
-%endif

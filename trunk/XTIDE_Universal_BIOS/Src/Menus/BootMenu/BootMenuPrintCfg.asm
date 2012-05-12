@@ -55,13 +55,13 @@ SECTION .text
 ;		AX, CX, DX
 ;--------------------------------------------------------------------
 .PushAddressingMode:
-	ACCESSDPT__GET_UNSHIFTED_ADDRESS_MODE_TO_AXZF
+	ACCESSDPT__GET_UNSHIFTED_TRANSLATE_MODE_TO_AXZF
 	;;
 	;; This multiply both shifts the addressing mode bits down to low order bits, and
 	;; at the same time multiplies by the size of the string displacement.  The result is in AH,
 	;; with AL clear, and so we exchange AL and AH after the multiply for the final result.
 	;;
-	mov		cx, g_szAddressingModes_Displacement << (8-ADDRESSING_MODE_FIELD_POSITION)
+	mov		cx, g_szAddressingModes_Displacement << (8-TRANSLATEMODE_FIELD_POSITION)
 	mul		cx
 	xchg	al, ah		; AL = always zero after above multiplication
 	add		ax, g_szAddressingModes
@@ -131,11 +131,7 @@ SECTION .text
 ;		AX, BX, DX, ES
 ;--------------------------------------------------------------------
 .PushResetStatus:
-%ifdef MODULE_ADVANCED_ATA
-	mov		al, [di+DPT_ADVANCED_ATA.bInitError]
+	mov		al, [di+DPT.bInitError]
 	push	ax
-%else
-	ePUSH_T	ax, 0
-%endif
 
 ;;; fall-out to BootMenuPrint_HardDiskRefreshInformation.

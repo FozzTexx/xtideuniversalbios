@@ -54,7 +54,7 @@ CreateDPT_FromAtaInformation:
 ;		AX
 ;--------------------------------------------------------------------
 .InitializeDPT:
-	mov		[di+DPT.bIdevarsOffset], bp	; IDEVARS must start in first 256 bytes of ROM
+	mov		[di+DPT.bIdevarsOffset], bp		; IDEVARS must start in first 256 bytes of ROM
 	; Fall to .StoreDriveSelectAndDriveControlByte
 
 ;--------------------------------------------------------------------
@@ -94,22 +94,18 @@ CreateDPT_FromAtaInformation:
 ;--------------------------------------------------------------------
 .StoreCHSparametersAndAddressingMode:
 	; Check if CHS defined in ROMVARS
-	call	AccessDPT_GetPointerToDRVPARAMStoCSBX
-	test	byte [cs:bx+DRVPARAMS.wFlags], FLG_DRVPARAMS_USERCHS    ; User specified P-CHS?
+	call	GetUserDefinedCapacityToBXAXandFlagsToCXandModeToDXfromROMVARS
+	test	cl, FLG_DRVPARAMS_USERCHS
 	jz		SHORT .AutodetectPCHSvalues
 
-	; Use DRVPARAMS P-CHS values instead of autodetected
-	mov		ax, [cs:bx+DRVPARAMS.wCylinders]
-	mov		bx, [cs:bx+DRVPARAMS.wHeadsAndSectors]
-	call	AtaGeometry_GetLCHStoAXBLBHfromPCHSinAXBLBH
+	; Translate P-CHS to L-CHS
+	call	AtaGeometry_GetLCHStoAXBLBHfromPCHSinAXBLBHandTranslateModeInDX
 	jmp		SHORT .StoreLCHStoDPT
-
-	; Get L-CHS parameters and addressing mode
 .AutodetectPCHSvalues:
-	call	AtaGeometry_GetLCHStoAXBLBHfromAtaInfoInESSI
+	call	AtaGeometry_GetLCHStoAXBLBHfromAtaInfoInESSIandTranslateModeInDX
 
 .StoreLCHStoDPT:
-	eSHL_IM	dl, ADDRESSING_MODE_FIELD_POSITION
+	eSHL_IM	dl, TRANSLATEMODE_FIELD_POSITION
 	or		cl, dl
 	or		[di+DPT.bFlagsLow], cl		; Shift count and addressing mode
 	mov		[di+DPT.wLchsCylinders], ax
@@ -143,14 +139,13 @@ CreateDPT_FromAtaInformation:
 	call	StoreLba48AddressingFromCLandTotalSectorCountFromBXDXAX
 
 	; Load user defined LBA
-	call	AccessDPT_GetPointerToDRVPARAMStoCSBX
-	test	BYTE [cs:bx+DRVPARAMS.wFlags], FLG_DRVPARAMS_USERLBA
+	call	GetUserDefinedCapacityToBXAXandFlagsToCXandModeToDXfromROMVARS
+	test	cl, FLG_DRVPARAMS_USERLBA
 	jz		SHORT .KeepTotalSectorsFromAtaID
-	mov		ax, [cs:bx+DRVPARAMS.dwMaximumLBA]
-	mov		dx, [cs:bx+DRVPARAMS.dwMaximumLBA+2]
-	xor		bx, bx
 
 	; Compare user defined and ATA-ID sector count and select smaller
+	xor		dx, dx
+	xchg	bx, dx		; User defined LBA now in BX:DX:AX
 	cmp		bx, [di+DPT.twLbaSectors+4]
 	jb		SHORT .StoreUserDefinedSectorCountToDPT
 	cmp		dx, [di+DPT.twLbaSectors+2]
@@ -159,7 +154,7 @@ CreateDPT_FromAtaInformation:
 	cmp		ax, [di+DPT.twLbaSectors]
 	jae		SHORT .KeepTotalSectorsFromAtaID
 .StoreUserDefinedSectorCountToDPT:
-	xor		cx, cx		; Always LBA28 for user defined values
+	; CL bit FLGL_DPT_LBA48 is clear at this point
 	call	StoreLba48AddressingFromCLandTotalSectorCountFromBXDXAX
 
 .KeepTotalSectorsFromAtaID:
@@ -230,6 +225,36 @@ CreateDPT_FromAtaInformation:
 
 .AllDone:
 	clc
+	ret
+
+
+;--------------------------------------------------------------------
+; GetUserDefinedCapacityToBXAXandFlagsToCXandModeToDXfromROMVARS
+;	Parameters:
+;		DS:DI:		Ptr to Disk Parameter Table
+;	Returns:
+;		AX:			User defined P-CHS Cylinders or LBA low word
+;		BX:			User defined P-CHS Heads and Sectors or LBA high word
+;		DX:			Translate mode or TRANSLATEMODE_AUTO
+;		CX:			FLG_DRVPARAMS_USERCHS if user defined CHS in BX:AX
+;					FLG_DRVPARAMS_USERLBA if user defined LBA in BX:AX
+;					Zero if user has not defined capacity
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+GetUserDefinedCapacityToBXAXandFlagsToCXandModeToDXfromROMVARS:
+	call	AccessDPT_GetPointerToDRVPARAMStoCSBX
+
+	; Get settings
+	mov		cx, [cs:bx+DRVPARAMS.wFlags]
+	mov		dx, cx
+	and		cx, BYTE FLG_DRVPARAMS_USERCHS | FLG_DRVPARAMS_USERLBA
+	and		dx, BYTE MASK_DRVPARAMS_TRANSLATEMODE
+	eSHR_IM	dx, TRANSLATEMODE_FIELD_POSITION
+
+	; Get capacity
+	mov		ax, [cs:bx+DRVPARAMS.wCylinders]		; Or .dwMaximumLBA
+	mov		bx, [cs:bx+DRVPARAMS.wHeadsAndSectors]	; Or .dwMaximumLBA+2
 	ret
 
 

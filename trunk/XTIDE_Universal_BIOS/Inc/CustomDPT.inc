@@ -22,31 +22,35 @@
 %define CUSTOMDPT_INC
 
 ; Base DPT for all device types
-struc DPT	; 8 or 18 bytes
+struc DPT	; 10 or 18 bytes
 	; General Disk Parameter Table related
 	.wFlags:
 	.bFlagsLow				resb	1
 	.bFlagsHigh				resb	1
 	.bIdevarsOffset			resb	1	; Offset to IDEVARS for this drive
+	.bInitError				resb	1	; Flags for AH=09h initialization errors
 
-	.bPchsHeads				resb	1	; (1...16)
+	; CHS variables
 	.wLchsCylinders			resb	2	; (1...1027, yes 1027)
 	.wLchsHeadsAndSectors:
 	.bLchsHeads				resb	1	; (1...255)
 	.bLchsSectorsPerTrack	resb	1	; (1...63)
+	.bPchsHeads				resb	1	; (1...16)
 
+	; LBA and remaining P-CHS variables
 %ifdef MODULE_EBIOS
-	.twLbaSectors			resb	6	; 48-bit sector count for LBA addressing
-	.wPchsCylinders			resb	2
 	.bPchsSectorsPerTrack	resb	1
-							resb	1
+	.wPchsCylinders			resb	2
+	.twLbaSectors			resb	6	; 48-bit sector count for LBA addressing
+%else
+							resb	1	; Alignment
 %endif
 endstruc
 
 	; Bit definitions for DPT.bFlagsLow
 	MASKL_DPT_CHS_SHIFT_COUNT			EQU	(3<<0)				; Bits 0...1, P-CHS to L-CHS bit shift count (0...3)
-	MASKL_DPT_ADDRESSING_MODE			EQU	(3<<ADDRESSING_MODE_FIELD_POSITION)	; Bits 2...3, NORMAL, LARGE or Assisted LBA addressing mode
-	FLGL_DPT_ASSISTED_LBA				EQU	(1<<(ADDRESSING_MODE_FIELD_POSITION+1))
+	MASKL_DPT_TRANSLATEMODE				EQU	MASK_DRVPARAMS_TRANSLATEMODE	; Bits 2...3, NORMAL, LARGE or Assisted LBA addressing mode
+	FLGL_DPT_ASSISTED_LBA				EQU	(1<<(TRANSLATEMODE_FIELD_POSITION+1))
 	FLGL_DPT_SLAVE						EQU	FLG_DRVNHEAD_DRV	; Bit 4, Drive is a Slave Drive
 %ifdef MODULE_IRQ
 	FLGL_DPT_ENABLE_IRQ					EQU	(1<<5)				; Bit 5, Enable IRQ
@@ -55,12 +59,6 @@ endstruc
 	FLGL_DPT_LBA_AND_EBIOS_SUPPORTED	EQU	FLG_DRVNHEAD_LBA	; Bit 6, Drive supports LBA and so EBIOS functions can be supported
 	FLGL_DPT_LBA48						EQU	(1<<7)				; Bit 7, Drive supports 48-bit LBA (Must be bit 7!)
 %endif
-
-	; Addressing modes for DPT.bFlagsLow
-	ADDRESSING_MODE_FIELD_POSITION		EQU		2
-	ADDRESSING_MODE_NORMAL				EQU		0
-	ADDRESSING_MODE_LARGE				EQU		1
-	ADDRESSING_MODE_ASSISTED_LBA		EQU		2	; 28-bit or 48-bit LBA
 
 
 	; Bit definitions for DPT.bFlagsHigh
@@ -86,9 +84,19 @@ endstruc
 %endif
 
 
+	; Flags for DPT_ADVANCED_ATA.bInitError
+	FLG_INITERROR_FAILED_TO_SELECT_DRIVE				EQU (1<<0)
+	FLG_INITERROR_FAILED_TO_INITIALIZE_CHS_PARAMETERS	EQU (1<<1)
+	FLG_INITERROR_FAILED_TO_SET_WRITE_CACHE				EQU (1<<2)
+	FLG_INITERROR_FAILED_TO_RECALIBRATE_DRIVE			EQU (1<<3)
+	FLG_INITERROR_FAILED_TO_SET_BLOCK_MODE				EQU (1<<4)
+	FLG_INITERROR_FAILED_TO_SET_PIO_MODE				EQU (1<<5)
+	FLG_INITERROR_FAILED_TO_INITIALIZE_STANDBY_TIMER	EQU	(1<<6)
+
+
 
 ; DPT for ATA devices
-struc DPT_ATA	; 8/18 bytes + 2 bytes = 10/20 bytes
+struc DPT_ATA	; 10/18 bytes + 2 bytes = 12/20 bytes
 	.dpt					resb	DPT_size
 	.bBlockSize				resb	1	; Current block size in sectors (do not set to zero!)
 	.bDevice				resb	1	; Device Type from IDEVARS (overrided when 32-bit controller detected)
@@ -99,23 +107,14 @@ endstruc
 ; Additional variables needed to initialize and reset Advanced IDE Controllers.
 ; EBDA must be reserved for DPTs when using these!
 %ifdef MODULE_ADVANCED_ATA
-struc DPT_ADVANCED_ATA	; 10/20 bytes + 8 bytes = 18/28 bytes
+struc DPT_ADVANCED_ATA	; 12/20 bytes + 8 bytes = 20/28 bytes
 	.dpt_ata				resb	DPT_ATA_size
 	.wControllerID			resb	2	; Controller specific ID WORD (from Advanced Controller detection)
 	.wControllerBasePort	resb	2	; Advanced Controller port (not IDE port)
 	.wMinPioCycleTime		resb	2	; Minimum PIO Cycle Time in ns
 	.bPioMode				resb	1	; Best supported PIO mode
-	.bInitError				resb	1	; Flags for initialization errors
+							resb	1
 endstruc
-
-	; Flags for DPT_ADVANCED_ATA.bInitError
-	FLG_INITERROR_FAILED_TO_SELECT_DRIVE				EQU (1<<0)
-	FLG_INITERROR_FAILED_TO_INITIALIZE_CHS_PARAMETERS	EQU (1<<1)
-	FLG_INITERROR_FAILED_TO_SET_WRITE_CACHE				EQU (1<<2)
-	FLG_INITERROR_FAILED_TO_RECALIBRATE_DRIVE			EQU (1<<3)
-	FLG_INITERROR_FAILED_TO_SET_BLOCK_MODE				EQU (1<<4)
-	FLG_INITERROR_FAILED_TO_SET_PIO_MODE				EQU (1<<5)
-	FLG_INITERROR_FAILED_TO_INITIALIZE_STANDBY_TIMER	EQU	(1<<6)
 %endif
 
 
