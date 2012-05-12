@@ -143,7 +143,7 @@ AccessDPT_GetLbaSectorCountToBXDXAX:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 AccessDPT_GetPointerToDRVPARAMStoCSBX:
-	eMOVZX	bx, [di+DPT.bIdevarsOffset]			; CS:BX points to IDEVARS
+	eMOVZX	bx, BYTE [di+DPT.bIdevarsOffset]	; CS:BX points to IDEVARS
 	add		bx, BYTE IDEVARS.drvParamsMaster	; CS:BX points to Master Drive DRVPARAMS
 	test	BYTE [di+DPT.bFlagsLow], FLGL_DPT_SLAVE
 	jz		SHORT .ReturnPointerToDRVPARAMS
@@ -153,11 +153,11 @@ AccessDPT_GetPointerToDRVPARAMStoCSBX:
 
 
 ;--------------------------------------------------------------------
-; ACCESSDPT__GET_UNSHIFTED_ADDRESS_MODE_TO_AXZF
+; ACCESSDPT__GET_UNSHIFTED_TRANSLATE_MODE_TO_AXZF
 ;	Parameters:
 ;		DS:DI:	Ptr to Disk Parameter Table
 ;	Returns:
-;		AX:		Addressing Mode (ADDRESSING_MODE_NORMAL, ADDRESSING_MODE_LARGE or ADDRESSING_MODE_ASSISTED_LBA)
+;		AX:		Translate Mode (TRANSLATEMODE_NORMAL, TRANSLATEMODE_LARGE or TRANSLATEMODE_ASSISTED_LBA)
 ;               unshifted (still shifted where it is in bFlagsLow)
 ;       ZF:     Set based on value in AL
 ;	Corrupts registers:
@@ -167,7 +167,7 @@ AccessDPT_GetPointerToDRVPARAMStoCSBX:
 ; Converted to a macro since only called in two places, and the call/ret overhead
 ; is not worth it for these two instructions (4 bytes total)
 ;
-%macro ACCESSDPT__GET_UNSHIFTED_ADDRESS_MODE_TO_AXZF 0
+%macro ACCESSDPT__GET_UNSHIFTED_TRANSLATE_MODE_TO_AXZF 0
 	mov		al, [di+DPT.bFlagsLow]
-	and		ax, BYTE MASKL_DPT_ADDRESSING_MODE
+	and		ax, BYTE MASKL_DPT_TRANSLATEMODE
 %endmacro

@@ -33,7 +33,8 @@ SECTION .text
 ;		ES:SI:	Ptr to 512-byte ATA information read from the drive
 ;	Returns:
 ;		BX:DX:AX:	48-bit sector count
-;		CL:			FLGL_DPT_LBA48 if LBA48 supported, zero otherwise
+;		CL:			FLGL_DPT_LBA48 if LBA48 supported
+;					Zero if only LBA28 is supported
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
@@ -63,41 +64,55 @@ AtaGeometry_GetLbaSectorCountToBXDXAXfromAtaInfoInESSI:
 
 
 ;--------------------------------------------------------------------
-; AtaGeometry_GetLCHStoAXBLBHfromAtaInfoInESSI:
+; AtaGeometry_GetLCHStoAXBLBHfromAtaInfoInESSIandTranslateModeInDX
+; AtaGeometry_GetLCHStoAXBLBHfromPCHSinAXBLBHandTranslateModeInDX
 ;	Parameters:
+;		DX:		Wanted translate mode or TRANSLATEMODE_AUTO to autodetect
 ;		ES:SI:	Ptr to 512-byte ATA information read from the drive
 ;	Returns:
 ;		AX:		Number of L-CHS cylinders (1...1027, yes 1027)
 ;		BL:		Number of L-CHS heads (1...255)
 ;		BH:		Number of L-CHS sectors per track (1...63)
 ;		CX:		Number of bits shifted (0...3)
-;		DL:		Addressing mode
+;		DL:		CHS Translate Mode
 ;	Corrupts registers:
 ;		DH
 ;--------------------------------------------------------------------
-AtaGeometry_GetLCHStoAXBLBHfromAtaInfoInESSI:
+AtaGeometry_GetLCHStoAXBLBHfromAtaInfoInESSIandTranslateModeInDX:
 	call	AtaGeometry_GetPCHStoAXBLBHfromAtaInfoInESSI
 	; Fall to AtaGeometry_GetLCHStoAXBLBHfromPCHSinAXBLBH
 
-AtaGeometry_GetLCHStoAXBLBHfromPCHSinAXBLBH:
+AtaGeometry_GetLCHStoAXBLBHfromPCHSinAXBLBHandTranslateModeInDX:
+	; Check if user defined translate mode
+	test	dx, dx
+	jnz		SHORT .CheckIfLargeTranslationWanted
+	MIN_U	ax, MAX_LCHS_CYLINDERS	; TRANSLATEMODE_NORMAL maximum cylinders
+	inc		dx
+.CheckIfLargeTranslationWanted:
+	dec		dx						; Set ZF if TRANSLATEMODE_LARGE
+	jz		SHORT ConvertPCHfromAXBLtoRevisedEnhancedCHinAXBL
+	dec		dx						; Set ZF if TRANSLATEMODE_ASSISTED_LBA
+	jz		SHORT .UseAssistedLBA
+	; TRANSLATEMODE_AUTO set
+
 	; Generate L-CHS using simple bit shift algorithm (ECHS) if
 	; 8192 or less cylinders.
 	cmp		ax, 8192
-	jbe		SHORT ConvertPCHfromAXBXtoEnhancedCHinAXBX
+	jbe		SHORT ConvertPCHfromAXBLtoEnhancedCHinAXBL
 
 	; We have 8193 or more cylinders so two algorithms are available:
 	; Revised ECHS or Assisted LBA. The Assisted LBA provides larger
 	; capacity but requires LBA support from drive (drives this large
-	; always support LBA but we may have intentionally cleared the LBA
-	; bit to force CHS addressing).
+	; always support LBA but user might have unintentionally set LBA).
+.UseAssistedLBA:
 	test	BYTE [es:si+ATA1.wCaps+1], A1_wCaps_LBA>>8
-	jz		SHORT ConvertPCHfromAXBXtoRevisedEnhancedCHinAXBX
+	jz		SHORT ConvertPCHfromAXBLtoRevisedEnhancedCHinAXBL
 
 	; Drive supports LBA
-	call	AtaGeometry_GetSectorCountToDXAXfromCHSinAXBLBH
+	call	GetSectorCountToDXAXfromCHSinAXBLBH
 	call	ConvertChsSectorCountFromDXAXtoLbaAssistedLCHSinAXBLBH
 	xor		cx, cx		; No bits to shift
-	mov		dl, ADDRESSING_MODE_ASSISTED_LBA
+	mov		dl, TRANSLATEMODE_ASSISTED_LBA
 	ret
 
 
@@ -120,7 +135,7 @@ AtaGeometry_GetPCHStoAXBLBHfromAtaInfoInESSI:
 
 
 ;--------------------------------------------------------------------
-; AtaGeometry_GetSectorCountToDXAXfromCHSinAXBLBH
+; GetSectorCountToDXAXfromCHSinAXBLBH
 ;	Parameters:
 ;		ES:SI:	Ptr to 512-byte ATA information read from the drive
 ;		AX:		Number of cylinders (1...16383)
@@ -131,7 +146,7 @@ AtaGeometry_GetPCHStoAXBLBHfromAtaInfoInESSI:
 ;	Corrupts registers:
 ;		BX
 ;--------------------------------------------------------------------
-AtaGeometry_GetSectorCountToDXAXfromCHSinAXBLBH:
+GetSectorCountToDXAXfromCHSinAXBLBH:
 	xchg	ax, bx
 	mul		ah			; AX = Heads * Sectors per track
 	mul		bx
@@ -156,7 +171,7 @@ AtaGeometry_GetSectorCountToDXAXfromCHSinAXBLBH:
 ;  Cylinders = cylinders * 16 / 15 (losing the fraction component)
 ;  Do a standard ECHS translation
 ;
-; ConvertPCHfromAXBXtoRevisedEnhancedCHinAXBX:
+; ConvertPCHfromAXBLtoRevisedEnhancedCHinAXBL:
 ;	Parameters:
 ;		AX:		Number of P-CHS cylinders (8193...16383)
 ;		BL:		Number of P-CHS heads (1...16)
@@ -168,9 +183,13 @@ AtaGeometry_GetSectorCountToDXAXfromCHSinAXBLBH:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ConvertPCHfromAXBXtoRevisedEnhancedCHinAXBX:
+ConvertPCHfromAXBLtoRevisedEnhancedCHinAXBL:
+	; Generate L-CHS using simple bit shift algorithm (ECHS) if
+	; 8192 or less cylinders
+	cmp		ax, 8192
+	jbe		SHORT ConvertPCHfromAXBLtoEnhancedCHinAXBL
 	cmp		bl, 16	; Drives with 8193 or more cylinders can report 15 heads
-	jb		SHORT ConvertPCHfromAXBXtoEnhancedCHinAXBX
+	jb		SHORT ConvertPCHfromAXBLtoEnhancedCHinAXBL
 
 	eMOVZX	cx, bl	; CX = 16
 	dec		bx		; Heads = 15
@@ -200,7 +219,7 @@ ConvertPCHfromAXBXtoRevisedEnhancedCHinAXBX:
 ;  Do a left bitwise rotation on the multiplier (i.e., multiply by 2)
 ;  Use the multiplier on the Cylinder and Head values to obtain the translated values.
 ;
-; ConvertPCHfromAXBXtoEnhancedCHinAXBX:
+; ConvertPCHfromAXBLtoEnhancedCHinAXBL:
 ;	Parameters:
 ;		AX:		Number of P-CHS cylinders (1...8192)
 ;		BL:		Number of P-CHS heads (1...16)
@@ -208,20 +227,20 @@ ConvertPCHfromAXBXtoRevisedEnhancedCHinAXBX:
 ;		AX:		Number of L-CHS cylinders (?...1024)
 ;		BL:		Number of L-CHS heads (?...128)
 ;		CX:		Number of bits shifted (0...3)
-;		DL:		ADDRESSING_MODE_NORMAL or ADDRESSING_MODE_LARGE
+;		DL:		TRANSLATEMODE_NORMAL or TRANSLATEMODE_LARGE
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ConvertPCHfromAXBXtoEnhancedCHinAXBX:
+ConvertPCHfromAXBLtoEnhancedCHinAXBL:
 	xor		cx, cx		; No bits to shift initially
-	xor		dl, dl		; Assume ADDRESSING_MODE_NORMAL
+	xor		dl, dl		; Assume TRANSLATEMODE_NORMAL
 .ShiftIfMoreThan1024Cylinder:
 	cmp		ax, MAX_LCHS_CYLINDERS
 	jbe		SHORT ReturnLCHSinAXBLBH
-	shr		ax, 1
-	shl		bl, 1
+	shr		ax, 1		; Halve cylinders
+	shl		bl, 1		; Double heads
 	inc		cx			; Increment bit shift count
-	mov		dl, ADDRESSING_MODE_LARGE
+	mov		dl, TRANSLATEMODE_LARGE
 	jmp		SHORT .ShiftIfMoreThan1024Cylinder
 
 

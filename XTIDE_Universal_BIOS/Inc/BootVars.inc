@@ -62,19 +62,13 @@ FLG_HOTKEY_HD_FIRST		EQU		(1<<0)	; First try to boot from HDD, then FDD
 
 
 struc DRVDETECTINFO
+	.StartOfDrvDetectInfo:
 	.szDrvName				resb	MAX_HARD_DISK_NAME_LENGTH
 							resb	2	; Zero word (ensures string terminates)
 	.wInitErrorFlags		resb	2	; Errors during initialization
 
-%if LARGEST_DPT_SIZE == 28
-							resb	22	; padding to make DRVDETECTINFO size an even multiple of DPT size
-%elif LARGEST_DPT_SIZE == 20
-							resb	6
-%elif LARGEST_DPT_SIZE == 18
-							resb	2
-%else	; LARGEST_DPT_SIZE == 10
-							resb	6
-%endif
+	; DRVDETECTINFO's size must be an even multiple of DPT's size
+	.EndOfDriveDetectInfo:	resb	LARGEST_DPT_SIZE - (.EndOfDriveDetectInfo % LARGEST_DPT_SIZE)
 endstruc
 
 ; Boot Menu Information Table. These are generated for all XTIDE Universal
