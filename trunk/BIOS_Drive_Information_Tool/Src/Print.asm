@@ -29,7 +29,6 @@ SECTION .text
 ;	Corrupts registers:
 ;		AX, BX, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 Print_SetCharacterOutputToSTDOUT:
 	mov		bl, ATTRIBUTES_NOT_USED
 	mov		ax, DosCharOut
@@ -49,7 +48,6 @@ Print_SetCharacterOutputToSTDOUT:
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 DosCharOut:
 	xchg	dx, ax
 	mov		ah, 02h		; DOS 1+ - WRITE CHARACTER TO STANDARD OUTPUT
@@ -67,12 +65,11 @@ DosCharOut:
 ;	Corrupts registers:
 ;		AX, BP, SI, DI (CF remains unchanged)
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 Print_ErrorMessageFromAHifError:
 	jnc		SHORT .NoErrors
 	eMOVZX	ax, ah
 	mov		si, g_szBiosError
-	call	Print_BiosFunctionNumberFromAXusingFormatStringInSI
+	call	Print_FormatStringFromSIwithParameterInAX
 	stc		; Keep the CF set
 ALIGN JUMP_ALIGN
 .NoErrors:
@@ -81,26 +78,86 @@ ALIGN JUMP_ALIGN
 
 ;---------------------------------------------------------------------
 ; Print_DriveNumberFromDLusingFormatStringInSI
-; Print_VersionStringFromAXusingFormatStringInSI
-; Print_BiosFunctionNumberFromAXusingFormatStringInSI
-; Print_SectorSizeFromAXusingFormatStringInSI
 ;	Parameters:
 ;		DL:		Drive Number
-;		AX:		Function number
+;		SI:		Offset to format string
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
 ;		AX, BP, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 Print_DriveNumberFromDLusingFormatStringInSI:
 	eMOVZX	ax, dl
-Print_VersionStringFromAXusingFormatStringInSI:
-Print_BiosFunctionNumberFromAXusingFormatStringInSI:
-Print_SectorSizeFromAXusingFormatStringInSI:
+	; Fall to Print_FormatStringFromSIwithParameterInAX
+
+
+;---------------------------------------------------------------------
+; Print_FormatStringFromSIwithParameterInAX
+; Print_FormatStringFromSIwithParametersInAXDX
+; Print_FormatStringFromSIwithParametersInAXDXCX
+;	Parameters:
+;		AX:		Format parameter 1
+;		DX:		Format parameter 2
+;		CX:		Format parameter 3
+;		SI:		Offset to format string
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, BP, DI
+;--------------------------------------------------------------------
+Print_FormatStringFromSIwithParameterInAX:
 	mov		bp, sp
 	push	ax
+	jmp		JumpToFormatNullTerminatedStringFromSI
+
+Print_FormatStringFromSIwithParametersInAXDX:
+	mov		bp, sp
+	push	ax
+	push	dx
+	jmp		JumpToFormatNullTerminatedStringFromSI
+
+Print_FormatStringFromSIwithParametersInAXDXCX:
+	mov		bp, sp
+	push	ax
+	push	dx
+	push	cx
 	jmp		SHORT JumpToFormatNullTerminatedStringFromSI
+
+
+;---------------------------------------------------------------------
+; Print_ModeFromDLandCHSfromAXBLBH
+;	Parameters:
+;		AX:		Number of L-CHS cylinders (1...1024)
+;		BL:		Number of L-CHS heads (1...255)
+;		BH:		Number of L-CHS sectors per track (1...63)
+;		DL:		CHS Translate Mode
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, BP, SI, DI
+;--------------------------------------------------------------------
+Print_ModeFromDLandCHSfromAXLBH:
+	mov		bp, sp
+
+	xor		dh, dh
+	mov		si, dx
+	shl		si, 1		; Shift for WORD lookup
+	push	WORD [si+.rgszXlateModeToString]
+
+	ePUSH_T	si, g_szFormatCHS
+	push	ax			; Cylinders
+	eMOVZX	ax, bl
+	push	ax			; Heads
+	mov		al, bh
+	push	ax			; Sectors per track
+
+	mov		si, g_szXlateAndCHS
+	jmp		SHORT JumpToFormatNullTerminatedStringFromSI
+
+.rgszXlateModeToString:
+	dw		g_szNormal
+	dw		g_szLarge
+	dw		g_szLBA
 
 
 ;---------------------------------------------------------------------
@@ -114,7 +171,6 @@ Print_SectorSizeFromAXusingFormatStringInSI:
 ;	Corrupts registers:
 ;		AX, BP, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 Print_CHSfromCXDXAX:
 	push	si
 
@@ -138,7 +194,6 @@ Print_CHSfromCXDXAX:
 ;	Corrupts registers:
 ;		AX, CX, BP, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 Print_NameFromAtaInfoInBX:
 	cld
 	lea		si, [bx+ATA1.strModel]
@@ -170,7 +225,6 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		AX, BX, BP, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 Print_TotalSectorsFromBXDXAX:
 	ePUSH_T	di, 0
 	push	bx
@@ -199,7 +253,6 @@ Print_TotalSectorsFromBXDXAX:
 ;	Corrupts registers:
 ;		AX, BP, SI, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 Print_EbiosVersionFromBXandExtensionsFromCX:
 	mov		bp, sp
 	push	bx
@@ -218,7 +271,6 @@ Print_EbiosVersionFromBXandExtensionsFromCX:
 ;	Corrupts registers:
 ;		AX, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 JumpToFormatNullTerminatedStringFromSI:	
 	CALL_DISPLAY_LIBRARY 	FormatNullTerminatedStringFromCSSI
 	ret
@@ -233,7 +285,6 @@ JumpToFormatNullTerminatedStringFromSI:
 ;	Corrupts registers:
 ;		AX, DI
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 Print_NullTerminatedStringFromSI:
 	CALL_DISPLAY_LIBRARY	PrintNullTerminatedStringFromCSSI
 	ret
