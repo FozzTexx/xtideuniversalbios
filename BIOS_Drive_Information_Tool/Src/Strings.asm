@@ -30,17 +30,17 @@ g_szPressAnyKey:	db	CR,LF,"Press any key to display next drive.",CR,LF,NULL
 g_szHeaderDrive:	db	CR,LF,"-= Drive %2x =-",CR,LF,NULL
 
 g_szAtaInfoHeader:	db	"ATA-information from AH=25h...",CR,LF,NULL
-g_szFormatDrvName:	db	" Name: %s",CR,LF,NULL
-g_szXlateAndCHS:	db	" Mode: %s, %s",NULL
+g_szFormatDrvName:	db	" Name         : %s",CR,LF,NULL
+g_szChsAndMode:		db	"%s, Mode: %s",CR,LF,NULL
 g_szNormal:			db	"NORMAL",NULL
 g_szLarge:			db	"LARGE ",NULL
 g_szLBA:			db	"LBA   ",NULL
-g_szFormatCHS:		db	" Cylinders    : %5-u, Heads: %3-u, Sectors: %2-u",CR,LF,NULL
+g_szFormatCHS:		db	" Cylinders    : %5u, Heads: %3u, Sectors: %2u",NULL
 g_szChsSectors:		db	" CHS   sectors: ",NULL
 g_szLBA28:			db	" LBA28 sectors: ",NULL
 g_szLBA48:			db	" LBA48 sectors: ",NULL
-g_szBlockMode:		db	" Block set    : %u, Max block: %u sectors",CR,LF,NULL
-g_szPIO:			db	" Max PIO mode : %u, Min cycle time without IORDY %u, with IORDY %d ns",CR,LF,NULL
+g_szBlockMode:		db	" Block mode   : Set to %u from max %u sectors",CR,LF,NULL
+g_szPIO:			db	" PIO mode     : Max %u, Min cycle times: %u ns, with IORDY %d ns",CR,LF,NULL
 g_szXTUB:			db	"XTIDE Universal BIOS %s generates following L-CHS...",CR,LF,NULL
 g_szXTUBversion:	db	ROM_VERSION_STRING	; This one is NULL terminated
 
