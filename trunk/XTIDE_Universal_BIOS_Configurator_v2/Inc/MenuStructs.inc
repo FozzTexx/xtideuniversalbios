@@ -70,9 +70,10 @@ struc ITEM_VALUE
 	.rgszChoiceToStringLookup:
 	.wMinValue				resb	2	; Minimum allowed integer value
 	.wMaxValue:
-	.wValueBitmask			resb	2	; Bitmask for item value flag
+	.wValueBitmask			resb	2	; Bitmask for item value flag or field
 	.fnValueReader			resb	2	; Called just after ROMVARS is read, providing a hook for further action
 	.fnValueWriter			resb	2	; Called just before ROMVARS is written, providing a hook for further action
+	.bFieldPosition			resb	1	; Bit field position
 endstruc
 
 

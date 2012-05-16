@@ -257,6 +257,10 @@ ALIGN JUMP_ALIGN
 .StoreByteOrWordValueFromAXtoESDIwithItemInDSSI:
 	test	BYTE [si+MENUITEM.bFlags], FLG_MENUITEM_MASKVALUE
 	jz		SHORT .StoreByteOrWord
+	push	cx
+	mov		cl, [si+MENUITEM.itemValue+ITEM_VALUE.bFieldPosition]
+	shl		ax, cl
+	pop		cx
 	or		[es:di], ax
 	jmp		SHORT .SetUnsavedChanges
 
@@ -343,7 +347,12 @@ Menuitem_GetValueToAXfromMenuitemInDSSI:
 
 	test	BYTE [si+MENUITEM.bFlags], FLG_MENUITEM_MASKVALUE
 	jz		SHORT .TestIfFlagValue
+
 	and		ax, [si+MENUITEM.itemValue+ITEM_VALUE.wValueBitmask]
+	push	cx
+	mov		cl, [si+MENUITEM.itemValue+ITEM_VALUE.bFieldPosition]
+	shr		ax, cl
+	pop		cx
 	ret
 
 .TestIfFlagValue:

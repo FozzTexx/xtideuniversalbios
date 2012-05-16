@@ -23,7 +23,7 @@ SECTION .data
 ; Menu title
 g_szProgramTitle:
 	db	"Configuration and Flashing program for XTIDE Universal BIOS v2.0.0.",LF,CR,NULL
-g_szXtideUniversalBiosSignature:	db	"XTIDE200",NULL
+g_szXtideUniversalBiosSignature:	db	"XTIDE201",NULL
 g_szBiosIsNotLoaded:				db	"BIOS is not loaded!",NULL
 g_szEEPROM:							db	"EEPROM",NULL
 g_szSourceAndTypeSeparator:			db	" : ",NULL
@@ -308,6 +308,7 @@ g_szValueCfgDeviceSerial:	db	"Serial",NULL
 ; Strings for DRVPARAMS menu
 g_szItemDrvBackToIde:	db	"Back to IDE Controller Menu",NULL
 g_szItemDrvBlockMode:	db	"Block Mode Transfers",NULL
+g_szItemDrvXlateMode:	db	"CHS translation method",NULL
 g_szItemDrvWriteCache:	db	"Internal Write Cache",NULL
 g_szItemDrvUserCHS:		db	"User specified CHS",NULL
 g_szItemDrvCyls:		db	"Cylinders",NULL
@@ -317,15 +318,17 @@ g_szItemDrvUserLBA:		db	"User specified LBA",NULL
 g_szItemDrvLbaSectors:	db	"Millions of sectors",NULL
 
 g_szDlgDrvBlockMode:	db	"Enable Block Mode Transfers?",NULL
+g_szDlgDrvXlateMode:	db	"Select P-CHS to L-CHS translation method.",NULL
 g_szDlgDrvWriteCache:	db	"Select hard drive internal write cache settings.",NULL
 g_szDlgDrvUserCHS:		db	"Specify (P-)CHS parameters manually?",NULL
 g_szDlgDrvCyls:			db	"Enter number of P-CHS cylinders (1...16383).",NULL
 g_szDlgDrvHeads:		db	"Enter number of P-CHS heads (1...16).",NULL
 g_szDlgDrvSect:			db	"Enter number of sectors per track (1...63).",NULL
 g_szDlgDrvUserLBA:		db	"Limit drive capacity?",NULL
-g_szDlgDrvLbaSectors:	db	"Enter maximum capacity in millions of sectors (1...256).",NULL
+g_szDlgDrvLbaSectors:	db	"Enter maximum capacity in millions of sectors (16...256).",NULL
 
 g_szNfoDrvBlockMode:	db	"Transfer multiple sectors per data request.",NULL
+g_szNfoDrvXlateMode:	db	"P-CHS to L-CHS translation method.",NULL
 g_szNfoDrvWriteCache:	db	"Hard Drive Internal Write Cache settings (WARNING!).",NULL
 g_szNfoDrvUserCHS:		db	"Specify (P-)CHS parameters manually instead of autodetecting them.",NULL
 g_szNfoDrvCyls:			db	"Number of user specified P-CHS cylinders.",NULL
@@ -342,6 +345,17 @@ g_szHelpDrvUserCHS:		incbin	"Drive_UserCHS.txt"
 						db	NULL
 g_szHelpDrvUserLBA:		incbin	"Drive_UserLBA.txt"
 						db	NULL
+
+g_szMultichoiseXlateMode:
+						db	"NORMAL",LF
+						db	"LARGE",LF
+						db	"Assisted LBA",LF
+						db	"Autodetect",NULL
+
+g_szValueDrvXlateNormal:db	"NORMAL",NULL
+g_szValueDrvXlateLarge:	db	"LARGE",NULL
+g_szValueDrvXlateLBA:	db	"LBA",NULL
+g_szValueDrvXlateAuto:	db	"Auto",NULL
 
 g_szMultichoiseWrCache:	db	"Drive Default",LF
 						db	"Disable Write Cache",LF
