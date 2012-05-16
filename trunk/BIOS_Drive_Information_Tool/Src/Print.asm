@@ -139,11 +139,7 @@ Print_FormatStringFromSIwithParametersInAXDXCX:
 Print_ModeFromDLandCHSfromAXLBH:
 	mov		bp, sp
 
-	xor		dh, dh
-	mov		si, dx
-	shl		si, 1		; Shift for WORD lookup
-	push	WORD [si+.rgszXlateModeToString]
-
+	; Push CHS parameters
 	ePUSH_T	si, g_szFormatCHS
 	push	ax			; Cylinders
 	eMOVZX	ax, bl
@@ -151,7 +147,13 @@ Print_ModeFromDLandCHSfromAXLBH:
 	mov		al, bh
 	push	ax			; Sectors per track
 
-	mov		si, g_szXlateAndCHS
+	; Push translation mode
+	xor		dh, dh
+	mov		si, dx
+	shl		si, 1		; Shift for WORD lookup
+	push	WORD [si+.rgszXlateModeToString]
+
+	mov		si, g_szChsAndMode
 	jmp		SHORT JumpToFormatNullTerminatedStringFromSI
 
 .rgszXlateModeToString:
@@ -180,6 +182,7 @@ Print_CHSfromCXDXAX:
 	push	ax
 	mov		si, g_szFormatCHS
 	CALL_DISPLAY_LIBRARY	FormatNullTerminatedStringFromCSSI
+	CALL_DISPLAY_LIBRARY	PrintNewlineCharacters
 
 	pop		si
 	ret
