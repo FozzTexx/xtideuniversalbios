@@ -107,7 +107,7 @@ ASFLAGS += -O9					# Optimize operands to their shortest forms
 
 .PHONY: all at xtplus xt clean release
 
-all: clean xt
+all: clean release
 	@echo All done!
 
 at:

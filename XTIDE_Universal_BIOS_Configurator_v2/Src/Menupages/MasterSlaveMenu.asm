@@ -25,7 +25,7 @@ g_MenupageForMasterSlaveMenu:
 istruc MENUPAGE
 	at	MENUPAGE.fnEnter,			dw	MasterSlaveMenu_EnterMenuOrModifyItemVisibility
 	at	MENUPAGE.fnBack,			dw	IdeControllerMenu_EnterMenuOrModifyItemVisibility
-	at	MENUPAGE.wMenuitems,		dw	9
+	at	MENUPAGE.wMenuitems,		dw	10
 iend
 
 g_MenuitemMasterSlaveBackToIdeControllerMenu:
@@ -54,6 +54,24 @@ istruc MENUITEM
 	at	MENUITEM.itemValue + ITEM_VALUE.wValueBitmask,				dw	FLG_DRVPARAMS_BLOCKMODE
 iend
 
+g_MenuitemMasterSlaveChsTranslateMode:
+istruc MENUITEM
+	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiceSelectionForMenuitemInDSSI
+	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteLookupValueStringToBufferInESDIfromUnshiftedItemInDSSI
+	at	MENUITEM.szName,			dw	g_szItemDrvXlateMode
+	at	MENUITEM.szQuickInfo,		dw	g_szNfoDrvXlateMode
+	at	MENUITEM.szHelp,			dw	g_szNfoDrvXlateMode
+	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE | FLG_MENUITEM_MASKVALUE
+	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOICE
+	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	NULL
+	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgDrvXlateMode
+	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoice,				dw	g_szMultichoiseXlateMode
+	at	MENUITEM.itemValue + ITEM_VALUE.rgwChoiceToValueLookup,		dw	g_rgwChoiceToValueLookupForXlateMode
+	at	MENUITEM.itemValue + ITEM_VALUE.rgszChoiceToStringLookup,	dw	g_rgszChoiceToStringLookupForXlateMode
+	at	MENUITEM.itemValue + ITEM_VALUE.wValueBitmask,				dw	MASK_DRVPARAMS_TRANSLATEMODE
+	at	MENUITEM.itemValue + ITEM_VALUE.bFieldPosition,				db	TRANSLATEMODE_FIELD_POSITION
+iend
+
 g_MenuitemMasterSlaveWriteCache:
 istruc MENUITEM
 	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateMultichoiceSelectionForMenuitemInDSSI
@@ -69,6 +87,7 @@ istruc MENUITEM
 	at	MENUITEM.itemValue + ITEM_VALUE.rgwChoiceToValueLookup,		dw	g_rgwChoiceToValueLookupForWriteCache
 	at	MENUITEM.itemValue + ITEM_VALUE.rgszChoiceToStringLookup,	dw	g_rgszChoiceToStringLookupForWriteCache
 	at	MENUITEM.itemValue + ITEM_VALUE.wValueBitmask,				dw	MASK_DRVPARAMS_WRITECACHE
+	at	MENUITEM.itemValue + ITEM_VALUE.bFieldPosition,				db	0
 iend
 
 g_MenuitemMasterSlaveUserCHS:
@@ -100,7 +119,7 @@ istruc MENUITEM
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	NULL
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgDrvCyls
 	at	MENUITEM.itemValue + ITEM_VALUE.wMinValue,					dw	1
-	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	16383
+	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	MAX_USER_CYLINDERS
 %define					MASTERSLAVE_CYLINDERS_DEFAULT					65
 iend
 
@@ -116,8 +135,8 @@ istruc MENUITEM
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	NULL
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgDrvHeads
 	at	MENUITEM.itemValue + ITEM_VALUE.wMinValue,					dw	1
-	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	16
-%define					MASTERSLAVE_HEADS_DEFAULT						16		
+	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	MAX_USER_HEADS
+%define					MASTERSLAVE_HEADS_DEFAULT						MAX_USER_HEADS		
 iend
 
 g_MenuitemMasterSlaveSectors:
@@ -132,8 +151,8 @@ istruc MENUITEM
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	NULL
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgDrvSect
 	at	MENUITEM.itemValue + ITEM_VALUE.wMinValue,					dw	1
-	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	63
-%define					MASTERSLAVE_SECTORS_DEFAULT						63
+	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	MAX_USER_SECTORS_PER_TRACK
+%define					MASTERSLAVE_SECTORS_DEFAULT						MAX_USER_SECTORS_PER_TRACK
 iend
 
 g_MenuitemMasterSlaveUserLBA:
@@ -164,11 +183,11 @@ istruc MENUITEM
 	at	MENUITEM.bType,				db	TYPE_MENUITEM_UNSIGNED
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	NULL
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgDrvLbaSectors
-	at	MENUITEM.itemValue + ITEM_VALUE.wMinValue,					dw	1							; 512 MiB
+	at	MENUITEM.itemValue + ITEM_VALUE.wMinValue,					dw	16							; 8 GiB
 	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	10000000h / (1024 * 1024)	; Limit to 28-bit LBA
 	at	MENUITEM.itemValue + ITEM_VALUE.fnValueReader,				dw	ValueReaderForUserLbaValue
 	at	MENUITEM.itemValue + ITEM_VALUE.fnValueWriter,				dw	ValueWriterForUserLbaValue
-%define				MASTERSLAVE_USERLBA_DEFAULT						1
+%define				MASTERSLAVE_USERLBA_DEFAULT						64
 iend
 
 
@@ -181,6 +200,18 @@ g_rgszChoiceToStringLookupForWriteCache:
 	dw	g_szValueBootDispModeDefault
 	dw	g_szValueDrvWrCaDis
 	dw	g_szValueDrvWrCaEn
+
+g_rgwChoiceToValueLookupForXlateMode:
+	dw	TRANSLATEMODE_NORMAL
+	dw	TRANSLATEMODE_LARGE
+	dw	TRANSLATEMODE_ASSISTED_LBA
+	dw	TRANSLATEMODE_AUTO
+
+g_rgszChoiceToStringLookupForXlateMode:
+	dw	g_szValueDrvXlateNormal
+	dw	g_szValueDrvXlateLarge
+	dw	g_szValueDrvXlateLBA
+	dw	g_szValueDrvXlateAuto
 
 
 ; Section containing code
@@ -199,6 +230,7 @@ ALIGN JUMP_ALIGN
 MasterSlaveMenu_InitializeToDrvparamsOffsetInBX:
 	lea		ax, [bx+DRVPARAMS.wFlags]
 	mov		[cs:g_MenuitemMasterSlaveBlockModeTransfers+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset], ax
+	mov		[cs:g_MenuitemMasterSlaveChsTranslateMode+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset], ax
 	mov		[cs:g_MenuitemMasterSlaveWriteCache+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset], ax
 	mov		[cs:g_MenuitemMasterSlaveUserCHS+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset], ax
 	mov		[cs:g_MenuitemMasterSlaveUserLBA+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset], ax
