@@ -32,7 +32,7 @@ SECTION .text
 ;	Parameters:
 ;		ES:SI:	Ptr to 512-byte ATA information read from the drive
 ;	Returns:
-;		BX:DX:AX:	48-bit sector count
+;		BX:DX:AX:	48-bit sectohr count
 ;		CL:			FLGL_DPT_LBA48 if LBA48 supported
 ;					Zero if only LBA28 is supported
 ;	Corrupts registers:
