@@ -30,7 +30,6 @@ SECTION .text
 ;	Corrupts registers:
 ;		AX, BX, CX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 Bios_GetNumberOfHardDrivesToDX:
 	mov		dl, 80h		; First hard drive
 	mov		ah, GET_DRIVE_PARAMETERS
@@ -53,7 +52,6 @@ Bios_GetNumberOfHardDrivesToDX:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 Bios_ReadOldInt13hParametersFromDriveDL:
 	mov		ah, GET_DRIVE_PARAMETERS
 	int		BIOS_DISK_INTERRUPT_13h
@@ -101,7 +99,6 @@ ExtractCHSfromOldInt13hDriveParameters:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 Bios_ReadOldInt13hCapacityFromDriveDL:
 	mov		ah, GET_DISK_TYPE
 	int		BIOS_DISK_INTERRUPT_13h
@@ -122,7 +119,6 @@ Bios_ReadOldInt13hCapacityFromDriveDL:
 ;	Corrupts registers:
 ;		ES
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 Bios_ReadAtaInfoFromDriveDLtoBX:
 	mov		bx, g_rgbAtaInfo
 	push	ds
@@ -145,7 +141,6 @@ Bios_ReadAtaInfoFromDriveDLtoBX:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 Bios_ReadEbiosVersionFromDriveDL:
 	mov		ah, CHECK_EXTENSIONS_PRESENT
 	mov		bx, 55AAh
@@ -174,7 +169,6 @@ Bios_ReadEbiosVersionFromDriveDL:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 Bios_ReadEbiosInfoFromDriveDLtoDSSI:
 	mov		si, g_edriveInfo
 	mov		WORD [si+EDRIVE_INFO.wSize], MINIMUM_EDRIVEINFO_SIZE
