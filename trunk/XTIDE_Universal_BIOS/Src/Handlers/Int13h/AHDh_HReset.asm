@@ -149,5 +149,5 @@ AHDh_WaitUnilDriveMotorHasReachedFullSpeed:
 .WaitSinceRealHardDisk:
 %endif
 
-	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_MOTOR_STARTUP, FLG_STATUS_BSY)
+	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_MOTOR_STARTUP, FLG_STATUS_DRDY)
 	jmp		IdeWait_PollStatusFlagInBLwithTimeoutInBH
