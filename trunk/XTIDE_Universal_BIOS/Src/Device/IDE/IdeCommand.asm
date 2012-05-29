@@ -78,8 +78,7 @@ IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 	jne		SHORT .SkipLongWaitSinceDriveIsNotPrimaryMaster
 	test	bh, FLG_DRVNHEAD_DRV
 	jnz		SHORT .SkipLongWaitSinceDriveIsNotPrimaryMaster
-	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_MOTOR_STARTUP, FLG_STATUS_DRDY)
-	call	IdeWait_PollStatusFlagInBLwithTimeoutInBH
+	call	AHDh_WaitUnilDriveMotorHasReachedFullSpeed
 .SkipLongWaitSinceDriveIsNotPrimaryMaster:
 
 	; Create IDEPACK without INTPACK

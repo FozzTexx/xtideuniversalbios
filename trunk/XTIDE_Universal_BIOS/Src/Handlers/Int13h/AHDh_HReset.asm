@@ -105,7 +105,8 @@ IterateAndResetDrives:
 	jne		.Done
 	push	cx
 	push	ax
-	call	AH9h_InitializeDriveForUse			; Reset Master and Slave (Master will come first in DPT list)
+	call	AHDh_WaitUnilDriveMotorHasReachedFullSpeed
+	call	AH9h_InitializeDriveForUse			; Initialize Master or Slave (Master will come first in DPT list)
 
 %ifdef MODULE_ADVANCED_ATA
 	jc		SHORT .SkipControllerInitSinceError
@@ -129,3 +130,24 @@ IterateAndResetDrives:
 	stc											; From IterateAllDPTs perspective, the DPT is never found (continue iteration)
 	ret
 
+
+;--------------------------------------------------------------------
+; AHDh_WaitUnilDriveMotorHasReachedFullSpeed
+;	Parameters:
+;		DS:DI:	Ptr to DPT
+;	Returns:
+;		AH:		Int 13h return status
+;		CF:		0 if successful, 1 if error
+;	Corrupts registers:
+;		AL, BX, CX, DX
+;--------------------------------------------------------------------
+AHDh_WaitUnilDriveMotorHasReachedFullSpeed:
+%ifdef MODULE_SERIAL
+	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE
+	jz		SHORT .WaitSinceRealHardDisk
+	ret
+.WaitSinceRealHardDisk:
+%endif
+
+	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_MOTOR_STARTUP, FLG_STATUS_BSY)
+	jmp		IdeWait_PollStatusFlagInBLwithTimeoutInBH

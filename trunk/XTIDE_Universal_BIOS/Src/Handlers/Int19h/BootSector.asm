@@ -72,33 +72,18 @@ LoadFirstSectorFromDriveDL:
 	mov		di, BOOT_READ_RETRY_TIMES		; Initialize retry counter
 
 .ReadRetryLoop:
-	call	.ResetBootDriveFromDL
 	call	.LoadFirstSectorFromDLtoESBX
 	jnc		SHORT .Return
-	dec		di								; Decrement retry counter
-	jnz		SHORT .ReadRetryLoop			; Loop while retries left
-.Return:
-	ret
+	dec		di								; Decrement retry counter (preserve CF)
+	jz		SHORT .Return					; Loop while retries left
 
-;--------------------------------------------------------------------
-; .ResetBootDriveFromDL
-;	Parameters:
-;		DL:		Drive to boot from (translated, 00h or 80h)
-;	Returns:
-;		AH:		INT 13h error code
-;		CF:		Cleared if read successful
-;				Set if any error
-;	Corrupts registers:
-;		AL
-;--------------------------------------------------------------------
-.ResetBootDriveFromDL:
+	; Reset drive and retry
 	xor		ax, ax							; AH=0h, Disk Controller Reset
 	test	dl, dl							; Floppy drive?
-	jns		SHORT .SkipAltReset
-	mov		ah, 0Dh							; AH=Dh, Reset Hard Disk (Alternate reset)
-.SkipAltReset:
+	eCMOVS	ah, RESET_HARD_DISK				; AH=Dh, Reset Hard Disk (Alternate reset)
 	int		BIOS_DISK_INTERRUPT_13h
-	ret
+	jmp		SHORT .ReadRetryLoop
+
 
 ;--------------------------------------------------------------------
 ; .LoadFirstSectorFromDLtoESBX
@@ -118,4 +103,5 @@ LoadFirstSectorFromDriveDL:
 	mov		cx, 1							; Cylinder 0, Sector 1
 	xor		dh, dh							; Head 0
 	int		BIOS_DISK_INTERRUPT_13h
+.Return:
 	ret
