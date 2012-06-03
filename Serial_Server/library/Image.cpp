@@ -111,38 +111,41 @@ void Image::init( char *name, int p_readOnly, int p_drive, unsigned long p_cyl, 
 		totallba = p_cyl * p_head * p_sect;
 	}
 
-	if( p_useCHS )
+	if( p_cyl )
 	{
-		if( p_cyl )
-		{
-			if( p_sect > 63 || (p_head > 16 || p_head < 1) || (p_cyl > 1024 || p_cyl < 1) )
-				log( -1, "'%s', parts of the CHS geometry (%lu:%lu:%lu) are out of the range (1-1024:1-16:1-63)", name, p_cyl, p_head, p_sect );
-			else if( totallba != (p_sect * p_head * p_cyl) )
-				log( -1, "'%s', file size does not match geometry", name );
-			sect = p_sect;
-			head = p_head;
-			cyl = p_cyl;
-		}
-		else
-		{
-			if( (totallba % 16) != 0 || ((totallba/16) % 63) != 0 )
-				log( -1, "'%s', file size does not match standard CHS geometry (x:16:63), please specify geometry explicitly with -g", name );
-			else
-			{
-				sect = 63;
-				head = 16;
-				cyl = (totallba / sect / head);
-				if( cyl > 1024 )
-					log( -1, "'%s', CHS geometry of %lu:%lu:%lu is larger than maximum values 1024:16:63", name, cyl, head, sect );
-			}
-		}
+		if( (p_sect > 255 || p_sect < 1) || (p_head > 16 || p_head < 1) || (p_cyl > 65536 || p_cyl < 1) )
+			log( -1, "'%s', parts of the CHS geometry (%lu:%lu:%lu) are out of the range (1-65536:1-16:1-255)", name, p_cyl, p_head, p_sect );
+		else if( totallba != (p_sect * p_head * p_cyl) )
+			log( -1, "'%s', file size does not match geometry", name );
+		sect = p_sect;
+		head = p_head;
+		cyl = p_cyl;
 	}
 	else
 	{
-		sect = 0;
-		head = 0;
-		cyl = 0;
+		if( totallba > 65536*16*63 )
+		{
+			log( 0, "'%s': Warning: Image size is greater than derived standard CHS maximum, limiting CHS to 65535:16:63, consider using -g to specify geometry", name );
+			cyl = 65536;
+			head = 16;
+			sect = 63;
+		}
+		else if( (totallba % 16) != 0 || ((totallba/16) % 63) != 0 )
+		{
+			log( -1, "'%s', file size does not match standard CHS geometry (x:16:63), please specify geometry explicitly with -g", name );
+		}
+		else 
+		{
+			sect = 63;
+			head = 16;
+			cyl = (totallba / sect / head);
+			if( cyl > 65536 )
+			{
+				log( -1, "'%s', derived standard CHS geometry of %lu:16:63 is has more cylinders than 65536, please specify geometry explicitly with -g", name, cyl, head, sect );
+			}
+		}
 	}
+
 	useCHS = p_useCHS;
 
 	sizef = totallba/2048.0;
@@ -156,8 +159,8 @@ void Image::init( char *name, int p_readOnly, int p_drive, unsigned long p_cyl, 
 		log( 0, "%s: %s with CHS geometry %u:%u:%u, size %.2lf %cB",
 			 name, (floppy ? "Floppy Disk" : "Hard Disk"), cyl, head, sect, sizef, sizeChar );
 	else
-		log( 0, "%s: %s with total sectors %lu, size %.2lf %cB", 
-			 name, (floppy ? "Floppy Disk" : "Hard Disk"), totallba, sizef, sizeChar );
+		log( 0, "%s: %s with %lu LBA sectors, size %.2lf %cB (CHS geometry %u:%u:%u)", 
+			 name, (floppy ? "Floppy Disk" : "Hard Disk"), totallba, sizef, sizeChar, cyl, head, sect );
 }
 
 int Image::parseGeometry( char *str, unsigned long *p_cyl, unsigned long *p_head, unsigned long *p_sect )
@@ -295,13 +298,11 @@ void Image::respondInquire( unsigned short *buff, unsigned short originalPortAnd
 	strncpy( (char *) &buff[ATA_strFirmware], formatBuff, ATA_strFirmware_Length );
 	flipEndian( &buff[ATA_strFirmware], ATA_strFirmware_Length );
 
-	if( useCHS )
-	{
-		buff[ ATA_wCylCnt ] = cyl;
-		buff[ ATA_wHeadCnt ] = head;
-		buff[ ATA_wSPT ] = sect;
-	}
-	else
+	buff[ ATA_wCylCnt ] = cyl;
+	buff[ ATA_wHeadCnt ] = head;
+	buff[ ATA_wSPT ] = sect;
+
+	if( !useCHS )
 	{
 		buff[ ATA_wCaps ] = ATA_wCaps_LBA;
 		buff[ ATA_dwLBACnt ] = (unsigned short) (totallba & 0xffff);
