@@ -77,8 +77,8 @@ Initialize_AndDetectDrives:
 	call	DetectPrint_RomFoundAtSegment
 	call	RamVars_Initialize
 	call	BootVars_Initialize
-	call	Interrupts_InitializeInterruptVectors
 	call	DetectDrives_FromAllIDEControllers
+	call	Interrupts_InitializeInterruptVectors
 	; Fall to .StoreDptPointersToIntVectors
 
 ;--------------------------------------------------------------------

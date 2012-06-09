@@ -21,6 +21,8 @@
 SECTION .text
 
 ;--------------------------------------------------------------------
+; Drives must be detected before this function is called!
+;
 ; Interrupts_InitializeInterruptVectors
 ;	Parameters:
 ;		DS:		RAMVARS segment
@@ -31,6 +33,17 @@ SECTION .text
 ;		All except segments
 ;--------------------------------------------------------------------
 Interrupts_InitializeInterruptVectors:
+	; Install INT 19h handler to properly reset the system
+	mov		al, BIOS_BOOT_LOADER_INTERRUPT_19h	; INT 19h interrupt vector offset
+	mov		si, Int19hReset_Handler				; INT 19h handler to reboot the system
+	call	Interrupts_InstallHandlerToVectorInALFromCSSI
+
+	; If no drives detected, leave system INT 13h and 40h handlers
+	; in place. We need our INT 13h handler to swap drive letters.
+%ifndef MODULE_HOTKEYS
+	cmp		BYTE [RAMVARS.bDrvCnt], 0
+	je		SHORT Interrupts_Return
+%endif
 	; Fall to .InitializeInt13hAnd40h
 
 ;--------------------------------------------------------------------
@@ -65,11 +78,7 @@ Interrupts_InitializeInterruptVectors:
 	test	BYTE [cs:ROMVARS.wFlags], FLG_ROMVARS_FULLMODE
 	eCMOVNZ	si, Int13h_DiskFunctionsHandlerWithStackChange
 %endif
-	call	Interrupts_InstallHandlerToVectorInALFromCSSI
 
-	; Install INT 19h handler to properly reset the system
-	mov		al, BIOS_BOOT_LOADER_INTERRUPT_19h	; INT 19h interrupt vector offset
-	mov		si, Int19hReset_Handler				; INT 19h handler to reboot the system
 %ifndef MODULE_IRQ
 	; Fall to Interrupts_InstallHandlerToVectorInALFromCSSI
 %else
@@ -162,6 +171,7 @@ Interrupts_InstallHandlerToVectorInALFromCSSI:
 	xchg	ax, bx
 	mov		[es:bx], si				; Store offset
 	mov		[es:bx+2], cs			; Store segment
+Interrupts_Return:
 	ret
 
 
