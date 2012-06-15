@@ -47,7 +47,7 @@ IdeCommand_ResetMasterAndSlaveController:
 	call	Timer_DelayMicrosecondsFromAX
 
 	; HSR2: Check_status
-	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_MOTOR_STARTUP, FLG_STATUS_BSY)
+	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_MAXIMUM, FLG_STATUS_BSY)
 	jmp		IdeWait_PollStatusFlagInBLwithTimeoutInBH
 
 
