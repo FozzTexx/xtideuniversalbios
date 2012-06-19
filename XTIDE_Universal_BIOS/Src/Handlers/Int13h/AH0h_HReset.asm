@@ -101,12 +101,9 @@ ResetForeignHardDisks:
 	; since our INT 13h was called by some other BIOS.
 	; We only need to reset drives from the previous INT 13h handler.
 	; There could be more in chain but let the previous one handle them.
-	mov		dl, 80h
-	cmp		[RAMVARS.bFirstDrv], dl
-	je		SHORT NoForeignDrivesToReset
-
-	cmp		bl, [RAMVARS.bFirstDrv]
-	eCMOVB	dl, bl					; DL when entering AH=00h
+	mov		dl, [RAMVARS.bFirstDrv]
+	or		dl, 80h					; We may not have our drives at all!
+	MIN_U	dl, bl					; BL is always Hard Drive number
 
 	xor		ah, ah					; Disk Controller Reset
 	call	Int13h_CallPreviousInt13hHandler
