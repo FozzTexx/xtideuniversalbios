@@ -34,7 +34,7 @@ SECTION .text
 ;		CL:		Bits 7...6: Cylinder number bits 9...8
 ;				Bits 5...0:	Maximum sector number (1...63)
 ;		DH:		Maximum head number (0...254)
-;		DL:		Number of drives
+;		DL:		Number of drives!!!
 ;       ES:DI:  Floppy DPT (for floppies only)
 ;		AH:		Int 13h/40h floppy return status
 ;		CF:		0 if successful, 1 if error
