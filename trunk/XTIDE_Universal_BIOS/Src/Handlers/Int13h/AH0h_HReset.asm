@@ -37,8 +37,16 @@ SECTION .text
 ;		CF:		0 if successful, 1 if error
 ;--------------------------------------------------------------------
 AH0h_HandlerForDiskControllerReset:
-	eMOVZX	bx, dl						; Copy requested drive to BL, zero BH to assume no errors
-	call	ResetFloppyDrivesWithInt40h
+	; Reset Floppy Drives with INT 40h
+	xor		bx, bx						; Zero BH to assume no errors
+	or		bl, dl						; Copy requested drive to BL
+	eCMOVS	dl, bh						; Reset Floppy Drive 00h since DL has Hard Drive number
+
+	xor		ah, ah						; Disk Controller Reset
+	int		BIOS_DISKETTE_INTERRUPT_40h
+	call	BackupErrorCodeFromTheRequestedDriveToBH
+	; We do not reset Hard Drives if DL was 0xh on entry
+
 
 %ifdef MODULE_SERIAL_FLOPPY
 ;
@@ -60,9 +68,9 @@ AH0h_HandlerForDiskControllerReset:
 	call	BackupErrorCodeFromTheRequestedDriveToBH	; only one drive), but doing it again is not harmful.
 %endif
 
+	; Reset foreign Hard Drives (those handled by other BIOSes)
 	test	bl, bl										; If we were called with a floppy disk, then we are done,
 	jns		SHORT .SkipHardDiskReset					; don't do hard disks.
-
 	call	ResetForeignHardDisks
 
 	; Resetting our hard disks will modify dl and bl to be idevars offset based instead of drive number based,
@@ -79,23 +87,6 @@ AH0h_HandlerForDiskControllerReset:
 
 
 ;--------------------------------------------------------------------
-; ResetFloppyDrivesWithInt40h
-;	Parameters:
-;		BL:		Requested drive (DL when entering AH=00h)
-;	Returns:
-;		BH:		Error code from requested drive (if available)
-;	Corrupts registers:
-;		AX, DL, DI
-;--------------------------------------------------------------------
-ResetFloppyDrivesWithInt40h:
-	call	GetDriveNumberForForeignHardDiskHandlerToDL
-	and		dl, 7Fh						; Clear hard disk bit
-	xor		ah, ah						; Disk Controller Reset
-	int		BIOS_DISKETTE_INTERRUPT_40h
-	jmp		SHORT BackupErrorCodeFromTheRequestedDriveToBH
-
-
-;--------------------------------------------------------------------
 ; ResetForeignHardDisks
 ;	Parameters:
 ;		BL:		Requested drive (DL when entering AH=00h)
@@ -103,11 +94,18 @@ ResetFloppyDrivesWithInt40h:
 ;	Returns:
 ;		BH:		Error code from requested drive (if available)
 ;	Corrupts registers:
-;		AX, DL, DI
+;		AX, DL
 ;--------------------------------------------------------------------
 ResetForeignHardDisks:
-	call	GetDriveNumberForForeignHardDiskHandlerToDL
-	xor		ah, ah						; Disk Controller Reset
+	; If there are drives after our drives, those are already reset
+	; since our INT 13h was called by some other BIOS.
+	; We only need to reset drives from the previous INT 13h handler.
+	; There could be more in chain but let the previous one handle them.
+	mov		dl, 80h
+	cmp		[RAMVARS.bFirstDrv], dl
+	je		SHORT NoForeignDrivesToReset
+
+	xor		ah, ah					; Disk Controller Reset
 	call	Int13h_CallPreviousInt13hHandler
 ;;; fall-through to BackupErrorCodeFromTheRequestedDriveToBH
 
@@ -129,24 +127,8 @@ BackupErrorCodeFromTheRequestedDriveToBH:
 	ret
 
 
-;--------------------------------------------------------------------
-; GetDriveNumberForForeignHardDiskHandlerToDL
-;	Parameters:
-;		BL:		Requested drive (DL when entering AH=00h)
-;		DS:		RAMVARS segment
-;	Returns:
-;		DS:DI:	Ptr to DPT if our drive (or Null if foreign drive)
-;		DL:		BL if foreign drive
-;				80h if our drive
-;--------------------------------------------------------------------
-GetDriveNumberForForeignHardDiskHandlerToDL:
-	mov		dl, bl
-	test	di, di
-	jz		SHORT .Return
-	mov		dl, 80h				; First possible Hard Disk should be safe value
-.Return:
-	ret
 
+; This defines what is called when resetting our drives at the end of drive detection.
 AH0h_ResetAllOurHardDisksAtTheEndOfDriveInitialization equ ResetHardDisksHandledByOurBIOS.ErrorCodeNotUsed
 
 ;--------------------------------------------------------------------
@@ -164,7 +146,7 @@ AH0h_ResetAllOurHardDisksAtTheEndOfDriveInitialization equ ResetHardDisksHandled
 ResetHardDisksHandledByOurBIOS:
 	xor		bl, bl										; Assume Null IdevarsOffset for now, assuming foreign drive
 	test	di, di
-	jz		.ErrorCodeNotUsed
+	jz		SHORT .ErrorCodeNotUsed
 	mov		bl, [di+DPT.bIdevarsOffset]					; replace drive number with Idevars pointer for cmp with dl
 
 .ErrorCodeNotUsed:										; BH will be garbage on exit if this entry point is used,
@@ -181,7 +163,7 @@ ResetHardDisksHandledByOurBIOS:
 
 .loop:
 	call	FindDPT_ForIdevarsOffsetInDL				; look for the first drive on this controller, if any
-	jc		.notFound
+	jc		SHORT .notFound
 
 	call	AHDh_ResetDrive								; reset master and slave on that controller
 	call	BackupErrorCodeFromTheRequestedDriveToBH	; save error code if same controller as drive from entry
@@ -191,4 +173,5 @@ ResetHardDisksHandledByOurBIOS:
 	loop	.loop
 
 .done:
+NoForeignDrivesToReset:
 	ret

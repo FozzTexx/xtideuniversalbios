@@ -41,7 +41,7 @@ struc RAMVARS
 	.bTimeoutTicksLeft	resb	1
 	.bLastTimeoutUpdate	resb	1
 
-	.wDrvCntAndFirst:
+	.wFirstDrvAndCount:
 	.bFirstDrv			resb	1	; Number of first drive for this BIOS
 	.wDrvCntAndFlopCnt:				; Both the hard disk and floppy counts in one word
 									; (yes, misaligned, but it is only used this way during initialization)

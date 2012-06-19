@@ -42,7 +42,7 @@ FindDPT_ForDriveNumberInDL:
 ;
 ; Check Our Hard Disks
 ;
-	mov		ax, [RAMVARS.wDrvCntAndFirst]		; Drive count to AH, First number to AL
+	mov		ax, [RAMVARS.wFirstDrvAndCount]		; Drive count to AH, First number to AL
 	add		ah, al								; One past last drive to AH
 
 %ifdef MODULE_SERIAL_FLOPPY
@@ -96,7 +96,7 @@ ALIGN JUMP_ALIGN
 	push	dx
 
 %ifdef MODULE_SERIAL_FLOPPY
-	mov		ax, [RAMVARS.wDrvCntAndFirst]
+	mov		ax, [RAMVARS.wFirstDrvAndCount]
 
 	test	dl, dl
 	js		.harddisk
