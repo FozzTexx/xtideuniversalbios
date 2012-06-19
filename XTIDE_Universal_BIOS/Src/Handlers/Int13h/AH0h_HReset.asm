@@ -40,7 +40,7 @@ AH0h_HandlerForDiskControllerReset:
 	; Reset Floppy Drives with INT 40h
 	xor		bx, bx						; Zero BH to assume no errors
 	or		bl, dl						; Copy requested drive to BL
-	eCMOVS	dl, bh						; Reset Floppy Drive 00h since DL has Hard Drive number
+	eCMOVS	dl, bh						; Reset Floppy Drive(s) with 00h since DL has Hard Drive number
 
 	xor		ah, ah						; Disk Controller Reset
 	int		BIOS_DISKETTE_INTERRUPT_40h
@@ -89,7 +89,7 @@ AH0h_HandlerForDiskControllerReset:
 ;--------------------------------------------------------------------
 ; ResetForeignHardDisks
 ;	Parameters:
-;		BL:		Requested drive (DL when entering AH=00h)
+;		BL:		Requested Hard Drive (DL when entering AH=00h)
 ;		DS:		RAMVARS segment
 ;	Returns:
 ;		BH:		Error code from requested drive (if available)
@@ -104,6 +104,9 @@ ResetForeignHardDisks:
 	mov		dl, 80h
 	cmp		[RAMVARS.bFirstDrv], dl
 	je		SHORT NoForeignDrivesToReset
+
+	cmp		bl, [RAMVARS.bFirstDrv]
+	eCMOVB	dl, bl					; DL when entering AH=00h
 
 	xor		ah, ah					; Disk Controller Reset
 	call	Int13h_CallPreviousInt13hHandler
