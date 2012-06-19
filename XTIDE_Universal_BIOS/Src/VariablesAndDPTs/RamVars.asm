@@ -187,7 +187,7 @@ RamVars_GetHardDiskCountFromBDAtoAX:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 RamVars_GetCountOfKnownDrivesToAX:
-	mov		ax, [RAMVARS.wDrvCntAndFirst]
+	mov		ax, [RAMVARS.wFirstDrvAndCount]
 	add		al, ah
 	and		ax, BYTE 7fh
 	ret
