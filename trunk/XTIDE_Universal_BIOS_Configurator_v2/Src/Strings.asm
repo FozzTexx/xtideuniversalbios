@@ -238,7 +238,7 @@ g_szHelpIdeSerialBaud:	incbin  "IDE_SerialBaud.txt"
 
 g_szMultichoiceCfgDevice:
 						db	"JR-IDE/ISA",LF
-						db	"Fast XTIDE (CPLD v2 project)",LF
+						db	"Lo-tech XT-CF",LF
 						db	"XTIDE rev 2 or modded rev 1",LF
 						db	"XTIDE rev 1",LF
 						db	"16-bit ISA/VLB/PCI IDE",LF
@@ -296,7 +296,7 @@ g_szValueCfgBaud2400:	db		"2400",NULL
 
 
 g_szValueCfgDeviceJrIdeIsa:	db	"JR-ISA",NULL
-g_szValueCfgDeviceFast:		db	"Fast XT",NULL
+g_szValueCfgDeviceFast:		db	"XT-CF",NULL
 g_szValueCfgDeviceRev2:		db	"XTIDE r2",NULL
 g_szValueCfgDeviceRev1:		db	"XTIDE r1",NULL
 g_szValueCfgDevice16b:		db	"16-bit",NULL
