@@ -100,6 +100,7 @@ COMMAND_IDLE							EQU		0E3h
 
 
 ; Subcommands for COMMAND_SET_FEATURES
+FEATURE_ENABLE_8BIT_PIO_TRANSFER_MODE	EQU		01h		; CFA feature set only
 FEATURE_ENABLE_WRITE_CACHE				EQU		02h
 FEATURE_DISABLE_WRITE_CACHE				EQU		82h		; Can also be used to flush cache
 FEATURE_SET_TRANSFER_MODE				EQU		03h		; Transfer mode goes to the Sector Count Register

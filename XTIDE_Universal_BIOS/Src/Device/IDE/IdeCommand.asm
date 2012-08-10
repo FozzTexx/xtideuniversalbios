@@ -85,6 +85,9 @@ IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 	push	bp
 	call	Idepack_FakeToSSBP
 
+	; Enable 8-bit PIO mode for Lo-tech XT-CF
+	call	AH9h_Enable8bitPioModeForXTCF
+
 	; Prepare to output Identify Device command
 	mov		dl, 1						; Sector count (required by IdeTransfer.asm)
 	mov		al, COMMAND_IDENTIFY_DEVICE
