@@ -126,6 +126,11 @@ AH9h_InitializeDriveForUse:
 .SkipInitializeDeviceParameters:
 
 
+;;; Enable 8-bit PIO Transfer Mode for Lo-tech XT-CF (CF and Microdrives only)
+	call	AH9h_Enable8bitPioModeForXTCF
+	STORE_ERROR_FLAG_TO_DPT		FLG_INITERROR_FAILED_TO_ENABLE_8BIT_PIO_MODE
+
+
 ;;;	SetWriteCache
 	; Enable or Disable Write Cache
 	call	AccessDPT_GetPointerToDRVPARAMStoCSBX
@@ -247,3 +252,24 @@ SetErrorFlagFromALwithErrorCodeInAH:
 	stc
 .NoErrorFlagToSet:
 	ret
+
+
+;--------------------------------------------------------------------
+; AH9h_Enable8bitPioModeForXTCF
+;	Parameters:
+;		DS:DI:	Ptr to DPT
+;	Returns:
+;		AH:		Int 13h return status
+;		CF:		0 if successful, 1 if error
+;	Corrupts registers:
+;		AL, BX, CX, DX
+;--------------------------------------------------------------------
+AH9h_Enable8bitPioModeForXTCF:
+	eMOVZX	bx, BYTE [di+DPT.bIdevarsOffset]
+	cmp		BYTE [cs:bx+IDEVARS.bDevice], DEVICE_8BIT_XTCF
+	je		SHORT .Enable8bitMode
+	xor		ah, ah		; Do nothing for this device
+	ret
+.Enable8bitMode:
+	mov		si, FEATURE_ENABLE_8BIT_PIO_TRANSFER_MODE
+	jmp		AH23h_SetControllerFeatures

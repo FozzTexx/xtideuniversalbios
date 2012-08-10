@@ -138,7 +138,7 @@ DEVICE_ATA_QUATERNARY_PORTCTRL			EQU		(DEVICE_ATA_QUATERNARY_PORT + 200h)
 ; Device types for IDEVARS.bDevice
 ;
 DEVICE_8BIT_JRIDE_ISA					EQU	(0<<1)	; JR-IDE/ISA (must be 0)
-DEVICE_8BIT_FAST_XTIDE					EQU	(1<<1)	; CPLD v2 project (must be 1 or 2)
+DEVICE_8BIT_XTCF						EQU	(1<<1)	; Lo-tech XT-CF
 DEVICE_8BIT_XTIDE_REV2					EQU	(2<<1)	; Or rev 1 with swapped A0 and A3 (must be 1 or 2)
 DEVICE_8BIT_XTIDE_REV1					EQU	(3<<1)	; Must be 4
 COUNT_OF_8BIT_IDE_DEVICES				EQU	4
