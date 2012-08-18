@@ -85,8 +85,11 @@ IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 	push	bp
 	call	Idepack_FakeToSSBP
 
+%ifdef MODULE_8BIT_IDE
 	; Enable 8-bit PIO mode for Lo-tech XT-CF
 	call	AH9h_Enable8bitPioModeForXTCF
+	jc		SHORT .FailedToSet8bitMode
+%endif
 
 	; Prepare to output Identify Device command
 	mov		dl, 1						; Sector count (required by IdeTransfer.asm)
@@ -95,6 +98,7 @@ IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 	call	Idepack_StoreNonExtParametersAndIssueCommandFromAL
 
 	; Clean stack and return
+.FailedToSet8bitMode:
 	lea		sp, [bp+EXTRA_BYTES_FOR_INTPACK]	; This assumes BP hasn't changed between Idepack_FakeToSSBP and here
 	pop		bp
 	ret
