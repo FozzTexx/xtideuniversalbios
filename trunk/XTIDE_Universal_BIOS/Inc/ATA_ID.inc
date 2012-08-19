@@ -20,6 +20,12 @@
 %ifndef ATA_ID_INC
 %define ATA_ID_INC
 
+; Maximum valid P-CHS parameters
+MAX_VALID_PCHS_CYLINDERS			EQU		16383
+MAX_VALID_PCHS_HEADS				EQU		16
+MAX_VALID_PCHS_SECTORS_PER_TRACK	EQU		63
+
+
 ; PIO Minimum Cycle Times (t0)
 ; Timings for Advanced Modes (3 and above) can be read from ATA info WORDs 67 and 68
 ; Those usually have the same Cycle Time as below
@@ -315,6 +321,7 @@ struc ATA6
 				resw 176-161	; 161...175R, Reserved for assignment by the CompactFlash Association
 	.strMediaSr	resw 206-176	; 176...205V, Current media serial number
 				resw 255-206	; 206...254R
+	.wIntegrityWord:
 	.bSignature	resb 1	; 255[0-7]X, Signature
 	.bChecksum	resb 1	; 255[8-15]X, Checksum
 endstruc
@@ -470,6 +477,9 @@ A6_wCFAPower_WORDSUPP	EQU	(1<<15)	; Word 160 supported
 A6_wCFAPower_REQUIRED	EQU	(1<<13)	; CFA power mode 1 is required for one or more commands implemented by the device
 A6_wCFAPower_DISABLED	EQU	(1<<12)	; CFA power mode 1 disabled
 A6_wCFAPower_MASK_mA	EQU	0FFFh	; Maximum current in mA
+
+; ATA-6 WORD 255, Integrity Word (Signature and Checksum)
+A6_wIntegrity_SIGNATURE	EQU	0A5h
 
 
 %endif ; ATA_ID_INC
