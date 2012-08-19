@@ -141,3 +141,26 @@ Memory_ReserveCXbytesFromStackToDSSI:
 	mov		si, sp
 	jmp		ax
 %endif
+
+
+;--------------------------------------------------------------------
+; Memory_SumCXbytesFromESSItoAL
+;	Parameters
+;		CX:		Number of bytes to sum (0=65536)
+;		ES:SI:	Ptr to buffer containing the bytes to sum
+;	Returns:
+;		AL:		Sum of bytes
+;	Corrupts registers:
+;		CX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+Memory_SumCXbytesFromESSItoAL:
+	push	si
+	xor		al, al
+ALIGN JUMP_ALIGN
+.AddNextByteToAL:
+	add		al, [es:si]
+	inc		si
+	loop	.AddNextByteToAL
+	pop		si
+	ret
