@@ -217,6 +217,10 @@ DetectDrives_DriveNotFound:
 ;		AX, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 CreateBiosTablesForHardDisk:
+	push	bx
+	call	AtaID_VerifyFromESSI
+	pop		bx
+	jc		SHORT DetectDrives_DriveNotFound
 	call	CreateDPT_FromAtaInformation
 	jc		SHORT DetectDrives_DriveNotFound
 	call	DriveDetectInfo_CreateForHardDisk
