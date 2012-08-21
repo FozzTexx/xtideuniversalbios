@@ -272,6 +272,24 @@ ALIGN JUMP_ALIGN
 	ret
 %endif
 
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+ReadBlockFromXTCF:
+	UNROLL_SECTORS_IN_CX_TO_DWORDS
+ALIGN JUMP_ALIGN
+.ReadNextDword:
+	in		al, dx		; Read 1st BYTE
+	stosb				; Store 1st BYTE to [ES:DI]
+	in		al, dx
+	stosb
+
+	in		al, dx
+	stosb
+	in		al, dx
+	stosb
+	loop	.ReadNextDword
+	ret
+
 %endif	; MODULE_8BIT_IDE
 
 ;--------------------------------------------------------------------
@@ -351,23 +369,23 @@ ALIGN JUMP_ALIGN
 
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-WriteBlockToFastXtide:
-	UNROLL_SECTORS_IN_CX_TO_QWORDS
+WriteBlockToXTCF:
+	UNROLL_SECTORS_IN_CX_TO_DWORDS
 	push	ds
 	push	es
 	pop		ds
-	or		dl, (1<<4)	; Writes need A4 set
 ALIGN JUMP_ALIGN
-.ReadNextQword:
-	lodsw				; Load 1st WORD from [DS:SI]
-	out		dx, ax		; Write 1st WORD
-	lodsw
-	out		dx, ax		; 2nd
-	lodsw
-	out		dx, ax		; 3rd
-	lodsw
-	out		dx, ax		; 4th
-	loop	.ReadNextQword
+.WriteNextDword:
+	lodsb				; Load 1st BYTE from [DS:SI]
+	out		dx, al		; Write 1st BYTE
+	lodsb
+	out		dx, al
+
+	lodsb
+	out		dx, al
+	lodsb
+	out		dx, al
+	loop	.WriteNextDword
 	pop		ds
 	ret
 %endif	; MODULE_8BIT_IDE
@@ -403,11 +421,10 @@ ALIGN WORD_ALIGN
 g_rgfnPioRead:
 %ifdef MODULE_8BIT_IDE
 		dw		0							; 0, DEVICE_8BIT_JRIDE_ISA
+		dw		ReadBlockFromXTCF			; 1, DEVICE_8BIT_XTCF
 	%ifdef USE_186
-		dw		ReadBlockFrom16bitDataPort	; 1, DEVICE_FAST_XTIDE
 		dw		ReadBlockFrom16bitDataPort	; 2, DEVICE_8BIT_XTIDE_REV2
 	%else
-		dw		ReadBlockFromXtideRev2		; 1, DEVICE_FAST_XTIDE
 		dw		ReadBlockFromXtideRev2		; 2, DEVICE_8BIT_XTIDE_REV2
 	%endif
 		dw		ReadBlockFromXtideRev1		; 3, DEVICE_XTIDE_REV1
@@ -424,7 +441,7 @@ g_rgfnPioRead:
 g_rgfnPioWrite:
 %ifdef MODULE_8BIT_IDE
 		dw		0							; 0, DEVICE_8BIT_JRIDE_ISA
-		dw		WriteBlockToFastXtide		; 1, DEVICE_FAST_XTIDE
+		dw		WriteBlockToXTCF			; 1, DEVICE_8BIT_XTCF
 		dw		WriteBlockToXtideRev2		; 2, DEVICE_XTIDE_REV2
 		dw		WriteBlockToXtideRev1		; 3, DEVICE_XTIDE_REV1
 
