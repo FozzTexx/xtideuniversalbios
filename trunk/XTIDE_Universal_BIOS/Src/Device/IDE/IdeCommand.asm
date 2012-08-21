@@ -74,9 +74,9 @@ IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 	call	IdeDPT_StoreDeviceTypeFromIdevarsInCSBPtoDPTinDSDI
 
 	; Wait until drive motors have reached max speed
-	cmp		bp, BYTE ROMVARS.ideVars0
+	cmp		bp, BYTE ROMVARS.ideVars0		; First controller?
 	jne		SHORT .SkipLongWaitSinceDriveIsNotPrimaryMaster
-	test	bh, FLG_DRVNHEAD_DRV
+	test	bh, FLG_DRVNHEAD_DRV			; Wait already done for Master
 	jnz		SHORT .SkipLongWaitSinceDriveIsNotPrimaryMaster
 	call	AHDh_WaitUnilDriveMotorHasReachedFullSpeed
 .SkipLongWaitSinceDriveIsNotPrimaryMaster:

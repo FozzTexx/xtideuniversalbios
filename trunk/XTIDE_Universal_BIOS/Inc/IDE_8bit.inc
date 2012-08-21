@@ -22,20 +22,29 @@
 %define IDE_8BIT_INC
 
 ;--------------------------------------------------------------------
+; UNROLL_SECTORS_IN_CX_TO_DWORDS
 ; UNROLL_SECTORS_IN_CX_TO_QWORDS
 ;	Parameters:
 ;		CX:		Number of sectors in block
 ;	Returns:
-;		CX:		Number of QWORDs in block
+;		CX:		Number of DWORDs or QWORDs in block
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+%macro UNROLL_SECTORS_IN_CX_TO_DWORDS 0
+%ifdef USE_186
+	shl		cx, 7
+%else
+	xchg	cl, ch		; Sectors to WORDs (SHL CX, 8)
+	shr		cx, 1
+%endif
+%endmacro
+
 %macro UNROLL_SECTORS_IN_CX_TO_QWORDS 0
 %ifdef USE_186
 	shl		cx, 6
 %else
-	xchg	cl, ch		; Sectors to WORDs (SHL CX, 8)
-	shr		cx, 1
+	UNROLL_SECTORS_IN_CX_TO_DWORDS
 	shr		cx, 1
 %endif
 %endmacro

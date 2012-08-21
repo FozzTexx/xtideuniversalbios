@@ -44,7 +44,7 @@ AtaID_VerifyFromESSI:
 	call	.CompareCHorSfromOffsetBXtoMaxValueInCX
 
 	add		bx, BYTE ATA1.wHeadCnt - ATA1.wCylCnt
-	mov		cl, MAX_VALID_PCHS_HEADS
+	mov		cx, MAX_VALID_PCHS_HEADS
 	call	.CompareCHorSfromOffsetBXtoMaxValueInCX
 
 	add		bx, BYTE ATA1.wSPT - ATA1.wHeadCnt
@@ -95,7 +95,7 @@ AtaID_VerifyFromESSI:
 	cmp		ax, cx			; Compare to max valid value
 	jbe		SHORT .ValidPCHorSinOffsetBX
 .InvalidPCHorSinOffsetBX:
-	add		sp, 2			; Clear return address for this function
+	add		sp, BYTE 2		; Clear return address for this function
 .FailedToVerifyAtaID:
 	stc						; Set carry to indicate invalid ATA-ID
 .ValidPCHorSinOffsetBX:
