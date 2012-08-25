@@ -162,14 +162,12 @@ GetIdePortToDX:
 
 	; Exchange address lines A0 and A3 from DL
 	add		dx, [cs:bx]							; DX now has port address
-	mov		bl, dl
-	mov		bh, MASK_A3_AND_A0_ADDRESS_LINES
-	and		bh, bl								; BH = 0, 1, 8 or 9, we can ignore 0 and 9
-	jz		SHORT .ReturnTranslatedPortInDX		; Jump out since DH is 0
-	xor		bh, MASK_A3_AND_A0_ADDRESS_LINES
-	jz		SHORT .ReturnTranslatedPortInDX		; Jump out since DH was 9
-	and		dl, ~MASK_A3_AND_A0_ADDRESS_LINES
-	or		dl, bh								; Address lines now reversed
+	mov		bl, dl								; Port low byte to BL
+	and		bl, MASK_A3_AND_A0_ADDRESS_LINES	; Clear all bits except A0 and A3
+	jz		SHORT .ReturnTranslatedPortInDX		; A0 and A3 both zeroes, no change needed
+	cmp		bl, MASK_A3_AND_A0_ADDRESS_LINES
+	je		SHORT .ReturnTranslatedPortInDX		; A0 and A3 both ones, no change needed
+	xor		dl, MASK_A3_AND_A0_ADDRESS_LINES	; Invert A0 and A3
 .ReturnTranslatedPortInDX:
 	ret
 

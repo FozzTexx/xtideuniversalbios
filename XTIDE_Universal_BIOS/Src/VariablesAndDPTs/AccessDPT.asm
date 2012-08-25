@@ -61,7 +61,7 @@ AccessDPT_GetDriveSelectByteForOldInt13hToAL:
 %ifdef MODULE_EBIOS
 ALIGN JUMP_ALIGN
 AccessDPT_GetDriveSelectByteForEbiosToAL:
-	mov		al, [di+DPT.wFlags]
+	mov		al, [di+DPT.bFlagsLow]
 	; Fall to GetDriveSelectByteForAssistedLBAtoAL
 %endif ; MODULE_EBIOS
 

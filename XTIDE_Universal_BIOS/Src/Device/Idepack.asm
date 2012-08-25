@@ -31,7 +31,7 @@ SECTION .text
 ;--------------------------------------------------------------------
 Idepack_FakeToSSBP:
 	pop		ax
-	sub		sp, BYTE EXTRA_BYTES_FOR_INTPACK
+	sub		sp, BYTE SIZE_OF_IDEPACK_WITHOUT_INTPACK
 	mov		bp, sp
 	jmp		ax
 
@@ -160,8 +160,6 @@ Idepack_StoreNonExtParametersAndIssueCommandFromAL:
 	mov		[bp+IDEPACK.bDrvAndHead], al
 
 	; Device Control byte with interrupts disabled
-	call	AccessDPT_GetDeviceControlByteToAL
-	or		al, FLG_DEVCONTROL_nIEN		; Disable interrupt
-	mov		[bp+IDEPACK.bDeviceControl], al
+	mov		BYTE [bp+IDEPACK.bDeviceControl], FLG_DEVCONTROL_nIEN
 
 	jmp		Device_OutputCommandWithParameters

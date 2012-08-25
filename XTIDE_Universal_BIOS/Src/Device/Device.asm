@@ -88,7 +88,7 @@ Device_ResetMasterAndSlaveController:
 ;		AH:		INT 13h Error Code
 ;		CF:		Cleared if success, Set if error
 ;	Corrupts registers:
-;		AL, BL, CX, DX, SI, DI, ES
+;		AL, BX, CX, DX, SI, DI, ES
 ;--------------------------------------------------------------------
 %ifdef MODULE_SERIAL	; IDE + Serial
 Device_IdentifyToBufferInESSIwithDriveSelectByteInBH:

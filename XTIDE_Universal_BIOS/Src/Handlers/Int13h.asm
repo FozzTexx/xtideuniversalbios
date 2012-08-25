@@ -89,7 +89,7 @@ ALIGN JUMP_ALIGN
 Int13h_DiskFunctionsHandler:
 	sti									; Enable interrupts
 	cld									; String instructions to increment pointers
-	CREATE_FRAME_INTPACK_TO_SSBP	EXTRA_BYTES_FOR_INTPACK
+	CREATE_FRAME_INTPACK_TO_SSBP	SIZE_OF_IDEPACK_WITHOUT_INTPACK
 	call	RamVars_GetSegmentToDS
 
 %ifdef MODULE_HOTKEYS
@@ -263,7 +263,7 @@ Int13h_ReturnFromHandlerWithoutStoringErrorCode:
 	; on INT 13h to enable interrupts.
 	or		BYTE [bp+IDEPACK.intpack+INTPACK.flags+1], (FLG_FLAGS_IF>>8)
 	mov		sp, bp	; This makes possible to exit anytime, no matter what is on stack
-	RESTORE_FRAME_INTPACK_FROM_SSBP		EXTRA_BYTES_FOR_INTPACK
+	RESTORE_FRAME_INTPACK_FROM_SSBP		SIZE_OF_IDEPACK_WITHOUT_INTPACK
 
 
 ;--------------------------------------------------------------------

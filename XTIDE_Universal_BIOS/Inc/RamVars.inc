@@ -117,7 +117,7 @@ struc IDEPACK	; PIOVARS and MEMPIOVARS overwrite the first 7 bytes
 	.intpack				resb	INTPACK_size
 endstruc
 
-EXTRA_BYTES_FOR_INTPACK		EQU	(IDEPACK_size - INTPACK_size)
+SIZE_OF_IDEPACK_WITHOUT_INTPACK		EQU	(IDEPACK_size - INTPACK_size)
 
 
 %endif ; RAMVARS_INC
