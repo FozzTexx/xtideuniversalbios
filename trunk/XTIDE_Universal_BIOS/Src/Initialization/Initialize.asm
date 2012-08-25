@@ -118,5 +118,5 @@ Initialize_AndDetectDrives:
 .ResetDetectedDrives:
 	call	Idepack_FakeToSSBP
 	call	AH0h_ResetAllOurHardDisksAtTheEndOfDriveInitialization
-	add		sp, BYTE EXTRA_BYTES_FOR_INTPACK
+	add		sp, BYTE SIZE_OF_IDEPACK_WITHOUT_INTPACK
 	ret

@@ -62,7 +62,7 @@ IdeCommand_ResetMasterAndSlaveController:
 ;		AH:		INT 13h Error Code
 ;		CF:		Cleared if success, Set if error
 ;	Corrupts registers:
-;		AL, BL, CX, DX, SI, DI, ES
+;		AL, BX, CX, DX, SI, DI, ES
 ;--------------------------------------------------------------------
 IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 	; Create fake DPT to be able to use Device.asm functions
@@ -73,7 +73,7 @@ IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 	mov		BYTE [di+DPT_ATA.bBlockSize], 1	; Block = 1 sector
 	call	IdeDPT_StoreDeviceTypeFromIdevarsInCSBPtoDPTinDSDI
 
-	; Wait until drive motors have reached max speed
+	; Wait until drive motors have reached full speed
 	cmp		bp, BYTE ROMVARS.ideVars0		; First controller?
 	jne		SHORT .SkipLongWaitSinceDriveIsNotPrimaryMaster
 	test	bh, FLG_DRVNHEAD_DRV			; Wait already done for Master
@@ -87,7 +87,9 @@ IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 
 %ifdef MODULE_8BIT_IDE
 	; Enable 8-bit PIO mode for Lo-tech XT-CF
+	push	si
 	call	AH9h_Enable8bitPioModeForXTCF
+	pop		si
 	jc		SHORT .FailedToSet8bitMode
 %endif
 
@@ -99,7 +101,7 @@ IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 
 	; Clean stack and return
 .FailedToSet8bitMode:
-	lea		sp, [bp+EXTRA_BYTES_FOR_INTPACK]	; This assumes BP hasn't changed between Idepack_FakeToSSBP and here
+	lea		sp, [bp+SIZE_OF_IDEPACK_WITHOUT_INTPACK]	; This assumes BP hasn't changed between Idepack_FakeToSSBP and here
 	pop		bp
 	ret
 

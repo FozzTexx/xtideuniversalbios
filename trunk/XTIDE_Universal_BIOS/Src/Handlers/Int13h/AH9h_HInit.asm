@@ -261,6 +261,7 @@ SetErrorFlagFromALwithErrorCodeInAH:
 ; AH9h_Enable8bitPioModeForXTCF
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT
+;		SS:BP:	Ptr to IDEPACK
 ;	Returns:
 ;		AH:		Int 13h return status
 ;		CF:		0 if successful, 1 if error
