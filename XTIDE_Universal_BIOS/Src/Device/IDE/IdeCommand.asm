@@ -202,20 +202,15 @@ IdeCommand_OutputWithParameters:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 IdeCommand_SelectDrive:
-%if 0
-	; Wait until neither Master or Slave Drive is busy
-	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_BSY, FLG_STATUS_BSY)
-	cmp		BYTE [bp+IDEPACK.bCommand], COMMAND_IDENTIFY_DEVICE
-	eCMOVE	bh, TIMEOUT_IDENTIFY_DEVICE
-	call	IdeWait_PollStatusFlagInBLwithTimeoutInBH
-%endif
+	; We use different timeout value when detecting drives.
+	; This prevents unnecessary long delays when drive is not present.
+	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRDY, FLG_STATUS_DRDY)
+	cmp		WORD [RAMVARS.wDrvDetectSignature], RAMVARS_DRV_DETECT_SIGNATURE
+	eCMOVE	bh, TIMEOUT_SELECT_DRIVE_DURING_DRIVE_DETECTION
 
 	; Select Master or Slave Drive
 	mov		al, [bp+IDEPACK.bDrvAndHead]
 	OUTPUT_AL_TO_IDE_REGISTER	DRIVE_AND_HEAD_SELECT_REGISTER
-	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRDY, FLG_STATUS_DRDY)
-	cmp		BYTE [bp+IDEPACK.bCommand], COMMAND_IDENTIFY_DEVICE
-	eCMOVE	bh, TIMEOUT_IDENTIFY_DEVICE
 	call	IdeWait_PollStatusFlagInBLwithTimeoutInBH
 
 	; Ignore errors from IDE Error Register (set by previous command)

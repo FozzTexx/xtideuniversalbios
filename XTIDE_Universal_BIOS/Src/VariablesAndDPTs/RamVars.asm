@@ -74,7 +74,8 @@ RamVars_Initialize:
 	mov		cx, RAMVARS_size
 	xor		di, di
 	call	Memory_ZeroESDIwithSizeInCX
-	mov		WORD [RAMVARS.wSignature], RAMVARS_SIGNATURE
+	mov		WORD [RAMVARS.wDrvDetectSignature], RAMVARS_DRV_DETECT_SIGNATURE
+	mov		WORD [RAMVARS.wSignature], RAMVARS_RAM_SIGNATURE
 	; Fall to .InitializeInt13hStackChangeVariables
 
 ;--------------------------------------------------------------------
@@ -150,7 +151,7 @@ ALIGN JUMP_ALIGN
 .LoopStolenKBs:
 	mov		ds, di					; EBDA segment to DS
 	add		di, BYTE 64				; DI to next stolen kB
-	cmp		WORD [RAMVARS.wSignature], RAMVARS_SIGNATURE
+	cmp		WORD [RAMVARS.wSignature], RAMVARS_RAM_SIGNATURE
 	jne		SHORT .LoopStolenKBs	; Loop until sign found (always found eventually)
 	ret
 
