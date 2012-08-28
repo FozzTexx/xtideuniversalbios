@@ -227,6 +227,7 @@ InitializePiovarsInSSBPwithSectorCountInAH:
 ;--------------------------------------------------------------------
 ; ReadBlockFromXtideRev1		XTIDE rev 1
 ; ReadBlockFromXtideRev2		XTIDE rev 2 or rev 1 with swapped A0 and A3 (chuck-mod)
+; ReadBlockFrom8bitDataPort		CF-XT when using 8-bit PIO
 ; ReadBlockFrom16bitDataPort	Normal 16-bit IDE
 ; ReadBlockFrom32bitDataPort	VLB/PCI 32-bit IDE
 ;	Parameters:
@@ -240,86 +241,91 @@ InitializePiovarsInSSBPwithSectorCountInAH:
 ;--------------------------------------------------------------------
 %ifdef MODULE_8BIT_IDE
 
-ALIGN JUMP_ALIGN
-ReadBlockFromXtideRev1:
-	UNROLL_SECTORS_IN_CX_TO_QWORDS
-	mov		bl, 8		; Bit mask for toggling data low/high reg
-ALIGN JUMP_ALIGN
-.InswLoop:
-	XTIDE_INSW
-	XTIDE_INSW
-	XTIDE_INSW
-	XTIDE_INSW
-	loop	.InswLoop
-	ret
+	ALIGN JUMP_ALIGN
+	ReadBlockFromXtideRev1:
+		UNROLL_SECTORS_IN_CX_TO_QWORDS
+		mov		bl, 8		; Bit mask for toggling data low/high reg
+	ALIGN JUMP_ALIGN
+	.InswLoop:
+		XTIDE_INSW
+		XTIDE_INSW
+		XTIDE_INSW
+		XTIDE_INSW
+		loop	.InswLoop
+		ret
 
-;--------------------------------------------------------------------
-%ifndef USE_186			; 8086/8088 compatible WORD read
-ALIGN JUMP_ALIGN
-ReadBlockFromXtideRev2:
-	UNROLL_SECTORS_IN_CX_TO_QWORDS
-ALIGN JUMP_ALIGN
-.ReadNextQword:
-	in		ax, dx		; Read 1st WORD
-	stosw				; Store 1st WORD to [ES:DI]
-	in		ax, dx
-	stosw				; 2nd
-	in		ax, dx
-	stosw				; 3rd
-	in		ax, dx
-	stosw				; 4th
-	loop	.ReadNextQword
-	ret
-%endif
+	;--------------------------------------------------------------------
+	%ifndef USE_186			; 8086/8088 compatible WORD read
+		ALIGN JUMP_ALIGN
+		ReadBlockFromXtideRev2:
+			UNROLL_SECTORS_IN_CX_TO_QWORDS
+		ALIGN JUMP_ALIGN
+		.ReadNextQword:
+			in		ax, dx		; Read 1st WORD
+			stosw				; Store 1st WORD to [ES:DI]
+			in		ax, dx
+			stosw				; 2nd
+			in		ax, dx
+			stosw				; 3rd
+			in		ax, dx
+			stosw				; 4th
+			loop	.ReadNextQword
+			ret
+	%endif
 
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-ReadBlockFromXTCF:
-	UNROLL_SECTORS_IN_CX_TO_DWORDS
-ALIGN JUMP_ALIGN
-.ReadNextDword:
-	in		al, dx		; Read 1st BYTE
-	stosb				; Store 1st BYTE to [ES:DI]
-	in		al, dx
-	stosb
+	;--------------------------------------------------------------------
+	%ifdef USE_186
+		ALIGN JUMP_ALIGN
+		ReadBlockFrom8bitDataPort:
+			shl		cx, 9		; Sectors to BYTEs
+			rep insb
+			ret
 
-	in		al, dx
-	stosb
-	in		al, dx
-	stosb
-	loop	.ReadNextDword
-	ret
+	%else ; If 8088/8086
+			ALIGN JUMP_ALIGN
+		ReadBlockFrom8bitDataPort:
+			UNROLL_SECTORS_IN_CX_TO_DWORDS
+		ALIGN JUMP_ALIGN
+		.ReadNextDword:
+			in		al, dx		; Read 1st BYTE
+			stosb				; Store 1st BYTE to [ES:DI]
+			in		al, dx
+			stosb
 
+			in		al, dx
+			stosb
+			in		al, dx
+			stosb
+			loop	.ReadNextDword
+			ret
+	%endif
 %endif	; MODULE_8BIT_IDE
 
 ;--------------------------------------------------------------------
 %ifdef USE_186
-ALIGN JUMP_ALIGN
-ReadBlockFrom16bitDataPort:
-	xchg	cl, ch		; Sectors to WORDs
-	rep
-	db		6Dh			; INSW (we want this in XT build)
-	ret
+	ALIGN JUMP_ALIGN
+	ReadBlockFrom16bitDataPort:
+		xchg	cl, ch		; Sectors to WORDs
+		rep insw
+		ret
 %endif
 
 ;--------------------------------------------------------------------
 %ifdef USE_AT
-ALIGN JUMP_ALIGN
-ReadBlockFrom32bitDataPort:
-	db		0C1h		; SHL
-	db		0E1h		; CX
-	db		7			; 7	(Sectors to DWORDs)
-	rep
-	db		66h			; Override operand size to 32-bit
-	db		6Dh			; INSW/INSD
-	ret
+	ALIGN JUMP_ALIGN
+	ReadBlockFrom32bitDataPort:
+		shl		cx, 7		; Sectors to DWORDs
+		rep
+		db		66h			; Override operand size to 32-bit
+		db		6Dh			; INSW/INSD
+		ret
 %endif
 
 
 ;--------------------------------------------------------------------
 ; WriteBlockToXtideRev1			XTIDE rev 1
 ; WriteBlockToXtideRev2			XTIDE rev 2 or rev 1 with swapped A0 and A3 (chuck-mod)
-; WriteBlockToFastXtide			Fast XTIDE (CPLD v2 project)
+; WriteBlockTo8bitDataPort		XT-CF when using 8-bit PIO
 ; WriteBlockTo16bitDataPort		Normal 16-bit IDE
 ; WriteBlockTo32bitDataPort		VLB/PCI 32-bit IDE
 ;	Parameters:
@@ -333,63 +339,72 @@ ReadBlockFrom32bitDataPort:
 ;--------------------------------------------------------------------
 %ifdef MODULE_8BIT_IDE
 
-ALIGN JUMP_ALIGN
-WriteBlockToXtideRev1:
-	push	ds
-	UNROLL_SECTORS_IN_CX_TO_QWORDS
-	mov		bl, 8		; Bit mask for toggling data low/high reg
-	push	es			; Copy ES...
-	pop		ds			; ...to DS
-ALIGN JUMP_ALIGN
-.OutswLoop:
-	XTIDE_OUTSW
-	XTIDE_OUTSW
-	XTIDE_OUTSW
-	XTIDE_OUTSW
-	loop	.OutswLoop
-	pop		ds
-	ret
+	ALIGN JUMP_ALIGN
+	WriteBlockToXtideRev1:
+		push	ds
+		UNROLL_SECTORS_IN_CX_TO_QWORDS
+		mov		bl, 8		; Bit mask for toggling data low/high reg
+		push	es			; Copy ES...
+		pop		ds			; ...to DS
+	ALIGN JUMP_ALIGN
+	.OutswLoop:
+		XTIDE_OUTSW
+		XTIDE_OUTSW
+		XTIDE_OUTSW
+		XTIDE_OUTSW
+		loop	.OutswLoop
+		pop		ds
+		ret
 
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-WriteBlockToXtideRev2:
-	UNROLL_SECTORS_IN_CX_TO_QWORDS
-	push	ds
-	push	es			; Copy ES...
-	pop		ds			; ...to DS
-ALIGN JUMP_ALIGN
-.WriteNextQword:
-	XTIDE_MOD_OUTSW
-	XTIDE_MOD_OUTSW
-	XTIDE_MOD_OUTSW
-	XTIDE_MOD_OUTSW
-	loop	.WriteNextQword
-	pop		ds
-	ret
+	;--------------------------------------------------------------------
+	ALIGN JUMP_ALIGN
+	WriteBlockToXtideRev2:
+		UNROLL_SECTORS_IN_CX_TO_QWORDS
+		push	ds
+		push	es			; Copy ES...
+		pop		ds			; ...to DS
+	ALIGN JUMP_ALIGN
+	.WriteNextQword:
+		XTIDE_MOD_OUTSW
+		XTIDE_MOD_OUTSW
+		XTIDE_MOD_OUTSW
+		XTIDE_MOD_OUTSW
+		loop	.WriteNextQword
+		pop		ds
+		ret
 
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-WriteBlockToXTCF:
-	UNROLL_SECTORS_IN_CX_TO_DWORDS
-	push	ds
-	push	es
-	pop		ds
-ALIGN JUMP_ALIGN
-.WriteNextDword:
-	lodsb				; Load 1st BYTE from [DS:SI]
-	out		dx, al		; Write 1st BYTE
-	lodsb
-	out		dx, al
+	;--------------------------------------------------------------------
+	%ifdef USE_186
+		ALIGN JUMP_ALIGN
+		WriteBlockTo8bitDataPort:
+			shl		cx, 9		; Sectors to BYTEs
+			es					; Source is ES segment
+			rep outsb
+			ret
 
-	lodsb
-	out		dx, al
-	lodsb
-	out		dx, al
-	loop	.WriteNextDword
-	pop		ds
-	ret
+	%else ; If 8088/8086
+		ALIGN JUMP_ALIGN
+		WriteBlockTo8bitDataPort:
+			UNROLL_SECTORS_IN_CX_TO_DWORDS
+			push	ds
+			push	es
+			pop		ds
+		ALIGN JUMP_ALIGN
+		.WriteNextDword:
+			lodsb				; Load 1st BYTE from [DS:SI]
+			out		dx, al		; Write 1st BYTE
+			lodsb
+			out		dx, al
+
+			lodsb
+			out		dx, al
+			lodsb
+			out		dx, al
+			loop	.WriteNextDword
+			pop		ds
+			ret
+	%endif
 %endif	; MODULE_8BIT_IDE
-
 
 ;--------------------------------------------------------------------
 %ifdef USE_AT
@@ -397,16 +412,13 @@ ALIGN JUMP_ALIGN
 WriteBlockTo16bitDataPort:
 	xchg	cl, ch		; Sectors to WORDs
 	es					; Source is ES segment
-	rep
-	db		6Fh			; OUTSW (we want this in XT build)
+	rep outsw
 	ret
 
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 WriteBlockTo32bitDataPort:
-	db		0C1h		; SHL
-	db		0E1h		; CX
-	db		7			; 7	(Sectors to DWORDs)
+	shl		cx, 7		; Sectors to DWORDs
 	es					; Source is ES segment
 	rep
 	db		66h			; Override operand size to 32-bit
@@ -421,7 +433,7 @@ ALIGN WORD_ALIGN
 g_rgfnPioRead:
 %ifdef MODULE_8BIT_IDE
 		dw		0							; 0, DEVICE_8BIT_JRIDE_ISA
-		dw		ReadBlockFromXTCF			; 1, DEVICE_8BIT_XTCF
+		dw		ReadBlockFrom8bitDataPort	; 1, DEVICE_8BIT_XTCF
 	%ifdef USE_186
 		dw		ReadBlockFrom16bitDataPort	; 2, DEVICE_8BIT_XTIDE_REV2
 	%else
@@ -441,7 +453,7 @@ g_rgfnPioRead:
 g_rgfnPioWrite:
 %ifdef MODULE_8BIT_IDE
 		dw		0							; 0, DEVICE_8BIT_JRIDE_ISA
-		dw		WriteBlockToXTCF			; 1, DEVICE_8BIT_XTCF
+		dw		WriteBlockTo8bitDataPort	; 1, DEVICE_8BIT_XTCF
 		dw		WriteBlockToXtideRev2		; 2, DEVICE_XTIDE_REV2
 		dw		WriteBlockToXtideRev1		; 3, DEVICE_XTIDE_REV1
 

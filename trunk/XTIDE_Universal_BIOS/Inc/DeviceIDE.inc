@@ -26,7 +26,7 @@ HSR1_RESET_WAIT_US		EQU		2100	; Delay must be at least 2 ms
 
 ; Polling timeout delays (system timer ticks, 1 tick = 54.9 ms)
 TIMEOUT_DRQ				EQU		255			;   14 s (some CF cards occasionally have long write delays)
-TIMEOUT_IDENTIFY_DEVICE	EQU		(500/55)	;  500 ms
+TIMEOUT_SELECT_DRIVE_DURING_DRIVE_DETECTION	EQU	(500/55)	;  500 ms
 TIMEOUT_MOTOR_STARTUP	EQU		(10000/55)	;   10 s
 TIMEOUT_MAXIMUM			EQU		255			; We would actually want 31 seconds here but I don't think there are so slow drives
 

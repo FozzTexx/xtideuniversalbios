@@ -36,8 +36,9 @@ struc RAMVARS
 	.wStackChangeDS		resb	2
 	.wNewStackOffset	resb	2
 %endif
+	.wDrvDetectSignature:			; Signature when BIOS is in drive detection mode
 	.fpOldI13h			resb	4	; Far pointer to old INT 13h handler
-	.wSignature			resb	2	; Sign for finding stolen 1 kiB
+	.wSignature			resb	2	; Sign for finding stolen 1...64 kiB
 	.bTimeoutTicksLeft	resb	1
 	.bLastTimeoutUpdate	resb	1
 
@@ -52,6 +53,11 @@ struc RAMVARS
 	.xlateVars			resb	XLATEVARS_size
 %endif
 endstruc
+
+; Note!!! .wDrvDetectSignature and .wSignature are intentionally in different locations.
+RAMVARS_RAM_SIGNATURE			EQU	"Xu"	; RAMVARS signature for .wSignature
+RAMVARS_DRV_DETECT_SIGNATURE	EQU	5A5Ah	; Signature when BIOS is in drive detection mode
+
 
 
 ; Variables for translating drive numbers.
@@ -82,7 +88,7 @@ endstruc
   %endif
 %endif
 
-RAMVARS_SIGNATURE		EQU	"Xu"	; RAMVARS signature for .wSignature
+
 
 ;
 ; IDEPACK NOTE: The first six bytes of this structure are directly put on the 
