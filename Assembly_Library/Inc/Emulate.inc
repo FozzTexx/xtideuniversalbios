@@ -464,18 +464,31 @@ ALIGN JUMP_ALIGN
 %macro eSHR_IM 2
 	eSHIFT_IM	%1, %2, shr
 %endmacro
+
 %macro eSHL_IM 2
+%ifdef USE_386
+	%if %2 = 1
+		add		%1, %1	; Same size but faster on 386 and 486. Fails if %1 is a memory operand.
+	%else
+		eSHIFT_IM	%1, %2, shl
+	%endif
+%else
 	eSHIFT_IM	%1, %2, shl
+%endif
 %endmacro
+
 %macro eROR_IM 2
 	eSHIFT_IM	%1, %2, ror
 %endmacro
+
 %macro eROL_IM 2
 	eSHIFT_IM	%1, %2, rol
 %endmacro
+
 %macro eRCR_IM 2
 	eSHIFT_IM	%1, %2, rcr
 %endmacro
+
 %macro eRCL_IM 2
 	eSHIFT_IM	%1, %2, rcl
 %endmacro

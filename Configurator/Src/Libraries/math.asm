@@ -103,11 +103,9 @@ Math_MulDWbyW:
 	jcxz	.RetZero			; If CX=0, return 0
 	push	bx
 	mov		bx, dx				; Copy hiword to BX
-	xor		dx, dx				; Zero DX for multiplication
 	mul		cx					; DX:AX = AX (loword) * CX (multiplier)
 	push	dx					; Push possible overflow
 	xchg	ax, bx				; => AX=old hiword, BX=new loword
-	xor		dx, dx				; Zero DX for division
 	mul		cx					; DX:AX = AX (hiword) * CX (multiplier)
 	pop		dx					; Pop possible overflow from first mul
 	add		dx, ax				; Add new hiword to overflow from first mul

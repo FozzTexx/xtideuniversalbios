@@ -1,41 +1,41 @@
-##################################################################################################
-# Makefile to build XTIDE Universal BIOS.                                                        #
-#                                                                                                #
-# Valid makefile targets are:                                                                    #
-# all       Removes existing files and builds binary files in \Build                             #
-# small     Builds 8 kiB binaries only (without checksum)                                        #
-# large     Builds 15 kiB binaries only (without checksum)                                       #
-# clean     Removes all files from \Build                                                        #
-# checksum* Builds all and then generates checksum byte to all binary files                      #
-# strings*  Compress src\Strings.asm to src\StringsCompressed.asm                                #
-#                                                                                                #
-# * at the end of target name means that Perl is required for the job.                           #
-# Build directory must be created manually if it does not exist.                                 #
-#                                                                                                #
-#                                                                                                #
-# Following modules can be included or excluded:                                                 #
-# MODULE_8BIT_IDE			Support for 8-BIT IDE cards like XTIDE                               #
-# MODULE_JRIDE              Support for JR-IDE/ISA                                               #
-# MODULE_ADVANCED_ATA       Native support for some VLB IDE controllers                          #
-# MODULE_BOOT_MENU          Boot Menu for selection of drive to boot from                        #
-# MODULE_EBIOS              Enhanced functions for accessing drives over 8.4 GB                  #
-# MODULE_HOTKEYS            Hotkey Bar to boot from any drive                                    #
-# MODULE_IRQ				IDE IRQ support                                                      #
-# MODULE_SERIAL             Virtual hard disks using serial port                                 #
-# MODULE_SERIAL_FLOPPY      Virtual floppy drives using serial port (requires MODULE_SERIAL)     #
-# MODULE_STRINGS_COMPRESSED Use compressed strings to save space                                 #
-# MODULE_FEATURE_SETS       Power Management support                                             #
-#                                                                                                #
-# Not modules but these affect the assembly:                                                     #
-# ELIMINATE_CGA_SNOW        Prevents CGA snowing at the cost of a few bytes                      #
-# RELOCATE_INT13H_STACK     Relocates INT 13h stack to top of stolen conventional memory         #
-# RESERVE_DIAGNOSTIC_CYLINDER Reserve one L-CHS cylinder for compatibility with old BIOSes       #
-# USE_186                   Use instructions supported by 80188/80186 and V20/V30 and later      #
-# USE_286                   Use instructions supported by 286 and later                          #
-# USE_386                   Use instructions supported by 386 and later                          #
-# USE_AT                    Use features supported on AT and later systems (not available on XT) #
-#                                                                                                #
-##################################################################################################
+####################################################################################################
+# Makefile to build XTIDE Universal BIOS.                                                          #
+#                                                                                                  #
+# Valid makefile targets are:                                                                      #
+# all       Removes existing files and builds binary files in \Build                               #
+# small     Builds 8 kiB binaries only (without checksum)                                          #
+# large     Builds 15 kiB binaries only (without checksum)                                         #
+# clean     Removes all files from \Build                                                          #
+# checksum* Builds all and then generates checksum byte to all binary files                        #
+# strings*  Compress src\Strings.asm to src\StringsCompressed.asm                                  #
+#                                                                                                  #
+# * at the end of target name means that Perl is required for the job.                             #
+# Build directory must be created manually if it does not exist.                                   #
+#                                                                                                  #
+#                                                                                                  #
+# Following modules can be included or excluded:                                                   #
+# MODULE_8BIT_IDE             Support for 8-BIT IDE cards like XTIDE                               #
+# MODULE_JRIDE                Support for JR-IDE/ISA                                               #
+# MODULE_ADVANCED_ATA         Native support for some VLB IDE controllers                          #
+# MODULE_BOOT_MENU            Boot Menu for selection of drive to boot from                        #
+# MODULE_EBIOS                Enhanced functions for accessing drives over 8.4 GB                  #
+# MODULE_HOTKEYS              Hotkey Bar to boot from any drive                                    #
+# MODULE_IRQ                  IDE IRQ support                                                      #
+# MODULE_SERIAL               Virtual hard disks using serial port                                 #
+# MODULE_SERIAL_FLOPPY        Virtual floppy drives using serial port (requires MODULE_SERIAL)     #
+# MODULE_STRINGS_COMPRESSED   Use compressed strings to save space                                 #
+# MODULE_FEATURE_SETS         Power Management support                                             #
+#                                                                                                  #
+# Not modules but these affect the assembly:                                                       #
+# ELIMINATE_CGA_SNOW          Prevents CGA snowing at the cost of a few bytes                      #
+# RELOCATE_INT13H_STACK       Relocates INT 13h stack to top of stolen conventional memory         #
+# RESERVE_DIAGNOSTIC_CYLINDER Reserve one L-CHS cylinder for compatibility with old BIOSes         #
+# USE_186                     Use instructions supported by 80188/80186 and V20/V30 and later      #
+# USE_286                     Use instructions supported by 286 and later                          #
+# USE_386                     Use instructions supported by 386 and later                          #
+# USE_AT                      Use features supported on AT and later systems (not available on XT) #
+#                                                                                                  #
+####################################################################################################
 
 ###########################################
 # Source files and destination executable #

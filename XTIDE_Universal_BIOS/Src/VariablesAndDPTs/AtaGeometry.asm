@@ -3,26 +3,26 @@
 ;					drives with more than 1024 cylinders.
 ;
 ; 					These algorithms are taken from: http://www.mossywell.com/boot-sequence
-; 					Take a look at it for more detailed information.		
+; 					Take a look at it for more detailed information.
 ;
 ;					This file is shared with BIOS Drive Information Tool.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 ;
-		
+
 ; Section containing code
 SECTION .text
 
@@ -32,7 +32,7 @@ SECTION .text
 ;	Parameters:
 ;		ES:SI:	Ptr to 512-byte ATA information read from the drive
 ;	Returns:
-;		BX:DX:AX:	48-bit sectohr count
+;		BX:DX:AX:	48-bit sector count
 ;		CL:			FLGL_DPT_LBA48 if LBA48 supported
 ;					Zero if only LBA28 is supported
 ;	Corrupts registers:
@@ -238,7 +238,7 @@ ConvertPCHfromAXBLtoEnhancedCHinAXBL:
 	cmp		ax, MAX_LCHS_CYLINDERS
 	jbe		SHORT ReturnLCHSinAXBLBH
 	shr		ax, 1		; Halve cylinders
-	shl		bl, 1		; Double heads
+	eSHL_IM	bl, 1		; Double heads
 	inc		cx			; Increment bit shift count
 	mov		dl, TRANSLATEMODE_LARGE
 	jmp		SHORT .ShiftIfMoreThan1024Cylinder
@@ -299,10 +299,9 @@ ConvertChsSectorCountFromDXAXtoLbaAssistedLCHSinAXBLBH:
 .CompareNextValidNumberOfHeads:
 	cmp		ax, cx
 	jbe		SHORT .NumberOfHeadsNowInCX
-	shl		cx, 1						; Double number of heads
-	test	ch, ch						; Reached 256 heads?
-	jz		SHORT .CompareNextValidNumberOfHeads
-	dec		cx							;  If so, limit heads to 255
+	eSHL_IM	cl, 1						; Double number of heads
+	jnz		SHORT .CompareNextValidNumberOfHeads	; Reached 256 heads?
+	dec		cl							;  If so, limit heads to 255
 .NumberOfHeadsNowInCX:
 	mov		bx, cx						; Number of heads are returned in BL
 	mov		bh, LBA_ASSIST_SPT			; Sectors per Track
