@@ -2,21 +2,21 @@
 ; Description	:	Functions for splitting menu lines during character output.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 ;
-		
+
 
 ; Section containing code
 SECTION .text
@@ -39,7 +39,7 @@ CharOutLineSplitter_PrepareForPrintingTextLines:
 
 	; Get last text line column offset to AX
 	call	MenuLocation_GetMaxTextLineLengthToAX
-	shl		ax, 1			; Characters to BYTEs
+	eSHL_IM	ax, 1			; Characters to BYTEs
 	add		ax, dx
 
 	xchg	ax, dx			; AL = First text line column offset
@@ -61,7 +61,7 @@ ALIGN MENU_JUMP_ALIGN
 CharOutLineSplitter_GetFirstBorderLineColumnOffsetToAX:
 	call	MenuLocation_GetTitleBordersTopLeftCoordinatesToAX
 	xor		ah, ah
-	shl		ax, 1
+	eSHL_IM	ax, 1
 	ret
 
 
@@ -81,7 +81,7 @@ CharOutLineSplitter_IsCursorAtTheEndOfTextLine:
 	push	ax
 
 	mov		dl, [VIDEO_BDA.wColumns]
-	shl		dl, 1			; DX = bytes per row
+	eSHL_IM	dl, 1			; DX = bytes per row
 	mov		ax, di
 	div		dl				; AL = row index, AH = column index
 	cmp		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.wCharOutParam+1], ah

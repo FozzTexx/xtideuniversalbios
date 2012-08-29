@@ -243,6 +243,7 @@ AH9h_InitializeDriveForUse:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+DoNotEnable8bitMode:
 IgnoreInvalidCommandError:
 	xor		ah, ah	; Clears CF
 SetErrorFlagFromALwithErrorCodeInAH:
@@ -269,12 +270,10 @@ SetErrorFlagFromALwithErrorCodeInAH:
 ;		AL, BX, CX, DX, SI
 ;--------------------------------------------------------------------
 AH9h_Enable8bitPioModeForXTCF:
-	eMOVZX	bx, BYTE [di+DPT.bIdevarsOffset]
+	eMOVZX	bx, [di+DPT.bIdevarsOffset]
 	cmp		BYTE [cs:bx+IDEVARS.bDevice], DEVICE_8BIT_XTCF
-	je		SHORT .Enable8bitMode
-	xor		ah, ah		; Do nothing for this device
-	ret
-.Enable8bitMode:
+	jne		SHORT DoNotEnable8bitMode
+
 	mov		si, FEATURE_ENABLE_8BIT_PIO_TRANSFER_MODE
 	jmp		AH23h_SetControllerFeatures
 %endif ; MODULE_8BIT_IDE

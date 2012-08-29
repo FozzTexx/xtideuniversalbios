@@ -3,20 +3,20 @@
 ;					IDENTIFY DEVICE command.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
-;		
+;
 
 ; Section containing code
 SECTION .text
@@ -27,7 +27,7 @@ SECTION .text
 ;		ES:SI:	Ptr to 512-byte ATA information read from the drive
 ;	Returns:
 ;		CF:		Set if failed to verify ATA-ID
-;				Cleared if ATA-ID verified succesfully
+;				Cleared if ATA-ID verified successfully
 ;	Corrupts registers:
 ;		AX, BX, CX
 ;--------------------------------------------------------------------
@@ -43,11 +43,11 @@ AtaID_VerifyFromESSI:
 	mov		cx, MAX_VALID_PCHS_CYLINDERS
 	call	.CompareCHorSfromOffsetBXtoMaxValueInCX
 
-	add		bx, BYTE ATA1.wHeadCnt - ATA1.wCylCnt
+	mov		bl, ATA1.wHeadCnt & 0FFh
 	mov		cx, MAX_VALID_PCHS_HEADS
 	call	.CompareCHorSfromOffsetBXtoMaxValueInCX
 
-	add		bx, BYTE ATA1.wSPT - ATA1.wHeadCnt
+	mov		bl, ATA1.wSPT & 0FFh
 	mov		cl, MAX_VALID_PCHS_SECTORS_PER_TRACK
 	call	.CompareCHorSfromOffsetBXtoMaxValueInCX
 
@@ -68,8 +68,7 @@ AtaID_VerifyFromESSI:
 
 	; Check checksum byte
 	mov		cx, ATA6_size
-	call	Memory_SumCXbytesFromESSItoAL
-	test	al, al
+	call	Memory_SumCXbytesFromESSItoAL		; Returns with ZF set according to result
 	jnz		SHORT .FailedToVerifyAtaID
 
 	; ATA-ID is now verified to be valid
@@ -118,7 +117,7 @@ AtaID_GetMaxPioModeToAXandMinCycleTimeToCX:
 	; Get PIO mode and cycle time for PIO 0...2
 	mov		bx, [es:si+ATA1.bPioMode]
 	mov		ax, bx					; AH = 0, AL = PIO mode 0, 1 or 2
-	shl		bx, 1					; Shift for WORD lookup
+	eSHL_IM	bx, 1					; Shift for WORD lookup
 	mov		cx, [cs:bx+.rgwPio0to2CycleTimeInNanosecs]
 
 	; Check if IORDY is supported
@@ -186,18 +185,16 @@ AtaID_GetRecoveryTimeToAXfromPioModeInBXandCycleTimeInCX:
 ;		Nothing
 ;--------------------------------------------------------------------
 AtaID_GetActiveTimeToAXfromPioModeInBX:
-	shl		bx, 1
-	mov		ax, [cs:bx+.rgwPioModeToActiveTimeNs]
-	shr		bx, 1
+	eMOVZX	ax, [cs:bx+.rgbPioModeToActiveTimeNs]
 	ret
 
-.rgwPioModeToActiveTimeNs:
-	dw		PIO_0_MIN_ACTIVE_TIME_NS
-	dw		PIO_1_MIN_ACTIVE_TIME_NS
-	dw		PIO_2_MIN_ACTIVE_TIME_NS
-	dw		PIO_3_MIN_ACTIVE_TIME_NS
-	dw		PIO_4_MIN_ACTIVE_TIME_NS
-	dw		PIO_5_MIN_ACTIVE_TIME_NS
-	dw		PIO_6_MIN_ACTIVE_TIME_NS
+.rgbPioModeToActiveTimeNs:
+	db		PIO_0_MIN_ACTIVE_TIME_NS
+	db		PIO_1_MIN_ACTIVE_TIME_NS
+	db		PIO_2_MIN_ACTIVE_TIME_NS
+	db		PIO_3_MIN_ACTIVE_TIME_NS
+	db		PIO_4_MIN_ACTIVE_TIME_NS
+	db		PIO_5_MIN_ACTIVE_TIME_NS
+	db		PIO_6_MIN_ACTIVE_TIME_NS
 
 %endif ; MODULE_ADVANCED_ATA

@@ -5,18 +5,18 @@
 ;					working instead with precompiled and slightly compressed strings.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 ;
 
@@ -193,7 +193,7 @@ DisplayFormat_ParseCharacters:
 	call 	DisplayPrint_CharacterFromAL
 
 .process_after_output:
-	shl		ch,1								; check high order bits for end of string or space
+	eSHL_IM	ch,1								; check high order bits for end of string or space
 	jns		short DisplayFormatCompressed_ret
 	jnc		.decode
 	mov		al,' '
@@ -207,7 +207,7 @@ DisplayFormatCompressed_TranslatesAndFormats:
 ; This routine is here (above DisplayFormat_ParseCharacters) to reduce the amount of code between
 ; DisplayFormatCompressed_BaseFormatOffset and jump targets (must fit in 256 bytes)
 ;
-	shl		ch,1				; setup ch for later testing of null in .process_after_output
+	eSHL_IM	ch,1				; setup ch for later testing of null in .process_after_output
 	and		ax,0001fh			; also clears AH for addition with BX and DX below
 
 	mov		bx,StringsCompressed_TranslatesAndFormats	; calculate offset of translation/formats offset byte

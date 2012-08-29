@@ -2,20 +2,20 @@
 ; Description	:	Functions for memory access.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
-;		
+;
 
 ; Section containing code
 SECTION .text
@@ -150,17 +150,22 @@ Memory_ReserveCXbytesFromStackToDSSI:
 ;		ES:SI:	Ptr to buffer containing the bytes to sum
 ;	Returns:
 ;		AL:		Sum of bytes
+;		ZF:		Set if result is zero
+;				Cleared if result is non-zero
 ;	Corrupts registers:
 ;		CX
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDECFG
 ALIGN JUMP_ALIGN
 Memory_SumCXbytesFromESSItoAL:
 	push	si
+	dec		si
 	xor		al, al
 ALIGN JUMP_ALIGN
 .AddNextByteToAL:
-	add		al, [es:si]
 	inc		si
+	add		al, [es:si]
 	loop	.AddNextByteToAL
 	pop		si
 	ret
+%endif

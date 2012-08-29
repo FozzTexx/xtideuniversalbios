@@ -78,7 +78,7 @@ ALIGN JUMP_ALIGN
 	%endif
 ALIGN JUMP_ALIGN
 .ShiftNextBit:
-	shl		ax, 1
+	eSHL_IM	ax, 1
 	rcl		dx, 1
 	loop	.ShiftNextBit
 %endmacro

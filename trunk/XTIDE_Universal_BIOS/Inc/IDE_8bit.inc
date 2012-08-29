@@ -3,18 +3,18 @@
 ;					IDE controllers.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 ;
 
@@ -24,10 +24,11 @@
 ;--------------------------------------------------------------------
 ; UNROLL_SECTORS_IN_CX_TO_DWORDS
 ; UNROLL_SECTORS_IN_CX_TO_QWORDS
+; UNROLL_SECTORS_IN_CX_TO_OWORDS
 ;	Parameters:
 ;		CX:		Number of sectors in block
 ;	Returns:
-;		CX:		Number of DWORDs or QWORDs in block
+;		CX:		Number of DWORDs, QWORDs or OWORDs in block
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
@@ -45,6 +46,15 @@
 	shl		cx, 6
 %else
 	UNROLL_SECTORS_IN_CX_TO_DWORDS
+	shr		cx, 1
+%endif
+%endmacro
+
+%macro UNROLL_SECTORS_IN_CX_TO_OWORDS 0
+%ifdef USE_186
+	shl		cx, 5
+%else
+	UNROLL_SECTORS_IN_CX_TO_QWORDS
 	shr		cx, 1
 %endif
 %endmacro

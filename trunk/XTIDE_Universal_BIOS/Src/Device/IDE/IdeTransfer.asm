@@ -2,20 +2,20 @@
 ; Description	:	IDE Device transfer functions.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
-;		
+;
 
 ; Structure containing variables for PIO transfer functions.
 ; This struct must not be larger than IDEPACK without INTPACK.
@@ -118,7 +118,7 @@ CheckErrorsAfterTransferringLastBlock:
 	pop		cx	; [bp+PIOVARS.bSectorsLeft]
 	jc		SHORT ReturnWithTransferErrorInAH
 
-	; All sectors succesfully transferred
+	; All sectors successfully transferred
 	add		cx, [bp+PIOVARS.bSectorsDone]		; Never sets CF
 	ret
 
@@ -243,14 +243,13 @@ InitializePiovarsInSSBPwithSectorCountInAH:
 
 	ALIGN JUMP_ALIGN
 	ReadBlockFromXtideRev1:
-		UNROLL_SECTORS_IN_CX_TO_QWORDS
+		UNROLL_SECTORS_IN_CX_TO_OWORDS
 		mov		bl, 8		; Bit mask for toggling data low/high reg
 	ALIGN JUMP_ALIGN
 	.InswLoop:
+	%rep 8	; WORDs
 		XTIDE_INSW
-		XTIDE_INSW
-		XTIDE_INSW
-		XTIDE_INSW
+	%endrep
 		loop	.InswLoop
 		ret
 
@@ -258,18 +257,14 @@ InitializePiovarsInSSBPwithSectorCountInAH:
 	%ifndef USE_186			; 8086/8088 compatible WORD read
 		ALIGN JUMP_ALIGN
 		ReadBlockFromXtideRev2:
-			UNROLL_SECTORS_IN_CX_TO_QWORDS
+			UNROLL_SECTORS_IN_CX_TO_OWORDS
 		ALIGN JUMP_ALIGN
-		.ReadNextQword:
-			in		ax, dx		; Read 1st WORD
-			stosw				; Store 1st WORD to [ES:DI]
-			in		ax, dx
-			stosw				; 2nd
-			in		ax, dx
-			stosw				; 3rd
-			in		ax, dx
-			stosw				; 4th
-			loop	.ReadNextQword
+		.ReadNextOword:
+		%rep 8	; WORDs
+			in		ax, dx		; Read WORD
+			stosw				; Store WORD to [ES:DI]
+		%endrep
+			loop	.ReadNextOword
 			ret
 	%endif
 
@@ -282,21 +277,16 @@ InitializePiovarsInSSBPwithSectorCountInAH:
 			ret
 
 	%else ; If 8088/8086
-			ALIGN JUMP_ALIGN
-		ReadBlockFrom8bitDataPort:
-			UNROLL_SECTORS_IN_CX_TO_DWORDS
 		ALIGN JUMP_ALIGN
-		.ReadNextDword:
-			in		al, dx		; Read 1st BYTE
-			stosb				; Store 1st BYTE to [ES:DI]
-			in		al, dx
-			stosb
-
-			in		al, dx
-			stosb
-			in		al, dx
-			stosb
-			loop	.ReadNextDword
+		ReadBlockFrom8bitDataPort:
+			UNROLL_SECTORS_IN_CX_TO_OWORDS
+		ALIGN JUMP_ALIGN
+		.ReadNextOword:
+		%rep 16	; BYTEs
+			in		al, dx		; Read BYTE
+			stosb				; Store BYTE to [ES:DI]
+		%endrep
+			loop	.ReadNextOword
 			ret
 	%endif
 %endif	; MODULE_8BIT_IDE
@@ -348,10 +338,9 @@ InitializePiovarsInSSBPwithSectorCountInAH:
 		pop		ds			; ...to DS
 	ALIGN JUMP_ALIGN
 	.OutswLoop:
+	%rep 4	; WORDs
 		XTIDE_OUTSW
-		XTIDE_OUTSW
-		XTIDE_OUTSW
-		XTIDE_OUTSW
+	%endrep
 		loop	.OutswLoop
 		pop		ds
 		ret
@@ -365,10 +354,9 @@ InitializePiovarsInSSBPwithSectorCountInAH:
 		pop		ds			; ...to DS
 	ALIGN JUMP_ALIGN
 	.WriteNextQword:
+	%rep 4	; WORDs
 		XTIDE_MOD_OUTSW
-		XTIDE_MOD_OUTSW
-		XTIDE_MOD_OUTSW
-		XTIDE_MOD_OUTSW
+	%endrep
 		loop	.WriteNextQword
 		pop		ds
 		ret
@@ -391,15 +379,10 @@ InitializePiovarsInSSBPwithSectorCountInAH:
 			pop		ds
 		ALIGN JUMP_ALIGN
 		.WriteNextDword:
-			lodsb				; Load 1st BYTE from [DS:SI]
-			out		dx, al		; Write 1st BYTE
-			lodsb
-			out		dx, al
-
-			lodsb
-			out		dx, al
-			lodsb
-			out		dx, al
+		%rep 4	; BYTEs
+			lodsb				; Load BYTE from [DS:SI]
+			out		dx, al		; Write BYTE
+		%endrep
 			loop	.WriteNextDword
 			pop		ds
 			ret

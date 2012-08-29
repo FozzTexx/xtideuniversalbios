@@ -120,7 +120,7 @@ CheckErrorsAfterTransferringLastMemoryMappedBlock:
 	pop		cx	; [bp+MEMPIOVARS.bSectorsLeft]
 	jc		SHORT ReturnWithMemoryIOtransferErrorInAH
 
-	; All rectors succesfully transferred
+	; All sectors successfully transferred
 	add		cx, [bp+PIOVARS.bSectorsDone]		; Never sets CF
 	ret
 
