@@ -1,8 +1,4 @@
-; File name		:	DosFunctions.inc
 ; Project name	:	AssemblyLibrary
-; Created date	:	1.9.2010
-; Last update	:	3.1.2011
-; Author		:	Tomi Tilli
 ; Description	:	Defines for MS-DOS functions.
 %ifndef DOS_FUNCTIONS_INC
 %define DOS_FUNCTIONS_INC
@@ -18,6 +14,7 @@ GET_CURRENT_DEFAULT_DRIVE							EQU		19h
 GET_DISK_TRANSFER_AREA_ADDRESS						EQU		2Fh
 GET_DOS_DRIVE_PARAMETER_BLOCK_FOR_SPECIFIC_DRIVE	EQU		32h
 SET_CURRENT_DIRECTORY								EQU		3Bh
+CREATE_OR_TRUNCATE_FILE								EQU		3Ch
 OPEN_EXISTING_FILE									EQU		3Dh
 CLOSE_FILE											EQU		3Eh
 READ_FROM_FILE_OR_DEVICE							EQU		3Fh

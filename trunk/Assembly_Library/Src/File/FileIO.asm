@@ -22,6 +22,26 @@
 SECTION .text
 
 ;--------------------------------------------------------------------
+; FileIO_CreateWithPathInDSSIandAttributesInCX
+;	Parameters:
+;		CX:		File attribute flags
+;		DS:SI:	Ptr to NULL terminated path or file name
+;	Returns:
+;		AX:		DOS error code if CF set
+;		BX:		File handle if CF cleared
+;		CF:		Clear if file opened successfully
+;				Set if error
+;	Corrupts registers:
+;		AX, BX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+FileIO_CreateWithPathInDSSIandAttributesInCX:
+	xchg	dx, si		; Path now in DS:DX
+	mov		ah, CREATE_OR_TRUNCATE_FILE
+	jmp		SHORT CreateOrOpenFile
+
+
+;--------------------------------------------------------------------
 ; FileIO_OpenWithPathInDSSIandFileAccessInAL
 ;	Parameters:
 ;		AL:		FILE_ACCESS.(mode)
@@ -38,6 +58,7 @@ ALIGN JUMP_ALIGN
 FileIO_OpenWithPathInDSSIandFileAccessInAL:
 	xchg	dx, si		; Path now in DS:DX
 	mov		ah, OPEN_EXISTING_FILE
+CreateOrOpenFile:
 	int		DOS_INTERRUPT_21h
 	xchg	si, dx
 	mov		bx, ax		; Copy file handle to BX
