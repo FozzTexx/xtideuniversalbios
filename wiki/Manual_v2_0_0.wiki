@@ -218,7 +218,7 @@ F8 calls software interrupt 18h. This starts IBM ROM Basic, ROM DOS or displays 
 
 DOS requires that it is loaded from the first floppy drive (00h) or the first hard disk (80h) in the system. XTIDE Universal BIOS translates drive numbers to make booting possible from any floppy drive or hard disk. Drive number translation is implemented with a simple swapping method: selected drive will be swapped with first drive and vice versa. For example drive 81h (Second hard drive) would be translated to 80h (First hard drive) and 80h would be translated to 81h. Drive swapping for floppy drives and hard disks are handled separately to make possible to install DOS from any floppy drive to any hard disk.
 
----
+----
 = Boot menu =
 
 Using the boot menu is optional and it is not included in official 8 kiB builds. Boot menu does not offer any more functionality than hotkeys except to display drive information. Drive can be selected with Up and Down arrows. Home, End, PgUp and PgDn keys can speed up selection if there are many drives in the boot menu. Press Enter to boot from selected drive.
@@ -237,11 +237,9 @@ The boot menu can display a little bit of information about the drive:
    This shows the drive capacity. This is the same as reported by the drive unless you have specified CHS or LBA manually. Capacity is read from INT 13h AH=08h for drives not handled by XTIDE Universal BIOS.
   * Addr.
    This shows the current addressing mode:
-    * L-CHS is used for drives with 1024 or less cylinders (504 MiB / 528 MB and smaller drives). L-CHS is the fastest mode since no address translations are required.
-    * P-CHS addressing is used for drives without LBA support and 1025 or more cylinders. It is unlikely such drives exists so P-CHS addressing is used if you manually specify CHS parameters with 1025 or more cylinders. P-CHS addressing is only a bit slower than L-CHS addressing.
-    * LBA28 is used when the drive supports LBA and has a capacity of at most 128 GiB / 137 GB.
-    * LBA48 is used for drives larger than 128 GiB / 137 GB.
-   LBA modes are the slowest but the difference cannot be noticed on an AT system. There is no difference in performance between LBA28 and LBA48. EBIOS functions (support for drives larger than 7.8 GiB / 8.4 GB) is available only when LBA addressing is used.
+    * NORMAL is used for drives with 1024 or less cylinders (504 MiB / 528 MB and smaller drives). NORMAL is the fastest mode since no address translations are required.
+    * LARGE is used for drives with 1025...8192 cylinders. LARGE addressing mode L-CHS parameters are generated with Revised Enhanced CHS calculation algorithm. LARGE addressing mode can use LBA if drive supports it.
+    * LBA is used for drives with 8193 or more cylinders and LBA support. L-CHS parameters are generated with Assisted LBA algorithm.
   * Block
    Shows the maximum number of sectors supported in a single multi-sector transfer. The larger the better. 1 means that block mode is disabled or not supported. CF cards usually supports block mode commands but do not allow blocks larger than 1 sector.
   * Bus
@@ -305,6 +303,7 @@ Known to happen with 0.90 dated 4-30-02 when using user defined LBA. Change FORM
 
 = Other known problems =
   * Flash utility hung the PC when saving settings on one occasion (maybe because the FDD entry point was via the BIOS just over-written?)
+  * Lo-tech XT-CF support won't work with final product. Support will be updated when XT-CF is ready.
 
 
 == Problems with Compact Flash cards and microdrives ==
