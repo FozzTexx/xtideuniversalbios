@@ -66,7 +66,7 @@ MODULE_STRINGS_COMPRESSED, MODULE_HOTKEYS, MODULE_EBIOS, MODULE_FEATURE_SETS and
 
 == Important if you are upgrading from any previous XTIDE Universal BIOS version ==
 
-The new v2.0.0 beta 2 version, like most other BIOSes, adheres to the Phoenix Enhanced Disk Drive Specification. The older v1.x.x versions and v2.0.0 beta 1 do NOT - they have a bugs in that they may generate different L-CHS parameters for many drives. If you move a drive handled by a v1.x.x or v2.0.0 beta 1 BIOS to another system or upgrade to v2.x.x you risk data corruption if different L-CHS parameters are used.
+The new v2.0.0 beta 2 version, like most other BIOSes, adheres to the Phoenix Enhanced Disk Drive Specification. The older v1.x.x versions and v2.0.0 beta 1 do NOT - they may generate different L-CHS parameters for many drives. If you move a drive handled by a v1.x.x or v2.0.0 beta 1 BIOS to another system or upgrade to v2.x.x you risk data corruption if different L-CHS parameters are used.
 
 IMPORTANT! This means that, after upgrading to XTIDE Universal BIOS v2.0.0 beta 2, you need to re-create and format any partitions on drives handled by this BIOS.
 
@@ -146,6 +146,8 @@ Some menu items appear only when needed to make configuring easier.
    This menu item will appear only when "Full operating mode" is enabled. Leave it at the default unless you need to enable "Full operating mode" on Tandy 1000 models with 640k or less RAM. Setting this to 33 (almost always enough) or 65 (always enough) will reserve the top of RAM to Tandy video circuitry in addition to the XTIDE Universal BIOS variables thus avoiding a conflict between the two.
   * IDE controllers [default=1 for XT builds, 2 for AT builds]
    Number of IDE controllers to be searched by XTIDE Universal BIOS. The maximum is 4 if "Full operating mode" is enabled. Otherwise the maximum is 2.
+  * Power Management [default=Disabled]
+   This menu item opens up a submenu where you can select the amount of time before idling harddrives should enter standby mode (i.e. stop spinning). This setting applies only to drives controlled by XTIDE Universal BIOS and requires that the drive(s) supports the Power Management feature set. Harddrives that do not support Power Management (only very old drives) will just keep spinning. Note that this option will be completely ignored if the BIOS has been built without MODULE_FEATURE_SETS.
 
 === Menu items on "Boot settings" submenu ===
   * Display Mode [default=Default]
