@@ -1,5 +1,5 @@
 #summary Instructions for XTIDE Universal BIOS v1.1.0
-#labels Featured,Phase-Deploy
+#labels Phase-Deploy
 *Table of Contents*
 <wiki:toc max_depth="3" />
 ----
