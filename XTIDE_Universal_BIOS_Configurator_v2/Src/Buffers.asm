@@ -83,6 +83,25 @@ Buffers_IsXtideUniversalBiosSignatureInESDI:
 
 
 ;--------------------------------------------------------------------
+; Buffers_IsXTbuildLoaded
+;	Parameters:
+;		Nothing
+;	Returns:
+;		ZF:		Set if XT or XT+ build is loaded
+;				Cleared if some other (AT, 386) build is loaded
+;	Corrupts registers:
+;		DI, ES
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+Buffers_IsXTbuildLoaded:
+%strlen BUILD_TYPE_OFFSET	TITLE_STRING_START
+	call	Buffers_GetFileBufferToESDI
+	cmp		WORD [es:di+ROMVARS.szTitle+BUILD_TYPE_OFFSET+1], 'XT'	; +1 is for '('
+	ret
+%undef BUILD_TYPE_OFFSET
+
+
+;--------------------------------------------------------------------
 ; Buffers_NewBiosWithSizeInDXCXandSourceInAXhasBeenLoadedForConfiguration
 ;	Parameters:
 ;		AX:		EEPROM source (FLG_CFGVARS_FILELOADED or FLG_CFGVARS_ROMLOADED)
