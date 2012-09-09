@@ -25,6 +25,7 @@
 %include "AssemblyLibrary.inc"	; Assembly Library. Must be included first!
 %include "Romvars.inc"			; XTIDE Universal BIOS variables
 
+%include "Version.inc"
 %include "MenuCfg.inc"
 %include "MenuStructs.inc"
 %include "Variables.inc"

@@ -95,7 +95,7 @@ istruc MENUITEM
 	at	MENUITEM.szName,			dw	g_szItemCfgFullMode
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoCfgFullMode
 	at	MENUITEM.szHelp,			dw	g_szHelpCfgFullMode
-	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE | FLG_MENUITEM_MODIFY_MENU | FLG_MENUITEM_FLAGVALUE
+	at	MENUITEM.bFlags,			db	FLG_MENUITEM_MODIFY_MENU | FLG_MENUITEM_FLAGVALUE
 	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOICE
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	ROMVARS.wFlags
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgCfgFullMode
@@ -141,7 +141,7 @@ istruc MENUITEM
 	at	MENUITEM.szName,			dw	g_szItemCfgIdleTimeout
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoCfgIdleTimeout
 	at	MENUITEM.szHelp,			dw	g_szHelpCfgIdleTimeout
-	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE | FLG_MENUITEM_BYTEVALUE | FLG_MENUITEM_CHOICESTRINGS
+	at	MENUITEM.bFlags,			db	FLG_MENUITEM_BYTEVALUE | FLG_MENUITEM_CHOICESTRINGS
 	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOICE
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	ROMVARS.bIdleTimeout
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgCfgIdleTimeout
@@ -186,7 +186,9 @@ ConfigurationMenu_EnterMenuOrModifyItemVisibility:
 	pop		ds
 	call	.DisableAllIdeControllerMenuitems
 	call	.EnableIdeControllerMenuitemsBasedOnConfiguration
+	call	.EnableOrDisableOperatingModeSelection
 	call	.EnableOrDisableKiBtoStealFromRAM
+	call	.EnableOrDisableIdleTimeout
 	call	LimitIdeControllersForLiteMode
 	mov		si, g_MenupageForConfigurationMenu
 	jmp		Menupage_ChangeToNewMenupageInDSSI
@@ -228,6 +230,23 @@ ALIGN JUMP_ALIGN
 
 
 ;--------------------------------------------------------------------
+; .EnableOrDisableOperatingModeSelection
+;	Parameters:
+;		SS:BP:	Menu handle
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		BX, DI, ES
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+.EnableOrDisableOperatingModeSelection:
+	mov		bx, g_MenuitemConfigurationFullOperatingMode
+	call	Buffers_IsXTbuildLoaded
+	je		SHORT .EnableMenuitemFromCSBX
+	jmp		SHORT .DisableMenuitemFromCSBX
+
+
+;--------------------------------------------------------------------
 ; .EnableOrDisableKiBtoStealFromRAM
 ;	Parameters:
 ;		SS:BP:	Menu handle
@@ -241,6 +260,24 @@ ALIGN JUMP_ALIGN
 	call	Buffers_GetRomvarsFlagsToAX
 	mov		bx, g_MenuitemConfigurationKiBtoStealFromRAM
 	test	ax, FLG_ROMVARS_FULLMODE
+	jz		SHORT .DisableMenuitemFromCSBX
+	jmp		SHORT .EnableMenuitemFromCSBX
+
+
+;--------------------------------------------------------------------
+; .EnableOrDisableIdleTimeout
+;	Parameters:
+;		SS:BP:	Menu handle
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, BX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+.EnableOrDisableIdleTimeout:
+	call	Buffers_GetRomvarsFlagsToAX
+	mov		bx, g_MenuitemConfigurationIdleTimeout
+	test	ax, FLG_ROMVARS_MODULE_FEATURE_SETS
 	jz		SHORT .DisableMenuitemFromCSBX
 	; Fall to .EnableMenuitemFromCSBX
 
