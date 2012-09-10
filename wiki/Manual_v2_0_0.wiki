@@ -148,7 +148,7 @@ Some menu items appear only when needed to make configuring easier.
   * IDE controllers [default=1 for XT builds, 2 for AT builds]
    Number of IDE controllers to be searched by XTIDE Universal BIOS. The maximum is 4 if "Full operating mode" is enabled. Otherwise the maximum is 2.
   * Power Management [default=Disabled]
-   This menu item opens up a submenu where you can select the amount of time before idling harddrives should enter standby mode (i.e. stop spinning). This setting applies only to drives controlled by XTIDE Universal BIOS and requires that the drive(s) supports the Power Management feature set. Harddrives that do not support Power Management (only very old drives) will just keep spinning. Note that this option will be completely ignored if the BIOS has been built without MODULE_FEATURE_SETS.
+   This menu item opens up a submenu where you can select the amount of time before idling harddrives should enter standby mode (i.e. stop spinning). This setting applies only to drives controlled by XTIDE Universal BIOS and requires that the drive(s) supports the Power Management feature set. Harddrives that do not support Power Management (only very old drives) will just keep spinning. Note that this option is not available if the BIOS has been built without MODULE_FEATURE_SETS.
 
 === Menu items on "Boot settings" submenu ===
   * Display Mode [default=Default]
