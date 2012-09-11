@@ -379,7 +379,7 @@ g_szDlgBootFloppyDrvs:	db	"Select number of Floppy Drives in system.",NULL
 g_szDlgSerialDetect:	db	"Scan for serial drives?",NULL
 
 g_szNfoBootTimeout:		db	"Menu item selection timeout in BIOS timer ticks. 1 tick = 54.9 ms.",NULL
-g_szNfoBootDrive:		db	"Default drive on boot menu.",NULL
+g_szNfoBootDrive:		db	"Default boot drive.",NULL
 g_szNfoDispMode:		db	"Display mode to set when booting.",NULL
 g_szNfoBootFloppyDrvs:	db	"Number of Floppy Drives in system.",NULL
 g_szNfoSerialDetect:	db	"Scans all standard COM ports for serial drives."

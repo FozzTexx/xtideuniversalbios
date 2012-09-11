@@ -162,7 +162,7 @@ istruc MENUITEM
 	at	MENUITEM.szName,			dw	g_szItemIdeEnIRQ
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoIdeEnIRQ
 	at	MENUITEM.szHelp,			dw	g_szHelpIdeEnIRQ
-	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE | FLG_MENUITEM_MODIFY_MENU | FLG_MENUITEM_FLAGVALUE
+	at	MENUITEM.bFlags,			db	FLG_MENUITEM_MODIFY_MENU | FLG_MENUITEM_FLAGVALUE
 	at	MENUITEM.bType,				db	TYPE_MENUITEM_MULTICHOICE
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	NULL
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgIdeEnIRQ
@@ -331,13 +331,15 @@ ALIGN JUMP_ALIGN
 IdeControllerMenu_EnterMenuOrModifyItemVisibility:
 	push	cs
 	pop		ds
-	call	.EnableOrDisableIRQ
+	call	.DisableIRQchannelSelection
+	call	.EnableOrDisableEnableInterrupt
 	call	.EnableOrDisableSerial
 	mov		si, g_MenupageForIdeControllerMenu
 	jmp		Menupage_ChangeToNewMenupageInDSSI
 
+
 ;--------------------------------------------------------------------
-; .EnableOrDisableIRQ
+; .EnableOrDisableEnableInterrupt
 ;	Parameters:
 ;		SS:BP:	Menu handle
 ;	Returns:
@@ -346,17 +348,48 @@ IdeControllerMenu_EnterMenuOrModifyItemVisibility:
 ;		AX, BX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-.EnableOrDisableIRQ:
+.EnableOrDisableEnableInterrupt:
+	call	Buffers_GetRomvarsFlagsToAX
+	mov		bx, g_MenuitemIdeControllerEnableInterrupt
+	test	ax, FLG_ROMVARS_MODULE_IRQ
+	jz		SHORT .DisableMenuitemFromCSBX
+
+	mov		bx, [cs:g_MenuitemIdeControllerDevice+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset]
+	call	Buffers_GetRomvarsValueToAXfromOffsetInBX
+	mov		bx, g_MenuitemIdeControllerEnableInterrupt
+	cmp		al, DEVICE_SERIAL_PORT
+	jae		SHORT .DisableMenuitemFromCSBX
+	cmp		al, DEVICE_8BIT_XTCF
+	jbe		SHORT .DisableMenuitemFromCSBX
+
+	call	.EnableMenuitemFromCSBX
+	; Fall to .EnableOrDisableIRQchannelSelection
+
+;--------------------------------------------------------------------
+; .EnableOrDisableIRQchannelSelection
+;	Parameters:
+;		SS:BP:	Menu handle
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, BX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+.EnableOrDisableIRQchannelSelection:
 	mov		bx, [cs:g_MenuitemIdeControllerEnableInterrupt+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset]
 	call	Buffers_GetRomvarsValueToAXfromOffsetInBX
 	mov		bx, g_MenuitemIdeControllerIdeIRQ
 	test	al, al
+	jnz		SHORT .EnableMenuitemFromCSBX
+.DisableIRQchannelSelection:
+	mov		bx, g_MenuitemIdeControllerIdeIRQ
 	jz		SHORT .DisableMenuitemFromCSBX
-	; Fall to .EnableMenuitemFromCSBX
+	; Fall to .DisableMenuitemFromCSBX
+
 
 ;--------------------------------------------------------------------
-; .EnableMenuitemFromCSBX
 ; .DisableMenuitemFromCSBX
+; .EnableMenuitemFromCSBX
 ;	Parameters:
 ;		CS:BX:	Ptr to MENUITEM
 ;	Returns:
@@ -365,23 +398,21 @@ ALIGN JUMP_ALIGN
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
+.DisableMenuitemFromCSBX:
+	and		BYTE [cs:bx+MENUITEM.bFlags], ~FLG_MENUITEM_VISIBLE
+	ret
+
+ALIGN JUMP_ALIGN
 .EnableMenuitemFromCSBX:
 	or		BYTE [cs:bx+MENUITEM.bFlags], FLG_MENUITEM_VISIBLE
 	ret
 
-ALIGN JUMP_ALIGN
-.DisableMenuitemFromCSBX:
-	and		BYTE [cs:bx+MENUITEM.bFlags], ~FLG_MENUITEM_VISIBLE
-	ret
 
 .EnableOrDisableSerial:
 	mov		bx, g_MenuitemIdeControllerCommandBlockAddress
 	call	.DisableMenuitemFromCSBX
 
 	mov		bx, g_MenuitemIdeControllerControlBlockAddress
-	call	.DisableMenuitemFromCSBX
-
-	mov		bx, g_MenuitemIdeControllerEnableInterrupt
 	call	.DisableMenuitemFromCSBX
 
 	mov		bx, g_MenuitemIdeControllerSerialBaud
@@ -395,7 +426,7 @@ ALIGN JUMP_ALIGN
 
 	mov		bx, [cs:g_MenuitemIdeControllerDevice+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset]
 	call	Buffers_GetRomvarsValueToAXfromOffsetInBX
-	cmp		al,DEVICE_SERIAL_PORT
+	cmp		al, DEVICE_SERIAL_PORT
 	jnz		.DisableAllSerial
 
 	mov		bx, g_MenuitemIdeControllerSerialCOM
@@ -417,9 +448,6 @@ ALIGN JUMP_ALIGN
 	call	.EnableMenuitemFromCSBX
 
 	mov		bx, g_MenuitemIdeControllerControlBlockAddress
-	call	.EnableMenuitemFromCSBX
-
-	mov		bx, g_MenuitemIdeControllerEnableInterrupt
 	call	.EnableMenuitemFromCSBX
 
 	ret

@@ -93,7 +93,7 @@ istruc MENUITEM
 	at	MENUITEM.szName,			dw	g_szItemBootDrive
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoBootDrive
 	at	MENUITEM.szHelp,			dw	g_szHelpBootDrive
-	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE | FLG_MENUITEM_BYTEVALUE
+	at	MENUITEM.bFlags,			db	FLG_MENUITEM_BYTEVALUE
 	at	MENUITEM.bType,				db	TYPE_MENUITEM_HEX
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	ROMVARS.bBootDrv
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgBootDrive
@@ -162,14 +162,15 @@ ALIGN JUMP_ALIGN
 BootMenuSettingsMenu_EnterMenuOrModifyItemVisibility:
 	push	cs
 	pop		ds
-	call	EnableOrDisableBootMenuSettings
-	call	EnableOrDisableSerialSettings
+	call	.EnableOrDisableScanForSerialDrives
+	call	.EnableOrDisableDefaultBootDrive
+	call	.EnableOrDisableBootMenuSelectionTimeout
 	mov		si, g_MenupageForBootMenuSettingsMenu
 	jmp		Menupage_ChangeToNewMenupageInDSSI
 
 
 ;--------------------------------------------------------------------
-; EnableOrDisableBootMenuSettings
+; .EnableOrDisableScanForSerialDrives
 ;	Parameters:
 ;		SS:BP:	Menu handle
 ;	Returns:
@@ -178,25 +179,15 @@ BootMenuSettingsMenu_EnterMenuOrModifyItemVisibility:
 ;		AX, BX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-EnableOrDisableBootMenuSettings:
-	mov		bx, ROMVARS.wFlags
-	call	Buffers_GetRomvarsValueToAXfromOffsetInBX
-	test	ax, FLG_ROMVARS_MODULE_BOOT_MENU
-	mov		al, FLG_MENUITEM_VISIBLE
-	jz		SHORT .DisableBootMenuSettings
-
-	; Enable boot menu related
-	or		[g_MenuitemBootMnuStngsSelectionTimeout+MENUITEM.bFlags], al
-	ret
-
-.DisableBootMenuSettings:
-	not		ax
-	and		[g_MenuitemBootMnuStngsSelectionTimeout+MENUITEM.bFlags], al
-	ret
+.EnableOrDisableScanForSerialDrives:
+	call	Buffers_GetRomvarsFlagsToAX
+	mov		bx, g_MenuitemBootMenuSerialScanDetect
+	test	ax, FLG_ROMVARS_MODULE_SERIAL
+	jmp		SHORT .DisableMenuitemFromCSBXifZFset
 
 
 ;--------------------------------------------------------------------
-; EnableOrDisableSerialSettings
+; .EnableOrDisableDefaultBootDrive
 ;	Parameters:
 ;		SS:BP:	Menu handle
 ;	Returns:
@@ -204,20 +195,51 @@ EnableOrDisableBootMenuSettings:
 ;	Corrupts registers:
 ;		AX, BX
 ;--------------------------------------------------------------------
-EnableOrDisableSerialSettings:
-	mov		bx, ROMVARS.wFlags
-	call	Buffers_GetRomvarsValueToAXfromOffsetInBX
-	test	ax, FLG_ROMVARS_MODULE_SERIAL
-	mov		al, FLG_MENUITEM_VISIBLE
-	jz		SHORT .DisableSerialSettings
+ALIGN JUMP_ALIGN
+.EnableOrDisableDefaultBootDrive:
+	call	Buffers_GetRomvarsFlagsToAX
+	mov		bx, g_MenuitemBootMnuStngsDefaultBootDrive
+	test	ax, FLG_ROMVARS_MODULE_HOTKEYS
+	jmp		SHORT .DisableMenuitemFromCSBXifZFset
 
-	; Enable serial related
-	or		[g_MenuitemBootMenuSerialScanDetect+MENUITEM.bFlags], al
+
+;--------------------------------------------------------------------
+; .EnableOrDisableBootMenuSelectionTimeout
+;	Parameters:
+;		SS:BP:	Menu handle
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, BX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+.EnableOrDisableBootMenuSelectionTimeout:
+	call	Buffers_GetRomvarsFlagsToAX
+	mov		bx, g_MenuitemBootMnuStngsSelectionTimeout
+	test	ax, FLG_ROMVARS_MODULE_BOOT_MENU
+.DisableMenuitemFromCSBXifZFset:
+	jz		SHORT .DisableMenuitemFromCSBX
+	; Fall to .EnableMenuitemFromCSBX
+
+
+;--------------------------------------------------------------------
+; .EnableMenuitemFromCSBX
+; .DisableMenuitemFromCSBX
+;	Parameters:
+;		CS:BX:	Ptr to MENUITEM
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+.EnableMenuitemFromCSBX:
+	or		BYTE [cs:bx+MENUITEM.bFlags], FLG_MENUITEM_VISIBLE
 	ret
 
-.DisableSerialSettings:
-	not		ax
-	and		[g_MenuitemBootMenuSerialScanDetect+MENUITEM.bFlags], al
+ALIGN JUMP_ALIGN
+.DisableMenuitemFromCSBX:
+	and		BYTE [cs:bx+MENUITEM.bFlags], ~FLG_MENUITEM_VISIBLE
 	ret
 
 
