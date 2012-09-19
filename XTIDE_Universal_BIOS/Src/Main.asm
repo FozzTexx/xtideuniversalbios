@@ -81,7 +81,7 @@ istruc ROMVARS
 %ifdef MODULE_BOOT_MENU
 		at	ROMVARS.wBootTimeout,	dw	BOOT_MENU_DEFAULT_TIMEOUT
 %endif
-	at	ROMVARS.bIdeCnt,		db	4						; Number of supported controllers
+	at	ROMVARS.bIdeCnt,		db	2						; Number of supported controllers
 	at	ROMVARS.bBootDrv,		db	80h						; Boot Menu default drive
 	at	ROMVARS.bMinFddCnt, 	db	0						; Do not force minimum number of floppy drives
 	at	ROMVARS.bStealSize,		db	1						; Steal 1kB from base memory
@@ -129,7 +129,7 @@ istruc ROMVARS
 %endif
 	at	ROMVARS.bIdeCnt,		db	1						; Number of supported controllers
 	at	ROMVARS.bBootDrv,		db	80h						; Boot Menu default drive
-	at	ROMVARS.bMinFddCnt, 	db	1						; Assume at least 1 floppy drive present if autodetect fails
+	at	ROMVARS.bMinFddCnt, 	db	0						; Do not force minimum number of floppy drives
 	at	ROMVARS.bStealSize,		db	1						; Steal 1kB from base memory in full mode
 	at	ROMVARS.bIdleTimeout,	db	0						; Standby timer disabled by default
 

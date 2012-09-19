@@ -57,7 +57,7 @@
 
 #define BETA " Beta "
 
-#define ROM_VERSION_STRING		"v2.0.0" BETA "1 (" __DATE__ ")"
+#define ROM_VERSION_STRING		"v2.0.0" BETA "2 (" __DATE__ ")"
 
 /*
 %endif
