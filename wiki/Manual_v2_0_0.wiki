@@ -6,8 +6,6 @@
 
 = Introduction =
 
-Note! This manual is currently being updated for v2.0.0 beta 2. It will be released when all documentation is fully up to date.
-
 XTIDE Universal BIOS makes it possible to use modern large ATA hard disks or Compact Flash cards on old PC's. You can then enjoy quiet or noiseless drives with more capacity than you'll ever need for old computers.
 
 XTIDE Universal BIOS can be used on any IBM PC, XT, AT or 100% compatible system. On AT systems you can use any 16-bit ISA or VLB IDE or Multi I/O controller. For XT systems you can use XTIDE rev1 (not available anymore), [http://www.vintage-computer.com/vcforum/showwiki.php?title=XTIDE+Rev2 XTIDE rev2] or [http://www.retrotronics.org/tiki/tiki-index.php JR-IDE/ISA].
@@ -138,7 +136,7 @@ Some menu items appear only when needed to make configuring easier.
    Each "xxx IDE Controller" submenu displays IDE controller specific settings. "IDE controllers" menu item specifies the visible "xxx IDE Controller" submenus.
   * Boot settings
    Opens submenu for boot related settings such as should boot menu be enabled etc.
-  * Full operating mode [default=No for XT builds, not used for AT builds]
+  * Full operating mode [default=No for XT builds, not available for AT builds]
    "Full operating mode" reserves a bit of Conventional memory for XTIDE Universal BIOS variables. Disabling this will reduce the maximum number of supported IDE controllers to 2 and place the variables in a memory area reserved for IBM ROM Basic (30:0h). You should always enable this option unless:
     # You don't need to use IBM ROM Basic or any BIOS or software that requires that memory area.
     # You have a Tandy 1000 with 640k or less RAM (see "kiB to steal from RAM" for a way around this problem).
@@ -153,7 +151,7 @@ Some menu items appear only when needed to make configuring easier.
 === Menu items on "Boot settings" submenu ===
   * Display Mode [default=Default]
    This setting allows you to force a display mode change before the boot menu is displayed. This setting will work even if the boot menu has been disabled and will leave the specified display mode set when booting to the OS. Forcing the display mode can be handy if you have a composite monitor (use 40 column modes for better readability) or a black&white VGA monitor (use 80 column black&white mode for better readability).
-  * Number of Floppy Drives [default=1 for XT builds, Auto for AT builds]
+  * Number of Floppy Drives [default=Auto]
    In some systems the number of floppy drives cannot be reliably autodetected. This setting allows you to specify it manually so all drives can be displayed on the boot menu.
   * Scan for Serial Devices [default=No]
    When enabled, the BIOS will scan COM1-7 for a Serial Drive server at the end of standard drive detection. Even without this option enabled, holding down the ALT key at the end of drive detection will accomplish the same thing (useful for bootstrapping scenarios). The BIOS will display "Serial Master on COM Detect:" while it is scanning. See the [SerialDrives Serial Drive] documentation for more information.
