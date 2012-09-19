@@ -1,1 +1,0 @@
-Limit drive size to X million sectors for EBIOS functions. This option is useful to prevent large drive compatibility problems with MS-DOS 7.x (Windows 95 and 98).
