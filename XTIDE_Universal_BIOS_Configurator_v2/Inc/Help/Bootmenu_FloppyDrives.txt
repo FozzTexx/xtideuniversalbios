@@ -1,0 +1,1 @@
+Detecting correct number of floppy drives might fail when using floppy controller with it's own BIOS. Minimum number of floppy drives can be specified to force non-detected drives to appear on boot menu.
