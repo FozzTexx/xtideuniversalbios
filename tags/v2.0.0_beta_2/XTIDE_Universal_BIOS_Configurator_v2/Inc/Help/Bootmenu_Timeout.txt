@@ -1,0 +1,1 @@
+Boot Menu selection timeout in BIOS timer ticks (1 second = 18.2 ticks). When time goes to zero, currently selected drive will be booted automatically. Timeout can be disabled by setting this to 0.

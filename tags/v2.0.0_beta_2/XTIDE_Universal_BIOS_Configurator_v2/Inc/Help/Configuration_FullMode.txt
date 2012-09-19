@@ -1,0 +1,5 @@
+Full mode supports up to 4 IDE controllers (8 drives). Full mode reserves a bit of RAM from the top of Conventional memory. This makes it possible to use ROM BASIC and other software that requires the interrupt vectors where XTIDE Universal BIOS parameters would be stored in Lite mode.
+
+Lite mode supports only one IDE controller (2 drives) and stores parameters to the top of the interrupt vectors (30:0h) so no Conventional memory needs to be reserved. Lite mode cannot be used if some software requires the top of interrupt vectors. Usually this is not a problem since only IBM ROM BASIC uses them.
+
+Tandy 1000 models with 640 kiB or less memory need to use Lite mode since the top of Conventional memory gets dynamically reserved by video hardware. This happens only with Tandy integrated video controller and not when using expansion graphics cards. It is possible to use Full mode if reserving RAM for video memory + what is required for XTIDE Universal BIOS. This would mean 129 kiB but most software should work with 65 kiB reserved.
