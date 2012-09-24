@@ -299,10 +299,6 @@ Set page size to maximum supported and try to reflash few times. Eventually it s
 ===FreeDOS Format.exe freezes===
 Known to happen with 0.90 dated 4-30-02 when using user defined LBA. Change FORMAT.EXE to newer. 0.91v dated 1-14-06 is known to work.
 
-===Invalid Media Type error after partitioning drive===
-This behavior is seen at least on IBM 5150, modded XTIDE, Hitachi 6GB microdrive and DOS 6.22 boot disk.
-It is unclear what the problem is. Just press A (abort) to continue. You can now format the drive normally.
-
 
 = Other known problems =
   * Flash utility hung the PC when saving settings on one occasion (maybe because the FDD entry point was via the BIOS just over-written?)
