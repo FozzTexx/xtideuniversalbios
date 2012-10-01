@@ -27,30 +27,61 @@
 XTCF_BASE_PORT_1					EQU		200h
 XTCF_BASE_PORT_2					EQU		240h
 XTCF_BASE_PORT_3					EQU		300h	; Default setting
-XTCF_BASE_PORT_4					EQU		320h
+XTCF_BASE_PORT_4					EQU		340h
 
 
 ; XT-CF Control Register (do not SHL 1 these!)
 XTCF_CONTROL_REGISTER				EQU		1Fh
 XTCT_CONTROL_REGISTER_INVERTED_in	EQU		1Eh
 
+; Control Register contents:
+;
+; Control Register holds high byte from Sector Window segment if >= A0h
+; (First possible segment for Sector Window is A000h)
+; 
+; 8-bit PIO transfers (port I/O) are used if Control Register is zero.
+; Any other value means DMA transfers (using DMA channel 3).
 
-; Bit Definitions for XT-CF Control Register
-MASK_XTCF_BASE_PORT_in				EQU		(3<<0)	; Bits 0...1
-	XTCF_PORT_200h					EQU		0
-	XTCF_PORT_240h					EQU		1
-	XTCF_PORT_300h					EQU		2		; Default
-	XTCF_PORT_320h					EQU		3
-FLG_PIO8_INSTEAD_OF_DMA				EQU		(1<<2)	; Set to enable PIO8, clear to enable DMA (Channel 3)
-FLG_AT_ZERO_WAIT_STATE_in			EQU		(1<<3)
-MASK_SECTOR_WINDOW_SEGMENT_in		EQU		(7<<4)	; Bits 4...6
-	XTCF_SECTOR_WINDOW_AT_C000h		EQU		0
-	XTCF_SECTOR_WINDOW_AT_C800h		EQU		1
-	XTCF_SECTOR_WINDOW_AT_D000h		EQU		2		; Default
-	XTCF_SECTOR_WINDOW_AT_D800h		EQU		3
-	XTCF_SECTOR_WINDOW_AT_E000h		EQU		4
-	XTCF_SECTOR_WINDOW_AT_E800h		EQU		5
-FLG_XTCF_ROM_ENABLE_in				EQU		(1<<7)
+
+; Subcommands for AH=1Eh, Lo-tech XT-CF features.
+; Return values common for all subcommands:
+;		AH:		RET_HD_SUCCESS if drive is XT-CF
+;				RET_HD_INVALID if drive is not XT-CF
+;		CF:		0 if successful, 1 if error
+
+;--------------------------------------------------------------------
+; IS_THIS_DRIVE_XTCF
+;	Parameters:
+;		DL:		Drive Number
+;--------------------------------------------------------------------
+IS_THIS_DRIVE_XTCF					EQU		0
+
+;--------------------------------------------------------------------
+; IS_XTCF_IN_PORT_CX
+;	Parameters:
+;		CX:		Port to search XT-CF from (can be anything)
+;	Returns:
+;		AH:		RET_HD_SUCCESS if XT-CF is found from port
+;				RET_HD_INVALID if XT-CF is not found
+;--------------------------------------------------------------------
+IS_XTCF_IN_PORT_CX					EQU		1
+
+;--------------------------------------------------------------------
+; READ_XTCF_CONTROL_REGISTER_TO_DH
+;	Parameters:
+;		DL:		Drive Number
+;	Returns:
+;		DH:		XT-CF Control Register contents
+;--------------------------------------------------------------------
+READ_XTCF_CONTROL_REGISTER_TO_DH	EQU		2
+
+;--------------------------------------------------------------------
+; WRITE_DH_TO_XTCF_CONTROL_REGISTER
+;	Parameters:
+;		DH:		Byte to write to XT-CF Control Register
+;		DL:		Drive Number
+;--------------------------------------------------------------------
+WRITE_DH_TO_XTCF_CONTROL_REGISTER	EQU		3
 
 
 %endif ; XTCF_INC
