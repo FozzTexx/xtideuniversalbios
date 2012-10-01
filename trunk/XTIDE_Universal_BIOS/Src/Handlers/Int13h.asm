@@ -394,7 +394,11 @@ g_rgw13hFuncJump:
 	dw	UnsupportedFunction							; 1Bh, Get ESDI Manufacturing Header (PS/2)
 	dw	UnsupportedFunction							; 1Ch, ESDI Special Functions (PS/2)
 	dw	UnsupportedFunction							; 1Dh,
-	dw	UnsupportedFunction							; 1Eh,
+%ifdef MODULE_8BIT_IDE
+	dw	AH1Eh_HandlerForXTCFfeatures				; 1Eh, Lo-tech XT-CF features (XTIDE Universal BIOS)
+%else
+	dw	UnsupportedFunction							; 1Eh, 
+%endif
 	dw	UnsupportedFunction							; 1Fh,
 	dw	UnsupportedFunction							; 20h,
 	dw	UnsupportedFunction							; 21h, Read Disk Sectors, Multiple Blocks (PS/1)

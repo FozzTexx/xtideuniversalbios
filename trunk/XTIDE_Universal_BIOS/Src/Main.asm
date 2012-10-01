@@ -254,6 +254,9 @@ iend
 	%include "AH10h_HReady.asm"		; Required by Int13h_Jump.asm
 	%include "AH11h_HRecal.asm"		; Required by Int13h_Jump.asm
 	%include "AH15h_HSize.asm"		; Required by Int13h_Jump.asm
+%ifdef MODULE_8BIT_IDE
+	%include "AH1Eh_XTCF.asm"
+%endif
 	%include "AH23h_HFeatures.asm"	; Required by Int13h_Jump.asm
 	%include "AH24h_HSetBlocks.asm"	; Required by Int13h_Jump.asm
 	%include "AH25h_HDrvID.asm"		; Required by Int13h_Jump.asm
