@@ -37,20 +37,20 @@ SECTION .text
 ;		CF:		0 if successful, 1 if error
 ;--------------------------------------------------------------------
 AH1Eh_HandlerForXTCFfeatures:
-	eMOVZX	bx, al	; Subcommand to BX
+	xor		ah, ah		; Subcommand now in AX
 %ifndef USE_186
-	call	AH1Eh_ProcessXTCFsubcommandFromBX
+	call	AH1Eh_ProcessXTCFsubcommandFromAX
 	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 %else
 	push	Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
-	; Fall to AH1Eh_ProcessXTCFsubcommandFromBX
+	; Fall to AH1Eh_ProcessXTCFsubcommandFromAX
 %endif
 
 
 ;--------------------------------------------------------------------
-; AH1Eh_ProcessXTCFsubcommandFromBX
+; AH1Eh_ProcessXTCFsubcommandFromAX
 ;	Parameters:
-;		BX:		XT-CF subcommand (see XTCF.inc for more info)
+;		AX:		XT-CF subcommand (see XTCF.inc for more info)
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
 ;		SS:BP:	Ptr to IDEPACK
 ;	Returns:
@@ -59,4 +59,56 @@ AH1Eh_HandlerForXTCFfeatures:
 ;	Corrupts registers:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
-AH1Eh_ProcessXTCFsubcommandFromBX:
+AH1Eh_ProcessXTCFsubcommandFromAX:
+	; IS_THIS_DRIVE_XTCF. We check this for all commands.
+	dec		ax		; Subcommand
+	mov		dx, [di+DPT.wXTCFport]
+	test	dx, dx	; Never zero for XT-CF, Always zero for other devices
+	jz		SHORT XTCFnotFound
+
+	; READ_XTCF_CONTROL_REGISTER_TO_DH
+	add		dl, XTCF_CONTROL_REGISTER	; DX to Control Register
+	dec		ax		; Subcommand
+	jnz		SHORT .SkipReadXtcfControlRegisterToDH
+	in		al, dx
+	mov		[bp+IDEPACK.intpack+INTPACK.dh], al
+	jmp		SHORT .ReturnWithSuccess
+.SkipReadXtcfControlRegisterToDH:
+
+	; WRITE_DH_TO_XTCF_CONTROL_REGISTER
+	dec		ax		; Subcommand
+	jnz		SHORT XTCFnotFound			; Invalid subcommand
+	mov		al, [bp+IDEPACK.intpack+INTPACK.dh]
+	out		dx, al
+.ReturnWithSuccess:
+	xor		ah, ah
+	ret
+
+
+;--------------------------------------------------------------------
+; AH1Eh_DetectXTCFwithBasePortInDX
+;	Parameters:
+;		DX:		Base I/O port address to check
+;	Returns:
+;		AH:		RET_HD_SUCCESS if XT-CF is found from port
+;				RET_HD_INVALID if XT-CF is not found
+;		CF:		Cleared if XT-CF found
+;				Set if XT-CF not found
+;	Corrupts registers:
+;		AL, DX
+;--------------------------------------------------------------------
+AH1Eh_DetectXTCFwithBasePortInDX:
+	add		dl, XTCT_CONTROL_REGISTER_INVERTED_in	; set DX to XT-CF config register (inverted)
+	in		al, dx		; get value
+	mov		ah, al		; save in ah
+	inc		dx			; set DX to XT-CF config register (non-inverted)
+	in		al, dx		; get value
+	not		al			; invert it
+	sub		ah, al		; do they match? (clear AH if they do)
+	jz		SHORT XTCFfound
+
+XTCFnotFound:
+	stc					; set carry flag since XT-CF not found
+	mov		ah, RET_HD_INVALID
+XTCFfound:
+	ret					; and return
