@@ -22,15 +22,15 @@
 %define CUSTOMDPT_INC
 
 ; Base DPT for all device types
-struc DPT	; 10 or 18 bytes
-	; General Disk Parameter Table related
+struc DPT
+	; General Disk Parameter Table related (Bytes 0...3)
 	.wFlags:
 	.bFlagsLow				resb	1
 	.bFlagsHigh				resb	1
 	.bIdevarsOffset			resb	1	; Offset to IDEVARS for this drive
 	.bInitError				resb	1	; Flags for AH=09h initialization errors
 
-	; CHS variables
+	; CHS variables (Bytes 4...8)
 	.wLchsCylinders			resb	2	; (1...1027, yes 1027)
 	.wLchsHeadsAndSectors:
 	.bLchsHeads				resb	1	; (1...255)
@@ -42,9 +42,12 @@ struc DPT	; 10 or 18 bytes
 	.bPchsSectorsPerTrack	resb	1
 	.wPchsCylinders			resb	2
 	.twLbaSectors			resb	6	; 48-bit sector count for LBA addressing
-%else
-							resb	1	; Alignment
 %endif
+
+%ifdef MODULE_8BIT_IDE
+	.wXTCFport				resb	2	; Autodetected XT-CF port
+%endif
+							alignb	2	; WORD alignent for DPT_SERIAL or DPT_ATA
 endstruc
 
 	; Bit definitions for DPT.bFlagsLow
@@ -114,7 +117,7 @@ struc DPT_ADVANCED_ATA	; 12/20 bytes + 8 bytes = 20/28 bytes
 	.wControllerBasePort	resb	2	; Advanced Controller port (not IDE port)
 	.wMinPioCycleTime		resb	2	; Minimum PIO Cycle Time in ns
 	.bPioMode				resb	1	; Best supported PIO mode
-							resb	1
+							alignb	2
 endstruc
 %endif
 

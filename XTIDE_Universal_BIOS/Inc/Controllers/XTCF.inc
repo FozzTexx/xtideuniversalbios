@@ -57,23 +57,13 @@ XTCT_CONTROL_REGISTER_INVERTED_in	EQU		1Eh
 IS_THIS_DRIVE_XTCF					EQU		0
 
 ;--------------------------------------------------------------------
-; IS_XTCF_IN_PORT_CX
-;	Parameters:
-;		CX:		Port to search XT-CF from (can be anything)
-;	Returns:
-;		AH:		RET_HD_SUCCESS if XT-CF is found from port
-;				RET_HD_INVALID if XT-CF is not found
-;--------------------------------------------------------------------
-IS_XTCF_IN_PORT_CX					EQU		1
-
-;--------------------------------------------------------------------
 ; READ_XTCF_CONTROL_REGISTER_TO_DH
 ;	Parameters:
 ;		DL:		Drive Number
 ;	Returns:
 ;		DH:		XT-CF Control Register contents
 ;--------------------------------------------------------------------
-READ_XTCF_CONTROL_REGISTER_TO_DH	EQU		2
+READ_XTCF_CONTROL_REGISTER_TO_DH	EQU		1
 
 ;--------------------------------------------------------------------
 ; WRITE_DH_TO_XTCF_CONTROL_REGISTER
@@ -81,7 +71,7 @@ READ_XTCF_CONTROL_REGISTER_TO_DH	EQU		2
 ;		DH:		Byte to write to XT-CF Control Register
 ;		DL:		Drive Number
 ;--------------------------------------------------------------------
-WRITE_DH_TO_XTCF_CONTROL_REGISTER	EQU		3
+WRITE_DH_TO_XTCF_CONTROL_REGISTER	EQU		2
 
 
 %endif ; XTCF_INC
