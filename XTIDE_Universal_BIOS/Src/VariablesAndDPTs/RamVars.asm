@@ -207,11 +207,12 @@ RamVars_GetIdeControllerCountToCX:
 	eMOVZX	cx, [cs:ROMVARS.bIdeCnt]
 	ret
 
+
 %ifdef MODULE_SERIAL_FLOPPY
 ;--------------------------------------------------------------------
 ; RamVars_UnpackFlopCntAndFirstToAL
 ;	Parameters:
-;		Nothing
+;		DS:		RAMVARS segment
 ;	Returns:
 ;		AL:		First floppy drive number supported
 ;       CF:		Number of floppy drives supported (clear = 1, set = 2)
@@ -225,3 +226,17 @@ RamVars_UnpackFlopCntAndFirstToAL:
 	sar		al, 1
 	ret
 %endif
+
+
+;--------------------------------------------------------------------
+; RamVars_IsDriveDetectionInProgress
+;	Parameters:
+;		DS:		RAMVARS segment
+;	Returns:
+;		ZF:		Set if drive detection is in progress (ROM initialization)
+;	Corrupts registers:
+;		None
+;--------------------------------------------------------------------
+RamVars_IsDriveDetectionInProgress:
+	cmp		WORD [RAMVARS.wSignature], RAMVARS_DRV_DETECT_SIGNATURE
+	ret

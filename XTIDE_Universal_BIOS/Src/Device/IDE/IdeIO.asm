@@ -1,5 +1,6 @@
 ; Project name	:	XTIDE Universal BIOS
-; Description	:	IDE Register I/O functions.
+; Description	:	IDE Register I/O functions when supporting 8-bit
+;					devices that need address translations.
 
 ;
 ; XTIDE Universal BIOS and Associated Tools
@@ -21,6 +22,70 @@
 SECTION .text
 
 ;--------------------------------------------------------------------
+; IdeIO_InputStatusRegisterToAL
+;	Parameters:
+;		DS:DI:	Ptr to DPT (in RAMVARS segment)
+;	Returns:
+;		AL:		IDE Status Register contents
+;	Corrupts registers:
+;		BX, DX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+IdeIO_InputStatusRegisterToAL:
+%ifndef MODULE_8BIT_IDE
+	INPUT_TO_AL_FROM_IDE_REGISTER STATUS_REGISTER_in
+	ret
+
+%else
+	mov		dl, STATUS_REGISTER_in
+	; Fall to IdeIO_InputToALfromIdeRegisterInDL
+
+;--------------------------------------------------------------------
+; IdeIO_InputToALfromIdeRegisterInDL
+;	Parameters:
+;		DL:		IDE Register
+;		DS:DI:	Ptr to DPT (in RAMVARS segment)
+;	Returns:
+;		AL:		Inputted byte
+;	Corrupts registers:
+;		BX, DX
+;--------------------------------------------------------------------
+IdeIO_InputToALfromIdeRegisterInDL:
+	xor		dh, dh	; IDE Register index now in DX
+
+	mov		al, [di+DPT_ATA.bDevice]
+	cmp		al, DEVICE_8BIT_XTIDE_REV2
+	je		SHORT .ReverseA0andA3fromRegisterIndexInDX
+	jb		SHORT .InputToALfromRegisterInDX	; Standard IDE controllers and XTIDE rev 1
+	cmp		al, DEVICE_8BIT_JRIDE_ISA
+	jne		SHORT .ShlRegisterIndexInDX			; All XT-CF modes
+	; Fall to .InputToALfromMemoryMappedRegisterInDX
+
+.InputToALfromMemoryMappedRegisterInDX:
+	mov		bx, JRIDE_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET
+	add		bx, dx
+	push	ds
+	mov		ds, [di+DPT.wBasePort]	; Segment for JR-IDE/ISA
+	mov		al, [bx]
+	pop		ds
+	ret
+
+.ReverseA0andA3fromRegisterIndexInDX:
+	mov		bx, dx
+	mov		dl, [cs:bx+g_rgbSwapA0andA3fromIdeRegisterIndex]
+	SKIP2B	bx	; Skip shl dx, 1
+
+.ShlRegisterIndexInDX:
+	shl		dx, 1
+	; Fall to .InputToALfromRegisterInDX
+
+.InputToALfromRegisterInDX:
+	add		dx, [di+DPT.wBasePort]
+	in		al, dx
+	ret
+
+
+;--------------------------------------------------------------------
 ; IdeIO_OutputALtoIdeControlBlockRegisterInDL
 ;	Parameters:
 ;		AL:		Byte to output
@@ -32,20 +97,31 @@ SECTION .text
 ;		BX, DX
 ;--------------------------------------------------------------------
 IdeIO_OutputALtoIdeControlBlockRegisterInDL:
-	%ifdef MODULE_8BIT_IDE
-		mov		dh, [di+DPT_ATA.bDevice]
-		%ifdef MODULE_JRIDE
-			test	dh, dh
-			jnz		SHORT .OutputToIoMappedIde
-		
-			add		dx, JRIDE_CONTROL_BLOCK_REGISTER_WINDOW_OFFSET
-			jmp		SHORT OutputToJrIdeRegister
-		.OutputToIoMappedIde:
-		%endif	; MODULE_JRIDE
-	%endif	; MODULE_8BIT_IDE
+	; Note! We do not need to reverse A0 and A3 for XTIDE rev 2 since
+	; the only Control Block Register we access is DEVICE_CONTROL_REGISTER_out
+	; at offset 6 (0110b).
+	xor		dh, dh	; IDE Register index now in DX
 
-	mov		bl, IDEVARS.wPortCtrl
-	jmp		SHORT OutputALtoIdeRegisterInDLwithIdevarsOffsetToBasePortInBL
+	mov		bl, [di+DPT_ATA.bDevice]
+	cmp		bl, DEVICE_8BIT_XTIDE_REV2
+	jbe		SHORT .OutputALtoControlBlockRegisterInDX	; Standard IDE controllers and XTIDE rev 1
+	cmp		bl, DEVICE_8BIT_JRIDE_ISA
+	jne		SHORT .ShlRegisterIndexInDX		; All XT-CF modes
+	; Fall to .OutputALtoMemoryMappedRegisterInDX
+
+.OutputALtoMemoryMappedRegisterInDX:
+	mov		bx, JRIDE_CONTROL_BLOCK_REGISTER_WINDOW_OFFSET
+	jmp 	SHORT IdeIO_OutputALtoIdeRegisterInDL.OutputALtoMemoryMappedRegisterInDXwithWindowOffsetInBX
+
+.ShlRegisterIndexInDX:
+	add		dl, OFFSET_TO_CONTROL_BLOCK_REGISTERS
+	shl		dx, 1
+	jmp		SHORT OutputALtoRegisterInDX
+
+.OutputALtoControlBlockRegisterInDX:
+	call	AccessDPT_GetIdevarsToCSBX
+	add		dx, [cs:bx+IDEVARS.wControlBlockPort]
+	jmp		SHORT OutputALtoPortInDX
 
 
 ;--------------------------------------------------------------------
@@ -61,124 +137,53 @@ IdeIO_OutputALtoIdeControlBlockRegisterInDL:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 IdeIO_OutputALtoIdeRegisterInDL:
-	%ifdef MODULE_8BIT_IDE
-		mov		dh, [di+DPT_ATA.bDevice]
-		%ifdef MODULE_JRIDE
-			test	dh, dh
-			jnz		SHORT OutputALtoIOmappedIdeRegisterInDL
-		
-		%if JRIDE_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET & 0FFh = 0
-			mov		dh, JRIDE_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET >> 8
-		%else
-			add		dx, JRIDE_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET
-		%endif
-		OutputToJrIdeRegister:
-			mov		bx, dx
-			mov		[cs:bx], al
-			ret
-		ALIGN JUMP_ALIGN
-		OutputALtoIOmappedIdeRegisterInDL:
-		%endif	; MODULE_JRIDE
-	%endif	; MODULE_8BIT_IDE
+	xor		dh, dh	; IDE Register index now in DX
 
-	mov		bl, IDEVARS.wPort
-OutputALtoIdeRegisterInDLwithIdevarsOffsetToBasePortInBL:
-	call	GetIdePortToDX
+	mov		bl, [di+DPT_ATA.bDevice]
+	cmp		bl, DEVICE_8BIT_XTIDE_REV2
+	je		SHORT .ReverseA0andA3fromRegisterIndexInDX
+	jb		SHORT OutputALtoRegisterInDX	; Standard IDE controllers and XTIDE rev 1
+	cmp		bl, DEVICE_8BIT_JRIDE_ISA
+	jne		SHORT .ShlRegisterIndexInDX		; All XT-CF modes
+	; Fall to .OutputALtoMemoryMappedRegisterInDX
+
+.OutputALtoMemoryMappedRegisterInDX:
+	mov		bx, JRIDE_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET
+.OutputALtoMemoryMappedRegisterInDXwithWindowOffsetInBX:
+	add		bx, dx
+	push	ds
+	mov		ds, [di+DPT.wBasePort]	; Segment for JR-IDE/ISA
+	mov		[bx], al
+	pop		ds
+	ret
+
+.ReverseA0andA3fromRegisterIndexInDX:
+	mov		bx, dx
+	mov		dl, [cs:bx+g_rgbSwapA0andA3fromIdeRegisterIndex]
+	SKIP2B	bx	; Skip shl dx, 1
+
+.ShlRegisterIndexInDX:
+	shl		dx, 1
+	; Fall to OutputALtoRegisterInDX
+
+ALIGN JUMP_ALIGN
+OutputALtoRegisterInDX:
+	add		dx, [di+DPT.wBasePort]
+OutputALtoPortInDX:
 	out		dx, al
 	ret
 
 
-;--------------------------------------------------------------------
-; IdeIO_InputStatusRegisterToAL
-;	Parameters:
-;		DS:DI:	Ptr to DPT (in RAMVARS segment)
-;	Returns:
-;		AL:		IDE Status Register contents
-;	Corrupts registers:
-;		BX, DX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-IdeIO_InputStatusRegisterToAL:
-	mov		dl, STATUS_REGISTER_in
-	; Fall to IdeIO_InputToALfromIdeRegisterInDL
 
-;--------------------------------------------------------------------
-; IdeIO_InputToALfromIdeRegisterInDL
-;	Parameters:
-;		DL:		IDE Register
-;		DS:DI:	Ptr to DPT (in RAMVARS segment)
-;	Returns:
-;		AL:		Inputted byte
-;	Corrupts registers:
-;		BX, DX
-;--------------------------------------------------------------------
-IdeIO_InputToALfromIdeRegisterInDL:
-	%ifdef MODULE_8BIT_IDE
-		mov		dh, [di+DPT_ATA.bDevice]
-		%ifdef MODULE_JRIDE
-			test	dh, dh
-			jnz		SHORT .InputToALfromIOmappedIdeRegisterInDL
-		
-		%if JRIDE_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET & 0FFh = 0
-			mov		dh, JRIDE_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET >> 8
-		%else
-			add		dx, JRIDE_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET
-		%endif
-			mov		bx, dx
-			mov		al, [cs:bx]
-			ret
-		.InputToALfromIOmappedIdeRegisterInDL:
-		%endif	; MODULE_JRIDE
-	%endif	; MODULE_8BIT_IDE
-	mov		bl, IDEVARS.wPort
-	call	GetIdePortToDX
-	in		al, dx
-	ret
+; A0 <-> A3 lookup table
+g_rgbSwapA0andA3fromIdeRegisterIndex:
+	db	0000b	; <-> 0000b, 0
+	db	1000b	; <-> 0001b, 1
+	db	0010b	; <-> 0010b, 2
+	db	1010b	; <-> 0011b, 3
+	db	0100b	; <-> 0100b, 4
+	db	1100b	; <-> 0101b, 5
+	db	0110b	; <-> 0110b, 6
+	db	1110b	; <-> 0111b, 7
 
-
-;--------------------------------------------------------------------
-; GetIdePortToDX
-;	Parameters:
-;		BL:		Offset to port in IDEVARS (IDEVARS.wPort or IDEVARS.wPortCtrl)
-;		DH:		Device Type (IDEVARS.bDevice)
-;		DL:		IDE Register
-;		DS:DI:	Ptr to DPT (in RAMVARS segment)
-;	Returns:
-;		DX:		Source/Destination Port
-;	Corrupts registers:
-;		BX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-GetIdePortToDX:
-%ifdef MODULE_8BIT_IDE
-	; Point CS:BX to IDEVARS
-	xor		bh, bh
-	add		bl, [di+DPT.bIdevarsOffset]			; CS:BX now points port address
-
-	; Load port address and check if A0 and A3 address lines need to be reversed
-	cmp		dh, DEVICE_8BIT_XTIDE_REV1
-	mov		dh, bh								; DX now has IDE register offset
-	jae		SHORT .ReturnUntranslatedPortInDX	; No need to swap address lines
-
-	; Exchange address lines A0 and A3 from DL
-	add		dx, [cs:bx]							; DX now has port address
-	mov		bl, dl								; Port low byte to BL
-	and		bl, MASK_A3_AND_A0_ADDRESS_LINES	; Clear all bits except A0 and A3
-	jz		SHORT .ReturnTranslatedPortInDX		; A0 and A3 both zeroes, no change needed
-	cmp		bl, MASK_A3_AND_A0_ADDRESS_LINES
-	je		SHORT .ReturnTranslatedPortInDX		; A0 and A3 both ones, no change needed
-	xor		dl, MASK_A3_AND_A0_ADDRESS_LINES	; Invert A0 and A3
-.ReturnTranslatedPortInDX:
-	ret
-
-.ReturnUntranslatedPortInDX:
-	add		dx, [cs:bx]
-	ret
-
-%else	; Only standard IDE devices
-	xor		bh, bh
-	add		bl, [di+DPT.bIdevarsOffset]			; CS:BX now points port address
-	xor		dh, dh
-	add		dx, [cs:bx]							; DX now has port address
-	ret
-%endif
+%endif ; MODULE_8BIT_IDE

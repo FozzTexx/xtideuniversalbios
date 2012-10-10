@@ -20,16 +20,9 @@
 %ifndef IDE_IO_INC
 %define IDE_IO_INC
 
-JRIDE_SECTOR_ACCESS_WINDOW_OFFSET			EQU	3C00h	; 512 byte IDE Sector Access Window
-JRIDE_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET	EQU	3E00h	; 8 byte CS0 IDE Register Window
-JRIDE_CONTROL_BLOCK_REGISTER_WINDOW_OFFSET	EQU	3E08h	; 8 byte CS1 IDE Register Window
-JRIDE_SECTOR_ACCESS_WINDOW_SIZE				EQU	512		; 512 bytes
-
-
 ;--------------------------------------------------------------------
-; OUTPUT_AL_TO_IDE_REGISTER_IN_DL
-; JUMP_TO_OUTPUT_AL_TO_IDE_REGISTER_IN_DL
-; OUTPUT_AL_TO_IDE_CONTROL_BLOCK_REGISTER_IN_DL
+; OUTPUT_AL_TO_IDE_REGISTER
+; OUTPUT_AL_TO_IDE_CONTROL_BLOCK_REGISTER
 ;	Parameters:
 ;		AL:		Byte to output
 ;		%1:		IDE Register				(OUTPUT_AL_TO_IDE_REGISTER)
@@ -41,24 +34,43 @@ JRIDE_SECTOR_ACCESS_WINDOW_SIZE				EQU	512		; 512 bytes
 ;		BX, DX
 ;--------------------------------------------------------------------
 %macro OUTPUT_AL_TO_IDE_REGISTER 1
-%ifnidni %1, dl
-	mov		dl, %1
-%endif
+%ifndef MODULE_8BIT_IDE	; Standard IDE controllers only
+
+	%ifnidni %1, dx
+		mov		dx, %1
+	%endif
+	add		dx, [di+DPT.wBasePort]
+	out		dx, al
+
+%else	; Register translations required
+
+	%ifnidni %1, dl
+		mov		dl, %1
+	%endif
 	call	IdeIO_OutputALtoIdeRegisterInDL
+
+%endif
 %endmacro
 
-%macro JUMP_TO_OUTPUT_AL_TO_IDE_REGISTER 1
-%ifnidni %1, dl
-	mov		dl, %1
-%endif
-	jmp		IdeIO_OutputALtoIdeRegisterInDL
-%endmacro
 
 %macro OUTPUT_AL_TO_IDE_CONTROL_BLOCK_REGISTER 1
-%ifnidni %1, dl
-	mov		dl, %1
-%endif
+%ifndef MODULE_8BIT_IDE	; Standard IDE controllers only
+
+	%ifnidni %1, dx
+		mov		dx, %1
+	%endif
+	eMOVZX	bx, BYTE [di+DPT.bIdevarsOffset]
+	add		dx, [cs:bx+IDEVARS.wControlBlockPort]
+	out		dx, al
+
+%else	; Register translations required
+
+	%ifnidni %1, dl
+		mov		dl, %1
+	%endif
 	call	IdeIO_OutputALtoIdeControlBlockRegisterInDL
+
+%endif
 %endmacro
 
 
@@ -73,10 +85,22 @@ JRIDE_SECTOR_ACCESS_WINDOW_SIZE				EQU	512		; 512 bytes
 ;		BX, DX
 ;--------------------------------------------------------------------
 %macro INPUT_TO_AL_FROM_IDE_REGISTER 1
-%ifnidni %1, dl
-	mov		dl, %1
+%ifndef MODULE_8BIT_IDE	; Standard IDE controllers only
+
+	%ifnidni %1, dx
+		mov		dx, %1
+	%endif
+	add		dx, [di+DPT.wBasePort]
+	in		al, dx
+
+%else	; Register translations required
+
+	%ifnidni %1, dl
+		mov		dl, %1
+	%endif
+		call	IdeIO_InputToALfromIdeRegisterInDL
+
 %endif
-	call	IdeIO_InputToALfromIdeRegisterInDL
 %endmacro
 
 

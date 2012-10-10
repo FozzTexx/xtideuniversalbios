@@ -78,16 +78,12 @@ DetectPrint_RomFoundAtSegment:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, SI, DI, CX
+;		AX, SI, DI, CX, DX
 ;--------------------------------------------------------------------
 DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP:
-	mov		ax, [cs:bp+IDEVARS.wPort]    	; for IDE: AX=port address, DH=.bDevice
+	mov		ax, [cs:bp+IDEVARS.wBasePort]   ; for IDE: AX=port address, DH=.bDevice
 	mov		dx, [cs:bp+IDEVARS.bDevice-1]   ; for Serial: AL=port address>>2, AH=baud rate
 											;			  DL=COM number character, DH=.bDevice
-%ifdef MODULE_JRIDE
-	cmp		dh, DEVICE_8BIT_JRIDE_ISA
-	eCMOVE	ax, cs							; Use segment address for JR-IDE/ISA
-%endif
 
 	push	bp								; setup stack for call to
 	mov		bp, sp							; BootMenuPrint_FormatCSSIfromParamsInSSBP

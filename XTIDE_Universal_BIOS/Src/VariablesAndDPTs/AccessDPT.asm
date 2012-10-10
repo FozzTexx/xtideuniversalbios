@@ -20,24 +20,6 @@
 ; Section containing code
 SECTION .text
 
-%ifdef MODULE_ADVANCED_ATA
-;--------------------------------------------------------------------
-; AccessDPT_GetIdeBasePortToBX
-;	Parameters:
-;		DS:DI:	Ptr to Disk Parameter Table
-;	Returns:
-;		BX:		IDE Base Port Address
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-AccessDPT_GetIdeBasePortToBX:
-	eMOVZX	bx, [di+DPT.bIdevarsOffset]			; CS:BX points to IDEVARS
-	mov		bx, [cs:bx+IDEVARS.wPort]
-	ret
-%endif	; MODULE_ADVANCED_ATA
-
-
 ;--------------------------------------------------------------------
 ; AccessDPT_GetDriveSelectByteForOldInt13hToAL
 ; AccessDPT_GetDriveSelectByteForEbiosToAL
@@ -112,6 +94,30 @@ AccessDPT_GetLCHStoAXBLBH:
 	ret
 
 
+%ifdef MODULE_8BIT_IDE
+;--------------------------------------------------------------------
+; AccessDPT_IsThisDeviceXTCF
+;	Parameters:
+;		DS:DI:	Ptr to Disk Parameter Table
+;	Returns:
+;		AH:		Device Type
+;		ZF:		Set if XTCF
+;				Cleared if some other device
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+AccessDPT_IsThisDeviceXTCF:
+	mov		ah, [di+DPT_ATA.bDevice]
+	cmp		ah, DEVICE_8BIT_XTCF_PIO8
+	je		SHORT .DeviceIsXTCF
+	cmp		ah, DEVICE_8BIT_XTCF_DMA
+	je		SHORT .DeviceIsXTCF
+	cmp		ah, DEVICE_8BIT_XTCF_MEMMAP
+.DeviceIsXTCF:
+	ret
+%endif ; MODULE_8BIT_IDE
+
+
 %ifdef MODULE_EBIOS
 ;--------------------------------------------------------------------
 ; AccessDPT_GetLbaSectorCountToBXDXAX
@@ -141,14 +147,30 @@ AccessDPT_GetLbaSectorCountToBXDXAX:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 AccessDPT_GetPointerToDRVPARAMStoCSBX:
-	eMOVZX	bx, BYTE [di+DPT.bIdevarsOffset]	; CS:BX points to IDEVARS
+	call	AccessDPT_GetIdevarsToCSBX
 	add		bx, BYTE IDEVARS.drvParamsMaster	; CS:BX points to Master Drive DRVPARAMS
 	test	BYTE [di+DPT.bFlagsLow], FLGL_DPT_SLAVE
 	jz		SHORT .ReturnPointerToDRVPARAMS
 	add		bx, BYTE DRVPARAMS_size				; CS:BX points to Slave Drive DRVPARAMS
 .ReturnPointerToDRVPARAMS:
+	ret
+
+
+;--------------------------------------------------------------------
+; Needed many times during initialization so it is better to
+; make it as a function to save bytes.
+;
+; AccessDPT_GetIdevarsToCSBX
+;	Parameters:
+;		DS:DI:	Ptr to Disk Parameter Table
+;	Returns:
+;		CS:BX:	Ptr to IDEVARS for the drive
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+AccessDPT_GetIdevarsToCSBX:
+	eMOVZX	bx, BYTE [di+DPT.bIdevarsOffset]
 	ret
 
 

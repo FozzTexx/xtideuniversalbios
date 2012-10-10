@@ -149,19 +149,53 @@ DetectDrives_FromAllIDEControllers:
 ;	Returns:
 ;       None
 ;	Corrupts registers:
-;		AX, BX, CX, DX, SI, DI
+;		AX, BL, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 StartDetectionWithDriveSelectByteInBHandStringInCX:
 	call	DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP
 %ifdef MODULE_HOTKEYS
 	call	HotkeyBar_UpdateDuringDriveDetection
 %endif
+	; Fall to .AutodetectXTCFport or .ReadAtaInfoFromHardDisk
+
+
+%ifdef MODULE_8BIT_IDE
+;--------------------------------------------------------------------
+; .AutodetectXTCFport
+;	Parameters:
+;		BH:		Drive Select byte for Drive and Head Register
+;		CS:BP:	Ptr to IDEVARS for the drive
+;		DS:		RAMVARS segment
+;		ES:		Zero (BDA segment)
+;	Returns:
+;       DX:		Autodetected port (for devices that support autodetection)
+;	Corrupts registers:
+;		AX
+;--------------------------------------------------------------------
+.AutodetectXTCFport:
+	; Detect port for XTCF
+	call	DetectDrives_DoesIdevarsInCSBPbelongToXTCF
+	jne		SHORT .SkipXTCFportDetection
+
+	; XT-CF do not support slave drives so we can safely update port
+	; for next drive (another XT-CF card on same system)
+.DetectNextPort:
+	call	BootVars_GetNextXTCFportToDetectToDX
+	cmp		dx, XTCF_BASE_PORT_4
+	ja		SHORT DetectDrives_DriveNotFound	; XT-CF not found from any port
+
+	call	AH1Eh_DetectXTCFwithBasePortInDX
+	jc		SHORT .DetectNextPort				; XT-CF not found from this port
+.SkipXTCFportDetection:
 	; Fall to .ReadAtaInfoFromHardDisk
+%endif ; MODULE_8BIT_IDE
+
 
 ;--------------------------------------------------------------------
 ; .ReadAtaInfoFromHardDisk
 ;	Parameters:
 ;		BH:		Drive Select byte for Drive and Head Register
+;		DX:		Autodetected port (for devices that support autodetection)
 ;		CS:BP:	Ptr to IDEVARS for the drive
 ;		DS:		RAMVARS segment
 ;		ES:		Zero (BDA segment)
@@ -175,9 +209,11 @@ StartDetectionWithDriveSelectByteInBHandStringInCX:
 	mov		si, BOOTVARS.rgbAtaInfo		; ES:SI now points to ATA info location
 	push	es
 	push	si
+	push	dx
 	push	bx
 	call	Device_IdentifyToBufferInESSIwithDriveSelectByteInBH
 	pop		bx
+	pop		dx
 	pop		si
 	pop		es
 	jnc		SHORT CreateBiosTablesForHardDisk
@@ -207,6 +243,7 @@ DetectDrives_DriveNotFound:
 ; CreateBiosTablesForHardDisk
 ;	Parameters:
 ;		BH:		Drive Select byte for Drive and Head Register
+;		DX:		Autodetected port (for devices that support autodetection)
 ;		CS:BP:	Ptr to IDEVARS for the drive
 ;		ES:SI	Ptr to ATA information for the drive
 ;		DS:		RAMVARS segment
@@ -225,3 +262,26 @@ CreateBiosTablesForHardDisk:
 	jc		SHORT DetectDrives_DriveNotFound
 	call	DriveDetectInfo_CreateForHardDisk
 	jmp		SHORT DetectPrint_DriveNameFromDrvDetectInfoInESBX
+
+
+%ifdef MODULE_8BIT_IDE
+;--------------------------------------------------------------------
+; DetectDrives_DoesIdevarsInCSBPbelongToXTCF
+;	Parameters:
+;		CS:BP:	Ptr to IDEVARS for the drive
+;	Returns:
+;		ZF:		Set if IDEVARS belongs to XT-CF device
+;				Cleared if some other device
+;	Corrupts registers:
+;		AL
+;--------------------------------------------------------------------
+DetectDrives_DoesIdevarsInCSBPbelongToXTCF:
+	mov		al, [cs:bp+IDEVARS.bDevice]
+	cmp		al, DEVICE_8BIT_XTCF_PIO8
+	je		SHORT .DeviceIsXTCF
+	cmp		al, DEVICE_8BIT_XTCF_DMA
+	je		SHORT .DeviceIsXTCF
+	cmp		al, DEVICE_8BIT_XTCF_MEMMAP
+.DeviceIsXTCF:
+	ret
+%endif ; MODULE_8BIT_IDE

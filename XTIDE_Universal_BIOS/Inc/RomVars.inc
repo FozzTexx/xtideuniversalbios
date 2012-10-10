@@ -71,7 +71,7 @@ FLG_ROMVARS_SERIAL_SCANDETECT 		EQU	(1<<3)	; Scan COM ports at the end of drive 
 ; Here in case the configuration needs to know functionality is present
 FLG_ROMVARS_MODULE_FEATURE_SETS			EQU	(1<<5)
 FLG_ROMVARS_MODULE_8BIT_IDE				EQU	(1<<6)
-FLG_ROMVARS_MODULE_JRIDE				EQU (1<<7)
+
 FLG_ROMVARS_MODULE_ADVANCED_ATA			EQU	(1<<8)
 FLG_ROMVARS_MODULE_BOOT_MENU			EQU	(1<<9)
 FLG_ROMVARS_MODULE_EBIOS				EQU	(1<<10)
@@ -90,12 +90,13 @@ DEFAULT_TEXT_MODE		EQU	4
 struc IDEVARS
 ;;; Word 0
 	.wSerialPortAndBaud:					; Serial connection port (low, divided by 4) and baud rate divisor (high)
-	.wPort:									; IDE Base Port for Command Block (usual) Registers
+	.wBasePort:								; IDE Base Port for Command Block (usual) Registers
 	.bSerialPort				resb	1
 	.bSerialBaud				resb	1
 
 ;;; Word 1
-	.wPortCtrl:
+	.wControlBlockPort:
+	.bXTCFcontrolRegister:					; XT-CF autodetects ports
 	.bSerialUnused				resb	1	; IDE Base Port for Control Block Registers
 
 	.wSerialCOMPortCharAndDevice:			; In DetectPrint, we grab the COM Port char and Device at the same time
@@ -103,7 +104,6 @@ struc IDEVARS
 
 ;;; Word 2
 	.bDevice					resb	1	; Device type
-
 	.bIRQ						resb	1	; Interrupt Request Number
 
 ;;; And more...
@@ -136,18 +136,24 @@ DEVICE_ATA_QUATERNARY_PORTCTRL			EQU		(DEVICE_ATA_QUATERNARY_PORT + 200h)
 
 
 ; Device types for IDEVARS.bDevice
+; IDE Devices are grouped so device numbers cannot be changed without modifying code elsewhere!
 ;
-DEVICE_8BIT_JRIDE_ISA					EQU	(0<<1)	; JR-IDE/ISA (must be 0)
-DEVICE_8BIT_XTCF						EQU	(1<<1)	; Lo-tech XT-CF
-DEVICE_8BIT_XTIDE_REV2					EQU	(2<<1)	; Or rev 1 with swapped A0 and A3 (must be 1 or 2)
-DEVICE_8BIT_XTIDE_REV1					EQU	(3<<1)	; Must be 4
-COUNT_OF_8BIT_IDE_DEVICES				EQU	4
-
-DEVICE_16BIT_ATA						EQU	(COUNT_OF_8BIT_IDE_DEVICES<<1)
-DEVICE_32BIT_ATA						EQU	((COUNT_OF_8BIT_IDE_DEVICES+1)<<1)
-COUNT_OF_16BIT_IDE_DEVICES				EQU	2
-COUNT_OF_ALL_IDE_DEVICES				EQU	(COUNT_OF_8BIT_IDE_DEVICES + COUNT_OF_16BIT_IDE_DEVICES)
-
+COUNT_OF_STANDARD_IDE_DEVICES			EQU	2
+COUNT_OF_8BIT_IDE_DEVICES				EQU	6
+COUNT_OF_ALL_IDE_DEVICES				EQU	(COUNT_OF_8BIT_IDE_DEVICES + COUNT_OF_STANDARD_IDE_DEVICES)
+; Standard port mapped I/O
+DEVICE_16BIT_ATA						EQU	(0<<1)
+DEVICE_32BIT_ATA						EQU	(1<<1)
+DEVICE_8BIT_XTIDE_REV1					EQU	(COUNT_OF_STANDARD_IDE_DEVICES<<1)
+; Address lines A0 and A3 are swapped
+DEVICE_8BIT_XTIDE_REV2					EQU	((COUNT_OF_STANDARD_IDE_DEVICES+1)<<1)	; Or rev 1 with swapped A0 and A3
+; IDE Register offsets are SHL 1
+DEVICE_8BIT_XTCF_PIO8					EQU	((COUNT_OF_STANDARD_IDE_DEVICES+2)<<1)	; XT-CF using 8-bit PIO mode
+DEVICE_8BIT_XTCF_DMA					EQU	((COUNT_OF_STANDARD_IDE_DEVICES+3)<<1)	; XT-CF using DMA
+DEVICE_8BIT_XTCF_MEMMAP					EQU	((COUNT_OF_STANDARD_IDE_DEVICES+4)<<1)	; XT-CF using Memory Mapped transfers (not I/O)
+; Memory Mapped I/O
+DEVICE_8BIT_JRIDE_ISA					EQU	((COUNT_OF_STANDARD_IDE_DEVICES+5)<<1)	; JR-IDE/ISA (Memory Mapped I/O)
+; Virtual devices
 DEVICE_SERIAL_PORT						EQU	(COUNT_OF_ALL_IDE_DEVICES<<1)
 
 

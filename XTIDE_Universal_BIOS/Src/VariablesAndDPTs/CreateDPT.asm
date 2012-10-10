@@ -27,6 +27,7 @@ SECTION .text
 ; CreateDPT_FromAtaInformation
 ;	Parameters:
 ;		BH:		Drive Select byte for Drive and Head Register
+;		DX:		Autodetected port (for devices that support autodetection)
 ;		ES:SI:	Ptr to 512-byte ATA information read from the drive
 ;		CS:BP:	Ptr to IDEVARS for the controller
 ;		DS:		RAMVARS segment
@@ -46,6 +47,7 @@ CreateDPT_FromAtaInformation:
 ; .InitializeDPT
 ;	Parameters:
 ;		BH:		Drive Select byte for Drive and Head Register
+;		DX:		Autodetected port (for devices that support autodetection)
 ;		DS:DI:	Ptr to Disk Parameter Table
 ;		CS:BP:	Ptr to IDEVARS for the controller
 ;	Returns:
@@ -54,7 +56,7 @@ CreateDPT_FromAtaInformation:
 ;		AX
 ;--------------------------------------------------------------------
 .InitializeDPT:
-	mov		[di+DPT.bIdevarsOffset], bp		; IDEVARS must start in first 256 bytes of ROM
+	call	CreateDPT_StoreIdevarsOffsetAndBasePortFromCSBPtoDPTinDSDI
 	; Fall to .StoreDriveSelectAndDriveControlByte
 
 ;--------------------------------------------------------------------
@@ -225,6 +227,33 @@ CreateDPT_FromAtaInformation:
 
 .AllDone:
 	clc
+	ret
+
+
+;--------------------------------------------------------------------
+; CreateDPT_StoreIdevarsOffsetAndBasePortFromCSBPtoDPTinDSDI
+;	Parameters:
+;		DX:		Autodetected port (for devices that support autodetection)
+;		DS:DI:	Ptr to Disk Parameter Table
+;		CS:BP:	Ptr to IDEVARS for the controller
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX
+;--------------------------------------------------------------------
+CreateDPT_StoreIdevarsOffsetAndBasePortFromCSBPtoDPTinDSDI:
+	mov		[di+DPT.bIdevarsOffset], bp		; IDEVARS must start in first 256 bytes of ROM
+
+%ifdef MODULE_8BIT_IDE
+	call	DetectDrives_DoesIdevarsInCSBPbelongToXTCF
+	jne		SHORT .DeviceUsesPortSpecifiedInIDEVARS
+	mov		[di+DPT.wBasePort], dx
+	ret
+.DeviceUsesPortSpecifiedInIDEVARS:
+%endif ; MODULE_8BIT_IDE
+
+	mov		ax, [cs:bp+IDEVARS.wBasePort]
+	mov		[di+DPT.wBasePort], ax
 	ret
 
 

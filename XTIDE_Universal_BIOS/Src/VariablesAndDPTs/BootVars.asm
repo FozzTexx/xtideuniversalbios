@@ -31,6 +31,10 @@ SECTION .text
 ;		AX, CX, DX, DI
 ;--------------------------------------------------------------------
 BootVars_Initialize:
+%ifdef MODULE_8BIT_IDE
+	mov		WORD [es:BOOTVARS.wNextXTCFportToScan], XTCF_BASE_PORT_1
+%endif
+
 	; Clear to zero
 	mov		al, DRVDETECTINFO_size
 	mul		BYTE [cs:ROMVARS.bIdeCnt]
@@ -65,3 +69,25 @@ BootVars_StoreHotkeyForDriveNumberInDL:
 	jmp		Memory_ZeroESDIwithSizeInCX
 
 %endif ; MODULE_HOTKEYS
+
+
+%ifdef MODULE_8BIT_IDE
+;--------------------------------------------------------------------
+; BootVars_GetNextXTCFportToDetectToDX
+;	Parameters:
+;		ES:		BDA Segment
+;	Returns:
+;		DX:		Next XT-CF port to detect
+;	Corrupts registers:
+;		AX
+;--------------------------------------------------------------------
+BootVars_GetNextXTCFportToDetectToDX:
+	mov		dx, [es:BOOTVARS.wNextXTCFportToScan]
+	test	dl, dl
+	jz		SHORT .NextOneIs240hor340h
+	add		WORD [es:BOOTVARS.wNextXTCFportToScan], XTCF_BASE_PORT_3 - XTCF_BASE_PORT_2
+	ret
+.NextOneIs240hor340h:
+	mov		BYTE [es:BOOTVARS.wNextXTCFportToScan], XTCF_BASE_PORT_2 & 0FFh	; 40h
+	ret		
+%endif ; MODULE_8BIT_IDE

@@ -116,40 +116,48 @@ g_szAddressingModes_Displacement equ (g_szLARGE - g_szAddressingModes)
 	%endif
 %endif
 
-g_szBusTypeValues:
-g_szBusTypeValues_8JrIde:		db		"M8 ",NULL
-g_szBusTypeValues_8Fast:		db		"F8 ",NULL
-g_szBusTypeValues_8Reversed:	db		"X8 ",NULL
-g_szBusTypeValues_8Dual:		db		"D8 ",NULL
-g_szBusTypeValues_16:			db		" 16",NULL
-g_szBusTypeValues_32:			db		" 32",NULL
-g_szBusTypeValues_Serial:		db		"SER",NULL
+g_szDeviceTypeValues:
+g_szDeviceTypeValues_16bit:		db		" 16",NULL
+g_szDeviceTypeValues_32bit:		db		" 32",NULL
+g_szDeviceTypeValues_XTIDEr1:	db		"D8 ",NULL	; Dual 8-bit
+g_szDeviceTypeValues_XTIDEr2:	db		"X8 ",NULL	; A0<->A3 swapped 8-bit
+g_szDeviceTypeValues_XTCFpio8:	db		"T8 ",NULL	; True 8-bit
+g_szDeviceTypeValues_XTCFdma:	db		"8MA",NULL	; DMA 8-bit
+g_szDeviceTypeValues_XTCFmem:	db		"M8 ",NULL	; Memory Mapped 8-bit
+g_szDeviceTypeValues_JrIde:		db		"M8 ",NULL
+g_szDeviceTypeValues_Serial:	db		"SER",NULL
 
-g_szBusTypeValues_Displacement equ (g_szBusTypeValues_8Fast - g_szBusTypeValues)
+g_szDeviceTypeValues_Displacement equ (g_szDeviceTypeValues_32bit - g_szDeviceTypeValues)
 ;
-; Ensure that bus type strings are correctly spaced in memory
+; Ensure that device type strings are correctly spaced in memory
 ;
 %ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
-	%if g_szBusTypeValues_8JrIde <> g_szBusTypeValues
-		%error "g_szBusTypeValues Displacement Incorrect 1"
+	%if g_szDeviceTypeValues_16bit <> g_szDeviceTypeValues
+		%error "g_szDeviceTypeValues Displacement Incorrect 1"
 	%endif
-	%if g_szBusTypeValues_8Fast <> g_szBusTypeValues + g_szBusTypeValues_Displacement
-		%error "g_szBusTypeValues Displacement Incorrect 2"
+	%if g_szDeviceTypeValues_32bit <> g_szDeviceTypeValues + g_szDeviceTypeValues_Displacement
+		%error "g_szDeviceTypeValues Displacement Incorrect 2"
 	%endif
-	%if g_szBusTypeValues_8Reversed <> g_szBusTypeValues_8Fast + g_szBusTypeValues_Displacement
-		%error "g_szBusTypeValues Displacement Incorrect 3"
+	%if g_szDeviceTypeValues_XTIDEr1 <> g_szDeviceTypeValues_32bit + g_szDeviceTypeValues_Displacement
+		%error "g_szDeviceTypeValues Displacement Incorrect 3"
 	%endif
-	%if g_szBusTypeValues_8Dual <> g_szBusTypeValues_8Reversed + g_szBusTypeValues_Displacement
-		%error "g_szBusTypeValues Displacement Incorrect 4"
+	%if g_szDeviceTypeValues_XTIDEr2 <> g_szDeviceTypeValues_XTIDEr1 + g_szDeviceTypeValues_Displacement
+		%error "g_szDeviceTypeValues Displacement Incorrect 4"
 	%endif
-	%if g_szBusTypeValues_16 <> g_szBusTypeValues_8Dual + g_szBusTypeValues_Displacement
-		%error "g_szBusTypeValues Displacement Incorrect 5"
+	%if g_szDeviceTypeValues_XTCFpio8 <> g_szDeviceTypeValues_XTIDEr2 + g_szDeviceTypeValues_Displacement
+		%error "g_szDeviceTypeValues Displacement Incorrect 5"
 	%endif
-	%if g_szBusTypeValues_32 <> g_szBusTypeValues_16 + g_szBusTypeValues_Displacement
-		%error "g_szBusTypeValues Displacement Incorrect 6"
+	%if g_szDeviceTypeValues_XTCFdma <> g_szDeviceTypeValues_XTCFpio8 + g_szDeviceTypeValues_Displacement
+		%error "g_szDeviceTypeValues Displacement Incorrect 6"
 	%endif
-	%if g_szBusTypeValues_Serial <> g_szBusTypeValues_32 + g_szBusTypeValues_Displacement
-		%error "g_szBusTypeValues Displacement Incorrect 7"
+	%if g_szDeviceTypeValues_XTCFmem <> g_szDeviceTypeValues_XTCFdma + g_szDeviceTypeValues_Displacement
+		%error "g_szDeviceTypeValues Displacement Incorrect 7"
+	%endif
+	%if g_szDeviceTypeValues_JrIde <> g_szDeviceTypeValues_XTCFmem + g_szDeviceTypeValues_Displacement
+		%error "g_szDeviceTypeValues Displacement Incorrect 8"
+	%endif
+	%if g_szDeviceTypeValues_Serial <> g_szDeviceTypeValues_JrIde + g_szDeviceTypeValues_Displacement
+		%error "g_szDeviceTypeValues Displacement Incorrect 9"
 	%endif
 %endif
 

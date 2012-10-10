@@ -105,6 +105,19 @@ AH9h_InitializeDriveForUse:
 .ContinueInitializationSinceDriveSelectedSuccesfully:
 
 
+;;; Set XT-CF mode
+%ifdef MODULE_8BIT_IDE
+	call	AccessDPT_IsThisDeviceXTCF
+	jne		SHORT .DoNotSetXTCFmode
+
+	call	AccessDPT_GetIdevarsToCSBX
+	mov		al, [cs:bx+IDEVARS.bXTCFcontrolRegister]
+	call	AH1Eh_ChangeXTCFmodeBasedOnControlRegisterInAL
+	STORE_ERROR_FLAG_TO_DPT		FLG_INITERROR_FAILED_TO_SET_XTCF_MODE
+.DoNotSetXTCFmode:
+%endif
+
+
 ;;;	InitializeDeviceParameters
 	; Initialize CHS parameters if LBA is not used and
 	; user has specified P-CHS parameters
@@ -124,13 +137,6 @@ AH9h_InitializeDriveForUse:
 	call	Idepack_StoreNonExtParametersAndIssueCommandFromAL
 	STORE_ERROR_FLAG_TO_DPT		FLG_INITERROR_FAILED_TO_INITIALIZE_CHS_PARAMETERS
 .SkipInitializeDeviceParameters:
-
-
-%ifdef MODULE_8BIT_IDE
-;;; Enable 8-bit PIO Transfer Mode for Lo-tech XT-CF (CF and Microdrives only)
-	call	AH9h_Enable8bitPioModeForXTCF
-	STORE_ERROR_FLAG_TO_DPT		FLG_INITERROR_FAILED_TO_ENABLE_8BIT_PIO_MODE
-%endif
 
 
 ;;;	SetWriteCache
@@ -243,7 +249,6 @@ AH9h_InitializeDriveForUse:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-DoNotEnable8bitMode:
 IgnoreInvalidCommandError:
 	xor		ah, ah	; Clears CF
 SetErrorFlagFromALwithErrorCodeInAH:
@@ -255,25 +260,3 @@ SetErrorFlagFromALwithErrorCodeInAH:
 	stc
 .NoErrorFlagToSet:
 	ret
-
-
-%ifdef MODULE_8BIT_IDE
-;--------------------------------------------------------------------
-; AH9h_Enable8bitPioModeForXTCF
-;	Parameters:
-;		DS:DI:	Ptr to DPT
-;		SS:BP:	Ptr to IDEPACK
-;	Returns:
-;		AH:		Int 13h return status
-;		CF:		0 if successful, 1 if error
-;	Corrupts registers:
-;		AL, BX, CX, DX, SI
-;--------------------------------------------------------------------
-AH9h_Enable8bitPioModeForXTCF:
-	eMOVZX	bx, [di+DPT.bIdevarsOffset]
-	cmp		BYTE [cs:bx+IDEVARS.bDevice], DEVICE_8BIT_XTCF
-	jne		SHORT DoNotEnable8bitMode
-
-	mov		si, FEATURE_ENABLE_8BIT_PIO_TRANSFER_MODE
-	jmp		AH23h_SetControllerFeatures
-%endif ; MODULE_8BIT_IDE
