@@ -205,245 +205,49 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 InitializePiovarsInSSBPwithSectorCountInAH:
-	; Store sizes
+	; Store sizes and Data Port
 	mov		[bp+PIOVARS.bSectorsLeft], ah
+	mov		ax, [di+DPT.wBasePort]
+	mov		[bp+PIOVARS.wDataPort], ax
 	eMOVZX	ax, [di+DPT_ATA.bBlockSize]
 	mov		[bp+PIOVARS.wSectorsInBlock], ax
 	mov		[bp+PIOVARS.bSectorsDone], ah		; Zero
 
 	; Get transfer function based on bus type
 	xchg	ax, bx								; Lookup table offset to AX
-	mov		bl, [di+DPT.bIdevarsOffset]			; CS:BX now points to IDEVARS
-	mov		dx, [cs:bx+IDEVARS.wPort]			; Load IDE Data port address
 	mov		bl, [di+DPT_ATA.bDevice]
 	add		bx, ax
-
-	mov		[bp+PIOVARS.wDataPort], dx
 	mov		ax, [cs:bx]							; Load offset to transfer function
 	mov		[bp+PIOVARS.fnXfer], ax
 	ret
-
-
-;--------------------------------------------------------------------
-; ReadBlockFromXtideRev1		XTIDE rev 1
-; ReadBlockFromXtideRev2		XTIDE rev 2 or rev 1 with swapped A0 and A3 (chuck-mod)
-; ReadBlockFrom8bitDataPort		CF-XT when using 8-bit PIO
-; ReadBlockFrom16bitDataPort	Normal 16-bit IDE
-; ReadBlockFrom32bitDataPort	VLB/PCI 32-bit IDE
-;	Parameters:
-;		CX:		Block size in 512 byte sectors
-;		DX:		IDE Data port address
-;		ES:DI:	Normalized ptr to buffer to receive data
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, BX, CX
-;--------------------------------------------------------------------
-%ifdef MODULE_8BIT_IDE
-
-	ALIGN JUMP_ALIGN
-	ReadBlockFromXtideRev1:
-		UNROLL_SECTORS_IN_CX_TO_OWORDS
-		mov		bl, 8		; Bit mask for toggling data low/high reg
-	ALIGN JUMP_ALIGN
-	.InswLoop:
-	%rep 8	; WORDs
-		XTIDE_INSW
-	%endrep
-		loop	.InswLoop
-		ret
-
-	;--------------------------------------------------------------------
-	%ifndef USE_186			; 8086/8088 compatible WORD read
-		ALIGN JUMP_ALIGN
-		ReadBlockFromXtideRev2:
-			UNROLL_SECTORS_IN_CX_TO_OWORDS
-		ALIGN JUMP_ALIGN
-		.ReadNextOword:
-		%rep 8	; WORDs
-			in		ax, dx		; Read WORD
-			stosw				; Store WORD to [ES:DI]
-		%endrep
-			loop	.ReadNextOword
-			ret
-	%endif
-
-	;--------------------------------------------------------------------
-	%ifdef USE_186
-		ALIGN JUMP_ALIGN
-		ReadBlockFrom8bitDataPort:
-			shl		cx, 9		; Sectors to BYTEs
-			rep insb
-			ret
-
-	%else ; If 8088/8086
-		ALIGN JUMP_ALIGN
-		ReadBlockFrom8bitDataPort:
-			UNROLL_SECTORS_IN_CX_TO_OWORDS
-		ALIGN JUMP_ALIGN
-		.ReadNextOword:
-		%rep 16	; BYTEs
-			in		al, dx		; Read BYTE
-			stosb				; Store BYTE to [ES:DI]
-		%endrep
-			loop	.ReadNextOword
-			ret
-	%endif
-%endif	; MODULE_8BIT_IDE
-
-;--------------------------------------------------------------------
-%ifdef USE_186
-	ALIGN JUMP_ALIGN
-	ReadBlockFrom16bitDataPort:
-		xchg	cl, ch		; Sectors to WORDs
-		rep insw
-		ret
-%endif
-
-;--------------------------------------------------------------------
-%ifdef USE_AT
-	ALIGN JUMP_ALIGN
-	ReadBlockFrom32bitDataPort:
-		shl		cx, 7		; Sectors to DWORDs
-		rep
-		db		66h			; Override operand size to 32-bit
-		db		6Dh			; INSW/INSD
-		ret
-%endif
-
-
-;--------------------------------------------------------------------
-; WriteBlockToXtideRev1			XTIDE rev 1
-; WriteBlockToXtideRev2			XTIDE rev 2 or rev 1 with swapped A0 and A3 (chuck-mod)
-; WriteBlockTo8bitDataPort		XT-CF when using 8-bit PIO
-; WriteBlockTo16bitDataPort		Normal 16-bit IDE
-; WriteBlockTo32bitDataPort		VLB/PCI 32-bit IDE
-;	Parameters:
-;		CX:		Block size in 512-byte sectors
-;		DX:		IDE Data port address
-;		ES:SI:	Normalized ptr to buffer containing data
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, BX, CX, DX
-;--------------------------------------------------------------------
-%ifdef MODULE_8BIT_IDE
-
-	ALIGN JUMP_ALIGN
-	WriteBlockToXtideRev1:
-		push	ds
-		UNROLL_SECTORS_IN_CX_TO_QWORDS
-		mov		bl, 8		; Bit mask for toggling data low/high reg
-		push	es			; Copy ES...
-		pop		ds			; ...to DS
-	ALIGN JUMP_ALIGN
-	.OutswLoop:
-	%rep 4	; WORDs
-		XTIDE_OUTSW
-	%endrep
-		loop	.OutswLoop
-		pop		ds
-		ret
-
-	;--------------------------------------------------------------------
-	ALIGN JUMP_ALIGN
-	WriteBlockToXtideRev2:
-		UNROLL_SECTORS_IN_CX_TO_QWORDS
-		push	ds
-		push	es			; Copy ES...
-		pop		ds			; ...to DS
-	ALIGN JUMP_ALIGN
-	.WriteNextQword:
-	%rep 4	; WORDs
-		XTIDE_MOD_OUTSW
-	%endrep
-		loop	.WriteNextQword
-		pop		ds
-		ret
-
-	;--------------------------------------------------------------------
-	%ifdef USE_186
-		ALIGN JUMP_ALIGN
-		WriteBlockTo8bitDataPort:
-			shl		cx, 9		; Sectors to BYTEs
-			es					; Source is ES segment
-			rep outsb
-			ret
-
-	%else ; If 8088/8086
-		ALIGN JUMP_ALIGN
-		WriteBlockTo8bitDataPort:
-			UNROLL_SECTORS_IN_CX_TO_DWORDS
-			push	ds
-			push	es
-			pop		ds
-		ALIGN JUMP_ALIGN
-		.WriteNextDword:
-		%rep 4	; BYTEs
-			lodsb				; Load BYTE from [DS:SI]
-			out		dx, al		; Write BYTE
-		%endrep
-			loop	.WriteNextDword
-			pop		ds
-			ret
-	%endif
-%endif	; MODULE_8BIT_IDE
-
-;--------------------------------------------------------------------
-%ifdef USE_AT
-ALIGN JUMP_ALIGN
-WriteBlockTo16bitDataPort:
-	xchg	cl, ch		; Sectors to WORDs
-	es					; Source is ES segment
-	rep outsw
-	ret
-
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-WriteBlockTo32bitDataPort:
-	shl		cx, 7		; Sectors to DWORDs
-	es					; Source is ES segment
-	rep
-	db		66h			; Override operand size to 32-bit
-	db		6Fh			; OUTSW/OUTSD
-	ret
-%endif ; USE_AT
 
 
 
 ; Lookup tables to get transfer function based on bus type
 ALIGN WORD_ALIGN
 g_rgfnPioRead:
+%ifdef USE_AT
+		dw		IdePioBlock_ReadFrom16bitDataPort	; 0, DEVICE_16BIT_ATA
+		dw		IdePioBlock_ReadFrom32bitDataPort	; 1, DEVICE_32BIT_ATA
+%else
+		dd		0
+%endif
 %ifdef MODULE_8BIT_IDE
-		dw		0							; 0, DEVICE_8BIT_JRIDE_ISA
-		dw		ReadBlockFrom8bitDataPort	; 1, DEVICE_8BIT_XTCF
-	%ifdef USE_186
-		dw		ReadBlockFrom16bitDataPort	; 2, DEVICE_8BIT_XTIDE_REV2
-	%else
-		dw		ReadBlockFromXtideRev2		; 2, DEVICE_8BIT_XTIDE_REV2
+		dw		IdePioBlock_ReadFromXtideRev1		; 2, DEVICE_8BIT_XTIDE_REV1
+	%ifndef USE_AT
+		g_rgfnPioWrite:
 	%endif
-		dw		ReadBlockFromXtideRev1		; 3, DEVICE_XTIDE_REV1
-
-%else
-		times	COUNT_OF_8BIT_IDE_DEVICES	dw	0
+		dw		IdePioBlock_ReadFromXtideRev2		; 3, DEVICE_8BIT_XTIDE_REV2
+		dw		IdePioBlock_ReadFrom8bitDataPort	; 4, DEVICE_8BIT_XTCF_PIO8
 %endif
+
 %ifdef USE_AT
-		dw		ReadBlockFrom16bitDataPort	; 4, DEVICE_16BIT_ATA
-		dw		ReadBlockFrom32bitDataPort	; 5, DEVICE_32BIT_ATA
-%endif
-
-
 g_rgfnPioWrite:
-%ifdef MODULE_8BIT_IDE
-		dw		0							; 0, DEVICE_8BIT_JRIDE_ISA
-		dw		WriteBlockTo8bitDataPort	; 1, DEVICE_8BIT_XTCF
-		dw		WriteBlockToXtideRev2		; 2, DEVICE_XTIDE_REV2
-		dw		WriteBlockToXtideRev1		; 3, DEVICE_XTIDE_REV1
-
-%else
-		times	COUNT_OF_8BIT_IDE_DEVICES	dw	0
+		dw		IdePioBlock_WriteTo16bitDataPort	; 0, DEVICE_16BIT_ATA
+		dw		IdePioBlock_WriteTo32bitDataPort	; 1, DEVICE_32BIT_ATA
 %endif
-%ifdef USE_AT
-		dw		WriteBlockTo16bitDataPort	; 4, DEVICE_16BIT_ATA
-		dw		WriteBlockTo32bitDataPort	; 5, DEVICE_32BIT_ATA
+%ifdef MODULE_8BIT_IDE
+		dw		IdePioBlock_WriteToXtideRev1		; 2, DEVICE_8BIT_XTIDE_REV1
+		dw		IdePioBlock_WriteToXtideRev2		; 3, DEVICE_8BIT_XTIDE_REV2
+		dw		IdePioBlock_WriteTo8bitDataPort		; 4, DEVICE_8BIT_XTCF_PIO8
 %endif

@@ -69,7 +69,8 @@ AHDh_ResetDrive:
 												; (error register has special values after reset)
 
 	; Initialize Master and Slave drives
-	eMOVZX	ax, [di+DPT.bIdevarsOffset]			; (AL) pointer to controller we are looking to reset
+	call	AccessDPT_GetIdevarsToCSBX
+	xchg	ax, bx								; (AL) pointer to controller we are looking to reset
 												; (AH) initialize error code, assume success
 
 	mov		si, IterateAndResetDrives			; Callback function for FindDPT_IterateAllDPTs

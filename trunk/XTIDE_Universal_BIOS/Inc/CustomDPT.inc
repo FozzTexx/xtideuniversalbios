@@ -23,14 +23,15 @@
 
 ; Base DPT for all device types
 struc DPT
-	; General Disk Parameter Table related (Bytes 0...3)
+	; General Disk Parameter Table related
 	.wFlags:
 	.bFlagsLow				resb	1
 	.bFlagsHigh				resb	1
 	.bIdevarsOffset			resb	1	; Offset to IDEVARS for this drive
 	.bInitError				resb	1	; Flags for AH=09h initialization errors
+	.wBasePort				resb	2	; Segment for JR-IDE/ISA
 
-	; CHS variables (Bytes 4...8)
+	; CHS variables
 	.wLchsCylinders			resb	2	; (1...1027, yes 1027)
 	.wLchsHeadsAndSectors:
 	.bLchsHeads				resb	1	; (1...255)
@@ -42,10 +43,6 @@ struc DPT
 	.bPchsSectorsPerTrack	resb	1
 	.wPchsCylinders			resb	2
 	.twLbaSectors			resb	6	; 48-bit sector count for LBA addressing
-%endif
-
-%ifdef MODULE_8BIT_IDE
-	.wXTCFport				resb	2	; Autodetected XT-CF port
 %endif
 							alignb	2	; WORD alignent for DPT_SERIAL or DPT_ATA
 endstruc
@@ -95,15 +92,15 @@ endstruc
 	FLG_INITERROR_FAILED_TO_SET_BLOCK_MODE				EQU (1<<4)
 	FLG_INITERROR_FAILED_TO_SET_PIO_MODE				EQU (1<<5)
 	FLG_INITERROR_FAILED_TO_INITIALIZE_STANDBY_TIMER	EQU	(1<<6)
-	FLG_INITERROR_FAILED_TO_ENABLE_8BIT_PIO_MODE		EQU	(1<<7)
+	FLG_INITERROR_FAILED_TO_SET_XTCF_MODE				EQU	(1<<7)
 
 
 
 ; DPT for ATA devices
-struc DPT_ATA	; 10/18 bytes + 2 bytes = 12/20 bytes
+struc DPT_ATA
 	.dpt					resb	DPT_size
-	.bBlockSize				resb	1	; Current block size in sectors (do not set to zero!)
 	.bDevice				resb	1	; Device Type from IDEVARS (overrided when 32-bit controller detected)
+	.bBlockSize				resb	1	; Current block size in sectors (do not set to zero!)
 endstruc
 
 
@@ -111,7 +108,7 @@ endstruc
 ; Additional variables needed to initialize and reset Advanced IDE Controllers.
 ; EBDA must be reserved for DPTs when using these!
 %ifdef MODULE_ADVANCED_ATA
-struc DPT_ADVANCED_ATA	; 12/20 bytes + 8 bytes = 20/28 bytes
+struc DPT_ADVANCED_ATA
 	.dpt_ata				resb	DPT_ATA_size
 	.wControllerID			resb	2	; Controller specific ID WORD (from Advanced Controller detection)
 	.wControllerBasePort	resb	2	; Advanced Controller port (not IDE port)
@@ -124,7 +121,7 @@ endstruc
 
 ; DPT for Serial devices
 %ifdef MODULE_SERIAL
-struc DPT_SERIAL	; 8/18 bytes + 2 bytes = 10/20 bytes
+struc DPT_SERIAL
 	.dpt					resb	DPT_size
 	.wSerialPortAndBaud:
 	.bSerialPort			resb	1	; Serial connection I/O port address, divided by 4

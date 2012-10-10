@@ -81,6 +81,7 @@ Device_ResetMasterAndSlaveController:
 ; Device_IdentifyToBufferInESSIwithDriveSelectByteInBH
 ;	Parameters:
 ;		BH:		Drive Select byte for Drive and Head Select Register
+;		DX:		Autodetected port (for devices that support autodetection)
 ;		DS:		Segment to RAMVARS
 ;		ES:SI:	Ptr to normalized buffer to receive 512-byte IDE Information
 ;		CS:BP:	Ptr to IDEVARS

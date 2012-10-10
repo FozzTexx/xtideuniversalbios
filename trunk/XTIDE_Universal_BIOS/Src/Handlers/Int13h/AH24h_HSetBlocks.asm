@@ -58,6 +58,16 @@ AH24h_HandlerForSetMultipleBlocks:
 ;		AL, CX, DX
 ;--------------------------------------------------------------------
 AH24h_SetBlockSize:
+	; XT-CF does not support largest block size in DMA mode.
+%ifdef MODULE_8BIT_IDE
+	call	AccessDPT_IsThisDeviceXTCF
+	cmp		ah, DEVICE_8BIT_XTCF_DMA
+	jne		SHORT .NoNeedToLimitBlockSize
+	cmp		al, XTCF_DMA_MODE_MAX_BLOCK_SIZE
+	ja		SHORT AH1Eh_LoadInvalidCommandToAHandSetCF
+.NoNeedToLimitBlockSize:
+%endif ; MODULE_8BIT_IDE
+
 	push	bx
 
 	push	ax

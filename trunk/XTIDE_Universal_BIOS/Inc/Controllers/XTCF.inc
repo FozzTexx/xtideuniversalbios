@@ -22,6 +22,9 @@
 %ifndef XTCF_INC
 %define XTCF_INC
 
+XTCF_DMA_MODE_MAX_BLOCK_SIZE		EQU		64		; Sectors
+OFFSET_TO_CONTROL_BLOCK_REGISTERS	EQU		8
+
 ; Possible base addresses. Note that all XT-CF IDE registers are SHL 1 compared
 ; to standard IDE registers.
 XTCF_BASE_PORT_1					EQU		200h
@@ -41,6 +44,9 @@ XTCT_CONTROL_REGISTER_INVERTED_in	EQU		1Eh
 ; 
 ; 8-bit PIO transfers (port I/O) are used if Control Register is zero.
 ; Any other value means DMA transfers (using DMA channel 3).
+XTCF_8BIT_PIO_MODE					EQU		0
+XTCF_MEMORY_MAPPED_MODE				EQU		0A0h
+
 
 
 ; Subcommands for AH=1Eh, Lo-tech XT-CF features.

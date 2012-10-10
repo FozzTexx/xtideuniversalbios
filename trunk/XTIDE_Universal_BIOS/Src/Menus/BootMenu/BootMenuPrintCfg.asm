@@ -87,7 +87,7 @@ SECTION .text
 	push	ax
 
 ;--------------------------------------------------------------------
-; PushBusType
+; PushDeviceType
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT
 ;		CS:BX:	Ptr to IDEVARS
@@ -96,13 +96,20 @@ SECTION .text
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
-.PushBusType:
-	mov		al,g_szBusTypeValues_Displacement
-	mul		BYTE [cs:bx+IDEVARS.bDevice]
+.PushDeviceType:
+	mov		al,g_szDeviceTypeValues_Displacement
+%ifdef MODULE_SERIAL
+	mov		ah, [cs:bx+IDEVARS.bDevice]
+	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE
+	eCMOVZ	ah, [di+DPT_ATA.bDevice]	; DPT_ATA contains up to date device information for IDE drives
+	mul		ah
+%else	
+	mul		BYTE [di+DPT_ATA.bDevice]
+%endif
 
 	shr		ax,1			; divide by 2 since IDEVARS.bDevice is multiplied by 2
 
-	add		ax,g_szBusTypeValues
+	add		ax, g_szDeviceTypeValues
 	push	ax
 
 ;--------------------------------------------------------------------

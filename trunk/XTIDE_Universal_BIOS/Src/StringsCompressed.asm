@@ -216,61 +216,75 @@ g_szAddressingModes_Displacement equ (g_szLARGE - g_szAddressingModes)
 %endif
 %endif
 
-g_szBusTypeValues:
-g_szBusTypeValues_8JrIde:		; db		"M8 ",NULL
-                         		; db		 4dh,  38h,  20h,  00h    ; uncompressed
-                         		  db		 53h,  31h,  00h          ; compressed
+g_szDeviceTypeValues:
+g_szDeviceTypeValues_16bit:		; db		" 16",NULL
+                           		; db		 20h,  31h,  36h,  00h    ; uncompressed
+                           		  db		 20h,  2bh,  10h          ; compressed
 
-g_szBusTypeValues_8Fast:		; db		"F8 ",NULL
-                        		; db		 46h,  38h,  20h,  00h    ; uncompressed
-                        		  db		 4ch,  31h,  00h          ; compressed
+g_szDeviceTypeValues_32bit:		; db		" 32",NULL
+                           		; db		 20h,  33h,  32h,  00h    ; uncompressed
+                           		  db		 20h,  2dh,  0ch          ; compressed
 
-g_szBusTypeValues_8Reversed:	; db		"X8 ",NULL
-                            	; db		 58h,  38h,  20h,  00h    ; uncompressed
-                            	  db		 5eh,  31h,  00h          ; compressed
+g_szDeviceTypeValues_XTIDEr1:	; db		"D8 ",NULL	; Dual 8-bit
+                             	; db		 44h,  38h,  20h,  00h    ; uncompressed
+                             	  db		 4ah,  31h,  00h          ; compressed
 
-g_szBusTypeValues_8Dual:		; db		"D8 ",NULL
-                        		; db		 44h,  38h,  20h,  00h    ; uncompressed
-                        		  db		 4ah,  31h,  00h          ; compressed
+g_szDeviceTypeValues_XTIDEr2:	; db		"X8 ",NULL	; A0<->A3 swapped 8-bit
+                             	; db		 58h,  38h,  20h,  00h    ; uncompressed
+                             	  db		 5eh,  31h,  00h          ; compressed
 
-g_szBusTypeValues_16:			; db		" 16",NULL
-                     			; db		 20h,  31h,  36h,  00h    ; uncompressed
-                     			  db		 20h,  2bh,  10h          ; compressed
+g_szDeviceTypeValues_XTCFpio8:	; db		"T8 ",NULL	; True 8-bit
+                              	; db		 54h,  38h,  20h,  00h    ; uncompressed
+                              	  db		 5ah,  31h,  00h          ; compressed
 
-g_szBusTypeValues_32:			; db		" 32",NULL
-                     			; db		 20h,  33h,  32h,  00h    ; uncompressed
-                     			  db		 20h,  2dh,  0ch          ; compressed
+g_szDeviceTypeValues_XTCFdma:	; db		"8MA",NULL	; DMA 8-bit
+                             	; db		 38h,  4dh,  41h,  00h    ; uncompressed
+                             	  db		 31h,  53h,  87h          ; compressed
 
-g_szBusTypeValues_Serial:		; db		"SER",NULL
-                         		; db		 53h,  45h,  52h,  00h    ; uncompressed
-                         		  db		 59h,  4bh,  98h          ; compressed
+g_szDeviceTypeValues_XTCFmem:	; db		"M8 ",NULL	; Memory Mapped 8-bit
+                             	; db		 4dh,  38h,  20h,  00h    ; uncompressed
+                             	  db		 53h,  31h,  00h          ; compressed
+
+g_szDeviceTypeValues_JrIde:		; db		"M8 ",NULL
+                           		; db		 4dh,  38h,  20h,  00h    ; uncompressed
+                           		  db		 53h,  31h,  00h          ; compressed
+
+g_szDeviceTypeValues_Serial:	; db		"SER",NULL
+                            	; db		 53h,  45h,  52h,  00h    ; uncompressed
+                            	  db		 59h,  4bh,  98h          ; compressed
 
 
-g_szBusTypeValues_Displacement equ (g_szBusTypeValues_8Fast - g_szBusTypeValues)
+g_szDeviceTypeValues_Displacement equ (g_szDeviceTypeValues_32bit - g_szDeviceTypeValues)
 ;
-; Ensure that bus type strings are correctly spaced in memory
+; Ensure that device type strings are correctly spaced in memory
 ;
 %ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
-%if g_szBusTypeValues_8JrIde <> g_szBusTypeValues
-%error "g_szBusTypeValues Displacement Incorrect 1"
+%if g_szDeviceTypeValues_16bit <> g_szDeviceTypeValues
+%error "g_szDeviceTypeValues Displacement Incorrect 1"
 %endif
-%if g_szBusTypeValues_8Fast <> g_szBusTypeValues + g_szBusTypeValues_Displacement
-%error "g_szBusTypeValues Displacement Incorrect 2"
+%if g_szDeviceTypeValues_32bit <> g_szDeviceTypeValues + g_szDeviceTypeValues_Displacement
+%error "g_szDeviceTypeValues Displacement Incorrect 2"
 %endif
-%if g_szBusTypeValues_8Reversed <> g_szBusTypeValues_8Fast + g_szBusTypeValues_Displacement
-%error "g_szBusTypeValues Displacement Incorrect 3"
+%if g_szDeviceTypeValues_XTIDEr1 <> g_szDeviceTypeValues_32bit + g_szDeviceTypeValues_Displacement
+%error "g_szDeviceTypeValues Displacement Incorrect 3"
 %endif
-%if g_szBusTypeValues_8Dual <> g_szBusTypeValues_8Reversed + g_szBusTypeValues_Displacement
-%error "g_szBusTypeValues Displacement Incorrect 4"
+%if g_szDeviceTypeValues_XTIDEr2 <> g_szDeviceTypeValues_XTIDEr1 + g_szDeviceTypeValues_Displacement
+%error "g_szDeviceTypeValues Displacement Incorrect 4"
 %endif
-%if g_szBusTypeValues_16 <> g_szBusTypeValues_8Dual + g_szBusTypeValues_Displacement
-%error "g_szBusTypeValues Displacement Incorrect 5"
+%if g_szDeviceTypeValues_XTCFpio8 <> g_szDeviceTypeValues_XTIDEr2 + g_szDeviceTypeValues_Displacement
+%error "g_szDeviceTypeValues Displacement Incorrect 5"
 %endif
-%if g_szBusTypeValues_32 <> g_szBusTypeValues_16 + g_szBusTypeValues_Displacement
-%error "g_szBusTypeValues Displacement Incorrect 6"
+%if g_szDeviceTypeValues_XTCFdma <> g_szDeviceTypeValues_XTCFpio8 + g_szDeviceTypeValues_Displacement
+%error "g_szDeviceTypeValues Displacement Incorrect 6"
 %endif
-%if g_szBusTypeValues_Serial <> g_szBusTypeValues_32 + g_szBusTypeValues_Displacement
-%error "g_szBusTypeValues Displacement Incorrect 7"
+%if g_szDeviceTypeValues_XTCFmem <> g_szDeviceTypeValues_XTCFdma + g_szDeviceTypeValues_Displacement
+%error "g_szDeviceTypeValues Displacement Incorrect 7"
+%endif
+%if g_szDeviceTypeValues_JrIde <> g_szDeviceTypeValues_XTCFmem + g_szDeviceTypeValues_Displacement
+%error "g_szDeviceTypeValues Displacement Incorrect 8"
+%endif
+%if g_szDeviceTypeValues_Serial <> g_szDeviceTypeValues_JrIde + g_szDeviceTypeValues_Displacement
+%error "g_szDeviceTypeValues Displacement Incorrect 9"
 %endif
 %endif
 
@@ -474,7 +488,7 @@ StringsCompressed_TranslatesAndFormats:
 
 ;; translated usage stats
 ;; 33:1
-;; 32:26
+;; 32:27
 ;; 181:1
 ;; 53:2
 ;; 48:2
@@ -489,7 +503,7 @@ StringsCompressed_TranslatesAndFormats:
 ;; 172:2
 ;; 34:3
 ;; 49:1
-;; 56:4
+;; 56:6
 ;; 45:1
 ;; 175:1
 ;; 171:2
@@ -518,26 +532,26 @@ StringsCompressed_TranslatesAndFormats:
 ;; 62,>:
 ;; 63,?:
 ;; 64,@:1
-;; 65,A:4
+;; 65,A:5
 ;; 66,B:8
 ;; 67,C:2
 ;; 68,D:10
 ;; 69,E:3
-;; 70,F:4
+;; 70,F:3
 ;; 71,G:3
 ;; 72,H:2
 ;; 73,I:1
 ;; 74,J:
 ;; 75,K:1
 ;; 76,L:4
-;; 77,M:5
+;; 77,M:7
 ;; 78,N:2
 ;; 79,O:2
 ;; 80,P:1
 ;; 81,Q:1
 ;; 82,R:7
 ;; 83,S:3
-;; 84,T:
+;; 84,T:1
 ;; 85,U:2
 ;; 86,V:
 ;; 87,W:
@@ -575,6 +589,6 @@ StringsCompressed_TranslatesAndFormats:
 ;; 119,w:1
 ;; 120,x:
 ;; 121,y:2
-;; alphabet used count: 44
+;; alphabet used count: 45
 %endif ; STRINGSCOMPRESSED_TABLES
 

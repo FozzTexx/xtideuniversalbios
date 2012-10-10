@@ -178,7 +178,7 @@ Vision_InitializeWithIDinAHandConfigInAL:
 	; Now we need to determine is the drive connected to the Primary or Secondary channel.
 	; QD6500 has only one channel that can be Primary at 1F0h or Secondary at 170h.
 	; QD6580 always has Primary channel at 1F0h. Secondary channel at 170h can be Enabled or Disabled.
-	call	AccessDPT_GetIdeBasePortToBX
+	mov		bx, [di+DPT.wBasePort]
 	cmp		bx, DEVICE_ATA_PRIMARY_PORT
 	je		SHORT .CalculateTimingTicksForQD6580	; Primary Channel so no need to modify DX
 	times 2 inc dx									; Secondary Channel IDE Timing Register

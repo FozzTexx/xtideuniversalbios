@@ -55,6 +55,7 @@ IdeCommand_ResetMasterAndSlaveController:
 ; IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH
 ;	Parameters:
 ;		BH:		Drive Select byte for Drive and Head Select Register
+;		DX:		Autodetected port for XT-CF
 ;		DS:		Segment to RAMVARS
 ;		ES:SI:	Ptr to buffer to receive 512-byte IDE Information
 ;		CS:BP:	Ptr to IDEVARS
@@ -69,14 +70,14 @@ IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 	call	FindDPT_ForNewDriveToDSDI
 	eMOVZX	ax, bh
 	mov		[di+DPT.wFlags], ax
-	mov		[di+DPT.bIdevarsOffset], bp
+	call	CreateDPT_StoreIdevarsOffsetAndBasePortFromCSBPtoDPTinDSDI
+	call	IdeDPT_StoreDeviceTypeToDPTinDSDIfromIdevarsInCSBP
 	mov		BYTE [di+DPT_ATA.bBlockSize], 1	; Block = 1 sector
-	call	IdeDPT_StoreDeviceTypeFromIdevarsInCSBPtoDPTinDSDI
 
 	; Wait until drive motors have reached full speed
-	cmp		bp, BYTE ROMVARS.ideVars0		; First controller?
+	cmp		bp, BYTE ROMVARS.ideVars0	; First controller?
 	jne		SHORT .SkipLongWaitSinceDriveIsNotPrimaryMaster
-	test	bh, FLG_DRVNHEAD_DRV			; Wait already done for Master
+	test	bh, FLG_DRVNHEAD_DRV		; Wait already done for Master
 	jnz		SHORT .SkipLongWaitSinceDriveIsNotPrimaryMaster
 	call	AHDh_WaitUntilDriveMotorHasReachedFullSpeed
 .SkipLongWaitSinceDriveIsNotPrimaryMaster:
@@ -86,12 +87,18 @@ IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 	call	Idepack_FakeToSSBP
 
 %ifdef MODULE_8BIT_IDE
-	; Enable 8-bit PIO mode for Lo-tech XT-CF
+	; We set XT-CF to 8-bit PIO mode for Identify Device command.
+	; Correct XT-CF mode is later set on AH=09h (after all drives are detected).
+	call	AccessDPT_IsThisDeviceXTCF
+	jne		SHORT .SkipXTCFmodeChange
+
+	xor		al, al						; XTCF_8BIT_PIO_MODE
 	push	si
-	call	AH9h_Enable8bitPioModeForXTCF
+	call	AH1Eh_ChangeXTCFmodeBasedOnControlRegisterInAL
 	pop		si
 	jc		SHORT .FailedToSet8bitMode
-%endif
+.SkipXTCFmodeChange:
+%endif ; MODULE_8BIT_IDE
 
 	; Prepare to output Identify Device command
 	mov		dl, 1						; Sector count (required by IdeTransfer.asm)
@@ -169,9 +176,10 @@ IdeCommand_OutputWithParameters:
 	pop		bx								; Pop status and timeout for polling
 	cmp		bl, FLG_STATUS_DRQ				; Data transfer started?
 	jne		SHORT .WaitUntilNonTransferCommandCompletes
-%ifdef MODULE_JRIDE
-	cmp		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_JRIDE_ISA
-	je		SHORT JrIdeTransfer_StartWithCommandInAL
+%ifdef MODULE_8BIT_IDE
+	cmp		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_XTCF_DMA
+	je		SHORT 0 ; IdeDma_StartTransferWithCommandInAL
+	ja		SHORT JrIdeTransfer_StartWithCommandInAL	; DEVICE_8BIT_XTCF_MEMMAP or DEVICE_8BIT_JRIDE_ISA
 %endif
 	jmp		IdeTransfer_StartWithCommandInAL
 
@@ -204,13 +212,14 @@ ALIGN JUMP_ALIGN
 IdeCommand_SelectDrive:
 	; We use different timeout value when detecting drives.
 	; This prevents unnecessary long delays when drive is not present.
-	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRDY, FLG_STATUS_DRDY)
+	mov		cx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRDY, FLG_STATUS_DRDY)
 	cmp		WORD [RAMVARS.wDrvDetectSignature], RAMVARS_DRV_DETECT_SIGNATURE
-	eCMOVE	bh, TIMEOUT_SELECT_DRIVE_DURING_DRIVE_DETECTION
+	eCMOVE	ch, TIMEOUT_SELECT_DRIVE_DURING_DRIVE_DETECTION
 
 	; Select Master or Slave Drive
 	mov		al, [bp+IDEPACK.bDrvAndHead]
 	OUTPUT_AL_TO_IDE_REGISTER	DRIVE_AND_HEAD_SELECT_REGISTER
+	mov		bx, cx
 	call	IdeWait_PollStatusFlagInBLwithTimeoutInBH
 
 	; Ignore errors from IDE Error Register (set by previous command)
@@ -247,4 +256,5 @@ OutputSectorCountAndAddress:
 	OUTPUT_AL_TO_IDE_REGISTER	LBA_MIDDLE_REGISTER
 
 	mov		al, ch
-	JUMP_TO_OUTPUT_AL_TO_IDE_REGISTER	LBA_HIGH_REGISTER
+	OUTPUT_AL_TO_IDE_REGISTER	LBA_HIGH_REGISTER
+	ret

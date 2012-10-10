@@ -15,7 +15,6 @@
 #                                                                                                  #
 # Following modules can be included or excluded:                                                   #
 # MODULE_8BIT_IDE             Support for 8-BIT IDE cards like XTIDE                               #
-# MODULE_JRIDE                Support for JR-IDE/ISA                                               #
 # MODULE_ADVANCED_ATA         Native support for some VLB IDE controllers                          #
 # MODULE_BOOT_MENU            Boot Menu for selection of drive to boot from                        #
 # MODULE_EBIOS                Enhanced functions for accessing drives over 8.4 GB                  #
@@ -97,13 +96,13 @@ HEADERS += $(LIBS)
 DEFINES_COMMON = MODULE_STRINGS_COMPRESSED MODULE_HOTKEYS MODULE_EBIOS MODULE_FEATURE_SETS RESERVE_DIAGNOSTIC_CYLINDER
 DEFINES_COMMON_LARGE = MODULE_BOOT_MENU
 
-DEFINES_XT = $(DEFINES_COMMON) ELIMINATE_CGA_SNOW MODULE_8BIT_IDE MODULE_JRIDE MODULE_SERIAL MODULE_SERIAL_FLOPPY
+DEFINES_XT = $(DEFINES_COMMON) ELIMINATE_CGA_SNOW MODULE_8BIT_IDE MODULE_SERIAL MODULE_SERIAL_FLOPPY
 DEFINES_XTPLUS = $(DEFINES_COMMON) $(DEFINES_XT) USE_186
 DEFINES_AT = $(DEFINES_COMMON) USE_AT USE_286 RELOCATE_INT13H_STACK MODULE_IRQ MODULE_SERIAL MODULE_SERIAL_FLOPPY MODULE_ADVANCED_ATA
 
 DEFINES_XT_LARGE = $(DEFINES_XT) $(DEFINES_COMMON_LARGE)
 DEFINES_XTPLUS_LARGE = $(DEFINES_XTPLUS) $(DEFINES_COMMON_LARGE)
-DEFINES_AT_LARGE = $(DEFINES_AT) $(DEFINES_COMMON_LARGE)
+DEFINES_AT_LARGE = $(DEFINES_AT) $(DEFINES_COMMON_LARGE) MODULE_8BIT_IDE
 
 DEFINES_XT_TINY = MODULE_STRINGS_COMPRESSED MODULE_8BIT_IDE
 DEFINES_386_8K = $(DEFINES_AT) USE_386

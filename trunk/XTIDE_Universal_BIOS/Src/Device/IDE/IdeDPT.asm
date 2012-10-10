@@ -63,7 +63,7 @@ IdeDPT_Finalize:
 ;		AL
 ;--------------------------------------------------------------------
 .StoreDeviceType:
-	call	IdeDPT_StoreDeviceTypeFromIdevarsInCSBPtoDPTinDSDI
+	call	IdeDPT_StoreDeviceTypeToDPTinDSDIfromIdevarsInCSBP
 
 
 ;--------------------------------------------------------------------
@@ -110,7 +110,7 @@ IdeDPT_Finalize:
 ;		AX, BX, CX, DX
 ;--------------------------------------------------------------------
 .DetectAdvancedIdeController:
-	call	AccessDPT_GetIdeBasePortToBX
+	mov		bx, [di+DPT.wBasePort]
 	call	AdvAtaInit_DetectControllerForIdeBaseInBX
 	mov		[di+DPT_ADVANCED_ATA.wControllerID], ax	; Store zero if none detected
 	mov		[di+DPT_ADVANCED_ATA.wControllerBasePort], dx
@@ -137,7 +137,7 @@ IdeDPT_Finalize:
 
 
 ;--------------------------------------------------------------------
-; IdeDPT_StoreDeviceTypeFromIdevarsInCSBPtoDPTinDSDI
+; IdeDPT_StoreDeviceTypeToDPTinDSDIfromIdevarsInCSBP
 ;	Parameters:
 ;		DS:DI:	Ptr to Disk Parameter Table
 ;		CS:BP:	Ptr to IDEVARS for the controller
@@ -146,7 +146,7 @@ IdeDPT_Finalize:
 ;	Corrupts registers:
 ;		AL
 ;--------------------------------------------------------------------
-IdeDPT_StoreDeviceTypeFromIdevarsInCSBPtoDPTinDSDI:
+IdeDPT_StoreDeviceTypeToDPTinDSDIfromIdevarsInCSBP:
 	mov		al, [cs:bp+IDEVARS.bDevice]
 	mov		[di+DPT_ATA.bDevice], al
 	ret

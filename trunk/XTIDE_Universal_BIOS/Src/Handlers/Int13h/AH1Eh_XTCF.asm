@@ -37,52 +37,88 @@ SECTION .text
 ;		CF:		0 if successful, 1 if error
 ;--------------------------------------------------------------------
 AH1Eh_HandlerForXTCFfeatures:
-	xor		ah, ah		; Subcommand now in AX
 %ifndef USE_186
-	call	AH1Eh_ProcessXTCFsubcommandFromAX
+	call	AH1Eh_ProcessXTCFsubcommandFromAL
 	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 %else
 	push	Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
-	; Fall to AH1Eh_ProcessXTCFsubcommandFromAX
+	; Fall to AH1Eh_ProcessXTCFsubcommandFromAL
 %endif
 
 
 ;--------------------------------------------------------------------
-; AH1Eh_ProcessXTCFsubcommandFromAX
+; AH1Eh_ProcessXTCFsubcommandFromAL
 ;	Parameters:
-;		AX:		XT-CF subcommand (see XTCF.inc for more info)
+;		AL:		XT-CF subcommand (see XTCF.inc for more info)
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
 ;		SS:BP:	Ptr to IDEPACK
 ;	Returns:
 ;		AH:		Int 13h return status
 ;		CF:		0 if successful, 1 if error
 ;	Corrupts registers:
-;		AL, BX, CX, DX
+;		AL, BX, CX, DX, SI
 ;--------------------------------------------------------------------
-AH1Eh_ProcessXTCFsubcommandFromAX:
+AH1Eh_ProcessXTCFsubcommandFromAL:
 	; IS_THIS_DRIVE_XTCF. We check this for all commands.
-	dec		ax		; Subcommand
-	mov		dx, [di+DPT.wXTCFport]
-	test	dx, dx	; Never zero for XT-CF, Always zero for other devices
-	jz		SHORT XTCFnotFound
+	call	AccessDPT_IsThisDeviceXTCF
+	jne		SHORT XTCFnotFound
+	and		ax, BYTE 7Fh				; Subcommand now in AX
+	jz		SHORT .ReturnWithSuccess	; IS_THIS_DRIVE_XTCF
 
 	; READ_XTCF_CONTROL_REGISTER_TO_DH
-	add		dl, XTCF_CONTROL_REGISTER	; DX to Control Register
-	dec		ax		; Subcommand
+	dec		ax							; Subcommand
 	jnz		SHORT .SkipReadXtcfControlRegisterToDH
+	mov		dx, [di+DPT.wBasePort]
+	add		dl, XTCF_CONTROL_REGISTER
 	in		al, dx
 	mov		[bp+IDEPACK.intpack+INTPACK.dh], al
-	jmp		SHORT .ReturnWithSuccess
-.SkipReadXtcfControlRegisterToDH:
-
-	; WRITE_DH_TO_XTCF_CONTROL_REGISTER
-	dec		ax		; Subcommand
-	jnz		SHORT XTCFnotFound			; Invalid subcommand
-	mov		al, [bp+IDEPACK.intpack+INTPACK.dh]
-	out		dx, al
 .ReturnWithSuccess:
 	xor		ah, ah
 	ret
+.SkipReadXtcfControlRegisterToDH:
+
+	; WRITE_DH_TO_XTCF_CONTROL_REGISTER
+	dec		ax							; Subcommand
+	jnz		SHORT XTCFnotFound			; Invalid subcommand
+	mov		al, [bp+IDEPACK.intpack+INTPACK.dh]
+	; Fall to AH1Eh_ChangeXTCFmodeBasedOnControlRegisterInAL
+
+
+;--------------------------------------------------------------------
+; AH1Eh_ChangeXTCFmodeBasedOnControlRegisterInAL
+;	Parameters:
+;		AL:		XT-CF Control Register
+;		DS:DI:	Ptr to DPT (in RAMVARS segment)
+;		SS:BP:	Ptr to IDEPACK
+;	Returns:
+;		AH:		Int 13h return status
+;		CF:		0 if successful, 1 if error
+;	Corrupts registers:
+;		AL, BX, CX, DX, SI
+;--------------------------------------------------------------------
+AH1Eh_ChangeXTCFmodeBasedOnControlRegisterInAL:
+	; Output Control Register
+	mov		dx, [di+DPT.wBasePort]
+	add		dl, XTCF_CONTROL_REGISTER
+	out		dx, al
+
+	; Convert Control Register Contents to device code
+	test	al, al
+	jz		SHORT .Set8bitPioMode
+	cmp		al, XTCF_MEMORY_MAPPED_MODE
+	jae		SHORT .SetMemoryMappedMode
+
+	; Set DMA Mode
+	mov		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_XTCF_DMA
+	jmp		AH23h_Disable8bitPioMode
+
+.SetMemoryMappedMode:
+	mov		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_XTCF_MEMMAP
+	jmp		AH23h_Disable8bitPioMode
+
+.Set8bitPioMode:
+	mov		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_XTCF_PIO8
+	jmp		AH23h_Enable8bitPioMode
 
 
 ;--------------------------------------------------------------------
@@ -95,19 +131,22 @@ AH1Eh_ProcessXTCFsubcommandFromAX:
 ;		CF:		Cleared if XT-CF found
 ;				Set if XT-CF not found
 ;	Corrupts registers:
-;		AL, DX
+;		AL
 ;--------------------------------------------------------------------
 AH1Eh_DetectXTCFwithBasePortInDX:
+	push	dx
 	add		dl, XTCT_CONTROL_REGISTER_INVERTED_in	; set DX to XT-CF config register (inverted)
 	in		al, dx		; get value
 	mov		ah, al		; save in ah
 	inc		dx			; set DX to XT-CF config register (non-inverted)
 	in		al, dx		; get value
-	not		al			; invert it
+	not		al			; invert value
+	pop		dx
 	sub		ah, al		; do they match? (clear AH if they do)
 	jz		SHORT XTCFfound
 
 XTCFnotFound:
+AH1Eh_LoadInvalidCommandToAHandSetCF:
 	stc					; set carry flag since XT-CF not found
 	mov		ah, RET_HD_INVALID
 XTCFfound:

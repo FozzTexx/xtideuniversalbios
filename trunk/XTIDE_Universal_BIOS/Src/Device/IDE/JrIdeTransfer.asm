@@ -27,6 +27,8 @@ struc MEMPIOVARS	; Must not be larger than 9 bytes! See IDEPACK in RamVars.inc.
 	.bSectorsDone			resb	1	; 8, Number of sectors xferred
 endstruc
 
+SECTOR_ACCESS_WINDOW_SIZE	EQU		512	; 512 bytes
+
 
 ; Section containing code
 SECTION .text
@@ -36,7 +38,7 @@ SECTION .text
 ;	Parameters:
 ;		AL:		IDE command that was used to start the transfer
 ;				(all PIO read and write commands including Identify Device)
-;		ES:SI:	Ptr to normalized data buffer
+;		ES:SI:	Ptr to normalized data buffer (SI 0...15)
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
 ;		SS:BP:	Ptr to IDEPACK
 ;	Returns:
@@ -48,29 +50,46 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 JrIdeTransfer_StartWithCommandInAL:
-	push	cs	; We push CS here (segment of SAW) and later pop it to DS (reads) or ES (writes)
-
-	; Initialize PIOVARS
-	xor		cx, cx
-	mov		[bp+MEMPIOVARS.bSectorsDone], cl
-	mov		cl, [bp+IDEPACK.bSectorCount]
-	mov		[bp+MEMPIOVARS.bSectorsLeft], cl
-	mov		cl, [di+DPT_ATA.bBlockSize]
-	mov		[bp+MEMPIOVARS.wSectorsInBlock], cx
+	; Initialize MEMPIOVARS
+	xchg	cx, ax			; IDE command to CL
+	xor		ax, ax
+	mov		[bp+MEMPIOVARS.bSectorsDone], al
+	mov		al, [bp+IDEPACK.bSectorCount]
+	mov		[bp+MEMPIOVARS.bSectorsLeft], al
+	mov		al, [di+DPT_ATA.bBlockSize]
+	mov		[bp+MEMPIOVARS.wSectorsInBlock], ax
 	mov		[bp+MEMPIOVARS.fpDPT], di
 	mov		[bp+MEMPIOVARS.fpDPT+2], ds
 
+	; Get far pointer to Sector Access Window
+	mov		dx, [di+DPT.wBasePort]
+	cmp		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_JRIDE_ISA
+	jne		SHORT .GetSectorAccessWindowForXTCF
+
+	; Get Sector Access Window for JR-IDE/ISA
+	mov		di, JRIDE_SECTOR_ACCESS_WINDOW_OFFSET
+	mov		ds, dx		; Segment for JR-IDE/ISA
+	jmp		SHORT .SectorAccessWindowLoadedToDSDI
+
+.GetSectorAccessWindowForXTCF:
+	xor		di, di
+	add		dl, XTCF_CONTROL_REGISTER
+	in		al, dx					; Read high byte for Sector Access Window segment
+	xchg	ah, al
+	mov		ds, ax
+
 	; Are we reading or writing?
-	test	al, 16	; Bit 4 is cleared on all the read commands but set on 3 of the 4 write commands
+.SectorAccessWindowLoadedToDSDI:
+	test	cl, 16	; Bit 4 is cleared on all the read commands but set on 3 of the 4 write commands
 	jnz		SHORT WriteToSectorAccessWindow
-	cmp		al, COMMAND_WRITE_MULTIPLE
+	cmp		cl, COMMAND_WRITE_MULTIPLE
 	je		SHORT WriteToSectorAccessWindow
 	; Fall to ReadFromSectorAccessWindow
 
 ;--------------------------------------------------------------------
 ; ReadFromSectorAccessWindow
 ;	Parameters:
-;		Stack:	Segment part of ptr to Sector Access Window
+;		DS:DI:	Ptr to Sector Access Window
 ;		ES:SI:	Normalized ptr to buffer to receive data
 ;		SS:BP:	Ptr to MEMPIOVARS
 ;	Returns:
@@ -83,10 +102,7 @@ JrIdeTransfer_StartWithCommandInAL:
 ;		AL, BX, DX, SI, ES
 ;--------------------------------------------------------------------
 ReadFromSectorAccessWindow:
-	pop		ds		; CS -> DS
-	mov		di, si	; ES:DI = destination
-	mov		si, JRIDE_SECTOR_ACCESS_WINDOW_OFFSET	; DS:SI = source
-
+	xchg	si, di	; DS:SI = source, ES:DI = Destination
 	call	WaitUntilReadyToTransferNextBlock
 	jc		SHORT ReturnWithMemoryIOtransferErrorInAH
 
@@ -139,7 +155,7 @@ ReturnWithMemoryIOtransferErrorInAH:
 ;--------------------------------------------------------------------
 ; WriteToSectorAccessWindow
 ;	Parameters:
-;		Stack:	Segment part of ptr to Sector Access Window
+;		DS:DI:	Ptr to Sector Access Window
 ;		ES:SI:	Normalized ptr to buffer containing data
 ;		SS:BP:	Ptr to MEMPIOVARS
 ;	Returns:
@@ -154,9 +170,9 @@ ReturnWithMemoryIOtransferErrorInAH:
 ALIGN JUMP_ALIGN
 WriteToSectorAccessWindow:
 	push	es
-	pop		ds
-	pop		es	; CS -> ES
-	mov		di, JRIDE_SECTOR_ACCESS_WINDOW_OFFSET
+	push	ds
+	pop		es		; ES:DI = Sector Access Window (destination)
+	pop		ds		; DS:SI = Ptr to source buffer
 
 	; Always poll when writing first block (IRQs are generated for following blocks)
 	call	WaitUntilReadyToTransferNextBlock
@@ -204,7 +220,7 @@ WriteSingleBlockFromDSSIToSectorAccessWindowInESDI:
 	xor		cl, cl
 ALIGN JUMP_ALIGN
 .WriteBlock:
-	mov		ch, JRIDE_SECTOR_ACCESS_WINDOW_SIZE >> 9
+	mov		ch, SECTOR_ACCESS_WINDOW_SIZE >> 9
 	rep movsw
 	mov		di, bx	; Reset for next sector
 	dec		dx
@@ -231,7 +247,7 @@ ReadSingleBlockFromSectorAccessWindowInDSSItoESDI:
 	xor		cl, cl
 ALIGN JUMP_ALIGN
 .ReadBlock:
-	mov		ch, JRIDE_SECTOR_ACCESS_WINDOW_SIZE >> 9
+	mov		ch, SECTOR_ACCESS_WINDOW_SIZE >> 9
 	rep movsw
 	mov		si, bx	; Reset for next sector
 	dec		dx
@@ -260,6 +276,6 @@ WaitUntilReadyToTransferNextBlock:
 	ret
 
 
-%if JRIDE_SECTOR_ACCESS_WINDOW_SIZE <> 512
-	%error "JRIDE_SECTOR_ACCESS_WINDOW_SIZE is no longer equal to 512. JrIdeTransfer.asm needs changes."
+%if SECTOR_ACCESS_WINDOW_SIZE <> 512
+	%error "SECTOR_ACCESS_WINDOW_SIZE is no longer equal to 512. JrIdeTransfer.asm needs changes."
 %endif
