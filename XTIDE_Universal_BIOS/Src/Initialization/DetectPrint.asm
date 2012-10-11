@@ -74,17 +74,29 @@ DetectPrint_RomFoundAtSegment:
 ;	Parameters:
 ;		CS:CX:	Ptr to "Master" or "Slave" string
 ;		CS:BP:	Ptr to IDEVARS
-;       SI:		Ptr to template string
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, SI, DI, CX, DX
+;		AX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP:
 	mov		ax, [cs:bp+IDEVARS.wBasePort]   ; for IDE: AX=port address, DH=.bDevice
+	; Fall to DetectPrint_StartDetectWithAutodetectedBasePortInAX
+
+;--------------------------------------------------------------------
+; DetectPrint_StartDetectWithAutodetectedBasePortInAXandIdeVarsInCSBP
+;	Parameters:
+;		AX:		Base Port Address
+;		CS:CX:	Ptr to "Master" or "Slave" string
+;		CS:BP:	Ptr to IDEVARS
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, CX, DX, SI, DI
+;--------------------------------------------------------------------	
+DetectPrint_StartDetectWithAutodetectedBasePortInAXandIdeVarsInCSBP:
 	mov		dx, [cs:bp+IDEVARS.bDevice-1]   ; for Serial: AL=port address>>2, AH=baud rate
 											;			  DL=COM number character, DH=.bDevice
-
 	push	bp								; setup stack for call to
 	mov		bp, sp							; BootMenuPrint_FormatCSSIfromParamsInSSBP
 

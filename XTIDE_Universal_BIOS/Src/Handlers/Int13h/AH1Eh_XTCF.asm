@@ -110,14 +110,16 @@ AH1Eh_ChangeXTCFmodeBasedOnControlRegisterInAL:
 
 	; Set DMA Mode
 	mov		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_XTCF_DMA
-	jmp		AH23h_Disable8bitPioMode
+	mov		al, [di+DPT_ATA.bBlockSize]
+	jmp		AH24h_SetBlockSize	; AH=24h limits block size if necessary
 
 .SetMemoryMappedMode:
 	mov		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_XTCF_MEMMAP
-	jmp		AH23h_Disable8bitPioMode
+	jmp		SHORT .Enable8bitPioMode
 
 .Set8bitPioMode:
 	mov		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_XTCF_PIO8
+.Enable8bitPioMode:	
 	jmp		AH23h_Enable8bitPioMode
 
 

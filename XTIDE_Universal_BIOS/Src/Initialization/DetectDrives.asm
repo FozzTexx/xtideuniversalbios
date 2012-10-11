@@ -152,43 +152,45 @@ DetectDrives_FromAllIDEControllers:
 ;		AX, BL, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 StartDetectionWithDriveSelectByteInBHandStringInCX:
-	call	DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP
-%ifdef MODULE_HOTKEYS
-	call	HotkeyBar_UpdateDuringDriveDetection
-%endif
-	; Fall to .AutodetectXTCFport or .ReadAtaInfoFromHardDisk
-
-
+	; Autodetect port for XT-CF
 %ifdef MODULE_8BIT_IDE
-;--------------------------------------------------------------------
-; .AutodetectXTCFport
-;	Parameters:
-;		BH:		Drive Select byte for Drive and Head Register
-;		CS:BP:	Ptr to IDEVARS for the drive
-;		DS:		RAMVARS segment
-;		ES:		Zero (BDA segment)
-;	Returns:
-;       DX:		Autodetected port (for devices that support autodetection)
-;	Corrupts registers:
-;		AX
-;--------------------------------------------------------------------
-.AutodetectXTCFport:
-	; Detect port for XTCF
 	call	DetectDrives_DoesIdevarsInCSBPbelongToXTCF
 	jne		SHORT .SkipXTCFportDetection
+
+	; XT-CF do not support slave drives so skip detection
+	test	bh, FLG_DRVNHEAD_DRV
+	jnz		SHORT NoSlaveDriveAvailable
 
 	; XT-CF do not support slave drives so we can safely update port
 	; for next drive (another XT-CF card on same system)
 .DetectNextPort:
 	call	BootVars_GetNextXTCFportToDetectToDX
 	cmp		dx, XTCF_BASE_PORT_4
-	ja		SHORT DetectDrives_DriveNotFound	; XT-CF not found from any port
+	ja		SHORT .SkipXTCFportDetection		; XT-CF not found from any port
 
 	call	AH1Eh_DetectXTCFwithBasePortInDX
 	jc		SHORT .DetectNextPort				; XT-CF not found from this port
+
+	; We now have autodetected port in DX
+	push	dx
+	xchg	ax, dx								; Port to print in AX
+	call	DetectPrint_StartDetectWithAutodetectedBasePortInAXandIdeVarsInCSBP
+	jmp		SHORT .DriveDetectionStringPrintedOnScreen
+
+	; Print detect string for devices that do not support autodetection 	
 .SkipXTCFportDetection:
-	; Fall to .ReadAtaInfoFromHardDisk
+	push	dx
 %endif ; MODULE_8BIT_IDE
+
+	call	DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP
+.DriveDetectionStringPrintedOnScreen:
+%ifdef MODULE_HOTKEYS
+	call	HotkeyBar_UpdateDuringDriveDetection
+%endif
+%ifdef MODULE_8BIT_IDE
+	pop		dx
+%endif
+	; Fall to .ReadAtaInfoFromHardDisk
 
 
 ;--------------------------------------------------------------------
@@ -283,5 +285,6 @@ DetectDrives_DoesIdevarsInCSBPbelongToXTCF:
 	je		SHORT .DeviceIsXTCF
 	cmp		al, DEVICE_8BIT_XTCF_MEMMAP
 .DeviceIsXTCF:
+NoSlaveDriveAvailable:
 	ret
 %endif ; MODULE_8BIT_IDE

@@ -178,10 +178,14 @@ IdeCommand_OutputWithParameters:
 	jne		SHORT .WaitUntilNonTransferCommandCompletes
 %ifdef MODULE_8BIT_IDE
 	cmp		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_XTCF_DMA
-	je		SHORT 0 ; IdeDma_StartTransferWithCommandInAL
+	je		SHORT .StartDmaTransfer
 	ja		SHORT JrIdeTransfer_StartWithCommandInAL	; DEVICE_8BIT_XTCF_MEMMAP or DEVICE_8BIT_JRIDE_ISA
-%endif
 	jmp		IdeTransfer_StartWithCommandInAL
+.StartDmaTransfer:
+	jmp		IdeDmaTransfer_StartWithCommandInAL
+%else
+	jmp		IdeTransfer_StartWithCommandInAL
+%endif
 
 .WaitUntilNonTransferCommandCompletes:
 %ifdef MODULE_IRQ
