@@ -127,6 +127,12 @@ struc DPT_SERIAL
 	.bSerialPort			resb	1	; Serial connection I/O port address, divided by 4
 	.bSerialBaud			resb 	1	; Serial connection baud rate divisor
 endstruc
+
+; On performance critical situations we compare DPT_ATA.bDevice without checking FLGH_DPT_SERIAL_DEVICE
+; first! DPT_ATA.bDevice uses small values so there will be no problems.
+%if DPT_SERIAL.bSerialPort <> DPT_ATA.bDevice
+	%error "DPT_ATA.bDevice and DPT_SERIAL.bSerialPort must be in same offsets!"
+%endif
 %endif
 
 

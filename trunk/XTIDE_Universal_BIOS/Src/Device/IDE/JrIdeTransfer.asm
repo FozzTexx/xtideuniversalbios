@@ -38,7 +38,7 @@ SECTION .text
 ;	Parameters:
 ;		AL:		IDE command that was used to start the transfer
 ;				(all PIO read and write commands including Identify Device)
-;		ES:SI:	Ptr to normalized data buffer (SI 0...15)
+;		ES:SI:	Ptr to normalized data buffer
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
 ;		SS:BP:	Ptr to IDEPACK
 ;	Returns:

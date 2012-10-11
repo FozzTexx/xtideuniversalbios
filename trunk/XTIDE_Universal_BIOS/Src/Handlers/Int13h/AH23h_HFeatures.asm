@@ -78,7 +78,6 @@ AH23h_SetControllerFeatures:
 %ifdef MODULE_8BIT_IDE
 ;--------------------------------------------------------------------
 ; AH23h_Enable8bitPioMode
-; AH23h_Disable8bitPioMode
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
 ;		SS:BP:	Ptr to IDEPACK
@@ -90,8 +89,5 @@ AH23h_SetControllerFeatures:
 ;--------------------------------------------------------------------
 AH23h_Enable8bitPioMode:
 	mov		si, FEATURE_ENABLE_8BIT_PIO_TRANSFER_MODE
-	jmp		SHORT AH23h_SetControllerFeatures
-AH23h_Disable8bitPioMode:
-	mov		si, FEATURE_DISABLE_8BIT_PIO_TRANSFER_MODE
 	jmp		SHORT AH23h_SetControllerFeatures
 %endif ; MODULE_8BIT_IDE
