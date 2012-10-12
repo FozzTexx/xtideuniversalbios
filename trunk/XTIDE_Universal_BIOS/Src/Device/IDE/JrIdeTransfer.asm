@@ -99,14 +99,14 @@ JrIdeTransfer_StartWithCommandInAL:
 ;		CF:		0 if transfer successful
 ;				1 if any error
 ;	Corrupts registers:
-;		AL, BX, DX, SI, ES
+;		AL, BX, DX, SI
 ;--------------------------------------------------------------------
 ReadFromSectorAccessWindow:
 	xchg	si, di	; DS:SI = source, ES:DI = Destination
 	call	WaitUntilReadyToTransferNextBlock
 	jc		SHORT ReturnWithMemoryIOtransferErrorInAH
 
-	mov		cx, [bp+MEMPIOVARS.wSectorsInBlock]
+	mov		cx, [bp+MEMPIOVARS.wSectorsInBlock]	; Clears CH
 	cmp		[bp+MEMPIOVARS.bSectorsLeft], cl
 	jbe		SHORT .ReadLastBlockFromDrive
 
@@ -137,16 +137,16 @@ CheckErrorsAfterTransferringLastMemoryMappedBlock:
 	jc		SHORT ReturnWithMemoryIOtransferErrorInAH
 
 	; All sectors successfully transferred
-	add		cx, [bp+PIOVARS.bSectorsDone]		; Never sets CF
+	add		cl, [bp+MEMPIOVARS.bSectorsDone]	; Never sets CF
 	ret
 
 	; Return number of successfully transferred sectors
 ReturnWithMemoryIOtransferErrorInAH:
 	lds		di, [bp+MEMPIOVARS.fpDPT]			; DPT now in DS:DI
 %ifdef USE_386
-	movzx	cx, [bp+MEMPIOVARS.bSectorsDone]
+	movzx	cx, BYTE [bp+MEMPIOVARS.bSectorsDone]
 %else
-	mov		ch, 0
+	mov		ch, 0								; Preserve CF
 	mov		cl, [bp+MEMPIOVARS.bSectorsDone]
 %endif
 	ret
@@ -219,19 +219,19 @@ WriteSingleBlockFromDSSIToSectorAccessWindowInESDI:
 	mov		dx, cx
 	xor		cl, cl
 ALIGN JUMP_ALIGN
-.WriteBlock:
+.WriteNextSector:
 	mov		ch, SECTOR_ACCESS_WINDOW_SIZE >> 9
 	rep movsw
 	mov		di, bx	; Reset for next sector
 	dec		dx
-	jnz		SHORT .WriteBlock
+	jnz		SHORT .WriteNextSector
 	ret
 
 
 ;--------------------------------------------------------------------
 ; ReadSingleBlockFromSectorAccessWindowInDSSItoESDI
 ;	Parameters:
-;		CX		Number of sectors in block
+;		CX		Number of sectors in full block or sectors in last partial block
 ;		ES:DI:	Normalized ptr to buffer to receive data (destination)
 ;		DS:SI:	Ptr to Sector Access Window (source)
 ;	Returns:
@@ -246,12 +246,12 @@ ReadSingleBlockFromSectorAccessWindowInDSSItoESDI:
 	mov		dx, cx
 	xor		cl, cl
 ALIGN JUMP_ALIGN
-.ReadBlock:
+.ReadNextSector:
 	mov		ch, SECTOR_ACCESS_WINDOW_SIZE >> 9
 	rep movsw
 	mov		si, bx	; Reset for next sector
 	dec		dx
-	jnz		SHORT .ReadBlock
+	jnz		SHORT .ReadNextSector
 	ret
 
 
