@@ -38,16 +38,16 @@ SECTION .text
 ;--------------------------------------------------------------------
 AH1Eh_HandlerForXTCFfeatures:
 %ifndef USE_186
-	call	AH1Eh_ProcessXTCFsubcommandFromAL
+	call	ProcessXTCFsubcommandFromAL
 	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 %else
 	push	Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
-	; Fall to AH1Eh_ProcessXTCFsubcommandFromAL
+	; Fall to ProcessXTCFsubcommandFromAL
 %endif
 
 
 ;--------------------------------------------------------------------
-; AH1Eh_ProcessXTCFsubcommandFromAL
+; ProcessXTCFsubcommandFromAL
 ;	Parameters:
 ;		AL:		XT-CF subcommand (see XTCF.inc for more info)
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
@@ -58,7 +58,7 @@ AH1Eh_HandlerForXTCFfeatures:
 ;	Corrupts registers:
 ;		AL, BX, CX, DX, SI
 ;--------------------------------------------------------------------
-AH1Eh_ProcessXTCFsubcommandFromAL:
+ProcessXTCFsubcommandFromAL:
 	; IS_THIS_DRIVE_XTCF. We check this for all commands.
 	call	AccessDPT_IsThisDeviceXTCF
 	jne		SHORT XTCFnotFound
