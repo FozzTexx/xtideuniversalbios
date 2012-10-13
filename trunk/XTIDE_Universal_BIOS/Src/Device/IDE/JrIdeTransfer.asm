@@ -116,10 +116,19 @@ ALIGN JUMP_ALIGN
 	call	WaitUntilReadyToTransferNextBlock
 	jc		SHORT ReturnWithMemoryIOtransferErrorInAH
 
-	; Increment number of successfully read sectors
+	; Update number of successfully read sectors and sectors left to transfer.
+	; We cannot use SUB instruction as a comparison since it will not
+	; work in this situation:
+	; Before SUB we have 2 full blocks left to transfer. SUB command
+	; then compares 2 full blocks against one full block and updates
+	; sectors left to one full block and jumps to .ReadNextBlockFromDrive,
+	; since we have one full block left to transfer. After it has been
+	; transferred, there will be a wait for next block but DRQ is never
+	; set since all is transferred! Then we get timeout error.
 	mov		cx, [bp+MEMPIOVARS.wSectorsInBlock]
-	add		[bp+MEMPIOVARS.bSectorsDone], cl
 	sub		[bp+MEMPIOVARS.bSectorsLeft], cl
+	add		[bp+MEMPIOVARS.bSectorsDone], cl
+	cmp		[bp+MEMPIOVARS.bSectorsLeft], cl
 	ja		SHORT .ReadNextBlockFromDrive
 
 ALIGN JUMP_ALIGN
@@ -190,8 +199,9 @@ ALIGN JUMP_ALIGN
 
 	; Increment number of successfully written WORDs
 	mov		cx, [bp+MEMPIOVARS.wSectorsInBlock]
-	add		[bp+MEMPIOVARS.bSectorsDone], cl
 	sub		[bp+MEMPIOVARS.bSectorsLeft], cl
+	add		[bp+MEMPIOVARS.bSectorsDone], cl
+	cmp		[bp+MEMPIOVARS.bSectorsLeft], cl
 	ja		SHORT .WriteNextBlockToDrive
 
 ALIGN JUMP_ALIGN
