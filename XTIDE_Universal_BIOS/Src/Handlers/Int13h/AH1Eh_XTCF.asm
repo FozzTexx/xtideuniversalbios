@@ -111,7 +111,8 @@ AH1Eh_ChangeXTCFmodeBasedOnControlRegisterInAL:
 	; Set DMA Mode
 	mov		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_XTCF_DMA
 	mov		al, [di+DPT_ATA.bBlockSize]
-	jmp		AH24h_SetBlockSize	; AH=24h limits block size if necessary
+	call	AH24h_SetBlockSize	; AH=24h limits block size if necessary
+	jmp		SHORT .Enable8bitPioMode
 
 .SetMemoryMappedMode:
 	mov		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_XTCF_MEMMAP
@@ -119,6 +120,10 @@ AH1Eh_ChangeXTCFmodeBasedOnControlRegisterInAL:
 
 .Set8bitPioMode:
 	mov		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_XTCF_PIO8
+	; Fall to .Enable8bitPioMode
+	
+	; We always need to enable 8-bit mode since 16-bit mode is restored
+	; when controller is reset (AH=0h or Dh)
 .Enable8bitPioMode:	
 	jmp		AH23h_Enable8bitPioMode
 
