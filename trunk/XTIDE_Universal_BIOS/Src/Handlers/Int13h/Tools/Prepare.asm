@@ -93,25 +93,21 @@ Prepare_GetOldInt13hCommandIndexToBX:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Prepare_BufferToESSIforOldInt13hTransfer:
+	mov		si, [bp+IDEPACK.intpack+INTPACK.bx]	; Load offset
+
+%ifdef MODULE_8BIT_IDE
 	cmp		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_XTCF_DMA
 	jne		SHORT .NormalizeForSmallestPossibleOffset
 
-	; Normalize segment for physical 64k pages
-	xor		bx, bx
-	mov		si, [bp+IDEPACK.intpack+INTPACK.es]	; Load segment
-%rep 4
-	shl		si, 1
-	rcl		bx, 1
-%endrep
-	add		si, [bp+IDEPACK.intpack+INTPACK.bx]
-	adc		bx, BYTE 0
-	mov		es, bx								; ES:SI now has physical address
+	; DMA transfers do not need to normalize pointer
+	; (it will be converted to physical address in IdeDmaTransfer.asm)
+	mov		es, [bp+IDEPACK.intpack+INTPACK.es]
 	jmp		SHORT Prepare_ByValidatingSectorsInALforOldInt13h
+%endif ; MODULE_8BIT_IDE
 
 	; Normalize segment for 16b pages
 .NormalizeForSmallestPossibleOffset:
-	mov		bx, [bp+IDEPACK.intpack+INTPACK.bx]	; Load offset
-	mov		si, bx
+	mov		bx, si
 	eSHR_IM	bx, 4								; Divide offset by 16
 	add		bx, [bp+IDEPACK.intpack+INTPACK.es]
 	mov		es, bx								; Segment normalized

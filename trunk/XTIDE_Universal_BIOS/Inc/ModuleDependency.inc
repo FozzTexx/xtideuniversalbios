@@ -35,6 +35,7 @@
 
 ; Include module specific .INC files
 %ifdef MODULE_8BIT_IDE
+	%include "DmaController.inc"
 	%include "IDE_8bit.inc"			; For IDE 8-bit data port macros
 	%include "XTCF.inc"				; For Lo-tech XT-CF
 	%include "JRIDE_ISA.inc"		; For JR-IDE/ISA

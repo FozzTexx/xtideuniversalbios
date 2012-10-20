@@ -81,7 +81,7 @@ istruc ROMVARS
 %ifdef MODULE_BOOT_MENU
 		at	ROMVARS.wBootTimeout,	dw	BOOT_MENU_DEFAULT_TIMEOUT
 %endif
-	at	ROMVARS.bIdeCnt,		db	2						; Number of supported controllers
+	at	ROMVARS.bIdeCnt,		db	3						; Number of supported controllers
 	at	ROMVARS.bBootDrv,		db	80h						; Boot Menu default drive
 	at	ROMVARS.bMinFddCnt, 	db	0						; Do not force minimum number of floppy drives
 	at	ROMVARS.bStealSize,		db	1						; Steal 1kB from base memory
@@ -103,9 +103,12 @@ istruc ROMVARS
 	at	ROMVARS.ideVars1+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	dw	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE | (TRANSLATEMODE_AUTO<<TRANSLATEMODE_FIELD_POSITION)
 	at	ROMVARS.ideVars1+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags,	dw	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE | (TRANSLATEMODE_AUTO<<TRANSLATEMODE_FIELD_POSITION)
 
-	at	ROMVARS.ideVars2+IDEVARS.wBasePort,			dw	DEVICE_ATA_TERTIARY_PORT
-	at	ROMVARS.ideVars2+IDEVARS.wControlBlockPort,	dw	DEVICE_ATA_TERTIARY_PORTCTRL
-	at	ROMVARS.ideVars2+IDEVARS.bDevice,			db	DEVICE_16BIT_ATA
+	;at	ROMVARS.ideVars2+IDEVARS.wBasePort,			dw	DEVICE_ATA_TERTIARY_PORT
+	;at	ROMVARS.ideVars2+IDEVARS.wControlBlockPort,	dw	DEVICE_ATA_TERTIARY_PORTCTRL
+	;at	ROMVARS.ideVars2+IDEVARS.bDevice,			db	DEVICE_16BIT_ATA
+	at	ROMVARS.ideVars2+IDEVARS.wBasePort,			dw	0D800h
+	at	ROMVARS.ideVars2+IDEVARS.wControlBlockPort,	dw	0
+	at	ROMVARS.ideVars2+IDEVARS.bDevice,			db	DEVICE_8BIT_JRIDE_ISA
 	at	ROMVARS.ideVars2+IDEVARS.bIRQ,				db	0
 	at	ROMVARS.ideVars2+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	dw	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE | (TRANSLATEMODE_AUTO<<TRANSLATEMODE_FIELD_POSITION)
 	at	ROMVARS.ideVars2+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags,	dw	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE | (TRANSLATEMODE_AUTO<<TRANSLATEMODE_FIELD_POSITION)
