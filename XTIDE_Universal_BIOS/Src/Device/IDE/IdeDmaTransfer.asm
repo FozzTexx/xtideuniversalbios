@@ -103,25 +103,28 @@ ReadBlockFromXTCF:
 	; Transfer first DMA page
 	mov		ah, CHANNEL_3 | WRITE | AUTOINIT_DISABLE | ADDRESS_INCREMENT | DEMAND_MODE
 	call	StartDMAtransferForXTCFwithDmaModeInAH
-	jc		SHORT ReturnNumberOfSectorsXferred
+	call	UpdateVariablesForSecondPageIfRequired
+	jc		SHORT ReturnNumberOfSectorsXferred		; Second page not needed
 
 	; Transfer second DMA page if necessary (always less than 64k)
-	call	UpdateVariablesForSecondPageIfRequired
-	jc		SHORT SecondDmaPageIsNotRequired
 	mov		ah, CHANNEL_3 | WRITE | AUTOINIT_DISABLE | ADDRESS_INCREMENT | DEMAND_MODE
 	call	StartDMAtransferForXTCFwithDmaModeInAH
-	jc		SHORT ReturnNumberOfSectorsXferred
-	; Fall to BothDmaPagesTransferredSuccessfully
+	; Fall to BothDmaPagesTransferred
 
-BothDmaPagesTransferredSuccessfully:
+BothDmaPagesTransferred:
 	inc		cx			; Never overflows since second page always less than 64k
 	shr		cx, 1		; BYTEs to WORDs
 	add		[bp+DMAVARS.wTotalWordsXferred], cx
-SecondDmaPageIsNotRequired:
-	xor		ah, ah
 ReturnNumberOfSectorsXferred:
+	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRQ, FLG_STATUS_BSY)
+	call	IdeWait_PollStatusFlagInBLwithTimeoutInBH
+	jc		SHORT .ErrorInTransfer
 	mov		cx, [bp+DMAVARS.wTotalWordsXferred]
 	xchg	cl, ch		; WORDs to sectors
+	ret
+
+.ErrorInTransfer:
+	mov		cx, 0		; No way to know how many bytes got xferred
 	ret
 
 
@@ -140,19 +143,18 @@ ReturnNumberOfSectorsXferred:
 ;	Corrupts registers:
 ;		AL, BX, DX
 ;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
 WriteBlockToXTCF:
 	; Transfer first DMA page
 	mov		ah, CHANNEL_3 | READ | AUTOINIT_DISABLE | ADDRESS_INCREMENT | DEMAND_MODE
 	call	StartDMAtransferForXTCFwithDmaModeInAH
-	jc		SHORT ReturnNumberOfSectorsXferred
+	call	UpdateVariablesForSecondPageIfRequired
+	jc		SHORT ReturnNumberOfSectorsXferred		; Second page not needed
 
 	; Transfer second DMA page if necessary (always less than 64k)
-	call	UpdateVariablesForSecondPageIfRequired
-	jc		SHORT SecondDmaPageIsNotRequired
 	mov		ah, CHANNEL_3 | READ | AUTOINIT_DISABLE | ADDRESS_INCREMENT | DEMAND_MODE
 	call	StartDMAtransferForXTCFwithDmaModeInAH
-	jc		SHORT ReturnNumberOfSectorsXferred
-	jmp		SHORT BothDmaPagesTransferredSuccessfully
+	jmp		SHORT BothDmaPagesTransferred
 
 
 ;--------------------------------------------------------------------
@@ -162,12 +164,11 @@ WriteBlockToXTCF:
 ;		CX:		Number of BYTEs to transfer - 1
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
 ;	Returns:
-;		AH:		BIOS Error code
-;		CF:		0 if transfer successful
-;				1 if any error
+;		Nothing
 ;	Corrupts registers:
-;		AL, BX, DX
+;		AL, DX
 ;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
 StartDMAtransferForXTCFwithDmaModeInAH:
 	push	cx
 
@@ -209,17 +210,14 @@ StartDMAtransferForXTCFwithDmaModeInAH:
 	; block by adding 15, then dividing bytes (in CX) by 16 to get the
 	; total block requests.  The 8237 is programmed with the actual byte
 	; count and will end the transfer by asserting TC when done.
-	xor		ax, ax
-	add		cx, BYTE 1 + 15		; Number of BYTEs to xfer + 15
-	adc		al, ah
-	shr		ax, 1
+	add		cx, BYTE 1 + 15		; Number of BYTEs to xfer + 15 (bit 16 in CF)
 	rcr		cx, 1
 	eSHR_IM	cx, 3				; CX = Number of 16 byte blocks
 	mov		dx, [di+DPT.wBasePort]
 	add		dl, XTCF_CONTROL_REGISTER
 
 .MoreToDo:						; at this point, cx must be >0
-	mov		al, 0x40			; 0x40 = Raise DRQ and clear XT-CFv2 transfer counter
+	mov		al, 40h				; 0x40 = Raise DRQ and clear XT-CFv2 transfer counter
 .NextDemandBlock:
 	out		dx, al				; get up to 16 bytes from XT-CF card
 	loop	.NextDemandBlock	; decrement CX and loop if <> 0
@@ -233,12 +231,8 @@ StartDMAtransferForXTCFwithDmaModeInAH:
 	jz		SHORT .MoreToDo							; it wasn't set so get more bytes
 
 .EndDMA:
-	mov		al, 0x10			; 
+	mov		al, 10h				; 
 	out		dx, al				; set back to DMA enabled status
-
-	; Check IDE Status Register for errors
-	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRQ, FLG_STATUS_BSY)
-	call	IdeWait_PollStatusFlagInBLwithTimeoutInBH
 	pop		cx
 	ret
 
@@ -255,6 +249,7 @@ StartDMAtransferForXTCFwithDmaModeInAH:
 ;	Corrupts registers:
 ;		AX, (CX)
 ;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
 UpdateVariablesForSecondPageIfRequired:
 	inc		cx							; BYTEs in first page
 	jcxz	.FullPageXferred			; 0 = 65536
@@ -280,3 +275,245 @@ UpdateVariablesForSecondPageIfRequired:
 	stc
 .OnePageWasEnough:
 	ret
+
+
+
+
+%if 0
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+ReadBlockFromXTCF:
+;	Parameters:
+;		CX:		Block size in 512 byte sectors (1..64)
+;		DX:		IDE Data port address
+;		ES:DI:		Normalized ptr to buffer to receive data
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, BX, CX
+
+	; use config register to see what we're doing:
+	; < A0 = DMA via ch.3
+	; > A0 = mem-mapped IO (word-length)
+	; 
+	
+	or		dl, 0x1f	; XT-CF board control register address (base + 1fh)
+	in		al, dx		; get control register
+	cmp		al, 0xA0	; test al against 0xA0:
+	jae	.MemMapIO		; - use memory-mapped IO if >=A0h
+	or		al, al		; test al against 0 (quicker than cmp):
+	jz	.PortIO			; - use port-based IO (the default) if it was zero
+					; otherwise, 0 < al < A0h, so fall to DMA mode
+
+.DMAIO:
+	; work out how much we're transferring.  We can't cross a physical 64KB boundary
+	; but since the max transfer size is 64KB, we only ever need to do one or two DMA operations
+	
+	; first, normalise the pointer - we need ES to be a physical page address 
+	
+	mov		ax, es
+	mov		ch, cl			; max sectors is 128; also sectors << 8 = words, and we need cl...
+	mov		cl, 4			; ... for the rotate parameter
+	rol		ax, cl			; ax = es rol 4
+	mov		bx, ax			; bx = ax = es rol 4
+	and		al, 0xf0		; ax (15..4) now has es (11..0)
+	and		bx, 0x000f		; bx (3..0) now has es (15..12)
+	add		di, ax			; add offset portion of es (in ax) to di...
+	adc		bl, 0			; ... and if it overflowed, increment bl
+	mov		es, bx			; es now has physical segment address >> 12
+
+	; now check how much we can transfer without crossing a physical page boundary
+	mov		bx, di			; 
+	not		bx			; 65535 - di = number of bytes we could transfer -1 now in bx
+	xor		cl, cl			; zero cl; cx now has transfer size in words
+	shl		cx, 1			; words to bytes; CX has total byte count
+	dec		cx			; calling DMA with 0 implies 1 byte transferred (so max is 64k exactly)
+	cmp		bx, cx			; can we do it in one hit?
+	jae	.LastDMA
+
+	; at this point, the (bytes-1) for this transfer are in bx, total byte count -1 in cx
+	; and we need to do 2 DMA operations as the buffer straddles a physical 64k boundary
+	
+	sub		cx, bx			; cx has bytes for 2nd transfer (as (x-1)-(y-1) = x-y)
+	dec		cx			; cx has bytes-1 for 2nd transfer
+	xchg		bx, cx			; bx = bytes-1 for 2nd transfer; cx = bytes-1 for this transfer
+	mov		ah, 0x07		; request a read DMA transfer
+	call	DemandBasedTransferWithBytesInCX
+
+	; DMA 1 of 2 done - set up registers for second transfer
+	mov		cx, bx			; bytes-1 for the 2nd transfer back in cx
+	; 1st transfer is done, now for the second
+ALIGN JUMP_ALIGN
+.LastDMA:
+	; at this point, (bytes-1) for this transfer are in CX
+	mov		ah, 0x07		; request a read DMA transfer
+	call	DemandBasedTransferWithBytesInCX
+
+	; transfer is done, set ES back to a physical segment address
+	mov		ax, es			; 
+	mov		cl, 4			; 
+	ror		ax, cl			; ax = es ror 4.  Since ES was >> 12 (for DMA controller) so
+	mov		es, ax			; now it's back to normal format
+	
+	; pointer format restored - we're done
+	and		dl, 0xE0		; restore register values
+	ret
+
+
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+WriteBlockToXTCF:
+	; use config register to see what we're doing:
+	; 0 = not set; use byte-length port-IO
+	; < A0 = DMA via ch.3
+	; > A0 = mem-mapped IO (word-length)
+	; 
+	
+	or		dl, 0x1f	; XT-CF board control register address (base + 1fh)
+	in		al, dx		; get control register
+	cmp		al, 0xA0	; test al against 0xA0:
+	jae	.MemMapIO		; - use memory-mapped IO if >=A0h
+	or		al, al		; test al against 0 (quicker than cmp):
+	jz	.PortIO			; - use port-based IO (the default) if it was zero
+					; otherwise, 0 < al < A0h, so fall to DMA mode
+
+.DMAIO:
+	; work out how much we're transferring.  We can't cross a physical 64KB boundary
+	; but since the max transfer size is 64KB, we only ever need to do one or two DMA operations
+
+	push		di			; save di...
+	mov		di, si			; ...and move si to di (for DMA routine)
+	
+	; first, normalise the pointer - we need ES to be a physical page address 
+	
+	mov		ax, es
+	mov		ch, cl			; max sectors is 64; also sectors << 8 = words, and we need cl...
+	mov		cl, 4			; ... for the rotate parameter
+	rol		ax, cl			; ax = es rol 4
+	mov		bx, ax			; bx = ax = es rol 4
+	and		al, 0xf0		; ax (15..4) now has es (11..0)
+	and		bx, 0x000f		; bx (3..0) now has es (15..12)
+	add		di, ax			; add offset portion of es (in ax) to si...
+	adc		bl, 0			; ... and if it overflowed, increment bl
+	mov		es, bx			; es now has physical segment address >> 12
+
+	; now check how much we can transfer without crossing a physical page boundary
+	mov		bx, di			; 
+	not		bx			; 65535 - di = number of bytes we could transfer -1 now in bx
+	xor		cl, cl			; zero cl; cx now has transfer size in words
+	shl		cx, 1			; words to bytes; CX has total byte count
+	dec		cx			; calling DMA with 0 implies 1 byte transferred (so max is 64k exactly)
+	cmp		bx, cx			; can we do it in one hit?
+	jae	.LastDMA
+
+	; at this point, the (bytes-1) for this transfer are in bx, total byte count -1 in cx
+	; and we need to do 2 DMA operations as the buffer straddles a physical 64k boundary
+	
+	sub		cx, bx			; cx has bytes for 2nd transfer (as (x-1)-(y-1) = x-y)
+	dec		cx			; cx has bytes-1 for 2nd transfer
+	xchg		bx, cx			; bx = bytes-1 for 2nd transfer; cx = bytes-1 for this transfer
+	mov		ah, 0x0b		; request a write DMA transfer
+	call	DemandBasedTransferWithBytesInCX
+
+	; DMA 1 of 2 done - set up registers for second transfer
+	mov		cx, bx			; bytes-1 for the 2nd transfer back in cx
+	; 1st transfer is done, now for the second
+ALIGN JUMP_ALIGN
+.LastDMA:
+	; at this point, (bytes-1) for this transfer are in CX
+	mov		ah, 0x0b		; request a write DMA transfer
+	call	DemandBasedTransferWithBytesInCX
+
+	; transfer is done, set ES back to a physical segment address
+	mov		ax, es			; 
+	mov		cl, 4			; 
+	ror		ax, cl			; ax = es ror 4.  Since ES was >> 12 (for DMA controller) so
+	mov		es, ax			; now it's back to normal format
+
+	mov		si, di			; move di (used by DMA routine) back to si
+	
+	; pointers updated - we're done
+	pop		di			; 
+	and		dl, 0xE0		; restore register values
+	ret
+
+
+; -------------------------------------------------------------------------------------------------------------
+; 
+; DemandBasedTransferWithBytesInCX
+; ================================
+; 
+; DMA Transfer function:
+; - AH = 0x07 for read from media - demand/inc/non-auto-init/write(to memory)/ch3
+; - AH = 0x0b for write to media  - demand/inc/non-auto-init/read(from memory)/ch3
+; - byte count -1 in CX
+; - XT-CF control register in DX
+; - physical segment address in ES *but* high four bits in low four bits (i.e. shr 12)
+; - buffer offset (from physical segment) in DI
+;
+; Note - cannot cross a physical segment boundary, but ES will be updated (maintaining the >>12
+;        format) if after the last byte has been transferred the pointer needs to be updated to
+;        the next physical segment.
+; 
+; Preserves:	BX, DX
+; Corrupts: 	AX, CX
+; Updates: 	ES, DI
+; 
+; -------------------------------------------------------------------------------------------------------------
+
+ALIGN JUMP_ALIGN
+DemandBasedTransferWithBytesInCX:
+	cli					; clear interrupts while we set up the actual DMA transfer
+	mov		al, 0x07		; mask (4) + channel (3)
+	out		0x0a, al		; send to DMA mask register
+	mov		al, ah			; retrieve the transfer mode passed in...
+	out		0x0b, al		; and send mode to DMA mode register
+	out		0x0c, al		; clear DMA byte-order flip-flop (write any value)
+	mov		ax, di			; di has buffer offset
+	out		0x06, al		; 
+	mov		al, ah			; 
+	out		0x06, al		; send offset to DMA controller address port for ch.3
+	mov		ax, es			; es has physical segment address >> 12
+	out		0x82, al		; send the relavent 4-bits to DMA controller page for ch.3
+	out		0x0c, al		; clear DMA byte-order flip-flop (write any value)
+	mov		ax, cx			; byte count to AX
+	out		0x07, al		; send low-byte of transfer size in bytes...
+	mov		al, ah			; mov high byte to low byte...
+	out		0x07, al		; ...and high byte to DMA controller count port for ch.3
+	mov		al, 0x03		; clear bit mask (0) + channel (3)
+	out		0x0a, al		; send to DMA mask register - enable the DMA!
+	sti					; enable interrutps; let the CPU see to anything outstanding
+
+	mov		ax, es			; update ES:DI (values have been loaded into DMA controller)
+	inc		cx			; CX back to actual bytes
+	add		di, cx			; add bytes to DI...
+	adc		ax, 0			; ...and if it overflowed, increment...
+	mov		es, ax			; ...ES
+
+	add		cx, 15			; XT-CFv2 will present data in 16-byte blocks, but byte count may not
+	shr		cx, 1			; be divisable by 16 due to boundary crossing.  So catch any < 16-byte
+	shr		cx, 1			; block by adding 15, then dividing bytes (in CX) by 16 to get the
+	shr		cx, 1			; total block requests.  The 8237 is programmed with the actual byte
+	shr		cx, 1			; count and will end the transfer by asserting TC when done.
+
+.MoreToDo:					; at this point, cx must be >0
+	mov		al, 0x40		; 0x40 = Raise DRQ and clear XT-CFv2 transfer counter
+.NextDemandBlock:
+	out		dx, al			; get up to 16 bytes from XT-CF card
+	loop	.NextDemandBlock		; decrement CX and loop if <> 0
+						; (Loop provides a wait-state between 16-byte blocks; do not unroll)
+.CleanUp:
+	; check the transfer is actually done - in case another DMA operation messed things up
+	inc		cx			; set up CX, in case we need to do an extra iteration
+	in		al, 0x08		; get DMA status register
+	and		al, 0x08		; test DMA ch.3 TC bit
+	jz	.MoreToDo			; it wasn't set so get more bytes
+.EndDMA:
+	mov		al, 0x10		; 
+	out		dx, al			; set back to DMA enabled status
+	ret
+	
+%endif ; 0
+
+
+
