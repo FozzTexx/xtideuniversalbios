@@ -86,7 +86,7 @@ COMMAND_REGISTER_DMA16_out		EQU		0D0h	; AT+
 	DACK_SENSE_ACTIVE_HIGH		EQU		(1<<7)	; Instead of DACK Sense Active Low
 
 
-; Status Registers
+; Status Registers (reading will clear Terminal Count flags)
 STATUS_REGISTER_DMA8_in			EQU		COMMAND_REGISTER_DMA8_out
 	FLG_CH1_HAS_REACHED_TERMINAL_COUNT		EQU		(1<<1)
 	FLG_CH2_HAS_REACHED_TERMINAL_COUNT		EQU		(1<<2)
