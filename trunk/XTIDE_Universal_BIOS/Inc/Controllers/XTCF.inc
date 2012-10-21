@@ -44,8 +44,10 @@ XTCT_CONTROL_REGISTER_INVERTED_in	EQU		1Eh
 ; 
 ; 8-bit PIO transfers (port I/O) are used if Control Register is zero.
 ; Any other value means DMA transfers (using DMA channel 3).
-XTCF_8BIT_PIO_MODE					EQU		0
-XTCF_MEMORY_MAPPED_MODE				EQU		0A0h
+XTCF_8BIT_PIO_MODE						EQU		0
+XTCF_DMA_MODE							EQU		10h
+XTCF_MEMORY_MAPPED_MODE					EQU		0A0h
+RAISE_DRQ_AND_CLEAR_XTCF_XFER_COUNTER	EQU		40h
 
 
 
