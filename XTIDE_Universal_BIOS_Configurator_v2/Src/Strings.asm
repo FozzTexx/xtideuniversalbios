@@ -23,7 +23,7 @@ SECTION .data
 ; Menu title
 g_szProgramTitle:
 	db	"Configuration and Flashing program for XTIDE Universal BIOS v2.0.0.",LF,CR,NULL
-g_szXtideUniversalBiosSignature:	db	"XTIDE201",NULL
+g_szXtideUniversalBiosSignature:	db	"XTIDE203",NULL
 g_szBiosIsNotLoaded:				db	"BIOS is not loaded!",NULL
 g_szEEPROM:							db	"EEPROM",NULL
 g_szSourceAndTypeSeparator:			db	" : ",NULL
@@ -237,14 +237,27 @@ g_szHelpIdeSerialBaud:	incbin  "IDE_SerialBaud.txt"
 						db  NULL
 
 g_szMultichoiceCfgDevice:
-						db	"JR-IDE/ISA",LF
-						db	"Lo-tech XT-CF",LF
-						db	"XTIDE rev 2 or modded rev 1",LF
-						db	"XTIDE rev 1",LF
 						db	"16-bit ISA/VLB/PCI IDE",LF
 						db	"32-bit VLB/PCI IDE",LF
+						db	"16-bit ISA IDE in 8-bit mode",LF
+						db	"XTIDE rev 1",LF
+						db	"XTIDE rev 2 or modded rev 1",LF
+						db	"Lo-tech XT-CF in PIO mode",LF
+						db	"Lo-tech XT-CF in DMA mode",LF
+						db	"Lo-tech XT-CF in memory mode",LF
+						db	"JR-IDE/ISA",LF
 						db	"Serial port virtual device",NULL
 
+g_szValueCfgDevice16b:		db	"16-bit",NULL
+g_szValueCfgDevice32b:		db	"32-bit",NULL
+g_szValueCfgDevice8b:		db	"8-bit",NULL
+g_szValueCfgDeviceRev1:		db	"XTIDE r1",NULL
+g_szValueCfgDeviceRev2:		db	"XTIDE r2",NULL
+g_szValueCfgDevicePioXTCF:	db	"XTCF PIO",NULL
+g_szValueCfgDeviceDmaXTCF:	db	"XTCF DMA",NULL
+g_szValueCfgDeviceMemXTCF:	db	"XTCF MEM",NULL
+g_szValueCfgDeviceJrIdeIsa:	db	"JR-ISA",NULL
+g_szValueCfgDeviceSerial:	db	"Serial",NULL
 
 g_szSerialCOMChoice:
 						db  "COM1 - address 3f8h",LF
@@ -293,15 +306,6 @@ g_szValueCfgBaud19_2:	db		"19.2K",NULL
 g_szValueCfgBaud9600:	db		"9600",NULL
 g_szValueCfgBaud4800:	db		"4800",NULL
 g_szValueCfgBaud2400:	db		"2400",NULL
-
-
-g_szValueCfgDeviceJrIdeIsa:	db	"JR-ISA",NULL
-g_szValueCfgDeviceFast:		db	"XT-CF",NULL
-g_szValueCfgDeviceRev2:		db	"XTIDE r2",NULL
-g_szValueCfgDeviceRev1:		db	"XTIDE r1",NULL
-g_szValueCfgDevice16b:		db	"16-bit",NULL
-g_szValueCfgDevice32b:		db	"32-bit",NULL
-g_szValueCfgDeviceSerial:	db	"Serial",NULL
 
 
 

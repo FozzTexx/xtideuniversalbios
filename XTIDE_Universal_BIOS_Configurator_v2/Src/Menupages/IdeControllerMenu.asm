@@ -187,20 +187,26 @@ istruc MENUITEM
 iend
 
 g_rgwChoiceToValueLookupForDevice:
-	dw	DEVICE_8BIT_JRIDE_ISA
-	dw	DEVICE_8BIT_XTCF
-	dw	DEVICE_8BIT_XTIDE_REV2
-	dw	DEVICE_8BIT_XTIDE_REV1
 	dw	DEVICE_16BIT_ATA
 	dw	DEVICE_32BIT_ATA
+	dw	DEVICE_8BIT_ATA
+	dw	DEVICE_8BIT_XTIDE_REV1
+	dw	DEVICE_8BIT_XTIDE_REV2
+	dw	DEVICE_8BIT_XTCF_PIO8
+	dw	DEVICE_8BIT_XTCF_DMA
+	dw	DEVICE_8BIT_XTCF_MEMMAP
+	dw	DEVICE_8BIT_JRIDE_ISA
 	dw	DEVICE_SERIAL_PORT
 g_rgszValueToStringLookupForDevice:
-	dw	g_szValueCfgDeviceJrIdeIsa
-	dw	g_szValueCfgDeviceFast
-	dw	g_szValueCfgDeviceRev2
-	dw	g_szValueCfgDeviceRev1
 	dw	g_szValueCfgDevice16b
 	dw	g_szValueCfgDevice32b
+	dw	g_szValueCfgDevice8b
+	dw	g_szValueCfgDeviceRev1
+	dw	g_szValueCfgDeviceRev2
+	dw	g_szValueCfgDevicePioXTCF
+	dw	g_szValueCfgDeviceDmaXTCF
+	dw	g_szValueCfgDeviceMemXTCF
+	dw	g_szValueCfgDeviceJrIdeIsa
 	dw	g_szValueCfgDeviceSerial
 
 
@@ -296,7 +302,7 @@ IdeControllerMenu_InitializeToIdevarsOffsetInBX:
 	lea		ax, [bx+IDEVARS.bDevice]
 	mov		[cs:g_MenuitemIdeControllerDevice+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset], ax
 
-	lea		ax, [bx+IDEVARS.wPort]
+	lea		ax, [bx+IDEVARS.wBasePort]
 	mov		[cs:g_MenuitemIdeControllerCommandBlockAddress+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset], ax
 
 	lea		ax, [bx+IDEVARS.bSerialPort]
@@ -305,7 +311,7 @@ IdeControllerMenu_InitializeToIdevarsOffsetInBX:
 	lea		ax, [bx+IDEVARS.bSerialBaud]
 	mov		[cs:g_MenuitemIdeControllerSerialBaud+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset], ax
 
-	lea		ax, [bx+IDEVARS.wPortCtrl]
+	lea		ax, [bx+IDEVARS.wControlBlockPort]
 	mov		[cs:g_MenuitemIdeControllerControlBlockAddress+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset], ax
 
 	lea		ax, [bx+IDEVARS.bSerialCOMPortChar]
@@ -357,10 +363,8 @@ ALIGN JUMP_ALIGN
 	mov		bx, [cs:g_MenuitemIdeControllerDevice+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset]
 	call	Buffers_GetRomvarsValueToAXfromOffsetInBX
 	mov		bx, g_MenuitemIdeControllerEnableInterrupt
-	cmp		al, DEVICE_SERIAL_PORT
+	cmp		al, DEVICE_8BIT_XTIDE_REV2
 	jae		SHORT .DisableMenuitemFromCSBX
-	cmp		al, DEVICE_8BIT_XTCF
-	jbe		SHORT .DisableMenuitemFromCSBX
 
 	call	.EnableMenuitemFromCSBX
 	; Fall to .EnableOrDisableIRQchannelSelection
@@ -535,7 +539,7 @@ IdeControllerMenu_WriteDevice:
 
 		mov		bl,[es:di]							; what is the current Device?
 
-		add		di,IDEVARS.wPort - IDEVARS.bDevice	; Get ready to set the Port addresses
+		add		di,IDEVARS.wBasePort - IDEVARS.bDevice	; Get ready to set the Port addresses
 
 		cmp		al,DEVICE_SERIAL_PORT
 		jz		.changingToSerial
@@ -555,7 +559,7 @@ IdeControllerMenu_WriteDevice:
 		mov		bx, DEVICE_ATA_PRIMARY_PORTCTRL
 
 .writeNonSerial:
-		stosw										; Store defaults in IDEVARS.wPort and IDEVARS.wPortCtrl
+		stosw										; Store defaults in IDEVARS.wBasePort and IDEVARS.wBasePortCtrl
 		xchg	bx, ax
 		stosw
 
@@ -565,10 +569,10 @@ IdeControllerMenu_WriteDevice:
 		cmp		bl,DEVICE_SERIAL_PORT
 		jz		.done								; if we were already serial, nothing to do
 
-		mov		byte [es:di+IDEVARS.bSerialBaud-IDEVARS.wPort],SERIAL_DEFAULT_BAUD
+		mov		byte [es:di+IDEVARS.bSerialBaud-IDEVARS.wBasePort],SERIAL_DEFAULT_BAUD
 
 		mov		al,SERIAL_DEFAULT_COM
-		add		di,IDEVARS.bSerialCOMPortChar-IDEVARS.wPort
+		add		di,IDEVARS.bSerialCOMPortChar-IDEVARS.wBasePort
 		call	IdeControllerMenu_SerialWriteCOM
 		stosb
 
