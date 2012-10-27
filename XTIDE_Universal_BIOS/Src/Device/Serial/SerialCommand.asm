@@ -60,6 +60,7 @@ SerialCommand_OutputWithParameters:
 		ret
 
 .readOrWrite:
+		call	IdeTransfer_NormalizePointerInESSI
 		mov		[bp+IDEPACK.bFeatures],ah		; store protocol command
 				
 		mov		dx, [di+DPT_SERIAL.wSerialPortAndBaud]

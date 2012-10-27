@@ -107,15 +107,18 @@ AH9h_InitializeDriveForUse:
 
 ;;; Set XT-CF mode
 %ifdef MODULE_8BIT_IDE
-	call	AccessDPT_IsThisDeviceXTCF
-	jne		SHORT .DoNotSetXTCFmode
-
 	call	AccessDPT_GetIdevarsToCSBX
 	mov		al, [cs:bx+IDEVARS.bXTCFcontrolRegister]
-	call	AH1Eh_ChangeXTCFmodeBasedOnControlRegisterInAL
+	call	AH9h_SetModeFromALtoXTCF
 	STORE_ERROR_FLAG_TO_DPT		FLG_INITERROR_FAILED_TO_SET_XTCF_MODE
 .DoNotSetXTCFmode:
-%endif
+
+
+;;; Set 8-bit PIO mode
+	call	AH9h_Enable8bitModeForDevice8bitAta
+	STORE_ERROR_FLAG_TO_DPT		FLG_INITERROR_FAILED_TO_SET_8BIT_MODE
+.DoNotSet8bitMode:
+%endif ; MODULE_8BIT_IDE
 
 
 ;;;	InitializeDeviceParameters
@@ -260,3 +263,42 @@ SetErrorFlagFromALwithErrorCodeInAH:
 	stc
 .NoErrorFlagToSet:
 	ret
+
+
+%ifdef MODULE_8BIT_IDE
+;--------------------------------------------------------------------
+; AH9h_SetModeFromALtoXTCF
+;	Parameters:
+;		AL:		XT-CF Mode to set
+;		DS:DI:	Ptr to DPT (in RAMVARS segment)
+;		SS:BP:	Ptr to IDEPACK
+;	Returns:
+;		AH:		Int 13h return status
+;		CF:		Clear if successful or device is not XT-CF
+;				Set if failed to set mode for XT-CF
+;	Corrupts registers:
+;		AL, BX, CX, DX, SI
+;--------------------------------------------------------------------
+AH9h_SetModeFromALtoXTCF:
+	call	AccessDPT_IsThisDeviceXTCF
+	jne		SHORT IgnoreInvalidCommandError
+	jmp		AH1Eh_ChangeXTCFmodeBasedOnControlRegisterInAL
+
+
+;--------------------------------------------------------------------
+; AH9h_Enable8bitModeForDevice8bitAta
+;	Parameters:
+;		DS:DI:	Ptr to DPT (in RAMVARS segment)
+;		SS:BP:	Ptr to IDEPACK
+;	Returns:
+;		AH:		Int 13h return status
+;		CF:		Clear if successful or device is not DEVICE_8BIT_ATA
+;				Set if failed to set 8-bit mode for DEVICE_8BIT_ATA
+;	Corrupts registers:
+;		AL, BX, CX, DX, SI
+;--------------------------------------------------------------------
+AH9h_Enable8bitModeForDevice8bitAta:
+	cmp		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_ATA
+	jne		SHORT IgnoreInvalidCommandError
+	jmp		AH23h_Enable8bitPioMode
+%endif ; MODULE_8BIT_IDE

@@ -87,17 +87,12 @@ IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 	call	Idepack_FakeToSSBP
 
 %ifdef MODULE_8BIT_IDE
-	; We set XT-CF to 8-bit PIO mode for Identify Device command.
-	; Correct XT-CF mode is later set on AH=09h (after all drives are detected).
-	call	AccessDPT_IsThisDeviceXTCF
-	jne		SHORT .SkipXTCFmodeChange
-
-	xor		al, al						; XTCF_8BIT_PIO_MODE
+	; Enable 8-bit PIO mode for 8-bit ATA and XT-CF
 	push	si
-	call	AH1Eh_ChangeXTCFmodeBasedOnControlRegisterInAL
+	call	AH9h_Enable8bitModeForDevice8bitAta
+	xor		al, al						; XTCF_8BIT_PIO_MODE
+	call	AH9h_SetModeFromALtoXTCF
 	pop		si
-	jc		SHORT .FailedToSet8bitMode
-.SkipXTCFmodeChange:
 %endif ; MODULE_8BIT_IDE
 
 	; Prepare to output Identify Device command
@@ -177,15 +172,10 @@ IdeCommand_OutputWithParameters:
 	cmp		bl, FLG_STATUS_DRQ				; Data transfer started?
 	jne		SHORT .WaitUntilNonTransferCommandCompletes
 %ifdef MODULE_8BIT_IDE
-	cmp		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_XTCF_DMA
-	je		SHORT .StartDmaTransfer
-	ja		SHORT JrIdeTransfer_StartWithCommandInAL	; DEVICE_8BIT_XTCF_MEMMAP or DEVICE_8BIT_JRIDE_ISA
-	jmp		IdeTransfer_StartWithCommandInAL
-.StartDmaTransfer:
-	jmp		IdeDmaTransfer_StartWithCommandInAL
-%else
-	jmp		IdeTransfer_StartWithCommandInAL
+	cmp		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_XTCF_MEMMAP
+	jae		SHORT JrIdeTransfer_StartWithCommandInAL	; DEVICE_8BIT_XTCF_MEMMAP or DEVICE_8BIT_JRIDE_ISA
 %endif
+	jmp		IdeTransfer_StartWithCommandInAL
 
 .WaitUntilNonTransferCommandCompletes:
 %ifdef MODULE_IRQ

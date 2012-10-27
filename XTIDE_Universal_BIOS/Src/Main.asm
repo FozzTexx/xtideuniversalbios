@@ -231,7 +231,7 @@ iend
 	%include "IdeCommand.asm"
 %ifdef MODULE_8BIT_IDE
 	%include "JrIdeTransfer.asm"	; Must be included after IdeCommand.asm
-	%include "IdeDmaTransfer.asm"
+	%include "IdeDmaBlock.asm"
 %endif
 	%include "IdeTransfer.asm"
 	%include "IdePioBlock.asm"
