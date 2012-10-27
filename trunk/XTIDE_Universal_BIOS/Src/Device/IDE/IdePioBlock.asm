@@ -214,25 +214,26 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		AX, BX, CX
 ;--------------------------------------------------------------------
-%ifdef USE_186	; Also used by XTIDE rev 2 when 80186/80188 commands allowed
 ALIGN JUMP_ALIGN
+%ifdef USE_186
 IdePioBlock_ReadFromXtideRev2:
+%endif
 IdePioBlock_ReadFrom16bitDataPort:
 	xchg	cl, ch		; Sectors to WORDs
-	rep insw
+	rep
+	db		6Dh			; INSW
 	ret
-%endif
 
 ;--------------------------------------------------------------------
-%ifdef USE_AT
 ALIGN JUMP_ALIGN
 IdePioBlock_ReadFrom32bitDataPort:
-	shl		cx, 7		; Sectors to DWORDs
+	db		0C1h		; SHL
+	db		0E1h		; CX
+	db		7			; 7	(Sectors to DWORDs)
 	rep
 	db		66h			; Override operand size to 32-bit
 	db		6Dh			; INSW/INSD
 	ret
-%endif
 
 
 ;--------------------------------------------------------------------
@@ -247,23 +248,22 @@ IdePioBlock_ReadFrom32bitDataPort:
 ;	Corrupts registers:
 ;		AX, BX, CX, DX
 ;--------------------------------------------------------------------
-%ifdef USE_AT
-
 ALIGN JUMP_ALIGN
 IdePioBlock_WriteTo16bitDataPort:
 	xchg	cl, ch		; Sectors to WORDs
 	es					; Source is ES segment
-	rep outsw
+	rep
+	db		6Fh			; OUTSW
 	ret
 
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 IdePioBlock_WriteTo32bitDataPort:
-	shl		cx, 7		; Sectors to DWORDs
+	db		0C1h		; SHL
+	db		0E1h		; CX
+	db		7			; 7	(Sectors to DWORDs)
 	es					; Source is ES segment
 	rep
 	db		66h			; Override operand size to 32-bit
 	db		6Fh			; OUTSW/OUTSD
 	ret
-
-%endif ; USE_AT

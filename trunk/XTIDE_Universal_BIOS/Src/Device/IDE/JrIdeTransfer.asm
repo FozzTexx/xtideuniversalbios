@@ -38,7 +38,7 @@ SECTION .text
 ;	Parameters:
 ;		AL:		IDE command that was used to start the transfer
 ;				(all PIO read and write commands including Identify Device)
-;		ES:SI:	Ptr to normalized data buffer
+;		ES:SI:	Ptr to data buffer
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
 ;		SS:BP:	Ptr to IDEPACK
 ;	Returns:
@@ -60,6 +60,9 @@ JrIdeTransfer_StartWithCommandInAL:
 	mov		[bp+MEMPIOVARS.wSectorsInBlock], ax
 	mov		[bp+MEMPIOVARS.fpDPT], di
 	mov		[bp+MEMPIOVARS.fpDPT+2], ds
+
+	; Normalize pointer
+	call	IdeTransfer_NormalizePointerInESSI
 
 	; Get far pointer to Sector Access Window
 	mov		dx, [di+DPT.wBasePort]

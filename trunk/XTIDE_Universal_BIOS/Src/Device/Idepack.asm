@@ -73,25 +73,8 @@ Idepack_ConvertDapToIdepackAndIssueCommandFromAH:
 	or		al, ah
 	mov		[bp+IDEPACK.bDrvAndHead], al
 
-	; Normalize data buffer pointer to ES:SI
-%ifdef MODULE_8BIT_IDE
-	cmp		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_XTCF_DMA
-	jne		SHORT .NormalizeForSmallestPossibleOffset
-
-	; DMA transfers do not need to normalize pointer
-	; (it will be converted to physical address in IdeDmaTransfer.asm)
+	; Load data buffer pointer to ES:SI
 	les		si, [es:si+DAP.dwMemoryAddress]
-	jmp		SHORT GetDeviceControlByteToIdepackAndStartTransfer
-%endif ; MODULE_8BIT_IDE
-
-.NormalizeForSmallestPossibleOffset:
-	mov		ax, [es:si+DAP.wOffset]
-	mov		cx, ax
-	eSHR_IM	ax, 4								; Divide offset by 16
-	add		ax, [es:si+DAP.wSegment]			; Add segment
-	mov		es, ax								; Segment normalized
-	mov		si, cx
-	and		si, BYTE 0Fh						; Offset normalized
 	jmp		SHORT GetDeviceControlByteToIdepackAndStartTransfer
 %endif ; MODULE_EBIOS
 

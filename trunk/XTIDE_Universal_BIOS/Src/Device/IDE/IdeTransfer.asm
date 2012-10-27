@@ -37,7 +37,7 @@ SECTION .text
 ;	Parameters:
 ;		AL:		IDE command that was used to start the transfer
 ;				(all PIO read and write commands including Identify Device)
-;		ES:SI:	Ptr to normalized data buffer
+;		ES:SI:	Ptr to data buffer
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
 ;		SS:BP:	Ptr to IDEPACK
 ;	Returns:
@@ -61,7 +61,7 @@ IdeTransfer_StartWithCommandInAL:
 ; ReadFromDrive
 ;	Parameters:
 ;		AH:		Number of sectors to transfer (1...128)
-;		ES:SI:	Normalized ptr to buffer to receive data
+;		ES:SI:	Ptr to buffer to receive data
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
 ;		SS:BP:	Ptr to PIOVARS
 ;	Returns:
@@ -138,7 +138,7 @@ ReturnWithTransferErrorInAH:
 ;	Parameters:
 ;		AH:		Number of sectors to transfer (1...128)
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
-;		ES:SI:	Normalized ptr to buffer containing data
+;		ES:SI:	Ptr to buffer containing data
 ;		SS:BP:	Ptr to PIOVARS
 ;	Returns:
 ;		AH:		BIOS Error code
@@ -197,6 +197,7 @@ ALIGN JUMP_ALIGN
 ;		AH:		Number of sectors to transfer (1...128)
 ;		BX:		Offset to transfer function lookup table
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
+;		ES:SI:	Ptr to data buffer
 ;		SS:BP:	Ptr to PIOVARS
 ;	Returns:
 ;		Nothing
@@ -216,38 +217,68 @@ InitializePiovarsInSSBPwithSectorCountInAH:
 	; Get transfer function based on bus type
 	xchg	ax, bx								; Lookup table offset to AX
 	mov		bl, [di+DPT_ATA.bDevice]
+%ifdef MODULE_8BIT_IDE
+	mov		dl, bl
+%endif
 	add		bx, ax
 	mov		ax, [cs:bx]							; Load offset to transfer function
 	mov		[bp+PIOVARS.fnXfer], ax
-	ret
 
+	; Normalize pointer for PIO-transfers and convert to physical address for DMA transfers
+%ifdef MODULE_8BIT_IDE
+	cmp		dl, DEVICE_8BIT_XTCF_DMA
+	jb		SHORT IdeTransfer_NormalizePointerInESSI
+
+	; Convert ES:SI to physical address
+	xor		dx, dx
+	mov		ax, es
+%rep 4
+	shl		ax, 1
+	rcl		dx, 1
+%endrep
+	add		si, ax
+	adc		dl, dh
+	mov		es, dx
+	ret
+%endif ; MODULE_8BIT_IDE
+	; Fall to IdeTransfer_NormalizePointerInESSI if no MODULE_8BIT_IDE
+
+
+;--------------------------------------------------------------------
+; IdeTransfer_NormalizePointerInESSI
+;	Parameters:
+;		ES:SI:	Ptr to be normalized
+;	Returns:
+;		ES:SI:	Normalized pointer (SI = 0...15)
+;	Corrupts registers:
+;		AX, DX
+;--------------------------------------------------------------------
+IdeTransfer_NormalizePointerInESSI:
+	NORMALIZE_FAR_POINTER	es, si, ax, dx
+	ret
 
 
 ; Lookup tables to get transfer function based on bus type
 ALIGN WORD_ALIGN
 g_rgfnPioRead:
-%ifdef USE_AT
 		dw		IdePioBlock_ReadFrom16bitDataPort	; 0, DEVICE_16BIT_ATA
 		dw		IdePioBlock_ReadFrom32bitDataPort	; 1, DEVICE_32BIT_ATA
-%else
-		dd		0
-%endif
 %ifdef MODULE_8BIT_IDE
-		dw		IdePioBlock_ReadFromXtideRev1		; 2, DEVICE_8BIT_XTIDE_REV1
-	%ifndef USE_AT
-		g_rgfnPioWrite:
-	%endif
-		dw		IdePioBlock_ReadFromXtideRev2		; 3, DEVICE_8BIT_XTIDE_REV2
-		dw		IdePioBlock_ReadFrom8bitDataPort	; 4, DEVICE_8BIT_XTCF_PIO8
+		dw		IdePioBlock_ReadFrom8bitDataPort	; 2, DEVICE_8BIT_ATA
+		dw		IdePioBlock_ReadFromXtideRev1		; 3, DEVICE_8BIT_XTIDE_REV1		
+		dw		IdePioBlock_ReadFromXtideRev2		; 4, DEVICE_8BIT_XTIDE_REV2
+		dw		IdePioBlock_ReadFrom8bitDataPort	; 5, DEVICE_8BIT_XTCF_PIO8
+		dw		IdeDmaBlock_ReadFromXTCF			; 6, DEVICE_8BIT_XTCF_DMA
 %endif
 
-%ifdef USE_AT
+
 g_rgfnPioWrite:
 		dw		IdePioBlock_WriteTo16bitDataPort	; 0, DEVICE_16BIT_ATA
 		dw		IdePioBlock_WriteTo32bitDataPort	; 1, DEVICE_32BIT_ATA
-%endif
 %ifdef MODULE_8BIT_IDE
-		dw		IdePioBlock_WriteToXtideRev1		; 2, DEVICE_8BIT_XTIDE_REV1
-		dw		IdePioBlock_WriteToXtideRev2		; 3, DEVICE_8BIT_XTIDE_REV2
-		dw		IdePioBlock_WriteTo8bitDataPort		; 4, DEVICE_8BIT_XTCF_PIO8
+		dw		IdePioBlock_WriteTo8bitDataPort		; 2, DEVICE_8BIT_ATA
+		dw		IdePioBlock_WriteToXtideRev1		; 3, DEVICE_8BIT_XTIDE_REV1
+		dw		IdePioBlock_WriteToXtideRev2		; 4, DEVICE_8BIT_XTIDE_REV2
+		dw		IdePioBlock_WriteTo8bitDataPort		; 5, DEVICE_8BIT_XTCF_PIO8
+		dw		IdeDmaBlock_WriteToXTCF				; 6, DEVICE_8BIT_XTCF_DMA
 %endif

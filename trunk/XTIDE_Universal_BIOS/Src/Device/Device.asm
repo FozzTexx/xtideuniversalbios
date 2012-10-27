@@ -83,7 +83,7 @@ Device_ResetMasterAndSlaveController:
 ;		BH:		Drive Select byte for Drive and Head Select Register
 ;		DX:		Autodetected port (for devices that support autodetection)
 ;		DS:		Segment to RAMVARS
-;		ES:SI:	Ptr to normalized buffer to receive 512-byte IDE Information
+;		ES:SI:	Ptr to buffer to receive 512-byte IDE Information
 ;		CS:BP:	Ptr to IDEVARS
 ;	Returns:
 ;		AH:		INT 13h Error Code
@@ -108,7 +108,7 @@ Device_IdentifyToBufferInESSIwithDriveSelectByteInBH:
 ;	Parameters:
 ;		BH:		Default system timer ticks for timeout (can be ignored)
 ;		BL:		IDE Status Register bit to poll after command
-;		ES:SI:	Ptr to normalized buffer (for data transfer commands)
+;		ES:SI:	Ptr to buffer (for data transfer commands)
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
 ;		SS:BP:	Ptr to IDEPACK
 ;	Returns:
