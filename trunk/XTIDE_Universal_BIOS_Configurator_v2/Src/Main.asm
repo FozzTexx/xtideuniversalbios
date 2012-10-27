@@ -24,6 +24,7 @@
 		
 %include "AssemblyLibrary.inc"	; Assembly Library. Must be included first!
 %include "Romvars.inc"			; XTIDE Universal BIOS variables
+%include "XTCF.inc"				; For XT-CF modes
 
 %include "Version.inc"
 %include "MenuCfg.inc"
