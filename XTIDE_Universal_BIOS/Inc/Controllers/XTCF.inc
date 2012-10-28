@@ -24,6 +24,7 @@
 
 XTCF_DMA_MODE_MAX_BLOCK_SIZE		EQU		64		; Sectors
 OFFSET_TO_CONTROL_BLOCK_REGISTERS	EQU		8
+DEFAULT_XTCF_SECTOR_WINDOW_SEGMENT	EQU		0D800h
 
 ; Possible base addresses. Note that all XT-CF IDE registers are SHL 1 compared
 ; to standard IDE registers.
