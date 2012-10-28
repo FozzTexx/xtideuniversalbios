@@ -209,11 +209,10 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 Buffers_GenerateChecksum:
 	push	es
+	push	dx
 
 	call	Buffers_GetFileBufferToESDI
-	mov		ax, [cs:g_cfgVars+CFGVARS.wImageSizeInWords]
-	call	EEPROM_GetSmallestEepromSizeInWordsToCXforImageWithWordSizeInAX
-	shl		cx, 1			; Words to bytes
+	call	EEPROM_GetXtideUniversalBiosSizeFromESDItoDXCX
 	dec		cx				; Leave space for checksum byte
 	xor		ax, ax
 ALIGN JUMP_ALIGN
@@ -224,6 +223,7 @@ ALIGN JUMP_ALIGN
 	neg		al
 	mov		[es:di], al
 
+	pop		dx
 	pop		es
 	ret
 
