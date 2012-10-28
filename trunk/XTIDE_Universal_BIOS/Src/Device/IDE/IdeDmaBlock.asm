@@ -108,8 +108,8 @@ TransferBlockToOrFromXTCF:
 ;--------------------------------------------------------------------
 ; StartDMAtransferForXTCFwithDmaModeInBL
 ;	Parameters:
-;		CX:		Number of BYTEs to transfer
 ;		BL:		Byte for DMA Mode Register
+;		CX:		Number of BYTEs to transfer
 ;		DX:		XTCF Control Register
 ;	Returns:
 ;		Nothing
