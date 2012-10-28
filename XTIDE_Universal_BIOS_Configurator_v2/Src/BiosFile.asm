@@ -166,11 +166,7 @@ BiosFile_SaveRamBufferToFileInDSSI:
 
 	call	Buffers_GenerateChecksum
 	call	Buffers_GetFileBufferToESDI
-	mov		ax, [cs:g_cfgVars+CFGVARS.wImageSizeInWords]
-	call	EEPROM_GetSmallestEepromSizeInWordsToCXforImageWithWordSizeInAX
-	xor		dx, dx
-	shl		cx, 1
-	rcl		dx, 1			; WORDs to BYTEs
+	call	EEPROM_GetXtideUniversalBiosSizeFromESDItoDXCX
 
 	mov		al, FILE_ACCESS.WriteOnly
 	call	FileIO_OpenWithPathInDSSIandFileAccessInAL

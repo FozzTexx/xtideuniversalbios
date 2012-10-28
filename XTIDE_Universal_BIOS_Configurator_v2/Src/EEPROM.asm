@@ -43,36 +43,6 @@ g_rgwEepromPageToSizeInBytes:
 SECTION .text
 
 ;--------------------------------------------------------------------
-; EEPROM_GetSmallestEepromSizeInWordsToCXforImageWithWordSizeInAX
-;	Parameters:
-;		AX:		Image size in WORDs
-;	Returns:
-;		CX:		Required EEPROM size in WORDs
-;		CF:		Set if EEPROM size found
-;				Cleared if no valid EEPROM found
-;	Corrupts registers:
-;		BX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-EEPROM_GetSmallestEepromSizeInWordsToCXforImageWithWordSizeInAX:
-	mov		bx, g_rgwEepromTypeToSizeInWords
-	mov		cx, NUMBER_OF_EEPROM_TYPES
-ALIGN JUMP_ALIGN
-.CheckNextEepromSize:
-	cmp		ax, [cs:bx]
-	jbe		SHORT .ReturnEepromSizeInCX
-	inc		bx
-	inc		bx
-	loop	.CheckNextEepromSize
-	ret		; Return with CF cleared (none of the supported EEPROMs are large enough)
-ALIGN JUMP_ALIGN
-.ReturnEepromSizeInCX:
-	mov		cx, [cs:bx]
-	stc
-	ret
-
-
-;--------------------------------------------------------------------
 ; EEPROM_LoadXtideUniversalBiosFromRomToRamBufferAndReturnSizeInDXCX
 ;	Parameters:
 ;		Nothing
@@ -86,27 +56,28 @@ EEPROM_LoadXtideUniversalBiosFromRomToRamBufferAndReturnSizeInDXCX:
 	push	es
 
 	call	EEPROM_FindXtideUniversalBiosROMtoESDI
-	call	.GetXtideUniversalBiosSizeFromEStoDXCX
+	call	EEPROM_GetXtideUniversalBiosSizeFromESDItoDXCX
 	xor		si, si				; Load from beginning of ROM
 	call	LoadBytesFromRomToRamBuffer
 
-	call	.GetXtideUniversalBiosSizeFromEStoDXCX
+	call	EEPROM_GetXtideUniversalBiosSizeFromESDItoDXCX
 	pop		es
 	ret
 
+
 ;--------------------------------------------------------------------
-; .GetXtideUniversalBiosSizeFromEStoDXCX
+; EEPROM_GetXtideUniversalBiosSizeFromESDItoDXCX
 ;	Parameters:
-;		Nothing
+;		ES:DI:	Ptr to XTIDE Universal BIOS
 ;	Returns:
 ;		DX:CX:	Bios size in bytes
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-.GetXtideUniversalBiosSizeFromEStoDXCX:
+EEPROM_GetXtideUniversalBiosSizeFromESDItoDXCX:
 	xor		dx, dx
-	eMOVZX	cx, [es:ROMVARS.bRomSize]
+	eMOVZX	cx, [es:di+ROMVARS.bRomSize]
 	eSHL_IM	cx, 9				; *= 512 for byte count
 	ret
 
