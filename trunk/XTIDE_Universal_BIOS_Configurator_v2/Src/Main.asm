@@ -24,6 +24,7 @@
 		
 %include "AssemblyLibrary.inc"	; Assembly Library. Must be included first!
 %include "Romvars.inc"			; XTIDE Universal BIOS variables
+%include "JRIDE_ISA.inc"		; For JR-IDE/ISA default segment
 %include "XTCF.inc"				; For XT-CF modes
 
 %include "Version.inc"

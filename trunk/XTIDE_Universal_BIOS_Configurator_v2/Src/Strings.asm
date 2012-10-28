@@ -195,10 +195,10 @@ g_szItemIdeCmdPort:		db	"Base (cmd block) address",NULL
 g_szItemIdeCtrlPort:	db	"Control block address",NULL
 g_szItemIdeEnIRQ:		db	"Enable interrupt",NULL
 g_szItemIdeIRQ:			db	"IRQ",NULL
+g_szItemIdeXTCFwindow:	db	"XT-CF Sector Window",NULL
 g_szItemSerialCOM:		db	"COM Port",NULL
 g_szItemSerialBaud:		db	"Baud Rate",NULL
 g_szItemSerialPort:		db	"COM Port I/O address",NULL
-
 g_szItemIdeSerialComPort:	db	"COM port",NULL
 g_szItemIdeSerialBaudRate:	db	"Baud rate",NULL
 
@@ -207,15 +207,17 @@ g_szDlgIdeCmdPort:		db	"Enter IDE command block (base port) address.",NULL
 g_szDlgIdeCtrlPort:		db	"Enter IDE control block address (usually command block + 200h).",NULL
 g_szDlgIdeEnIRQ:		db	"Enable interrupt?",NULL
 g_szDlgIdeIRQ:			db	"Enter IRQ channel (2...7 for 8-bit controllers, 2...15 for any other controller).",NULL
+g_szDlgIdeXTCFwindow:	db	"XT-CF Sector Window segment (A000h...E800h).",NULL
 
 g_szNfoIdeBackToCfgMenu:db	"Back to XTIDE Universal BIOS Configuration Menu.",NULL
 g_szNfoIdeMaster:		db	"Settings for Master Drive.",NULL
 g_szNfoIdeSlave:		db	"Settings for Slave Drive.",NULL
 g_szNfoIdeDevice:		db	"Select controller device type.",NULL
-g_szNfoIdeCmdPort:		db	"IDE Controller Command Block (base port) address.",NULL
+g_szNfoIdeCmdPort:		db	"IDE Controller Command Block (base port) address or segment address for JR-IDE/ISA.",NULL
 g_szNfoIdeCtrlPort:		db	"IDE Controller Control Block address. Usually Cmd Block + 8 for XTIDE, and Cmd Block + 200h for ATA.",NULL
 g_szNfoIdeEnIRQ:		db	"Interrupt or polling mode.",NULL
 g_szNfoIdeIRQ:			db	"IRQ channel to use.",NULL
+g_szNfoIdeXTCFwindow:	db	"Segment Address for XT-CF 4 kiB Sector Access Window.",NULL
 g_szNfoIdeSerialCOM:	db	"Select a COM port by number.",NULL
 g_szNfoIdeSerialBaud:	db	"Select the COM port's Baud Rate. The server must match this speed."
 						db	" Note that UART clock multipliers may impact the actual speed.",NULL

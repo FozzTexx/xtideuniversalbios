@@ -25,7 +25,7 @@ g_MenupageForIdeControllerMenu:
 istruc MENUPAGE
 	at	MENUPAGE.fnEnter,			dw	IdeControllerMenu_EnterMenuOrModifyItemVisibility
 	at	MENUPAGE.fnBack,			dw	ConfigurationMenu_EnterMenuOrModifyItemVisibility
-	at	MENUPAGE.wMenuitems,		dw	11
+	at	MENUPAGE.wMenuitems,		dw	12
 iend
 
 g_MenuitemIdeControllerBackToConfigurationMenu:
@@ -82,7 +82,7 @@ istruc MENUITEM
 	at	MENUITEM.szName,			dw	g_szItemIdeCmdPort
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoIdeCmdPort
 	at	MENUITEM.szHelp,			dw	g_szHelpIdeCmdPort
-	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE
+	at	MENUITEM.bFlags,			db	NULL
 	at	MENUITEM.bType,				db	TYPE_MENUITEM_HEX
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	NULL
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgIdeCmdPort
@@ -97,7 +97,7 @@ istruc MENUITEM
 	at	MENUITEM.szName,			dw	g_szItemIdeCtrlPort
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoIdeCtrlPort
 	at	MENUITEM.szHelp,			dw	g_szHelpIdeCtrlPort
-	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE
+	at	MENUITEM.bFlags,			db	NULL
 	at	MENUITEM.bType,				db	TYPE_MENUITEM_HEX
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	NULL
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgIdeCtrlPort
@@ -186,6 +186,23 @@ istruc MENUITEM
 	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	15
 iend
 
+g_MenuitemIdeControllerXTCFwindow:
+istruc MENUITEM
+	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateHexInputForMenuitemInDSSI
+	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteHexValueStringToBufferInESDIfromItemInDSSI
+	at	MENUITEM.szName,			dw	g_szItemIdeXTCFwindow
+	at	MENUITEM.szQuickInfo,		dw	g_szNfoIdeXTCFwindow
+	at	MENUITEM.szHelp,			dw	g_szNfoIdeXTCFwindow
+	at	MENUITEM.bFlags,			db	FLG_MENUITEM_BYTEVALUE
+	at	MENUITEM.bType,				db	TYPE_MENUITEM_HEX
+	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	NULL
+	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgIdeXTCFwindow
+	at	MENUITEM.itemValue + ITEM_VALUE.wMinValue,					dw	0A000h
+	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	0E800h
+	at	MENUITEM.itemValue + ITEM_VALUE.fnValueReader,				dw	ReaderForXTCFwindow
+	at	MENUITEM.itemValue + ITEM_VALUE.fnValueWriter,				dw	WriterForXTCFwindow
+iend
+
 g_rgwChoiceToValueLookupForDevice:
 	dw	DEVICE_16BIT_ATA
 	dw	DEVICE_32BIT_ATA
@@ -208,7 +225,6 @@ g_rgszValueToStringLookupForDevice:
 	dw	g_szValueCfgDeviceMemXTCF
 	dw	g_szValueCfgDeviceJrIdeIsa
 	dw	g_szValueCfgDeviceSerial
-
 
 g_rgbChoiceToValueLookupForCOM:
 	dw	'1'
@@ -314,6 +330,9 @@ IdeControllerMenu_InitializeToIdevarsOffsetInBX:
 	lea		ax, [bx+IDEVARS.wControlBlockPort]
 	mov		[cs:g_MenuitemIdeControllerControlBlockAddress+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset], ax
 
+	lea		ax, [bx+IDEVARS.bXTCFcontrolRegister]
+	mov		[cs:g_MenuitemIdeControllerXTCFwindow+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset], ax
+
 	lea		ax, [bx+IDEVARS.bSerialCOMPortChar]
 	mov		[cs:g_MenuitemIdeControllerSerialCOM+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset], ax
 
@@ -337,11 +356,56 @@ ALIGN JUMP_ALIGN
 IdeControllerMenu_EnterMenuOrModifyItemVisibility:
 	push	cs
 	pop		ds
+	call	.EnableOrDisableCommandBlockPort
+	call	.EnableOrDisableControlBlockPort
 	call	.DisableIRQchannelSelection
 	call	.EnableOrDisableEnableInterrupt
+	call	.EnableOrDisableXTCFwindow
 	call	.EnableOrDisableSerial
 	mov		si, g_MenupageForIdeControllerMenu
 	jmp		Menupage_ChangeToNewMenupageInDSSI
+
+
+;--------------------------------------------------------------------
+; .EnableOrDisableCommandBlockPort
+;	Parameters:
+;		SS:BP:	Menu handle
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, BX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+.EnableOrDisableCommandBlockPort:
+	mov		bx, [cs:g_MenuitemIdeControllerDevice+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset]
+	call	Buffers_GetRomvarsValueToAXfromOffsetInBX
+	mov		bx, g_MenuitemIdeControllerCommandBlockAddress
+	cmp		al, DEVICE_8BIT_XTCF_PIO8
+	jb		SHORT .EnableMenuitemFromCSBX
+	cmp		al, DEVICE_SERIAL_PORT
+	je		SHORT .DisableMenuitemFromCSBX
+	cmp		al, DEVICE_8BIT_XTCF_MEMMAP
+	ja		SHORT .EnableMenuitemFromCSBX
+	jmp		SHORT .DisableMenuitemFromCSBX
+	
+
+;--------------------------------------------------------------------
+; .EnableOrDisableControlBlockPort
+;	Parameters:
+;		SS:BP:	Menu handle
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, BX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+.EnableOrDisableControlBlockPort:
+	mov		bx, [cs:g_MenuitemIdeControllerDevice+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset]
+	call	Buffers_GetRomvarsValueToAXfromOffsetInBX
+	mov		bx, g_MenuitemIdeControllerControlBlockAddress
+	cmp		al, DEVICE_8BIT_XTCF_PIO8
+	jb		SHORT .EnableMenuitemFromCSBX
+	jmp		SHORT .DisableMenuitemFromCSBX
 
 
 ;--------------------------------------------------------------------
@@ -388,6 +452,25 @@ ALIGN JUMP_ALIGN
 .DisableIRQchannelSelection:
 	mov		bx, g_MenuitemIdeControllerIdeIRQ
 	jz		SHORT .DisableMenuitemFromCSBX
+	jmp		SHORT .DisableMenuitemFromCSBX
+
+
+;--------------------------------------------------------------------
+; .EnableOrDisableXTCFwindow
+;	Parameters:
+;		SS:BP:	Menu handle
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, BX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+.EnableOrDisableXTCFwindow:
+	mov		bx, [cs:g_MenuitemIdeControllerDevice+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset]
+	call	Buffers_GetRomvarsValueToAXfromOffsetInBX
+	mov		bx, g_MenuitemIdeControllerXTCFwindow
+	cmp		al, DEVICE_8BIT_XTCF_MEMMAP
+	je		SHORT .EnableMenuitemFromCSBX
 	; Fall to .DisableMenuitemFromCSBX
 
 
@@ -413,12 +496,6 @@ ALIGN JUMP_ALIGN
 
 
 .EnableOrDisableSerial:
-	mov		bx, g_MenuitemIdeControllerCommandBlockAddress
-	call	.DisableMenuitemFromCSBX
-
-	mov		bx, g_MenuitemIdeControllerControlBlockAddress
-	call	.DisableMenuitemFromCSBX
-
 	mov		bx, g_MenuitemIdeControllerSerialBaud
 	call	.DisableMenuitemFromCSBX
 
@@ -445,15 +522,7 @@ ALIGN JUMP_ALIGN
 	cmp		al,'x'
 	jz		.EnableMenuitemFromCSBX
 	jmp		.DisableMenuitemFromCSBX
-
 .DisableAllSerial:
-
-	mov		bx, g_MenuitemIdeControllerCommandBlockAddress
-	call	.EnableMenuitemFromCSBX
-
-	mov		bx, g_MenuitemIdeControllerControlBlockAddress
-	call	.EnableMenuitemFromCSBX
-
 	ret
 
 ;--------------------------------------------------------------------
@@ -526,6 +595,18 @@ DisplayMasterSlaveMenu:
 ;	Corrupts registers:
 ;		AX
 ;
+ALIGN JUMP_ALIGN
+WriterForXTCFwindow:
+	mov		al, ah
+	xor		ah, ah
+	ret
+
+ALIGN JUMP_ALIGN
+ReaderForXTCFwindow:
+	mov		ah, al
+	xor		al, al
+	ret
+
 
 ;
 ; No change to Device byte, but use this opportunity to change defaults stored in wPort and wPortCtrl if we are
@@ -533,54 +614,77 @@ DisplayMasterSlaveMenu:
 ;
 ALIGN JUMP_ALIGN
 IdeControllerMenu_WriteDevice:
-		push	ax
 		push	bx
 		push	di
+		push	di
+		push	ax
 
-		mov		bl,[es:di]							; what is the current Device?
+		; Note! AL is the choice index, not device code
+		shl		ax, 1								; Selection to device code
+		mov		bl, [es:di]							; what is the current Device we are changing from?
+		sub		di, BYTE IDEVARS.bDevice - IDEVARS.wBasePort	; Get ready to set the Port addresses
+		cmp		al, DEVICE_SERIAL_PORT
+		je		SHORT .changingToSerial
+		cmp		al, DEVICE_8BIT_JRIDE_ISA
+		je		SHORT .ChangingToJrIdeIsa
 
-		add		di,IDEVARS.wBasePort - IDEVARS.bDevice	; Get ready to set the Port addresses
-
-		cmp		al,DEVICE_SERIAL_PORT
-		jz		.changingToSerial
-
-		cmp		bl,DEVICE_SERIAL_PORT
-		jnz		.done								; if we weren't Serial before, nothing to do
-
-.changingFromSerial:
-		cmp		al,DEVICE_16BIT_ATA
-
-		mov		ax,DEVICE_XTIDE_DEFAULT_PORT		; Defaults for 8-bit XTIDE devices
-		mov		bx,DEVICE_XTIDE_DEFAULT_PORTCTRL
-
-		jb		.writeNonSerial
-
+		; Restore ports to default values
+		cmp		al, DEVICE_8BIT_ATA					; Standard ATA controllers, including 8-bit mode
 		mov		ax, DEVICE_ATA_PRIMARY_PORT			; Defaults for 16-bit and better ATA devices
 		mov		bx, DEVICE_ATA_PRIMARY_PORTCTRL
+		jbe		SHORT .writeNonSerial
+
+		mov		ax, DEVICE_XTIDE_DEFAULT_PORT		; Defaults for 8-bit XTIDE devices
+		mov		bx, DEVICE_XTIDE_DEFAULT_PORTCTRL
 
 .writeNonSerial:
 		stosw										; Store defaults in IDEVARS.wBasePort and IDEVARS.wBasePortCtrl
 		xchg	bx, ax
 		stosw
+		jmp		SHORT .done
 
-		jmp		.done
+.ChangingToJrIdeIsa:
+		mov		ax, JRIDE_DEFAULT_SEGMENT_ADDRESS
+		xor		bx, bx
+		jmp		SHORT .writeNonSerial
 
 .changingToSerial:
-		cmp		bl,DEVICE_SERIAL_PORT
-		jz		.done								; if we were already serial, nothing to do
+		cmp		bl, DEVICE_SERIAL_PORT
+		je		SHORT .done							; if we were already serial, nothing to do
 
-		mov		byte [es:di+IDEVARS.bSerialBaud-IDEVARS.wBasePort],SERIAL_DEFAULT_BAUD
+		mov		BYTE [es:di+IDEVARS.bSerialBaud-IDEVARS.wBasePort], SERIAL_DEFAULT_BAUD
 
-		mov		al,SERIAL_DEFAULT_COM
-		add		di,IDEVARS.bSerialCOMPortChar-IDEVARS.wBasePort
+		mov		al, SERIAL_DEFAULT_COM
+		sub		di, IDEVARS.wBasePort - IDEVARS.bSerialCOMPortChar
 		call	IdeControllerMenu_SerialWriteCOM
 		stosb
 
 .done:
+		; See if we are changing to XT-CF. If we are, store
+		; byte for Control Register.
+		pop		ax
+		pop		di			; IDEVARS.bDevice
+		sub		di, BYTE IDEVARS.bDevice - IDEVARS.bXTCFcontrolRegister	; IDEVARS.bXTCFcontrolRegister
+		cmp		al, DEVICE_8BIT_XTCF_PIO8 >> 1
+		je		SHORT .ChangingToPioModeXTCF
+		cmp		al, DEVICE_8BIT_XTCF_DMA >> 1
+		je		SHORT .ChangingToDmaModeXTCF
+		cmp		al, DEVICE_8BIT_XTCF_MEMMAP >> 1
+		jne		SHORT .NoNeedToChangeXTCFsettings
+
+		; XT-CF Memory Mapped Mode
+		mov		WORD [es:di], DEFAULT_XTCF_SECTOR_WINDOW_SEGMENT >> 8	; Store word to clear Control Block Port high byte
+		jmp		SHORT .NoNeedToChangeXTCFsettings
+.ChangingToPioModeXTCF:
+		mov		BYTE [es:di], XTCF_8BIT_PIO_MODE
+		jmp		SHORT .NoNeedToChangeXTCFsettings
+.ChangingToDmaModeXTCF:
+		mov		BYTE [es:di], XTCF_DMA_MODE
+		; Fall to .NoNeedToChangeXTCFsettings
+
+.NoNeedToChangeXTCFsettings:
 		pop		di
 		pop		bx
-		pop		ax
-
 		ret
 
 ;

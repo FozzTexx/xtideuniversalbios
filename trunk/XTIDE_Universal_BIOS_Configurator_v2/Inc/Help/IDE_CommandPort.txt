@@ -1,1 +1,1 @@
-IDE controller command block address is the usual address mentioned for IDE controllers. By default the primary IDE controller uses port 1F0h and secondary controller uses port 170h. XTIDE card uses port 300h by default.
+IDE controller command block address is the usual address mentioned for IDE controllers. By default the primary IDE controller uses port 1F0h and secondary controller uses port 170h. XTIDE card uses port 300h by default. JR-IDE/ISA do not use ports but you need to set ROM space segment address for JR-IDE/ISA.
