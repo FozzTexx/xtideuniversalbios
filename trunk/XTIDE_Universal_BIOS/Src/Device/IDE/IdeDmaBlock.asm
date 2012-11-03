@@ -74,8 +74,8 @@ IdeDmaBlock_ReadFromXTCF:
 ;--------------------------------------------------------------------
 TransferBlockToOrFromXTCF:
 	; 8-bit DMA transfers must be done withing 64k physical page.
-	; We support maximum of 128 sectors (65536 bytes) per one INT 13h call
-	; so we might need to separate transfer to 2 separate DMA operations.
+	; XT-CF support maximum of 64 sector (32768 bytes) blocks in DMA mode
+	; so we never need to separate transfer to more than 2 separate DMA operations.
 
 	; Load XT-CF Control Register port to DX
 	add		dl, XTCF_CONTROL_REGISTER
@@ -109,7 +109,7 @@ TransferBlockToOrFromXTCF:
 ; StartDMAtransferForXTCFwithDmaModeInBL
 ;	Parameters:
 ;		BL:		Byte for DMA Mode Register
-;		CX:		Number of BYTEs to transfer
+;		CX:		Number of BYTEs to transfer (1...32768 since max block size is limited to 64)
 ;		DX:		XTCF Control Register
 ;	Returns:
 ;		Nothing
@@ -150,6 +150,7 @@ StartDMAtransferForXTCFwithDmaModeInBL:
 	sti										; Enable interrupts
 
 
+%if 0 ; Slow DMA code
 	; XT-CF transfers 16 bytes at a time. We need to manually
 	; start transfer for every block.
 ALIGN JUMP_ALIGN
@@ -162,6 +163,28 @@ ALIGN JUMP_ALIGN
 	sti
 	test	al, FLG_CH3_HAS_REACHED_TERMINAL_COUNT
 	jz		SHORT .TransferNextBlock	; All bytes transferred?
+%endif ; Slow DMA code
+
+
+%if 1 ; Fast DMA code
+	push	cx
+	add		cx, BYTE 15					; Include any partial DMA block (since we had to divide transfer to 64k physical pages)
+	eSHR_IM	cx, 4						; Drive Block size to 16 Byte DMA Block Size
+
+.JustOneMoreDmaBlock:
+	mov		al, RAISE_DRQ_AND_CLEAR_XTCF_XFER_COUNTER
+ALIGN JUMP_ALIGN
+.TransferNextDmaBlock:
+	out		dx, al						; Transfer 16 bytes to/from XT-CF card
+	loop	.TransferNextDmaBlock
+
+	inc		cx							; set up CX, in case we need to do an extra iteration
+	in		al, STATUS_REGISTER_DMA8_in
+	test	al, FLG_CH3_HAS_REACHED_TERMINAL_COUNT
+	jz		SHORT .JustOneMoreDmaBlock			; it wasn't set so get more bytes
+	pop		cx
+%endif ; Fast DMA code
+
 
 	; Restore XT-CF to normal operation
 	mov		al, XTCF_DMA_MODE

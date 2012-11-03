@@ -225,6 +225,10 @@ g_szDeviceTypeValues_32bit:		; db		" 32",NULL
                            		; db		 20h,  33h,  32h,  00h    ; uncompressed
                            		  db		 20h,  2dh,  0ch          ; compressed
 
+g_szDeviceTypeValues_8bit:		; db		"  8",NULL
+                          		; db		 20h,  20h,  38h,  00h    ; uncompressed
+                          		  db		 20h,  20h,  11h          ; compressed
+
 g_szDeviceTypeValues_XTIDEr1:	; db		"D8 ",NULL	; Dual 8-bit
                              	; db		 44h,  38h,  20h,  00h    ; uncompressed
                              	  db		 4ah,  31h,  00h          ; compressed
@@ -262,10 +266,13 @@ g_szDeviceTypeValues_Displacement equ (g_szDeviceTypeValues_32bit - g_szDeviceTy
 %if g_szDeviceTypeValues_16bit <> g_szDeviceTypeValues
 %error "g_szDeviceTypeValues Displacement Incorrect 1"
 %endif
-%if g_szDeviceTypeValues_32bit <> g_szDeviceTypeValues + g_szDeviceTypeValues_Displacement
+%if g_szDeviceTypeValues_32bit <> g_szDeviceTypeValues_16bit + g_szDeviceTypeValues_Displacement
 %error "g_szDeviceTypeValues Displacement Incorrect 2"
 %endif
-%if g_szDeviceTypeValues_XTIDEr1 <> g_szDeviceTypeValues_32bit + g_szDeviceTypeValues_Displacement
+%if g_szDeviceTypeValues_8bit <> g_szDeviceTypeValues_32bit + g_szDeviceTypeValues_Displacement
+%error "g_szDeviceTypeValues Displacement Incorrect 2"
+%endif
+%if g_szDeviceTypeValues_XTIDEr1 <> g_szDeviceTypeValues_8bit + g_szDeviceTypeValues_Displacement
 %error "g_szDeviceTypeValues Displacement Incorrect 3"
 %endif
 %if g_szDeviceTypeValues_XTIDEr2 <> g_szDeviceTypeValues_XTIDEr1 + g_szDeviceTypeValues_Displacement
@@ -488,7 +495,7 @@ StringsCompressed_TranslatesAndFormats:
 
 ;; translated usage stats
 ;; 33:1
-;; 32:27
+;; 32:29
 ;; 181:1
 ;; 53:2
 ;; 48:2
@@ -503,7 +510,7 @@ StringsCompressed_TranslatesAndFormats:
 ;; 172:2
 ;; 34:3
 ;; 49:1
-;; 56:6
+;; 56:7
 ;; 45:1
 ;; 175:1
 ;; 171:2

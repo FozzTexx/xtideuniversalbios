@@ -119,6 +119,7 @@ g_szAddressingModes_Displacement equ (g_szLARGE - g_szAddressingModes)
 g_szDeviceTypeValues:
 g_szDeviceTypeValues_16bit:		db		" 16",NULL
 g_szDeviceTypeValues_32bit:		db		" 32",NULL
+g_szDeviceTypeValues_8bit:		db		"  8",NULL
 g_szDeviceTypeValues_XTIDEr1:	db		"D8 ",NULL	; Dual 8-bit
 g_szDeviceTypeValues_XTIDEr2:	db		"X8 ",NULL	; A0<->A3 swapped 8-bit
 g_szDeviceTypeValues_XTCFpio8:	db		"T8 ",NULL	; True 8-bit
@@ -135,10 +136,13 @@ g_szDeviceTypeValues_Displacement equ (g_szDeviceTypeValues_32bit - g_szDeviceTy
 	%if g_szDeviceTypeValues_16bit <> g_szDeviceTypeValues
 		%error "g_szDeviceTypeValues Displacement Incorrect 1"
 	%endif
-	%if g_szDeviceTypeValues_32bit <> g_szDeviceTypeValues + g_szDeviceTypeValues_Displacement
+	%if g_szDeviceTypeValues_32bit <> g_szDeviceTypeValues_16bit + g_szDeviceTypeValues_Displacement
 		%error "g_szDeviceTypeValues Displacement Incorrect 2"
 	%endif
-	%if g_szDeviceTypeValues_XTIDEr1 <> g_szDeviceTypeValues_32bit + g_szDeviceTypeValues_Displacement
+	%if g_szDeviceTypeValues_8bit <> g_szDeviceTypeValues_32bit + g_szDeviceTypeValues_Displacement
+		%error "g_szDeviceTypeValues Displacement Incorrect 2"
+	%endif
+	%if g_szDeviceTypeValues_XTIDEr1 <> g_szDeviceTypeValues_8bit + g_szDeviceTypeValues_Displacement
 		%error "g_szDeviceTypeValues Displacement Incorrect 3"
 	%endif
 	%if g_szDeviceTypeValues_XTIDEr2 <> g_szDeviceTypeValues_XTIDEr1 + g_szDeviceTypeValues_Displacement
