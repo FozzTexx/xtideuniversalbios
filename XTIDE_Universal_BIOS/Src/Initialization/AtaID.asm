@@ -51,22 +51,15 @@ AtaID_VerifyFromESSI:
 	mov		cl, MAX_VALID_PCHS_SECTORS_PER_TRACK
 	call	.CompareCHorSfromOffsetBXtoMaxValueInCX
 
-	; We now verified P-CHS parameters so we assume ATA ID to be valid
-	; for ATA-4 and older. For ATA-5 and later we check signature
-	; and checksum.
-	mov		ax, [es:si+ATA6.wMajorVer]			; ATA-3 and later have this word
-	inc		ax
-	jz		SHORT .AtaIDverifiedSuccessfully	; FFFFh means no version info available
-	dec		ax
-	jz		SHORT .AtaIDverifiedSuccessfully	; Zero means no version info available
-	cmp		ax, A6_wMajorVer_ATA5
-	jb		SHORT .AtaIDverifiedSuccessfully	; ATA-3 and ATA-4 do not have checksum
-
-	; Check signature byte
-	cmp		BYTE [es:si+ATA6.bSignature], A6_wIntegrity_SIGNATURE
+	; Check signature byte. It is only found on ATA-5 and later. It should be zero on
+	; ATA-4 and older.
+	mov		al, [es:si+ATA6.bSignature]
+	test	al, al
+	jz		SHORT .AtaIDverifiedSuccessfully	; Old ATA so Signature and Checksum is not available
+	cmp		al, A6_wIntegrity_SIGNATURE
 	jne		SHORT .FailedToVerifyAtaID
 
-	; Check checksum byte
+	; Check checksum byte since signature was present
 	mov		cx, ATA6_size
 	call	Memory_SumCXbytesFromESSItoAL		; Returns with ZF set according to result
 	jnz		SHORT .FailedToVerifyAtaID
