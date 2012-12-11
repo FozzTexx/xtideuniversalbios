@@ -438,6 +438,7 @@ ALIGN JUMP_ALIGN
 ;		Nothing
 ;--------------------------------------------------------------------
 %macro eSHIFT_IM 3
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
 %ifndef USE_186
 	%ifidni %1, cl
 		times %2	%3		%1, 1
@@ -458,6 +459,7 @@ ALIGN JUMP_ALIGN
 ;-----------------------------------
 %else
 	%3		%1, %2
+%endif
 %endif
 %endmacro
 

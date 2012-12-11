@@ -131,8 +131,10 @@ endstruc
 
 ; On performance critical situations we compare DPT_ATA.bDevice without checking FLGH_DPT_SERIAL_DEVICE
 ; first! DPT_ATA.bDevice uses small values so there will be no problems.
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
 %if DPT_SERIAL.bSerialPort <> DPT_ATA.bDevice
 	%error "DPT_ATA.bDevice and DPT_SERIAL.bSerialPort must be in same offsets!"
+%endif
 %endif
 %endif
 

@@ -41,11 +41,11 @@ g_szDashForZero:	; db	"- ",NULL	; Required by Display Library
 
 g_szRomAt:			; db	LF,CR,"%s @ %x",LF,CR
           			; db	 0ah,  0dh,  25h,  73h,  20h,  40h,  20h,  25h,  78h,  0ah,  0dh    ; uncompressed
-          			  db	 3bh,  3eh,  20h, 0c6h,  39h,  3bh                                  ; compressed
+          			  db	 39h,  3dh,  20h, 0c6h,  37h,  39h                                  ; compressed
 
 	; db  "Released under GNU GPL v2",LF,CR,LF,CR,NULL
 	; db   52h,  65h,  6ch,  65h,  61h,  73h,  65h,  64h,  20h,  75h,  6eh,  64h,  65h,  72h,  20h,  47h,  4eh,  55h,  20h,  47h,  50h,  4ch,  20h,  76h,  32h,  0ah,  0dh,  0ah,  0dh,  00h    ; uncompressed
-	  db   58h,  6bh,  72h,  6bh,  67h,  79h,  6bh, 0eah,  7bh,  74h,  6ah,  6bh, 0f8h,  4dh,  54h, 0dbh,  4dh,  56h, 0d2h,  7ch,  2ch,  3bh,  1bh                                              ; compressed
+	  db   58h,  6bh,  72h,  6bh,  67h,  79h,  6bh, 0eah,  7bh,  74h,  6ah,  6bh, 0f8h,  4dh,  54h, 0dbh,  4dh,  56h, 0d2h,  7ch,  2ch,  39h,  19h                                              ; compressed
 
 
 
@@ -64,12 +64,12 @@ g_szDetectSlave:		; db	"Slave ",NULL
 
 g_szDetectOuter:		; db	"%s at %s: ",NULL
                 		; db	 25h,  73h,  20h,  61h,  74h,  20h,  25h,  73h,  3ah,  20h,  00h    ; uncompressed
-                		  db	 3eh,  20h,  67h, 0fah,  3eh,  40h,  00h                            ; compressed
+                		  db	 3dh,  20h,  67h, 0fah,  3dh,  40h,  00h                            ; compressed
 
 %ifdef MODULE_SERIAL
 g_szDetectCOM:			; db  "COM%c%s",NULL
               			; db   43h,  4fh,  4dh,  25h,  63h,  25h,  73h,  00h    ; uncompressed
-              			  db   49h,  55h,  53h,  35h,  1eh                      ; compressed
+              			  db   49h,  55h,  53h,  3ch,  1dh                      ; compressed
 
 g_szDetectCOMAuto:		; db	" Detect",NULL
                   		; db	 20h,  44h,  65h,  74h,  65h,  63h,  74h,  00h    ; uncompressed
@@ -77,17 +77,17 @@ g_szDetectCOMAuto:		; db	" Detect",NULL
 
 g_szDetectCOMSmall:		; db	"/%u%u00",NULL					; IDE Master at COM1/9600:
                    		; db	 2fh,  25h,  75h,  25h,  75h,  30h,  30h,  00h    ; uncompressed
-                   		  db	 2ah,  37h,  37h,  34h,  14h                      ; compressed
+                   		  db	 2ah,  35h,  35h,  33h,  13h                      ; compressed
 
 g_szDetectCOMLarge:		; db	"/%u.%uK",NULL					; IDE Master at COM1/19.2K:
                    		; db	 2fh,  25h,  75h,  2eh,  25h,  75h,  4bh,  00h    ; uncompressed
-                   		  db	 2ah,  37h,  29h,  37h,  91h                      ; compressed
+                   		  db	 2ah,  35h,  29h,  35h,  91h                      ; compressed
 
 %endif
 g_szDetectEnd:
 g_szDetectPort:			; db	"%x",NULL					   	; IDE Master at 1F0h:
                			; db	 25h,  78h,  00h    ; uncompressed
-               			  db	 19h                ; compressed
+               			  db	 17h                ; compressed
 
 
 %ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
@@ -100,7 +100,7 @@ g_szDetectPort:			; db	"%x",NULL					   	; IDE Master at 1F0h:
 ; Boot loader strings
 g_szTryToBoot:			; db	"Booting %c",ANGLE_QUOTE_RIGHT,"%c",LF,CR,NULL
               			; db	 42h,  6fh,  6fh,  74h,  69h,  6eh,  67h,  20h,  25h,  63h, 0afh,  25h,  63h,  0ah,  0dh,  00h    ; uncompressed
-              			  db	 48h,  75h,  75h,  7ah,  6fh,  74h, 0edh,  35h,  24h,  35h,  1bh                                  ; compressed
+              			  db	 48h,  75h,  75h,  7ah,  6fh,  74h, 0edh,  3ch,  24h,  3ch,  19h                                  ; compressed
 
 g_szBootSectorNotFound:	; db	"Boot sector "
                        	; db	 42h,  6fh,  6fh,  74h,  20h,  73h,  65h,  63h,  74h,  6fh,  72h,  20h    ; uncompressed
@@ -108,11 +108,11 @@ g_szBootSectorNotFound:	; db	"Boot sector "
 
 g_szNotFound:			; db	"not found",LF,CR,NULL
              			; db	 6eh,  6fh,  74h,  20h,  66h,  6fh,  75h,  6eh,  64h,  0ah,  0dh,  00h    ; uncompressed
-             			  db	 74h,  75h, 0fah,  6ch,  75h,  7bh,  74h,  6ah,  1bh                      ; compressed
+             			  db	 74h,  75h, 0fah,  6ch,  75h,  7bh,  74h,  6ah,  19h                      ; compressed
 
 g_szReadError:			; db	"Error %x!",LF,CR,NULL
               			; db	 45h,  72h,  72h,  6fh,  72h,  20h,  25h,  78h,  21h,  0ah,  0dh,  00h    ; uncompressed
-              			  db	 4bh,  78h,  78h,  75h, 0f8h,  39h,  25h,  1bh                            ; compressed
+              			  db	 4bh,  78h,  78h,  75h, 0f8h,  37h,  25h,  19h                            ; compressed
 
 
 
@@ -121,19 +121,19 @@ g_szReadError:			; db	"Error %x!",LF,CR,NULL
 ; Hotkey Bar strings
 g_szFDD:		; db	"FDD [%c]",NULL			; "FDD [A]"
         		; db	 46h,  44h,  44h,  20h,  5bh,  25h,  63h,  5dh,  00h    ; uncompressed
-        		  db	 4ch,  4ah, 0cah,  61h,  35h, 0a3h                      ; compressed
+        		  db	 4ch,  4ah, 0cah,  61h,  3ch, 0a3h                      ; compressed
 
 g_szHDD:		; db	"HDD [%c]",NULL			; "HDD [C]"
         		; db	 48h,  44h,  44h,  20h,  5bh,  25h,  63h,  5dh,  00h    ; uncompressed
-        		  db	 4eh,  4ah, 0cah,  61h,  35h, 0a3h                      ; compressed
+        		  db	 4eh,  4ah, 0cah,  61h,  3ch, 0a3h                      ; compressed
 
 g_szBootMenu:	; db	"%sMnu",NULL			; "BootMnu"
              	; db	 25h,  73h,  4dh,  6eh,  75h,  00h    ; uncompressed
-             	  db	 3eh,  53h,  74h, 0bbh                ; compressed
+             	  db	 3dh,  53h,  74h, 0bbh                ; compressed
 
 g_szRomBoot:	; db	"Rom%s",NULL			; "RomBoot"
             	; db	 52h,  6fh,  6dh,  25h,  73h,  00h    ; uncompressed
-            	  db	 58h,  75h,  73h,  1eh                ; compressed
+            	  db	 58h,  75h,  73h,  1dh                ; compressed
 
 g_szBoot:		; db	"Boot",NULL
          		; db	 42h,  6fh,  6fh,  74h,  00h    ; uncompressed
@@ -141,7 +141,7 @@ g_szBoot:		; db	"Boot",NULL
 
 g_szHotkey:		; db	"%A%c%c%A%s%A ",NULL	; "C»HDD [A] ", "F2BootMnu " or "F8RomBoot "
            		; db	 25h,  41h,  25h,  63h,  25h,  63h,  25h,  41h,  25h,  73h,  25h,  41h,  20h,  00h    ; uncompressed
-           		  db	 3dh,  35h,  35h,  3dh,  3eh,  3dh,  00h                                              ; compressed
+           		  db	 3bh,  3ch,  3ch,  3bh,  3dh,  3bh,  00h                                              ; compressed
 
 
 
@@ -160,11 +160,11 @@ g_szFddUnknown:	; db	"Unknown",NULL
 
 g_szFddSizeOr:	; db	"5",ONE_QUARTER,QUOTATION_MARK," or 3",ONE_HALF,QUOTATION_MARK," DD",NULL
               	; db	 35h, 0ach,  22h,  20h,  6fh,  72h,  20h,  33h, 0abh,  22h,  20h,  44h,  44h,  00h    ; uncompressed
-              	  db	 2fh,  21h,  26h,  20h,  75h, 0f8h,  2dh,  22h,  26h,  20h,  4ah,  8ah                ; compressed
+              	  db	 2eh,  21h,  26h,  20h,  75h, 0f8h,  2dh,  22h,  26h,  20h,  4ah,  8ah                ; compressed
 
 g_szFddSize:	; db	"%s",QUOTATION_MARK,", %u kiB",NULL	; 3½", 1440 kiB
             	; db	 25h,  73h,  22h,  2ch,  20h,  25h,  75h,  20h,  6bh,  69h,  42h,  00h    ; uncompressed
-            	  db	 3eh,  26h,  27h,  20h,  37h,  20h,  71h,  6fh,  88h                      ; compressed
+            	  db	 3dh,  26h,  27h,  20h,  35h,  20h,  71h,  6fh,  88h                      ; compressed
 
 g_szFddThreeHalf:		; db  "3",ONE_HALF,NULL
                  		; db   33h, 0abh,  00h    ; uncompressed
@@ -173,7 +173,7 @@ g_szFddThreeHalf:		; db  "3",ONE_HALF,NULL
 g_szFddEnd:
 g_szFddFiveQuarter:		; db  "5",ONE_QUARTER,NULL
                    		; db   35h, 0ach,  00h    ; uncompressed
-                   		  db   2fh,  01h          ; compressed
+                   		  db   2eh,  01h          ; compressed
 
 
 %ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
@@ -196,10 +196,6 @@ g_szLBA:		; db	"LBA   ",NULL
         		; db	 4ch,  42h,  41h,  20h,  20h,  20h,  00h    ; uncompressed
         		  db	 52h,  48h, 0c7h,  20h,  00h                ; compressed
 
-wantToRemoveThis:	; db	"4",NULL	; String compression want '4' somewhere
-                 	; db	 34h,  00h    ; uncompressed
-                 	  db	 0eh          ; compressed
-
 g_szAddressingModes_Displacement equ (g_szLARGE - g_szAddressingModes)
 ;
 ; Ensure that addressing modes are correctly spaced in memory
@@ -219,7 +215,7 @@ g_szAddressingModes_Displacement equ (g_szLARGE - g_szAddressingModes)
 g_szDeviceTypeValues:
 g_szDeviceTypeValues_16bit:		; db		" 16",NULL
                            		; db		 20h,  31h,  36h,  00h    ; uncompressed
-                           		  db		 20h,  2bh,  10h          ; compressed
+                           		  db		 20h,  2bh,  0fh          ; compressed
 
 g_szDeviceTypeValues_32bit:		; db		" 32",NULL
                            		; db		 20h,  33h,  32h,  00h    ; uncompressed
@@ -227,31 +223,31 @@ g_szDeviceTypeValues_32bit:		; db		" 32",NULL
 
 g_szDeviceTypeValues_8bit:		; db		"  8",NULL
                           		; db		 20h,  20h,  38h,  00h    ; uncompressed
-                          		  db		 20h,  20h,  11h          ; compressed
+                          		  db		 20h,  20h,  10h          ; compressed
 
 g_szDeviceTypeValues_XTIDEr1:	; db		"D8 ",NULL	; Dual 8-bit
                              	; db		 44h,  38h,  20h,  00h    ; uncompressed
-                             	  db		 4ah,  31h,  00h          ; compressed
+                             	  db		 4ah,  30h,  00h          ; compressed
 
 g_szDeviceTypeValues_XTIDEr2:	; db		"X8 ",NULL	; A0<->A3 swapped 8-bit
                              	; db		 58h,  38h,  20h,  00h    ; uncompressed
-                             	  db		 5eh,  31h,  00h          ; compressed
+                             	  db		 5eh,  30h,  00h          ; compressed
 
 g_szDeviceTypeValues_XTCFpio8:	; db		"T8 ",NULL	; True 8-bit
                               	; db		 54h,  38h,  20h,  00h    ; uncompressed
-                              	  db		 5ah,  31h,  00h          ; compressed
+                              	  db		 5ah,  30h,  00h          ; compressed
 
 g_szDeviceTypeValues_XTCFdma:	; db		"8MA",NULL	; DMA 8-bit
                              	; db		 38h,  4dh,  41h,  00h    ; uncompressed
-                             	  db		 31h,  53h,  87h          ; compressed
+                             	  db		 30h,  53h,  87h          ; compressed
 
 g_szDeviceTypeValues_XTCFmem:	; db		"M8 ",NULL	; Memory Mapped 8-bit
                              	; db		 4dh,  38h,  20h,  00h    ; uncompressed
-                             	  db		 53h,  31h,  00h          ; compressed
+                             	  db		 53h,  30h,  00h          ; compressed
 
 g_szDeviceTypeValues_JrIde:		; db		"M8 ",NULL
                            		; db		 4dh,  38h,  20h,  00h    ; uncompressed
-                           		  db		 53h,  31h,  00h          ; compressed
+                           		  db		 53h,  30h,  00h          ; compressed
 
 g_szDeviceTypeValues_Serial:	; db		"SER",NULL
                             	; db		 53h,  45h,  52h,  00h    ; uncompressed
@@ -297,7 +293,7 @@ g_szDeviceTypeValues_Displacement equ (g_szDeviceTypeValues_32bit - g_szDeviceTy
 
 g_szSelectionTimeout:	; db		DOUBLE_BOTTOM_LEFT_CORNER,DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL,"%ASelection in %2-u s",NULL
                      	; db		0c8h, 0b5h,  25h,  41h,  53h,  65h,  6ch,  65h,  63h,  74h,  69h,  6fh,  6eh,  20h,  69h,  6eh,  20h,  25h,  32h,  2dh,  75h,  20h,  73h,  00h    ; uncompressed
-                     	  db		 32h,  33h,  3dh,  59h,  6bh,  72h,  6bh,  69h,  7ah,  6fh,  75h, 0f4h,  6fh, 0f4h,  3ch,  20h, 0b9h                                              ; compressed
+                     	  db		 31h,  32h,  3bh,  59h,  6bh,  72h,  6bh,  69h,  7ah,  6fh,  75h, 0f4h,  6fh, 0f4h,  3ah,  20h, 0b9h                                              ; compressed
 
 
 
@@ -306,23 +302,23 @@ g_szSelectionTimeout:	; db		DOUBLE_BOTTOM_LEFT_CORNER,DOUBLE_LEFT_HORIZONTAL_TO_
 ; Boot Menu information strings
 g_szCapacity:			; db	"Capacity : %s",NULL
              			; db	 43h,  61h,  70h,  61h,  63h,  69h,  74h,  79h,  20h,  3ah,  20h,  25h,  73h,  00h    ; uncompressed
-             			  db	 49h,  67h,  76h,  67h,  69h,  6fh,  7ah, 0ffh, 0c0h,  1eh                            ; compressed
+             			  db	 49h,  67h,  76h,  67h,  69h,  6fh,  7ah, 0ffh, 0c0h,  1dh                            ; compressed
 
 g_szCapacityNum:		; db	"%5-u.%u %ciB",NULL
                 		; db	 25h,  35h,  2dh,  75h,  2eh,  25h,  75h,  20h,  25h,  63h,  69h,  42h,  00h    ; uncompressed
-                		  db	 38h,  29h,  37h,  20h,  35h,  6fh,  88h                                        ; compressed
+                		  db	 36h,  29h,  35h,  20h,  3ch,  6fh,  88h                                        ; compressed
 
 g_szInformation:		; db	"%s",LF,CR
                 		; db	 25h,  73h,  0ah,  0dh    ; uncompressed
-                		  db	 3eh,  3bh                ; compressed
+                		  db	 3dh,  39h                ; compressed
 
 	; db	"Addr. ",SINGLE_VERTICAL,"Block",SINGLE_VERTICAL,"Bus",SINGLE_VERTICAL,  "IRQ",SINGLE_VERTICAL,"Reset",LF,CR
 	; db	 41h,  64h,  64h,  72h,  2eh,  20h, 0b3h,  42h,  6ch,  6fh,  63h,  6bh, 0b3h,  42h,  75h,  73h, 0b3h,  49h,  52h,  51h, 0b3h,  52h,  65h,  73h,  65h,  74h,  0ah,  0dh    ; uncompressed
-	  db	 47h,  6ah,  6ah,  78h,  29h,  20h,  23h,  48h,  72h,  75h,  69h,  71h,  23h,  48h,  7bh,  79h,  23h,  4fh,  58h,  57h,  23h,  58h,  6bh,  79h,  6bh,  7ah,  3bh          ; compressed
+	  db	 47h,  6ah,  6ah,  78h,  29h,  20h,  23h,  48h,  72h,  75h,  69h,  71h,  23h,  48h,  7bh,  79h,  23h,  4fh,  58h,  57h,  23h,  58h,  6bh,  79h,  6bh,  7ah,  39h          ; compressed
 
 	; db	   "%s",SINGLE_VERTICAL, "%5-u",SINGLE_VERTICAL, "%s",SINGLE_VERTICAL," %2-I",SINGLE_VERTICAL,"%5-x" ,NULL
 	; db	    25h,  73h, 0b3h,  25h,  35h,  2dh,  75h, 0b3h,  25h,  73h, 0b3h,  20h,  25h,  32h,  2dh,  49h, 0b3h,  25h,  35h,  2dh,  78h,  00h    ; uncompressed
-	  db	    3eh,  23h,  38h,  23h,  3eh,  23h,  20h,  36h,  23h,  1ah                                                                            ; compressed
+	  db	    3dh,  23h,  36h,  23h,  3dh,  23h,  20h,  34h,  23h,  18h                                                                            ; compressed
 
 
 
@@ -335,15 +331,15 @@ g_szInformation:		; db	"%s",LF,CR
 g_szBootMenuPrintStart:
 g_szDriveNum:			; db	"%x %s",NULL
              			; db	 25h,  78h,  20h,  25h,  73h,  00h    ; uncompressed
-             			  db	 39h,  20h,  1eh                      ; compressed
+             			  db	 37h,  20h,  1dh                      ; compressed
 
 g_szDriveNumBOOTNFO:	; db	"%x %z",NULL
                     	; db	 25h,  78h,  20h,  25h,  7ah,  00h    ; uncompressed
-                    	  db	 39h,  20h,  1fh                      ; compressed
+                    	  db	 37h,  20h,  1eh                      ; compressed
 
 g_szFloppyDrv:			; db	"Floppy Drive %c",NULL
               			; db	 46h,  6ch,  6fh,  70h,  70h,  79h,  20h,  44h,  72h,  69h,  76h,  65h,  20h,  25h,  63h,  00h    ; uncompressed
-              			  db	 4ch,  72h,  75h,  76h,  76h, 0ffh,  4ah,  78h,  6fh,  7ch, 0ebh,  15h                            ; compressed
+              			  db	 4ch,  72h,  75h,  76h,  76h, 0ffh,  4ah,  78h,  6fh,  7ch, 0ebh,  1ch                            ; compressed
 
 g_szBootMenuPrintEnd:
 g_szForeignHD:			; db	"Foreign Hard Disk",NULL
@@ -365,6 +361,20 @@ g_szForeignHD:			; db	"Foreign Hard Disk",NULL
 ;
 ; Tables for StringsCompress.pl
 ;
+; Items can be added and removed from this table as needed, with the following rules:
+;  * Formats follow the special characters.  But other than that, order makes no difference.
+;  * Some of the formats require "even" and "odd" numbering.  Even tells the code that
+;    it is a "number-" format, otherwise it doesn't interpret a number first.  The easiest
+;    way to maintain this is to move one of the "n/a" items to/from the front of the format
+;    list to maintain the even/odd.
+;  * Values do not need to remain consistent across versions.  This table is only used
+;    internally to this file.
+;  * There can only be 32 of these (0-31).
+;  * Keeping the list short is good - this translates to a table in the compressed version.
+;    An error will be reported if a character or format is no longer being used by any 
+;    strings above.
+;  * Please keep items sequential for ease of further editing.
+;
 ;$translate{ord(' ')} = 0;    [StringsCompress Processed]
 ;$translate{172}      = 1;     # ONE_QUARTER    [StringsCompress Processed]
 ;$translate{171}      = 2;     # ONE_HALF    [StringsCompress Processed]
@@ -379,29 +389,28 @@ g_szForeignHD:			; db	"Foreign Hard Disk",NULL
 ;$translate{ord('1')} = 11;    [StringsCompress Processed]
 ;$translate{ord('2')} = 12;    [StringsCompress Processed]
 ;$translate{ord('3')} = 13;    [StringsCompress Processed]
-;$translate{ord('4')} = 14;	; Not used at the moment    [StringsCompress Processed]
-;$translate{ord('5')} = 15;    [StringsCompress Processed]
-;$translate{ord('6')} = 16;    [StringsCompress Processed]
-;$translate{ord('8')} = 17;    [StringsCompress Processed]
-;$translate{200}      = 18;    # DOUBLE_BOTTOM_LEFT_CORNER    [StringsCompress Processed]
-;$translate{181}      = 19;    # DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL    [StringsCompress Processed]
-;$translate{ord('0')} = 20;    [StringsCompress Processed]
+;$translate{ord('5')} = 14;    [StringsCompress Processed]
+;$translate{ord('6')} = 15;    [StringsCompress Processed]
+;$translate{ord('8')} = 16;    [StringsCompress Processed]
+;$translate{200}      = 17;    # DOUBLE_BOTTOM_LEFT_CORNER    [StringsCompress Processed]
+;$translate{181}      = 18;    # DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL    [StringsCompress Processed]
+;$translate{ord('0')} = 19;    [StringsCompress Processed]
 ;
 ; Formats begin immediately after the last Translated character (they are in the same table)
 ;
-;$format_begin = 21;    [StringsCompress Processed]
+;$format_begin = 20;    [StringsCompress Processed]
 ;
-;$format{"c"}   = 21;        # n/a    [StringsCompress Processed]
-;$format{"2-I"} = 22;        # must be even    [StringsCompress Processed]
-;$format{"u"}   = 23;        # must be odd    [StringsCompress Processed]
-;$format{"5-u"} = 24;        # must be even    [StringsCompress Processed]
-;$format{"x"}   = 25;        # must be odd    [StringsCompress Processed]
-;$format{"5-x"} = 26;        # must be even    [StringsCompress Processed]
-;$format{"nl"}  = 27;        # n/a    [StringsCompress Processed]
-;$format{"2-u"} = 28;        # must be even    [StringsCompress Processed]
-;$format{"A"}   = 29;        # n/a    [StringsCompress Processed]
-;$format{"s"}   = 30;        # n/a, normal string from DS    [StringsCompress Processed]
-;$format{"z"}   = 31;        # n/a, boot string from BDA    [StringsCompress Processed]
+;$format{"2-I"} = 20;        # must be even    [StringsCompress Processed]
+;$format{"u"}   = 21;        # must be odd    [StringsCompress Processed]
+;$format{"5-u"} = 22;        # must be even    [StringsCompress Processed]
+;$format{"x"}   = 23;        # must be odd    [StringsCompress Processed]
+;$format{"5-x"} = 24;        # must be even    [StringsCompress Processed]
+;$format{"nl"}  = 25;        # n/a    [StringsCompress Processed]
+;$format{"2-u"} = 26;        # must be even    [StringsCompress Processed]
+;$format{"A"}   = 27;        # n/a    [StringsCompress Processed]
+;$format{"c"}   = 28;        # n/a    [StringsCompress Processed]
+;$format{"s"}   = 29;        # n/a, normal string from DS    [StringsCompress Processed]
+;$format{"z"}   = 30;        # n/a, boot string from BDA    [StringsCompress Processed]
 ;
 ; NOTE: The last $format cannot exceed 31 (stored in a 5-bit quantity).
 ;
@@ -421,7 +430,7 @@ g_szForeignHD:			; db	"Foreign Hard Disk",NULL
 
 StringsCompressed_NormalBase     equ   58
 
-StringsCompressed_FormatsBegin   equ   21
+StringsCompressed_FormatsBegin   equ   20
 
 StringsCompressed_TranslatesAndFormats: 
         db     32  ; 0
@@ -438,29 +447,25 @@ StringsCompressed_TranslatesAndFormats:
         db     49  ; 11
         db     50  ; 12
         db     51  ; 13
-        db     52  ; 14
-        db     53  ; 15
-        db     54  ; 16
-        db     56  ; 17
-        db     200  ; 18
-        db     181  ; 19
-        db     48  ; 20
-        db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_c)    ; 21
-        db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_2_I)    ; 22
-        db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_u)    ; 23
-        db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_5_u)    ; 24
-        db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_x)    ; 25
-        db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_5_x)    ; 26
-        db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_nl)    ; 27
-        db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_2_u)    ; 28
-        db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_A)    ; 29
-        db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_s)    ; 30
-        db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_z)    ; 31
+        db     53  ; 14
+        db     54  ; 15
+        db     56  ; 16
+        db     200  ; 17
+        db     181  ; 18
+        db     48  ; 19
+        db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_2_I)    ; 20
+        db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_u)    ; 21
+        db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_5_u)    ; 22
+        db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_x)    ; 23
+        db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_5_x)    ; 24
+        db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_nl)    ; 25
+        db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_2_u)    ; 26
+        db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_A)    ; 27
+        db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_c)    ; 28
+        db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_s)    ; 29
+        db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_z)    ; 30
 
 %ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
-%if DisplayFormatCompressed_BaseFormatOffset < DisplayFormatCompressed_Format_c || DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_c > 255
-%error "DisplayFormatCompressed_Format_c is out of range of DisplayFormatCompressed_BaseFormatOffset"
-%endif
 %if DisplayFormatCompressed_BaseFormatOffset < DisplayFormatCompressed_Format_2_I || DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_2_I > 255
 %error "DisplayFormatCompressed_Format_2_I is out of range of DisplayFormatCompressed_BaseFormatOffset"
 %endif
@@ -485,6 +490,9 @@ StringsCompressed_TranslatesAndFormats:
 %if DisplayFormatCompressed_BaseFormatOffset < DisplayFormatCompressed_Format_A || DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_A > 255
 %error "DisplayFormatCompressed_Format_A is out of range of DisplayFormatCompressed_BaseFormatOffset"
 %endif
+%if DisplayFormatCompressed_BaseFormatOffset < DisplayFormatCompressed_Format_c || DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_c > 255
+%error "DisplayFormatCompressed_Format_c is out of range of DisplayFormatCompressed_BaseFormatOffset"
+%endif
 %if DisplayFormatCompressed_BaseFormatOffset < DisplayFormatCompressed_Format_s || DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_s > 255
 %error "DisplayFormatCompressed_Format_s is out of range of DisplayFormatCompressed_BaseFormatOffset"
 %endif
@@ -506,7 +514,6 @@ StringsCompressed_TranslatesAndFormats:
 ;; 50:2
 ;; 51:3
 ;; 47:2
-;; 52:1
 ;; 172:2
 ;; 34:3
 ;; 49:1
@@ -515,7 +522,7 @@ StringsCompressed_TranslatesAndFormats:
 ;; 175:1
 ;; 171:2
 ;; 54:1
-;; total translated: 21
+;; total translated: 20
 
 ;; format usage stats
 ;; A:4
@@ -526,8 +533,8 @@ StringsCompressed_TranslatesAndFormats:
 ;; 5-x:1
 ;; nl:9
 ;; 2-I:1
-;; c:9
 ;; u:6
+;; c:9
 ;; z:1
 ;; total format: 11
 
