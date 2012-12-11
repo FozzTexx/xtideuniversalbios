@@ -289,6 +289,8 @@ WaitUntilReadyToTransferNextBlock:
 	ret
 
 
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS		
 %if SECTOR_ACCESS_WINDOW_SIZE <> 512
 	%error "SECTOR_ACCESS_WINDOW_SIZE is no longer equal to 512. JrIdeTransfer.asm needs changes."
+%endif
 %endif

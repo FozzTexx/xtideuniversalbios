@@ -39,6 +39,7 @@ struct baudRate supportedBaudRates[] =
 	{ 153600,  0xff,  "153.6K" },
 	{ 230400,  0xff,  "230.4K" },
 	{ 460800,  0xff,  "460.8K" },
+    { 921600,  0xff,  "921.6K" },
 	{      0,     0, "Unknown" },
 };
 

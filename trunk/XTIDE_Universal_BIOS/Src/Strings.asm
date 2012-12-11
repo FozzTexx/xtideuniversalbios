@@ -99,7 +99,6 @@ g_szAddressingModes:
 g_szNORMAL:		db	"NORMAL",NULL
 g_szLARGE:		db	"LARGE ",NULL
 g_szLBA:		db	"LBA   ",NULL
-wantToRemoveThis:	db	"4",NULL	; String compression want '4' somewhere
 g_szAddressingModes_Displacement equ (g_szLARGE - g_szAddressingModes)
 ;
 ; Ensure that addressing modes are correctly spaced in memory
@@ -205,6 +204,20 @@ g_szForeignHD:			db	"Foreign Hard Disk",NULL
 ;
 ; Tables for StringsCompress.pl
 ;
+; Items can be added and removed from this table as needed, with the following rules:
+;  * Formats follow the special characters.  But other than that, order makes no difference.
+;  * Some of the formats require "even" and "odd" numbering.  Even tells the code that
+;    it is a "number-" format, otherwise it doesn't interpret a number first.  The easiest
+;    way to maintain this is to move one of the "n/a" items to/from the front of the format
+;    list to maintain the even/odd.
+;  * Values do not need to remain consistent across versions.  This table is only used
+;    internally to this file.
+;  * There can only be 32 of these (0-31).
+;  * Keeping the list short is good - this translates to a table in the compressed version.
+;    An error will be reported if a character or format is no longer being used by any 
+;    strings above.
+;  * Please keep items sequential for ease of further editing.
+;
 ;$translate{ord(' ')} = 0;
 ;$translate{172}      = 1;     # ONE_QUARTER
 ;$translate{171}      = 2;     # ONE_HALF
@@ -219,29 +232,28 @@ g_szForeignHD:			db	"Foreign Hard Disk",NULL
 ;$translate{ord('1')} = 11;
 ;$translate{ord('2')} = 12;
 ;$translate{ord('3')} = 13;
-;$translate{ord('4')} = 14;	; Not used at the moment
-;$translate{ord('5')} = 15;
-;$translate{ord('6')} = 16;
-;$translate{ord('8')} = 17;
-;$translate{200}      = 18;    # DOUBLE_BOTTOM_LEFT_CORNER
-;$translate{181}      = 19;    # DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL
-;$translate{ord('0')} = 20;
+;$translate{ord('5')} = 14;
+;$translate{ord('6')} = 15;
+;$translate{ord('8')} = 16;
+;$translate{200}      = 17;    # DOUBLE_BOTTOM_LEFT_CORNER
+;$translate{181}      = 18;    # DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL
+;$translate{ord('0')} = 19;
 ;
 ; Formats begin immediately after the last Translated character (they are in the same table)
 ;
-;$format_begin = 21;
+;$format_begin = 20;
 ;
-;$format{"c"}   = 21;        # n/a
-;$format{"2-I"} = 22;        # must be even
-;$format{"u"}   = 23;        # must be odd
-;$format{"5-u"} = 24;        # must be even
-;$format{"x"}   = 25;        # must be odd
-;$format{"5-x"} = 26;        # must be even
-;$format{"nl"}  = 27;        # n/a
-;$format{"2-u"} = 28;        # must be even
-;$format{"A"}   = 29;        # n/a
-;$format{"s"}   = 30;        # n/a, normal string from DS
-;$format{"z"}   = 31;        # n/a, boot string from BDA
+;$format{"2-I"} = 20;        # must be even
+;$format{"u"}   = 21;        # must be odd
+;$format{"5-u"} = 22;        # must be even
+;$format{"x"}   = 23;        # must be odd
+;$format{"5-x"} = 24;        # must be even
+;$format{"nl"}  = 25;        # n/a
+;$format{"2-u"} = 26;        # must be even
+;$format{"A"}   = 27;        # n/a
+;$format{"c"}   = 28;        # n/a
+;$format{"s"}   = 29;        # n/a, normal string from DS
+;$format{"z"}   = 30;        # n/a, boot string from BDA
 ;
 ; NOTE: The last $format cannot exceed 31 (stored in a 5-bit quantity).
 ;
