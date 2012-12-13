@@ -52,9 +52,11 @@ Registers_ExchangeDSSIwithESDI:
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
+%ifdef INCLUDE_MENU_LIBRARY		
 Registers_CopySSBPtoESDI:
 	COPY_SSBP_TO_ESDI
 	ret
+%endif
 
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN JUMP_ALIGN

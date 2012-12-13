@@ -219,6 +219,7 @@ ALIGN DISPLAY_JUMP_ALIGN
 %endif
 
 
+%ifdef INCLUDE_MENU_LIBRARY
 ;--------------------------------------------------------------------
 ; DisplayPrint_ClearScreenWithCharInALandAttributeInAH
 ;	Parameters:
@@ -248,8 +249,8 @@ DisplayPrint_ClearScreenWithCharInALandAttributeInAH:
 	pop		di
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fpCursorPosition], di
 	ret
-
-
+%endif
+		
 ;--------------------------------------------------------------------
 ; DisplayPrint_ClearAreaWithHeightInAHandWidthInAL
 ;	Parameters:

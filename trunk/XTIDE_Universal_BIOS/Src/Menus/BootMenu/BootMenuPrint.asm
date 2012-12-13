@@ -75,13 +75,11 @@ BootMenuPrint_RefreshItem:
 ;		AX, SI, DI
 ;--------------------------------------------------------------------
 BootMenuPrint_TitleStrings:
-	mov		si, ROMVARS.szTitle
-	call	DetectPrint_NullTerminatedStringFromCSSIandSetCF
-	CALL_DISPLAY_LIBRARY PrintNewlineCharacters
-	mov		si, ROMVARS.szVersion
-	jmp		DetectPrint_NullTerminatedStringFromCSSIandSetCF
+	xor		di,di						; Null character will be eaten 
+	mov		si, g_szBootMenuTitle
+	jmp		DetectPrint_RomFoundAtSegment.BootMenuEntry
 
-
+		
 ;--------------------------------------------------------------------
 ; BootMenuPrint_RefreshInformation
 ;	Parameters:

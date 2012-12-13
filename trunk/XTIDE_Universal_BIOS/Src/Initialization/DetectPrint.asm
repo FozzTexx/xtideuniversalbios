@@ -49,27 +49,6 @@ DetectPrint_GetSoftwareCoordinatesToAX:
 
 
 ;--------------------------------------------------------------------
-; Prints BIOS name and segment address where it is found.
-;
-; DetectPrint_RomFoundAtSegment
-;	Parameters:
-;		Nothing
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, SI, DI
-;--------------------------------------------------------------------
-DetectPrint_RomFoundAtSegment:
-	push	bp
-	mov		bp, sp
-	mov		si, g_szRomAt
-	ePUSH_T	ax, ROMVARS.szTitle			; Bios title string
-	push	cs							; BIOS segment
-
-	jmp		DetectPrint_FormatCSSIfromParamsInSSBP
-
-
-;--------------------------------------------------------------------
 ; DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP
 ;	Parameters:
 ;		CS:CX:	Ptr to "Master" or "Slave" string
@@ -81,7 +60,7 @@ DetectPrint_RomFoundAtSegment:
 ;--------------------------------------------------------------------
 DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP:
 	mov		ax, [cs:bp+IDEVARS.wBasePort]   ; for IDE: AX=port address, DH=.bDevice
-	; Fall to DetectPrint_StartDetectWithAutodetectedBasePortInAX
+	; fall through to DetectPrint_StartDetectWithAutodetectedBasePortInAXandIdeVarsInCSBP
 
 ;--------------------------------------------------------------------
 ; DetectPrint_StartDetectWithAutodetectedBasePortInAXandIdeVarsInCSBP
@@ -166,20 +145,54 @@ DetectPrint_StartDetectWithAutodetectedBasePortInAXandIdeVarsInCSBP:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, SI
+;		AX, SI, DI
 ;--------------------------------------------------------------------
 DetectPrint_DriveNameFromDrvDetectInfoInESBX:
-	push	di
-	push	bx
+	push	bp
+	mov		bp,sp	
+	lea		si,[bx+DRVDETECTINFO.szDrvName]
+	push	si
+	mov		si,g_szDriveName
+	jmp		SHORT DetectPrint_FormatCSSIfromParamsInSSBP
 
-	lea		si, [bx+DRVDETECTINFO.szDrvName]
-	mov		bx, es
-	CALL_DISPLAY_LIBRARY PrintNullTerminatedStringFromBXSI
-	CALL_DISPLAY_LIBRARY PrintNewlineCharacters
+				
+;--------------------------------------------------------------------
+; Prints BIOS name and segment address where it is found.
+;
+; DetectPrint_RomFoundAtSegment
+;	Parameters:
+;		Nothing
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, SI, DI
+;--------------------------------------------------------------------
+DetectPrint_RomFoundAtSegment:
+	mov		si, g_szRomAt
+	mov		di, cs						; BIOS segment address, for later inclusion in the output, parameterized
+										; so that it can be a different value when using .BootMenuEntry
 
-	pop		bx
-	pop		di
-	ret
+.BootMenuEntry:	
+	push	bp
+	mov		bp, sp
+
+%ifndef USE_186
+	mov		ax, ROMVARS.szTitle
+	push	ax
+	push	di							; BIOS segment
+	add		al, ROMVARS.szVersion - ROMVARS.szTitle
+	push	ax
+%else
+	; szTitle and szVersion have the high order byte of their addresses zero, 
+	; so these push instructions are only 2 bytes
+	;
+	push	ROMVARS.szTitle
+	push	di							; BIOS segment
+	push	ROMVARS.szVersion
+%endif
+
+	jmp		SHORT DetectPrint_FormatCSSIfromParamsInSSBP
+
 
 ;--------------------------------------------------------------------
 ; DetectPrint_FailedToLoadFirstSector

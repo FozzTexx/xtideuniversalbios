@@ -7,7 +7,7 @@
 #        unused.asm is assembled with the -E nasm flag
 #
 # Annotations can be placed in the source to eliminate false positives:
-#   a) if a label can be fallen into, place "; fall through to label" above the label
+#   a) if a label can be fallen into, place "; fall through to <label>" above the label
 #   b) "; unused entrypoint ok" can be placed on the same line with the label
 #   c) "; jump table entrypoint" can be placed on the same line with the label
 #
@@ -50,8 +50,12 @@ while(<LST>)
 
 while(<UNUSED>)
 {
-	if( /^([a-z0-9_]+\:)?\s+db\s+(.*)$/i || /^([a-z0-9_]+\:)?\s+dw\s+(.*)$/i || /^([a-z0-9_]+\:)?\s+mov\s+(.*)$/i ||
-		/^([a-z0-9_]+\:)?\s+call\s+(.*)$/i || /^([a-z0-9_]+\:)?\s+j[a-z]?[a-z]?[a-z]?[a-z]?[a-z]?\s+(.*)$/i ||
+	if( /^([a-z0-9_]+\:)?\s+db\s+(.*)$/i || 
+        /^([a-z0-9_]+\:)?\s+dw\s+(.*)$/i || 
+        /^([a-z0-9_]+\:)?\s+mov\s+(.*)$/i ||
+		/^([a-z0-9_]+\:)?\s+call\s+(.*)$/i || 
+		/^([a-z0-9_]+\:)?\s+push\s+(.*)$/i || 
+        /^([a-z0-9_]+\:)?\s+j[a-z]?[a-z]?[a-z]?[a-z]?[a-z]?\s+(.*)$/i ||
 		/^([a-z0-9_]+)?\s+equ\s+(.*)$/i )
 	{
 		$rem = $2;

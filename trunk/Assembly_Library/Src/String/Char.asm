@@ -180,6 +180,7 @@ Char_ALtoLowerCaseLetter:
 	jmp		SHORT Char_ALtoUpperCaseLetter.CheckCF
 %endif
 
+				
 ;--------------------------------------------------------------------
 ; Char_ALtoUpperCaseLetter
 ;	Parameters:
@@ -189,13 +190,16 @@ Char_ALtoLowerCaseLetter:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS		
 ALIGN STRING_JUMP_ALIGN
 Char_ALtoUpperCaseLetter:
 	call	Char_IsLowerCaseLetterInAL	; Is lower case character?
 .CheckCF:
 	jnc		SHORT Char_ChangeCaseInAL.Return
 	; Fall to Char_ChangeCaseInAL
+%endif
 
+		
 ;--------------------------------------------------------------------
 ; Char_ChangeCaseInAL
 ;	Parameters:

@@ -78,6 +78,7 @@ Memory_CopyCXbytesFromDSSItoESDI:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+%ifdef INCLUDE_MENU_LIBRARY
 ALIGN JUMP_ALIGN
 Memory_ZeroSSBPwithSizeInCX:
 	push	es
@@ -89,7 +90,9 @@ Memory_ZeroSSBPwithSizeInCX:
 	pop		di
 	pop		es
 	ret
+%endif
 
+		
 ;--------------------------------------------------------------------
 ; Memory_ZeroESDIwithSizeInCX
 ;	Parameters

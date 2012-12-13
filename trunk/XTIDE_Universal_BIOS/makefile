@@ -107,6 +107,8 @@ DEFINES_AT_LARGE = $(DEFINES_AT) $(DEFINES_COMMON_LARGE)
 DEFINES_XT_TINY = MODULE_STRINGS_COMPRESSED MODULE_8BIT_IDE
 DEFINES_386_8K = $(DEFINES_AT) USE_386
 
+DEFINES_ALL_FEATURES = MODULE_8BIT_IDE MODULE_ADVANCED_ATA MODULE_BOOT_MENU MODULE_EBIOS MODULE_HOTKEYS MODULE_IRQ MODULE_SERIAL MODULE_SERIAL_FLOPPY MODULE_STRINGS_COMPRESSED MODULE_FEATURE_SETS 
+
 
 ###################
 # Other variables #
@@ -125,6 +127,7 @@ DEFS_XTPLUS_LARGE = $(DEFINES_XTPLUS_LARGE:%=-D%) -DROMSIZE=$(ROMSIZE_LARGE)
 DEFS_AT_LARGE = $(DEFINES_AT_LARGE:%=-D%) -DROMSIZE=$(ROMSIZE_LARGE)
 DEFS_XT_TINY = $(DEFINES_XT_TINY:%=-D%) -DROMSIZE=$(ROMSIZE)
 DEFS_386_8K = $(DEFINES_386_8K:%=-D%) -DROMSIZE=$(ROMSIZE)
+DEFS_ALL_FEATURES = $(DEFINES_ALL_FEATURES:%=-D%)
 
 # Add -I in front of all header directories
 IHEADERS = $(HEADERS:%=-I%)
@@ -221,7 +224,26 @@ checksum: all
 	@perl ..\tools\checksum.pl $(TARGET)_atl.bin $(ROMSIZE_LARGE)
 	@perl ..\tools\checksum.pl $(TARGET)_386.bin $(ROMSIZE)
 
-xt_unused: xt
-	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XT) -o"$(TARGET)_xt_unused.asm" -E -DCHECK_FOR_UNUSED_ENTRYPOINTS
-	@perl ..\tools\unused.pl $(TARGET)_xt.lst $(TARGET)_xt_unused.asm
+unused: 
+	@echo "All Features"
+	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_ALL_FEATURES) $(DEFS_XT) $(DEFS_XT_PLUS) $(DEFS_AT) $(DEFS_XT_LARGE) $(DEFS_XTPLUS_LARGE) $(DEFS_AT_LARGE) $(DEFS_XT_TINY) $(DEFS_386_8K) -o"$(TARGET)_unused.asm" -l"$(TARGET)_unused.lst"
+	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_ALL_FEATURES) $(DEFS_XT) $(DEFS_XT_PLUS) $(DEFS_AT) $(DEFS_XT_LARGE) $(DEFS_XTPLUS_LARGE) $(DEFS_AT_LARGE) $(DEFS_XT_TINY) $(DEFS_386_8K) -o"$(TARGET)_unused.asm" -E -DCHECK_FOR_UNUSED_ENTRYPOINTS
+	@perl ..\tools\unused.pl $(TARGET)_unused.lst $(TARGET)_unused.asm
+	@echo "XT Small"
+	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XT) -o"$(TARGET)_unused_xt.asm" -l"$(TARGET)_unused_xt.lst"
+	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XT) -o"$(TARGET)_unused_xt.asm" -E -DCHECK_FOR_UNUSED_ENTRYPOINTS
+	@perl ..\tools\unused.pl $(TARGET)_unused_xt.lst $(TARGET)_unused_xt.asm
+	@echo "XT Large"
+	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XT_LARGE) -o"$(TARGET)_unused_xtl.asm" -l"$(TARGET)_unused_xtl.lst"
+	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XT_LARGE) -o"$(TARGET)_unused_xtl.asm" -E -DCHECK_FOR_UNUSED_ENTRYPOINTS
+	@perl ..\tools\unused.pl $(TARGET)_unused_xtl.lst $(TARGET)_unused_xtl.asm
+	@echo "AT Small"
+	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_AT) -o"$(TARGET)_unused_at.asm" -l"$(TARGET)_unused_at.lst"
+	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_AT) -o"$(TARGET)_unused_at.asm" -E -DCHECK_FOR_UNUSED_ENTRYPOINTS
+	@perl ..\tools\unused.pl $(TARGET)_unused_at.lst $(TARGET)_unused_at.asm
+	@echo "AT Large"
+	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_AT_LARGE) -o"$(TARGET)_unused_atl.asm" -l"$(TARGET)_unused_atl.lst"
+	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_AT_LARGE) -o"$(TARGET)_unused_atl.asm" -E -DCHECK_FOR_UNUSED_ENTRYPOINTS
+	@perl ..\tools\unused.pl $(TARGET)_unused_atl.lst $(TARGET)_unused_atl.asm
+
 

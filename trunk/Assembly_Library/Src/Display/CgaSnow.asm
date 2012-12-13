@@ -93,7 +93,7 @@ CgaSnow_Stosw:
 	pop		bx
 	ret
 
-
+%ifdef INCLUDE_MENU_LIBRARY
 ;--------------------------------------------------------------------
 ; CgaSnow_RepMovsb
 ;	Parameters:
@@ -121,7 +121,7 @@ CgaSnow_RepMovsb:
 .RepMovsbWithoutWaitSinceUnknownPort:
 	eSEG_STR rep, es, movsb
 	ret
-
+%endif
 
 ;--------------------------------------------------------------------
 ; LoadCgaStatusRegisterAddressToDXifCgaPresent

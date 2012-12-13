@@ -56,6 +56,7 @@ TimerTicks_GetMinutesToAXfromTicksInDX:
 	ret
 %endif ; EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 
+%ifdef INCLUDE_MENU_LIBRARY
 ALIGN JUMP_ALIGN
 TimerTicks_GetSecondsToAXfromTicksInDX:
 	xchg	ax, dx	; Ticks now in AX
@@ -64,7 +65,7 @@ TimerTicks_GetSecondsToAXfromTicksInDX:
 	xor		dx, dx
 	xchg	dl, ah	; Seconds in AX, remainder in DX
 	ret
-
+%endif
 
 ;--------------------------------------------------------------------
 ; First tick might take 0...54.9 ms and remaining ticks
@@ -80,13 +81,14 @@ TimerTicks_GetSecondsToAXfromTicksInDX:
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
+%ifdef INCLUDE_MENU_LIBRARY		
 ALIGN JUMP_ALIGN
 TimerTicks_InitializeTimeoutFromAX:
 	mov		[bx], ax					; Store timeout ticks
 	call	TimerTicks_ReadFromBdaToAX
 	add		[bx], ax					; [bx] now contains end time for timeout
 	ret
-
+%endif
 
 ;--------------------------------------------------------------------
 ; TimerTicks_GetTimeoutTicksLeftToAXfromDSBX
@@ -99,6 +101,7 @@ TimerTicks_InitializeTimeoutFromAX:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+%ifdef INCLUDE_MENU_LIBRARY		
 ALIGN JUMP_ALIGN
 TimerTicks_GetTimeoutTicksLeftToAXfromDSBX:
 	push	dx
@@ -108,7 +111,7 @@ TimerTicks_GetTimeoutTicksLeftToAXfromDSBX:
 	sub		ax, dx		; AX = End time - current time
 	pop		dx
 	ret
-
+%endif
 
 ;--------------------------------------------------------------------
 ; TimerTicks_GetElapsedToAXandResetDSBX

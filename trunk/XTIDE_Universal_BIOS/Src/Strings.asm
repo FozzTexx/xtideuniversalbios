@@ -26,9 +26,16 @@ SECTION .text
 
 ; POST drive detection strings
 g_szDashForZero:	db	"- ",NULL	; Required by Display Library
-g_szRomAt:			db	LF,CR,"%s @ %x",LF,CR
-					db  "Released under GNU GPL v2",LF,CR,LF,CR,NULL
-
+g_szRomAt:			db	LF,CR
+					db	"%s @ %x",LF,CR						; -=XTIDE ... =- @ Segment
+					db	"%s",LF,CR							; version string 
+					db  "Released under GNU GPL v2",LF,CR	
+					db	LF,CR,NULL
+%ifdef MODULE_BOOT_MENU
+g_szBootMenuTitle:	db	"%s%c",LF,CR						; -=XTIDE ... =- and null (eaten)
+					db	"%s",NULL							; version string
+%endif
+g_szDriveName:		db	"%z",LF,CR,NULL
 
 ; The following strings are used by DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP
 ; To support an optimization in that code, these strings must start on the same 256 byte page,
@@ -165,7 +172,6 @@ g_szDeviceTypeValues_Displacement equ (g_szDeviceTypeValues_32bit - g_szDeviceTy
 %endif
 
 g_szSelectionTimeout:	db		DOUBLE_BOTTOM_LEFT_CORNER,DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL,"%ASelection in %2-u s",NULL
-
 
 
 

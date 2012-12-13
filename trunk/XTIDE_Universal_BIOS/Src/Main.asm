@@ -87,8 +87,8 @@ istruc ROMVARS
 	at	ROMVARS.bStealSize,		db	1						; Steal 1kB from base memory
 	at	ROMVARS.bIdleTimeout,	db	0						; Standby timer disabled by default
 
-	at	ROMVARS.ideVars0+IDEVARS.wBasePort,			dw	DEVICE_ATA_PRIMARY_PORT 		; Controller Command Block base port
-	at	ROMVARS.ideVars0+IDEVARS.wControlBlockPort,	dw	DEVICE_ATA_PRIMARY_PORTCTRL 	; Controller Control Block base port
+	at	ROMVARS.ideVars0+IDEVARS.wBasePort,			dw	300h 		; Controller Command Block base port
+	at	ROMVARS.ideVars0+IDEVARS.wControlBlockPort,	dw	310h 	; Controller Control Block base port
 	at	ROMVARS.ideVars0+IDEVARS.bDevice,			db	DEVICE_16BIT_ATA
 	at	ROMVARS.ideVars0+IDEVARS.bIRQ,				db	0
 	at	ROMVARS.ideVars0+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	dw	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE | (TRANSLATEMODE_AUTO<<TRANSLATEMODE_FIELD_POSITION)

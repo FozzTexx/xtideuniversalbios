@@ -65,9 +65,13 @@ SerialCommand_OutputWithParameters:
 				
 		mov		dx, [di+DPT_SERIAL.wSerialPortAndBaud]
 
+; fall through to SerialCommand_FallThroughToSerialServer_SendReceive
+		
 ALIGN JUMP_ALIGN
-SerialCommand_FallThroughToSerialServer_SendReceive:
+SerialCommand_FallThroughToSerialServer_SendReceive:		
 
+; fall through to SerialServer_SendReceive
+		
 %include "SerialServer.asm"
 
 %ifndef CHECK_FOR_UNUSED_ENTRYPOINTS		
@@ -176,8 +180,12 @@ SerialCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 
 .identifyDeviceInDX:
 
+; fall through to SerialCommand_FallThroughToSerialServerScan_ScanForServer
+		
 ALIGN JUMP_ALIGN
-SerialCommand_FallThroughToSerialServerScan_ScanForServer:		
+SerialCommand_FallThroughToSerialServerScan_ScanForServer:
+
+; fall through to SerialServerScan_ScanForServer
 		
 %include "SerialServerScan.asm"
 
