@@ -173,5 +173,5 @@ ResetHardDisksHandledByOurBIOS:
 	loop	.loop
 
 .done:
-NoForeignDrivesToReset:
+.NoForeignDrivesToReset:
 	ret

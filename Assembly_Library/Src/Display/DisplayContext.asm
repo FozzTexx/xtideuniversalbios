@@ -101,6 +101,8 @@ DisplayContext_SynchronizeToHardware:
 	jmp		DisplayCursor_SynchronizeCoordinatesToHardware
 
 
+%ifdef INCLUDE_MENU_LIBRARY
+
 ;--------------------------------------------------------------------
 ; DisplayContext_Push
 ;	Parameters:
@@ -156,7 +158,7 @@ DisplayContext_Pop:
 	pop		dx
 	mov		ds, di					; Restore DS
 	ret
-
+%endif
 
 ;--------------------------------------------------------------------
 ; DisplayContext_PrepareOffScreenBufferInESBXwithLengthInCX
@@ -186,7 +188,8 @@ DisplayContext_PrepareOffScreenBufferInESBXwithLengthInCX:
 	mov		bx, di
 	pop		ds
 	ret
-%endif
+
+%endif  ; INCLUDE_MENU_LIBRARY
 
 
 ;--------------------------------------------------------------------
@@ -227,6 +230,7 @@ DisplayContext_GetCharacterPointerToBXAX:
 	ret
 %endif
 
+%ifdef INCLUDE_MENU_LIBRARY
 
 ;--------------------------------------------------------------------
 ; DisplayContext_SetCharOutputFunctionFromAXwithAttribFlagInBL
@@ -246,7 +250,7 @@ DisplayContext_SetCharOutputFunctionFromAXwithAttribFlagInBL:
 	or		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bFlags], bl
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fnCharOut], ax
 	ret
-		
+
 
 ;--------------------------------------------------------------------
 ; DisplayContext_SetCharacterAttributeFromAL
@@ -278,7 +282,8 @@ ALIGN DISPLAY_JUMP_ALIGN
 DisplayContext_SetCharacterOutputParameterFromAX:
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.wCharOutParam], ax
 	ret
-
+		
+%endif	 ; INCLUDE_MENU_LIBRARY
 		
 ;--------------------------------------------------------------------
 ; DisplayContext_GetCharacterOutputParameterToDX

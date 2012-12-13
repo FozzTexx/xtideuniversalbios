@@ -49,6 +49,8 @@ BootVars_Initialize:
 	; Store default drives to boot from
 	mov		dl, [cs:ROMVARS.bBootDrv]
 
+	; fall through to BootVars_StoreHotkeyForDriveNumberInDL
+
 ;--------------------------------------------------------------------
 ; BootVars_StoreHotkeyForDriveNumberInDL
 ;	Parameters:

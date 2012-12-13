@@ -468,6 +468,7 @@ ALIGN JUMP_ALIGN
 %endmacro
 
 %macro eSHL_IM 2
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
 %ifdef USE_386
 	%if %2 = 1
 		add		%1, %1	; Same size but faster on 386 and 486. Fails if %1 is a memory operand.
@@ -476,6 +477,7 @@ ALIGN JUMP_ALIGN
 	%endif
 %else
 	eSHIFT_IM	%1, %2, shl
+%endif
 %endif
 %endmacro
 

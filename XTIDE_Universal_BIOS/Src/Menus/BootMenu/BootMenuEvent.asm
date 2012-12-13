@@ -36,7 +36,7 @@ GetDefaultMenuitemToDX:
 	test	BYTE [es:BOOTVARS.hotkeyVars+HOTKEYVARS.bFlags], FLG_HOTKEY_HD_FIRST
 	eCMOVZ	dl, dh
 	call	IsDriveDLinSystem
-	jnc		SHORT DoNotSetDefaultMenuitem
+	jnc		SHORT BootMenuEvent_Handler.DoNotSetDefaultMenuitem
 	call	DriveXlate_SetDriveToSwap
 	; Fall to GetMenuitemToDXforDriveInDL
 
@@ -105,8 +105,8 @@ BootMenuEvent_Handler:
 	add		bx, FirstEvent
 	jmp		bx
 
-EventNotHandled:
-DoNotSetDefaultMenuitem:
+.EventNotHandled:
+.DoNotSetDefaultMenuitem:
 	xor		dx, dx		; Clear CF (and menuitem index for DoNotSetDefaultMenuitem)
 	ret
 
@@ -126,11 +126,11 @@ MENUEVENT_RefreshItemFromCX equ (BootMenuPrint_RefreshItem - FirstEvent)
 %else
 
 	cmp		bx, BYTE MENUEVENT.RefreshItemFromCX	; Above last supported item?
-	ja		SHORT EventNotHandled
+	ja		SHORT .EventNotHandled
 	jmp		[cs:bx+rgfnEventSpecificHandlers]
 
-EventNotHandled:
-DoNotSetDefaultMenuitem:
+.EventNotHandled:
+.DoNotSetDefaultMenuitem:
 	xor		dx, dx		; Clear CF (and menuitem index for DoNotSetDefaultMenuitem)
 	ret
 

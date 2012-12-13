@@ -39,14 +39,39 @@ g_szDashForZero:	; db	"- ",NULL	; Required by Display Library
                 	; db	 2dh,  20h,  00h    ; uncompressed
                 	  db	 28h,  00h          ; compressed
 
-g_szRomAt:			; db	LF,CR,"%s @ %x",LF,CR
-          			; db	 0ah,  0dh,  25h,  73h,  20h,  40h,  20h,  25h,  78h,  0ah,  0dh    ; uncompressed
-          			  db	 39h,  3dh,  20h, 0c6h,  37h,  39h                                  ; compressed
+g_szRomAt:			; db	LF,CR
+          			; db	 0ah,  0dh    ; uncompressed
+          			  db	 39h          ; compressed
 
-	; db  "Released under GNU GPL v2",LF,CR,LF,CR,NULL
-	; db   52h,  65h,  6ch,  65h,  61h,  73h,  65h,  64h,  20h,  75h,  6eh,  64h,  65h,  72h,  20h,  47h,  4eh,  55h,  20h,  47h,  50h,  4ch,  20h,  76h,  32h,  0ah,  0dh,  0ah,  0dh,  00h    ; uncompressed
-	  db   58h,  6bh,  72h,  6bh,  67h,  79h,  6bh, 0eah,  7bh,  74h,  6ah,  6bh, 0f8h,  4dh,  54h, 0dbh,  4dh,  56h, 0d2h,  7ch,  2ch,  39h,  19h                                              ; compressed
+	; db	"%s @ %x",LF,CR						; -=XTIDE ... =- @ Segment
+	; db	 25h,  73h,  20h,  40h,  20h,  25h,  78h,  0ah,  0dh    ; uncompressed
+	  db	 3dh,  20h, 0c6h,  37h,  39h                            ; compressed
 
+	; db	"%s",LF,CR							; version string 
+	; db	 25h,  73h,  0ah,  0dh    ; uncompressed
+	  db	 3dh,  39h                ; compressed
+
+	; db  "Released under GNU GPL v2",LF,CR	
+	; db   52h,  65h,  6ch,  65h,  61h,  73h,  65h,  64h,  20h,  75h,  6eh,  64h,  65h,  72h,  20h,  47h,  4eh,  55h,  20h,  47h,  50h,  4ch,  20h,  76h,  32h,  0ah,  0dh    ; uncompressed
+	  db   58h,  6bh,  72h,  6bh,  67h,  79h,  6bh, 0eah,  7bh,  74h,  6ah,  6bh, 0f8h,  4dh,  54h, 0dbh,  4dh,  56h, 0d2h,  7ch,  2ch,  39h                                  ; compressed
+
+	; db	LF,CR,NULL
+	; db	 0ah,  0dh,  00h    ; uncompressed
+	  db	 19h                ; compressed
+
+%ifdef MODULE_BOOT_MENU
+g_szBootMenuTitle:	; db	"%s%c",LF,CR						; -=XTIDE ... =- and null (eaten)
+                  	; db	 25h,  73h,  25h,  63h,  0ah,  0dh    ; uncompressed
+                  	  db	 3dh,  3ch,  39h                      ; compressed
+
+	; db	"%s",NULL							; version string
+	; db	 25h,  73h,  00h    ; uncompressed
+	  db	 1dh                ; compressed
+
+%endif
+g_szDriveName:		; db	"%z",LF,CR,NULL
+              		; db	 25h,  7ah,  0ah,  0dh,  00h    ; uncompressed
+              		  db	 3eh,  19h                      ; compressed
 
 
 ; The following strings are used by DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP
@@ -298,7 +323,6 @@ g_szSelectionTimeout:	; db		DOUBLE_BOTTOM_LEFT_CORNER,DOUBLE_LEFT_HORIZONTAL_TO_
 
 
 
-
 ; Boot Menu information strings
 g_szCapacity:			; db	"Capacity : %s",NULL
              			; db	 43h,  61h,  70h,  61h,  63h,  69h,  74h,  79h,  20h,  3ah,  20h,  25h,  73h,  00h    ; uncompressed
@@ -529,13 +553,13 @@ StringsCompressed_TranslatesAndFormats:
 ;; 2-u:1
 ;; 5-u:2
 ;; x:5
-;; s:13
+;; s:16
 ;; 5-x:1
-;; nl:9
+;; nl:12
 ;; 2-I:1
 ;; u:6
-;; c:9
-;; z:1
+;; c:10
+;; z:2
 ;; total format: 11
 
 ;; alphabet usage stats

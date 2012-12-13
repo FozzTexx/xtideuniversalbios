@@ -228,6 +228,7 @@ RamVars_UnpackFlopCntAndFirstToAL:
 %endif
 
 
+%if 0							; unused...
 ;--------------------------------------------------------------------
 ; RamVars_IsDriveDetectionInProgress
 ;	Parameters:
@@ -240,3 +241,4 @@ RamVars_UnpackFlopCntAndFirstToAL:
 RamVars_IsDriveDetectionInProgress:
 	cmp		WORD [RAMVARS.wSignature], RAMVARS_DRV_DETECT_SIGNATURE
 	ret
+%endif

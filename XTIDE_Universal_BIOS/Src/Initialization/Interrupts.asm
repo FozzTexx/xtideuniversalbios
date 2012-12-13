@@ -42,7 +42,7 @@ Interrupts_InitializeInterruptVectors:
 	; in place. We need our INT 13h handler to swap drive letters.
 %ifndef MODULE_HOTKEYS
 	cmp		BYTE [RAMVARS.bDrvCnt], 0
-	je		SHORT Interrupts_Return
+	je		SHORT Interrupts_InstallHandlerToVectorInALFromCSSI.Interrupts_Return
 %endif
 	; Fall to .InitializeInt13hAnd40h
 
@@ -171,7 +171,7 @@ Interrupts_InstallHandlerToVectorInALFromCSSI:
 	xchg	ax, bx
 	mov		[es:bx], si				; Store offset
 	mov		[es:bx+2], cs			; Store segment
-Interrupts_Return:
+.Interrupts_Return:
 	ret
 
 

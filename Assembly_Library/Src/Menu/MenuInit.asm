@@ -136,7 +136,8 @@ MenuInit_CloseMenuWindow:
 	or		BYTE [bp+MENU.bFlags], FLG_MENU_EXIT
 	ret
 
-
+		
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS		
 ;--------------------------------------------------------------------
 ; MenuInit_HighlightItemFromAX
 ;	Parameters
@@ -151,7 +152,9 @@ ALIGN MENU_JUMP_ALIGN
 MenuInit_HighlightItemFromAX:
 	sub		ax, [bp+MENUINIT.wHighlightedItem]
 	jmp		MenuScrollbars_MoveHighlightedItemByAX
+%endif
 
+		
 ;--------------------------------------------------------------------
 ; MenuInit_GetHighlightedItemToAX
 ;	Parameters

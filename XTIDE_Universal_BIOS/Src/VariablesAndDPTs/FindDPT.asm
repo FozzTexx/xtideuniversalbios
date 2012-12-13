@@ -245,8 +245,10 @@ FindDPT_ToDSDIforSerialDevice:
 ;	Corrupts registers:
 ;		SI
 ;--------------------------------------------------------------------
+%ifdef MODULE_IRQ		
 ALIGN JUMP_ALIGN
-FindDPT_ToDSDIforFlagsHighInBL:
+FindDPT_ToDSDIforFlagsHighInBL:	
+%endif
 	mov		si, IterateToDptWithFlagsHighInBL
 	; Fall to IterateAllDPTs
 

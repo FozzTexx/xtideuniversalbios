@@ -92,7 +92,7 @@ IdeWait_PollStatusFlagInBLwithTimeoutInBH:
 ;	Corrupts registers:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
-IdePollBsyAndFlgInAH:
+.IdePollBsyAndFlgInAH:
 	call	IdeIO_InputStatusRegisterToAL		; Discard contents of first read
 
 .PollLoop:

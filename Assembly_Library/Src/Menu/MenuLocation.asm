@@ -54,7 +54,9 @@ MenuLocation_GetTextCoordinatesToAXforItemInAX:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS		
 MenuLocation_GetItemBordersTopLeftCoordinatesToAX:
+%endif
 	xor		ax, ax
 	jmp		SHORT AddItemBordersTopLeftCoordinatesToAX
 

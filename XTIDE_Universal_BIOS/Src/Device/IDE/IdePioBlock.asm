@@ -216,7 +216,9 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 %ifdef USE_186
+%ifdef MODULE_8BIT_IDE
 IdePioBlock_ReadFromXtideRev2:
+%endif
 %endif
 IdePioBlock_ReadFrom16bitDataPort:
 	xchg	cl, ch		; Sectors to WORDs

@@ -17,6 +17,7 @@
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 ;		
 
+%ifdef INCLUDE_MENU_LIBRARY
 struc BYTE_MULTIPLES
 	.B			resb	1
 	.kiB		resb	1
@@ -81,7 +82,7 @@ ALIGN UTIL_SIZE_JUMP_ALIGN
 %endif
 	ret
 .rgbMagnitudeToChar:	db	" kMGTP"
-
+%endif
 
 ;--------------------------------------------------------------------
 ; Size_DivideSizeInBXDXAXby1024andIncrementMagnitudeInCX
@@ -110,7 +111,6 @@ ALIGN UTIL_SIZE_JUMP_ALIGN
 	inc		cx						; Increment magnitude
 	ret
 
-
 ;--------------------------------------------------------------------
 ; Size_ConvertSectorCountInBXDXAXtoKiB
 ; Size_DivideBXDXAXbyTwo
@@ -123,7 +123,7 @@ ALIGN UTIL_SIZE_JUMP_ALIGN
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN UTIL_SIZE_JUMP_ALIGN
-Size_ConvertSectorCountInBXDXAXtoKiB:
+Size_ConvertSectorCountInBXDXAXtoKiB:               ; unused entrypoint ok
 Size_DivideBXDXAXbyTwo:
 	shr		bx, 1					; Divide sector count by 2...
 	rcr		dx, 1					; ...to get disk size in...

@@ -36,7 +36,7 @@ DisplayCursor_GetDefaultCursorShapeToAX:
 	eCMOVE	ax, CURSOR_NORMAL_MDA				; MDA cursor
 	ret
 
-
+%ifdef INCLUDE_MENU_LIBRARY
 ;--------------------------------------------------------------------
 ; DisplayCursor_SetShapeFromAX
 ;	Parameters:
@@ -51,8 +51,8 @@ ALIGN DISPLAY_JUMP_ALIGN
 DisplayCursor_SetShapeFromAX:
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.wCursorShape], ax
 	ret
-
-
+%endif
+		
 ;--------------------------------------------------------------------
 ; DisplayCursor_SetCoordinatesFromAX
 ;	Parameters:
