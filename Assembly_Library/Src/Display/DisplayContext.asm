@@ -2,20 +2,20 @@
 ; Description	:	Functions for managing display context.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
-;		
+;
 
 ; Section containing code
 SECTION .text
@@ -101,10 +101,9 @@ DisplayContext_SynchronizeToHardware:
 	jmp		DisplayCursor_SynchronizeCoordinatesToHardware
 
 
-%ifdef INCLUDE_MENU_LIBRARY
-
 ;--------------------------------------------------------------------
 ; DisplayContext_Push
+; DisplayContext_Pop
 ;	Parameters:
 ;		Nothing
 ;	Returns:
@@ -112,6 +111,13 @@ DisplayContext_SynchronizeToHardware:
 ;	Corrupts registers:
 ;		AX, DI
 ;--------------------------------------------------------------------
+%ifdef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
+	%ifndef MODULE_BOOT_MENU
+		%define EXCLUDE
+	%endif
+%endif
+
+%ifndef EXCLUDE
 ALIGN DISPLAY_JUMP_ALIGN
 DisplayContext_Push:
 	mov		di, ds					; Backup DS
@@ -125,40 +131,34 @@ DisplayContext_Push:
 	%assign i i+2
 	%endrep
 %endif
-		
+
 	mov		ds, di					; Restore DS
 	jmp		ax
 
-;--------------------------------------------------------------------
-; DisplayContext_Pop
-;	Parameters:
-;		Nothing
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, DI
-;--------------------------------------------------------------------
+
 ALIGN DISPLAY_JUMP_ALIGN
 DisplayContext_Pop:
 	mov		di, ds					; Backup DS
 	LOAD_BDA_SEGMENT_TO	ds, ax
 	pop		ax						; Pop return address
 
-%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS		
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
 	%assign i DISPLAY_CONTEXT_size-2
 	%rep DISPLAY_CONTEXT_size / 2
 		pop		WORD [VIDEO_BDA.displayContext + i]
 	%assign i i-2
 	%endrep
 %endif
-		
+
 	push	ax						; Push return address
 	push	dx
 	call	DisplayContext_SynchronizeToHardware
 	pop		dx
 	mov		ds, di					; Restore DS
 	ret
-%endif
+%endif ; EXCLUDE
+%undef EXCLUDE
+
 
 ;--------------------------------------------------------------------
 ; DisplayContext_PrepareOffScreenBufferInESBXwithLengthInCX
@@ -188,8 +188,7 @@ DisplayContext_PrepareOffScreenBufferInESBXwithLengthInCX:
 	mov		bx, di
 	pop		ds
 	ret
-
-%endif  ; INCLUDE_MENU_LIBRARY
+%endif ; EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 
 
 ;--------------------------------------------------------------------
@@ -230,8 +229,12 @@ DisplayContext_GetCharacterPointerToBXAX:
 	ret
 %endif
 
-%ifdef INCLUDE_MENU_LIBRARY
 
+%ifdef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
+	%ifndef MODULE_BOOT_MENU
+		%define EXCLUDE
+	%endif
+%endif
 ;--------------------------------------------------------------------
 ; DisplayContext_SetCharOutputFunctionFromAXwithAttribFlagInBL
 ;	Parameters:
@@ -243,6 +246,7 @@ DisplayContext_GetCharacterPointerToBXAX:
 ;	Corrupts registers:
 ;		BL
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE	; 1 of 3
 ALIGN DISPLAY_JUMP_ALIGN
 DisplayContext_SetCharOutputFunctionFromAXwithAttribFlagInBL:
 	and		bl, FLG_CONTEXT_ATTRIBUTES
@@ -250,6 +254,7 @@ DisplayContext_SetCharOutputFunctionFromAXwithAttribFlagInBL:
 	or		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bFlags], bl
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fnCharOut], ax
 	ret
+%endif
 
 
 ;--------------------------------------------------------------------
@@ -262,10 +267,12 @@ DisplayContext_SetCharOutputFunctionFromAXwithAttribFlagInBL:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE	; 2 of 3
 ALIGN DISPLAY_JUMP_ALIGN
 DisplayContext_SetCharacterAttributeFromAL:
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bAttribute], al
 	ret
+%endif
 
 
 ;--------------------------------------------------------------------
@@ -278,13 +285,16 @@ DisplayContext_SetCharacterAttributeFromAL:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE	; 3 of 3
 ALIGN DISPLAY_JUMP_ALIGN
 DisplayContext_SetCharacterOutputParameterFromAX:
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.wCharOutParam], ax
 	ret
-		
-%endif	 ; INCLUDE_MENU_LIBRARY
-		
+%endif
+
+%undef EXCLUDE
+
+
 ;--------------------------------------------------------------------
 ; DisplayContext_GetCharacterOutputParameterToDX
 ;	Parameters:
@@ -294,7 +304,7 @@ DisplayContext_SetCharacterOutputParameterFromAX:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS OR EXCLUDE_FROM_XTIDECFG	; This is currently unused (dead code)
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS OR EXCLUDE_FROM_XTIDECFG
 ALIGN DISPLAY_JUMP_ALIGN
 DisplayContext_GetCharacterOutputParameterToDX:
 	mov		dx, [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.wCharOutParam]
@@ -321,7 +331,7 @@ DisplayContext_GetCharacterOffsetToAXfromByteOffsetInAX:
 	ret
 %endif
 
-		
+
 ;--------------------------------------------------------------------
 ; DisplayContext_GetByteOffsetToAXfromCharacterOffsetInAX
 ;	Parameters:

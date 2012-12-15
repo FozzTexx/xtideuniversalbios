@@ -2,20 +2,20 @@
 ; Description	:	Functions for accessing DPT data.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
-;		
+;
 
 ; Section containing code
 SECTION .text
@@ -66,14 +66,23 @@ GetDriveSelectByteForAssistedLBAtoAL:
 ALIGN JUMP_ALIGN
 AccessDPT_GetDeviceControlByteToAL:
 %ifdef MODULE_IRQ
+
+%ifndef USE_UNDOC_INTEL
 	xor		al, al
-	test	BYTE [di+DPT.bFlagsLow], FLGL_DPT_ENABLE_IRQ
+%endif
+
+	test	BYTE [di+DPT.bFlagsLow], FLGL_DPT_ENABLE_IRQ	; Clears CF
+
+%ifdef USE_UNDOC_INTEL
+	eSALC	; Clears AL using CF while preserving flags
+%endif
+
 	jnz		SHORT .EnableDeviceIrq
 	or		al, FLG_DEVCONTROL_nIEN	; Disable IRQ
 .EnableDeviceIrq:
 %else
 	mov		al, FLG_DEVCONTROL_nIEN	; Disable IRQ
-%endif
+%endif ; MODULE_IRQ
 	ret
 
 

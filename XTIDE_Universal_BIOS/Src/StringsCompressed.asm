@@ -12,20 +12,20 @@
 ; Description	:	Strings and equates for BIOS messages.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ; GNU General Public License for more details.
-; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html		
-;		
+; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+;
 
 %ifdef MODULE_STRINGS_COMPRESSED_PRECOMPRESS
 %include "Display.inc"
@@ -33,46 +33,6 @@
 
 ; Section containing code
 SECTION .text
-
-; POST drive detection strings
-g_szDashForZero:	; db	"- ",NULL	; Required by Display Library
-                	; db	 2dh,  20h,  00h    ; uncompressed
-                	  db	 28h,  00h          ; compressed
-
-g_szRomAt:			; db	LF,CR
-          			; db	 0ah,  0dh    ; uncompressed
-          			  db	 39h          ; compressed
-
-	; db	"%s @ %x",LF,CR						; -=XTIDE ... =- @ Segment
-	; db	 25h,  73h,  20h,  40h,  20h,  25h,  78h,  0ah,  0dh    ; uncompressed
-	  db	 3dh,  20h, 0c6h,  37h,  39h                            ; compressed
-
-	; db	"%s",LF,CR							; version string 
-	; db	 25h,  73h,  0ah,  0dh    ; uncompressed
-	  db	 3dh,  39h                ; compressed
-
-	; db  "Released under GNU GPL v2",LF,CR	
-	; db   52h,  65h,  6ch,  65h,  61h,  73h,  65h,  64h,  20h,  75h,  6eh,  64h,  65h,  72h,  20h,  47h,  4eh,  55h,  20h,  47h,  50h,  4ch,  20h,  76h,  32h,  0ah,  0dh    ; uncompressed
-	  db   58h,  6bh,  72h,  6bh,  67h,  79h,  6bh, 0eah,  7bh,  74h,  6ah,  6bh, 0f8h,  4dh,  54h, 0dbh,  4dh,  56h, 0d2h,  7ch,  2ch,  39h                                  ; compressed
-
-	; db	LF,CR,NULL
-	; db	 0ah,  0dh,  00h    ; uncompressed
-	  db	 19h                ; compressed
-
-%ifdef MODULE_BOOT_MENU
-g_szBootMenuTitle:	; db	"%s%c",LF,CR						; -=XTIDE ... =- and null (eaten)
-                  	; db	 25h,  73h,  25h,  63h,  0ah,  0dh    ; uncompressed
-                  	  db	 3dh,  3ch,  39h                      ; compressed
-
-	; db	"%s",NULL							; version string
-	; db	 25h,  73h,  00h    ; uncompressed
-	  db	 1dh                ; compressed
-
-%endif
-g_szDriveName:		; db	"%z",LF,CR,NULL
-              		; db	 25h,  7ah,  0ah,  0dh,  00h    ; uncompressed
-              		  db	 3eh,  19h                      ; compressed
-
 
 ; The following strings are used by DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP
 ; To support an optimization in that code, these strings must start on the same 256 byte page,
@@ -92,9 +52,9 @@ g_szDetectOuter:		; db	"%s at %s: ",NULL
                 		  db	 3dh,  20h,  67h, 0fah,  3dh,  40h,  00h                            ; compressed
 
 %ifdef MODULE_SERIAL
-g_szDetectCOM:			; db  "COM%c%s",NULL
-              			; db   43h,  4fh,  4dh,  25h,  63h,  25h,  73h,  00h    ; uncompressed
-              			  db   49h,  55h,  53h,  3ch,  1dh                      ; compressed
+g_szDetectCOM:			; db	"COM%c%s",NULL
+              			; db	 43h,  4fh,  4dh,  25h,  63h,  25h,  73h,  00h    ; uncompressed
+              			  db	 49h,  55h,  53h,  3ch,  1dh                      ; compressed
 
 g_szDetectCOMAuto:		; db	" Detect",NULL
                   		; db	 20h,  44h,  65h,  74h,  65h,  63h,  74h,  00h    ; uncompressed
@@ -110,16 +70,57 @@ g_szDetectCOMLarge:		; db	"/%u.%uK",NULL					; IDE Master at COM1/19.2K:
 
 %endif
 g_szDetectEnd:
-g_szDetectPort:			; db	"%x",NULL					   	; IDE Master at 1F0h:
+g_szDetectPort:			; db	"%x",NULL						; IDE Master at 1F0h:
                			; db	 25h,  78h,  00h    ; uncompressed
                			  db	 17h                ; compressed
 
 
 %ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
 %if ((g_szDetectEnd-$$) & 0xff00) <> ((g_szDetectStart-$$) & 0xff00)
-%error "g_szDetect* strings must start on the same 256 byte page, required by DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP.  Please move this block up or down within strings.asm"
+%error "g_szDetect* strings must start on the same 256 byte page, required by DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP.  Please move this block up or down within Strings.asm"
 %endif
 %endif
+
+
+; POST drive detection strings
+g_szDashForZero:	; db	"- ",NULL	; Required by Display Library
+                	; db	 2dh,  20h,  00h    ; uncompressed
+                	  db	 28h,  00h          ; compressed
+
+g_szRomAt:			; db	LF,CR
+          			; db	 0ah,  0dh    ; uncompressed
+          			  db	 39h          ; compressed
+
+	; db	"%s @ %x",LF,CR						; -=XTIDE ... =- @ Segment
+	; db	 25h,  73h,  20h,  40h,  20h,  25h,  78h,  0ah,  0dh    ; uncompressed
+	  db	 3dh,  20h, 0c6h,  37h,  39h                            ; compressed
+
+	; db	"%s",LF,CR							; version string
+	; db	 25h,  73h,  0ah,  0dh    ; uncompressed
+	  db	 3dh,  39h                ; compressed
+
+	; db	"Released under GNU GPL v2",LF,CR
+	; db	 52h,  65h,  6ch,  65h,  61h,  73h,  65h,  64h,  20h,  75h,  6eh,  64h,  65h,  72h,  20h,  47h,  4eh,  55h,  20h,  47h,  50h,  4ch,  20h,  76h,  32h,  0ah,  0dh    ; uncompressed
+	  db	 58h,  6bh,  72h,  6bh,  67h,  79h,  6bh, 0eah,  7bh,  74h,  6ah,  6bh, 0f8h,  4dh,  54h, 0dbh,  4dh,  56h, 0d2h,  7ch,  2ch,  39h                                  ; compressed
+
+	; db	LF,CR,NULL
+	; db	 0ah,  0dh,  00h    ; uncompressed
+	  db	 19h                ; compressed
+
+%ifdef MODULE_BOOT_MENU
+g_szBootMenuTitle:	; db	"%s%c",LF,CR						; -=XTIDE ... =- and null (eaten)
+                  	; db	 25h,  73h,  25h,  63h,  0ah,  0dh    ; uncompressed
+                  	  db	 3dh,  3ch,  39h                      ; compressed
+
+	; db	"%s",NULL							; version string
+	; db	 25h,  73h,  00h    ; uncompressed
+	  db	 1dh                ; compressed
+
+%endif
+g_szDriveName:		; db	"%z",LF,CR,NULL
+              		; db	 25h,  7ah,  0ah,  0dh,  00h    ; uncompressed
+              		  db	 3eh,  19h                      ; compressed
+
 
 
 ; Boot loader strings
@@ -142,7 +143,6 @@ g_szReadError:			; db	"Error %x!",LF,CR,NULL
 
 
 %ifdef MODULE_HOTKEYS
-
 ; Hotkey Bar strings
 g_szFDD:		; db	"FDD [%c]",NULL			; "FDD [A]"
         		; db	 46h,  44h,  44h,  20h,  5bh,  25h,  63h,  5dh,  00h    ; uncompressed
@@ -171,7 +171,6 @@ g_szHotkey:		; db	"%A%c%c%A%s%A ",NULL	; "C»HDD [A] ", "F2BootMnu " or "F8RomBoo
 
 
 %ifdef MODULE_BOOT_MENU
-
 ; Boot Menu Floppy Disk strings
 ;
 ; The following strings are used by BootMenuPrint_RefreshInformation
@@ -179,31 +178,31 @@ g_szHotkey:		; db	"%A%c%c%A%s%A ",NULL	; "C»HDD [A] ", "F2BootMnu " or "F8RomBoo
 ; which is checked at assembly time below.
 ;
 g_szFddStart:
-g_szFddUnknown:	; db	"Unknown",NULL
-               	; db	 55h,  6eh,  6bh,  6eh,  6fh,  77h,  6eh,  00h    ; uncompressed
-               	  db	 5bh,  74h,  71h,  74h,  75h,  7dh, 0b4h          ; compressed
+g_szFddUnknown:		; db	"Unknown",NULL
+               		; db	 55h,  6eh,  6bh,  6eh,  6fh,  77h,  6eh,  00h    ; uncompressed
+               		  db	 5bh,  74h,  71h,  74h,  75h,  7dh, 0b4h          ; compressed
 
-g_szFddSizeOr:	; db	"5",ONE_QUARTER,QUOTATION_MARK," or 3",ONE_HALF,QUOTATION_MARK," DD",NULL
-              	; db	 35h, 0ach,  22h,  20h,  6fh,  72h,  20h,  33h, 0abh,  22h,  20h,  44h,  44h,  00h    ; uncompressed
-              	  db	 2eh,  21h,  26h,  20h,  75h, 0f8h,  2dh,  22h,  26h,  20h,  4ah,  8ah                ; compressed
+g_szFddSizeOr:		; db	"5",ONE_QUARTER,QUOTATION_MARK," or 3",ONE_HALF,QUOTATION_MARK," DD",NULL
+              		; db	 35h, 0ach,  22h,  20h,  6fh,  72h,  20h,  33h, 0abh,  22h,  20h,  44h,  44h,  00h    ; uncompressed
+              		  db	 2eh,  21h,  26h,  20h,  75h, 0f8h,  2dh,  22h,  26h,  20h,  4ah,  8ah                ; compressed
 
-g_szFddSize:	; db	"%s",QUOTATION_MARK,", %u kiB",NULL	; 3½", 1440 kiB
-            	; db	 25h,  73h,  22h,  2ch,  20h,  25h,  75h,  20h,  6bh,  69h,  42h,  00h    ; uncompressed
-            	  db	 3dh,  26h,  27h,  20h,  35h,  20h,  71h,  6fh,  88h                      ; compressed
+g_szFddSize:		; db	"%s",QUOTATION_MARK,", %u kiB",NULL	; 3½", 1440 kiB
+            		; db	 25h,  73h,  22h,  2ch,  20h,  25h,  75h,  20h,  6bh,  69h,  42h,  00h    ; uncompressed
+            		  db	 3dh,  26h,  27h,  20h,  35h,  20h,  71h,  6fh,  88h                      ; compressed
 
-g_szFddThreeHalf:		; db  "3",ONE_HALF,NULL
-                 		; db   33h, 0abh,  00h    ; uncompressed
-                 		  db   2dh,  02h          ; compressed
+g_szFddThreeHalf:	; db	"3",ONE_HALF,NULL
+                 	; db	 33h, 0abh,  00h    ; uncompressed
+                 	  db	 2dh,  02h          ; compressed
 
 g_szFddEnd:
-g_szFddFiveQuarter:		; db  "5",ONE_QUARTER,NULL
-                   		; db   35h, 0ach,  00h    ; uncompressed
-                   		  db   2eh,  01h          ; compressed
+g_szFddFiveQuarter:	; db	"5",ONE_QUARTER,NULL
+                   	; db	 35h, 0ach,  00h    ; uncompressed
+                   	  db	 2eh,  01h          ; compressed
 
 
 %ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
 %if ((g_szFddStart-$$) & 0xff00) <> ((g_szFddEnd-$$) & 0xff00)
-%error "g_szFdd* strings must start on the same 256 byte page, required by the BootMenuPrint_RefreshInformation routines for floppy drives.  Please move this block up or down within strings.asm"
+%error "g_szFdd* strings must start on the same 256 byte page, required by the BootMenuPrint_RefreshInformation routines for floppy drives.  Please move this block up or down within Strings.asm"
 %endif
 %endif
 
@@ -237,46 +236,47 @@ g_szAddressingModes_Displacement equ (g_szLARGE - g_szAddressingModes)
 %endif
 %endif
 
+
 g_szDeviceTypeValues:
-g_szDeviceTypeValues_16bit:		; db		" 16",NULL
-                           		; db		 20h,  31h,  36h,  00h    ; uncompressed
-                           		  db		 20h,  2bh,  0fh          ; compressed
+g_szDeviceTypeValues_16bit:		; db	" 16",NULL
+                           		; db	 20h,  31h,  36h,  00h    ; uncompressed
+                           		  db	 20h,  2bh,  0fh          ; compressed
 
-g_szDeviceTypeValues_32bit:		; db		" 32",NULL
-                           		; db		 20h,  33h,  32h,  00h    ; uncompressed
-                           		  db		 20h,  2dh,  0ch          ; compressed
+g_szDeviceTypeValues_32bit:		; db	" 32",NULL
+                           		; db	 20h,  33h,  32h,  00h    ; uncompressed
+                           		  db	 20h,  2dh,  0ch          ; compressed
 
-g_szDeviceTypeValues_8bit:		; db		"  8",NULL
-                          		; db		 20h,  20h,  38h,  00h    ; uncompressed
-                          		  db		 20h,  20h,  10h          ; compressed
+g_szDeviceTypeValues_8bit:		; db	"  8",NULL
+                          		; db	 20h,  20h,  38h,  00h    ; uncompressed
+                          		  db	 20h,  20h,  10h          ; compressed
 
-g_szDeviceTypeValues_XTIDEr1:	; db		"D8 ",NULL	; Dual 8-bit
-                             	; db		 44h,  38h,  20h,  00h    ; uncompressed
-                             	  db		 4ah,  30h,  00h          ; compressed
+g_szDeviceTypeValues_XTIDEr1:	; db	"D8 ",NULL	; Dual 8-bit
+                             	; db	 44h,  38h,  20h,  00h    ; uncompressed
+                             	  db	 4ah,  30h,  00h          ; compressed
 
-g_szDeviceTypeValues_XTIDEr2:	; db		"X8 ",NULL	; A0<->A3 swapped 8-bit
-                             	; db		 58h,  38h,  20h,  00h    ; uncompressed
-                             	  db		 5eh,  30h,  00h          ; compressed
+g_szDeviceTypeValues_XTIDEr2:	; db	"X8 ",NULL	; A0<->A3 swapped 8-bit
+                             	; db	 58h,  38h,  20h,  00h    ; uncompressed
+                             	  db	 5eh,  30h,  00h          ; compressed
 
-g_szDeviceTypeValues_XTCFpio8:	; db		"T8 ",NULL	; True 8-bit
-                              	; db		 54h,  38h,  20h,  00h    ; uncompressed
-                              	  db		 5ah,  30h,  00h          ; compressed
+g_szDeviceTypeValues_XTCFpio8:	; db	"T8 ",NULL	; True 8-bit
+                              	; db	 54h,  38h,  20h,  00h    ; uncompressed
+                              	  db	 5ah,  30h,  00h          ; compressed
 
-g_szDeviceTypeValues_XTCFdma:	; db		"8MA",NULL	; DMA 8-bit
-                             	; db		 38h,  4dh,  41h,  00h    ; uncompressed
-                             	  db		 30h,  53h,  87h          ; compressed
+g_szDeviceTypeValues_XTCFdma:	; db	"8MA",NULL	; DMA 8-bit
+                             	; db	 38h,  4dh,  41h,  00h    ; uncompressed
+                             	  db	 30h,  53h,  87h          ; compressed
 
-g_szDeviceTypeValues_XTCFmem:	; db		"M8 ",NULL	; Memory Mapped 8-bit
-                             	; db		 4dh,  38h,  20h,  00h    ; uncompressed
-                             	  db		 53h,  30h,  00h          ; compressed
+g_szDeviceTypeValues_XTCFmem:	; db	"M8 ",NULL	; Memory Mapped 8-bit
+                             	; db	 4dh,  38h,  20h,  00h    ; uncompressed
+                             	  db	 53h,  30h,  00h          ; compressed
 
-g_szDeviceTypeValues_JrIde:		; db		"M8 ",NULL
-                           		; db		 4dh,  38h,  20h,  00h    ; uncompressed
-                           		  db		 53h,  30h,  00h          ; compressed
+g_szDeviceTypeValues_JrIde:		; db	"M8 ",NULL
+                           		; db	 4dh,  38h,  20h,  00h    ; uncompressed
+                           		  db	 53h,  30h,  00h          ; compressed
 
-g_szDeviceTypeValues_Serial:	; db		"SER",NULL
-                            	; db		 53h,  45h,  52h,  00h    ; uncompressed
-                            	  db		 59h,  4bh,  98h          ; compressed
+g_szDeviceTypeValues_Serial:	; db	"SER",NULL
+                            	; db	 53h,  45h,  52h,  00h    ; uncompressed
+                            	  db	 59h,  4bh,  98h          ; compressed
 
 
 g_szDeviceTypeValues_Displacement equ (g_szDeviceTypeValues_32bit - g_szDeviceTypeValues)
@@ -316,10 +316,10 @@ g_szDeviceTypeValues_Displacement equ (g_szDeviceTypeValues_32bit - g_szDeviceTy
 %endif
 %endif
 
-g_szSelectionTimeout:	; db		DOUBLE_BOTTOM_LEFT_CORNER,DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL,"%ASelection in %2-u s",NULL
-                     	; db		0c8h, 0b5h,  25h,  41h,  53h,  65h,  6ch,  65h,  63h,  74h,  69h,  6fh,  6eh,  20h,  69h,  6eh,  20h,  25h,  32h,  2dh,  75h,  20h,  73h,  00h    ; uncompressed
-                     	  db		 31h,  32h,  3bh,  59h,  6bh,  72h,  6bh,  69h,  7ah,  6fh,  75h, 0f4h,  6fh, 0f4h,  3ah,  20h, 0b9h                                              ; compressed
 
+g_szSelectionTimeout:	; db	DOUBLE_BOTTOM_LEFT_CORNER,DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL,"%ASelection in %2-u s",NULL
+                     	; db	0c8h, 0b5h,  25h,  41h,  53h,  65h,  6ch,  65h,  63h,  74h,  69h,  6fh,  6eh,  20h,  69h,  6eh,  20h,  25h,  32h,  2dh,  75h,  20h,  73h,  00h    ; uncompressed
+                     	  db	 31h,  32h,  3bh,  59h,  6bh,  72h,  6bh,  69h,  7ah,  6fh,  75h, 0f4h,  6fh, 0f4h,  3ah,  20h, 0b9h                                              ; compressed
 
 
 
@@ -336,13 +336,13 @@ g_szInformation:		; db	"%s",LF,CR
                 		; db	 25h,  73h,  0ah,  0dh    ; uncompressed
                 		  db	 3dh,  39h                ; compressed
 
-	; db	"Addr. ",SINGLE_VERTICAL,"Block",SINGLE_VERTICAL,"Bus",SINGLE_VERTICAL,  "IRQ",SINGLE_VERTICAL,"Reset",LF,CR
+	; db	"Addr. ",SINGLE_VERTICAL,"Block",SINGLE_VERTICAL,"Bus",SINGLE_VERTICAL,"IRQ",SINGLE_VERTICAL,"Reset",LF,CR
 	; db	 41h,  64h,  64h,  72h,  2eh,  20h, 0b3h,  42h,  6ch,  6fh,  63h,  6bh, 0b3h,  42h,  75h,  73h, 0b3h,  49h,  52h,  51h, 0b3h,  52h,  65h,  73h,  65h,  74h,  0ah,  0dh    ; uncompressed
 	  db	 47h,  6ah,  6ah,  78h,  29h,  20h,  23h,  48h,  72h,  75h,  69h,  71h,  23h,  48h,  7bh,  79h,  23h,  4fh,  58h,  57h,  23h,  58h,  6bh,  79h,  6bh,  7ah,  39h          ; compressed
 
-	; db	   "%s",SINGLE_VERTICAL, "%5-u",SINGLE_VERTICAL, "%s",SINGLE_VERTICAL," %2-I",SINGLE_VERTICAL,"%5-x" ,NULL
-	; db	    25h,  73h, 0b3h,  25h,  35h,  2dh,  75h, 0b3h,  25h,  73h, 0b3h,  20h,  25h,  32h,  2dh,  49h, 0b3h,  25h,  35h,  2dh,  78h,  00h    ; uncompressed
-	  db	    3dh,  23h,  36h,  23h,  3dh,  23h,  20h,  34h,  23h,  18h                                                                            ; compressed
+	; db	"%s",SINGLE_VERTICAL,"%5-u",SINGLE_VERTICAL,"%s",SINGLE_VERTICAL," %2-I",SINGLE_VERTICAL,"%5-x",NULL
+	; db	 25h,  73h, 0b3h,  25h,  35h,  2dh,  75h, 0b3h,  25h,  73h, 0b3h,  20h,  25h,  32h,  2dh,  49h, 0b3h,  25h,  35h,  2dh,  78h,  00h    ; uncompressed
+	  db	 3dh,  23h,  36h,  23h,  3dh,  23h,  20h,  34h,  23h,  18h                                                                            ; compressed
 
 
 
@@ -373,7 +373,7 @@ g_szForeignHD:			; db	"Foreign Hard Disk",NULL
 
 %ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
 %if ((g_szBootMenuPrintStart-$$) & 0xff00) <> ((g_szBootMenuPrintEnd-$$) & 0xff00)
-%error "g_szBootMenuPrint* strings must start on the same 256 byte page, required by the BootMenuPrint_* routines.  Please move this block up or down within strings.asm"
+%error "g_szBootMenuPrint* strings must start on the same 256 byte page, required by the BootMenuPrint_* routines.  Please move this block up or down within Strings.asm"
 %endif
 %endif
 
@@ -395,7 +395,7 @@ g_szForeignHD:			; db	"Foreign Hard Disk",NULL
 ;    internally to this file.
 ;  * There can only be 32 of these (0-31).
 ;  * Keeping the list short is good - this translates to a table in the compressed version.
-;    An error will be reported if a character or format is no longer being used by any 
+;    An error will be reported if a character or format is no longer being used by any
 ;    strings above.
 ;  * Please keep items sequential for ease of further editing.
 ;

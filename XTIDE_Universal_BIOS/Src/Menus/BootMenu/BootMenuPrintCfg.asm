@@ -50,7 +50,7 @@ SECTION .text
 ;		DS:DI:	Ptr to DPT
 ;		CS:BX:	Ptr to IDEVARS
 ;	Returns:
-;		Nothing (jumps to next push below)
+;		Nothing (falls to next push below)
 ;	Corrupts registers:
 ;		AX, CX, DX
 ;--------------------------------------------------------------------
@@ -85,50 +85,64 @@ SECTION .text
 	mov		al, [di+DPT_ATA.bBlockSize]
 .PushBlockSizeFromAX:
 	push	ax
+	; Fall to .PushDeviceType
 
 ;--------------------------------------------------------------------
-; PushDeviceType
-;	Parameters:
-;		DS:DI:	Ptr to DPT
-;		CS:BX:	Ptr to IDEVARS
-;	Returns:
-;		Nothing (jumps to next push below)
-;	Corrupts registers:
-;		AX, DX
-;--------------------------------------------------------------------
-.PushDeviceType:
-	mov		al,g_szDeviceTypeValues_Displacement
-%ifdef MODULE_SERIAL
-	mov		ah, [cs:bx+IDEVARS.bDevice]
-	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE
-	eCMOVZ	ah, [di+DPT_ATA.bDevice]	; DPT_ATA contains up to date device information for IDE drives
-	mul		ah
-%else	
-	mul		BYTE [di+DPT_ATA.bDevice]
-%endif
-
-	shr		ax,1			; divide by 2 since IDEVARS.bDevice is multiplied by 2
-
-	add		ax, g_szDeviceTypeValues
-	push	ax
-
-;--------------------------------------------------------------------
-; PushIRQ
+; .PushDeviceType
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT
 ;		CS:BX:	Ptr to IDEVARS
 ;	Returns:
 ;		Nothing (falls to next push below)
 ;	Corrupts registers:
-;		AX, DX
+;		AX
+;--------------------------------------------------------------------
+.PushDeviceType:
+%ifndef MODULE_SERIAL
+	mov		al, g_szDeviceTypeValues_Displacement
+	mul		BYTE [di+DPT_ATA.bDevice]
+%else
+	mov		ah, [cs:bx+IDEVARS.bDevice]
+	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE	; Clears CF
+	eCMOVZ	ah, [di+DPT_ATA.bDevice]	; DPT_ATA contains up to date device information for IDE drives
+%ifdef USE_UNDOC_INTEL
+	eSALC	; Clear AL using CF (from TEST above)
+	eAAD	g_szDeviceTypeValues_Displacement
+%else
+	mov		al, g_szDeviceTypeValues_Displacement
+	mul		ah
+%endif ; USE_UNDOC_INTEL
+%endif ; MODULE_SERIAL
+
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
+	%if (COUNT_OF_ALL_IDE_DEVICES * 2 * g_szDeviceTypeValues_Displacement) > 255
+		%error "The USE_UNDOC_INTEL block in .PushDeviceType needs to be removed (would cause an overflow)!"
+	%endif
+%endif
+
+	shr		ax, 1	; Divide by 2 since IDEVARS.bDevice is multiplied by 2
+	add		ax, g_szDeviceTypeValues
+	push	ax
+	; Fall to .PushIRQ
+
+;--------------------------------------------------------------------
+; .PushIRQ
+;	Parameters:
+;		DS:DI:	Ptr to DPT
+;		CS:BX:	Ptr to IDEVARS
+;	Returns:
+;		Nothing (falls to next push below)
+;	Corrupts registers:
+;		AX
 ;--------------------------------------------------------------------
 .PushIRQ:
 	mov		al, [cs:bx+IDEVARS.bIRQ]
 	cbw
 	push	ax
+	; Fall to .PushResetStatus
 
 ;--------------------------------------------------------------------
-; PushResetStatus
+; .PushResetStatus
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT
 ;		CS:BX:	Ptr to IDEVARS

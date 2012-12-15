@@ -35,7 +35,7 @@ AtaID_VerifyFromESSI:
 	; We cannot start by reading ATA version since the ID might be
 	; corrupted. We start by making sure P-CHS values are valid.
 	; If they are, we assume the ATA ID to be valid. Fortunately we can do
-	; futher checking for ATA-5 and later since they contain signature and
+	; further checking for ATA-5 and later since they contain signature and
 	; checksum bytes. Those are not available for ATA-4 and older.
 
 	; Verify P-CHS cylinders

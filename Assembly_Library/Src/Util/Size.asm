@@ -2,20 +2,20 @@
 ; Description	:	Functions for size calculations.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
-;		
+;
 
 %ifdef INCLUDE_MENU_LIBRARY
 struc BYTE_MULTIPLES
@@ -67,9 +67,15 @@ ALIGN UTIL_SIZE_JUMP_ALIGN
 
 	; Convert remainder to tenths
 	xchg	bx, ax						; Store AX
-	mov		ax, 10
-	mul		cx							; DX:AX = remainder * 10
-	eSHR_IM	ax, 10						; Divide AX by 1024
+	mov		ax, 5
+	mul		cx							; DX:AX = remainder * (10 / 2)
+%ifdef USE_186
+	shr		ax, 9						; Divide AX by (1024 / 2)
+%else
+	shr		ax, 1
+	mov		al, ah
+	cbw
+%endif
 	xchg	cx, ax						; CX = tenths
 	xchg	ax, bx
 
@@ -123,7 +129,7 @@ ALIGN UTIL_SIZE_JUMP_ALIGN
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN UTIL_SIZE_JUMP_ALIGN
-Size_ConvertSectorCountInBXDXAXtoKiB:               ; unused entrypoint ok
+Size_ConvertSectorCountInBXDXAXtoKiB:	; unused entrypoint ok
 Size_DivideBXDXAXbyTwo:
 	shr		bx, 1					; Divide sector count by 2...
 	rcr		dx, 1					; ...to get disk size in...

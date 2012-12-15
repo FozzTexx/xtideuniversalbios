@@ -2,20 +2,20 @@
 ; Description	:	Functions for detecting drive for the BIOS.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
-;		
+;
 
 ; Section containing code
 SECTION .text
@@ -152,8 +152,8 @@ DetectDrives_FromAllIDEControllers:
 ;		AX, BL, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 StartDetectionWithDriveSelectByteInBHandStringInCX:
-	; Autodetect port for XT-CF
 %ifdef MODULE_8BIT_IDE
+	; Autodetect port for XT-CF
 	call	DetectDrives_DoesIdevarsInCSBPbelongToXTCF
 	jne		SHORT .SkipXTCFportDetection
 
@@ -164,9 +164,14 @@ StartDetectionWithDriveSelectByteInBHandStringInCX:
 	; XT-CF do not support slave drives so we can safely update port
 	; for next drive (another XT-CF card on same system)
 .DetectNextPort:
-	call	BootVars_GetNextXTCFportToDetectToDX
-	cmp		dx, XTCF_BASE_PORT_4
+	mov		dx, [es:BOOTVARS.wNextXTCFportToScan]
+	xor		dl, 40h
+	jnz		SHORT .StoreNextXTCFportToScan
+	inc		dh
+	cmp		dh, XTCF_BASE_PORT_4 >> 8
 	ja		SHORT .SkipXTCFportDetection		; XT-CF not found from any port
+.StoreNextXTCFportToScan:
+	mov		[es:BOOTVARS.wNextXTCFportToScan], dx
 
 	call	AH1Eh_DetectXTCFwithBasePortInDX
 	jc		SHORT .DetectNextPort				; XT-CF not found from this port
@@ -177,7 +182,7 @@ StartDetectionWithDriveSelectByteInBHandStringInCX:
 	call	DetectPrint_StartDetectWithAutodetectedBasePortInAXandIdeVarsInCSBP
 	jmp		SHORT .DriveDetectionStringPrintedOnScreen
 
-	; Print detect string for devices that do not support autodetection 	
+	; Print detect string for devices that do not support autodetection
 .SkipXTCFportDetection:
 	push	dx
 %endif ; MODULE_8BIT_IDE

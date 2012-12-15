@@ -2,20 +2,20 @@
 ; Description	:	Int 13h function AH=1Eh, Lo-tech XT-CF features.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
-;		
+;
 
 ; Section containing code
 SECTION .text
@@ -62,21 +62,20 @@ ProcessXTCFsubcommandFromAL:
 	; IS_THIS_DRIVE_XTCF. We check this for all commands.
 	call	AccessDPT_IsThisDeviceXTCF
 	jne		SHORT XTCFnotFound
-	and		ax, BYTE 7Fh				; Subcommand now in AX
+	and		ax, BYTE 7Fh				; Subcommand now in AX (clears AH and CF)
 	jz		SHORT .ReturnWithSuccess	; IS_THIS_DRIVE_XTCF
 
 	; READ_XTCF_CONTROL_REGISTER_TO_DH
 	dec		ax							; Subcommand
 	jnz		SHORT .SkipReadXtcfControlRegisterToDH
 	mov		dx, [di+DPT.wBasePort]
-	add		dl, XTCF_CONTROL_REGISTER
+	add		dl, XTCF_CONTROL_REGISTER	; Will never overflow (keeps CF cleared)
 	in		al, dx
 	mov		[bp+IDEPACK.intpack+INTPACK.dh], al
 .ReturnWithSuccess:
-	xor		ah, ah
-	ret
-.SkipReadXtcfControlRegisterToDH:
+	ret		; With AH and CF cleared
 
+.SkipReadXtcfControlRegisterToDH:
 	; WRITE_DH_TO_XTCF_CONTROL_REGISTER
 	dec		ax							; Subcommand
 	jnz		SHORT XTCFnotFound			; Invalid subcommand
@@ -121,10 +120,10 @@ AH1Eh_ChangeXTCFmodeBasedOnControlRegisterInAL:
 .Set8bitPioMode:
 	mov		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_XTCF_PIO8
 	; Fall to .Enable8bitPioMode
-	
+
 	; We always need to enable 8-bit mode since 16-bit mode is restored
-	; when controller is reset (AH=0h or Dh)
-.Enable8bitPioMode:	
+	; when controller is reset (AH=00h or 0Dh)
+.Enable8bitPioMode:
 	jmp		AH23h_Enable8bitPioMode
 
 
@@ -142,7 +141,7 @@ AH1Eh_ChangeXTCFmodeBasedOnControlRegisterInAL:
 ;--------------------------------------------------------------------
 AH1Eh_DetectXTCFwithBasePortInDX:
 	push	dx
-	add		dl, XTCT_CONTROL_REGISTER_INVERTED_in	; set DX to XT-CF config register (inverted)
+	add		dl, XTCF_CONTROL_REGISTER_INVERTED_in	; set DX to XT-CF config register (inverted)
 	in		al, dx		; get value
 	mov		ah, al		; save in ah
 	inc		dx			; set DX to XT-CF config register (non-inverted)

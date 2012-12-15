@@ -230,15 +230,55 @@ InitializePiovarsInSSBPwithSectorCountInAH:
 	jb		SHORT IdeTransfer_NormalizePointerInESSI
 
 	; Convert ES:SI to physical address
-	xor		dx, dx
-	mov		ax, es
+%ifdef USE_186			; Bytes	EU Cycles(286)
+	mov		ax, es		; 2		2
+	rol		ax, 4		; 3		9
+	mov		dx, ax		; 2		2
+	and		ax, BYTE 0Fh; 3		3
+	xor		dx, ax		; 2		2
+	add		si, dx		; 2		2
+	adc		al, ah		; 2		2
+	mov		es, ax		; 2		2
+	;------------------------------------
+						; 18	24
+%else ; 808x
+
+%if 0
+						; Bytes	EU Cycles(808x)
+	mov		al, 4		; 2		4
+	mov		dx, es		; 2		2
+	xchg	cx, ax		; 1		3
+	rol		dx, cl		; 2		24
+	mov		cx, dx		; 2		2
+	xchg	cx, ax		; 1		3
+	and		ax, BYTE 0Fh; 3		4
+	xor		dx, ax		; 2		3
+	add		si, dx		; 2		3
+	adc		al, ah		; 2		3
+	mov		es, ax		; 2		2
+	;------------------------------------
+						; 21	53
+;
+; Judging by the Execution Unit cycle count the above block of code is
+; apparently slower. However, the shifts and rotates in the block below
+; execute faster than the Bus Interface Unit on an 8088 can fetch them,
+; thus causing the EU to starve. The difference in true execution speed
+; (if any) might not be worth the extra 5 bytes.
+; In other words, we could use a real world test here.
+;
+%endif ; 0
+						; Bytes	EU Cycles(808x/286)
+	xor		dx, dx		; 2		3/2
+	mov		ax, es		; 2		2/2
 %rep 4
-	shl		ax, 1
-	rcl		dx, 1
+	shl		ax, 1		; 8		8/8
+	rcl		dx, 1		; 8		8/8
 %endrep
-	add		si, ax
-	adc		dl, dh
-	mov		es, dx
+	add		si, ax		; 2		3/2
+	adc		dl, dh		; 2		3/2
+	mov		es, dx		; 2		2/2
+	;------------------------------------
+%endif					; 26	29/26
 	ret
 %endif ; MODULE_8BIT_IDE
 	; Fall to IdeTransfer_NormalizePointerInESSI if no MODULE_8BIT_IDE
@@ -265,7 +305,7 @@ g_rgfnPioRead:
 		dw		IdePioBlock_ReadFrom32bitDataPort	; 1, DEVICE_32BIT_ATA
 %ifdef MODULE_8BIT_IDE
 		dw		IdePioBlock_ReadFrom8bitDataPort	; 2, DEVICE_8BIT_ATA
-		dw		IdePioBlock_ReadFromXtideRev1		; 3, DEVICE_8BIT_XTIDE_REV1		
+		dw		IdePioBlock_ReadFromXtideRev1		; 3, DEVICE_8BIT_XTIDE_REV1
 		dw		IdePioBlock_ReadFromXtideRev2		; 4, DEVICE_8BIT_XTIDE_REV2
 		dw		IdePioBlock_ReadFrom8bitDataPort	; 5, DEVICE_8BIT_XTCF_PIO8
 		dw		IdeDmaBlock_ReadFromXTCF			; 6, DEVICE_8BIT_XTCF_DMA

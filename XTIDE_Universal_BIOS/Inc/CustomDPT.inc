@@ -44,7 +44,7 @@ struc DPT
 	.wPchsCylinders			resb	2
 	.twLbaSectors			resb	6	; 48-bit sector count for LBA addressing
 %endif
-							alignb	2	; WORD alignent for DPT_SERIAL or DPT_ATA
+							alignb	2	; WORD alignment for DPT_SERIAL or DPT_ATA
 endstruc
 
 	; Bit definitions for DPT.bFlagsLow
@@ -132,11 +132,11 @@ endstruc
 ; On performance critical situations we compare DPT_ATA.bDevice without checking FLGH_DPT_SERIAL_DEVICE
 ; first! DPT_ATA.bDevice uses small values so there will be no problems.
 %ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
-%if DPT_SERIAL.bSerialPort <> DPT_ATA.bDevice
-	%error "DPT_ATA.bDevice and DPT_SERIAL.bSerialPort must be in same offsets!"
+	%if DPT_SERIAL.bSerialPort <> DPT_ATA.bDevice
+		%error "DPT_ATA.bDevice and DPT_SERIAL.bSerialPort must be in same offsets!"
+	%endif
 %endif
-%endif
-%endif
+%endif ; MODULE_SERIAL
 
 
 ; This is the common size for all DPTs. All DPTs must be equal size.

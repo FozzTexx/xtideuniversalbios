@@ -2,23 +2,32 @@
 ; Description	:	Functions for system timer related operations.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
-;		
+;
 
-; System timer ticks 18.2 times per second = 54.9 ms / tick
-TICKS_PER_HOUR			EQU		65520
+; With a PIT input clock of 1193181.6666... Hz and a maximum
+; 16 bit divisor of 65536 (if PIT programmed with 0) we get:
+;
+; Clock / Divisor = ~18.2065 ticks per second
+; Clock * SecondsPerMinute / Divisor = ~1092 ticks per minute
+; Clock * SecondsPerHour / Divisor = ~65543 ticks per hour
+;
+; Since 65543 can't fit in a 16 bit register we use the
+; maximum possible instead and disregard the last ~8 ticks.
+
+TICKS_PER_HOUR			EQU		65535
 TICKS_PER_MINUTE		EQU		1092
 TICKS_PER_SECOND		EQU		18
 
@@ -27,9 +36,9 @@ TICKS_PER_SECOND		EQU		18
 SECTION .text
 
 ;--------------------------------------------------------------------
-; TimerTicks_GetHoursToAXfromTicksInDXAX
-; TimerTicks_GetMinutesToAXfromTicksInDX
-; TimerTicks_GetSecondsToAXfromTicksInDX
+; TimerTicks_GetHoursToAXandRemainderTicksToDXfromTicksInDXAX
+; TimerTicks_GetMinutesToAXandRemainderTicksToDXfromTicksInDX
+; TimerTicks_GetSecondsToAXandRemainderTicksToDXfromTicksInDX
 ;	Parameters
 ;		DX(:AX):	Timer ticks to convert
 ;	Returns:
@@ -41,14 +50,14 @@ SECTION .text
 %ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 %ifndef EXCLUDE_FROM_XTIDECFG
 ALIGN JUMP_ALIGN
-TimerTicks_GetHoursToAXfromTicksInDXAX:
+TimerTicks_GetHoursToAXandRemainderTicksToDXfromTicksInDXAX:
 	mov		cx, TICKS_PER_HOUR
 	div		cx		; Divide DX:AX by CX, Hours to AX, remainder ticks to DX
 	ret
 %endif ; EXCLUDE_FROM_XTIDECFG
 
 ALIGN JUMP_ALIGN
-TimerTicks_GetMinutesToAXfromTicksInDX:
+TimerTicks_GetMinutesToAXandRemainderTicksToDXfromTicksInDX:
 	xor		ax, ax
 	xchg	ax, dx	; Ticks now in DX:AX
 	mov		cx, TICKS_PER_MINUTE
@@ -56,9 +65,11 @@ TimerTicks_GetMinutesToAXfromTicksInDX:
 	ret
 %endif ; EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 
-%ifdef INCLUDE_MENU_LIBRARY
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS OR EXCLUDE_FROM_XTIDECFG
 ALIGN JUMP_ALIGN
-TimerTicks_GetSecondsToAXfromTicksInDX:
+TimerTicks_GetSecondsToAXandRemainderTicksToDXfromTicksInDX:
+	; This procedure can handle at most 4607 ticks in DX (almost 256 seconds)
+	; More than 4607 ticks will generate a divide overflow exception!
 	xchg	ax, dx	; Ticks now in AX
 	mov		cl, TICKS_PER_SECOND
 	div		cl		; Divide AX by CL, Seconds to AL, remainder ticks to AH
@@ -66,6 +77,31 @@ TimerTicks_GetSecondsToAXfromTicksInDX:
 	xchg	dl, ah	; Seconds in AX, remainder in DX
 	ret
 %endif
+
+
+%ifdef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
+	%ifndef MODULE_BOOT_MENU
+		%define EXCLUDE
+	%endif
+%endif
+;--------------------------------------------------------------------
+; TimerTicks_GetSecondsToAXfromTicksInDX
+;	Parameters
+;		DX:			Timer ticks to convert
+;	Returns:
+;		AX:			Seconds
+;	Corrupts registers:
+;		DX
+;--------------------------------------------------------------------
+%ifndef EXCLUDE	; 1 of 3
+ALIGN JUMP_ALIGN
+TimerTicks_GetSecondsToAXfromTicksInDX:
+	mov		ax, 3600	; Approximately 65536 / (Clock / Divisor)
+	mul		dx
+	xchg	dx, ax
+	ret
+%endif
+
 
 ;--------------------------------------------------------------------
 ; First tick might take 0...54.9 ms and remaining ticks
@@ -81,7 +117,7 @@ TimerTicks_GetSecondsToAXfromTicksInDX:
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
-%ifdef INCLUDE_MENU_LIBRARY		
+%ifndef EXCLUDE	; 2 of 3
 ALIGN JUMP_ALIGN
 TimerTicks_InitializeTimeoutFromAX:
 	mov		[bx], ax					; Store timeout ticks
@@ -89,6 +125,7 @@ TimerTicks_InitializeTimeoutFromAX:
 	add		[bx], ax					; [bx] now contains end time for timeout
 	ret
 %endif
+
 
 ;--------------------------------------------------------------------
 ; TimerTicks_GetTimeoutTicksLeftToAXfromDSBX
@@ -101,7 +138,7 @@ TimerTicks_InitializeTimeoutFromAX:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-%ifdef INCLUDE_MENU_LIBRARY		
+%ifndef EXCLUDE	; 3 of 3
 ALIGN JUMP_ALIGN
 TimerTicks_GetTimeoutTicksLeftToAXfromDSBX:
 	push	dx
@@ -112,6 +149,9 @@ TimerTicks_GetTimeoutTicksLeftToAXfromDSBX:
 	pop		dx
 	ret
 %endif
+
+%undef EXCLUDE
+
 
 ;--------------------------------------------------------------------
 ; TimerTicks_GetElapsedToAXandResetDSBX
@@ -132,6 +172,7 @@ TimerTicks_GetElapsedToAXandResetDSBX:
 	pop		WORD [bx]			; Latest time to [DS:BX]
 	ret
 %endif
+
 
 ;--------------------------------------------------------------------
 ; TimerTicks_GetElapsedToAXfromDSBX
@@ -160,6 +201,13 @@ TimerTicks_GetElapsedToAXfromDSBX:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+%ifdef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
+	%ifndef MODULE_BOOT_MENU OR MODULE_HOTKEYS
+		%define EXCLUDE
+	%endif
+%endif
+
+%ifndef EXCLUDE
 ALIGN JUMP_ALIGN
 TimerTicks_ReadFromBdaToAX:
 	push	ds
@@ -169,3 +217,5 @@ TimerTicks_ReadFromBdaToAX:
 
 	pop		ds
 	ret
+%endif
+%undef EXCLUDE

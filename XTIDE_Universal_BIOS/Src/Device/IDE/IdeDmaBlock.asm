@@ -73,7 +73,7 @@ IdeDmaBlock_ReadFromXTCF:
 ;		AX, BX, CX, DX
 ;--------------------------------------------------------------------
 TransferBlockToOrFromXTCF:
-	; 8-bit DMA transfers must be done withing 64k physical page.
+	; 8-bit DMA transfers must be done within 64k physical page.
 	; XT-CF support maximum of 64 sector (32768 bytes) blocks in DMA mode
 	; so we never need to separate transfer to more than 2 separate DMA operations.
 

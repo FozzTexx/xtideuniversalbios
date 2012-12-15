@@ -2,20 +2,20 @@
 ; Description	:	Functions for display output.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
-;		
+;
 
 ; Section containing code
 SECTION .text
@@ -108,7 +108,6 @@ DisplayPrint_SignedWordFromAXWithBaseInBX:
 %endif
 
 
-%ifndef MODULE_STRINGS_COMPRESSED
 ;--------------------------------------------------------------------
 ; DisplayPrint_WordFromAXWithBaseInBX
 ;	Parameters:
@@ -121,6 +120,7 @@ DisplayPrint_SignedWordFromAXWithBaseInBX:
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
+%ifndef MODULE_STRINGS_COMPRESSED
 ALIGN DISPLAY_JUMP_ALIGN
 DisplayPrint_WordFromAXWithBaseInBX:
 	push	cx
@@ -151,6 +151,8 @@ ALIGN DISPLAY_JUMP_ALIGN
 
 g_rgcDigitToCharacter:	db	"0123456789ABCDEF"
 
+%endif ; MODULE_STRINGS_COMPRESSED
+
 ;--------------------------------------------------------------------
 ; DisplayPrint_QWordFromSSBPwithBaseInBX
 ;	Parameters:
@@ -163,7 +165,7 @@ g_rgcDigitToCharacter:	db	"0123456789ABCDEF"
 ;	Corrupts registers:
 ;		AX, DX, [SS:BP]
 ;--------------------------------------------------------------------
-%ifndef EXCLUDE_FROM_XTIDECFG	; Not used in XTIDECFG
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS OR EXCLUDE_FROM_XTIDECFG
 ALIGN DISPLAY_JUMP_ALIGN
 DisplayPrint_QWordFromSSBPwithBaseInBX:
 	push	cx
@@ -180,9 +182,7 @@ ALIGN DISPLAY_JUMP_ALIGN
 	jne		SHORT .DivideLoop	;  If not, loop
 	mov		cx, bx				; Character count to CX
 	jmp		SHORT PrintAllPushedDigits
-%endif	; EXCLUDE_FROM_XTIDECFG
-
-%endif	; MODULE_STRINGS_COMPRESSED
+%endif
 
 
 ;--------------------------------------------------------------------
@@ -219,7 +219,6 @@ ALIGN DISPLAY_JUMP_ALIGN
 %endif
 
 
-%ifdef INCLUDE_MENU_LIBRARY
 ;--------------------------------------------------------------------
 ; DisplayPrint_ClearScreenWithCharInALandAttributeInAH
 ;	Parameters:
@@ -232,6 +231,7 @@ ALIGN DISPLAY_JUMP_ALIGN
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
+%ifdef INCLUDE_MENU_LIBRARY
 ALIGN DISPLAY_JUMP_ALIGN
 DisplayPrint_ClearScreenWithCharInALandAttributeInAH:
 	push	di
@@ -250,7 +250,8 @@ DisplayPrint_ClearScreenWithCharInALandAttributeInAH:
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.fpCursorPosition], di
 	ret
 %endif
-		
+
+
 ;--------------------------------------------------------------------
 ; DisplayPrint_ClearAreaWithHeightInAHandWidthInAL
 ;	Parameters:

@@ -75,11 +75,11 @@ BootMenuPrint_RefreshItem:
 ;		AX, SI, DI
 ;--------------------------------------------------------------------
 BootMenuPrint_TitleStrings:
-	xor		di,di						; Null character will be eaten 
+	xor		di,di						; Null character will be eaten
 	mov		si, g_szBootMenuTitle
 	jmp		DetectPrint_RomFoundAtSegment.BootMenuEntry
 
-		
+
 ;--------------------------------------------------------------------
 ; BootMenuPrint_RefreshInformation
 ;	Parameters:
@@ -202,12 +202,12 @@ BootMenuPrint_RefreshInformation:
 	test	di, di					; Zero if foreign drive
 	jz		SHORT BootMenuPrint_RefreshInformation.FormatRelay
 
-%include "BootMenuPrintCfg.asm"			; inline of code to fill out remainder of information string
+%include "BootMenuPrintCfg.asm"		; Inline of code to fill out remainder of information string
 	jmp		DetectPrint_FormatCSSIfromParamsInSSBP
 
 
 FloppyTypes:
-.rgbCapacityMultiplier equ 20	        ; Multiplier to reduce word sized values to byte size
+.rgbCapacityMultiplier equ 120		; Multiplier to reduce word sized values to byte size
 .rgbCapacity:
 	db		360   / FloppyTypes.rgbCapacityMultiplier    ;  type 1
 	db		1200  / FloppyTypes.rgbCapacityMultiplier    ;  type 2

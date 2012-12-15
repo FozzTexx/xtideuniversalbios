@@ -36,7 +36,7 @@ DisplayCursor_GetDefaultCursorShapeToAX:
 	eCMOVE	ax, CURSOR_NORMAL_MDA				; MDA cursor
 	ret
 
-%ifdef INCLUDE_MENU_LIBRARY
+
 ;--------------------------------------------------------------------
 ; DisplayCursor_SetShapeFromAX
 ;	Parameters:
@@ -47,12 +47,21 @@ DisplayCursor_GetDefaultCursorShapeToAX:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+%ifdef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
+	%ifndef MODULE_BOOT_MENU
+		%define EXCLUDE
+	%endif
+%endif
+
+%ifndef EXCLUDE
 ALIGN DISPLAY_JUMP_ALIGN
 DisplayCursor_SetShapeFromAX:
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.wCursorShape], ax
 	ret
 %endif
-		
+%undef EXCLUDE
+
+
 ;--------------------------------------------------------------------
 ; DisplayCursor_SetCoordinatesFromAX
 ;	Parameters:
