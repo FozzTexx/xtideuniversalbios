@@ -58,6 +58,81 @@ BITS 16							; Set 16 bit code generation
 ;==========================================================================
 
 ;--------------------------------------------------------------------
+; The undocumented instruction SALC (Set AL According to CF).
+; Available on all Intel processors and truly compatible clones.
+; Does not work on the NEC V20/V30 or Sony CXQ70108 processors.
+;
+; eSALC
+;	Parameters:
+;		Nothing
+;	Returns:
+;		AL:		FFh if CF=1
+;				00h if CF=0
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+%macro eSALC 0
+	db		0D6h
+%endmacro
+
+
+;--------------------------------------------------------------------
+; The AAD instruction (ASCII Adjust before Division).
+; Available on all Intel processors and truly compatible clones.
+; Does not work on the NEC V20/V30 or Sony CXQ70108 processors
+; unless %1 is 10 (0Ah).
+;
+; eAAD
+;	Parameters:
+;		%1:		Any 8 bit number (0...255)
+;	Returns:
+;		AL:		AH * %1 + AL
+;		AH:		0
+;		Flags:	Set according to result
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+%macro eAAD 1
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
+	%if %1 > 255
+		%error Invalid parameter passed to eAAD (%1 > 255)
+	%else
+		db		0D5h, %1
+	%endif
+%endif
+%endmacro
+
+
+;--------------------------------------------------------------------
+; The AAM instruction (ASCII Adjust after Multiplication).
+; Available on all Intel processors and truly compatible clones.
+; Does not work on the NEC V20/V30 or Sony CXQ70108 processors
+; unless %1 is 10 (0Ah).
+;
+; eAAM
+;	Parameters:
+;		%1:		Any 8 bit number except 0 (1...255)
+;	Returns:
+;		AL:		AL MOD %1
+;		AH:		AL / %1
+;		Flags:	Set according to result
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+%macro eAAM 1
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
+	%if %1 > 255
+		%error Invalid parameter passed to eAAM (%1 > 255)
+	%elif %1 = 0
+		%error Invalid parameter passed to eAAM (%1 = 0). This would cause a divide-by-zero exception!
+	%else
+		db		0D4h, %1
+	%endif
+%endif
+%endmacro
+
+
+;--------------------------------------------------------------------
 ; Emulates BSF (Bit Scan Forward) instruction when necessary.
 ; BSF is used to find index of least significant bit.
 ;

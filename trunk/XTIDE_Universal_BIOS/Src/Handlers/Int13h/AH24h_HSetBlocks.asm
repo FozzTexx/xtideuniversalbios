@@ -2,20 +2,20 @@
 ; Description	:	Int 13h function AH=24h, Set Multiple Blocks.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
-;		
+;
 
 ; Section containing code
 SECTION .text
@@ -58,13 +58,12 @@ AH24h_HandlerForSetMultipleBlocks:
 ;		AL, CX, DX
 ;--------------------------------------------------------------------
 AH24h_SetBlockSize:
-	; XT-CF does not support largest block size in DMA mode.
 %ifdef MODULE_8BIT_IDE
-	call	AccessDPT_IsThisDeviceXTCF
-	cmp		ah, DEVICE_8BIT_XTCF_DMA
-	jne		SHORT .NoNeedToLimitBlockSize
+	; XT-CF does not support largest block size in DMA mode.
 	cmp		al, XTCF_DMA_MODE_MAX_BLOCK_SIZE
-	ja		SHORT AH1Eh_LoadInvalidCommandToAHandSetCF
+	jbe		SHORT .NoNeedToLimitBlockSize
+	cmp		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_XTCF_DMA
+	je		SHORT AH1Eh_LoadInvalidCommandToAHandSetCF
 .NoNeedToLimitBlockSize:
 %endif ; MODULE_8BIT_IDE
 

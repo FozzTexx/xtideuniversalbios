@@ -387,7 +387,7 @@ ALIGN JUMP_ALIGN
 	cmp		al, DEVICE_8BIT_XTCF_MEMMAP
 	ja		SHORT .EnableMenuitemFromCSBX
 	jmp		SHORT .DisableMenuitemFromCSBX
-	
+
 
 ;--------------------------------------------------------------------
 ; .EnableOrDisableControlBlockPort
@@ -451,7 +451,6 @@ ALIGN JUMP_ALIGN
 	jnz		SHORT .EnableMenuitemFromCSBX
 .DisableIRQchannelSelection:
 	mov		bx, g_MenuitemIdeControllerIdeIRQ
-	jz		SHORT .DisableMenuitemFromCSBX
 	jmp		SHORT .DisableMenuitemFromCSBX
 
 

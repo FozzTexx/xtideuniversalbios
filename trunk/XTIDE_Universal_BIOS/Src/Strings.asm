@@ -2,20 +2,20 @@
 ; Description	:	Strings and equates for BIOS messages.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ; GNU General Public License for more details.
-; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html		
-;		
+; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+;
 
 %ifdef MODULE_STRINGS_COMPRESSED_PRECOMPRESS
 	%include "Display.inc"
@@ -23,19 +23,6 @@
 
 ; Section containing code
 SECTION .text
-
-; POST drive detection strings
-g_szDashForZero:	db	"- ",NULL	; Required by Display Library
-g_szRomAt:			db	LF,CR
-					db	"%s @ %x",LF,CR						; -=XTIDE ... =- @ Segment
-					db	"%s",LF,CR							; version string 
-					db  "Released under GNU GPL v2",LF,CR	
-					db	LF,CR,NULL
-%ifdef MODULE_BOOT_MENU
-g_szBootMenuTitle:	db	"%s%c",LF,CR						; -=XTIDE ... =- and null (eaten)
-					db	"%s",NULL							; version string
-%endif
-g_szDriveName:		db	"%z",LF,CR,NULL
 
 ; The following strings are used by DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP
 ; To support an optimization in that code, these strings must start on the same 256 byte page,
@@ -46,19 +33,33 @@ g_szDetectMaster:		db	"Master",NULL
 g_szDetectSlave:		db	"Slave ",NULL
 g_szDetectOuter:		db	"%s at %s: ",NULL
 %ifdef MODULE_SERIAL
-g_szDetectCOM:			db  "COM%c%s",NULL
+g_szDetectCOM:			db	"COM%c%s",NULL
 g_szDetectCOMAuto:		db	" Detect",NULL
 g_szDetectCOMSmall:		db	"/%u%u00",NULL					; IDE Master at COM1/9600:
 g_szDetectCOMLarge:		db	"/%u.%uK",NULL					; IDE Master at COM1/19.2K:
 %endif
 g_szDetectEnd:
-g_szDetectPort:			db	"%x",NULL					   	; IDE Master at 1F0h:
+g_szDetectPort:			db	"%x",NULL						; IDE Master at 1F0h:
 
 %ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
 	%if ((g_szDetectEnd-$$) & 0xff00) <> ((g_szDetectStart-$$) & 0xff00)
-		%error "g_szDetect* strings must start on the same 256 byte page, required by DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP.  Please move this block up or down within strings.asm"
+		%error "g_szDetect* strings must start on the same 256 byte page, required by DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP.  Please move this block up or down within Strings.asm"
 	%endif
 %endif
+
+
+; POST drive detection strings
+g_szDashForZero:	db	"- ",NULL	; Required by Display Library
+g_szRomAt:			db	LF,CR
+					db	"%s @ %x",LF,CR						; -=XTIDE ... =- @ Segment
+					db	"%s",LF,CR							; version string
+					db	"Released under GNU GPL v2",LF,CR
+					db	LF,CR,NULL
+%ifdef MODULE_BOOT_MENU
+g_szBootMenuTitle:	db	"%s%c",LF,CR						; -=XTIDE ... =- and null (eaten)
+					db	"%s",NULL							; version string
+%endif
+g_szDriveName:		db	"%z",LF,CR,NULL
 
 
 ; Boot loader strings
@@ -69,7 +70,6 @@ g_szReadError:			db	"Error %x!",LF,CR,NULL
 
 
 %ifdef MODULE_HOTKEYS
-
 ; Hotkey Bar strings
 g_szFDD:		db	"FDD [%c]",NULL			; "FDD [A]"
 g_szHDD:		db	"HDD [%c]",NULL			; "HDD [C]"
@@ -80,7 +80,6 @@ g_szHotkey:		db	"%A%c%c%A%s%A ",NULL	; "C»HDD [A] ", "F2BootMnu " or "F8RomBoot 
 
 
 %ifdef MODULE_BOOT_MENU
-
 ; Boot Menu Floppy Disk strings
 ;
 ; The following strings are used by BootMenuPrint_RefreshInformation
@@ -88,16 +87,16 @@ g_szHotkey:		db	"%A%c%c%A%s%A ",NULL	; "C»HDD [A] ", "F2BootMnu " or "F8RomBoot 
 ; which is checked at assembly time below.
 ;
 g_szFddStart:
-g_szFddUnknown:	db	"Unknown",NULL
-g_szFddSizeOr:	db	"5",ONE_QUARTER,QUOTATION_MARK," or 3",ONE_HALF,QUOTATION_MARK," DD",NULL
-g_szFddSize:	db	"%s",QUOTATION_MARK,", %u kiB",NULL	; 3½", 1440 kiB
-g_szFddThreeHalf:		db  "3",ONE_HALF,NULL
+g_szFddUnknown:		db	"Unknown",NULL
+g_szFddSizeOr:		db	"5",ONE_QUARTER,QUOTATION_MARK," or 3",ONE_HALF,QUOTATION_MARK," DD",NULL
+g_szFddSize:		db	"%s",QUOTATION_MARK,", %u kiB",NULL	; 3½", 1440 kiB
+g_szFddThreeHalf:	db	"3",ONE_HALF,NULL
 g_szFddEnd:
-g_szFddFiveQuarter:		db  "5",ONE_QUARTER,NULL
+g_szFddFiveQuarter:	db	"5",ONE_QUARTER,NULL
 
 %ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
 	%if ((g_szFddStart-$$) & 0xff00) <> ((g_szFddEnd-$$) & 0xff00)
-		%error "g_szFdd* strings must start on the same 256 byte page, required by the BootMenuPrint_RefreshInformation routines for floppy drives.  Please move this block up or down within strings.asm"
+		%error "g_szFdd* strings must start on the same 256 byte page, required by the BootMenuPrint_RefreshInformation routines for floppy drives.  Please move this block up or down within Strings.asm"
 	%endif
 %endif
 
@@ -122,17 +121,18 @@ g_szAddressingModes_Displacement equ (g_szLARGE - g_szAddressingModes)
 	%endif
 %endif
 
+
 g_szDeviceTypeValues:
-g_szDeviceTypeValues_16bit:		db		" 16",NULL
-g_szDeviceTypeValues_32bit:		db		" 32",NULL
-g_szDeviceTypeValues_8bit:		db		"  8",NULL
-g_szDeviceTypeValues_XTIDEr1:	db		"D8 ",NULL	; Dual 8-bit
-g_szDeviceTypeValues_XTIDEr2:	db		"X8 ",NULL	; A0<->A3 swapped 8-bit
-g_szDeviceTypeValues_XTCFpio8:	db		"T8 ",NULL	; True 8-bit
-g_szDeviceTypeValues_XTCFdma:	db		"8MA",NULL	; DMA 8-bit
-g_szDeviceTypeValues_XTCFmem:	db		"M8 ",NULL	; Memory Mapped 8-bit
-g_szDeviceTypeValues_JrIde:		db		"M8 ",NULL
-g_szDeviceTypeValues_Serial:	db		"SER",NULL
+g_szDeviceTypeValues_16bit:		db	" 16",NULL
+g_szDeviceTypeValues_32bit:		db	" 32",NULL
+g_szDeviceTypeValues_8bit:		db	"  8",NULL
+g_szDeviceTypeValues_XTIDEr1:	db	"D8 ",NULL	; Dual 8-bit
+g_szDeviceTypeValues_XTIDEr2:	db	"X8 ",NULL	; A0<->A3 swapped 8-bit
+g_szDeviceTypeValues_XTCFpio8:	db	"T8 ",NULL	; True 8-bit
+g_szDeviceTypeValues_XTCFdma:	db	"8MA",NULL	; DMA 8-bit
+g_szDeviceTypeValues_XTCFmem:	db	"M8 ",NULL	; Memory Mapped 8-bit
+g_szDeviceTypeValues_JrIde:		db	"M8 ",NULL
+g_szDeviceTypeValues_Serial:	db	"SER",NULL
 
 g_szDeviceTypeValues_Displacement equ (g_szDeviceTypeValues_32bit - g_szDeviceTypeValues)
 ;
@@ -171,16 +171,16 @@ g_szDeviceTypeValues_Displacement equ (g_szDeviceTypeValues_32bit - g_szDeviceTy
 	%endif
 %endif
 
-g_szSelectionTimeout:	db		DOUBLE_BOTTOM_LEFT_CORNER,DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL,"%ASelection in %2-u s",NULL
 
+g_szSelectionTimeout:	db	DOUBLE_BOTTOM_LEFT_CORNER,DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL,"%ASelection in %2-u s",NULL
 
 
 ; Boot Menu information strings
 g_szCapacity:			db	"Capacity : %s",NULL
 g_szCapacityNum:		db	"%5-u.%u %ciB",NULL
 g_szInformation:		db	"%s",LF,CR
-	db	"Addr. ",SINGLE_VERTICAL,"Block",SINGLE_VERTICAL,"Bus",SINGLE_VERTICAL,  "IRQ",SINGLE_VERTICAL,"Reset",LF,CR
-	db	   "%s",SINGLE_VERTICAL, "%5-u",SINGLE_VERTICAL, "%s",SINGLE_VERTICAL," %2-I",SINGLE_VERTICAL,"%5-x" ,NULL
+	db	"Addr. ",SINGLE_VERTICAL,"Block",SINGLE_VERTICAL,"Bus",SINGLE_VERTICAL,"IRQ",SINGLE_VERTICAL,"Reset",LF,CR
+	db	"%s",SINGLE_VERTICAL,"%5-u",SINGLE_VERTICAL,"%s",SINGLE_VERTICAL," %2-I",SINGLE_VERTICAL,"%5-x",NULL
 
 
 ; Boot Menu menuitem strings
@@ -198,7 +198,7 @@ g_szForeignHD:			db	"Foreign Hard Disk",NULL
 
 %ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
 	%if ((g_szBootMenuPrintStart-$$) & 0xff00) <> ((g_szBootMenuPrintEnd-$$) & 0xff00)
-		%error "g_szBootMenuPrint* strings must start on the same 256 byte page, required by the BootMenuPrint_* routines.  Please move this block up or down within strings.asm"
+		%error "g_szBootMenuPrint* strings must start on the same 256 byte page, required by the BootMenuPrint_* routines.  Please move this block up or down within Strings.asm"
 	%endif
 %endif
 
@@ -220,7 +220,7 @@ g_szForeignHD:			db	"Foreign Hard Disk",NULL
 ;    internally to this file.
 ;  * There can only be 32 of these (0-31).
 ;  * Keeping the list short is good - this translates to a table in the compressed version.
-;    An error will be reported if a character or format is no longer being used by any 
+;    An error will be reported if a character or format is no longer being used by any
 ;    strings above.
 ;  * Please keep items sequential for ease of further editing.
 ;

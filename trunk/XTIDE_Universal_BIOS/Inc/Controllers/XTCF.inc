@@ -4,18 +4,18 @@
 ;					More information at http://www.lo-tech.co.uk/wiki/Lo-tech_XT-CFv2_Board
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 ;
 
@@ -33,6 +33,7 @@ XTCF_DMA_MODE_MAX_BLOCK_SIZE		EQU		32		; Sectors
 
 ; Possible base addresses. Note that all XT-CF IDE registers are SHL 1 compared
 ; to standard IDE registers.
+XTCF_BASE_PORT_DETECTION_SEED		EQU		140h	; Not a valid base address but needed for autodetection
 XTCF_BASE_PORT_1					EQU		200h
 XTCF_BASE_PORT_2					EQU		240h
 XTCF_BASE_PORT_3					EQU		300h	; Default setting
@@ -41,13 +42,13 @@ XTCF_BASE_PORT_4					EQU		340h
 
 ; XT-CF Control Register (do not SHL 1 these!)
 XTCF_CONTROL_REGISTER				EQU		1Fh
-XTCT_CONTROL_REGISTER_INVERTED_in	EQU		1Eh
+XTCF_CONTROL_REGISTER_INVERTED_in	EQU		1Eh
 
 ; Control Register contents:
 ;
 ; Control Register holds high byte from Sector Window segment if >= A0h
 ; (First possible segment for Sector Window is A000h)
-; 
+;
 ; 8-bit PIO transfers (port I/O) are used if Control Register is zero.
 ; Any other value means DMA transfers (using DMA channel 3).
 XTCF_8BIT_PIO_MODE						EQU		0

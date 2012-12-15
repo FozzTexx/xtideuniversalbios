@@ -2,21 +2,21 @@
 ; Description	:	Displays progress bar dialog and starts progress task.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 ;
-		
+
 
 ; Section containing code
 SECTION .text
@@ -98,7 +98,7 @@ ALIGN JUMP_ALIGN
 	call	TimerTicks_ReadFromBdaToAX
 	mov		[si+PROGRESS_DIALOG_IO.wStartTimeTicks], ax
 
-	; 0 = 65536 but it needs to be adjusted to 65535 prevent division by zero
+	; 0 = 65536 but it needs to be adjusted to 65535 to prevent division by zero
 	cmp		WORD [si+PROGRESS_DIALOG_IO.wMaxProgressValue], BYTE 0
 	jne		SHORT CalculateProgressNeededBeforeUpdatingCharacter
 	dec		WORD [si+PROGRESS_DIALOG_IO.wMaxProgressValue]
@@ -287,7 +287,7 @@ DrawTimeLeftFromProgressDialogIoInDSSIwithTimeElapsedInDX:
 	jz		SHORT .PreventDivisionByZero
 	div		cx			; AX = Estimated ticks left
 	xchg	dx, ax
-	SKIP2B	f	; cmp ax, <next instruction>
+	SKIP2B	ax
 .PreventDivisionByZero:
 	xor		dx, dx
 	; Fall to FormatTicksFromDX
@@ -308,7 +308,7 @@ FormatTicksFromDX:
 
 	mov		bp, sp
 	mov		si, g_szTimeFormat
-	call	TimerTicks_GetMinutesToAXfromTicksInDX
+	call	TimerTicks_GetMinutesToAXandRemainderTicksToDXfromTicksInDX
 	push	ax
 	call	TimerTicks_GetSecondsToAXfromTicksInDX
 	push	ax

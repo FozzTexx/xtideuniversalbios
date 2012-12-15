@@ -2,21 +2,21 @@
 ; Description	:	Serial Server Support
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 ;
-		
+
 
 %include "SerialServer.inc"
 
@@ -74,14 +74,18 @@ SerialServer_SendReceive:
 		mov		bl,dl			; setup BL with proper values for read/write loops (BH comes later)
 
 		mov		al,83h
-		add		dl,Serial_UART_lineControl
+		add		dl, Serial_UART_lineControl	; Clears CF
 		out		dx,al
 
 		mov		al,ch
 		mov		dl,bl			; divisor low
 		out		dx,al
 
+%ifdef USE_UNDOC_INTEL
+		eSALC	; Clear AL using CF
+%else
 		xor		ax,ax
+%endif
 		inc		dx				; divisor high
 		push	dx
 		out		dx,al
@@ -102,7 +106,11 @@ SerialServer_SendReceive:
 		mov		bh,dl
 
 		pop		dx				; base, interrupts disabled
+%ifdef USE_UNDOC_INTEL
+		eSALC	; Clear AL using CF
+%else
 		xor		ax,ax
+%endif
 		out		dx,al
 
 ;----------------------------------------------------------------------

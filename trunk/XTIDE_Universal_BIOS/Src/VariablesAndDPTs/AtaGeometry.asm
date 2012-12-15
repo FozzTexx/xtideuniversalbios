@@ -80,16 +80,15 @@ AtaGeometry_GetLbaSectorCountToBXDXAXfromAtaInfoInESSI:
 ;--------------------------------------------------------------------
 AtaGeometry_GetLCHStoAXBLBHfromAtaInfoInESSIandTranslateModeInDX:
 	call	AtaGeometry_GetPCHStoAXBLBHfromAtaInfoInESSI
-	; Fall to AtaGeometry_GetLCHStoAXBLBHfromPCHSinAXBLBH
+	; Fall to AtaGeometry_GetLCHStoAXBLBHfromPCHSinAXBLBHandTranslateModeInDX
 
 AtaGeometry_GetLCHStoAXBLBHfromPCHSinAXBLBHandTranslateModeInDX:
 	; Check if user defined translate mode
-	test	dx, dx
-	jnz		SHORT .CheckIfLargeTranslationWanted
+	dec		dx						; Set ZF if TRANSLATEMODE_LARGE, SF if TRANSLATEMODE_NORMAL
+	jns		SHORT .CheckIfLargeTranslationWanted
 	MIN_U	ax, MAX_LCHS_CYLINDERS	; TRANSLATEMODE_NORMAL maximum cylinders
 	inc		dx
 .CheckIfLargeTranslationWanted:
-	dec		dx						; Set ZF if TRANSLATEMODE_LARGE
 	jz		SHORT ConvertPCHfromAXBLtoRevisedEnhancedCHinAXBL
 	dec		dx						; Set ZF if TRANSLATEMODE_ASSISTED_LBA
 	jz		SHORT .UseAssistedLBA

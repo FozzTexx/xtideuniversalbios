@@ -2,21 +2,21 @@
 ; Description	:	Functions for file access.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 ;
-		
+
 
 ; Section containing code
 SECTION .text
@@ -36,10 +36,9 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 FileIO_CreateWithPathInDSSIandAttributesInCX:
-	xchg	dx, si		; Path now in DS:DX
 	mov		ah, CREATE_OR_TRUNCATE_FILE
-	jmp		SHORT CreateOrOpenFile
-
+	SKIP2B	bx
+	; Fall to FileIO_OpenWithPathInDSSIandFileAccessInAL
 
 ;--------------------------------------------------------------------
 ; FileIO_OpenWithPathInDSSIandFileAccessInAL
@@ -54,11 +53,9 @@ FileIO_CreateWithPathInDSSIandAttributesInCX:
 ;	Corrupts registers:
 ;		AX, BX
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 FileIO_OpenWithPathInDSSIandFileAccessInAL:
-	xchg	dx, si		; Path now in DS:DX
 	mov		ah, OPEN_EXISTING_FILE
-CreateOrOpenFile:
+	xchg	dx, si		; Path now in DS:DX
 	int		DOS_INTERRUPT_21h
 	xchg	si, dx
 	mov		bx, ax		; Copy file handle to BX
@@ -86,31 +83,6 @@ FileIO_ReadDXCXbytesToDSSIusingHandleFromBX:
 	pop		bp
 	ret
 
-;--------------------------------------------------------------------
-; File position is updated so next read will start where
-; previous read stopped.
-;
-; FileIO_ReadCXbytesToDSSIusingHandleFromBX
-;	Parameters:
-;		BX:		File handle
-;		CX:		Number of bytes to read
-;		DS:SI:	Ptr to destination buffer
-;	Returns:
-;		AX:		Number of bytes actually read if successful (0 if at EOF before call)
-;				DOS error code if CF set
-;		CF:		Clear if successful
-;				Set if error
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-FileIO_ReadCXbytesToDSSIusingHandleFromBX:
-	xchg	dx, si				; DS:DX now points to destination buffer
-	mov		ah, READ_FROM_FILE_OR_DEVICE
-	int		DOS_INTERRUPT_21h
-	xchg	si, dx
-	ret
-
 
 ;--------------------------------------------------------------------
 ; FileIO_WriteDXCXbytesFromDSSIusingHandleFromBX
@@ -133,11 +105,35 @@ FileIO_WriteDXCXbytesFromDSSIusingHandleFromBX:
 	pop		bp
 	ret
 
+
+;--------------------------------------------------------------------
+; File position is updated so next read will start where
+; previous read stopped.
+;
+; FileIO_ReadCXbytesToDSSIusingHandleFromBX
+;	Parameters:
+;		BX:		File handle
+;		CX:		Number of bytes to read
+;		DS:SI:	Ptr to destination buffer
+;	Returns:
+;		AX:		Number of bytes actually read if successful (0 if at EOF before call)
+;				DOS error code if CF set
+;		CF:		Clear if successful
+;				Set if error
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+FileIO_ReadCXbytesToDSSIusingHandleFromBX:
+	mov		ah, READ_FROM_FILE_OR_DEVICE
+	SKIP2B	f
+	; Fall to FileIO_WriteCXbytesFromDSSIusingHandleFromBX
+
 ;--------------------------------------------------------------------
 ; File position is updated so next write will start where
 ; previous write stopped.
 ;
-; FileIO_WriteCXbytesFromDSSIusingHandleFromBX:
+; FileIO_WriteCXbytesFromDSSIusingHandleFromBX
 ;	Parameters:
 ;		BX:		File handle
 ;		CX:		Number of bytes to write
@@ -150,10 +146,9 @@ FileIO_WriteDXCXbytesFromDSSIusingHandleFromBX:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
 FileIO_WriteCXbytesFromDSSIusingHandleFromBX:
-	xchg	dx, si				; DS:DX now points to source buffer
 	mov		ah, WRITE_TO_FILE_OR_DEVICE
+	xchg	dx, si				; DS:DX now points to buffer
 	int		DOS_INTERRUPT_21h
 	xchg	si, dx
 	ret
@@ -231,7 +226,7 @@ NormalizeDSSI:
 
 
 ;--------------------------------------------------------------------
-; FileIO_GetFileSizeToDXAXusingHandleFromBXandResetFilePosition:
+; FileIO_GetFileSizeToDXAXusingHandleFromBXandResetFilePosition
 ;	Parameters:
 ;		BX:		File handle
 ;	Returns:
@@ -286,7 +281,7 @@ FileIO_CloseUsingHandleFromBX:
 
 
 ;--------------------------------------------------------------------
-; FileIO_SeekFromOriginInALtoOffsetInDXAXusingHandleFromBX:
+; FileIO_SeekFromOriginInALtoOffsetInDXAXusingHandleFromBX
 ;	Parameters:
 ;		AL:		SEEK_FROM.(origin)
 ;		BX:		File handle

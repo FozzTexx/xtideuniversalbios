@@ -54,8 +54,11 @@
 %ifdef USE_186
 	shl		cx, 5
 %else
-	UNROLL_SECTORS_IN_CX_TO_QWORDS
-	shr		cx, 1
+;	UNROLL_SECTORS_IN_CX_TO_QWORDS
+;	shr		cx, 1
+	mov		ch, cl		; 2 bytes shorter but possibly slower
+	mov		cl, 3
+	shr		cx, cl
 %endif
 %endmacro
 

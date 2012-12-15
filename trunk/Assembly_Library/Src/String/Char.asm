@@ -2,20 +2,20 @@
 ; Description	:	Functions for handling characters.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
-;		
+;
 
 ; Section containing code
 SECTION .text
@@ -28,7 +28,7 @@ SECTION .text
 ;		%2:		First accepted value in range
 ;		%3:		Last accepted value in range
 ;	Returns:
-;		CF:		Set if character is range
+;		CF:		Set if character in range
 ;				(Jumps to Char_CharIsNotValid if before range)
 ;	Corrupts registers:
 ;		Nothing
@@ -50,10 +50,20 @@ SECTION .text
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+%ifdef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
+	%ifndef MODULE_HOTKEYS
+		%define EXCLUDE
+	%endif
+%endif
+
+%ifndef EXCLUDE
 ALIGN STRING_JUMP_ALIGN
 Char_IsLowerCaseLetterInAL:
 	IS_BETWEEN_IMMEDIATES al, 'a', 'z'
 	ret
+%endif
+%undef EXCLUDE
+
 
 ;--------------------------------------------------------------------
 ; Char_IsUpperCaseLetterInAL
@@ -71,6 +81,7 @@ Char_IsUpperCaseLetterInAL:
 	IS_BETWEEN_IMMEDIATES al, 'A', 'Z'
 	ret
 %endif
+
 
 ;--------------------------------------------------------------------
 ; Char_IsHexadecimalDigitInAL
@@ -93,6 +104,7 @@ Char_IsHexadecimalDigitInAL:
 	ret
 %endif
 
+
 ;--------------------------------------------------------------------
 ; Char_IsDecimalDigitInAL
 ;	Parameters:
@@ -109,6 +121,7 @@ Char_IsDecimalDigitInAL:
 	IS_BETWEEN_IMMEDIATES al, '0', '9'
 	ret
 %endif
+
 
 ;--------------------------------------------------------------------
 ; Char_ConvertIntegerToALfromDigitInALwithBaseInBX
@@ -140,6 +153,7 @@ ALIGN STRING_JUMP_ALIGN
 	; Fall to Char_CharIsValid
 %endif
 
+
 ;--------------------------------------------------------------------
 ; Char_CharIsValid
 ; Char_CharIsNotValid
@@ -158,10 +172,23 @@ Char_CharIsValid:
 	ret
 %endif
 
+
+%ifdef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
+	%ifndef MODULE_HOTKEYS
+		%define EXCLUDE
+	%endif
+	%ifndef MODULE_STRINGS_COMPRESSED
+		%undef EXCLUDE
+	%endif
+%endif
+
+%ifndef EXCLUDE
 ALIGN STRING_JUMP_ALIGN
 Char_CharIsNotValid:
 	clc
 	ret
+%endif
+%undef EXCLUDE
 
 
 ;--------------------------------------------------------------------
@@ -180,7 +207,7 @@ Char_ALtoLowerCaseLetter:
 	jmp		SHORT Char_ALtoUpperCaseLetter.CheckCF
 %endif
 
-				
+
 ;--------------------------------------------------------------------
 ; Char_ALtoUpperCaseLetter
 ;	Parameters:
@@ -190,7 +217,7 @@ Char_ALtoLowerCaseLetter:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS		
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN STRING_JUMP_ALIGN
 Char_ALtoUpperCaseLetter:
 	call	Char_IsLowerCaseLetterInAL	; Is lower case character?
@@ -199,7 +226,7 @@ Char_ALtoUpperCaseLetter:
 	; Fall to Char_ChangeCaseInAL
 %endif
 
-		
+
 ;--------------------------------------------------------------------
 ; Char_ChangeCaseInAL
 ;	Parameters:
@@ -209,10 +236,13 @@ Char_ALtoUpperCaseLetter:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 Char_ChangeCaseInAL:
 	xor		al, 32
 .Return:
 	ret
+%endif
+
 
 ;--------------------------------------------------------------------
 ; Char_GetFilterFunctionToDXforNumericBaseInBX

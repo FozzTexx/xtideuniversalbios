@@ -326,7 +326,7 @@ HotkeyBar_RestoreCursorCoordinatesFromAX:
 ;--------------------------------------------------------------------
 HotkeyBar_StoreHotkeyToBootvarsForDriveLetterInDL:
 	eMOVZX	ax, dl
-	call	Char_ChangeCaseInAL	; Upper case drive letter to lower case keystroke
+	xor		al, 32	; Upper case drive letter to lower case keystroke
 	jmp		SHORT HotkeyBar_StoreHotkeyToBootvarsIfValidKeystrokeInAX
 
 
@@ -375,7 +375,7 @@ HotkeyBar_StoreHotkeyToBootvarsIfValidKeystrokeInAX:
 	; Drive letter hotkeys remaining, allow 'a' to 'z'
 	call	Char_IsLowerCaseLetterInAL
 	jnc		SHORT .KeystrokeIsNotValidHotkey
-	call	Char_ChangeCaseInAL		; We want to print upper case letters
+	xor		al, 32					; We want to print upper case letters
 
 	; Clear HD First flag to assume Floppy Drive hotkey
 	mov		di, BOOTVARS.hotkeyVars+HOTKEYVARS.bFlags
