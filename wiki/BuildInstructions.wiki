@@ -96,7 +96,7 @@ Open makefile with Windows Notepad (or [http://notepad-plus-plus.org/ Notepad++]
 #                                                                                                  #
 # Following modules can be included or excluded:                                                   #
 # MODULE_8BIT_IDE             Support for 8-BIT IDE cards like XTIDE                               #
-# MODULE_JRIDE                Support for JR-IDE/ISA                                               #
+# MODULE_8BIT_IDE_ADVANCED	  Support for memory mapped and DMA based cards like JRIDE and XTCF    #
 # MODULE_ADVANCED_ATA         Native support for some VLB IDE controllers                          #
 # MODULE_BOOT_MENU            Boot Menu for selection of drive to boot from                        #
 # MODULE_EBIOS                Enhanced functions for accessing drives over 8.4 GB                  #
@@ -115,6 +115,7 @@ Open makefile with Windows Notepad (or [http://notepad-plus-plus.org/ Notepad++]
 # USE_286                     Use instructions supported by 286 and later                          #
 # USE_386                     Use instructions supported by 386 and later                          #
 # USE_AT                      Use features supported on AT and later systems (not available on XT) #
+# USE_UNDOC_INTEL             Optimizations for Intel CPU:s - do NOT use on NEC V20/V30/Sony CPU:s #
 #                                                                                                  #
 ####################################################################################################
 }}}
@@ -127,11 +128,11 @@ Scroll down the makefile to find Assembler preprocessor defines and other variab
 # Assembler preprocessor defines.                               #
 #################################################################
 DEFINES_COMMON = MODULE_STRINGS_COMPRESSED MODULE_HOTKEYS MODULE_EBIOS MODULE_FEATURE_SETS RESERVE_DIAGNOSTIC_CYLINDER
-DEFINES_COMMON_LARGE = MODULE_BOOT_MENU
+DEFINES_COMMON_LARGE = MODULE_BOOT_MENU MODULE_8BIT_IDE MODULE_8BIT_IDE_ADVANCED
 
-DEFINES_XT = $(DEFINES_COMMON) ELIMINATE_CGA_SNOW MODULE_8BIT_IDE MODULE_JRIDE MODULE_SERIAL MODULE_SERIAL_FLOPPY
+DEFINES_XT = $(DEFINES_COMMON) ELIMINATE_CGA_SNOW MODULE_8BIT_IDE MODULE_SERIAL MODULE_SERIAL_FLOPPY
 DEFINES_XTPLUS = $(DEFINES_COMMON) $(DEFINES_XT) USE_186
-DEFINES_AT = $(DEFINES_COMMON) USE_AT USE_286 RELOCATE_INT13H_STACK MODULE_IRQ MODULE_SERIAL MODULE_SERIAL_FLOPPY MODULE_ADVANCED_ATA
+DEFINES_AT = $(DEFINES_COMMON) USE_AT USE_286 USE_UNDOC_INTEL RELOCATE_INT13H_STACK MODULE_IRQ MODULE_SERIAL MODULE_SERIAL_FLOPPY MODULE_ADVANCED_ATA 
 
 DEFINES_XT_LARGE = $(DEFINES_XT) $(DEFINES_COMMON_LARGE)
 DEFINES_XTPLUS_LARGE = $(DEFINES_XTPLUS) $(DEFINES_COMMON_LARGE)
@@ -139,7 +140,6 @@ DEFINES_AT_LARGE = $(DEFINES_AT) $(DEFINES_COMMON_LARGE)
 
 DEFINES_XT_TINY = MODULE_STRINGS_COMPRESSED MODULE_8BIT_IDE
 DEFINES_386_8K = $(DEFINES_AT) USE_386
-
 
 ###################
 # Other variables #
@@ -170,14 +170,14 @@ One more thing you might want to change is the size of large build. It is 15k by
 ====*MODULE_8BIT_IDE*====
 This module contains support for XTIDE rev 1 and 2 and Lo-tech XT-CF.
 
-====*MODULE_JRIDE* _(requires and automatically includes MODULE_8BIT_IDE)_====
-This module contains support for JR-IDE/ISA.
+====*MODULE_8BIT_IDE_ADVANCED* _(requires and automatically includes MODULE_8BIT_IDE)_====
+This module contains support for JR-IDE/ISA and more advanced modes for XT-CF.
 
 ====*MODULE_ADVANCED_ATA*====
 Adds native support for VLB (and eventually PCI) IDE Controllers. At the moment there is support for QDI Vision QD6500 and QD6580 VLB IDE controllers.
 
-====*MODULE_BOOT_MENU* _(requires and automatically includes MODULE_HOTKEYS)_====
-Adds boot menu to be selected from Hotkeybar. Boot menu displays drive details and allows selecting drive more easily but essentially it has all the same features as MODULE_HOTKEYS.
+====*MODULE_BOOT_MENU*====
+Adds boot menu to be selected from Hotkeybar. Boot menu displays drive details and allows selecting drive more easily but essentially it has all the same features as MODULE_HOTKEYS.  It can also be included without MODULE_HOTKEYS, in which case the menu is always entered during the boot process.
 
 ====*MODULE_IRQ*====
 Adds IRQ support (you also need to enable IRQ with XTIDECFG.COM). IRQs have no real benefit for DOS (but can actually slow transfer rates a bit). You might want to use IRQs with more capable operating systems.

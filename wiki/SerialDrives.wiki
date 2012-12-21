@@ -38,7 +38,7 @@ SerDrive will use the first available COM port by default, at a speed of 9600 ba
 
 === 3. Boot the Client ===
 
-Boot the client computer.  * During drive detection, hold down the Alt key, and at the end of drive detection, the BIOS will display "Master at COM Detect". *  The BIOS will now scan the available COM ports on the client (COM 1-7), looking for a server.  You can also configure the BIOS with XTIDECFG to always boot from the serial port (see below).
+Boot the client computer.  * During drive detection, hold down the Alt key, and at the end of drive detection, the BIOS will display "Master at COM Detect". *  The BIOS will now scan the available COM ports on the client (COM 1-7), looking for a server.  If Hotkeys are enabled (MODULE_HOTKEYS), pressing F6 will do the same thing.  And you can also configure the BIOS with XTIDECFG to always boot from the serial port (see below).
 
 If a server is found, the floppy and/or hard disk emulated will appear in the boot menu for the BIOS.  You can now proceed as normal.
 
@@ -108,10 +108,13 @@ Baud rate to use on the COM port.  If the client machine has a hardware rate mul
 || None ||  2400,  4800,  9600,  28.8K,  57.6K, 115.2K ||
 || 2x || 4800,  9600, 19200,  57.6K, 115.2K, 230.4K ||
 || 4x || 9600, 19200, 38400, 115.2K, 230.4K, 460.8K ||
+|| 8x || 19200, 38400, 115.2K, 230.4K, 460.8K, 921.6K ||
 
 And for completeness, 76.8K and 153.6K can also be set.  The default baud rate is 9600 (115.2K when used in named pipe mode).
 
 Note that in Windows' Device Manager, a high speed COM port may still show that it's maximum speed is 128K baud.  Do not be alarmed, this setting has no impact on what SerDrive does with the Windows API, where the higher speeds are available.  No manual setup of the serial port is required before SerDrive runs.
+
+Theoretically, and this is why the server supports it, 921.6K should be possible with a fast enough card and an 8x multiplier, hosted in a computer that can operate at least twice as fast as a 4.77Mhz 8088 machine.  I have only tested up to 460.8K with actual hardware.  
 
 * _Disable Operation Timeout:_ {{{-t}}} * 
 
@@ -155,6 +158,8 @@ The BIOS supports speeds up to 460.8K baud.  To achieve this speed, you will nee
 Care must be taken when configuring the serial connection - the clock multiplier is not detectable by the client PC.  With a 4x clock multiplier, the client PC should be set to 115.2K baud, while the matching server needs to be set to 460.8K baud.
 
 Note that in Windows' Device Manager, a high speed COM port may still show that it's maximum speed is 128K baud.  Do not be alarmed, this setting has no impact on what SerDrive does with the Windows API, where the higher speeds are available.  No manual setup of the serial port is required before SerDrive runs.
+
+Theoretically, 921.6K should be possible with a fast enough card and an 8x multiplier, hosted in a computer that can operate at least twice as fast as a 4.77Mhz 8088 machine.  I have only tested up to 460.8K with actual hardware, and ISA hardware with an 8x multiplier is hard to find.  
 
 = Disk Image Format =
 

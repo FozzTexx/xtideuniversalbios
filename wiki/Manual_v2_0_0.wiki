@@ -210,6 +210,8 @@ Keys A to Z work as hotkeys for drives to select as boot device. Hotkeys have an
 
 F2 displays boot menu (available only if MODULE_BOOT_MENU is available).
 
+F6 will search for virtual serial drives on COM ports 1-7 at the end of standard drive detection (available only if MODULE_SERIAL is available). 
+
 F8 calls software interrupt 18h. This starts IBM ROM Basic, ROM DOS or displays an error message from the motherboard BIOS when there is no ROM to boot from.
 
 
@@ -221,12 +223,6 @@ DOS requires that it is loaded from the first floppy drive (00h) or the first ha
 = Boot menu =
 
 Using the boot menu is optional and it is not included in official 8 kiB builds. Boot menu does not offer any more functionality than hotkeys except to display drive information. Drive can be selected with Up and Down arrows. Home, End, PgUp and PgDn keys can speed up selection if there are many drives in the boot menu. Press Enter to boot from selected drive.
-
-
-== Boot menu hotkeys ==
-
-All hotkeys from Hotkeybar are available when Boot Menu is displayed.
-
 
 == Boot menu drive information ==
 
