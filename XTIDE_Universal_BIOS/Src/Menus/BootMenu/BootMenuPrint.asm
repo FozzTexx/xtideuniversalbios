@@ -32,11 +32,13 @@ SECTION .text
 ;		Does not matter
 ;--------------------------------------------------------------------
 BootMenuPrint_RefreshItem:
-	call	BootMenu_GetDriveToDXforMenuitemInCX
-	jnc		BootMenuEvent_Completed					; if no menu item selected, out we go
-
 	push	bp
 	mov		bp, sp
+
+	call	BootMenu_GetDriveToDXforMenuitemInCX
+	mov		si, g_szRomBootDash						; Standard "Rom Boot" but with a "-" at the front
+	mov		al, 20h									; The space between "Rom" and "Boot"
+	jnc		.ROMBoot								; display "Rom Boot" option for last entry
 
 	call	FindDPT_ForDriveNumberInDL
 	jc		.notOurs
@@ -56,10 +58,18 @@ BootMenuPrint_RefreshItem:
 .go:
 	mov		ax, dx									; preserve DL for the floppy drive letter addition
 	call	DriveXlate_ToOrBack
+
+	test	dl, 0f0h								; if there is a character in the upper nibble
+	jnz		.noSpace
+	dec		si										; backup a character to a leading space
+.noSpace:
+
 	push	dx										; translated drive number
 	push	bx										; sub string
 	add		al, 'A'									; floppy drive letter (we always push this although
-	push	ax										; the hard disks don't ever use it, but it does no harm)
+													; the hard disks don't ever use it, but it does no harm)
+.ROMBoot:		
+	push	ax										
 
 	jmp		SHORT BootMenuPrint_RefreshInformation.FormatRelay
 
@@ -94,7 +104,7 @@ BootMenuPrint_RefreshInformation:
 	CALL_MENU_LIBRARY ClearInformationArea
 
 	call	BootMenu_GetDriveToDXforMenuitemInCX
-	jnc		BootMenuEvent_Completed						; if no menu selection, abort
+	jnc		BootMenuEvent_Completed						; nothing to display if "Rom Boot" option
 
 	push	bp
 	mov		bp, sp

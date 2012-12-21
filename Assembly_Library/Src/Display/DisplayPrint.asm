@@ -295,7 +295,17 @@ ALIGN DISPLAY_JUMP_ALIGN
 	ret
 %endif
 
+%ifdef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
+	%define EXCLUDE
+	%ifdef MODULE_HOTKEYS
+		%undef EXCLUDE
+	%endif
+	%ifdef MODULE_BOOT_MENU
+		%undef EXCLUDE
+	%endif
+%endif
 
+%ifndef EXCLUDE				
 ;--------------------------------------------------------------------
 ; DisplayPrint_RepeatCharacterFromALwithCountInCX
 ;	Parameters:
@@ -323,7 +333,8 @@ ALIGN DISPLAY_JUMP_ALIGN
 	pop		cx
 .NothingToRepeat:
 	ret
-
+%endif
+%undef EXCLUDE
 
 ;--------------------------------------------------------------------
 ; DisplayPrint_NullTerminatedStringFromCSSI

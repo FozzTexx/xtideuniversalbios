@@ -40,6 +40,17 @@ DisplayPage_SetFromAL:
 %endif
 
 
+%ifdef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
+	%define EXCLUDE
+	%ifdef MODULE_HOTKEYS
+		%undef EXCLUDE
+	%endif
+	%ifdef MODULE_BOOT_MENU
+		%undef EXCLUDE
+	%endif
+%endif
+
+%ifndef EXCLUDE		
 ;--------------------------------------------------------------------
 ; DisplayPage_GetColumnsToALandRowsToAH
 ;	Parameters:
@@ -55,7 +66,8 @@ DisplayPage_GetColumnsToALandRowsToAH:
 	mov		al, [VIDEO_BDA.wColumns]		; 40 or 80
 	mov		ah, 25							; Always 25 rows on standard text modes
 	ret
-
+%endif
+%undef EXCLUDE		
 
 ;--------------------------------------------------------------------
 ; DisplayPage_SynchronizeToHardware

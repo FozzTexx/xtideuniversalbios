@@ -106,7 +106,7 @@ RamVars_Initialize:
 ;--------------------------------------------------------------------
 .InitializeDriveTranslationAndReturn:
 	pop		es
-%ifdef MODULE_HOTKEYS
+%ifdef MODULE_DRIVEXLATE
 	jmp		DriveXlate_Reset
 %else
 	ret
@@ -163,15 +163,15 @@ ALIGN JUMP_ALIGN
 ;	Returns:
 ;		AX:		Total hard disk count
 ;	Corrupts registers:
-;		CX
+;		BX
 ;--------------------------------------------------------------------
 %ifdef MODULE_BOOT_MENU
 RamVars_GetHardDiskCountFromBDAtoAX:
 	call	RamVars_GetCountOfKnownDrivesToAX
 	push	ds
 	LOAD_BDA_SEGMENT_TO	ds, cx
-	mov		cl, [BDA.bHDCount]
-	MAX_U	al, cl
+	mov		bl, [BDA.bHDCount]
+	MAX_U	al, bl
 	pop		ds
 	ret
 %endif

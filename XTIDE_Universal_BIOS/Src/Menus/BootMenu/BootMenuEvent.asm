@@ -20,27 +20,6 @@
 ; Section containing code
 SECTION .text
 
-
-;--------------------------------------------------------------------
-; GetDefaultMenuitemToDL
-;	Parameters:
-;		DL:		Drive number
-;		ES:		Ptr to BDA (zero)
-;	Returns:
-;		DL:		Menuitem index (assuming drive is available)
-;	Corrupts registers:
-;		AX, DH
-;--------------------------------------------------------------------
-GetDefaultMenuitemToDX:
-	mov		dx, [es:BOOTVARS.hotkeyVars+HOTKEYVARS.wHddAndFddLetters]
-	test	BYTE [es:BOOTVARS.hotkeyVars+HOTKEYVARS.bFlags], FLG_HOTKEY_HD_FIRST
-	eCMOVZ	dl, dh
-	call	IsDriveDLinSystem
-	jnc		SHORT BootMenuEvent_Handler.DoNotSetDefaultMenuitem
-	call	DriveXlate_SetDriveToSwap
-	; Fall to GetMenuitemToDXforDriveInDL
-
-
 ;--------------------------------------------------------------------
 ; GetMenuitemToDXforDriveInDL
 ;	Parameters:
@@ -58,30 +37,6 @@ GetMenuitemToDXforDriveInDL:
 	and		dl, ~80h					; Clear HD bit
 	add		dx, ax
 .ReturnItemIndexInDX:
-	ret
-
-
-;--------------------------------------------------------------------
-; IsDriveDLinSystem
-;	Parameters:
-;		DL:		Drive number
-;		DS:		RAMVARS segment
-;	Returns:
-;		CF:		Set if drive number is valid
-;				Clear if drive is not present in system
-;	Corrupts registers:
-;		AX, CX
-;--------------------------------------------------------------------
-IsDriveDLinSystem:
-	test	dl, dl								; Floppy drive?
-	jns		SHORT .IsFloppyDriveInSystem
-	call	RamVars_GetHardDiskCountFromBDAtoAX	; Hard Disk count to AX
-	or		al, 80h								; Set Hard Disk bit to AX
-	jmp		SHORT .CompareDriveNumberToDriveCount
-.IsFloppyDriveInSystem:
-	call	FloppyDrive_GetCountToAX
-.CompareDriveNumberToDriveCount:
-	cmp		dl, al								; Set CF when DL is smaller
 	ret
 
 
@@ -114,7 +69,6 @@ MENUEVENT_InitializeMenuinitFromDSSI equ  (EventInitializeMenuinitFromSSBP - Fir
 MENUEVENT_ExitMenu equ  (BootMenuEvent_Completed - FirstEvent)
 MENUEVENT_ItemHighlightedFromCX equ (EventItemHighlightedFromCX - FirstEvent)
 MENUEVENT_ItemSelectedFromCX equ (EventItemSelectedFromCX - FirstEvent)
-MENUEVENT_KeyStrokeInAX equ (EventKeyStrokeInAX - FirstEvent)
 MENUEVENT_RefreshTitle equ (BootMenuPrint_TitleStrings - FirstEvent)
 MENUEVENT_RefreshInformation equ (BootMenuPrint_RefreshInformation - FirstEvent)
 MENUEVENT_RefreshItemFromCX equ (BootMenuPrint_RefreshItem - FirstEvent)
@@ -163,7 +117,7 @@ rgfnEventSpecificHandlers:
 FirstEvent:	
 EventInitializeMenuinitFromSSBP:
 	; Store default Menuitem (=default drive to boot from)
-	call	GetDefaultMenuitemToDX
+	xor		dx, dx
 	mov		[bp+MENUINIT.wHighlightedItem], dx
 
 	; Store number of Menuitems
@@ -171,15 +125,15 @@ EventInitializeMenuinitFromSSBP:
 	xchg	ax, cx
 	call	FloppyDrive_GetCountToAX
 	add		ax, cx
+	inc		ax								; extra entry for ROM Boot item
 	mov		[bp+MENUINIT.wItems], ax
-
+				
 	; Store menu size
 	mov		WORD [bp+MENUINIT.wTitleAndInfoLines], BOOT_MENU_TITLE_AND_INFO_LINES
 	mov		BYTE [bp+MENUINIT.bWidth], BOOT_MENU_WIDTH
 	add		al, BOOT_MENU_HEIGHT_WITHOUT_ITEMS
 	xchg	cx, ax
 	CALL_DISPLAY_LIBRARY	GetColumnsToALandRowsToAH
-	sub		ah, MENU_SCREEN_BOTTOM_LINES*2	; Leave space for Hotkey Bar
 	MIN_U	ah, cl
 	mov		[bp+MENUINIT.bHeight], ah
 
@@ -206,16 +160,12 @@ EventInitializeMenuinitFromSSBP:
 ;--------------------------------------------------------------------
 EventItemHighlightedFromCX:
 	push	cx
+	call	DriveXlate_Reset		
 	call	BootMenu_GetDriveToDXforMenuitemInCX		
-	call	DriveXlate_Reset
+	jnc		.noDriveSwap		
 	call	DriveXlate_SetDriveToSwap
-
-	; We need to generate keystroke so selection two drives is possible.
-	; The secondary boot drive is selected by highlighting it using menu keys
-	; and the primary boot drive is selected by pressing drive letter hotkey.
-	call	BootVars_StoreHotkeyForDriveNumberInDL
-	call	RedrawHotkeyBarFromInsideMenuEventHandler
-
+.noDriveSwap:	
+		
 	; Redraw changes in drive numbers
 	xor		ax, ax	; Update first floppy drive (for translated drive number)
 	CALL_MENU_LIBRARY	RefreshItemFromAX
@@ -229,31 +179,7 @@ EventItemHighlightedFromCX:
 	stc
 	ret
 
-
-;--------------------------------------------------------------------
-; EventKeyStrokeInAX
-;	Parameters
-;		AL:		ASCII character for the key
-;		AH:		Keyboard library scan code for the key
-;		DS:		Ptr to RAMVARS
-;		ES:		Ptr to BDA (zero)
-;		SS:BP:	Menu library handle
-;	Returns:
-;		CF:		Set if event processed
-;				Cleared if event not processed
-;	Corrupts registers:
-;		Does not matter
-;--------------------------------------------------------------------
-EventKeyStrokeInAX:
-	cmp		ah, BOOT_MENU_HOTKEY_SCANCODE
-	je		SHORT BootMenuEvent_Completed	; Ignore Boot Menu hotkey
-	call	HotkeyBar_StoreHotkeyToBootvarsIfValidKeystrokeInAX
-	jnc		SHORT BootMenuEvent_Completed
-
-	; Hotkey is now stored to BOOTVARS and menu can be closed
-	jmp		SHORT CloseBootMenu
-
-
+		
 ;--------------------------------------------------------------------
 ; EventItemSelectedFromCX
 ;	Parameters
@@ -268,11 +194,6 @@ EventKeyStrokeInAX:
 ;		Does not matter
 ;--------------------------------------------------------------------
 EventItemSelectedFromCX:
-	call	BootMenu_GetDriveToDXforMenuitemInCX
-	jnc		SHORT BootMenuEvent_Completed	; No menuitem selected
-
-	; Convert selected drive to hotkey keystroke
-	call	HotkeyBar_StoreHotkeyToBootvarsForDriveLetterInDL
 	; Fall to CloseBootMenu
 
 
@@ -289,30 +210,9 @@ EventItemSelectedFromCX:
 CloseBootMenu:
 	call	DriveXlate_Reset
 	CALL_MENU_LIBRARY	Close
-	; Fall to RedrawHotkeyBarFromInsideMenuEventHandler
-
-
-;--------------------------------------------------------------------
-; RedrawHotkeyBarFromInsideMenuEventHandler
-;	Parameters
-;		DS:		RAMVARS segment
-;		ES:		BDA segment (zero)
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, BX, CX, DX, SI, DI
-;--------------------------------------------------------------------
-RedrawHotkeyBarFromInsideMenuEventHandler:
-	mov		al, MONO_NORMAL
-	CALL_DISPLAY_LIBRARY	SetCharacterAttributeFromAL
-
-	mov		bl, ATTRIBUTES_ARE_USED
-	mov		ax, TELETYPE_OUTPUT_WITH_ATTRIBUTE
-	CALL_DISPLAY_LIBRARY	SetCharOutputFunctionFromAXwithAttribFlagInBL
-	call	HotkeyBar_DrawToTopOfScreen
 	; Fall to BootMenuEvent_Completed
 
-
+		
 ;--------------------------------------------------------------------
 ; BootMenuEvent_Completed
 ;	Parameters

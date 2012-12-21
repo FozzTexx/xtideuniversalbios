@@ -128,7 +128,7 @@ g_szTryToBoot:			; db	"Booting %c",ANGLE_QUOTE_RIGHT,"%c",LF,CR,NULL
               			; db	 42h,  6fh,  6fh,  74h,  69h,  6eh,  67h,  20h,  25h,  63h, 0afh,  25h,  63h,  0ah,  0dh,  00h    ; uncompressed
               			  db	 48h,  75h,  75h,  7ah,  6fh,  74h, 0edh,  3ch,  24h,  3ch,  19h                                  ; compressed
 
-g_szBootSectorNotFound:	; db	"Boot sector "
+g_szBootSectorNotFound:	; db	"Boot sector " 			; String fall through...
                        	; db	 42h,  6fh,  6fh,  74h,  20h,  73h,  65h,  63h,  74h,  6fh,  72h,  20h    ; uncompressed
                        	  db	 48h,  75h,  75h, 0fah,  79h,  6bh,  69h,  7ah,  75h, 0f8h                ; compressed
 
@@ -144,30 +144,44 @@ g_szReadError:			; db	"Error %x!",LF,CR,NULL
 
 %ifdef MODULE_HOTKEYS
 ; Hotkey Bar strings
-g_szFDD:		; db	"FDD [%c]",NULL			; "FDD [A]"
-        		; db	 46h,  44h,  44h,  20h,  5bh,  25h,  63h,  5dh,  00h    ; uncompressed
-        		  db	 4ch,  4ah, 0cah,  61h,  3ch, 0a3h                      ; compressed
+g_szFDD:				; db	"FDD [%c]",NULL			; "FDD [A]"
+        				; db	 46h,  44h,  44h,  20h,  5bh,  25h,  63h,  5dh,  00h    ; uncompressed
+        				  db	 4ch,  4ah, 0cah,  61h,  3ch, 0a3h                      ; compressed
 
-g_szHDD:		; db	"HDD [%c]",NULL			; "HDD [C]"
-        		; db	 48h,  44h,  44h,  20h,  5bh,  25h,  63h,  5dh,  00h    ; uncompressed
-        		  db	 4eh,  4ah, 0cah,  61h,  3ch, 0a3h                      ; compressed
+g_szHDD:				; db	"HDD [%c]",NULL			; "HDD [C]"
+        				; db	 48h,  44h,  44h,  20h,  5bh,  25h,  63h,  5dh,  00h    ; uncompressed
+        				  db	 4eh,  4ah, 0cah,  61h,  3ch, 0a3h                      ; compressed
 
-g_szBootMenu:	; db	"%sMnu",NULL			; "BootMnu"
-             	; db	 25h,  73h,  4dh,  6eh,  75h,  00h    ; uncompressed
-             	  db	 3dh,  53h,  74h, 0bbh                ; compressed
+%ifdef MODULE_BOOT_MENU
+g_szBootMenu:			; db	"BootMnu%c",NULL		; "BootMnu", location of %c doesn't matter
+             			; db	 42h,  6fh,  6fh,  74h,  4dh,  6eh,  75h,  25h,  63h,  00h    ; uncompressed
+             			  db	 48h,  75h,  75h,  7ah,  53h,  74h,  7bh,  1ch                ; compressed
 
-g_szRomBoot:	; db	"Rom%s",NULL			; "RomBoot"
-            	; db	 52h,  6fh,  6dh,  25h,  73h,  00h    ; uncompressed
-            	  db	 58h,  75h,  73h,  1dh                ; compressed
+%endif ; MODULE_BOOT_MENU
+g_szHotkey:				; db	"%A%c%c%A%s%A ",NULL	; "C»HDD [A] ", "F2BootMnu " or "F8RomBoot "
+           				; db	 25h,  41h,  25h,  63h,  25h,  63h,  25h,  41h,  25h,  73h,  25h,  41h,  20h,  00h    ; uncompressed
+           				  db	 3bh,  3ch,  3ch,  3bh,  3dh,  3bh,  00h                                              ; compressed
 
-g_szBoot:		; db	"Boot",NULL
-         		; db	 42h,  6fh,  6fh,  74h,  00h    ; uncompressed
-         		  db	 48h,  75h,  75h, 0bah          ; compressed
+%ifdef MODULE_SERIAL
+g_szHotComDetect:		; db	"ComDtct%c",NULL		; "ComDtct", location of %c doesn't matter
+                 		; db	 43h,  6fh,  6dh,  44h,  74h,  63h,  74h,  25h,  63h,  00h    ; uncompressed
+                 		  db	 49h,  75h,  73h,  4ah,  7ah,  69h,  7ah,  1ch                ; compressed
 
-g_szHotkey:		; db	"%A%c%c%A%s%A ",NULL	; "C»HDD [A] ", "F2BootMnu " or "F8RomBoot "
-           		; db	 25h,  41h,  25h,  63h,  25h,  63h,  25h,  41h,  25h,  73h,  25h,  41h,  20h,  00h    ; uncompressed
-           		  db	 3bh,  3ch,  3ch,  3bh,  3dh,  3bh,  00h                                              ; compressed
+%endif ; MODULE_SERIAL
+%endif ; MODULE_HOTKEYS
 
+%ifdef MODULE_BOOT_MENU
+g_szRomBootDash:		; db	" -  "					; String fall through to g_szRomBoot
+                		; db	 20h,  2dh,  20h,  20h    ; uncompressed
+                		  db	 20h,  28h,  20h,  20h    ; compressed
+
+%endif
+%ifdef MODULE_HOTKEYS OR MODULE_BOOT_MENU		
+g_szRomBoot:			; db	"Rom%cBoot", NULL		; "RomBoot" or "Rom Boot"
+            			; db	 52h,  6fh,  6dh,  25h,  63h,  42h,  6fh,  6fh,  74h,  00h    ; uncompressed
+            			  db	 58h,  75h,  73h,  3ch,  48h,  75h,  75h, 0bah                ; compressed
+
+%endif
 
 
 %ifdef MODULE_BOOT_MENU
@@ -352,11 +366,21 @@ g_szInformation:		; db	"%s",LF,CR
 ; To support optimizations in that code, these strings must start on the same 256 byte page,
 ; which is checked at assembly time below.
 ;
+g_szDriveNumSpace:		; db	" "							; leading space, used if drive number is less than 0fh
+                  		; db	 20h    ; uncompressed
+                  		  db	 20h    ; compressed
+
+; must come immediately before g_szDriveNum!
 g_szBootMenuPrintStart:
 g_szDriveNum:			; db	"%x %s",NULL
              			; db	 25h,  78h,  20h,  25h,  73h,  00h    ; uncompressed
              			  db	 37h,  20h,  1dh                      ; compressed
 
+g_szDriveNumBNSpace:	; db	" "							; leading space, used if drive number is less than 0fh
+                    	; db	 20h    ; uncompressed
+                    	  db	 20h    ; compressed
+
+; must come immediately before g_szDriveNumBOOTNFO!
 g_szDriveNumBOOTNFO:	; db	"%x %z",NULL
                     	; db	 25h,  78h,  20h,  25h,  7ah,  00h    ; uncompressed
                     	  db	 37h,  20h,  1eh                      ; compressed
@@ -375,10 +399,12 @@ g_szForeignHD:			; db	"Foreign Hard Disk",NULL
 %if ((g_szBootMenuPrintStart-$$) & 0xff00) <> ((g_szBootMenuPrintEnd-$$) & 0xff00)
 %error "g_szBootMenuPrint* strings must start on the same 256 byte page, required by the BootMenuPrint_* routines.  Please move this block up or down within Strings.asm"
 %endif
+%if g_szDriveNumSpace+1 != g_szDriveNum || g_szDriveNumBNSpace+1 != g_szDriveNumBOOTNFO
+%error "g_szDriveNumSpace or g_szDriveNumBNSpace are out of position"
+%endif
 %endif
 
 %endif ; MODULE_BOOT_MENU
-%endif ; MODULE_HOTKEYS
 
 
 ;------------------------------------------------------------------------------------------
@@ -527,7 +553,7 @@ StringsCompressed_TranslatesAndFormats:
 
 ;; translated usage stats
 ;; 33:1
-;; 32:29
+;; 32:34
 ;; 181:1
 ;; 53:2
 ;; 48:2
@@ -542,7 +568,7 @@ StringsCompressed_TranslatesAndFormats:
 ;; 34:3
 ;; 49:1
 ;; 56:7
-;; 45:1
+;; 45:2
 ;; 175:1
 ;; 171:2
 ;; 54:1
@@ -553,12 +579,12 @@ StringsCompressed_TranslatesAndFormats:
 ;; 2-u:1
 ;; 5-u:2
 ;; x:5
-;; s:16
+;; s:14
 ;; 5-x:1
 ;; nl:12
 ;; 2-I:1
 ;; u:6
-;; c:10
+;; c:13
 ;; z:2
 ;; total format: 11
 
@@ -571,9 +597,9 @@ StringsCompressed_TranslatesAndFormats:
 ;; 63,?:
 ;; 64,@:1
 ;; 65,A:5
-;; 66,B:8
-;; 67,C:2
-;; 68,D:10
+;; 66,B:9
+;; 67,C:3
+;; 68,D:11
 ;; 69,E:3
 ;; 70,F:3
 ;; 71,G:3
@@ -604,7 +630,7 @@ StringsCompressed_TranslatesAndFormats:
 ;; 96,`:
 ;; 97,a:7
 ;; 98,b:
-;; 99,c:5
+;; 99,c:6
 ;; 100,d:6
 ;; 101,e:15
 ;; 102,f:1
@@ -614,14 +640,14 @@ StringsCompressed_TranslatesAndFormats:
 ;; 106,j:
 ;; 107,k:4
 ;; 108,l:5
-;; 109,m:1
+;; 109,m:2
 ;; 110,n:11
-;; 111,o:17
+;; 111,o:20
 ;; 112,p:3
 ;; 113,q:
 ;; 114,r:11
 ;; 115,s:7
-;; 116,t:12
+;; 116,t:15
 ;; 117,u:4
 ;; 118,v:3
 ;; 119,w:1

@@ -32,7 +32,7 @@ SECTION .text
 ;	Corrupts registers:
 ;		AX, CX, DH, SI, DI, (DL if failed to read boot sector)
 ;--------------------------------------------------------------------
-BootSector_TryToLoadFromDriveDL:
+BootSector_TryToLoadFromDriveDL_AndBoot:
 	call	DetectPrint_TryToBootFromDL
 	call	LoadFirstSectorFromDriveDL
 	jc		SHORT .FailedToLoadFirstSector
@@ -43,16 +43,22 @@ BootSector_TryToLoadFromDriveDL:
 	jne		SHORT .FirstHardDiskSectorNotBootable
 .AlwaysBootFromFloppyDriveForBooterGames:
 	stc
-	ret
+	jmp		SHORT JumpToBootSector_or_RomBoot		
 .FailedToLoadFirstSector:
 	call	DetectPrint_FailedToLoadFirstSector
-	clc
 	ret
 .FirstHardDiskSectorNotBootable:
 	mov		si, g_szBootSectorNotFound
 	call	DetectPrint_NullTerminatedStringFromCSSIandSetCF
-	clc
 	ret
+
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS		
+  %ifdef MODULE_DRIVEXLATE
+    %if TryToBoot_FallThroughTo_BootSector_TryToLoadFromDriveDL_AndBoot <> BootSector_TryToLoadFromDriveDL_AndBoot
+	  %error "TryToBoot_FallThroughTo_BootSector_TryToLoadFromDriveDL_AndBoot <> BootSector_TryToLoadFromDriveDL_AndBoot, BootSector must come immediately after int19h.asm"
+    %endif
+  %endif
+%endif
 
 ;--------------------------------------------------------------------
 ; LoadFirstSectorFromDriveDL

@@ -40,7 +40,7 @@ Interrupts_InitializeInterruptVectors:
 
 	; If no drives detected, leave system INT 13h and 40h handlers
 	; in place. We need our INT 13h handler to swap drive letters.
-%ifndef MODULE_HOTKEYS
+%ifndef MODULE_DRIVEXLATE
 	cmp		BYTE [RAMVARS.bDrvCnt], 0
 	je		SHORT Interrupts_InstallHandlerToVectorInALFromCSSI.Interrupts_Return
 %endif

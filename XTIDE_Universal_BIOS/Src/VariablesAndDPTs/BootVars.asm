@@ -63,8 +63,8 @@ BootVars_Initialize:
 ;		AX, CX, DI
 ;--------------------------------------------------------------------
 BootVars_StoreHotkeyForDriveNumberInDL:
-	mov		WORD [es:BOOTVARS.hotkeyVars+HOTKEYVARS.wHddAndFddLetters], DEFAULT_HARD_DRIVE_LETTER | (DEFAULT_FLOPPY_DRIVE_LETTER<<8)
-	call	HotkeyBar_ConvertDriveNumberFromDLtoDriveLetter
+	mov		WORD [es:BOOTVARS.hotkeyVars+HOTKEYVARS.wHddAndFddLetters], DEFAULT_FLOPPY_DRIVE_LETTER | (DEFAULT_HARD_DRIVE_LETTER<<8)
+	call	DriveXlate_ConvertDriveNumberFromDLtoDriveLetter
 	jmp		HotkeyBar_StoreHotkeyToBootvarsForDriveLetterInDL
 
 %else

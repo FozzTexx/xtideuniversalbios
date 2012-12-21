@@ -103,50 +103,63 @@ Int19h_BootLoaderHandler:
 ;		Never returns (loads operating system)
 ;--------------------------------------------------------------------
 SelectDriveToBootFrom:
+
+; The following macro could be easily inlined below.  Why a macro?  Depending on the combination
+; of MODULE_HOTKEYS or MODULE_BOOT_MENU, this code needs to either come before or after the
+; call to the boot menu.  
+;
+%macro TRY_TO_BOOT_DL_AND_DH_DRIVES 0
+	push	dx									; it's OK if this is left on the stack, if we are
+												; are successful, the following call does not return
+	call	TryToBootFromPrimaryOrSecondaryBootDevice_AndBoot
+	pop		dx
+	mov		dl, dh
+	call	TryToBootFromPrimaryOrSecondaryBootDevice_AndBoot
+%endmacro
+				
 %ifdef MODULE_HOTKEYS
-	call	HotkeyBar_UpdateDuringDriveDetection
-
+	call	HotkeyBar_ScanHotkeysFromKeyBufferAndStoreToBootvars		
+	cmp		al, ROM_BOOT_HOTKEY_SCANCODE
+	jz		JumpToBootSector_or_RomBoot			; CF clear so ROM boot
 %ifdef MODULE_BOOT_MENU
-	mov		di, BOOTVARS.hotkeyVars+HOTKEYVARS.bScancode
-	cmp		BYTE [es:di], BOOT_MENU_HOTKEY_SCANCODE
-	jne		SHORT .DoNotDisplayBootMenu
-
-	; Stop blinking the Boot Menu hotkey and display menu
-	mov		BYTE [es:di], 0
-	call	HotkeyBar_DrawToTopOfScreen
-	call	BootMenu_DisplayAndStoreSelectionAsHotkey
-.DoNotDisplayBootMenu:
+	cmp		al, BOOT_MENU_HOTKEY_SCANCODE
+	jz		.BootMenu
+%endif
+	call	HotkeyBar_GetBootDriveNumbersToDX
+.TryUsingHotKeysCode:
+	TRY_TO_BOOT_DL_AND_DH_DRIVES
+	;; falls through to boot menu, if it is present.  If not present, falls through to rom boot.
 %endif
 
-	; Check if ROM boot (INT 18h) wanted
-	cmp		BYTE [es:BOOTVARS.hotkeyVars+HOTKEYVARS.bScancode], ROM_BOOT_HOTKEY_SCANCODE
-	je		SHORT JumpToBootSector_or_RomBoot	; CF clear so ROM boot
+%ifdef MODULE_BOOT_MENU
+.BootMenu:		
+	call	BootMenu_DisplayAndReturnDriveInDLRomBootClearCF
+	jnc		JumpToBootSector_or_RomBoot			; CF clear so ROM boot
 
-	; Get Primary boot drive number to DL
-	call	HotkeyBar_GetPrimaryBootDriveNumberToDL
+	mov		dh, dl								; Setup for secondary drive
+	not		dh									; Floppy goes to HD, or vice veras
+	and		dh, 080h							; Go to first drive of the floppy or HD set
+
+%ifdef MODULE_HOTKEYS
+	jmp		.TryUsingHotKeysCode
 %else
+	TRY_TO_BOOT_DL_AND_DH_DRIVES		
+	jmp		.BootMenu
+%endif
+%endif
+
+%ifndef MODULE_HOTKEYS
+%ifndef MODULE_BOOT_MENU
 	xor		dl, dl			; Try to boot from Floppy Drive A
-%endif	; MODULE_HOTKEYS
-
-	; Try to boot from Primary boot drive (00h by default)
-	call	TryToBootFromPrimaryOrSecondaryBootDevice
-	jc		SHORT JumpToBootSector_or_RomBoot
-
-	; Try to boot from Secondary boot device (80h by default)
-%ifdef MODULE_HOTKEYS
-	call	HotkeyBar_GetSecondaryBootDriveNumberToDL
-%else
+	call	TryToBootFromPrimaryOrSecondaryBootDevice_AndBoot
 	mov		dl, 80h			; Try to boot from Hard Drive C
+	call	TryToBootFromPrimaryOrSecondaryBootDevice_AndBoot
 %endif
-	call	TryToBootFromPrimaryOrSecondaryBootDevice
-
-%ifdef MODULE_BOOT_MENU
-	; Force Boot Menu hotkey to display boot menu
-	mov		BYTE [es:BOOTVARS.hotkeyVars+HOTKEYVARS.bScancode], BOOT_MENU_HOTKEY_SCANCODE
-	jnc		SHORT SelectDriveToBootFrom
 %endif
-	; Fall to JumpToBootSector_or_RomBoot
 
+%ifndef MODULE_BOOT_MENU
+	clc		;  fall through with flag for ROM boot.  Boot Menu goes back to menu and doesn't fall through.
+%endif		
 
 ;--------------------------------------------------------------------
 ; JumpToBootSector_or_RomBoot
@@ -202,12 +215,17 @@ JumpToBootSector_or_RomBoot:
 ;	Corrupts registers:
 ;		AX, CX, DH, SI, DI, (DL if failed to read boot sector)
 ;--------------------------------------------------------------------
-%ifndef MODULE_HOTKEYS
-TryToBootFromPrimaryOrSecondaryBootDevice	EQU		BootSector_TryToLoadFromDriveDL
+%ifndef MODULE_DRIVEXLATE
+TryToBootFromPrimaryOrSecondaryBootDevice_AndBoot	EQU		BootSector_TryToLoadFromDriveDL_AndBoot
 
 %else
-TryToBootFromPrimaryOrSecondaryBootDevice:
+TryToBootFromPrimaryOrSecondaryBootDevice_AndBoot:
 	call	DriveXlate_SetDriveToSwap
 	call	DriveXlate_ToOrBack
-	jmp		BootSector_TryToLoadFromDriveDL
+	; fall through to TryToBoot_FallThroughTo_BootSector_TryToLoadFromDriveDL_AndBoot
+
+TryToBoot_FallThroughTo_BootSector_TryToLoadFromDriveDL_AndBoot:
+; fall through to BootSector_TryToLoadFromDriveDL_AndBoot				
 %endif
+		
+
