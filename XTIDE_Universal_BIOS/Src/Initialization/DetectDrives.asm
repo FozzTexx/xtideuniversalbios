@@ -161,7 +161,7 @@ DetectDrives_FromAllIDEControllers:
 ;		AX, BL, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 StartDetectionWithDriveSelectByteInBHandStringInCX:
-%ifdef MODULE_8BIT_IDE
+%ifdef MODULE_8BIT_IDE_ADVANCED
 	; Autodetect port for XT-CF
 	call	DetectDrives_DoesIdevarsInCSBPbelongToXTCF
 	jne		SHORT .SkipXTCFportDetection
@@ -194,7 +194,7 @@ StartDetectionWithDriveSelectByteInBHandStringInCX:
 	; Print detect string for devices that do not support autodetection
 .SkipXTCFportDetection:
 	push	dx
-%endif ; MODULE_8BIT_IDE
+%endif ; MODULE_8BIT_IDE_ADVANCED
 
 	call	DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP
 .DriveDetectionStringPrintedOnScreen:
@@ -202,7 +202,7 @@ StartDetectionWithDriveSelectByteInBHandStringInCX:
 	call	HotkeyBar_UpdateDuringDriveDetection
 %endif				
 		
-%ifdef MODULE_8BIT_IDE
+%ifdef MODULE_8BIT_IDE_ADVANCED
 	pop		dx
 %endif
 	; Fall to .ReadAtaInfoFromHardDisk
@@ -281,7 +281,7 @@ CreateBiosTablesForHardDisk:
 	jmp		SHORT DetectPrint_DriveNameFromDrvDetectInfoInESBX
 
 
-%ifdef MODULE_8BIT_IDE
+%ifdef MODULE_8BIT_IDE_ADVANCED
 ;--------------------------------------------------------------------
 ; DetectDrives_DoesIdevarsInCSBPbelongToXTCF
 ;	Parameters:
@@ -302,4 +302,4 @@ DetectDrives_DoesIdevarsInCSBPbelongToXTCF:
 .DeviceIsXTCF:
 NoSlaveDriveAvailable:
 	ret
-%endif ; MODULE_8BIT_IDE
+%endif ; MODULE_8BIT_IDE_ADVANCED

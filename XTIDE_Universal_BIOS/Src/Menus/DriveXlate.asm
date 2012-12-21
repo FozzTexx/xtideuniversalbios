@@ -143,12 +143,11 @@ ALIGN JUMP_ALIGN
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		Nothing
+;		AX, DI, DL
 ;--------------------------------------------------------------------
 DriveXlate_Reset:
-	mov		WORD [RAMVARS.xlateVars+XLATEVARS.wFDandHDswap], 8000h
-	ret
-
+	xor		dl, dl				; no translation for a floppy
+	;; fall through to DriveXlate_SetDriveToSwap
 
 ;--------------------------------------------------------------------
 ; Stores drive to be swapped.
@@ -160,16 +159,15 @@ DriveXlate_Reset:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		Nothing
+;		AX, DI
 ;--------------------------------------------------------------------
 DriveXlate_SetDriveToSwap:
+	mov		ax, 8000h			; Default mapping (no translation)
 	test	dl, dl				; Floppy drive?
 	js		SHORT .SetHardDriveToSwap
-
-	; Set Floppy Drive to swap
-	mov		[RAMVARS.xlateVars+XLATEVARS.bFDSwap], dl
-	ret
-
-.SetHardDriveToSwap:
-	mov		[RAMVARS.xlateVars+XLATEVARS.bHDSwap], dl
+	mov		al, dl				; Store floppy translation
+	SKIP2B	di
+.SetHardDriveToSwap:	
+	mov		ah, dl				; Store HD translation
+	mov		WORD [RAMVARS.xlateVars+XLATEVARS.wFDandHDswap], ax
 	ret

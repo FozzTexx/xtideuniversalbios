@@ -244,13 +244,13 @@ CreateDPT_FromAtaInformation:
 CreateDPT_StoreIdevarsOffsetAndBasePortFromCSBPtoDPTinDSDI:
 	mov		[di+DPT.bIdevarsOffset], bp		; IDEVARS must start in first 256 bytes of ROM
 
-%ifdef MODULE_8BIT_IDE
+%ifdef MODULE_8BIT_IDE_ADVANCED
 	call	DetectDrives_DoesIdevarsInCSBPbelongToXTCF
 	jne		SHORT .DeviceUsesPortSpecifiedInIDEVARS
 	mov		[di+DPT.wBasePort], dx
 	ret
 .DeviceUsesPortSpecifiedInIDEVARS:
-%endif ; MODULE_8BIT_IDE
+%endif ; MODULE_8BIT_IDE_ADVANCED
 
 	mov		ax, [cs:bp+IDEVARS.wBasePort]
 	mov		[di+DPT.wBasePort], ax

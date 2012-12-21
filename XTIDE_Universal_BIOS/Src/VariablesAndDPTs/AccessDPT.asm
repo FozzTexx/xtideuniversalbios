@@ -103,7 +103,7 @@ AccessDPT_GetLCHStoAXBLBH:
 	ret
 
 
-%ifdef MODULE_8BIT_IDE
+%ifdef MODULE_8BIT_IDE_ADVANCED
 ;--------------------------------------------------------------------
 ; AccessDPT_IsThisDeviceXTCF
 ;	Parameters:
@@ -124,7 +124,7 @@ AccessDPT_IsThisDeviceXTCF:
 	cmp		ah, DEVICE_8BIT_XTCF_MEMMAP
 .DeviceIsXTCF:
 	ret
-%endif ; MODULE_8BIT_IDE
+%endif ; MODULE_8BIT_IDE_ADVANCED
 
 
 %ifdef MODULE_EBIOS

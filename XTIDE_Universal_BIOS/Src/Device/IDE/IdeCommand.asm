@@ -86,14 +86,14 @@ IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 	push	bp
 	call	Idepack_FakeToSSBP
 
-%ifdef MODULE_8BIT_IDE
+%ifdef MODULE_8BIT_IDE_ADVANCED
 	; Enable 8-bit PIO mode for 8-bit ATA and XT-CF
 	push	si
 	call	AH9h_Enable8bitModeForDevice8bitAta
 	xor		al, al						; XTCF_8BIT_PIO_MODE
 	call	AH9h_SetModeFromALtoXTCF
 	pop		si
-%endif ; MODULE_8BIT_IDE
+%endif ; MODULE_8BIT_IDE_ADVANCED
 
 	; Prepare to output Identify Device command
 	mov		dl, 1						; Sector count (required by IdeTransfer.asm)
@@ -171,7 +171,7 @@ IdeCommand_OutputWithParameters:
 	pop		bx								; Pop status and timeout for polling
 	cmp		bl, FLG_STATUS_DRQ				; Data transfer started?
 	jne		SHORT .WaitUntilNonTransferCommandCompletes
-%ifdef MODULE_8BIT_IDE
+%ifdef MODULE_8BIT_IDE_ADVANCED
 	cmp		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_XTCF_MEMMAP
 	jae		SHORT JrIdeTransfer_StartWithCommandInAL	; DEVICE_8BIT_XTCF_MEMMAP or DEVICE_8BIT_JRIDE_ISA
 %endif

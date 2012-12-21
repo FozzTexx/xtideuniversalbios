@@ -31,7 +31,7 @@ SECTION .text
 ;		AX, CX, DX, DI
 ;--------------------------------------------------------------------
 BootVars_Initialize:
-%ifdef MODULE_8BIT_IDE
+%ifdef MODULE_8BIT_IDE_ADVANCED
 	mov		WORD [es:BOOTVARS.wNextXTCFportToScan], XTCF_BASE_PORT_DETECTION_SEED
 %endif
 
