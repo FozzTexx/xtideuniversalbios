@@ -75,7 +75,6 @@ AH23h_SetControllerFeatures:
 	jmp		Idepack_StoreNonExtParametersAndIssueCommandFromAL
 
 
-%ifdef MODULE_8BIT_IDE
 ;--------------------------------------------------------------------
 ; AH23h_Enable8bitPioMode
 ;	Parameters:
@@ -87,7 +86,8 @@ AH23h_SetControllerFeatures:
 ;	Corrupts registers:
 ;		AL, BX, CX, DX, SI
 ;--------------------------------------------------------------------
+%ifdef MODULE_8BIT_IDE
 AH23h_Enable8bitPioMode:
 	mov		si, FEATURE_ENABLE_8BIT_PIO_TRANSFER_MODE
 	jmp		SHORT AH23h_SetControllerFeatures
-%endif ; MODULE_8BIT_IDE
+%endif

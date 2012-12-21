@@ -40,7 +40,7 @@ struc BOOTVARS
 	.rgbMnuStack:
 	.dwPostStack		resb	4		; POST stack pointer when entering INT 19h
 
-%ifdef MODULE_8BIT_IDE
+%ifdef MODULE_8BIT_IDE_ADVANCED
 	.wNextXTCFportToScan	resb	2	; Needed for XT-CF port autodetection
 %endif
 

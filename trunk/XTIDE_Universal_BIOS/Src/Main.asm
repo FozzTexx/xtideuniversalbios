@@ -127,7 +127,11 @@ istruc ROMVARS
 %ifdef MODULE_BOOT_MENU
 	at	ROMVARS.wBootTimeout,	dw	BOOT_MENU_DEFAULT_TIMEOUT
 %endif
+%ifdef MODULE_8BIT_IDE_ADVANCED		
 	at	ROMVARS.bIdeCnt,		db	2						; Number of supported controllers
+%else
+	at  ROMVARS.bIdeCnt,		db	1
+%endif
 	at	ROMVARS.bBootDrv,		db	80h						; Boot Menu default drive
 	at	ROMVARS.bMinFddCnt, 	db	0						; Do not force minimum number of floppy drives
 	at	ROMVARS.bStealSize,		db	1						; Steal 1kB from base memory in full mode
@@ -139,10 +143,15 @@ istruc ROMVARS
 	at	ROMVARS.ideVars0+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	db	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE | (TRANSLATEMODE_AUTO<<TRANSLATEMODE_FIELD_POSITION)
 	at	ROMVARS.ideVars0+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags,	db	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE | (TRANSLATEMODE_AUTO<<TRANSLATEMODE_FIELD_POSITION)
 
+%ifdef MODULE_8BIT_IDE_ADVANCED
 	at	ROMVARS.ideVars1+IDEVARS.bXTCFcontrolRegister,	db	XTCF_8BIT_PIO_MODE
 	at	ROMVARS.ideVars1+IDEVARS.bDevice,				db	DEVICE_8BIT_XTCF_PIO8
 	at	ROMVARS.ideVars1+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	db	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE | (TRANSLATEMODE_AUTO<<TRANSLATEMODE_FIELD_POSITION)
 	at	ROMVARS.ideVars1+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags,	db	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE | (TRANSLATEMODE_AUTO<<TRANSLATEMODE_FIELD_POSITION)
+%else
+	at	ROMVARS.ideVars1+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	db	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE | (TRANSLATEMODE_AUTO<<TRANSLATEMODE_FIELD_POSITION)
+	at	ROMVARS.ideVars1+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags,	db	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE | (TRANSLATEMODE_AUTO<<TRANSLATEMODE_FIELD_POSITION)
+%endif		
 
 	at	ROMVARS.ideVars2+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	db	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE | (TRANSLATEMODE_AUTO<<TRANSLATEMODE_FIELD_POSITION)
 	at	ROMVARS.ideVars2+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags,	db	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE | (TRANSLATEMODE_AUTO<<TRANSLATEMODE_FIELD_POSITION)
@@ -226,7 +235,7 @@ iend
 	%include "Vision.asm"			; QDI Vision QD6500 and QD6580 support
 %endif
 	%include "IdeCommand.asm"
-%ifdef MODULE_8BIT_IDE
+%ifdef MODULE_8BIT_IDE_ADVANCED
 	%include "JrIdeTransfer.asm"	; Must be included after IdeCommand.asm
 	%include "IdeDmaBlock.asm"
 %endif
@@ -260,7 +269,7 @@ iend
 	%include "AH10h_HReady.asm"		; Required by Int13h_Jump.asm
 	%include "AH11h_HRecal.asm"		; Required by Int13h_Jump.asm
 	%include "AH15h_HSize.asm"		; Required by Int13h_Jump.asm
-%ifdef MODULE_8BIT_IDE
+%ifdef MODULE_8BIT_IDE_ADVANCED
 	%include "AH1Eh_XTCF.asm"
 %endif
 	%include "AH23h_HFeatures.asm"	; Required by Int13h_Jump.asm

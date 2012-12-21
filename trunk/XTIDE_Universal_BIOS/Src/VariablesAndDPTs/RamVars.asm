@@ -93,25 +93,13 @@ RamVars_Initialize:
 	eSHL_IM	ax, 10			; kiB to Bytes = Top of stack offset
 	mov		[RAMVARS.wNewStackOffset], ax
 %endif
-	; Fall to .InitializeDriveTranslationAndReturn
 
-;--------------------------------------------------------------------
-; .InitializeDriveTranslationAndReturn
-;	Parameters:
-;		DS:		RAMVARS segment
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX
-;--------------------------------------------------------------------
-.InitializeDriveTranslationAndReturn:
+;; There used to be a DriveXlate_Reset call here.  It isn't necessary, as we reset
+;; when entering the boot menu and also before transferring control at boot time and
+;; for ROM boots (in int19h.asm).
+		
 	pop		es
-%ifdef MODULE_DRIVEXLATE
-	jmp		DriveXlate_Reset
-%else
 	ret
-%endif
-
 
 ;--------------------------------------------------------------------
 ; Returns segment to RAMVARS.

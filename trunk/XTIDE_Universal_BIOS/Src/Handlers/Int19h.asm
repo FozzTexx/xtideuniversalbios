@@ -120,7 +120,7 @@ SelectDriveToBootFrom:
 %ifdef MODULE_HOTKEYS
 	call	HotkeyBar_ScanHotkeysFromKeyBufferAndStoreToBootvars		
 	cmp		al, ROM_BOOT_HOTKEY_SCANCODE
-	jz		JumpToBootSector_or_RomBoot			; CF clear so ROM boot
+	jz		.RomBoot							; CF clear so ROM boot
 %ifdef MODULE_BOOT_MENU
 	cmp		al, BOOT_MENU_HOTKEY_SCANCODE
 	jz		.BootMenu
@@ -134,7 +134,7 @@ SelectDriveToBootFrom:
 %ifdef MODULE_BOOT_MENU
 .BootMenu:		
 	call	BootMenu_DisplayAndReturnDriveInDLRomBootClearCF
-	jnc		JumpToBootSector_or_RomBoot			; CF clear so ROM boot
+	jnc		.RomBoot							; CF clear so ROM boot
 
 	mov		dh, dl								; Setup for secondary drive
 	not		dh									; Floppy goes to HD, or vice veras
@@ -157,9 +157,12 @@ SelectDriveToBootFrom:
 %endif
 %endif
 
-%ifndef MODULE_BOOT_MENU
-	clc		;  fall through with flag for ROM boot.  Boot Menu goes back to menu and doesn't fall through.
-%endif		
+.RomBoot:
+%ifdef MODULE_DRIVEXLATE
+	call	DriveXlate_Reset					; Clean up any drive mappings before Rom Boot
+%endif
+	clc		
+	;; fall through to JumpToBootSector_or_RomBoot
 
 ;--------------------------------------------------------------------
 ; JumpToBootSector_or_RomBoot

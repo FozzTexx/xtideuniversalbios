@@ -217,7 +217,7 @@ InitializePiovarsInSSBPwithSectorCountInAH:
 	; Get transfer function based on bus type
 	xchg	ax, bx								; Lookup table offset to AX
 	mov		bl, [di+DPT_ATA.bDevice]
-%ifdef MODULE_8BIT_IDE
+%ifdef MODULE_8BIT_IDE_ADVANCED
 	mov		dl, bl
 %endif
 	add		bx, ax
@@ -225,7 +225,7 @@ InitializePiovarsInSSBPwithSectorCountInAH:
 	mov		[bp+PIOVARS.fnXfer], ax
 
 	; Normalize pointer for PIO-transfers and convert to physical address for DMA transfers
-%ifdef MODULE_8BIT_IDE
+%ifdef MODULE_8BIT_IDE_ADVANCED
 	cmp		dl, DEVICE_8BIT_XTCF_DMA
 	jb		SHORT IdeTransfer_NormalizePointerInESSI
 
@@ -280,7 +280,7 @@ InitializePiovarsInSSBPwithSectorCountInAH:
 	;------------------------------------
 %endif					; 26	29/26
 	ret
-%endif ; MODULE_8BIT_IDE
+%endif ; MODULE_8BIT_IDE_ADVANCED
 	; Fall to IdeTransfer_NormalizePointerInESSI if no MODULE_8BIT_IDE
 
 
@@ -307,8 +307,10 @@ g_rgfnPioRead:
 		dw		IdePioBlock_ReadFrom8bitDataPort	; 2, DEVICE_8BIT_ATA
 		dw		IdePioBlock_ReadFromXtideRev1		; 3, DEVICE_8BIT_XTIDE_REV1
 		dw		IdePioBlock_ReadFromXtideRev2		; 4, DEVICE_8BIT_XTIDE_REV2
+%ifdef MODULE_8BIT_IDE_ADVANCED
 		dw		IdePioBlock_ReadFrom8bitDataPort	; 5, DEVICE_8BIT_XTCF_PIO8
 		dw		IdeDmaBlock_ReadFromXTCF			; 6, DEVICE_8BIT_XTCF_DMA
+%endif
 %endif
 
 
@@ -319,6 +321,8 @@ g_rgfnPioWrite:
 		dw		IdePioBlock_WriteTo8bitDataPort		; 2, DEVICE_8BIT_ATA
 		dw		IdePioBlock_WriteToXtideRev1		; 3, DEVICE_8BIT_XTIDE_REV1
 		dw		IdePioBlock_WriteToXtideRev2		; 4, DEVICE_8BIT_XTIDE_REV2
+%ifdef MODULE_8BIT_IDE_ADVANCED		
 		dw		IdePioBlock_WriteTo8bitDataPort		; 5, DEVICE_8BIT_XTCF_PIO8
 		dw		IdeDmaBlock_WriteToXTCF				; 6, DEVICE_8BIT_XTCF_DMA
+%endif
 %endif

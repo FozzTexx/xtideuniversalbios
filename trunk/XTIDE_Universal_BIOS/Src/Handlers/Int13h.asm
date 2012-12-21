@@ -92,7 +92,7 @@ Int13h_DiskFunctionsHandler:
 	CREATE_FRAME_INTPACK_TO_SSBP	SIZE_OF_IDEPACK_WITHOUT_INTPACK
 	call	RamVars_GetSegmentToDS
 
-%ifdef MODULE_HOTKEYS
+%ifdef MODULE_DRIVEXLATE
 	call	DriveXlate_ToOrBack
 	mov		[RAMVARS.xlateVars+XLATEVARS.bXlatedDrv], dl
 %endif
@@ -178,7 +178,7 @@ Int13h_DirectCallToAnotherBios:
 	mov		[bp+IDEPACK.intpack+INTPACK.di], di
 	mov		[bp+IDEPACK.intpack+INTPACK.si], si
 	mov		[bp+IDEPACK.intpack+INTPACK.bx], bx
-%ifdef MODULE_HOTKEYS
+%ifdef MODULE_DRIVEXLATE
 	mov		[bp+IDEPACK.intpack+INTPACK.dh], dh
 %else
 	mov		[bp+IDEPACK.intpack+INTPACK.dx], dx
@@ -189,7 +189,7 @@ Int13h_DirectCallToAnotherBios:
 	pop		WORD [bp+IDEPACK.intpack+INTPACK.flags]
 	call	RamVars_GetSegmentToDS
 
-%ifdef MODULE_HOTKEYS
+%ifdef MODULE_DRIVEXLATE
 	cmp		dl, [RAMVARS.xlateVars+XLATEVARS.bXlatedDrv]	; DL is still drive number?
 	je		SHORT .ExchangeInt13hHandlers
 	mov		[bp+IDEPACK.intpack+INTPACK.dl], dl	; Something is returned in DL
@@ -394,7 +394,7 @@ g_rgw13hFuncJump:
 	dw	UnsupportedFunction							; 1Bh, Get ESDI Manufacturing Header (PS/2)
 	dw	UnsupportedFunction							; 1Ch, ESDI Special Functions (PS/2)
 	dw	UnsupportedFunction							; 1Dh,
-%ifdef MODULE_8BIT_IDE
+%ifdef MODULE_8BIT_IDE_ADVANCED
 	dw	AH1Eh_HandlerForXTCFfeatures				; 1Eh, Lo-tech XT-CF features (XTIDE Universal BIOS)
 %else
 	dw	UnsupportedFunction							; 1Eh, 

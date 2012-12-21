@@ -160,7 +160,6 @@ EventInitializeMenuinitFromSSBP:
 ;--------------------------------------------------------------------
 EventItemHighlightedFromCX:
 	push	cx
-	call	DriveXlate_Reset		
 	call	BootMenu_GetDriveToDXforMenuitemInCX		
 	jnc		.noDriveSwap		
 	call	DriveXlate_SetDriveToSwap
@@ -208,7 +207,6 @@ EventItemSelectedFromCX:
 ;		Does not matter
 ;--------------------------------------------------------------------
 CloseBootMenu:
-	call	DriveXlate_Reset
 	CALL_MENU_LIBRARY	Close
 	; Fall to BootMenuEvent_Completed
 

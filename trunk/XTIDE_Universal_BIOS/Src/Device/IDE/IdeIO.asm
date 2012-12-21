@@ -57,6 +57,8 @@ IdeIO_InputToALfromIdeRegisterInDL:
 	cmp		al, DEVICE_8BIT_XTIDE_REV2
 	je		SHORT .ReverseA0andA3fromRegisterIndexInDX
 	jb		SHORT .InputToALfromRegisterInDX	; Standard IDE controllers and XTIDE rev 1
+		
+%ifdef MODULE_8BIT_IDE_ADVANCED
 	cmp		al, DEVICE_8BIT_JRIDE_ISA
 	jne		SHORT .ShlRegisterIndexInDX			; All XT-CF modes
 	; Fall to .InputToALfromMemoryMappedRegisterInDX
@@ -67,7 +69,8 @@ IdeIO_InputToALfromIdeRegisterInDL:
 	mov		al, [bx+JRIDE_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET]
 	pop		ds
 	ret
-
+%endif
+		
 .ReverseA0andA3fromRegisterIndexInDX:
 	mov		dl, [cs:bx+g_rgbSwapA0andA3fromIdeRegisterIndex]
 	SKIP2B	bx	; Skip shl dx, 1
@@ -102,6 +105,8 @@ IdeIO_OutputALtoIdeControlBlockRegisterInDL:
 	mov		bl, [di+DPT_ATA.bDevice]
 	cmp		bl, DEVICE_8BIT_XTIDE_REV2
 	jbe		SHORT .OutputALtoControlBlockRegisterInDX	; Standard IDE controllers and XTIDE rev 1
+		
+%ifdef MODULE_8BIT_IDE_ADVANCED
 	cmp		bl, DEVICE_8BIT_JRIDE_ISA
 	jne		SHORT .ShlRegisterIndexInDX		; All XT-CF modes
 	; Fall to .OutputALtoMemoryMappedRegisterInDX
@@ -114,6 +119,7 @@ IdeIO_OutputALtoIdeControlBlockRegisterInDL:
 	add		dl, OFFSET_TO_CONTROL_BLOCK_REGISTERS
 	eSHL_IM	dx, 1
 	jmp		SHORT OutputALtoRegisterInDX
+%endif
 
 .OutputALtoControlBlockRegisterInDX:
 	call	AccessDPT_GetIdevarsToCSBX
@@ -140,6 +146,8 @@ IdeIO_OutputALtoIdeRegisterInDL:
 	cmp		bl, DEVICE_8BIT_XTIDE_REV2
 	je		SHORT .ReverseA0andA3fromRegisterIndexInDX
 	jb		SHORT OutputALtoRegisterInDX	; Standard IDE controllers and XTIDE rev 1
+
+%ifdef MODULE_8BIT_IDE_ADVANCED
 	cmp		bl, DEVICE_8BIT_JRIDE_ISA
 	jne		SHORT .ShlRegisterIndexInDX		; All XT-CF modes
 	; Fall to .OutputALtoMemoryMappedRegisterInDX
@@ -153,7 +161,8 @@ IdeIO_OutputALtoIdeRegisterInDL:
 	mov		[bx], al
 	pop		ds
 	ret
-
+%endif
+		
 .ReverseA0andA3fromRegisterIndexInDX:
 	mov		bx, dx
 	mov		dl, [cs:bx+g_rgbSwapA0andA3fromIdeRegisterIndex]
