@@ -33,7 +33,8 @@ DetectPrint_InitializeDisplayContext:
 	CALL_DISPLAY_LIBRARY	InitializeDisplayContext
 	ret
 
-
+		
+%ifdef MODULE_HOTKEYS
 ;--------------------------------------------------------------------
 ; DetectPrint_GetSoftwareCoordinatesToAX
 ;	Parameters:
@@ -46,8 +47,9 @@ DetectPrint_InitializeDisplayContext:
 DetectPrint_GetSoftwareCoordinatesToAX:
 	CALL_DISPLAY_LIBRARY	GetSoftwareCoordinatesToAX
 	ret
+%endif
 
-
+		
 ;--------------------------------------------------------------------
 ; DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP
 ;	Parameters:
@@ -226,20 +228,20 @@ DetectPrint_TryToBootFromDL:
 	push	bp
 	mov		bp, sp
 
-%ifdef MODULE_HOTKEYS
+%ifdef MODULE_DRIVEXLATE
 
 	call	DriveXlate_ToOrBack	; DL = Untranslated Drive number
 	mov		dh, dl
 	call	DriveXlate_ToOrBack	; DL = Translated Drive number
 
-	call	HotkeyBar_ConvertDriveNumberFromDLtoDriveLetter	; DL = Translated letter
+	call	DriveXlate_ConvertDriveNumberFromDLtoDriveLetter	; DL = Translated letter
 	xchg	dl, dh
-	call	HotkeyBar_ConvertDriveNumberFromDLtoDriveLetter	; DL = Untranslated letter
+	call	DriveXlate_ConvertDriveNumberFromDLtoDriveLetter	; DL = Untranslated letter
 	push	dx
 	xchg	dl, dh
 	push	dx
 
-	call	HotkeyBar_ConvertDriveLetterInDLtoDriveNumber	; Restore DL
+	call	DriveXlate_ConvertDriveLetterInDLtoDriveNumber	; Restore DL
 
 %else
 	ePUSH_T	ax, ' '			; No drive translation so print space
@@ -253,7 +255,7 @@ DetectPrint_TryToBootFromDL:
 	eCMOVNS	al, ah
 	push	ax
 
-%endif ; MODULE_HOTKEYS
+%endif ; MODULE_DRIVEXLATE
 
 	mov		si, g_szTryToBoot
 	jmp		SHORT DetectPrint_FormatCSSIfromParamsInSSBP	

@@ -64,20 +64,31 @@ g_szDriveName:		db	"%z",LF,CR,NULL
 
 ; Boot loader strings
 g_szTryToBoot:			db	"Booting %c",ANGLE_QUOTE_RIGHT,"%c",LF,CR,NULL
-g_szBootSectorNotFound:	db	"Boot sector "
+g_szBootSectorNotFound:	db	"Boot sector " 			; String fall through...
 g_szNotFound:			db	"not found",LF,CR,NULL
 g_szReadError:			db	"Error %x!",LF,CR,NULL
 
 
 %ifdef MODULE_HOTKEYS
 ; Hotkey Bar strings
-g_szFDD:		db	"FDD [%c]",NULL			; "FDD [A]"
-g_szHDD:		db	"HDD [%c]",NULL			; "HDD [C]"
-g_szBootMenu:	db	"%sMnu",NULL			; "BootMnu"
-g_szRomBoot:	db	"Rom%s",NULL			; "RomBoot"
-g_szBoot:		db	"Boot",NULL
-g_szHotkey:		db	"%A%c%c%A%s%A ",NULL	; "C»HDD [A] ", "F2BootMnu " or "F8RomBoot "
+g_szFDD:				db	"FDD [%c]",NULL			; "FDD [A]"
+g_szHDD:				db	"HDD [%c]",NULL			; "HDD [C]"
+%ifdef MODULE_BOOT_MENU
+g_szBootMenu:			db	"BootMnu%c",NULL		; "BootMnu", location of %c doesn't matter
+%endif ; MODULE_BOOT_MENU
+g_szHotkey:				db	"%A%c%c%A%s%A ",NULL	; "C»HDD [A] ", "F2BootMnu " or "F8RomBoot "
+%ifdef MODULE_SERIAL
+g_szHotComDetect:		db	"ComDtct%c",NULL		; "ComDtct", location of %c doesn't matter
+%endif ; MODULE_SERIAL
+%endif ; MODULE_HOTKEYS
 
+%ifdef MODULE_BOOT_MENU
+g_szRomBootDash:		db	" -  "					; String fall through to g_szRomBoot
+%endif
+%ifdef MODULE_HOTKEYS OR MODULE_BOOT_MENU		
+g_szRomBoot:			db	"Rom%cBoot", NULL		; "RomBoot" or "Rom Boot"
+%endif
+		
 
 %ifdef MODULE_BOOT_MENU
 ; Boot Menu Floppy Disk strings
@@ -189,8 +200,12 @@ g_szInformation:		db	"%s",LF,CR
 ; To support optimizations in that code, these strings must start on the same 256 byte page,
 ; which is checked at assembly time below.
 ;
+g_szDriveNumSpace:		db	" "							; leading space, used if drive number is less than 0fh
+														; must come immediately before g_szDriveNum!
 g_szBootMenuPrintStart:
 g_szDriveNum:			db	"%x %s",NULL
+g_szDriveNumBNSpace:	db	" "							; leading space, used if drive number is less than 0fh
+														; must come immediately before g_szDriveNumBOOTNFO!
 g_szDriveNumBOOTNFO:	db	"%x %z",NULL
 g_szFloppyDrv:			db	"Floppy Drive %c",NULL
 g_szBootMenuPrintEnd:
@@ -200,10 +215,12 @@ g_szForeignHD:			db	"Foreign Hard Disk",NULL
 	%if ((g_szBootMenuPrintStart-$$) & 0xff00) <> ((g_szBootMenuPrintEnd-$$) & 0xff00)
 		%error "g_szBootMenuPrint* strings must start on the same 256 byte page, required by the BootMenuPrint_* routines.  Please move this block up or down within Strings.asm"
 	%endif
+	%if g_szDriveNumSpace+1 != g_szDriveNum || g_szDriveNumBNSpace+1 != g_szDriveNumBOOTNFO
+		%error "g_szDriveNumSpace or g_szDriveNumBNSpace are out of position"
+	%endif
 %endif
 
 %endif ; MODULE_BOOT_MENU
-%endif ; MODULE_HOTKEYS
 
 
 ;------------------------------------------------------------------------------------------

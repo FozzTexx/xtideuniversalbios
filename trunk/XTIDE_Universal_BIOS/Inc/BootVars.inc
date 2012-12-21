@@ -21,6 +21,10 @@
 %ifndef BOOTVARS_INC
 %define BOOTVARS_INC
 
+; Default drives
+DEFAULT_FLOPPY_DRIVE_LETTER				EQU	'A'
+DEFAULT_HARD_DRIVE_LETTER				EQU	'C'
+
 ; Number of times to retry booting before accepting error
 BOOT_READ_RETRY_TIMES		EQU		3
 
@@ -42,28 +46,33 @@ struc BOOTVARS
 
 	.clearToZeroFromThisPoint:
 %ifdef MODULE_HOTKEYS
-	.hotkeyVars			resb	HOTKEYVARS_size
+	.hotkeyVars				resb	HOTKEYVARS_size
 %endif
 
 	.rgDrvDetectInfo:					; Array containing DRVDETECTINFO structs
 endstruc
 
 %ifdef MODULE_HOTKEYS
+
 struc HOTKEYVARS
 	.wTimeToClose		resb	2		; Earliest system time when Hotkey Bar can be closed
-	.bScancode			resb	1		; Function hotkey scancode
-	.bFlags				resb	1		; Must be just before .bHddLetter! 
 	.wHddAndFddLetters:
-	.bHddLetter			resb	1		; Hard Drive letter hotkey (upper case)
 	.bFddLetter			resb	1		; Floppy Drive letter hotkey (upper case)
+	.bHddLetter			resb	1		; Hard Drive letter hotkey (upper case)
+	.bFlags				resb	1		; Must be just after .bHddLetter!  (dependency in Hotkeybar.asm)
+	.bScancode			resb	1		; Function hotkey scancode, must be just after .bFlags!
 endstruc
 
-; Bit defines for HOTKEYVARS.bFlags
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
+%if HOTKEYVARS.bFddLetter+1 != HOTKEYVARS.bHddLetter || HOTKEYVARS.bHddLetter+1 != HOTKEYVARS.bFlags || HOTKEYVARS.bFlags+1 != HOTKEYVARS.bScancode 
+%error "HOTKEYVARS: bytes need to come in the order .bFddLetter, then .bHddLetter, then .bFlags, then .bScancode"
+%endif
+%endif
+
+; Bit defines for KEYBOARDVARS.bFlags
 FLG_HOTKEY_HD_FIRST		EQU		(1<<0)	; First try to boot from HDD, then FDD
 
-%endif ; MODULE_HOTKEY
-
-
+%endif ; MODULE_HOTKEYS
 
 struc DRVDETECTINFO
 	.StartOfDrvDetectInfo:

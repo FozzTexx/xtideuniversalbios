@@ -21,6 +21,83 @@
 SECTION .text
 
 ;--------------------------------------------------------------------
+; DriveXlate_ConvertDriveLetterInDLtoDriveNumber
+;	Parameters:
+;		DS:		RAMVARS segment
+;		DL:		Drive letter ('A'...)
+;	Returns:
+;		DL:		Drive number (0xh for Floppy Drives, 8xh for Hard Drives)
+;	Corrupts registers:
+;		AX
+;--------------------------------------------------------------------
+DriveXlate_ConvertDriveLetterInDLtoDriveNumber:
+	call	DriveXlate_GetLetterForFirstHardDriveToAX
+	cmp		dl, al
+	jb		SHORT .ConvertLetterInDLtoFloppyDriveNumber
+
+	; Convert letter in DL to Hard Drive number
+	sub		dl, al
+	or		dl, 80h
+	ret
+
+.ConvertLetterInDLtoFloppyDriveNumber:
+	sub		dl, DEFAULT_FLOPPY_DRIVE_LETTER
+	ret
+
+%ifdef MODULE_HOTKEY
+%if HotkeyBar_FallThroughTo_DriveXlate_ConvertDriveLetterInDLtoDriveNumber <> DriveXlate_ConvertDriveLetterInDLtoDriveNumber
+	%error "DriveXlate_ConvertDriveLetterInDLtoDriveNumber must be at the top of DriveXlate.asm, and that file must immediately follow HotKeys.asm"
+%endif		
+%endif
+		
+;--------------------------------------------------------------------
+; DriveXlate_ConvertDriveNumberFromDLtoDriveLetter
+;	Parameters:
+;		DL:		Drive number (0xh for Floppy Drives, 8xh for Hard Drives)
+;		DS:		RAMVARS Segment
+;	Returns:
+;		DL:		Drive letter ('A'...)
+;		CF:		Set if Hard Drive
+;				Clear if Floppy Drive
+;	Corrupts registers:
+;		AX
+;--------------------------------------------------------------------
+DriveXlate_ConvertDriveNumberFromDLtoDriveLetter:
+	test	dl, dl
+	jns		SHORT .GetDefaultFloppyDrive
+
+	; Store default hard drive to boot from
+	call	DriveXlate_GetLetterForFirstHardDriveToAX
+	sub		dl, 80h
+	add		dl, al
+	stc
+	ret
+
+.GetDefaultFloppyDrive:
+	add		dl, DEFAULT_FLOPPY_DRIVE_LETTER		; Clears CF
+	ret
+
+
+;--------------------------------------------------------------------
+; Returns letter for first hard disk. Usually it will be 'C' but it
+; can be higher if more than two floppy drives are found.
+;
+; DriveXlate_GetLetterForFirstHardDriveToAX
+;	Parameters:
+;		DS:		RAMVARS segment
+;	Returns:
+;		AX:		Upper case letter for first hard disk
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+DriveXlate_GetLetterForFirstHardDriveToAX:
+	call	FloppyDrive_GetCountToAX
+	add		al, DEFAULT_FLOPPY_DRIVE_LETTER
+	MAX_U	al, DEFAULT_HARD_DRIVE_LETTER
+	ret
+				
+
+;--------------------------------------------------------------------
 ; DriveXlate_ToOrBack
 ;	Parameters:
 ;		DL:		Drive number to be possibly translated

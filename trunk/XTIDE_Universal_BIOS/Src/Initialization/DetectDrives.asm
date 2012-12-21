@@ -47,6 +47,10 @@ DetectDrives_FromAllIDEControllers:
 	mov		bh, MASK_DRVNHEAD_SET | FLG_DRVNHEAD_DRV
 	call	StartDetectionWithDriveSelectByteInBHandStringInCX
 
+%ifdef MODULE_HOTKEYS
+	call	HotkeyBar_ScanHotkeysFromKeyBufferAndStoreToBootvars		; Done here while CX is still protected
+%endif				
+
 	pop		cx
 
 	add		bp, BYTE IDEVARS_size			; Point to next IDEVARS
@@ -61,10 +65,15 @@ DetectDrives_FromAllIDEControllers:
 ;
 ; if serial drive detected, do not scan (avoids duplicate drives and isn't needed - we already have a connection)
 ;
-	call	FindDPT_ToDSDIforSerialDevice
+	call	FindDPT_ToDSDIforSerialDevice   ; does not modify AX
 	jnc		.AddHardDisks
 
 	mov		bp, ROMVARS.ideVarsSerialAuto	; Point to our special IDEVARS structure, just for serial scans
+
+%ifdef MODULE_HOTKEYS
+	cmp		al, COM_DETECT_HOTKEY_SCANCODE  ; Set by last call to HotkeyBar_UpdateDuringDriveDetection above
+	jz		.DriveDetectLoop
+%endif		
 
 	mov		al,[cs:ROMVARS.wFlags]			; Configurator set to always scan?
 	or		al,[es:BDA.bKBFlgs1]			; Or, did the user hold down the ALT key?
@@ -191,7 +200,8 @@ StartDetectionWithDriveSelectByteInBHandStringInCX:
 .DriveDetectionStringPrintedOnScreen:
 %ifdef MODULE_HOTKEYS
 	call	HotkeyBar_UpdateDuringDriveDetection
-%endif
+%endif				
+		
 %ifdef MODULE_8BIT_IDE
 	pop		dx
 %endif

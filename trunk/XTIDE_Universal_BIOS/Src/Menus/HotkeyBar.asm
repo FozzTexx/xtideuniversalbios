@@ -31,10 +31,10 @@ SECTION .text
 ;		AX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 HotkeyBar_UpdateDuringDriveDetection:
-	call	ScanHotkeysFromKeyBufferAndStoreToBootvars
+	call	HotkeyBar_ScanHotkeysFromKeyBufferAndStoreToBootvars
 	; Fall to HotkeyBar_DrawToTopOfScreen
-
-
+		
+		
 ;--------------------------------------------------------------------
 ; HotkeyBar_DrawToTopOfScreen
 ;	Parameters:
@@ -65,13 +65,14 @@ HotkeyBar_DrawToTopOfScreen:
 ;		AX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 .PrintFloppyDriveHotkeys:
+	mov		cx, [es:BOOTVARS.hotkeyVars+HOTKEYVARS.wHddAndFddLetters]
+		
 	call	FloppyDrive_GetCountToAX
 	test	ax, ax		; Any Floppy Drives?
 	jz		SHORT .SkipFloppyDriveHotkeys
 
-	mov		di, DEFAULT_FLOPPY_DRIVE_LETTER | (ANGLE_QUOTE_RIGHT<<8)
-	mov		cl, [es:BOOTVARS.hotkeyVars+HOTKEYVARS.bFddLetter]
-	mov		si, g_szFDD
+	mov		ax, (ANGLE_QUOTE_RIGHT << 8) | DEFAULT_FLOPPY_DRIVE_LETTER
+	mov		di, g_szFDD
 	call	FormatDriveHotkeyString
 
 .SkipFloppyDriveHotkeys:
@@ -87,11 +88,10 @@ HotkeyBar_DrawToTopOfScreen:
 ;	Corrupts registers:
 ;		AX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
-	call	HotkeyBar_GetLetterForFirstHardDriveToAX
+	call	DriveXlate_GetLetterForFirstHardDriveToAX
 	mov		ah, ANGLE_QUOTE_RIGHT
-	xchg	di, ax
-	mov		cl, [es:BOOTVARS.hotkeyVars+HOTKEYVARS.bHddLetter]
-	mov		si, g_szHDD
+	mov		cl, ch
+	mov		di, g_szHDD
 	call	FormatDriveHotkeyString
 	; Fall to .PrintBootMenuHotkey
 
@@ -106,12 +106,28 @@ HotkeyBar_DrawToTopOfScreen:
 ;--------------------------------------------------------------------
 .PrintBootMenuHotkey:
 %ifdef MODULE_BOOT_MENU
-	mov		ah, BOOT_MENU_HOTKEY_SCANCODE
-	mov		di, 'F' | ('2'<<8)		; F2
-	mov		si, g_szBootMenu
+	mov		ax, BOOT_MENU_HOTKEY_SCANCODE | ('2' << 8)
+	mov		di, g_szBootMenu
 	call	FormatFunctionHotkeyString
 %endif
-	; Fall to .PrintRomBootHotkey
+	; Fall to .PrintComDetectHotkey
+
+;--------------------------------------------------------------------
+; .PrintComDetectHotkey
+;	Parameters:
+;		ES:		BDA segment (zero)
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, CX, DX, SI, DI
+;--------------------------------------------------------------------
+.PrintComDetectHotkey:
+%ifdef MODULE_SERIAL
+	mov		ax, COM_DETECT_HOTKEY_SCANCODE | ('6' << 8)
+	mov		di, g_szHotComDetect
+	call	FormatFunctionHotkeyString
+%endif
+	; Fall to .PrintRomBootHotkey		
 
 ;--------------------------------------------------------------------
 ; .PrintRomBootHotkey
@@ -123,9 +139,8 @@ HotkeyBar_DrawToTopOfScreen:
 ;		AX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 .PrintRomBootHotkey:
-	mov		ah, ROM_BOOT_HOTKEY_SCANCODE
-	mov		di, 'F' | ('8'<<8)		; F8
-	mov		si, g_szRomBoot
+	mov		ax, ROM_BOOT_HOTKEY_SCANCODE | ('8' << 8)
+	mov		di, g_szRomBoot
 	call	FormatFunctionHotkeyString
 	; Fall to .EndHotkeyBarRendering
 
@@ -167,8 +182,8 @@ HotkeyBar_ClearRestOfTopRow:
 ; FormatDriveHotkeyString
 ;	Parameters:
 ;		CL:			Drive letter hotkey from BOOTVARS
-;		DI low:		First character for drive key string
-;		DI high:	Second character for drive key string (ANGLE_QUOTE_RIGHT)
+;		AL:			First character for drive key string
+;		AH:			Second character for drive key string (ANGLE_QUOTE_RIGHT)
 ;		SI:			Offset to hotkey description string
 ;		ES:			BDA segment (zero)
 ;	Returns:
@@ -176,18 +191,16 @@ HotkeyBar_ClearRestOfTopRow:
 ;	Corrupts registers:
 ;		AX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
-FormatDriveHotkeyString:
-	ePUSH_T	ax, PushHotkeyParamsAndFormat
-	jmp		SHORT GetNonSelectedHotkeyDescriptionAttributeToDX
-
+;; No work to do before going into FormatFunctionHotkeyString
+FormatDriveHotkeyString  equ  GetNonSelectedHotkeyDescriptionAttributeToDX
 
 ;--------------------------------------------------------------------
 ; FormatFunctionHotkeyString
 ;	Parameters:
-;		AH:			Hotkey scancode to compare with BOOTVARS.hotkeyVars+HOTKEYVARS.bScancode
+;		AL:			Scancode of function key, to know which if any to show as selected
+;					Later replaced with an 'F' for the call to the output routine
+;		AH:			Second character for drive key string
 ;		SI:			Offset to hotkey description string
-;		DI low:		First character for drive key string
-;		DI high:	Second character for drive key string
 ;		ES:			BDA segment (zero)
 ;	Returns:
 ;		Nothing
@@ -195,50 +208,34 @@ FormatDriveHotkeyString:
 ;		AX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 FormatFunctionHotkeyString:
-	ePUSH_T	ax, PushHotkeyParamsAndFormat
-	mov		cx, g_szBoot		; Description parameter string
-	cmp		[es:BOOTVARS.hotkeyVars+HOTKEYVARS.bScancode], ah
-	jne		SHORT GetNonSelectedHotkeyDescriptionAttributeToDX
-	; Fall to GetSelectedHotkeyDescriptionAttributeToDX
+	xor		cx, cx		; Null character, eaten in output routines
 
+	cmp		[es:BOOTVARS.hotkeyVars+HOTKEYVARS.bScancode], al
+	mov		al, 'F'		; Replace scancode with character for output
 
-;--------------------------------------------------------------------
-; GetSelectedHotkeyDescriptionAttributeToDX
-; GetNonSelectedHotkeyDescriptionAttributeToDX
-;	Parameters:
-;		CF:		Set if selected hotkey
-;				Cleared if unselected hotkey
-;		ES:		BDA segment (zero)
-;	Returns:
-;		DX:		Description Attribute
-;	Corrupts registers:
-;		AX
-;--------------------------------------------------------------------
 %ifdef MODULE_BOOT_MENU
-GetSelectedHotkeyDescriptionAttributeToDX:
-	push	si
+
 	mov		si, ATTRIBUTE_CHARS.cHurryTimeout		; Selected hotkey
-	jmp		SHORT GetDescriptionAttributeToDX
+	jz		SHORT GetDescriptionAttributeToDX		; From compare with bScancode above
 
 GetNonSelectedHotkeyDescriptionAttributeToDX:
-	push	si
 	mov		si, ATTRIBUTE_CHARS.cHighlightedItem	; Unselected hotkey
 
 	; Display Library should not be called like this
 GetDescriptionAttributeToDX:
+	xchg	dx, ax
 	call	MenuAttribute_GetToAXfromTypeInSI
-	pop		si
 	xchg	dx, ax					; DX = Description attribute
-	ret
+	;;  fall through to PushHotkeyParamsAndFormat 
 
-%else	; No boot menu so use simpler attributes
+%else ; MODULE_BOOT_MENU - No boot menu so use simpler attributes
 
-GetSelectedHotkeyDescriptionAttributeToDX:
 	mov		dx, (COLOR_ATTRIBUTE(COLOR_YELLOW, COLOR_CYAN) << 8) | MONO_REVERSE_BLINK
-	jmp		SHORT SelectAttributeFromDHorDLbasedOnVideoMode
+	jz		SHORT SelectAttributeFromDHorDLbasedOnVideoMode			; From compare with bScancode above
 
 GetNonSelectedHotkeyDescriptionAttributeToDX:
 	mov		dx, (COLOR_ATTRIBUTE(COLOR_BLACK, COLOR_CYAN) << 8) | MONO_REVERSE
+
 SelectAttributeFromDHorDLbasedOnVideoMode:
 	mov		al, [es:BDA.bVidMode]
 	shr		al, 1
@@ -247,19 +244,19 @@ SelectAttributeFromDHorDLbasedOnVideoMode:
 	jnz		SHORT .AttributeLoadedToDL	; MDA
 	mov		dl, dh
 .AttributeLoadedToDL:
-	ret
+	;;  fall through to PushHotkeyParamsAndFormat 		
 
-%endif
+%endif ; MODULE_BOOT_MENU
 
 
 ;--------------------------------------------------------------------
 ; PushHotkeyParamsAndFormat
 ;	Parameters:
-;		DI low:		First character
-;		DI high:	Second character
+;		BL:			First character
+;		BH:			Second character
 ;		DX:			Description Attribute
 ;		CX:			Description string parameter
-;		CS:SI:		Description string
+;		CS:DI:		Description string
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
@@ -269,18 +266,19 @@ PushHotkeyParamsAndFormat:
 	push	bp
 	mov		bp, sp
 
-	mov		ax, MONO_BRIGHT
-	push	ax				; Key attribute
-	xchg	ax, di
-	push	ax				; First character
-	xchg	al, ah
-	push	ax				; Second character
+	mov		si, MONO_BRIGHT
+
+	push	si				; Key attribute
+	push	ax				; First Character
+	mov		al, ah
+	push	ax				; Second Character
 
 	push	dx				; Description attribute
-	push	si				; Description string
+	push	di				; Description string
 	push	cx				; Description string parameter
+		
+	push	si				; Key attribute for last space
 
-	push	di				; Key attribute for last space
 	mov		si, g_szHotkey
 	jmp		DetectPrint_FormatCSSIfromParamsInSSBP
 
@@ -331,20 +329,20 @@ HotkeyBar_StoreHotkeyToBootvarsForDriveLetterInDL:
 
 
 ;--------------------------------------------------------------------
-; ScanHotkeysFromKeyBufferAndStoreToBootvars
+; HotkeyBar_ScanHotkeysFromKeyBufferAndStoreToBootvars
 ;	Parameters:
 ;		DS:		RAMVARS segment
 ;		ES:		BDA segment (zero)
 ;	Returns:
-;		Nothing
+;		AL:		Last scancode value
 ;	Corrupts registers:
-;		AX, CX
+;		AH, CX
 ;--------------------------------------------------------------------
-ScanHotkeysFromKeyBufferAndStoreToBootvars:
+HotkeyBar_ScanHotkeysFromKeyBufferAndStoreToBootvars:
 	call	Keyboard_GetKeystrokeToAX
 	jz		SHORT NoHotkeyToProcess
 
-	ePUSH_T	cx, ScanHotkeysFromKeyBufferAndStoreToBootvars
+	ePUSH_T	cx, HotkeyBar_ScanHotkeysFromKeyBufferAndStoreToBootvars
 	; Fall to HotkeyBar_StoreHotkeyToBootvarsIfValidKeystrokeInAX
 
 
@@ -356,34 +354,30 @@ ScanHotkeysFromKeyBufferAndStoreToBootvars:
 ;		DS:		RAMVARS segment
 ;		ES:		BDA segment (zero)
 ;	Returns:
-;		CF:		Set if valid keystroke
-;				Clear if invalid keystroke
+;       AL:     Last scancode seen
 ;	Corrupts registers:
-;		AX, CX, DI
+;		AH, CX, DI
 ;--------------------------------------------------------------------
 HotkeyBar_StoreHotkeyToBootvarsIfValidKeystrokeInAX:
-	; Boot menu
-%ifdef MODULE_BOOT_MENU
-	cmp		ah, BOOT_MENU_HOTKEY_SCANCODE	; Display Boot Menu?
-	je		SHORT .StoreFunctionHotkeyFromAH
-%endif
+	mov		di, BOOTVARS.hotkeyVars+HOTKEYVARS.bScancode
 
-	; ROM Boot
-	cmp		ah, ROM_BOOT_HOTKEY_SCANCODE	; ROM Boot?
-	je		SHORT .StoreFunctionHotkeyFromAH
-
+	; All scancodes are saved, even if it wasn't a drive letter,
+	; which also covers our function key case.  Invalid function keys
+	; will not do anything (won't be printed, won't be accepted as input)		
+	mov		[es:di], ah
+		
 	; Drive letter hotkeys remaining, allow 'a' to 'z'
 	call	Char_IsLowerCaseLetterInAL
-	jnc		SHORT .KeystrokeIsNotValidHotkey
+	jnc		SHORT .KeystrokeIsNotValidDriveLetter
 	xor		al, 32					; We want to print upper case letters
 
 	; Clear HD First flag to assume Floppy Drive hotkey
-	mov		di, BOOTVARS.hotkeyVars+HOTKEYVARS.bFlags
+	dec		di
 	and		BYTE [es:di], ~FLG_HOTKEY_HD_FIRST
 
 	; Determine if Floppy or Hard Drive hotkey
 	eMOVZX	cx, al					; Clear CH to clear scancode
-	call	HotkeyBar_GetLetterForFirstHardDriveToAX
+	call	DriveXlate_GetLetterForFirstHardDriveToAX
 	cmp		cl, al
 	jb		SHORT .StoreDriveLetter	; Store Floppy Drive letter
 
@@ -391,110 +385,34 @@ HotkeyBar_StoreHotkeyToBootvarsIfValidKeystrokeInAX:
 	or		BYTE [es:di], FLG_HOTKEY_HD_FIRST
 
 .StoreDriveLetter:
-	adc		di, BYTE 1			; Add CF if Floppy Drive
+	sbb		di, BYTE 1			; Sub CF if Floppy Drive
 	xchg	ax, cx
 	mov		[es:di], al			; AH = zero to clear function hotkey
 
-.StoreFunctionHotkeyFromAH:
-	mov		[es:BOOTVARS.hotkeyVars+HOTKEYVARS.bScancode], ah
-	stc		; Valid hotkey
-
-.KeystrokeIsNotValidHotkey:
+.KeystrokeIsNotValidDriveLetter:		
 NoHotkeyToProcess:
+	mov		al, [es:BOOTVARS.hotkeyVars+HOTKEYVARS.bScancode]
 	ret
 
-
 ;--------------------------------------------------------------------
-; HotkeyBar_GetSecondaryBootDriveNumberToDL
-; HotkeyBar_GetPrimaryBootDriveNumberToDL
+; HotkeyBar_GetBootDriveNumbersToDX
 ;	Parameters:
 ;		DS:		RAMVARS segment
 ;		ES:		BDA segment (zero)
 ;	Returns:
-;		DL:		Drive selected as boot device
-;	Corrupts registers:
-;		AX, DH
-;--------------------------------------------------------------------
-HotkeyBar_GetSecondaryBootDriveNumberToDL:
-	mov		dx, [es:BOOTVARS.hotkeyVars+HOTKEYVARS.wHddAndFddLetters]
-	xchg	dl, dh
-	jmp		SHORT GetBootDriveNumberFromLettersInDX
-
-HotkeyBar_GetPrimaryBootDriveNumberToDL:
-	mov		dx, [es:BOOTVARS.hotkeyVars+HOTKEYVARS.wHddAndFddLetters]
-GetBootDriveNumberFromLettersInDX:
-	test	BYTE [es:BOOTVARS.hotkeyVars+HOTKEYVARS.bFlags], FLG_HOTKEY_HD_FIRST
-	eCMOVZ	dl, dh
-	; Fall to HotkeyBar_ConvertDriveLetterInDLtoDriveNumber
-
-
-;--------------------------------------------------------------------
-; HotkeyBar_ConvertDriveLetterInDLtoDriveNumber
-;	Parameters:
-;		DS:		RAMVARS segment
-;		DL:		Drive letter ('A'...)
-;	Returns:
-;		DL:		Drive number (0xh for Floppy Drives, 8xh for Hard Drives)
-;	Corrupts registers:
-;		AX, DH
-;--------------------------------------------------------------------
-HotkeyBar_ConvertDriveLetterInDLtoDriveNumber:
-	call	HotkeyBar_GetLetterForFirstHardDriveToAX
-	cmp		dl, al
-	jb		SHORT .ConvertLetterInDLtoFloppyDriveNumber
-
-	; Convert letter in DL to Hard Drive number
-	sub		dl, al
-	or		dl, 80h
-	ret
-
-.ConvertLetterInDLtoFloppyDriveNumber:
-	sub		dl, DEFAULT_FLOPPY_DRIVE_LETTER
-	ret
-
-
-;--------------------------------------------------------------------
-; HotkeyBar_ConvertDriveNumberFromDLtoDriveLetter
-;	Parameters:
-;		DL:		Drive number (0xh for Floppy Drives, 8xh for Hard Drives)
-;		DS:		RAMVARS Segment
-;	Returns:
-;		DL:		Drive letter ('A'...)
-;		CF:		Set if Hard Drive
-;				Clear if Floppy Drive
+;		DX:		Drives selected as boot device, DL is primary
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
-HotkeyBar_ConvertDriveNumberFromDLtoDriveLetter:
-	test	dl, dl
-	jns		SHORT .GetDefaultFloppyDrive
+HotkeyBar_GetBootDriveNumbersToDX:
+	mov		dx, [es:BOOTVARS.hotkeyVars+HOTKEYVARS.wHddAndFddLetters]
+	test	BYTE [es:BOOTVARS.hotkeyVars+HOTKEYVARS.bFlags], FLG_HOTKEY_HD_FIRST		
+	jnz		.noflip
+	xchg	dl, dh
+.noflip:	
+	call	DriveXlate_ConvertDriveLetterInDLtoDriveNumber
+	xchg	dl, dh
+	; Fall to HotkeyBar_FallThroughTo_DriveXlate_ConvertDriveLetterInDLtoDriveNumber		
+		
+HotkeyBar_FallThroughTo_DriveXlate_ConvertDriveLetterInDLtoDriveNumber:		
 
-	; Store default hard drive to boot from
-	call	HotkeyBar_GetLetterForFirstHardDriveToAX
-	sub		dl, 80h
-	add		dl, al
-	stc
-	ret
-
-.GetDefaultFloppyDrive:
-	add		dl, DEFAULT_FLOPPY_DRIVE_LETTER		; Clears CF
-	ret
-
-
-;--------------------------------------------------------------------
-; Returns letter for first hard disk. Usually it will be 'C' but it
-; can be higher if more than two floppy drives are found.
-;
-; HotkeyBar_GetLetterForFirstHardDriveToAX
-;	Parameters:
-;		DS:		RAMVARS segment
-;	Returns:
-;		AX:		Upper case letter for first hard disk
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-HotkeyBar_GetLetterForFirstHardDriveToAX:
-	call	FloppyDrive_GetCountToAX
-	add		al, DEFAULT_FLOPPY_DRIVE_LETTER
-	MAX_U	al, DEFAULT_HARD_DRIVE_LETTER
-	ret

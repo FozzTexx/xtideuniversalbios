@@ -288,11 +288,25 @@ Keyboard_RemoveAllKeystrokesFromBuffer:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+
+%ifdef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
+	%define EXCLUDE
+	%ifdef MODULE_HOTKEYS
+		%undef EXCLUDE
+	%endif
+	%ifdef MODULE_BOOT_MENU
+		%undef EXCLUDE
+	%endif
+%endif
+		
+%ifndef EXCLUDE
+
 ALIGN KEYBOARD_JUMP_ALIGN
 Keyboard_GetKeystrokeToAXandLeaveItToBuffer:
 	mov		ah, CHECK_FOR_KEYSTROKE
 	int		BIOS_KEYBOARD_INTERRUPT_16h
 	ret
+		
 ALIGN KEYBOARD_JUMP_ALIGN
 Keyboard_GetKeystrokeToAX:
 	call	Keyboard_GetKeystrokeToAXandLeaveItToBuffer
@@ -305,3 +319,6 @@ Keyboard_GetKeystrokeToAXandWaitIfNecessary:
 	test	ax, ax						; Clear ZF
 Keyboard_GetKeystrokeToAXReturn:
 	ret
+		
+%endif
+%undef EXCLUDE

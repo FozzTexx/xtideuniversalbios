@@ -35,7 +35,7 @@
 %ifdef MODULE_BOOT_MENU
 	%define MENUEVENT_INLINE_OFFSETS    	; Only one menu required, save space and inline offsets
 	%define INCLUDE_MENU_LIBRARY
-
+	%define MENU_NO_ESC					    ; User cannot 'esc' out of the menu
 %else	; If no boot menu included
 	%define	INCLUDE_DISPLAY_LIBRARY
 	%define INCLUDE_KEYBOARD_LIBRARY
@@ -196,7 +196,9 @@ iend
 	; Hotkey Bar
 %ifdef MODULE_HOTKEYS
 	%include "HotkeyBar.asm"		; For hotkeys during drive detection and boot menu
-	%include "DriveXlate.asm"		; For swapping drive numbers
+%endif		
+%ifdef MODULE_DRIVEXLATE
+	%include "DriveXlate.asm"		; For swapping drive numbers, must come immediately after HotkeyBar.asm
 %endif
 
 	; Boot menu
@@ -210,8 +212,8 @@ iend
 
 	; Boot loader
 	%include "Int19h.asm"			; For Int 19h, Boot Loader
-	%include "Int19hReset.asm"		; INT 19h handler for proper system reset
 	%include "BootSector.asm"		; For loading boot sector
+	%include "Int19hReset.asm"		; INT 19h handler for proper system reset
 
 	; For all device types
 	%include "Idepack.asm"

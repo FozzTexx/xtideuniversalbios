@@ -49,7 +49,7 @@ struc MENUEVENT
 	; Returns:
 	;	DS:SI:		Ptr to initialized MENUINIT struct
 	.InitializeMenuinitFromDSSI		resb	2
-%define MENUEVENT_InitializeMenuinitFromDSSI MENUEVENT.InitializeMenuinitFromDSSI
+MENUEVENT_InitializeMenuinitFromDSSI 	equ 	MENUEVENT.InitializeMenuinitFromDSSI
 
 	; Parameters:
 	;	None
@@ -57,46 +57,46 @@ struc MENUEVENT
 	;	CF:			Set to exit menu
 	;				Clear to cancel exit
 	.ExitMenu						resb	2
-%define MENUEVENT_ExitMenu MENUEVENT.ExitMenu
+MENUEVENT_ExitMenu 					equ 	MENUEVENT.ExitMenu
 
 %ifdef MENUEVENT_IDLEPROCESSING_ENABLE
 	; Parameters:
 	;	None
 	; See the definition of MENUEVENT_IDLEPROCESSING_ENABLE below.
 	.IdleProcessing					resb	2
-%define MENUEVENT_IdleProcessing MENUEVENT.IdleProcessing
+MENUEVENT_IdleProcessing 			equ		MENUEVENT.IdleProcessing
 %endif
 
 	; Parameters:
 	;	CX:			Index of new highlighted item
 	;	DX:			Index of previously highlighted item or NO_ITEM_HIGHLIGHTED
 	.ItemHighlightedFromCX			resb	2
-%define MENUEVENT_ItemHighlightedFromCX MENUEVENT.ItemHighlightedFromCX
+MENUEVENT_ItemHighlightedFromCX 	equ		MENUEVENT.ItemHighlightedFromCX
 
 	; Parameters:
 	;	CX:			Index of selected item
 	.ItemSelectedFromCX				resb	2
-%define MENUEVENT_ItemSelectedFromCX MENUEVENT.ItemSelectedFromCX
+MENUEVENT_ItemSelectedFromCX 		equ		MENUEVENT.ItemSelectedFromCX
 
 	; Parameters:
 	;	AL:			ASCII character for the key
 	;	AH:			Keyboard library scan code for the key
 	.KeyStrokeInAX					resb	2
-%define MENUEVENT_KeyStrokeInAX MENUEVENT.KeyStrokeInAX
+MENUEVENT_KeyStrokeInAX 			equ 	MENUEVENT.KeyStrokeInAX
 
 	; Parameters:
 	;	CX:			Index of highlighted item
 	;	Cursor has been positioned to the beginning of first line
 	.RefreshTitle					resb	2
 	.RefreshInformation				resb	2
-%define MENUEVENT_RefreshTitle MENUEVENT.RefreshTitle
-%define MENUEVENT_RefreshInformation MENUEVENT.RefreshInformation
+MENUEVENT_RefreshTitle 				equ		MENUEVENT.RefreshTitle
+MENUEVENT_RefreshInformation 		equ		MENUEVENT.RefreshInformation
 
 	; Parameters:
 	;	CX:			Index of item to refresh
 	;	Cursor has been positioned to the beginning of item line
 	.RefreshItemFromCX				resb	2
-%define MENUEVENT_RefreshItemFromCX MENUEVENT.RefreshItemFromCX
+MENUEVENT_RefreshItemFromCX 		equ		MENUEVENT.RefreshItemFromCX
 endstruc
 
 %endif ; MENUEVENTS_INLINE_OFFSETS

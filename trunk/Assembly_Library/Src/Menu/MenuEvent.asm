@@ -51,11 +51,13 @@ MenuEvent_InitializeMenuinit:
 ;	Corrupts registers:
 ;		AX, BX, DX
 ;--------------------------------------------------------------------
+%ifndef MENU_NO_ESC
 ALIGN MENU_JUMP_ALIGN
 MenuEvent_ExitMenu:
 	mov		bl, MENUEVENT_ExitMenu
 	jmp		SHORT MenuEvent_SendFromBX
-
+%endif
+		
 
 %ifdef MENUEVENT_IDLEPROCESSING_ENABLE
 ;--------------------------------------------------------------------
@@ -152,11 +154,12 @@ MenuEvent_HighlightItemFromCX:
 ;	Corrupts registers:
 ;		AX, BX, DX
 ;--------------------------------------------------------------------
+%ifdef MENUEVENT_KeyStrokInAX
 ALIGN MENU_JUMP_ALIGN
 MenuEvent_KeyStrokeInAX:
 	mov		bl, MENUEVENT_KeyStrokeInAX
 	SKIP2B	dx	; mov dx, <next instruction>
-
+%endif
 
 ;--------------------------------------------------------------------
 ; MenuEvent_ItemSelectedFromCX

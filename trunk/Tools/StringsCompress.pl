@@ -317,7 +317,7 @@ sub processString
 	# Loop through bytes...
 	# looking ahead as needed for possible space and null optimizations, compiling formats
 	#
-	for( $g = 0; $g < $#v-1; $g++ )    # -1 for the guard byte
+	for( $g = 0; $g < $#v; $g++ )
 	{
 		#
 		# Special translation of LF,CR to a format

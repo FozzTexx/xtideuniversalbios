@@ -84,9 +84,13 @@ ProcessKeystrokeFromAX:
 	call	MenuTime_StopSelectionTimeout
 	xchg	ax, cx
 	call	.ProcessMenuSystemKeystrokeFromAX
+%ifdef MENUEVENT_KeyStrokeInAX
 	jc		SHORT NoKeystrokeToProcess
 	jmp		MenuEvent_KeyStrokeInAX
-
+%else
+	jmp		SHORT NoKeystrokeToProcess
+%endif
+		
 ;--------------------------------------------------------------------
 ; .ProcessMenuSystemKeystrokeFromAX
 ;	Parameters
@@ -103,8 +107,10 @@ ProcessKeystrokeFromAX:
 ;--------------------------------------------------------------------
 ALIGN MENU_JUMP_ALIGN
 .ProcessMenuSystemKeystrokeFromAX:
+%ifndef MENU_NO_ESC
 	cmp		al, ESC
 	je		SHORT .LeaveMenuWithoutSelectingItem
+%endif
 	cmp		al, CR
 	je		SHORT .SelectItem
 
@@ -112,6 +118,7 @@ ALIGN MENU_JUMP_ALIGN
 	jz		SHORT MenuLoop_ProcessScrollingKeysFromAX
 	ret		; Return with CF cleared since keystroke not processed
 
+%ifndef MENU_NO_ESC		
 ALIGN MENU_JUMP_ALIGN
 .LeaveMenuWithoutSelectingItem:
 	call	MenuEvent_ExitMenu
@@ -121,7 +128,8 @@ ALIGN MENU_JUMP_ALIGN
 .CancelMenuExit:
 	stc
 	ret
-
+%endif
+		
 ALIGN MENU_JUMP_ALIGN
 .SelectItem:
 	mov		cx, [bp+MENUINIT.wHighlightedItem]

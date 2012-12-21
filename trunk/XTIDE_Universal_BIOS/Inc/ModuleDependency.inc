@@ -17,19 +17,11 @@
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 ;
 
-; Boot Menu requires Hotkey support
-%ifdef MODULE_BOOT_MENU
-	%ifndef MODULE_HOTKEYS
-		%define MODULE_HOTKEYS
-	%endif
-%endif
-
 %ifdef MODULE_SERIAL_FLOPPY
 	%ifndef MODULE_SERIAL
 		%define MODULE_SERIAL
 	%endif
 %endif
-
 
 ; Include module specific .INC files
 %ifdef MODULE_8BIT_IDE
@@ -49,9 +41,14 @@
 
 %ifdef MODULE_HOTKEYS
 	%include "HotkeyBar.inc"		; For Hotkeys
-	%ifdef MODULE_BOOT_MENU
-		%include "BootMenu.inc"		; For Boot Menu
-	%endif
+%endif
+
+%ifdef MODULE_BOOT_MENU
+	%include "BootMenu.inc"			; For Boot Menu
+%endif
+
+%ifdef MODULE_BOOT_MENU OR MODULE_HOTKEYS
+	%define MODULE_DRIVEXLATE
 %endif
 
 %ifdef MODULE_IRQ
