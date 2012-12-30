@@ -28,6 +28,8 @@ EEPROM_POLLING_TIMEOUT_TICKS		EQU		3	; 1 tick = 54.9 ms
 XTIDE_SIGNATURE_LENGTH				EQU		8	; XTIDE Universal BIOS signature string length
 NUMBER_OF_EEPROM_TYPES				EQU		5
 MAX_EEPROM_SIZE_IN_BYTES			EQU		65536
+IDE_PORT_TO_START_DETECTION			EQU	00h		; Must be zero (not actual port)
+FIRST_MEMORY_SEGMENT_ADDRESS		EQU	0C000h
 
 
 ; Program global variables

@@ -105,11 +105,15 @@ g_szItemCfgIde2:		db	"Secondary IDE Controller",NULL
 g_szItemCfgIde3:		db	"Tertiary IDE Controller",NULL
 g_szItemCfgIde4:		db	"Quaternary IDE Controller",NULL
 g_szItemCfgBootMenu:	db	"Boot settings",NULL
+g_szItemAutoConfigure:	db	"Auto Configure",NULL
 g_szItemCfgFullMode:	db	"Full operating mode",NULL
 g_szItemCfgStealSize:	db	"kiB to steal from RAM",NULL
 g_szItemCfgIdeCnt:		db	"IDE controllers",NULL
 g_szItemCfgIdleTimeout:	db	"Power Management",NULL
 
+g_szDlgAutoConfigure:	db	"Found " 
+g_bControllersDetected:	db	'x'				; Value stored directly here
+						db	" controllers.",NULL
 g_szDlgCfgFullMode:		db	"Enable full operating mode?",NULL
 g_szDlgCfgStealSize:	db	"How many kiB of base memory to steal for XTIDE Universal BIOS variables (1...255)?",NULL
 g_szDlgCfgIdeCnt:		db	"How many IDE controllers to manage (1...4)?",NULL
@@ -117,6 +121,7 @@ g_szDlgCfgIdleTimeout:	db	"Select the amount of time before idling drives should
 
 g_szNfoCfgIde:			db	"IDE controller and drive configuration.",NULL
 g_szNfoCfgBootMenu:		db	"Boot configuration.",NULL
+g_szNfoAutoConfigure:	db	"Automatically Configure XTIDE Universal BIOS for this system.",NULL
 g_szNfoCfgFullMode:		db	"Full mode supports multiple controllers and has more features.",NULL
 g_szNfoCfgStealSize:	db	"How many kiB's to steal from Conventional memory for XTIDE Universal BIOS variables.",NULL
 g_szNfoCfgIdeCnt:		db	"Number of IDE controllers to manage.",NULL
