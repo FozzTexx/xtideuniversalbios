@@ -24,6 +24,7 @@
 		
 %include "AssemblyLibrary.inc"	; Assembly Library. Must be included first!
 %include "Romvars.inc"			; XTIDE Universal BIOS variables
+%include "IdeRegisters.inc"		; Needed for port and device autodetection
 %include "JRIDE_ISA.inc"		; For JR-IDE/ISA default segment
 %include "XTCF.inc"				; For XT-CF modes
 
@@ -46,11 +47,13 @@ Start:
 %include "AssemblyLibrary.asm"
 
 ; Include sources for this program
+%include "AutoConfigure.asm"
 %include "BiosFile.asm"
 %include "Buffers.asm"
 %include "Dialogs.asm"
 %include "EEPROM.asm"
 %include "Flash.asm"
+%include "IdeAutodetect.asm"
 %include "MenuEvents.asm"
 %include "Menuitem.asm"
 %include "MenuitemPrint.asm"

@@ -25,7 +25,7 @@ g_MenupageForConfigurationMenu:
 istruc MENUPAGE
 	at	MENUPAGE.fnEnter,			dw	ConfigurationMenu_EnterMenuOrModifyItemVisibility
 	at	MENUPAGE.fnBack,			dw	MainMenu_EnterMenuOrModifyItemVisibility
-	at	MENUPAGE.wMenuitems,		dw	10
+	at	MENUPAGE.wMenuitems,		dw	11
 iend
 
 g_MenuitemConfigurationBackToMainMenu:
@@ -86,6 +86,16 @@ istruc MENUITEM
 	at	MENUITEM.szHelp,			dw	g_szNfoCfgBootMenu
 	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE
 	at	MENUITEM.bType,				db	TYPE_MENUITEM_PAGENEXT
+iend
+
+g_MenuitemAutoConfigure:
+istruc MENUITEM
+	at	MENUITEM.fnActivate,		dw	AutoConfigure_ForThisSystem
+	at	MENUITEM.szName,			dw	g_szItemAutoConfigure
+	at	MENUITEM.szQuickInfo,		dw	g_szNfoAutoConfigure
+	at	MENUITEM.szHelp,			dw	g_szNfoAutoConfigure
+	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE | FLG_MENUITEM_MODIFY_MENU
+	at	MENUITEM.bType,				db	TYPE_MENUITEM_ACTION
 iend
 
 g_MenuitemConfigurationFullOperatingMode:
