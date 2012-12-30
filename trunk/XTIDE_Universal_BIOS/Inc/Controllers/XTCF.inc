@@ -22,7 +22,6 @@
 %ifndef XTCF_INC
 %define XTCF_INC
 
-OFFSET_TO_CONTROL_BLOCK_REGISTERS	EQU		8
 DEFAULT_XTCF_SECTOR_WINDOW_SEGMENT	EQU		0D800h
 
 ; XT-CF requires that block must be less than 128 sectors (64 kiB).
