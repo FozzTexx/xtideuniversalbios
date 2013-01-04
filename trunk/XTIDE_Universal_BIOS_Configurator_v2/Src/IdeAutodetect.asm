@@ -75,19 +75,30 @@ IdeAutodetect_DetectIdeDeviceFromPortDX:
 	mov		al, DEVICE_8BIT_XTCF_PIO8
 	jnc		SHORT .IdeDeviceFound
 
-	; Try to detect 8-bit XT-IDE rev 1
+	; Try to detect 8-bit XT-IDE rev 1 or rev 2.
+	; Note that A0<->A3 address swaps Status Register and Alternative
+	; Status Register addresses. That is why we need another step
+	; to check is this XT-IDE rev 1 or rev 2.
 	shr		cx, 1
 	call	DetectIdeDeviceFromPortDXwithStatusRegOffsetsInBLandCX
-	mov		al, DEVICE_8BIT_XTIDE_REV1
-	jnc		SHORT .IdeDeviceFound
+	jc		SHORT .SkipRestOfDetection	; No XT-IDE rev 1 or rev 2 found
 
-	; Try to detect 8-bit XT-IDE rev 2 or modded rev 1
-	; This doesn't actually work since Status Register and Alternative
-	; Status Register swap place!!!
-	mov		bl, 1110b	; STATUS_REGISTER_in with A0 and A3 swapped
-	mov		cl, 0111b
-	call	DetectIdeDeviceFromPortDXwithStatusRegOffsetsInBLandCX
-	mov		al, DEVICE_8BIT_XTIDE_REV2
+	; Now we can be sure that we have XT-IDE rev 1 or rev 2.
+	; Rev 2 swaps address lines A0 and A3 thus LBA Low Register
+	; moves from offset 3h to offset Ah. There is no Register at
+	; offset Ah so if we can write to it and read back, then we
+	; must have XT-IDE rev 2 or modded rev 1.
+	push	dx
+	add		dx, BYTE 0Ah				; LBA Low Register for XT-IDE rev 2
+	mov		al, DEVICE_8BIT_XTIDE_REV2	; Our test byte
+	out		dx, al						; Output our test byte
+	JMP_DELAY
+	in		al, dx						; Read back
+	pop		dx
+	cmp		al, DEVICE_8BIT_XTIDE_REV2
+	je		SHORT .IdeDeviceFound
+	mov		al, DEVICE_8BIT_XTIDE_REV1	; We must have rev 1
+	clc
 .IdeDeviceFound:
 	ret
 .SkipRestOfDetection:
@@ -192,15 +203,11 @@ IdeAutodetect_IncrementDXtoNextIdeBasePort:
 ALIGN WORD_ALIGN
 .rgwIdeBasePorts:
 	dw		IDE_PORT_TO_START_DETECTION		; Must be first
-	; JR-IDE/ISA (Memory Segment Addresses)
-	dw		0C000h
-	dw		0C400h
-	dw		0C800h
-	dw		0CC00h
-	dw		0D000h
-	dw		0D400h
-	dw		0D800h
-	dw		0DC00h
+	; Standard IDE
+	dw		DEVICE_ATA_PRIMARY_PORT
+	dw		DEVICE_ATA_SECONDARY_PORT
+	dw		DEVICE_ATA_TERTIARY_PORT
+	dw		DEVICE_ATA_QUATERNARY_PORT
 	; 8-bit Devices
 	dw		200h
 	dw		220h
@@ -218,9 +225,13 @@ ALIGN WORD_ALIGN
 	dw		3A0h
 	dw		3C0h
 	dw		3E0h
-	; Standard IDE
-	dw		DEVICE_ATA_PRIMARY_PORT
-	dw		DEVICE_ATA_SECONDARY_PORT
-	dw		DEVICE_ATA_TERTIARY_PORT
+	; JR-IDE/ISA (Memory Segment Addresses)
+	dw		0C000h
+	dw		0C400h
+	dw		0C800h
+	dw		0CC00h
+	dw		0D000h
+	dw		0D400h
+	dw		0D800h
 .wLastIdePort:
-	dw		DEVICE_ATA_QUATERNARY_PORT
+	dw		0DC00h
