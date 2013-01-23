@@ -56,7 +56,7 @@ endstruc
 
 struc HOTKEYVARS
 	.wTimeToClose		resb	2		; Earliest system time when Hotkey Bar can be closed
-	.wHddAndFddLetters:
+	.wFddAndHddLetters:
 	.bFddLetter			resb	1		; Floppy Drive letter hotkey (upper case)
 	.bHddLetter			resb	1		; Hard Drive letter hotkey (upper case)
 	.bFlags				resb	1		; Must be just after .bHddLetter!  (dependency in Hotkeybar.asm)
