@@ -65,13 +65,12 @@ HotkeyBar_DrawToTopOfScreen:
 ;		AX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 .PrintFloppyDriveHotkeys:
-	mov		cx, [es:BOOTVARS.hotkeyVars+HOTKEYVARS.wHddAndFddLetters]
-		
 	call	FloppyDrive_GetCountToAX
 	test	ax, ax		; Any Floppy Drives?
 	jz		SHORT .SkipFloppyDriveHotkeys
 
 	mov		ax, (ANGLE_QUOTE_RIGHT << 8) | DEFAULT_FLOPPY_DRIVE_LETTER
+	mov		cl, [es:BOOTVARS.hotkeyVars+HOTKEYVARS.bFddLetter]
 	mov		di, g_szFDD
 	call	FormatDriveHotkeyString
 
@@ -90,7 +89,7 @@ HotkeyBar_DrawToTopOfScreen:
 ;--------------------------------------------------------------------
 	call	DriveXlate_GetLetterForFirstHardDriveToAX
 	mov		ah, ANGLE_QUOTE_RIGHT
-	mov		cl, ch
+	mov		cl, [es:BOOTVARS.hotkeyVars+HOTKEYVARS.bHddLetter]
 	mov		di, g_szHDD
 	call	FormatDriveHotkeyString
 	; Fall to .PrintBootMenuHotkey
@@ -228,7 +227,8 @@ GetDescriptionAttributeToDX:
 	xchg	dx, ax					; DX = Description attribute
 	;;  fall through to PushHotkeyParamsAndFormat 
 
-%else ; MODULE_BOOT_MENU - No boot menu so use simpler attributes
+
+%else ; if no MODULE_BOOT_MENU - No boot menu so use simpler attributes
 
 	mov		dx, (COLOR_ATTRIBUTE(COLOR_YELLOW, COLOR_CYAN) << 8) | MONO_REVERSE_BLINK
 	jz		SHORT SelectAttributeFromDHorDLbasedOnVideoMode			; From compare with bScancode above
@@ -237,10 +237,10 @@ GetNonSelectedHotkeyDescriptionAttributeToDX:
 	mov		dx, (COLOR_ATTRIBUTE(COLOR_BLACK, COLOR_CYAN) << 8) | MONO_REVERSE
 
 SelectAttributeFromDHorDLbasedOnVideoMode:
-	mov		al, [es:BDA.bVidMode]
-	shr		al, 1
+	mov		ch, [es:BDA.bVidMode]		; We only need to preserve CL
+	shr		ch, 1
 	jnc		SHORT .AttributeLoadedToDL	; Black & White modes
-	shr		al, 1
+	shr		ch, 1
 	jnz		SHORT .AttributeLoadedToDL	; MDA
 	mov		dl, dh
 .AttributeLoadedToDL:
@@ -252,8 +252,8 @@ SelectAttributeFromDHorDLbasedOnVideoMode:
 ;--------------------------------------------------------------------
 ; PushHotkeyParamsAndFormat
 ;	Parameters:
-;		BL:			First character
-;		BH:			Second character
+;		AL:			First character
+;		AH:			Second character
 ;		DX:			Description Attribute
 ;		CX:			Description string parameter
 ;		CS:DI:		Description string
@@ -405,7 +405,7 @@ NoHotkeyToProcess:
 ;		AX
 ;--------------------------------------------------------------------
 HotkeyBar_GetBootDriveNumbersToDX:
-	mov		dx, [es:BOOTVARS.hotkeyVars+HOTKEYVARS.wHddAndFddLetters]
+	mov		dx, [es:BOOTVARS.hotkeyVars+HOTKEYVARS.wFddAndHddLetters]
 	test	BYTE [es:BOOTVARS.hotkeyVars+HOTKEYVARS.bFlags], FLG_HOTKEY_HD_FIRST		
 	jnz		.noflip
 	xchg	dl, dh
