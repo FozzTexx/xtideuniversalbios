@@ -76,7 +76,7 @@ IdeIO_InputToALfromIdeRegisterInDL:
 	SKIP2B	bx	; Skip shl dx, 1
 
 .ShlRegisterIndexInDX:
-	eSHL_IM	dx, 1
+	shl		dx, 1
 	; Fall to .InputToALfromRegisterInDX
 
 .InputToALfromRegisterInDX:
@@ -97,14 +97,12 @@ IdeIO_InputToALfromIdeRegisterInDL:
 ;		BX, DX
 ;--------------------------------------------------------------------
 IdeIO_OutputALtoIdeControlBlockRegisterInDL:
-	; Note! We do not need to reverse A0 and A3 for XTIDE rev 2 since
-	; the only Control Block Register we access is DEVICE_CONTROL_REGISTER_out
-	; at offset 6 (0110b).
 	xor		dh, dh	; IDE Register index now in DX
 
 	mov		bl, [di+DPT_ATA.bDevice]
 	cmp		bl, DEVICE_8BIT_XTIDE_REV2
-	jbe		SHORT .OutputALtoControlBlockRegisterInDX	; Standard IDE controllers and XTIDE rev 1
+	je		SHORT .ReverseA0andA3fromRegisterIndexInDX
+	jb		SHORT .OutputALtoControlBlockRegisterInDX	; Standard IDE controllers and XTIDE rev 1
 
 %ifdef MODULE_8BIT_IDE_ADVANCED
 	cmp		bl, DEVICE_8BIT_JRIDE_ISA
@@ -116,9 +114,18 @@ IdeIO_OutputALtoIdeControlBlockRegisterInDL:
 	jmp 	SHORT IdeIO_OutputALtoIdeRegisterInDL.OutputALtoMemoryMappedRegisterInDXwithWindowOffsetInBX
 %endif
 
+.ReverseA0andA3fromRegisterIndexInDX:
+	; We cannot use lookup table since A3 will be always set because
+	; Control Block Registers start from Command Block + 8h. We can do
+	; a small trick since we only access Device Control Register at
+	; offset 6h: Always clear A3 and set A0.
+	add		dx, [cs:bx+IDEVARS.wControlBlockPort]
+	xor		dl, 1001b						; Clear A3, Set A0
+	jmp		SHORT OutputALtoPortInDX
+
 .ShlRegisterIndexInDX:
 	add		dl, XTCF_CONTROL_BLOCK_OFFSET
-	eSHL_IM	dx, 1
+	shl		dx, 1
 	jmp		SHORT OutputALtoRegisterInDX
 
 .OutputALtoControlBlockRegisterInDX:
@@ -162,14 +169,14 @@ IdeIO_OutputALtoIdeRegisterInDL:
 	pop		ds
 	ret
 %endif
-		
+
 .ReverseA0andA3fromRegisterIndexInDX:
 	mov		bx, dx
 	mov		dl, [cs:bx+g_rgbSwapA0andA3fromIdeRegisterIndex]
 	SKIP2B	bx	; Skip shl dx, 1
 
 .ShlRegisterIndexInDX:
-	eSHL_IM	dx, 1
+	shl		dx, 1
 	; Fall to OutputALtoRegisterInDX
 
 ALIGN JUMP_ALIGN

@@ -21,37 +21,6 @@
 SECTION .text
 
 ;--------------------------------------------------------------------
-; IdeCommand_ResetMasterAndSlaveController
-;	Parameters:
-;		DS:DI:	Ptr to DPT (in RAMVARS segment)
-;	Returns:
-;		AH:		INT 13h Error Code
-;		CF:		Cleared if success, Set if error
-;	Corrupts registers:
-;		AL, BX, CX, DX
-;--------------------------------------------------------------------
-IdeCommand_ResetMasterAndSlaveController:
-	; HSR0: Set_SRST
-	call	AccessDPT_GetDeviceControlByteToAL
-	or		al, FLG_DEVCONTROL_SRST | FLG_DEVCONTROL_nIEN	; Set Reset bit
-	OUTPUT_AL_TO_IDE_CONTROL_BLOCK_REGISTER		DEVICE_CONTROL_REGISTER_out
-	mov		ax, HSR0_RESET_WAIT_US
-	call	Timer_DelayMicrosecondsFromAX
-
-	; HSR1: Clear_wait
-	call	AccessDPT_GetDeviceControlByteToAL
-	or		al, FLG_DEVCONTROL_nIEN
-	and		al, ~FLG_DEVCONTROL_SRST						; Clear reset bit
-	OUTPUT_AL_TO_IDE_CONTROL_BLOCK_REGISTER		DEVICE_CONTROL_REGISTER_out
-	mov		ax, HSR1_RESET_WAIT_US
-	call	Timer_DelayMicrosecondsFromAX
-
-	; HSR2: Check_status
-	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_MAXIMUM, FLG_STATUS_BSY)
-	jmp		IdeWait_PollStatusFlagInBLwithTimeoutInBH
-
-
-;--------------------------------------------------------------------
 ; IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH
 ;	Parameters:
 ;		BH:		Drive Select byte for Drive and Head Select Register

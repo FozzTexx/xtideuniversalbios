@@ -37,16 +37,8 @@ SECTION .text
 ;		CF:		0 if successful, 1 if error
 ;--------------------------------------------------------------------
 AH0h_HandlerForDiskControllerReset:
-	; Reset Floppy Drives with INT 40h
 	xor		bx, bx						; Zero BH to assume no errors
 	or		bl, dl						; Copy requested drive to BL
-	eCMOVS	dl, bh						; Reset Floppy Drive(s) with 00h since DL has Hard Drive number
-
-	xor		ah, ah						; Disk Controller Reset
-	int		BIOS_DISKETTE_INTERRUPT_40h
-	call	BackupErrorCodeFromTheRequestedDriveToBH
-	; We do not reset Hard Drives if DL was 0xh on entry
-
 
 %ifdef MODULE_SERIAL_FLOPPY
 ;
@@ -68,15 +60,15 @@ AH0h_HandlerForDiskControllerReset:
 	call	BackupErrorCodeFromTheRequestedDriveToBH	; only one drive), but doing it again is not harmful.
 %endif
 
-	; Reset foreign Hard Drives (those handled by other BIOSes)
+	; Reset foreign Floppy and Hard Drives (those handled by other BIOSes)
+	call	ResetForeignDrives
 	test	bl, bl										; If we were called with a floppy disk, then we are done,
 	jns		SHORT .SkipHardDiskReset					; don't do hard disks.
-	call	ResetForeignHardDisks
 
 	; Resetting our hard disks will modify dl and bl to be idevars offset based instead of drive number based,
 	; such that this call must be the last in the list of reset routines called.
 	;
-	; This needs to happen after ResetForeignHardDisks, as that call may have set the error code for 80h,
+	; This needs to happen after ResetForeignDrives, as that call may have set the error code for 80h,
 	; and we need to override that value if we are xlate'd into 80h with one of our drives.
 	;
 	call	ResetHardDisksHandledByOurBIOS
@@ -87,23 +79,23 @@ AH0h_HandlerForDiskControllerReset:
 
 
 ;--------------------------------------------------------------------
-; ResetForeignHardDisks
+; ResetForeignDrives
 ;	Parameters:
-;		BL:		Requested Hard Drive (DL when entering AH=00h)
+;		BL:		Requested Floppy or Hard Drive (DL when entering AH=00h)
 ;		DS:		RAMVARS segment
 ;	Returns:
 ;		BH:		Error code from requested drive (if available)
 ;	Corrupts registers:
 ;		AX, DL
 ;--------------------------------------------------------------------
-ResetForeignHardDisks:
+ResetForeignDrives:
 	; If there are drives after our drives, those are already reset
 	; since our INT 13h was called by some other BIOS.
 	; We only need to reset drives from the previous INT 13h handler.
 	; There could be more in chain but let the previous one handle them.
 	mov		dl, [RAMVARS.bFirstDrv]
-	or		dl, 80h					; We may not have our drives at all!
-	MIN_U	dl, bl					; BL is always Hard Drive number
+	or		dl, 80h					; We may not have our drives at all so change 0 to 80h!
+	MIN_U	dl, bl
 
 	xor		ah, ah					; Disk Controller Reset
 	call	Int13h_CallPreviousInt13hHandler
@@ -134,6 +126,7 @@ AH0h_ResetAllOurHardDisksAtTheEndOfDriveInitialization equ ResetHardDisksHandled
 ;--------------------------------------------------------------------
 ; ResetHardDisksHandledByOurBIOS
 ;	Parameters:
+;		BL:		Requested drive (DL when entering AH=00h)
 ;		DS:DI:	Ptr to DPT for requested drive
 ;				If DPT pointer is not available, or error result in BH won't be used anyway,
 ;				enter through .ErrorCodeNotUsed.

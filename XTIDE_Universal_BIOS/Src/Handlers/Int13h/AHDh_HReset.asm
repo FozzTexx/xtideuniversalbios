@@ -64,10 +64,6 @@ AHDh_ResetDrive:
 %ifdef MODULE_IRQ
 	call	Interrupts_UnmaskInterruptControllerForDriveInDSDI
 %endif
-	call	Device_ResetMasterAndSlaveController
-	;jc		SHORT .ReturnError					; CF would be set if slave drive present without master
-												; (error register has special values after reset)
-
 	; Initialize Master and Slave drives
 	call	AccessDPT_GetIdevarsToCSBX
 	xchg	ax, bx								; (AL) pointer to controller we are looking to reset
