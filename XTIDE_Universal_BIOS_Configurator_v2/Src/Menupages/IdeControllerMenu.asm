@@ -82,7 +82,7 @@ istruc MENUITEM
 	at	MENUITEM.szName,			dw	g_szItemIdeCmdPort
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoIdeCmdPort
 	at	MENUITEM.szHelp,			dw	g_szHelpIdeCmdPort
-	at	MENUITEM.bFlags,			db	NULL
+	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE
 	at	MENUITEM.bType,				db	TYPE_MENUITEM_HEX
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	NULL
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgIdeCmdPort
@@ -356,7 +356,6 @@ ALIGN JUMP_ALIGN
 IdeControllerMenu_EnterMenuOrModifyItemVisibility:
 	push	cs
 	pop		ds
-	call	.EnableOrDisableCommandBlockPort
 	call	.EnableOrDisableControlBlockPort
 	call	.DisableIRQchannelSelection
 	call	.EnableOrDisableEnableInterrupt
@@ -364,29 +363,6 @@ IdeControllerMenu_EnterMenuOrModifyItemVisibility:
 	call	.EnableOrDisableSerial
 	mov		si, g_MenupageForIdeControllerMenu
 	jmp		Menupage_ChangeToNewMenupageInDSSI
-
-
-;--------------------------------------------------------------------
-; .EnableOrDisableCommandBlockPort
-;	Parameters:
-;		SS:BP:	Menu handle
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, BX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-.EnableOrDisableCommandBlockPort:
-	mov		bx, [cs:g_MenuitemIdeControllerDevice+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset]
-	call	Buffers_GetRomvarsValueToAXfromOffsetInBX
-	mov		bx, g_MenuitemIdeControllerCommandBlockAddress
-	cmp		al, DEVICE_8BIT_XTCF_PIO8
-	jb		SHORT .EnableMenuitemFromCSBX
-	cmp		al, DEVICE_SERIAL_PORT
-	je		SHORT .DisableMenuitemFromCSBX
-	cmp		al, DEVICE_8BIT_XTCF_MEMMAP
-	ja		SHORT .EnableMenuitemFromCSBX
-	jmp		SHORT .DisableMenuitemFromCSBX
 
 
 ;--------------------------------------------------------------------
@@ -404,7 +380,7 @@ ALIGN JUMP_ALIGN
 	call	Buffers_GetRomvarsValueToAXfromOffsetInBX
 	mov		bx, g_MenuitemIdeControllerControlBlockAddress
 	cmp		al, DEVICE_8BIT_XTCF_PIO8
-	jb		SHORT .EnableMenuitemFromCSBX
+	jb		SHORT .EnableMenuitemFromCSBX	; Not needed for XT-CF and JR-IDE/ISA
 	jmp		SHORT .DisableMenuitemFromCSBX
 
 
