@@ -21,65 +21,86 @@
 SECTION .text
 
 ;--------------------------------------------------------------------
-; IdeAutodetect_DetectIdeDeviceFromPortDX
+; IdeAutodetect_DetectIdeDeviceFromPortDXAndReturnControlBlockInCX
 ;	Parameters:
 ;		DX:		IDE Base Port
 ;		DS:DI:	Ptr to ROMVARS
 ;	Returns:
 ;		AL:		Device Type
+;		CX:		Control Block Base port (detected since there is no
+;				standard address for Tetriary and Quaternary IDE controllers)
 ;		CF:		Clear if IDE Device found
 ;				Set if IDE Device not found
 ;	Corrupts registers:
-;		AH, BX, CX
+;		AH, BX
 ;--------------------------------------------------------------------
-IdeAutodetect_DetectIdeDeviceFromPortDX:
+IdeAutodetect_DetectIdeDeviceFromPortDXAndReturnControlBlockInCX:
 	cmp		dx, FIRST_MEMORY_SEGMENT_ADDRESS
 	jb		SHORT .DetectPortMappedDevices
 
-	; Try to detect JR-IDE/ISA (only if MODULE_8BIT_IDE_ADVANCED is present)
+	; *** Try to detect JR-IDE/ISA (only if MODULE_8BIT_IDE_ADVANCED is present) ***
 	test	WORD [di+ROMVARS.wFlags], FLG_ROMVARS_MODULE_8BIT_IDE_ADVANCED
 	jz		SHORT .SkipRestOfDetection
 
 	push	ds
 	mov		ds, dx
-	cli							; Disable Interrupts
+	cli									; Disable Interrupts
 	mov		ah, [JRIDE_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET + STATUS_REGISTER_in]
 	mov		al, [JRIDE_CONTROL_BLOCK_REGISTER_WINDOW_OFFSET + ALTERNATE_STATUS_REGISTER_in]
-	sti							; Enable Interrupts
+	sti									; Enable Interrupts
 	pop		ds
 	call	CompareIdeStatusRegistersFromALandAH
-	mov		al, DEVICE_8BIT_JRIDE_ISA
-	ret
+	mov		al, DEVICE_8BIT_JRIDE_ISA	; Assume CF was cleared
+	ret									; No need to return Control Block Port
 .DetectPortMappedDevices:
 
 
-	; Try to detect Standard 16- and 32-bit IDE Devices
+	; *** Try to detect Standard 16- and 32-bit IDE Devices ***
 	mov		bh, DEVICE_16BIT_ATA		; Assume 16-bit ISA slot for AT builds
 	call	Buffers_IsXTbuildLoaded
 	eCMOVE	bh, DEVICE_8BIT_ATA			; Assume 8-bit ISA slot for XT builds
+
 	mov		bl, STATUS_REGISTER_in
 	mov		cx, STANDARD_CONTROL_BLOCK_OFFSET + ALTERNATE_STATUS_REGISTER_in
+.RedetectTertiaryOrQuaternaryWithDifferentAlternativeStatusRegisterPort:
 	call	DetectIdeDeviceFromPortDXwithStatusRegOffsetsInBLandCX
 	mov		al, bh
 	jnc		SHORT .IdeDeviceFound
+
+	; 16- or 32-bit IDE Device was not found but we may have used wrong Control Block port if we were trying
+	; to detect Tertiary or Quaternary IDE controllers. Control Block port location is not standardized. For
+	; example Promise FloppyMAX has Control Block at STANDARD_CONTROL_BLOCK_OFFSET but Sound Blaster 16 (CT2290)
+	; use DEVICE_ATA_SECONDARY_PORTCTRL for Tertiary and Quaternary even though only Secondary should use that.
+	cmp		cx, STANDARD_CONTROL_BLOCK_OFFSET + ALTERNATE_STATUS_REGISTER_in
+	jne		SHORT .AlreadyTriedAlternativeControlBlock
+	mov		cx, DEVICE_ATA_SECONDARY_PORTCTRL + ALTERNATE_STATUS_REGISTER_in
+	sub		cx, dx						; Offset to add to DX
+	cmp		dx, DEVICE_ATA_TERTIARY_PORT
+	je		SHORT .RedetectTertiaryOrQuaternaryWithDifferentAlternativeStatusRegisterPort
+	cmp		dx, DEVICE_ATA_QUATERNARY_PORT
+	je		SHORT .RedetectTertiaryOrQuaternaryWithDifferentAlternativeStatusRegisterPort
+.AlreadyTriedAlternativeControlBlock:
 
 
 	; Detect 8-bit devices only if MODULE_8BIT_IDE is available
 	test	BYTE [di+ROMVARS.wFlags], FLG_ROMVARS_MODULE_8BIT_IDE
 	jz		SHORT .SkipRestOfDetection
 
-	; Try to detect XT-CF
+	; *** Try to detect XT-CF ***
 	mov		bl, STATUS_REGISTER_in << 1
 	mov		cx, (XTIDE_CONTROL_BLOCK_OFFSET + ALTERNATE_STATUS_REGISTER_in) << 1
 	call	DetectIdeDeviceFromPortDXwithStatusRegOffsetsInBLandCX
+	rcl		ax, 1						; Store CF
+	shr		cx, 1						; XTIDE_CONTROL_BLOCK_OFFSET + ALTERNATE_STATUS_REGISTER_in
+	rcr		ax, 1						; Restore CF
 	mov		al, DEVICE_8BIT_XTCF_PIO8
 	jnc		SHORT .IdeDeviceFound
 
-	; Try to detect 8-bit XT-IDE rev 1 or rev 2.
+
+	; *** Try to detect 8-bit XT-IDE rev 1 or rev 2 ***
 	; Note that A0<->A3 address swaps Status Register and Alternative
 	; Status Register addresses. That is why we need another step
 	; to check is this XT-IDE rev 1 or rev 2.
-	shr		cx, 1
 	call	DetectIdeDeviceFromPortDXwithStatusRegOffsetsInBLandCX
 	jc		SHORT .SkipRestOfDetection	; No XT-IDE rev 1 or rev 2 found
 
@@ -98,8 +119,9 @@ IdeAutodetect_DetectIdeDeviceFromPortDX:
 	cmp		al, DEVICE_8BIT_XTIDE_REV2
 	je		SHORT .IdeDeviceFound
 	mov		al, DEVICE_8BIT_XTIDE_REV1	; We must have rev 1
-	clc
 .IdeDeviceFound:
+	sub		cl, ALTERNATE_STATUS_REGISTER_in	; Clear CF
+	add		cx, dx								; CX = Control Block address
 	ret
 .SkipRestOfDetection:
 	stc
@@ -155,8 +177,10 @@ CompareIdeStatusRegistersFromALandAH:
 	jne		SHORT .InvalidStatusRegister
 
 	; Bytes were the same but it is possible they were both FFh, for 
-	; example. We must make sure bit are what is expected from valid
-	; IDE Status Register.
+	; example. We must make sure bits are what is expected from valid
+	; IDE Status Register. So far all drives I've tested return 50h
+	; (FLG_STATUS_DRDY and FLG_STATUS_DSC set) but I don't want to assume
+	; just yet that all drives report 50h.
 	test	al, FLG_STATUS_BSY | FLG_STATUS_DF | FLG_STATUS_DRQ | FLG_STATUS_ERR
 	jnz		SHORT .InvalidStatusRegister	; Busy or Errors cannot be set
 	test	al, FLG_STATUS_DRDY

@@ -69,9 +69,16 @@ ResetIdevarsToDefaultValues:
 	; Set default values (other than zero)
 	mov		ax, DISABLE_WRITE_CACHE | (TRANSLATEMODE_AUTO<<TRANSLATEMODE_FIELD_POSITION) | FLG_DRVPARAMS_BLOCKMODE
 	mov		[di+ROMVARS.ideVars0+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags], ax
+	mov		[di+ROMVARS.ideVars0+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags], ax
+
 	mov		[di+ROMVARS.ideVars1+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags], ax
+	mov		[di+ROMVARS.ideVars1+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags], ax
+
 	mov		[di+ROMVARS.ideVars2+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags], ax
+	mov		[di+ROMVARS.ideVars2+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags], ax
+
 	mov		[di+ROMVARS.ideVars3+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags], ax
+	mov		[di+ROMVARS.ideVars3+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags], ax
 	ret
 
 
@@ -94,13 +101,13 @@ DetectIdePortsAndDevices:
 	call	IdeAutodetect_IncrementDXtoNextIdeBasePort
 	jz		SHORT .AllPortsAlreadyDetected
 	push	cx
-	call	IdeAutodetect_DetectIdeDeviceFromPortDX
+	call	IdeAutodetect_DetectIdeDeviceFromPortDXAndReturnControlBlockInCX
+	mov		bx, cx
 	pop		cx
 	jc		SHORT .DetectFromNextPort
 
 	; Device found from port DX, Device Type returned in AL
 	inc		cx	; Increment number of controllers found
-	call	GetControlBlockPortToBXfromDeviceTypeInALandBasePortInDX
 	mov		[si+IDEVARS.wBasePort], dx
 	mov		[si+IDEVARS.wControlBlockPort], bx
 	mov		[si+IDEVARS.bDevice], al
@@ -111,36 +118,6 @@ DetectIdePortsAndDevices:
 	add		si, IDEVARS_size
 	jmp		SHORT .DetectFromNextPort
 .AllPortsAlreadyDetected:
-	ret
-
-
-;--------------------------------------------------------------------
-; GetControlBlockPortToBXfromDeviceTypeInALandBasePortInDX
-;	Parameters:
-;		AL:		Device Type
-;		DX:		Base port
-;	Returns:
-;		BX:		Control Block Port
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-GetControlBlockPortToBXfromDeviceTypeInALandBasePortInDX:
-	mov		bx, dx
-	cmp		al, DEVICE_8BIT_XTIDE_REV1
-	jae		SHORT .NonStandardControlBlockPortLocation
-
-	; Standard IDE Devices
-	add		bx, STANDARD_CONTROL_BLOCK_OFFSET
-	ret
-
-.NonStandardControlBlockPortLocation:
-	cmp		al, DEVICE_8BIT_JRIDE_ISA
-	je		SHORT .JrIdeIsaDoesNotNeedControlBlockAddress
-
-	; 8-bit Devices
-	add		bx, BYTE XTIDE_CONTROL_BLOCK_OFFSET	; XT-CF also
-.JrIdeIsaDoesNotNeedControlBlockAddress:
 	ret
 
 
