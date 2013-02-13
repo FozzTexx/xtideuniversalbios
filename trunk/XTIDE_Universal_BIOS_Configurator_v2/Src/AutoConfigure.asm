@@ -100,10 +100,10 @@ DetectIdePortsAndDevices:
 .DetectFromNextPort:
 	call	IdeAutodetect_IncrementDXtoNextIdeBasePort
 	jz		SHORT .AllPortsAlreadyDetected
-	push	cx
-	call	IdeAutodetect_DetectIdeDeviceFromPortDXAndReturnControlBlockInCX
-	mov		bx, cx
-	pop		cx
+	push	si
+	call	IdeAutodetect_DetectIdeDeviceFromPortDXAndReturnControlBlockInSI
+	mov		bx, si
+	pop		si
 	jc		SHORT .DetectFromNextPort
 
 	; Device found from port DX, Device Type returned in AL
