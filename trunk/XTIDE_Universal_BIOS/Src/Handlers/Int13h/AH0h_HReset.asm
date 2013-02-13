@@ -37,8 +37,12 @@ SECTION .text
 ;		CF:		0 if successful, 1 if error
 ;--------------------------------------------------------------------
 AH0h_HandlerForDiskControllerReset:
-	xor		bx, bx						; Zero BH to assume no errors
-	or		bl, dl						; Copy requested drive to BL
+	; Reset foreign Floppy and Hard Drives (those handled by other BIOSes)
+	xor		bx, bx										; Zero BH to assume no errors
+	or		bl, dl										; Copy requested drive to BL
+	xor		ah, ah										; Disk Controller Reset
+	call	Int13h_CallPreviousInt13hHandler			; Reset floppy drives only or floppy drives and foreign hard disks
+	call	BackupErrorCodeFromTheRequestedDriveToBH
 
 %ifdef MODULE_SERIAL_FLOPPY
 ;
@@ -59,9 +63,6 @@ AH0h_HandlerForDiskControllerReset:
 	mov		dl, al										; We may end up doing the first drive twice (if there is
 	call	BackupErrorCodeFromTheRequestedDriveToBH	; only one drive), but doing it again is not harmful.
 %endif
-
-	; Reset foreign Floppy and Hard Drives (those handled by other BIOSes)
-	call	ResetForeignDrives
 	test	bl, bl										; If we were called with a floppy disk, then we are done,
 	jns		SHORT .SkipHardDiskReset					; don't do hard disks.
 
@@ -76,30 +77,6 @@ AH0h_HandlerForDiskControllerReset:
 .SkipHardDiskReset:
 	mov		ah, bh
 	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
-
-
-;--------------------------------------------------------------------
-; ResetForeignDrives
-;	Parameters:
-;		BL:		Requested Floppy or Hard Drive (DL when entering AH=00h)
-;		DS:		RAMVARS segment
-;	Returns:
-;		BH:		Error code from requested drive (if available)
-;	Corrupts registers:
-;		AX, DL
-;--------------------------------------------------------------------
-ResetForeignDrives:
-	; If there are drives after our drives, those are already reset
-	; since our INT 13h was called by some other BIOS.
-	; We only need to reset drives from the previous INT 13h handler.
-	; There could be more in chain but let the previous one handle them.
-	mov		dl, [RAMVARS.bFirstDrv]
-	or		dl, 80h					; We may not have our drives at all so change 0 to 80h!
-	MIN_U	dl, bl
-
-	xor		ah, ah					; Disk Controller Reset
-	call	Int13h_CallPreviousInt13hHandler
-;;; fall-through to BackupErrorCodeFromTheRequestedDriveToBH
 
 
 ;--------------------------------------------------------------------

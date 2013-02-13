@@ -124,8 +124,8 @@ IdeIO_OutputALtoIdeControlBlockRegisterInDL:
 	jmp		SHORT OutputALtoPortInDX
 
 .ShlRegisterIndexInDX:
-	add		dl, XTCF_CONTROL_BLOCK_OFFSET
 	shl		dx, 1
+	add		dx, BYTE XTCF_CONTROL_BLOCK_OFFSET
 	jmp		SHORT OutputALtoRegisterInDX
 
 .OutputALtoControlBlockRegisterInDX:
