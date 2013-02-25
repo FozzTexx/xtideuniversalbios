@@ -2,20 +2,20 @@
 ; Description	:	Functions for printing drive detection strings.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
-;		
+;
 
 ; Section containing code
 SECTION .text
@@ -30,10 +30,9 @@ SECTION .text
 ;		AX, DI
 ;--------------------------------------------------------------------
 DetectPrint_InitializeDisplayContext:
-	CALL_DISPLAY_LIBRARY	InitializeDisplayContext
-	ret
+	JMP_DISPLAY_LIBRARY InitializeDisplayContext
 
-		
+
 %ifdef MODULE_HOTKEYS
 ;--------------------------------------------------------------------
 ; DetectPrint_GetSoftwareCoordinatesToAX
@@ -45,11 +44,10 @@ DetectPrint_InitializeDisplayContext:
 ;		AX, DI
 ;--------------------------------------------------------------------
 DetectPrint_GetSoftwareCoordinatesToAX:
-	CALL_DISPLAY_LIBRARY	GetSoftwareCoordinatesToAX
-	ret
+	JMP_DISPLAY_LIBRARY GetSoftwareCoordinatesToAX
 %endif
 
-		
+
 ;--------------------------------------------------------------------
 ; DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP
 ;	Parameters:
@@ -74,7 +72,7 @@ DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP:
 ;		Nothing
 ;	Corrupts registers:
 ;		AX, CX, DX, SI, DI
-;--------------------------------------------------------------------	
+;--------------------------------------------------------------------
 DetectPrint_StartDetectWithAutodetectedBasePortInAXandIdeVarsInCSBP:
 	mov		dx, [cs:bp+IDEVARS.bDevice-1]   ; for Serial: AL=port address>>2, AH=baud rate
 											;			  DL=COM number character, DH=.bDevice
@@ -151,13 +149,13 @@ DetectPrint_StartDetectWithAutodetectedBasePortInAXandIdeVarsInCSBP:
 ;--------------------------------------------------------------------
 DetectPrint_DriveNameFromDrvDetectInfoInESBX:
 	push	bp
-	mov		bp,sp	
+	mov		bp,sp
 	lea		si,[bx+DRVDETECTINFO.szDrvName]
 	push	si
 	mov		si,g_szDriveName
 	jmp		SHORT DetectPrint_FormatCSSIfromParamsInSSBP
 
-				
+
 ;--------------------------------------------------------------------
 ; Prints BIOS name and segment address where it is found.
 ;
@@ -174,7 +172,7 @@ DetectPrint_RomFoundAtSegment:
 	mov		di, cs						; BIOS segment address, for later inclusion in the output, parameterized
 										; so that it can be a different value when using .BootMenuEntry
 
-.BootMenuEntry:	
+.BootMenuEntry:
 	push	bp
 	mov		bp, sp
 
@@ -185,7 +183,7 @@ DetectPrint_RomFoundAtSegment:
 	add		al, ROMVARS.szVersion - ROMVARS.szTitle
 	push	ax
 %else
-	; szTitle and szVersion have the high order byte of their addresses zero, 
+	; szTitle and szVersion have the high order byte of their addresses zero,
 	; so these push instructions are only 2 bytes
 	;
 	push	ROMVARS.szTitle
@@ -258,7 +256,7 @@ DetectPrint_TryToBootFromDL:
 %endif ; MODULE_DRIVEXLATE
 
 	mov		si, g_szTryToBoot
-	jmp		SHORT DetectPrint_FormatCSSIfromParamsInSSBP	
+	jmp		SHORT DetectPrint_FormatCSSIfromParamsInSSBP
 
 
 ;--------------------------------------------------------------------

@@ -215,11 +215,8 @@ DrawProgressBarFromDialogIoInDSSI:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 .RepeatProgressCharacterCXtimesFromAL:
-	jcxz	.NothingToRepeat
-	CALL_DISPLAY_LIBRARY PrintRepeatedCharacterFromALwithCountInCX
-ALIGN JUMP_ALIGN, ret
-.NothingToRepeat:
-	ret
+	jcxz	NothingToRepeat
+	JMP_DISPLAY_LIBRARY PrintRepeatedCharacterFromALwithCountInCX
 
 
 ;--------------------------------------------------------------------
@@ -235,6 +232,7 @@ ALIGN JUMP_ALIGN
 GetProgressLengthToBXfromProgressDialogIoInDSSI:
 	mov		bx, [si+PROGRESS_DIALOG_IO.wMaxProgressValue]
 	sub		bx, [si+PROGRESS_DIALOG_IO.wMinProgressValue]
+NothingToRepeat:
 	ret
 
 

@@ -101,30 +101,36 @@ AH1Eh_ChangeXTCFmodeBasedOnControlRegisterInAL:
 	add		dl, XTCF_CONTROL_REGISTER
 	out		dx, al
 
+	; We always need to enable 8-bit mode since 16-bit mode is restored
+	; when controller is reset (AH=00h or 0Dh)
+	ePUSH_T	bx, AH23h_Enable8bitPioMode
+
 	; Convert Control Register Contents to device code
 	test	al, al
 	jz		SHORT .Set8bitPioMode
 	cmp		al, XTCF_MEMORY_MAPPED_MODE
 	jae		SHORT .SetMemoryMappedMode
 
+; We need to limit block size here. Consider this scenario;
+; 1. While in PIO mode or memory mapped mode, the drive is set to do
+;    block transfers larger than XTCF_DMA_MODE_MAX_BLOCK_SIZE.
+; 2. A call is subsequently made to change device mode to DEVICE_8BIT_XTCF_DMA.
+; 3. The call to AH24h_SetBlockSize fails but the change in device mode has been made.
+
 	; Set DMA Mode
 	mov		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_XTCF_DMA
 	mov		al, [di+DPT_ATA.bBlockSize]
-	call	AH24h_SetBlockSize	; AH=24h limits block size if necessary
-	jmp		SHORT .Enable8bitPioMode
+	MIN_U	al, XTCF_DMA_MODE_MAX_BLOCK_SIZE
+	jmp		SHORT AH24h_SetBlockSize	; Returns via AH23h_Enable8bitPioMode
 
 .SetMemoryMappedMode:
-	mov		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_XTCF_MEMMAP
-	jmp		SHORT .Enable8bitPioMode
+	mov		al, DEVICE_8BIT_XTCF_MEMMAP
+	SKIP2B	bx
 
 .Set8bitPioMode:
-	mov		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_XTCF_PIO8
-	; Fall to .Enable8bitPioMode
-
-	; We always need to enable 8-bit mode since 16-bit mode is restored
-	; when controller is reset (AH=00h or 0Dh)
-.Enable8bitPioMode:
-	jmp		AH23h_Enable8bitPioMode
+	mov		al, DEVICE_8BIT_XTCF_PIO8
+	mov		[di+DPT_ATA.bDevice], al
+	ret		; Via AH23h_Enable8bitPioMode
 
 
 ;--------------------------------------------------------------------

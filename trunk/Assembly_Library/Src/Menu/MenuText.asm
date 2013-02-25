@@ -2,21 +2,21 @@
 ; Description	:	Functions for drawing menu texts by the user.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 ;
-		
+
 
 ; Section containing code
 SECTION .text
@@ -39,7 +39,7 @@ MenuText_ClearTitleArea:
 	mov		cl, [bp+MENUINIT.bTitleLines]
 	jmp		SHORT MenuText_ClearInformationArea.ClearCLlinesOfText
 %endif
-		
+
 ALIGN MENU_JUMP_ALIGN
 MenuText_ClearInformationArea:
 	CALL_DISPLAY_LIBRARY PushDisplayContext		; Save cursor coordinates
@@ -52,8 +52,7 @@ MenuText_ClearInformationArea:
 	xchg	cx, ax
 	mov		al, ' '
 	CALL_DISPLAY_LIBRARY PrintRepeatedCharacterFromALwithCountInCX
-	CALL_DISPLAY_LIBRARY PopDisplayContext
-	ret
+	JMP_DISPLAY_LIBRARY PopDisplayContext
 
 
 ;--------------------------------------------------------------------
@@ -219,8 +218,7 @@ ClearPreviousItem:
 	call	MenuBorders_PrintMultipleBorderCharactersFromAL
 
 	xchg	ax, bx
-	CALL_DISPLAY_LIBRARY SetCursorCoordinatesFromAX
-	ret
+	JMP_DISPLAY_LIBRARY SetCursorCoordinatesFromAX
 
 
 ;--------------------------------------------------------------------

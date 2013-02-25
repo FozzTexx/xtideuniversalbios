@@ -2,20 +2,20 @@
 ; Description	:	Menu event handling.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
-;		
+;
 
 ; Section containing code
 SECTION .text
@@ -203,13 +203,13 @@ ALIGN JUMP_ALIGN
 	call	.PrintLoadStatus
 	call	.PrintStatusOfUnsavedChanges
 	stc
+.ReturnSinceNothingToPrint:
 	ret
 
 ALIGN JUMP_ALIGN
 .PrintProgramName:
 	mov		si, g_szProgramTitle
-	CALL_DISPLAY_LIBRARY PrintNullTerminatedStringFromCSSI
-	ret
+	JMP_DISPLAY_LIBRARY PrintNullTerminatedStringFromCSSI
 
 ALIGN JUMP_ALIGN
 .PrintLoadStatus:
@@ -222,8 +222,7 @@ ALIGN JUMP_ALIGN
 
 .PrintNothingLoaded:
 	mov		si, g_szBiosIsNotLoaded
-	CALL_DISPLAY_LIBRARY PrintNullTerminatedStringFromCSSI
-	ret
+	JMP_DISPLAY_LIBRARY PrintNullTerminatedStringFromCSSI
 
 ALIGN JUMP_ALIGN
 .PrintNameOfLoadedFile:
@@ -247,20 +246,16 @@ ALIGN JUMP_ALIGN
 	call	Buffers_GetFileBufferToESDI
 	mov		bx, es
 	lea		si, [di+ROMVARS.szVersion]
-	CALL_DISPLAY_LIBRARY PrintNullTerminatedStringFromBXSI
-	ret
+	JMP_DISPLAY_LIBRARY PrintNullTerminatedStringFromBXSI
 
 ALIGN JUMP_ALIGN
 .PrintUnidentifiedType:
 	mov		si, g_szUnidentified
-	CALL_DISPLAY_LIBRARY PrintNullTerminatedStringFromCSSI
-	ret
+	JMP_DISPLAY_LIBRARY PrintNullTerminatedStringFromCSSI
 
 ALIGN JUMP_ALIGN
 .PrintStatusOfUnsavedChanges:
 	test	WORD [g_cfgVars+CFGVARS.wFlags], FLG_CFGVARS_UNSAVED
 	jz		SHORT .ReturnSinceNothingToPrint
 	mov		si, g_szUnsaved
-	CALL_DISPLAY_LIBRARY PrintNullTerminatedStringFromCSSI
-.ReturnSinceNothingToPrint:
-	ret
+	JMP_DISPLAY_LIBRARY PrintNullTerminatedStringFromCSSI

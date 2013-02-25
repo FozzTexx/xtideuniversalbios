@@ -70,10 +70,10 @@ endstruc
 	FLGH_DPT_INTERRUPT_IN_SERVICE		EQU	(1<<3)	; Bit 3, Set when waiting for IRQ
 %endif
 %ifdef MODULE_FEATURE_SETS
-	FLGH_DPT_POWER_MANAGEMENT_SUPPORTED	EQU (1<<5)	; Bit 4, Drive supports power management
+	FLGH_DPT_POWER_MANAGEMENT_SUPPORTED	EQU (1<<5)	; Bit 5, Drive supports power management
 %endif
 %ifdef MODULE_ADVANCED_ATA
-	FLGH_DPT_IORDY						EQU	(1<<7)	; Bit 5, Controller and Drive supports IORDY
+	FLGH_DPT_IORDY						EQU	(1<<7)	; Bit 7, Controller and Drive supports IORDY
 %endif
 
 	; Serial device only

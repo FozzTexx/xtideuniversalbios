@@ -2,21 +2,21 @@
 ; Description	:	Functions for drawing menu borders.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 ;
-		
+
 
 ; Struct containing border characters for different types of menu window lines
 struc BORDER_CHARS
@@ -295,8 +295,7 @@ PrintBorderCharactersFromCSSIandShadowCharacter:
 ;--------------------------------------------------------------------
 ALIGN MENU_JUMP_ALIGN
 PrintNewlineToEndBorderLine:
-	CALL_DISPLAY_LIBRARY PrintNewlineCharacters
-	ret
+	JMP_DISPLAY_LIBRARY PrintNewlineCharacters
 
 
 ;--------------------------------------------------------------------
@@ -324,8 +323,7 @@ PrintShadowCharactersByDXtimes:
 
 	call	MenuBorders_PrintMultipleBorderCharactersFromAL	; AL does not matter
 
-	CALL_DISPLAY_LIBRARY PopDisplayContext
-	ret
+	JMP_DISPLAY_LIBRARY PopDisplayContext
 
 
 ;--------------------------------------------------------------------
@@ -364,8 +362,7 @@ PrintBorderCharactersFromCSSI:
 ;--------------------------------------------------------------------
 ALIGN MENU_JUMP_ALIGN
 MenuBorders_PrintSingleBorderCharacterFromAL:
-	CALL_DISPLAY_LIBRARY PrintCharacterFromAL
-	ret
+	JMP_DISPLAY_LIBRARY PrintCharacterFromAL
 
 ALIGN MENU_JUMP_ALIGN
 MenuBorders_PrintMultipleBorderCharactersFromAL:

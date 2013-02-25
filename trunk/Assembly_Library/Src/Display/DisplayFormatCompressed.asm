@@ -138,10 +138,9 @@ DisplayFormatCompressed_Format_5_u:
 	mov		al, 89h						; emit space
 
 .PrintDigit:
-	add		al, 90h						; Convert binary digit in AL to ASCII hex digit (0 - 9 or A - F)
-	daa
-	adc		al, 40h
-	daa
+	cmp		al, 10						; Convert binary digit in AL to ASCII hex digit ('0'-'9' or 'A'-'F')
+	sbb		al, 69h
+	das
 
 	call	DisplayPrint_CharacterFromAL
 

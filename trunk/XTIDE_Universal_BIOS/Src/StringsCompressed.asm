@@ -176,8 +176,8 @@ g_szRomBootDash:		; db	" -  "					; String fall through to g_szRomBoot
                 		  db	 20h,  28h,  20h,  20h    ; compressed
 
 %endif
-%ifdef MODULE_HOTKEYS OR MODULE_BOOT_MENU		
-g_szRomBoot:			; db	"Rom%cBoot", NULL		; "RomBoot" or "Rom Boot"
+%ifdef MODULE_HOTKEYS OR MODULE_BOOT_MENU
+g_szRomBoot:			; db	"Rom%cBoot",NULL		; "RomBoot" or "Rom Boot"
             			; db	 52h,  6fh,  6dh,  25h,  63h,  42h,  6fh,  6fh,  74h,  00h    ; uncompressed
             			  db	 58h,  75h,  73h,  3ch,  48h,  75h,  75h, 0bah                ; compressed
 

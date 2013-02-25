@@ -305,7 +305,7 @@ ALIGN DISPLAY_JUMP_ALIGN
 	%endif
 %endif
 
-%ifndef EXCLUDE				
+%ifndef EXCLUDE
 ;--------------------------------------------------------------------
 ; DisplayPrint_RepeatCharacterFromALwithCountInCX
 ;	Parameters:
@@ -396,7 +396,7 @@ DisplayPrint_Newline:
 ; DisplayPrint_CharacterFromAL
 ;	Parameters:
 ;		AL:		Character to display
-;               Zero value is ignored (no characer is printed)
+;               Zero value is ignored (no character is printed)
 ;		DS:		BDA segment (zero)
 ;		ES:DI:	Ptr to cursor location in video RAM
 ;	Returns:
@@ -406,7 +406,7 @@ DisplayPrint_Newline:
 ;--------------------------------------------------------------------
 ALIGN DISPLAY_JUMP_ALIGN
 DisplayPrint_CharacterFromAL:
-	test	al,al
+	test	al, al
 	jz		DisplayPrint_Ret
 
 	mov		ah, [VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bAttribute]

@@ -100,9 +100,13 @@ AH9h_InitializeDriveForUse:
 	mov		[bp+IDEPACK.bDrvAndHead], al
 	call	Device_SelectDrive
 	STORE_ERROR_FLAG_TO_DPT		FLG_INITERROR_FAILED_TO_SELECT_DRIVE
+%ifdef USE_386
+	jc		.ReturnWithErrorCodeInAH
+%else
 	jnc		SHORT .ContinueInitializationSinceDriveSelectedSuccesfully
 	jmp		.ReturnWithErrorCodeInAH
 .ContinueInitializationSinceDriveSelectedSuccesfully:
+%endif
 
 
 ;;; Set XT-CF mode
