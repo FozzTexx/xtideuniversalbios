@@ -2,20 +2,20 @@
 ; Description	:	Int 19h Handler (Boot Loader).
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
-;		
+;
 
 ; Section containing code
 SECTION .text
@@ -106,62 +106,60 @@ SelectDriveToBootFrom:
 
 ; The following macro could be easily inlined below.  Why a macro?  Depending on the combination
 ; of MODULE_HOTKEYS or MODULE_BOOT_MENU, this code needs to either come before or after the
-; call to the boot menu.  
+; call to the boot menu.
 ;
 %macro TRY_TO_BOOT_DL_AND_DH_DRIVES 0
 	push	dx									; it's OK if this is left on the stack, if we are
-												; are successful, the following call does not return
+												; successful, the following call does not return
 	call	TryToBootFromPrimaryOrSecondaryBootDevice_AndBoot
 	pop		dx
 	mov		dl, dh
 	call	TryToBootFromPrimaryOrSecondaryBootDevice_AndBoot
 %endmacro
-				
+
 %ifdef MODULE_HOTKEYS
-	call	HotkeyBar_ScanHotkeysFromKeyBufferAndStoreToBootvars		
+	call	HotkeyBar_ScanHotkeysFromKeyBufferAndStoreToBootvars
 	cmp		al, ROM_BOOT_HOTKEY_SCANCODE
-	jz		.RomBoot							; CF clear so ROM boot
+	je		.RomBoot							; CF clear so ROM boot
 %ifdef MODULE_BOOT_MENU
 	cmp		al, BOOT_MENU_HOTKEY_SCANCODE
-	jz		.BootMenu
+	je		.BootMenu
 %endif
 	call	HotkeyBar_GetBootDriveNumbersToDX
 .TryUsingHotKeysCode:
 	TRY_TO_BOOT_DL_AND_DH_DRIVES
 	;; falls through to boot menu, if it is present.  If not present, falls through to rom boot.
-%endif
+%endif ; MODULE_HOTKEYS
 
 %ifdef MODULE_BOOT_MENU
-.BootMenu:		
+.BootMenu:
 	call	BootMenu_DisplayAndReturnDriveInDLRomBootClearCF
 	jnc		.RomBoot							; CF clear so ROM boot
 
 	mov		dh, dl								; Setup for secondary drive
-	not		dh									; Floppy goes to HD, or vice veras
-	and		dh, 080h							; Go to first drive of the floppy or HD set
+	not		dh									; Floppy goes to HD, or vice versa
+	and		dh, 80h								; Go to first drive of the floppy or HD set
 
 %ifdef MODULE_HOTKEYS
 	jmp		.TryUsingHotKeysCode
 %else
-	TRY_TO_BOOT_DL_AND_DH_DRIVES		
+	TRY_TO_BOOT_DL_AND_DH_DRIVES
 	jmp		.BootMenu
 %endif
-%endif
+%endif ; MODULE_BOOT_MENU
 
-%ifndef MODULE_HOTKEYS
-%ifndef MODULE_BOOT_MENU
+%ifndef MODULE_HOTKEYS OR MODULE_BOOT_MENU
 	xor		dl, dl			; Try to boot from Floppy Drive A
 	call	TryToBootFromPrimaryOrSecondaryBootDevice_AndBoot
 	mov		dl, 80h			; Try to boot from Hard Drive C
 	call	TryToBootFromPrimaryOrSecondaryBootDevice_AndBoot
-%endif
 %endif
 
 .RomBoot:
 %ifdef MODULE_DRIVEXLATE
 	call	DriveXlate_Reset					; Clean up any drive mappings before Rom Boot
 %endif
-	clc		
+	clc
 	;; fall through to JumpToBootSector_or_RomBoot
 
 ;--------------------------------------------------------------------
@@ -173,7 +171,7 @@ SelectDriveToBootFrom:
 ;
 ;	Parameters:
 ;		DL:		Drive to boot from (translated, 00h or 80h)
-;       CF:     Set for Boot Sector Boot 
+;       CF:     Set for Boot Sector Boot
 ;               Clear for ROM Boot
 ;	   	ES:BX:	(if CF set) Ptr to boot sector
 ;
@@ -186,7 +184,7 @@ JumpToBootSector_or_RomBoot:
 	SWITCH_BACK_TO_POST_STACK
 
 ; clear segment registers before boot sector or rom call
-	mov		ds, ax		
+	mov		ds, ax
 	mov		es, ax
 %ifdef USE_386
 	mov		fs, ax
@@ -201,11 +199,11 @@ JumpToBootSector_or_RomBoot:
 
 ; Boot by calling INT 18h (ROM Basic of ROM DOS)
 .romboot:
-	int		BIOS_BOOT_FAILURE_INTERRUPT_18h	; Never returns	
+	int		BIOS_BOOT_FAILURE_INTERRUPT_18h	; Never returns
 
 
 ;--------------------------------------------------------------------
-; TryToBootFromPrimaryOrSecondaryBootDevice
+; TryToBootFromPrimaryOrSecondaryBootDevice_AndBoot
 ;	Parameters
 ;		DL:		Drive selected as boot device
 ;		DS:		RAMVARS segment
@@ -228,7 +226,6 @@ TryToBootFromPrimaryOrSecondaryBootDevice_AndBoot:
 	; fall through to TryToBoot_FallThroughTo_BootSector_TryToLoadFromDriveDL_AndBoot
 
 TryToBoot_FallThroughTo_BootSector_TryToLoadFromDriveDL_AndBoot:
-; fall through to BootSector_TryToLoadFromDriveDL_AndBoot				
+; fall through to BootSector_TryToLoadFromDriveDL_AndBoot
 %endif
-		
 

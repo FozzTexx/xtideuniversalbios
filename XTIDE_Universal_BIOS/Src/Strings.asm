@@ -85,10 +85,10 @@ g_szHotComDetect:		db	"ComDtct%c",NULL		; "ComDtct", location of %c doesn't matt
 %ifdef MODULE_BOOT_MENU
 g_szRomBootDash:		db	" -  "					; String fall through to g_szRomBoot
 %endif
-%ifdef MODULE_HOTKEYS OR MODULE_BOOT_MENU		
-g_szRomBoot:			db	"Rom%cBoot", NULL		; "RomBoot" or "Rom Boot"
+%ifdef MODULE_HOTKEYS OR MODULE_BOOT_MENU
+g_szRomBoot:			db	"Rom%cBoot",NULL		; "RomBoot" or "Rom Boot"
 %endif
-		
+
 
 %ifdef MODULE_BOOT_MENU
 ; Boot Menu Floppy Disk strings

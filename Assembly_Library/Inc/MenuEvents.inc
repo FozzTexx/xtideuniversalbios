@@ -1,8 +1,4 @@
-; File name		:	MenuEvents.inc
 ; Project name	:	Assembly Library
-; Created date	:	13.7.2010
-; Last update	:	18.10.2010
-; Author		:	Tomi Tilli
 ; Description	:	Defines for Menu events send to the user.
 %ifndef MENUEVENTS_INC
 %define MENUEVENTS_INC
@@ -26,8 +22,8 @@
 ;    instantiate with members that point to the routines that make up the menu.
 ;
 ; 2. If the program needs only one menu, %define MENUEVENT_INLINE_OFFSETS before this include file,
-;    and define (through EQU statements) each of the entry points as offsets from a base address.  
-; 
+;    and define (through EQU statements) each of the entry points as offsets from a base address.
+;
 
 ;
 ; If user level idle processing is desired, %define this symbol and .IdleProcessing will be called.
@@ -48,57 +44,57 @@ struc MENUEVENT
 	;	DS:SI:		Ptr to MENUINIT struct to initialize
 	; Returns:
 	;	DS:SI:		Ptr to initialized MENUINIT struct
-	.InitializeMenuinitFromDSSI		resb	2
-MENUEVENT_InitializeMenuinitFromDSSI 	equ 	MENUEVENT.InitializeMenuinitFromDSSI
+	.InitializeMenuinitFromDSSI	resb	2
+%define MENUEVENT_InitializeMenuinitFromDSSI	MENUEVENT.InitializeMenuinitFromDSSI
 
 	; Parameters:
 	;	None
 	; Returns:
 	;	CF:			Set to exit menu
 	;				Clear to cancel exit
-	.ExitMenu						resb	2
-MENUEVENT_ExitMenu 					equ 	MENUEVENT.ExitMenu
+	.ExitMenu					resb	2
+%define MENUEVENT_ExitMenu						MENUEVENT.ExitMenu
 
 %ifdef MENUEVENT_IDLEPROCESSING_ENABLE
 	; Parameters:
 	;	None
 	; See the definition of MENUEVENT_IDLEPROCESSING_ENABLE below.
-	.IdleProcessing					resb	2
-MENUEVENT_IdleProcessing 			equ		MENUEVENT.IdleProcessing
+	.IdleProcessing				resb	2
+%define MENUEVENT_IdleProcessing				MENUEVENT.IdleProcessing
 %endif
 
 	; Parameters:
 	;	CX:			Index of new highlighted item
 	;	DX:			Index of previously highlighted item or NO_ITEM_HIGHLIGHTED
-	.ItemHighlightedFromCX			resb	2
-MENUEVENT_ItemHighlightedFromCX 	equ		MENUEVENT.ItemHighlightedFromCX
+	.ItemHighlightedFromCX		resb	2
+%define MENUEVENT_ItemHighlightedFromCX			MENUEVENT.ItemHighlightedFromCX
 
 	; Parameters:
 	;	CX:			Index of selected item
-	.ItemSelectedFromCX				resb	2
-MENUEVENT_ItemSelectedFromCX 		equ		MENUEVENT.ItemSelectedFromCX
+	.ItemSelectedFromCX			resb	2
+%define MENUEVENT_ItemSelectedFromCX			MENUEVENT.ItemSelectedFromCX
 
 	; Parameters:
 	;	AL:			ASCII character for the key
 	;	AH:			Keyboard library scan code for the key
-	.KeyStrokeInAX					resb	2
-MENUEVENT_KeyStrokeInAX 			equ 	MENUEVENT.KeyStrokeInAX
+	.KeyStrokeInAX				resb	2
+%define MENUEVENT_KeyStrokeInAX					MENUEVENT.KeyStrokeInAX
 
 	; Parameters:
 	;	CX:			Index of highlighted item
 	;	Cursor has been positioned to the beginning of first line
-	.RefreshTitle					resb	2
-	.RefreshInformation				resb	2
-MENUEVENT_RefreshTitle 				equ		MENUEVENT.RefreshTitle
-MENUEVENT_RefreshInformation 		equ		MENUEVENT.RefreshInformation
+	.RefreshTitle				resb	2
+	.RefreshInformation			resb	2
+%define MENUEVENT_RefreshTitle					MENUEVENT.RefreshTitle
+%define MENUEVENT_RefreshInformation			MENUEVENT.RefreshInformation
 
 	; Parameters:
 	;	CX:			Index of item to refresh
 	;	Cursor has been positioned to the beginning of item line
-	.RefreshItemFromCX				resb	2
-MENUEVENT_RefreshItemFromCX 		equ		MENUEVENT.RefreshItemFromCX
+	.RefreshItemFromCX			resb	2
+%define MENUEVENT_RefreshItemFromCX				MENUEVENT.RefreshItemFromCX
 endstruc
 
-%endif ; MENUEVENTS_INLINE_OFFSETS
+%endif ; MENUEVENT_INLINE_OFFSETS
 
 %endif ; MENUEVENTS_INC

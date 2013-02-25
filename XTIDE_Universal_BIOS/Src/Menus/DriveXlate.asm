@@ -2,20 +2,20 @@
 ; Description	:	Functions for swapping drive letters.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
-;		
+;
 
 ; Section containing code
 SECTION .text
@@ -47,9 +47,9 @@ DriveXlate_ConvertDriveLetterInDLtoDriveNumber:
 %ifdef MODULE_HOTKEY
 %if HotkeyBar_FallThroughTo_DriveXlate_ConvertDriveLetterInDLtoDriveNumber <> DriveXlate_ConvertDriveLetterInDLtoDriveNumber
 	%error "DriveXlate_ConvertDriveLetterInDLtoDriveNumber must be at the top of DriveXlate.asm, and that file must immediately follow HotKeys.asm"
-%endif		
 %endif
-		
+%endif
+
 ;--------------------------------------------------------------------
 ; DriveXlate_ConvertDriveNumberFromDLtoDriveLetter
 ;	Parameters:
@@ -63,18 +63,17 @@ DriveXlate_ConvertDriveLetterInDLtoDriveNumber:
 ;		AX
 ;--------------------------------------------------------------------
 DriveXlate_ConvertDriveNumberFromDLtoDriveLetter:
-	test	dl, dl
-	jns		SHORT .GetDefaultFloppyDrive
+	xor		dl, 80h
+	js		SHORT .GetDefaultFloppyDrive
 
 	; Store default hard drive to boot from
 	call	DriveXlate_GetLetterForFirstHardDriveToAX
-	sub		dl, 80h
 	add		dl, al
 	stc
 	ret
 
 .GetDefaultFloppyDrive:
-	add		dl, DEFAULT_FLOPPY_DRIVE_LETTER		; Clears CF
+	sub		dl, 80h - DEFAULT_FLOPPY_DRIVE_LETTER	; Clears CF
 	ret
 
 
@@ -95,7 +94,7 @@ DriveXlate_GetLetterForFirstHardDriveToAX:
 	add		al, DEFAULT_FLOPPY_DRIVE_LETTER
 	MAX_U	al, DEFAULT_HARD_DRIVE_LETTER
 	ret
-				
+
 
 ;--------------------------------------------------------------------
 ; DriveXlate_ToOrBack
@@ -167,7 +166,7 @@ DriveXlate_SetDriveToSwap:
 	js		SHORT .SetHardDriveToSwap
 	mov		al, dl				; Store floppy translation
 	SKIP2B	di
-.SetHardDriveToSwap:	
+.SetHardDriveToSwap:
 	mov		ah, dl				; Store HD translation
 	mov		WORD [RAMVARS.xlateVars+XLATEVARS.wFDandHDswap], ax
 	ret

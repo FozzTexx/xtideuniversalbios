@@ -2,20 +2,20 @@
 ; Description	:	Functions to print information read from BIOS.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
-;				
+;
 
 ; Section containing code
 SECTION .text
@@ -32,8 +32,8 @@ SECTION .text
 Print_SetCharacterOutputToSTDOUT:
 	mov		bl, ATTRIBUTES_NOT_USED
 	mov		ax, DosCharOut
-	CALL_DISPLAY_LIBRARY	SetCharOutputFunctionFromAXwithAttribFlagInBL
-	ret
+	JMP_DISPLAY_LIBRARY SetCharOutputFunctionFromAXwithAttribFlagInBL
+
 
 ;--------------------------------------------------------------------
 ; Use DOS standard output so strings can be redirected to a file.
@@ -71,7 +71,7 @@ Print_ErrorMessageFromAHifError:
 	mov		si, g_szBiosError
 	call	Print_FormatStringFromSIwithParameterInAX
 	stc		; Keep the CF set
-ALIGN JUMP_ALIGN
+ALIGN JUMP_ALIGN, ret
 .NoErrors:
 	ret
 
@@ -181,8 +181,8 @@ Print_CHSfromCXDXAX:
 	push	dx
 	push	ax
 	mov		si, g_szFormatCHS
-	CALL_DISPLAY_LIBRARY	FormatNullTerminatedStringFromCSSI
-	CALL_DISPLAY_LIBRARY	PrintNewlineCharacters
+	CALL_DISPLAY_LIBRARY FormatNullTerminatedStringFromCSSI
+	CALL_DISPLAY_LIBRARY PrintNewlineCharacters
 
 	pop		si
 	ret
@@ -242,7 +242,7 @@ Print_TotalSectorsFromBXDXAX:
 	mov		si, g_szNewline
 	call	Print_NullTerminatedStringFromSI
 	pop		si
-		
+
 	ret
 
 
@@ -274,9 +274,8 @@ Print_EbiosVersionFromBXandExtensionsFromCX:
 ;	Corrupts registers:
 ;		AX, DI
 ;--------------------------------------------------------------------
-JumpToFormatNullTerminatedStringFromSI:	
-	CALL_DISPLAY_LIBRARY 	FormatNullTerminatedStringFromCSSI
-	ret
+JumpToFormatNullTerminatedStringFromSI:
+	JMP_DISPLAY_LIBRARY FormatNullTerminatedStringFromCSSI
 
 
 ;---------------------------------------------------------------------
@@ -289,5 +288,5 @@ JumpToFormatNullTerminatedStringFromSI:
 ;		AX, DI
 ;--------------------------------------------------------------------
 Print_NullTerminatedStringFromSI:
-	CALL_DISPLAY_LIBRARY	PrintNullTerminatedStringFromCSSI
-	ret
+	JMP_DISPLAY_LIBRARY PrintNullTerminatedStringFromCSSI
+

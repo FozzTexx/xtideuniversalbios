@@ -5,10 +5,11 @@
 
 %ifndef MODULE_STRINGS_COMPRESSED_PRECOMPRESS
 ;--------------------------------------------------------------------
-; Display Library users need to use this macro since it will provide
+; Display Library users need to use these macros since it will provide
 ; compatibility with future library versions.
 ;
 ; CALL_DISPLAY_LIBRARY
+; JMP_DISPLAY_LIBRARY
 ;	Parameters:
 ;		%1:			Function to call (functionName from DISPLAY_LIB)
 ;		Registers:	Depends on function to call
@@ -27,6 +28,24 @@
 	%else
 		mov		di, %1
 		call	Display_FunctionFromDI
+	%endif
+%endmacro
+
+%macro JMP_DISPLAY_LIBRARY 1
+	%ifidn %1, PushDisplayContext
+		jmp		DisplayContext_Push
+	%elifidn %1, PopDisplayContext
+		call	DisplayContext_Pop
+		ret
+	%elifidn %1, PrepareOffScreenBufferInESBXwithLengthInCX
+		jmp		DisplayContext_PrepareOffScreenBufferInESBXwithLengthInCX
+	%elifidn %1, FormatNullTerminatedStringFromCSSI
+		mov		di, %1
+		call	Display_FunctionFromDI
+		ret
+	%else
+		mov		di, %1
+		jmp		Display_FunctionFromDI
 	%endif
 %endmacro
 

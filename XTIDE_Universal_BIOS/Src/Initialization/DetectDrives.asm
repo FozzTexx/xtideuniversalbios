@@ -49,7 +49,7 @@ DetectDrives_FromAllIDEControllers:
 
 %ifdef MODULE_HOTKEYS
 	call	HotkeyBar_ScanHotkeysFromKeyBufferAndStoreToBootvars		; Done here while CX is still protected
-%endif				
+%endif
 
 	pop		cx
 
@@ -72,8 +72,8 @@ DetectDrives_FromAllIDEControllers:
 
 %ifdef MODULE_HOTKEYS
 	cmp		al, COM_DETECT_HOTKEY_SCANCODE  ; Set by last call to HotkeyBar_UpdateDuringDriveDetection above
-	jz		.DriveDetectLoop
-%endif		
+	je		.DriveDetectLoop
+%endif
 
 	mov		al,[cs:ROMVARS.wFlags]			; Configurator set to always scan?
 	or		al,[es:BDA.bKBFlgs1]			; Or, did the user hold down the ALT key?
@@ -200,8 +200,8 @@ StartDetectionWithDriveSelectByteInBHandStringInCX:
 .DriveDetectionStringPrintedOnScreen:
 %ifdef MODULE_HOTKEYS
 	call	HotkeyBar_UpdateDuringDriveDetection
-%endif				
-		
+%endif
+
 %ifdef MODULE_8BIT_IDE_ADVANCED
 	pop		dx
 %endif
@@ -247,7 +247,7 @@ StartDetectionWithDriveSelectByteInBHandStringInCX:
 ;	Parameters:
 ;		Nothing
 ;	Returns:
-;		CF:     Set (from BootMenuPrint_NullTerminatedStringFromCSSIandSetCF)
+;		CF:     Set (from DetectPrint_NullTerminatedStringFromCSSIandSetCF)
 ;	Corrupts registers:
 ;		AX, SI
 ;--------------------------------------------------------------------

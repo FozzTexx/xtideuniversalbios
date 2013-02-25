@@ -2,20 +2,20 @@
 ; Description	:	Tests for Assembly Library.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
-;		
+;
 
 ; Include .inc files
 %define INCLUDE_DISPLAY_LIBRARY
@@ -108,7 +108,7 @@ MeasureRegAndMemMovDurationDifferenceToAX:
 ; GetBusCycleTimeToAXfromRegAndMemMovDurationDifferenceInAX
 ;	Parameters:
 ;		AX:		Difference in register and memory access durations
-;				(Precise Event Timer Ticks)	
+;				(Precise Event Timer Ticks)
 ;	Returns:
 ;		AX:		Duration for single BYTE in nanosecs
 ;	Corrupts registers:
@@ -181,8 +181,7 @@ PrintBusMeasurements:
 	push	cx
 	push	dx
 	push	ax
-	CALL_DISPLAY_LIBRARY FormatNullTerminatedStringFromCSSI
-	ret
+	JMP_DISPLAY_LIBRARY FormatNullTerminatedStringFromCSSI
 
 
 

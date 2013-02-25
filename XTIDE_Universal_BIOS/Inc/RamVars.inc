@@ -2,18 +2,18 @@
 ; Description	:	RAMVARS struct containing BIOS variables stored in RAM.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 ;
 
@@ -22,14 +22,11 @@
 
 ; Segment when RAMVARS is stored to top of interrupt vectors.
 %ifndef USE_AT
-LITE_MODE_RAMVARS_SEGMENT	EQU		30h
+	LITE_MODE_RAMVARS_SEGMENT	EQU		30h
 %endif
 
-%ifdef MODULE_SERIAL_FLOPPY
-	%define NEED_XLATEVARS
-%endif
 
-%ifdef MODULE_DRIVEXLATE
+%ifdef MODULE_SERIAL_FLOPPY OR MODULE_DRIVEXLATE
 	%define NEED_XLATEVARS
 %endif
 
@@ -76,7 +73,7 @@ RAMVARS_DRV_DETECT_SIGNATURE	EQU	5A5Ah	; Signature when BIOS is in drive detecti
 		.bFlopCntAndFirst	resb	1	; Normally, packed starting floppy drive number (high order 7 bits)
 										; and number of drives (low order bit, max 2 drives supported).
 										; During initialization, until the end of DetectDrives_FromAllIDEControllers,
-										; this byte contains the raw number of floppy drives seen 
+										; this byte contains the raw number of floppy drives seen
 										; (using .bFlopCreateCnt)
 	%else
 							resb	1	; alignment
@@ -104,7 +101,7 @@ RAMVARS_DRV_DETECT_SIGNATURE	EQU	5A5Ah	; Signature when BIOS is in drive detecti
 
 
 ;
-; IDEPACK NOTE: The first six bytes of this structure are directly put on the 
+; IDEPACK NOTE: The first six bytes of this structure are directly put on the
 ; wire for MODULE_SERIAL, please do not change the order or insert other members.
 ;
 struc IDEPACK	; PIOVARS and MEMPIOVARS overwrite the first 7 bytes

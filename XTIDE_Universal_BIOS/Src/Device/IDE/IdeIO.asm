@@ -55,10 +55,11 @@ IdeIO_InputToALfromIdeRegisterInDL:
 	mov		bx, dx	; and BX
 	mov		al, [di+DPT_ATA.bDevice]
 	cmp		al, DEVICE_8BIT_XTIDE_REV2
-	je		SHORT .ReverseA0andA3fromRegisterIndexInDX
 	jb		SHORT .InputToALfromRegisterInDX	; Standard IDE controllers and XTIDE rev 1
-		
+
 %ifdef MODULE_8BIT_IDE_ADVANCED
+	je		SHORT .ReverseA0andA3fromRegisterIndexInDX
+
 	cmp		al, DEVICE_8BIT_JRIDE_ISA
 	jne		SHORT .ShlRegisterIndexInDX			; All XT-CF modes
 	; Fall to .InputToALfromMemoryMappedRegisterInDX
@@ -70,13 +71,13 @@ IdeIO_InputToALfromIdeRegisterInDL:
 	pop		ds
 	ret
 %endif
-		
+
 .ReverseA0andA3fromRegisterIndexInDX:
 	mov		dl, [cs:bx+g_rgbSwapA0andA3fromIdeRegisterIndex]
 	SKIP2B	bx	; Skip shl dx, 1
 
 .ShlRegisterIndexInDX:
-	shl		dx, 1
+	eSHL_IM	dx, 1
 	; Fall to .InputToALfromRegisterInDX
 
 .InputToALfromRegisterInDX:
@@ -101,10 +102,11 @@ IdeIO_OutputALtoIdeControlBlockRegisterInDL:
 
 	mov		bl, [di+DPT_ATA.bDevice]
 	cmp		bl, DEVICE_8BIT_XTIDE_REV2
-	je		SHORT .ReverseA0andA3fromRegisterIndexInDX
 	jb		SHORT .OutputALtoControlBlockRegisterInDX	; Standard IDE controllers and XTIDE rev 1
 
 %ifdef MODULE_8BIT_IDE_ADVANCED
+	je		SHORT .ReverseA0andA3fromRegisterIndexInDX
+
 	cmp		bl, DEVICE_8BIT_JRIDE_ISA
 	jne		SHORT .ShlRegisterIndexInDX		; All XT-CF modes
 	; Fall to .OutputALtoMemoryMappedRegisterInDX
@@ -124,7 +126,7 @@ IdeIO_OutputALtoIdeControlBlockRegisterInDL:
 	jmp		SHORT OutputALtoPortInDX
 
 .ShlRegisterIndexInDX:
-	shl		dx, 1
+	eSHL_IM	dx, 1
 	add		dx, BYTE XTCF_CONTROL_BLOCK_OFFSET
 	jmp		SHORT OutputALtoRegisterInDX
 
@@ -151,10 +153,11 @@ IdeIO_OutputALtoIdeRegisterInDL:
 
 	mov		bl, [di+DPT_ATA.bDevice]
 	cmp		bl, DEVICE_8BIT_XTIDE_REV2
-	je		SHORT .ReverseA0andA3fromRegisterIndexInDX
 	jb		SHORT OutputALtoRegisterInDX	; Standard IDE controllers and XTIDE rev 1
 
 %ifdef MODULE_8BIT_IDE_ADVANCED
+	je		SHORT .ReverseA0andA3fromRegisterIndexInDX
+
 	cmp		bl, DEVICE_8BIT_JRIDE_ISA
 	jne		SHORT .ShlRegisterIndexInDX		; All XT-CF modes
 	; Fall to .OutputALtoMemoryMappedRegisterInDX
@@ -176,7 +179,7 @@ IdeIO_OutputALtoIdeRegisterInDL:
 	SKIP2B	bx	; Skip shl dx, 1
 
 .ShlRegisterIndexInDX:
-	shl		dx, 1
+	eSHL_IM	dx, 1
 	; Fall to OutputALtoRegisterInDX
 
 ALIGN JUMP_ALIGN

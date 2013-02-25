@@ -38,8 +38,8 @@ SECTION .text
 ;--------------------------------------------------------------------
 AH0h_HandlerForDiskControllerReset:
 	; Reset foreign Floppy and Hard Drives (those handled by other BIOSes)
-	xor		bx, bx										; Zero BH to assume no errors
-	or		bl, dl										; Copy requested drive to BL
+	eMOVZX	bx, dl										; Copy requested drive to BL and zero BH to assume no errors
+
 	xor		ah, ah										; Disk Controller Reset
 	call	Int13h_CallPreviousInt13hHandler			; Reset floppy drives only or floppy drives and foreign hard disks
 	call	BackupErrorCodeFromTheRequestedDriveToBH

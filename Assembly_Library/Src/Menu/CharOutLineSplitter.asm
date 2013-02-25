@@ -44,8 +44,7 @@ CharOutLineSplitter_PrepareForPrintingTextLines:
 
 	xchg	ax, dx			; AL = First text line column offset
 	mov		ah, dl			; AH = Last text line column offset
-	CALL_DISPLAY_LIBRARY SetCharacterOutputParameterFromAX
-	ret
+	JMP_DISPLAY_LIBRARY SetCharacterOutputParameterFromAX
 
 
 ;--------------------------------------------------------------------

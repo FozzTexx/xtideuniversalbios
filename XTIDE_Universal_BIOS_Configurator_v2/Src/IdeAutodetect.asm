@@ -21,7 +21,7 @@
 SECTION .text
 
 ;--------------------------------------------------------------------
-; IdeAutodetect_DetectIdeDeviceFromPortDXAndReturnControlBlockInCX
+; IdeAutodetect_DetectIdeDeviceFromPortDXAndReturnControlBlockInSI
 ;	Parameters:
 ;		DX:		IDE Base Port or segment address (Command Block)
 ;		DS:DI:	Ptr to ROMVARS
@@ -192,7 +192,7 @@ CompareIdeStatusRegistersFromALandAH:
 	cmp		al, ah
 	jne		SHORT .InvalidStatusRegister
 
-	; Bytes were the same but it is possible they were both FFh, for 
+	; Bytes were the same but it is possible they were both FFh, for
 	; example. We must make sure bits are what is expected from valid
 	; IDE Status Register. So far all drives I've tested return 50h
 	; (FLG_STATUS_DRDY and FLG_STATUS_DSC set) unless there is only

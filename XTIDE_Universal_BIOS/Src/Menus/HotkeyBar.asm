@@ -33,8 +33,8 @@ SECTION .text
 HotkeyBar_UpdateDuringDriveDetection:
 	call	HotkeyBar_ScanHotkeysFromKeyBufferAndStoreToBootvars
 	; Fall to HotkeyBar_DrawToTopOfScreen
-		
-		
+
+
 ;--------------------------------------------------------------------
 ; HotkeyBar_DrawToTopOfScreen
 ;	Parameters:
@@ -126,7 +126,7 @@ HotkeyBar_DrawToTopOfScreen:
 	mov		di, g_szHotComDetect
 	call	FormatFunctionHotkeyString
 %endif
-	; Fall to .PrintRomBootHotkey		
+	; Fall to .PrintRomBootHotkey
 
 ;--------------------------------------------------------------------
 ; .PrintRomBootHotkey
@@ -168,13 +168,12 @@ HotkeyBar_DrawToTopOfScreen:
 ;		AX, CX, DI
 ;--------------------------------------------------------------------
 HotkeyBar_ClearRestOfTopRow:
-	CALL_DISPLAY_LIBRARY	GetColumnsToALandRowsToAH
+	CALL_DISPLAY_LIBRARY GetColumnsToALandRowsToAH
 	eMOVZX	cx, al
-	CALL_DISPLAY_LIBRARY	GetSoftwareCoordinatesToAX
+	CALL_DISPLAY_LIBRARY GetSoftwareCoordinatesToAX
 	sub		cl, al
 	mov		al, ' '
-	CALL_DISPLAY_LIBRARY	PrintRepeatedCharacterFromALwithCountInCX
-	ret
+	JMP_DISPLAY_LIBRARY PrintRepeatedCharacterFromALwithCountInCX
 
 
 ;--------------------------------------------------------------------
@@ -215,7 +214,7 @@ FormatFunctionHotkeyString:
 %ifdef MODULE_BOOT_MENU
 
 	mov		si, ATTRIBUTE_CHARS.cHurryTimeout		; Selected hotkey
-	jz		SHORT GetDescriptionAttributeToDX		; From compare with bScancode above
+	je		SHORT GetDescriptionAttributeToDX		; From compare with bScancode above
 
 GetNonSelectedHotkeyDescriptionAttributeToDX:
 	mov		si, ATTRIBUTE_CHARS.cHighlightedItem	; Unselected hotkey
@@ -225,13 +224,13 @@ GetDescriptionAttributeToDX:
 	xchg	dx, ax
 	call	MenuAttribute_GetToAXfromTypeInSI
 	xchg	dx, ax					; DX = Description attribute
-	;;  fall through to PushHotkeyParamsAndFormat 
+	;;  fall through to PushHotkeyParamsAndFormat
 
 
 %else ; if no MODULE_BOOT_MENU - No boot menu so use simpler attributes
 
 	mov		dx, (COLOR_ATTRIBUTE(COLOR_YELLOW, COLOR_CYAN) << 8) | MONO_REVERSE_BLINK
-	jz		SHORT SelectAttributeFromDHorDLbasedOnVideoMode			; From compare with bScancode above
+	je		SHORT SelectAttributeFromDHorDLbasedOnVideoMode		; From compare with bScancode above
 
 GetNonSelectedHotkeyDescriptionAttributeToDX:
 	mov		dx, (COLOR_ATTRIBUTE(COLOR_BLACK, COLOR_CYAN) << 8) | MONO_REVERSE
@@ -244,7 +243,7 @@ SelectAttributeFromDHorDLbasedOnVideoMode:
 	jnz		SHORT .AttributeLoadedToDL	; MDA
 	mov		dl, dh
 .AttributeLoadedToDL:
-	;;  fall through to PushHotkeyParamsAndFormat 		
+	;;  fall through to PushHotkeyParamsAndFormat
 
 %endif ; MODULE_BOOT_MENU
 
@@ -276,7 +275,7 @@ PushHotkeyParamsAndFormat:
 	push	dx				; Description attribute
 	push	di				; Description string
 	push	cx				; Description string parameter
-		
+
 	push	si				; Key attribute for last space
 
 	mov		si, g_szHotkey
@@ -307,8 +306,7 @@ MoveCursorToScreenTopLeftCorner:
 ;		AX, DI
 ;--------------------------------------------------------------------
 HotkeyBar_RestoreCursorCoordinatesFromAX:
-	CALL_DISPLAY_LIBRARY	SetCursorCoordinatesFromAX
-	ret
+	JMP_DISPLAY_LIBRARY SetCursorCoordinatesFromAX
 
 
 ;--------------------------------------------------------------------
@@ -324,7 +322,7 @@ HotkeyBar_RestoreCursorCoordinatesFromAX:
 ;--------------------------------------------------------------------
 HotkeyBar_StoreHotkeyToBootvarsForDriveLetterInDL:
 	eMOVZX	ax, dl
-	xor		al, 32	; Upper case drive letter to lower case keystroke
+	or		al, 32	; Upper case drive letter to lower case keystroke
 	jmp		SHORT HotkeyBar_StoreHotkeyToBootvarsIfValidKeystrokeInAX
 
 
@@ -363,20 +361,20 @@ HotkeyBar_StoreHotkeyToBootvarsIfValidKeystrokeInAX:
 
 	; All scancodes are saved, even if it wasn't a drive letter,
 	; which also covers our function key case.  Invalid function keys
-	; will not do anything (won't be printed, won't be accepted as input)		
+	; will not do anything (won't be printed, won't be accepted as input)
 	mov		[es:di], ah
-		
+
 	; Drive letter hotkeys remaining, allow 'a' to 'z'
 	call	Char_IsLowerCaseLetterInAL
 	jnc		SHORT .KeystrokeIsNotValidDriveLetter
-	xor		al, 32					; We want to print upper case letters
+	and		al, ~32					; We want to print upper case letters
 
 	; Clear HD First flag to assume Floppy Drive hotkey
 	dec		di
 	and		BYTE [es:di], ~FLG_HOTKEY_HD_FIRST
 
 	; Determine if Floppy or Hard Drive hotkey
-	eMOVZX	cx, al					; Clear CH to clear scancode
+	xchg	cx, ax
 	call	DriveXlate_GetLetterForFirstHardDriveToAX
 	cmp		cl, al
 	jb		SHORT .StoreDriveLetter	; Store Floppy Drive letter
@@ -385,11 +383,11 @@ HotkeyBar_StoreHotkeyToBootvarsIfValidKeystrokeInAX:
 	or		BYTE [es:di], FLG_HOTKEY_HD_FIRST
 
 .StoreDriveLetter:
-	sbb		di, BYTE 1			; Sub CF if Floppy Drive
+	sbb		di, BYTE 1				; Sub CF if Floppy Drive
 	xchg	ax, cx
-	mov		[es:di], al			; AH = zero to clear function hotkey
+	mov		[es:di], al
 
-.KeystrokeIsNotValidDriveLetter:		
+.KeystrokeIsNotValidDriveLetter:
 NoHotkeyToProcess:
 	mov		al, [es:BOOTVARS.hotkeyVars+HOTKEYVARS.bScancode]
 	ret
@@ -406,13 +404,13 @@ NoHotkeyToProcess:
 ;--------------------------------------------------------------------
 HotkeyBar_GetBootDriveNumbersToDX:
 	mov		dx, [es:BOOTVARS.hotkeyVars+HOTKEYVARS.wFddAndHddLetters]
-	test	BYTE [es:BOOTVARS.hotkeyVars+HOTKEYVARS.bFlags], FLG_HOTKEY_HD_FIRST		
+	test	BYTE [es:BOOTVARS.hotkeyVars+HOTKEYVARS.bFlags], FLG_HOTKEY_HD_FIRST
 	jnz		.noflip
 	xchg	dl, dh
-.noflip:	
+.noflip:
 	call	DriveXlate_ConvertDriveLetterInDLtoDriveNumber
 	xchg	dl, dh
-	; Fall to HotkeyBar_FallThroughTo_DriveXlate_ConvertDriveLetterInDLtoDriveNumber		
-		
-HotkeyBar_FallThroughTo_DriveXlate_ConvertDriveLetterInDLtoDriveNumber:		
+	; Fall to HotkeyBar_FallThroughTo_DriveXlate_ConvertDriveLetterInDLtoDriveNumber
+
+HotkeyBar_FallThroughTo_DriveXlate_ConvertDriveLetterInDLtoDriveNumber:
 

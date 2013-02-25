@@ -113,10 +113,9 @@ DetectIdePortsAndDevices:
 	mov		[si+IDEVARS.bDevice], al
 
 	; Point to next IDEVARS
-	cmp		si, ROMVARS.ideVars3
-	jae		SHORT .AllPortsAlreadyDetected
 	add		si, IDEVARS_size
-	jmp		SHORT .DetectFromNextPort
+	cmp		si, ROMVARS.ideVars3
+	jbe		SHORT .DetectFromNextPort
 .AllPortsAlreadyDetected:
 	ret
 

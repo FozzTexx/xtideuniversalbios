@@ -6,23 +6,23 @@
 //
 // Routines for accessing the file system under Win32.  It's important
 // to use these direct Win32 calls for large files, since FILE * routines,
-// in particular ftell() and fseek(), are limites to signed 32-bits (2 GB).
+// in particular ftell() and fseek(), are limited to signed 32-bits (2 GB).
 // These are also likely faster since they are more direct.
-// 
+//
 
 //
-// XTIDE Universal BIOS and Associated Tools 
+// XTIDE Universal BIOS and Associated Tools
 // Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.		
+// GNU General Public License for more details.
 // Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 //
 
@@ -68,7 +68,7 @@ public:
 		if( fp )
 		{
 			if( !CloseHandle( fp ) )
-				log( 0, "'%s', could not close file handle", name ? name : "unknown" );			
+				log( 0, "'%s', could not close file handle", name ? name : "unknown" );
 		}
 	}
 
@@ -125,7 +125,7 @@ public:
 	}
 
     // LBA 28 limit - 28-bits (could be 1 more, but not worth pushing it)
-	const static unsigned long MaxSectors = 0xfffffff; 
+	const static unsigned long MaxSectors = 0xfffffff;
 #define USAGE_MAXSECTORS "137438 MB (LBA28 limit)"
 
 private:
