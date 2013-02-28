@@ -95,12 +95,12 @@ HEADERS += $(LIBS)
 #################################################################
 # Assembler preprocessor defines.                               #
 #################################################################
-DEFINES_COMMON = MODULE_STRINGS_COMPRESSED MODULE_HOTKEYS MODULE_EBIOS MODULE_FEATURE_SETS RESERVE_DIAGNOSTIC_CYLINDER
-DEFINES_COMMON_LARGE = MODULE_BOOT_MENU MODULE_8BIT_IDE MODULE_8BIT_IDE_ADVANCED
+DEFINES_COMMON = MODULE_STRINGS_COMPRESSED MODULE_HOTKEYS MODULE_8BIT_IDE MODULE_SERIAL MODULE_SERIAL_FLOPPY MODULE_EBIOS MODULE_FEATURE_SETS RESERVE_DIAGNOSTIC_CYLINDER
+DEFINES_COMMON_LARGE = MODULE_BOOT_MENU MODULE_8BIT_IDE_ADVANCED
 
-DEFINES_XT = $(DEFINES_COMMON) ELIMINATE_CGA_SNOW MODULE_8BIT_IDE MODULE_SERIAL MODULE_SERIAL_FLOPPY
+DEFINES_XT = $(DEFINES_COMMON) ELIMINATE_CGA_SNOW MODULE_8BIT_IDE_ADVANCED
 DEFINES_XTPLUS = $(DEFINES_COMMON) $(DEFINES_XT) USE_186
-DEFINES_AT = $(DEFINES_COMMON) USE_AT USE_286 USE_UNDOC_INTEL RELOCATE_INT13H_STACK MODULE_IRQ MODULE_SERIAL MODULE_SERIAL_FLOPPY MODULE_ADVANCED_ATA
+DEFINES_AT = $(DEFINES_COMMON) USE_AT USE_286 USE_UNDOC_INTEL RELOCATE_INT13H_STACK MODULE_IRQ MODULE_ADVANCED_ATA
 
 DEFINES_XT_LARGE = $(DEFINES_XT) $(DEFINES_COMMON_LARGE)
 DEFINES_XTPLUS_LARGE = $(DEFINES_XTPLUS) $(DEFINES_COMMON_LARGE)
@@ -117,18 +117,20 @@ DEFINES_ALL_FEATURES = MODULE_8BIT_IDE MODULE_ADVANCED_ATA MODULE_BOOT_MENU MODU
 ###################
 
 # Target size of the ROM, used in main.asm for number of 512B blocks and by checksum Perl script below
-ROMSIZE = 8192
-ROMSIZE_LARGE = 15360
+BIOS_SIZE = 8192		# For BIOS header (use even multiplier!)
+ROMSIZE = $(BIOS_SIZE)	# Size of binary to build when building with make checksum
+BIOS_SIZE_LARGE = 10240
+ROMSIZE_LARGE = $(BIOS_SIZE_LARGE)
 
 # Add -D in front of every preprocessor define declaration
-DEFS_XT = $(DEFINES_XT:%=-D%) -DROMSIZE=$(ROMSIZE)
-DEFS_XTPLUS = $(DEFINES_XTPLUS:%=-D%) -DROMSIZE=$(ROMSIZE)
-DEFS_AT = $(DEFINES_AT:%=-D%) -DROMSIZE=$(ROMSIZE)
-DEFS_XT_LARGE = $(DEFINES_XT_LARGE:%=-D%) -DROMSIZE=$(ROMSIZE_LARGE)
-DEFS_XTPLUS_LARGE = $(DEFINES_XTPLUS_LARGE:%=-D%) -DROMSIZE=$(ROMSIZE_LARGE)
-DEFS_AT_LARGE = $(DEFINES_AT_LARGE:%=-D%) -DROMSIZE=$(ROMSIZE_LARGE)
-DEFS_XT_TINY = $(DEFINES_XT_TINY:%=-D%) -DROMSIZE=$(ROMSIZE)
-DEFS_386_8K = $(DEFINES_386_8K:%=-D%) -DROMSIZE=$(ROMSIZE)
+DEFS_XT = $(DEFINES_XT:%=-D%) -DBIOS_SIZE=$(BIOS_SIZE)
+DEFS_XTPLUS = $(DEFINES_XTPLUS:%=-D%) -DBIOS_SIZE=$(BIOS_SIZE)
+DEFS_AT = $(DEFINES_AT:%=-D%) -DBIOS_SIZE=$(BIOS_SIZE)
+DEFS_XT_LARGE = $(DEFINES_XT_LARGE:%=-D%) -DBIOS_SIZE=$(BIOS_SIZE_LARGE)
+DEFS_XTPLUS_LARGE = $(DEFINES_XTPLUS_LARGE:%=-D%) -DBIOS_SIZE=$(BIOS_SIZE_LARGE)
+DEFS_AT_LARGE = $(DEFINES_AT_LARGE:%=-D%) -DBIOS_SIZE=$(BIOS_SIZE_LARGE)
+DEFS_XT_TINY = $(DEFINES_XT_TINY:%=-D%) -DBIOS_SIZE=$(BIOS_SIZE)
+DEFS_386_8K = $(DEFINES_386_8K:%=-D%) -DBIOS_SIZE=$(BIOS_SIZE)
 DEFS_ALL_FEATURES = $(DEFINES_ALL_FEATURES:%=-D%)
 
 # Add -I in front of all header directories
@@ -170,34 +172,34 @@ all: clean small large
 	@echo All done!
 
 small: xt_tiny xt xtplus at 386_8k
-	@echo All 8 kiB binaries built!
+	@echo All small binaries built!
 
 large: xt_large xtplus_large at_large
-	@echo All 15 kiB binaries built!
+	@echo All large binaries built!
 
 at:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_AT) -l"$(TARGET)_at.lst" -o"$(TARGET)_at.bin"
-	@echo * 8k AT version "$(TARGET)_at.bin" built.
+	@echo * Small AT version "$(TARGET)_at.bin" built.
 
 at_large:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_AT_LARGE) -l"$(TARGET)_atl.lst" -o"$(TARGET)_atl.bin"
-	@echo *15k AT version "$(TARGET)_atl.bin" built.
+	@echo *Large AT version "$(TARGET)_atl.bin" built.
 
 xtplus:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XTPLUS) -l"$(TARGET)_xtp.lst" -o"$(TARGET)_xtp.bin"
-	@echo * 8k XT Plus version "$(TARGET)_xtp.bin" built.
+	@echo * Small XT Plus version "$(TARGET)_xtp.bin" built.
 
 xtplus_large:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XTPLUS_LARGE) -l"$(TARGET)_xtpl.lst" -o"$(TARGET)_xtpl.bin"
-	@echo *15k XT Plus version "$(TARGET)_xtpl.bin" built.
+	@echo *Large XT Plus version "$(TARGET)_xtpl.bin" built.
 
 xt:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XT) -l"$(TARGET)_xt.lst" -o"$(TARGET)_xt.bin"
-	@echo * 8k XT version "$(TARGET)_xt.bin" built.
+	@echo * Small XT version "$(TARGET)_xt.bin" built.
 
 xt_large:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XT_LARGE) -l"$(TARGET)_xtl.lst" -o"$(TARGET)_xtl.bin"
-	@echo *15k XT version "$(TARGET)_xtl.bin" built.
+	@echo *Large XT version "$(TARGET)_xtl.bin" built.
 
 xt_tiny:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XT_TINY) -l"$(TARGET)_tiny.lst" -o"$(TARGET)_tiny.bin"
@@ -205,7 +207,7 @@ xt_tiny:
 
 386_8k:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_386_8K) -l"$(TARGET)_386.lst" -o"$(TARGET)_386.bin"
-	@echo * 8k 386 version "$(TARGET)_386.bin" built.
+	@echo * Small 386 version "$(TARGET)_386.bin" built.
 
 strings: src\Strings.asm
 	@$(AS) src\Strings.asm $(ASFLAGS) $(DEFS_AT_LARGE) -DCHECK_FOR_UNUSED_ENTRYPOINTS -DMODULE_STRINGS_COMPRESSED_PRECOMPRESS -o build\Strings.bin -l build\StringsPrecompress.lst
