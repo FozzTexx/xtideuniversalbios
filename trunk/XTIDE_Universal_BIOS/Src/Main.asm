@@ -63,7 +63,7 @@
 SECTION .text
 
 ; ROM variables (must start at offset 0)
-CNT_ROM_BLOCKS		EQU		ROMSIZE / 512		; number of 512B blocks, 16 = 8kB BIOS
+CNT_ROM_BLOCKS		EQU		BIOS_SIZE / 512		; number of 512B blocks, 16 = 8kB BIOS
 istruc ROMVARS
 	at	ROMVARS.wRomSign,	dw	0AA55h			; PC ROM signature
 	at	ROMVARS.bRomSize,	db	CNT_ROM_BLOCKS	; ROM size in 512B blocks
