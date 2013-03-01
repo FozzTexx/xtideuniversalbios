@@ -79,30 +79,6 @@ Initialize_AndDetectDrives:
 	call	BootVars_Initialize
 	call	DetectDrives_FromAllIDEControllers
 	call	Interrupts_InitializeInterruptVectors
-	; Fall to .StoreDptPointersToIntVectors
-
-;--------------------------------------------------------------------
-; .StoreDptPointersToIntVectors
-;	Parameters:
-;		DS:		RAMVARS segment
-;		ES:		BDA and interrupt vector segment (zero)
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		DX, DI
-;--------------------------------------------------------------------
-.StoreDptPointersToIntVectors:
-	mov		dl, 80h
-	call	FindDPT_ForDriveNumberInDL   ; DPT to DS:DI
-	jc		SHORT .FindForDrive81h	; Store nothing if not our drive
-	mov		[es:HD0_DPT_POINTER_41h*4], di
-	mov		[es:HD0_DPT_POINTER_41h*4+2], ds
-.FindForDrive81h:
-	inc		dx
-	call	FindDPT_ForDriveNumberInDL
-	jc		SHORT .ResetDetectedDrives
-	mov		[es:HD1_DPT_POINTER_46h*4], di
-	mov		[es:HD1_DPT_POINTER_46h*4+2], ds
 	; Fall to .ResetDetectedDrives
 
 ;--------------------------------------------------------------------

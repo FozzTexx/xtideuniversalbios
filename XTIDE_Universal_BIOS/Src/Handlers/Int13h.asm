@@ -377,7 +377,7 @@ g_rgw13hFuncJump:
 	dw	UnsupportedFunction							; 0Ah, Read Disk Sectors with ECC (XT, AT, EISA)
 	dw	UnsupportedFunction							; 0Bh, Write Disk Sectors with ECC (XT, AT, EISA)
 	dw	AHCh_HandlerForSeek							; 0Ch, Seek (All)
-	dw	AHDh_HandlerForResetHardDisk				; 0Dh, Alternate Disk Reset (All)
+	dw	AH9h_HandlerForInitializeDriveParameters	; 0Dh, Alternate Disk Reset (All)
 	dw	UnsupportedFunction							; 0Eh, Read Sector Buffer (XT, PS/1), ESDI Undocumented Diagnostic (PS/2)
 	dw	UnsupportedFunction							; 0Fh, Write Sector Buffer (XT, PS/1), ESDI Undocumented Diagnostic (PS/2)
 	dw	AH10h_HandlerForCheckDriveReady				; 10h, Check Drive Ready (All)

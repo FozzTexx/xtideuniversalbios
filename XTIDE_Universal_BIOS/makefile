@@ -8,6 +8,7 @@
 # clean     Removes all files from \Build                                                          #
 # checksum* Builds all and then generates checksum byte to all binary files                        #
 # strings*  Compress src\Strings.asm to src\StringsCompressed.asm                                  #
+# unused*	Checks if there are any unused functions that can be removed to save space             #
 #                                                                                                  #
 # * at the end of target name means that Perl is required for the job.                             #
 # Build directory must be created manually if it does not exist.                                   #

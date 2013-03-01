@@ -58,6 +58,26 @@ Device_FinalizeDPT:
 
 
 ;--------------------------------------------------------------------
+; Device_ResetMasterAndSlaveController
+;	Parameters:
+;		DS:DI:	Ptr to DPT (in RAMVARS segment)
+;	Returns:
+;		AH:		INT 13h Error Code
+;		CF:		Cleared if success, Set if error
+;	Corrupts registers:
+;		AL, BX, CX, DX
+;--------------------------------------------------------------------
+%ifdef MODULE_SERIAL	; IDE + Serial
+Device_ResetMasterAndSlaveController:
+	TEST_USING_DPT_AND_JUMP_IF_SERIAL_DEVICE	ReturnSuccessForSerialPort
+	jmp		IdeCommand_ResetMasterAndSlaveController
+
+%else					; IDE
+	Device_ResetMasterAndSlaveController	EQU		IdeCommand_ResetMasterAndSlaveController
+%endif
+
+
+;--------------------------------------------------------------------
 ; Device_IdentifyToBufferInESSIwithDriveSelectByteInBH
 ;	Parameters:
 ;		BH:		Drive Select byte for Drive and Head Select Register

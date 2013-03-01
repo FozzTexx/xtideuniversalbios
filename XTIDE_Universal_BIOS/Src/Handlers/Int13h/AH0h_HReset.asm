@@ -118,8 +118,14 @@ ResetHardDisksHandledByOurBIOS:
 	test	di, di
 	jz		SHORT .ErrorCodeNotUsed
 	mov		bl, [di+DPT.bIdevarsOffset]					; replace drive number with Idevars pointer for cmp with dl
+.ErrorCodeNotUsed:
 
-.ErrorCodeNotUsed:										; BH will be garbage on exit if this entry point is used,
+	mov		si, ControllerResetForDPTinDSDI
+	call	.CallSIforEveryDrive						; Reset all drives to power on settings
+	mov		si, AH9h_InitializeDriveForUse
+	; Fall to .CallSIforEveryDrive						; Initialize all drives
+
+.CallSIforEveryDrive:									; BH will be garbage on exit if this entry point is used,
 														; but reset of all drives will still happen
 
 	mov		dl, ROMVARS.ideVars0						; starting Idevars offset
@@ -129,18 +135,47 @@ ResetHardDisksHandledByOurBIOS:
 	; RamVars_GetIdeControllerCountToCX was used.  Unused controllers won't make a difference, since no DPT
 	; will point to them.  Performance isn't an issue, as this is a reset operation.
     ;
-	mov		cx, (ROMVARS.ideVarsEnd - ROMVARS.ideVarsBegin) / IDEVARS_size
+	mov		cx, NUMBER_OF_IDEVARS
 
 .loop:
+	push	si
 	call	FindDPT_ForIdevarsOffsetInDL				; look for the first drive on this controller, if any
+	pop		si
 	jc		SHORT .notFound
 
-	call	AHDh_ResetDrive								; reset master and slave on that controller
+	push	bx
+	push	cx
+	push	dx
+	call	si											; Reset Master AND Slave or initialize Master OR Slave drive
+	pop		dx
+	pop		cx
+	pop		bx
 	call	BackupErrorCodeFromTheRequestedDriveToBH	; save error code if same controller as drive from entry
 
 .notFound:
 	add		dl, IDEVARS_size							; move Idevars pointer forward
 	loop	.loop
-
-.done:
 	ret
+
+
+;--------------------------------------------------------------------
+; ControllerResetForDPTinDSDI
+;	Parameters:
+;		DS:DI:	Ptr to DPT for drive to reset (resets both Master and Slave drive)
+;		SS:BP:	Ptr to IDEPACK
+;	Returns:
+;		AH:		Int 13h return status
+;		CF:		0 if successful, 1 if error
+;	Corrupts registers:
+;		AL, BX, CX, DX
+;--------------------------------------------------------------------
+ControllerResetForDPTinDSDI:
+%ifdef MODULE_IRQ
+	call	Interrupts_UnmaskInterruptControllerForDriveInDSDI
+%endif
+%ifdef MODULE_ADVANCED_ATA
+	call	Device_ResetMasterAndSlaveController
+	jmp		AdvAtaInit_InitializeControllerForDPTinDSDI
+%else
+	jmp		Device_ResetMasterAndSlaveController
+%endif
