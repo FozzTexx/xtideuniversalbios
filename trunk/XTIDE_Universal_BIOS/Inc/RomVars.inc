@@ -62,6 +62,8 @@ endstruc
 	%endif
 %endif
 
+NUMBER_OF_IDEVARS					EQU	((ROMVARS.ideVarsEnd - ROMVARS.ideVarsBegin) / IDEVARS_size)
+
 ; Bit defines for ROMVARS.wFlags
 FLG_ROMVARS_FULLMODE				EQU	(1<<0)	; Full operating mode (steals base RAM, supports EBIOS etc.)
 FLG_ROMVARS_SERIAL_SCANDETECT 		EQU	(1<<3)	; Scan COM ports at the end of drive detection.  Can also be invoked

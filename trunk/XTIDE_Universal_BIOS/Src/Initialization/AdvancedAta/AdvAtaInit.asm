@@ -68,10 +68,11 @@ AdvAtaInit_GetControllerMaxPioModeToAL	equ	Vision_GetMaxPioModeToAL
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT for Single or Slave Drive
 ;	Returns:
+;		AH:		Int 13h return status
 ;		CF:		Cleared if success or no controller to initialize
 ;				Set if error
 ;	Corrupts registers:
-;		AX, BX, CX, DX
+;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
 AdvAtaInit_InitializeControllerForDPTinDSDI:
 	; Call Controller Specific initialization function
@@ -90,6 +91,7 @@ AdvAtaInit_InitializeControllerForDPTinDSDI:
 	pop		bp
 
 .NoAdvancedController:
+	xor		ax, ax						; Success
 	ret
 
 

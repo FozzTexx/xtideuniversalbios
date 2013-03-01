@@ -265,7 +265,6 @@ iend
 	%include "AH8h_HParams.asm"		; Required by Int13h_Jump.asm
 	%include "AH9h_HInit.asm"		; Required by Int13h_Jump.asm
 	%include "AHCh_HSeek.asm"		; Required by Int13h_Jump.asm
-	%include "AHDh_HReset.asm"		; Required by Int13h_Jump.asm
 	%include "AH10h_HReady.asm"		; Required by Int13h_Jump.asm
 	%include "AH11h_HRecal.asm"		; Required by Int13h_Jump.asm
 	%include "AH15h_HSize.asm"		; Required by Int13h_Jump.asm
