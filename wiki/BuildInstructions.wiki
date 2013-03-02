@@ -4,7 +4,7 @@
 ----
 = Introduction =
 
-This is a small tutorial on how to build XTIDE Universal BIOS on Windows. This tutorial is updated for XTIDE Universal BIOS v2.0.0 beta 2.
+This is a small tutorial on how to build XTIDE Universal BIOS on Windows. This tutorial is updated for XTIDE Universal BIOS v2.0.0 beta 3.
 
 
 = Programs needed =
@@ -77,7 +77,7 @@ There are many optional modules (most of them are included in official release b
 
 It is easy to include and exclude modules but it must be done by editing makefile. Makefile specifies how the binaries are build when you execute _mingw32-make_.
 
-Open makefile with Windows Notepad (or [http://notepad-plus-plus.org/ Notepad++]). You will now see all the modules and short description about them. The makefile looks like below for XTIDE Universal BIOS v2.0.0 beta 2:
+Open makefile with Windows Notepad (or [http://notepad-plus-plus.org/ Notepad++]). You will now see all the modules and short description about them. The makefile looks like below for XTIDE Universal BIOS v2.0.0 beta 3:
 {{{
 ####################################################################################################
 # Makefile to build XTIDE Universal BIOS.                                                          #
@@ -85,10 +85,11 @@ Open makefile with Windows Notepad (or [http://notepad-plus-plus.org/ Notepad++]
 # Valid makefile targets are:                                                                      #
 # all       Removes existing files and builds binary files in \Build                               #
 # small     Builds 8 kiB binaries only (without checksum)                                          #
-# large     Builds 15 kiB binaries only (without checksum)                                         #
+# large     Builds 12 kiB binaries only (without checksum)                                         #
 # clean     Removes all files from \Build                                                          #
 # checksum* Builds all and then generates checksum byte to all binary files                        #
 # strings*  Compress src\Strings.asm to src\StringsCompressed.asm                                  #
+# unused*   Checks if there are any unused functions that can be removed to save space             #
 #                                                                                                  #
 # * at the end of target name means that Perl is required for the job.                             #
 # Build directory must be created manually if it does not exist.                                   #
@@ -112,8 +113,8 @@ Open makefile with Windows Notepad (or [http://notepad-plus-plus.org/ Notepad++]
 # RELOCATE_INT13H_STACK       Relocates INT 13h stack to top of stolen conventional memory         #
 # RESERVE_DIAGNOSTIC_CYLINDER Reserve one L-CHS cylinder for compatibility with old BIOSes         #
 # USE_186                     Use instructions supported by 80188/80186 and V20/V30 and later      #
-# USE_286                     Use instructions supported by 286 and later                          #
-# USE_386                     Use instructions supported by 386 and later                          #
+# USE_286                     Use instructions supported by 286 and later (defines USE_UNDOC_INTEL)#
+# USE_386                     Use instructions supported by 386 and later (defines USE_286)        #
 # USE_AT                      Use features supported on AT and later systems (not available on XT) #
 # USE_UNDOC_INTEL             Optimizations for Intel CPU:s - do NOT use on NEC V20/V30/Sony CPU:s #
 #                                                                                                  #
@@ -127,12 +128,12 @@ Scroll down the makefile to find Assembler preprocessor defines and other variab
 #################################################################
 # Assembler preprocessor defines.                               #
 #################################################################
-DEFINES_COMMON = MODULE_STRINGS_COMPRESSED MODULE_HOTKEYS MODULE_EBIOS MODULE_FEATURE_SETS RESERVE_DIAGNOSTIC_CYLINDER
-DEFINES_COMMON_LARGE = MODULE_BOOT_MENU MODULE_8BIT_IDE MODULE_8BIT_IDE_ADVANCED
+DEFINES_COMMON = MODULE_STRINGS_COMPRESSED MODULE_HOTKEYS MODULE_8BIT_IDE MODULE_SERIAL MODULE_SERIAL_FLOPPY MODULE_EBIOS MODULE_FEATURE_SETS RESERVE_DIAGNOSTIC_CYLINDER
+DEFINES_COMMON_LARGE = MODULE_BOOT_MENU MODULE_8BIT_IDE_ADVANCED
 
-DEFINES_XT = $(DEFINES_COMMON) ELIMINATE_CGA_SNOW MODULE_8BIT_IDE MODULE_SERIAL MODULE_SERIAL_FLOPPY
+DEFINES_XT = $(DEFINES_COMMON) ELIMINATE_CGA_SNOW MODULE_8BIT_IDE_ADVANCED
 DEFINES_XTPLUS = $(DEFINES_COMMON) $(DEFINES_XT) USE_186
-DEFINES_AT = $(DEFINES_COMMON) USE_AT USE_286 USE_UNDOC_INTEL RELOCATE_INT13H_STACK MODULE_IRQ MODULE_SERIAL MODULE_SERIAL_FLOPPY MODULE_ADVANCED_ATA 
+DEFINES_AT = $(DEFINES_COMMON) USE_AT USE_286 RELOCATE_INT13H_STACK MODULE_IRQ MODULE_ADVANCED_ATA
 
 DEFINES_XT_LARGE = $(DEFINES_XT) $(DEFINES_COMMON_LARGE)
 DEFINES_XTPLUS_LARGE = $(DEFINES_XTPLUS) $(DEFINES_COMMON_LARGE)
@@ -141,43 +142,54 @@ DEFINES_AT_LARGE = $(DEFINES_AT) $(DEFINES_COMMON_LARGE)
 DEFINES_XT_TINY = MODULE_STRINGS_COMPRESSED MODULE_8BIT_IDE
 DEFINES_386_8K = $(DEFINES_AT) USE_386
 
+DEFINES_ALL_FEATURES = MODULE_8BIT_IDE MODULE_8BIT_IDE_ADVANCED MODULE_ADVANCED_ATA MODULE_EBIOS MODULE_BOOT_MENU MODULE_HOTKEYS MODULE_IRQ MODULE_SERIAL MODULE_SERIAL_FLOPPY MODULE_STRINGS_COMPRESSED MODULE_FEATURE_SETS
+
+
 ###################
 # Other variables #
 ###################
 
 # Target size of the ROM, used in main.asm for number of 512B blocks and by checksum Perl script below
-ROMSIZE = 8192
-ROMSIZE_LARGE = 15360
+BIOS_SIZE = 8192		# For BIOS header (use even multiplier!)
+ROMSIZE = $(BIOS_SIZE)	# Size of binary to build when building with make checksum
+BIOS_SIZE_LARGE = 12288
+ROMSIZE_LARGE = $(BIOS_SIZE_LARGE)
 }}}
 
 These are the only parts in the makefile that you need to edit. The defines tell what modules are included in what builds.
 
-DEFINES_COMMON define the modules that are included in all builds and DEFINES_COMMON_LARGE define additional modules for all large (15k) builds.
+DEFINES_COMMON define the modules that are included in all builds and DEFINES_COMMON_LARGE define additional modules for all large builds.
 
 DEFINES_XT, DEFINES_XTPLUS and DEFINES_AT define what modules are included in the 8k XT, XT+ and AT builds in addition to the ones in DEFINES_COMMON.
 
-DEFINES_XT_LARGE, DEFINES_XTPLUS_LARGE and DEFINES_AT_LARGE are for large builds (15k by default).
+DEFINES_XT_LARGE, DEFINES_XTPLUS_LARGE and DEFINES_AT_LARGE are for large builds (12k by default).
 
 Finally there are DEFINES_XT_TINY (XT build with minimal features) and DEFINES_386_8K (AT build for 386+).
 
 If you want to make your own 8k AT build, for example, modify DEFINES_COMMON and DEFINES_AT to include the modules you want. Then rebuild with _mingw32-make all_ or _mingw32-make checksum_.
 
-One more thing you might want to change is the size of large build. It is 15k by default (15360 bytes). If you want 16k binary, set ROMSIZE_LARGE to 16384. For 32k build set it to 32768.
+One more thing you might want to change is the size of large build. It is 12k by default (12288 bytes). If you want 16k binary, set ROMSIZE_LARGE to 16384. For 32k build set it to 32768.
 
 
 === Module information ===
 
 ====*MODULE_8BIT_IDE*====
-This module contains support for XTIDE rev 1 and 2 and Lo-tech XT-CF.
+This module contains support for XTIDE rev 1 and 2 and Lo-tech XT-CF v2/v3/Lite PIO mode.
 
 ====*MODULE_8BIT_IDE_ADVANCED* _(requires and automatically includes MODULE_8BIT_IDE)_====
-This module contains support for JR-IDE/ISA and more advanced modes for XT-CF.
+This module contains support for JR-IDE/ISA and more advanced modes for XT-CF v2.
 
 ====*MODULE_ADVANCED_ATA*====
 Adds native support for VLB (and eventually PCI) IDE Controllers. At the moment there is support for QDI Vision QD6500 and QD6580 VLB IDE controllers.
 
+====*MODULE_EBIOS*====
+Support for Phoenix Enhanced Disk Drive Specification. Allows to access more than 8 GB but requires support from operating system (Windows 9x and later).
+
 ====*MODULE_BOOT_MENU*====
-Adds boot menu to be selected from Hotkeybar. Boot menu displays drive details and allows selecting drive more easily but essentially it has all the same features as MODULE_HOTKEYS.  It can also be included without MODULE_HOTKEYS, in which case the menu is always entered during the boot process.
+Boot menu displays drive details and allows selecting drive more easily but essentially it has all the same features as MODULE_HOTKEYS.  It can also be included without MODULE_HOTKEYS, in which case the menu is always entered during the boot process.
+
+====*MODULE_HOTKEYS*====
+Displays hotkeys during drive detections. Hotkeys allows boot drive selection, ROM Boot, Serial Drive Scanning and Boot Menu.
 
 ====*MODULE_IRQ*====
 Adds IRQ support (you also need to enable IRQ with XTIDECFG.COM). IRQs have no real benefit for DOS (but can actually slow transfer rates a bit). You might want to use IRQs with more capable operating systems.
@@ -208,6 +220,9 @@ Old BIOSes reserve one diagnostic cylinder that is not used for anything. Do not
 
 ====*USE_186, USE_286 and USE_386*====
 Determines what CPU instructions are allowed. USE_186 limits instructions to those supported by 80188/80186 and NEC V20/V30. USE_286 limits instructions for 286 compatible code and USE_386 limits instructions for 386 compatible code. XTIDE Universal BIOS uses macros that emulate the missing instructions when necessary. Do not use any of the mentioned preprocessor directives if you want to generate 8088/8086 compatible code.
+
+====*USE_UNDOC_INTEL*====
+Allows to use undocumented Intel opcodes that are not supported by NEC V20/V30. This is defined automatically when USE_286 or USE_386 is defined.
 
 ====*USE_AT*====
 Assembles code targeted for AT systems. For example AT builds always operate in full operating mode. Another difference is that AT builds use some BIOS functions that are not available on XT systems.
