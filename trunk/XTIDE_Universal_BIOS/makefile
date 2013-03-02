@@ -4,11 +4,11 @@
 # Valid makefile targets are:                                                                      #
 # all       Removes existing files and builds binary files in \Build                               #
 # small     Builds 8 kiB binaries only (without checksum)                                          #
-# large     Builds 15 kiB binaries only (without checksum)                                         #
+# large     Builds 12 kiB binaries only (without checksum)                                         #
 # clean     Removes all files from \Build                                                          #
 # checksum* Builds all and then generates checksum byte to all binary files                        #
 # strings*  Compress src\Strings.asm to src\StringsCompressed.asm                                  #
-# unused*	Checks if there are any unused functions that can be removed to save space             #
+# unused*   Checks if there are any unused functions that can be removed to save space             #
 #                                                                                                  #
 # * at the end of target name means that Perl is required for the job.                             #
 # Build directory must be created manually if it does not exist.                                   #
@@ -32,8 +32,8 @@
 # RELOCATE_INT13H_STACK       Relocates INT 13h stack to top of stolen conventional memory         #
 # RESERVE_DIAGNOSTIC_CYLINDER Reserve one L-CHS cylinder for compatibility with old BIOSes         #
 # USE_186                     Use instructions supported by 80188/80186 and V20/V30 and later      #
-# USE_286                     Use instructions supported by 286 and later                          #
-# USE_386                     Use instructions supported by 386 and later                          #
+# USE_286                     Use instructions supported by 286 and later (defines USE_UNDOC_INTEL)#
+# USE_386                     Use instructions supported by 386 and later (defines USE_286)        #
 # USE_AT                      Use features supported on AT and later systems (not available on XT) #
 # USE_UNDOC_INTEL             Optimizations for Intel CPU:s - do NOT use on NEC V20/V30/Sony CPU:s #
 #                                                                                                  #
@@ -101,7 +101,7 @@ DEFINES_COMMON_LARGE = MODULE_BOOT_MENU MODULE_8BIT_IDE_ADVANCED
 
 DEFINES_XT = $(DEFINES_COMMON) ELIMINATE_CGA_SNOW MODULE_8BIT_IDE_ADVANCED
 DEFINES_XTPLUS = $(DEFINES_COMMON) $(DEFINES_XT) USE_186
-DEFINES_AT = $(DEFINES_COMMON) USE_AT USE_286 USE_UNDOC_INTEL RELOCATE_INT13H_STACK MODULE_IRQ MODULE_ADVANCED_ATA
+DEFINES_AT = $(DEFINES_COMMON) USE_AT USE_286 RELOCATE_INT13H_STACK MODULE_IRQ MODULE_ADVANCED_ATA
 
 DEFINES_XT_LARGE = $(DEFINES_XT) $(DEFINES_COMMON_LARGE)
 DEFINES_XTPLUS_LARGE = $(DEFINES_XTPLUS) $(DEFINES_COMMON_LARGE)
@@ -110,7 +110,7 @@ DEFINES_AT_LARGE = $(DEFINES_AT) $(DEFINES_COMMON_LARGE)
 DEFINES_XT_TINY = MODULE_STRINGS_COMPRESSED MODULE_8BIT_IDE
 DEFINES_386_8K = $(DEFINES_AT) USE_386
 
-DEFINES_ALL_FEATURES = MODULE_8BIT_IDE MODULE_ADVANCED_ATA MODULE_BOOT_MENU MODULE_EBIOS MODULE_HOTKEYS MODULE_IRQ MODULE_SERIAL MODULE_SERIAL_FLOPPY MODULE_STRINGS_COMPRESSED MODULE_FEATURE_SETS MODULE_8BIT_IDE_ADVANCED
+DEFINES_ALL_FEATURES = MODULE_8BIT_IDE MODULE_8BIT_IDE_ADVANCED MODULE_ADVANCED_ATA MODULE_EBIOS MODULE_BOOT_MENU MODULE_HOTKEYS MODULE_IRQ MODULE_SERIAL MODULE_SERIAL_FLOPPY MODULE_STRINGS_COMPRESSED MODULE_FEATURE_SETS
 
 
 ###################
@@ -120,7 +120,7 @@ DEFINES_ALL_FEATURES = MODULE_8BIT_IDE MODULE_ADVANCED_ATA MODULE_BOOT_MENU MODU
 # Target size of the ROM, used in main.asm for number of 512B blocks and by checksum Perl script below
 BIOS_SIZE = 8192		# For BIOS header (use even multiplier!)
 ROMSIZE = $(BIOS_SIZE)	# Size of binary to build when building with make checksum
-BIOS_SIZE_LARGE = 10240
+BIOS_SIZE_LARGE = 12288
 ROMSIZE_LARGE = $(BIOS_SIZE_LARGE)
 
 # Add -D in front of every preprocessor define declaration
