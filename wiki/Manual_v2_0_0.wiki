@@ -1,4 +1,4 @@
-#summary Instructions for XTIDE Universal BIOS v2.0.0
+#summary Instructions for XTIDE Universal BIOS v2.0.0 beta 3
 #labels Featured,Phase-Deploy
 *Table of Contents*
 <wiki:toc max_depth="3" />
@@ -34,7 +34,7 @@ Some of the features included in XTIDE Universal BIOS are...
   * PIO transfers with block mode support
   * Hard disk autodetection
   * Autodetected capacity, both CHS and LBA, can be overridden to make drive appear smaller than it actually is
-  * Hotkeys and optional Boot menu (included in official 15k builds) for selecting any floppy drive or hard disk to boot from, including hard disks that are not handled by XTIDE Universal BIOS
+  * Hotkeys and optional Boot menu (included in official 12k builds) for selecting any floppy drive or hard disk to boot from, including hard disks that are not handled by XTIDE Universal BIOS
   * Compact Flash and Microdrive support
   * Support for most 8-, 16-, and 32-bit IDE controllers
   * Native support for QDI Vision QD6500 and QD6580 VLB IDE controllers
@@ -49,30 +49,30 @@ XTIDE Universal BIOS includes many modules and features that are optional. It is
 
 [http://code.google.com/p/xtideuniversalbios/wiki/BuildInstructions See build instructions for module descriptions].
 
-||File||Description||MODULE_8BIT_IDE||MODULE_JRIDE||MODULE_ADVANCED_ATA||MODULE_BOOT_MENU||MODULE_IRQ||MODULE_SERIAL||MODULE_SERIAL_FLOPPY||ELIMINATE_CGA_SNOW||RELOCATE_INT13H_STACK||USE_186||USE_AT||
-||ide_xt.bin||8088/8086 compatible 8 kiB XT build||√||√||-||-||-||√||√||√||-||-||-||
-||ide_xtp.bin||8 kiB XT+ build requiring 80188/80186 or better||√||√||-||-||-||√||√||√||-||√||-||
-||ide_at.bin||8 kiB AT build requiring 286 or better||-||-||√||-||√||√||√||-||√||√||√||
-||ide_xtl.bin||8088/8086 compatible 15 kiB XT build||√||√||-||√||-||√||√||√||-||-||-||
-||ide_xtpl.bin||15 kiB XT+ build requiring 80188/80186 or better||√||√||-||√||-||√||√||√||-||√||-||
-||ide_atl.bin||15 kiB AT build requiring 286 or better||-||-||√||√||√||√||√||-||√||√||√||
+||File||Description||MODULE_8BIT_IDE_ADVANCED||MODULE_ADVANCED_ATA||MODULE_BOOT_MENU||MODULE_IRQ||ELIMINATE_CGA_SNOW||RELOCATE_INT13H_STACK||USE_186||USE_286||USE_AT||
+||ide_xt.bin||8088/8086 compatible 8 kiB XT build||√||-||-||-||√||-||-||-||-||
+||ide_xtp.bin||8 kiB XT+ build requiring 80188/80186 or better||√||-||-||-||√||-||√||-||-||
+||ide_at.bin||8 kiB AT build requiring 286 or better||-||√||-||√||-||√||√||√||√||
+||ide_xtl.bin||8088/8086 compatible 12 kiB XT build||√||-||√||-||√||-||-||-||-||
+||ide_xtpl.bin||12 kiB XT+ build requiring 80188/80186 or better||√||-||√||-||√||-||√||-||-||
+||ide_atl.bin||12 kiB AT build requiring 286 or better||√||√||√||√||-||√||√||√||√||
 
 All official builds include the following modules and features:
-MODULE_STRINGS_COMPRESSED, MODULE_HOTKEYS, MODULE_EBIOS, MODULE_FEATURE_SETS and RESERVE_DIAGNOSTIC_CYLINDER
+MODULE_STRINGS_COMPRESSED, MODULE_HOTKEYS, MODULE_EBIOS, MODULE_SERIAL, MODULE_SERIAL_FLOPPY, MODULE_FEATURE_SETS and RESERVE_DIAGNOSTIC_CYLINDER
 
 ----
 = Installing XTIDE Universal BIOS =
 
 == Important if you are upgrading from any previous XTIDE Universal BIOS version ==
 
-The new v2.0.0 beta 2 version, like most other BIOSes, adheres to the Phoenix Enhanced Disk Drive Specification. The older v1.x.x versions and v2.0.0 beta 1 do NOT - they may generate different L-CHS parameters for many drives. If you move a drive handled by a v1.x.x or v2.0.0 beta 1 BIOS to another system or upgrade to v2.x.x you risk data corruption if different L-CHS parameters are used.
+The v2.0.0 beta 2 and later versions, like most other BIOSes, adheres to the Phoenix Enhanced Disk Drive Specification. The older v1.x.x versions and v2.0.0 beta 1 do NOT - they may generate different L-CHS parameters for many drives. If you move a drive handled by a v1.x.x or v2.0.0 beta 1 BIOS to another system or upgrade to v2.x.x you risk data corruption if different L-CHS parameters are used.
 
-IMPORTANT! This means that, after upgrading to XTIDE Universal BIOS v2.0.0 beta 2, you need to re-create and format any partitions on drives handled by this BIOS.
+IMPORTANT! This means that, after upgrading to XTIDE Universal BIOS v2.0.0 beta 2 or later, you need to re-create and format any partitions on drives handled by this BIOS.
 
 
 == Hardware supporting XTIDE Universal BIOS ROM ==
 
-The most convenient way to use XTIDE Universal BIOS is to use an [http://www.vintage-computer.com/vcforum/showwiki.php?title=XTIDE+Rev2 XTIDE card] or [http://www.lo-tech.co.uk/wiki/Lo-tech_XT-CF_Board Lo-tech XT-CF] that hopefully will be available soon. They can be used on any PC with a free 8-bit ISA slot. You might not want to connect any drives to them in 16- or 32-bit systems since 8-bit transfers will be very slow. Using the XTIDE card allows EEPROM flashing so it is really easy to update XTIDE Universal BIOS.
+The most convenient way to use XTIDE Universal BIOS is to use an [http://www.vintage-computer.com/vcforum/showwiki.php?title=XTIDE+Rev2 XTIDE card] or [http://www.lo-tech.co.uk/ Lo-tech XT-CF]. They can be used on any PC with a free 8-bit ISA slot. You might not want to connect any drives to them in 16- or 32-bit systems since 8-bit transfers will be very slow. Using the XTIDE card allows EEPROM flashing so it is really easy to update XTIDE Universal BIOS.
 
 Another option is to use any card with a free ROM socket for 8 kiB or larger ROMs. Official XTIDE builds are meant for 8 kiB and 16 kiB ROMs but you can burn it on a larger ROM if you append enough zeroes to the end (only append zeroes so checksum does not change). Many network cards have unused ROM sockets and there are also a few multi I/O cards and IDE controllers with ROM sockets. These cards remains fully usable even if you place a ROM with XTIDE Universal BIOS on them.
 
@@ -136,6 +136,8 @@ Some menu items appear only when needed to make configuring easier.
    Each "xxx IDE Controller" submenu displays IDE controller specific settings. "IDE controllers" menu item specifies the visible "xxx IDE Controller" submenus.
   * Boot settings
    Opens submenu for boot related settings such as should boot menu be enabled etc.
+  * `*`Auto Configure
+   Tries to automatically detect controllers and sets settings accordingly.
   * Full operating mode [default=No for XT builds, not available for AT builds]
    "Full operating mode" reserves a bit of Conventional memory for XTIDE Universal BIOS variables. Disabling this will reduce the maximum number of supported IDE controllers to 2 and place the variables in a memory area reserved for IBM ROM Basic (30:0h). You should always enable this option unless:
     # You don't need to use IBM ROM Basic or any BIOS or software that requires that memory area.
@@ -169,7 +171,22 @@ Some menu items appear only when needed to make configuring easier.
   * Slave Drive
    Opens submenu for Master/Slave Drive specific settings for this IDE Controller.
   * Device Type [default=XTIDE for XT builds, 16-bit for AT builds]
-   Type of device. 16-bit will support all standard IDE controllers, including VLB controllers. 32-bit will use 32-bit transfers on unidentified VLB/PCI controllers but those controllers usually require native support for full speed. Other devices include XTIDE rev1 (and rev2 slow mode), XTIDE mod with swapped A0 and A3 address lines (XTIDE rev2 fast mode), JR-IDE/ISA (requires MODULE_JRIDE), Lo-tech XT-CF and [SerialDrives support for virtual devices through serial port]. Note that a serial port controller must be the last configured IDE controller. XTIDECFG will automatically move any serial ports to the end of the list if needed. This is done so that serial floppy disks, if any are present, will be last on the list of drives detected.
+    Following devices are supported:
+    * 16-bit ISA/VLB/PCI IDE [default for AT builds]
+      32-bit mode will be automatically enabled when supported VLB/PCI controller is detected.
+    * 32-bit VLB/PCI IDE
+      For those 32-bit controllers that do not require software support (PIO mode is set with jumpers). Can be used with all 32-bit controllers but PIO mode is 0 just like on 16-bit controllers.
+    * 16-bit ISA IDE in 8-bit mode
+      Allows to use 16-bit IDE controllers on XT systems. This will require drive that supports 8-bit transfers (CF card and Microdrives all support 8-bit mode).
+    * XTIDE rev 1 [default for XT builds]
+    * XTIDE rev 2 or modded rev 1
+      XTIDE with A0 and A3 address lines swapped.
+    * XT-CF v2/v3/Lite in PIO mode
+    * XT-CF v2 in DMA mode
+    * XT-CF v2 in memory mode
+    * JR-IDE/ISA
+    * Serial port virtual device
+      Note that a serial port controller must be the last configured IDE controller. XTIDECFG will automatically move any serial ports to the end of the list if needed. This is done so that serial floppy disks, if any are present, will be last on the list of drives detected.
   * Base (cmd block) address [default=300h for XT builds, 1F0h (Primary IDE) and 170h (Secondary IDE) for AT builds]
    Command block (base port) address where the IDE Controller is located. JR-IDE/ISA does not use this setting.
   * Control block address [default=308h for XT builds, 3F0h/370h for AT builds]
@@ -257,6 +274,14 @@ It might be a good idea to use a small partition for OS and frequently used util
 It is very likely that this same problem will occur if you decide to use MS-DOS 7.x (Windows 9x) or FreeDOS and a large FAT32 partition on a slow 386 or even 486.
 
 
+== Smartdrive can slow down transfer rates ==
+When smartdrive or other cache program is used, data is read from drive to RAM area used by the cache program. Then it is copied to the program RAM area. If same data is required again it is found from the cache. Reading from cache is a lot faster than reading from drive, especially when the drive is old.
+
+Modern drives are a lot faster and they have very large internal caches and data prefetch abilities. Modern drives are so fast on old computers that the extra CPU usage required by caching programs slow down more than reading directly from drive, at least with slow CPUs and small caches.
+
+Don't assume that disk caching makes things faster. Always test it first.
+
+
 == Importance of Shadow RAM ==
 Always enable Shadow RAM and ROM area caching if your systems supports them! They might speed up much more than you think. This is especially true on Pentium systems.
 
@@ -298,7 +323,6 @@ Known to happen with 0.90 dated 4-30-02 when using user defined LBA. Change FORM
 
 = Other known problems =
   * Flash utility hung the PC when saving settings on one occasion (maybe because the FDD entry point was via the BIOS just over-written?)
-  * Lo-tech XT-CF support won't work with final product. Support will be updated when XT-CF is ready.
   * Detecting non-available drives takes a lot longer on XT systems than on AT systems. Both have same timeout values so it is unclear what causes it.
 
 
