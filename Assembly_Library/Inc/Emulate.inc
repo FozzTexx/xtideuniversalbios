@@ -23,6 +23,7 @@
 %endif
 %ifdef USE_286
 	%define USE_186				; Define to use 18x/V20/V30 instructions
+	%define USE_UNDOC_INTEL		; Not supported by NEC V20/V30
 %endif
 
 %ifdef USE_386
