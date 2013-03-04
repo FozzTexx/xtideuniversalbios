@@ -20,6 +20,9 @@
 ; Section containing code
 SECTION .text
 
+IDE_PORT_TO_START_DETECTION			EQU	00h		; Must be zero (not actual port)
+FIRST_MEMORY_SEGMENT_ADDRESS		EQU	0C000h
+
 ;--------------------------------------------------------------------
 ; IdeAutodetect_DetectIdeDeviceFromPortDXAndReturnControlBlockInSI
 ;	Parameters:
@@ -64,6 +67,7 @@ DetectMemoryMappedDeviceFromSegmentDX:
 	pop		ds
 	call	CompareIdeStatusRegistersFromALandAH
 	mov		al, DEVICE_8BIT_JRIDE_ISA	; Assume CF was cleared
+	mov		si, dx						; For IDEDTCT.COM
 	ret									; No need to return Control Block Port
 
 
@@ -142,6 +146,7 @@ DetectPortMappedDeviceFromPortDX:
 	je		SHORT .IdeDeviceFound
 	mov		al, DEVICE_8BIT_XTIDE_REV1	; We must have rev 1
 .IdeDeviceFound:
+	clc
 	ret
 
 
@@ -190,22 +195,22 @@ CompareIdeStatusRegistersFromALandAH:
 	; Status Register now in AH and Alternative Status Register in AL.
 	; They must be the same if base port was in use by IDE device.
 	cmp		al, ah
-	jne		SHORT .InvalidStatusRegister
+	jne		SHORT NoIdeDeviceFound
 
 	; Bytes were the same but it is possible they were both FFh, for
 	; example. We must make sure bits are what is expected from valid
 	; IDE Status Register. So far all drives I've tested return 50h
-	; (FLG_STATUS_DRDY and FLG_STATUS_DSC set) unless there is only
-	; one drive present but wrong drive is selected. For example if Master
+	; (FLG_STATUS_DRDY and FLG_STATUS_DSC set) or 00h.
+	; I suspect that the zero might mean non available drive is selected. For example if Master
 	; drive is present but Slave is selected from IDE Drive and Head Select Register,
-	; then the Status Register can be 00h.
+	; then the Status Register can be 00h. We cannot accept 00h as valid byte
+	; since that can easily cause invalid JR-IDE/ISA detections.
 	test	al, FLG_STATUS_BSY | FLG_STATUS_DF | FLG_STATUS_DRQ | FLG_STATUS_ERR
 	jnz		SHORT .InvalidStatusRegister	; Busy or Errors cannot be set
 	test	al, FLG_STATUS_DRDY
 	jz		SHORT .InvalidStatusRegister	; Device needs to be ready
 	ret										; Return with CF cleared
 
-.InvalidStatusRegister:
 NoIdeDeviceFound:
 	stc
 	ret
@@ -246,7 +251,7 @@ ChangeDifferentControlBlockAddressToSI:
 ;--------------------------------------------------------------------
 ; IdeAutodetect_IncrementDXtoNextIdeBasePort
 ;	Parameters:
-;		DX:		Previous IDE Base Port
+;		DX:		Previous IDE Base Port or IDE_PORT_TO_START_DETECTION
 ;	Returns:
 ;		DX:		Next IDE Base Port
 ;		ZF:		Set if no more Base Ports (DX was last base port on entry)
