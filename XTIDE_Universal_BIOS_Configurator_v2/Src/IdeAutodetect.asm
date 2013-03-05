@@ -206,9 +206,9 @@ CompareIdeStatusRegistersFromALandAH:
 	; then the Status Register can be 00h. We cannot accept 00h as valid byte
 	; since that can easily cause invalid JR-IDE/ISA detections.
 	test	al, FLG_STATUS_BSY | FLG_STATUS_DF | FLG_STATUS_DRQ | FLG_STATUS_ERR
-	jnz		SHORT .InvalidStatusRegister	; Busy or Errors cannot be set
+	jnz		SHORT NoIdeDeviceFound	; Busy or Errors cannot be set
 	test	al, FLG_STATUS_DRDY
-	jz		SHORT .InvalidStatusRegister	; Device needs to be ready
+	jz		SHORT NoIdeDeviceFound	; Device needs to be ready
 	ret										; Return with CF cleared
 
 NoIdeDeviceFound:
