@@ -44,18 +44,22 @@ struc BOOTVARS
 	.wNextXTCFportToScan	resb	2	; Needed for XT-CF port autodetection
 %endif
 
-	.clearToZeroFromThisPoint:
+	
 %ifdef MODULE_HOTKEYS
 	.hotkeyVars				resb	HOTKEYVARS_size
+%else
+	.clearToZeroFromThisPoint:
 %endif
 
 	.rgDrvDetectInfo:					; Array containing DRVDETECTINFO structs
 endstruc
 
+
 %ifdef MODULE_HOTKEYS
 
 struc HOTKEYVARS
 	.wTimeToClose		resb	2		; Earliest system time when Hotkey Bar can be closed
+.clearToZeroFromThisPoint:
 	.wFddAndHddLetters:
 	.bFddLetter			resb	1		; Floppy Drive letter hotkey (upper case)
 	.bHddLetter			resb	1		; Hard Drive letter hotkey (upper case)

@@ -100,7 +100,6 @@ AdvAtaInit_InitializeControllerForDPTinDSDI:
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT for Single or Slave Drive
 ;	Returns:
-;		DS:DI:	Ptr to DPT for Single or Slave Drive
 ;		SI:		Offset to Master DPT if Slave Drive present
 ;				Zero if Slave Drive not present
 ;	Corrupts registers:

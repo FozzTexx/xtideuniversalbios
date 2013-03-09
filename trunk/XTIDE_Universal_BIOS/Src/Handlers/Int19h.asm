@@ -79,7 +79,7 @@ Int19h_BootLoaderHandler:
 ;--------------------------------------------------------------------
 %ifdef MODULE_HOTKEYS
 	call	TimerTicks_ReadFromBdaToAX
-	add		ax, MIN_TIME_TO_DISPLAY_HOTKEY_BAR
+	add		ax, BYTE MIN_TIME_TO_DISPLAY_HOTKEY_BAR
 	mov		[es:BOOTVARS.hotkeyVars+HOTKEYVARS.wTimeToClose], ax
 %endif
 

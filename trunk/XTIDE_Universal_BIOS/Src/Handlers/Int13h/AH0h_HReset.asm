@@ -121,11 +121,11 @@ ResetHardDisksHandledByOurBIOS:
 .ErrorCodeNotUsed:
 
 	mov		si, ControllerResetForDPTinDSDI
-	call	.CallSIforEveryDrive						; Reset all drives to power on settings
-	mov		si, AH9h_InitializeDriveForUse
-	; Fall to .CallSIforEveryDrive						; Initialize all drives
+	call	.CallSIforEveryController					; Reset all drives to power on settings
+	mov		si, ControllerInitForMasterOrSingleDPTinDSDI
+	; Fall to .CallSIforEveryController					; Initialize all controllers (Master and Slave drives)
 
-.CallSIforEveryDrive:									; BH will be garbage on exit if this entry point is used,
+.CallSIforEveryController:								; BH will be garbage on exit if this entry point is used,
 														; but reset of all drives will still happen
 
 	mov		dl, ROMVARS.ideVars0						; starting Idevars offset
@@ -165,7 +165,6 @@ ResetHardDisksHandledByOurBIOS:
 ;		SS:BP:	Ptr to IDEPACK
 ;	Returns:
 ;		AH:		Int 13h return status
-;		CF:		0 if successful, 1 if error
 ;	Corrupts registers:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
@@ -179,3 +178,29 @@ ControllerResetForDPTinDSDI:
 %else
 	jmp		Device_ResetMasterAndSlaveController
 %endif
+
+
+;--------------------------------------------------------------------
+; ControllerInitForMasterOrSingleDPTinDSDI
+;	Parameters:
+;		DS:DI:	Ptr to DPT for Master or Single Drive (initializes both Master and Slave drive)
+;		SS:BP:	Ptr to IDEPACK
+;	Returns:
+;		AH:		Int 13h return status
+;	Corrupts registers:
+;		AL, BX, CX, DX
+;--------------------------------------------------------------------
+ControllerInitForMasterOrSingleDPTinDSDI:
+	call	AH9h_InitializeDriveForUse			; Init Master or Single drive
+	push	ax									; Store error code
+
+	eMOVZX	ax, BYTE [di+DPT.bIdevarsOffset]	; Clear AH
+	add		di, BYTE LARGEST_DPT_SIZE			; Slave drive or next controller
+	cmp		[di+DPT.bIdevarsOffset], al
+	jne		SHORT .NoSlaveDrivePresent
+
+	call	AH9h_InitializeDriveForUse			; Init Slave drive
+.NoSlaveDrivePresent:
+	pop		bx
+	MAX_U	ah, bh								; Return error code from either drive
+	ret

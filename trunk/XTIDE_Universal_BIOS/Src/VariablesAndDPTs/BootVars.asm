@@ -38,7 +38,11 @@ BootVars_Initialize:
 	; Clear to zero
 	mov		al, DRVDETECTINFO_size
 	mul		BYTE [cs:ROMVARS.bIdeCnt]
-	mov		di, BOOTVARS.clearToZeroFromThisPoint	; We must not initialize anything before this!
+%ifdef MODULE_HOTKEYS ; We must not initialize anything before this!
+	mov		di, BOOTVARS.hotkeyVars + HOTKEYVARS.clearToZeroFromThisPoint	
+%else
+	mov		di, BOOTVARS.clearToZeroFromThisPoint
+%endif
 	add		ax, BOOTVARS_size
 	sub		ax, di
 	xchg	cx, ax
