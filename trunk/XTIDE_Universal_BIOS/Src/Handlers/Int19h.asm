@@ -160,10 +160,10 @@ SelectDriveToBootFrom:
 	call	DriveXlate_Reset					; Clean up any drive mappings before Rom Boot
 %endif
 	clc
-	;; fall through to JumpToBootSector_or_RomBoot
+	;; fall through to Int19_JumpToBootSectorOrRomBoot
 
 ;--------------------------------------------------------------------
-; JumpToBootSector_or_RomBoot
+; Int19_JumpToBootSectorOrRomBoot
 ;
 ; Switches back to the POST stack, clears the DS and ES registers,
 ; and either jumps to the MBR (Master Boot Record) that was just read,
@@ -178,7 +178,7 @@ SelectDriveToBootFrom:
 ;	Returns:
 ;		Never returns
 ;--------------------------------------------------------------------
-JumpToBootSector_or_RomBoot:
+Int19_JumpToBootSectorOrRomBoot:
 	mov		cx, es		; Preserve MBR segment (can't push because of stack change)
 	mov		ax, 0		; NOTE: can't use XOR (LOAD_BDA_SEGMENT_TO) as it impacts CF
 	SWITCH_BACK_TO_POST_STACK

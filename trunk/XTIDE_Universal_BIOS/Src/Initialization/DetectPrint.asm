@@ -199,7 +199,7 @@ DetectPrint_RomFoundAtSegment:
 ;	Parameters:
 ;		AH:		INT 13h error code
 ;	Returns:
-;		Nothing
+;		CF:		Set
 ;	Corrupts registers:
 ;		AX, CX, SI, DI
 ;--------------------------------------------------------------------
@@ -209,7 +209,7 @@ DetectPrint_FailedToLoadFirstSector:
 	eMOVZX	cx, ah
 	push	cx					; Push INT 13h error code
 	mov		si, g_szReadError
-	jmp		SHORT DetectPrint_FormatCSSIfromParamsInSSBP
+	jmp		SHORT DetectPrint_FormatCSSIfromParamsInSSBP	; Sets CF
 
 
 ;--------------------------------------------------------------------
@@ -260,6 +260,7 @@ DetectPrint_TryToBootFromDL:
 
 
 ;--------------------------------------------------------------------
+; DetectPrint_NullTerminatedStringFromCSSI
 ; DetectPrint_NullTerminatedStringFromCSSIandSetCF
 ;	Parameters:
 ;		CS:SI:	Ptr to NULL terminated string to print
@@ -268,6 +269,7 @@ DetectPrint_TryToBootFromDL:
 ;	Corrupts registers:
 ;		AX, DI
 ;--------------------------------------------------------------------
+DetectPrint_NullTerminatedStringFromCSSI:
 DetectPrint_NullTerminatedStringFromCSSIandSetCF:
 ;
 ; We send all CSSI strings through the Format routine for the case of

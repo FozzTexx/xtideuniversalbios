@@ -35,28 +35,42 @@ SECTION .text
 BootSector_TryToLoadFromDriveDL_AndBoot:
 	call	DetectPrint_TryToBootFromDL
 	call	LoadFirstSectorFromDriveDL
-%ifndef USE_386
-	jc		SHORT .FailedToLoadFirstSector
+	jnc		SHORT .FirstSectorLoadedToESBX
+
+	; Do not display timeout error (80h) for floppy drives since
+	; it most likely mean no diskette in drive. This way we do not
+	; display error code every time user intends to boot from hard disk
+	; when A then C boot order is used.
+	js		SHORT .PrintFailedToLoadErrorCode	; Hard Drive
+	cmp		ah, RET_HD_TIMEOUT
+	je		SHORT .ReturnWithCFclearSinceFailedToLoadBootSector
+	cmp		ah, RET_HD_NOMEDIA
+	je		SHORT .ReturnWithCFclearSinceFailedToLoadBootSector
+.PrintFailedToLoadErrorCode:
+%ifdef USE_186
+	push	.ReturnWithCFclearSinceFailedToLoadBootSector
+	jmp		DetectPrint_FailedToLoadFirstSector
 %else
-	jc		DetectPrint_FailedToLoadFirstSector
+	call	DetectPrint_FailedToLoadFirstSector
+	jmp		.ReturnWithCFclearSinceFailedToLoadBootSector
 %endif
 
+
+.FirstSectorLoadedToESBX:
 	test	dl, dl
 	jns		SHORT .AlwaysBootFromFloppyDriveForBooterGames
 	cmp		WORD [es:bx+510], 0AA55h		; Valid boot sector?
 	jne		SHORT .FirstHardDiskSectorNotBootable
 .AlwaysBootFromFloppyDriveForBooterGames:
-	stc
-	jmp		SHORT JumpToBootSector_or_RomBoot
-
-%ifndef USE_386
-.FailedToLoadFirstSector:
-	jmp		DetectPrint_FailedToLoadFirstSector
-%endif
+	stc		; Boot Sector loaded succesfully
+	jmp		SHORT Int19_JumpToBootSectorOrRomBoot
 
 .FirstHardDiskSectorNotBootable:
 	mov		si, g_szBootSectorNotFound
-	jmp		DetectPrint_NullTerminatedStringFromCSSIandSetCF
+	call	DetectPrint_NullTerminatedStringFromCSSI
+.ReturnWithCFclearSinceFailedToLoadBootSector:
+	clc
+	ret
 
 %ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
   %ifdef MODULE_DRIVEXLATE
