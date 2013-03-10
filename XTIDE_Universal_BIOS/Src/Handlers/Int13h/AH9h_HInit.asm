@@ -72,7 +72,7 @@ AH9h_HandlerForInitializeDriveParameters:
 ;		AH:		Int 13h return status
 ;		CF:		0 if successful, 1 if error
 ;	Corrupts registers:
-;		AL, BX, CX, DX
+;		AL, CX
 ;--------------------------------------------------------------------
 AH9h_InitializeDriveForUse:
 	xor		ax, ax				; Clear AH to assume no errors
@@ -92,6 +92,8 @@ AH9h_InitializeDriveForUse:
 
 	push	es
 	push	si
+	push	dx
+	push	bx
 
 
 ;;;	SelectDrive
@@ -231,6 +233,8 @@ AH9h_InitializeDriveForUse:
 .ReturnWithSuccess:
 %endif
 
+	pop		bx
+	pop		dx
 	pop		si
 	pop		es
 	ret

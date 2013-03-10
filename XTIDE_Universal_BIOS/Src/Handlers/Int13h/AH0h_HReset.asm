@@ -118,16 +118,8 @@ ResetHardDisksHandledByOurBIOS:
 	test	di, di
 	jz		SHORT .ErrorCodeNotUsed
 	mov		bl, [di+DPT.bIdevarsOffset]					; replace drive number with Idevars pointer for cmp with dl
-.ErrorCodeNotUsed:
-
-	mov		si, ControllerResetForDPTinDSDI
-	call	.CallSIforEveryController					; Reset all drives to power on settings
-	mov		si, ControllerInitForMasterOrSingleDPTinDSDI
-	; Fall to .CallSIforEveryController					; Initialize all controllers (Master and Slave drives)
-
-.CallSIforEveryController:								; BH will be garbage on exit if this entry point is used,
+.ErrorCodeNotUsed:										; BH will be garbage on exit if this entry point is used,
 														; but reset of all drives will still happen
-
 	mov		dl, ROMVARS.ideVars0						; starting Idevars offset
 
     ; Get count of ALL Idevars structures, not just the ones that are configured.  This may seem odd,
@@ -138,69 +130,40 @@ ResetHardDisksHandledByOurBIOS:
 	mov		cx, NUMBER_OF_IDEVARS
 
 .loop:
-	push	si
-	call	FindDPT_ForIdevarsOffsetInDL				; look for the first drive on this controller, if any
-	pop		si
-	jc		SHORT .notFound
+	call	FindDPT_MasterOrSingleForIdevarsOffsetInDL
+	jc		SHORT .ControllerNotAvailable
 
-	push	bx
+	; Reset controller (both Master and Slave Drive). We ignore error codes
+	; here since initialization is the one that matters.
 	push	cx
 	push	dx
-	call	si											; Reset Master AND Slave or initialize Master OR Slave drive
-	pop		dx
-	pop		cx
-	pop		bx
-	call	BackupErrorCodeFromTheRequestedDriveToBH	; save error code if same controller as drive from entry
-
-.notFound:
-	add		dl, IDEVARS_size							; move Idevars pointer forward
-	loop	.loop
-	ret
-
-
-;--------------------------------------------------------------------
-; ControllerResetForDPTinDSDI
-;	Parameters:
-;		DS:DI:	Ptr to DPT for drive to reset (resets both Master and Slave drive)
-;		SS:BP:	Ptr to IDEPACK
-;	Returns:
-;		AH:		Int 13h return status
-;	Corrupts registers:
-;		AL, BX, CX, DX
-;--------------------------------------------------------------------
-ControllerResetForDPTinDSDI:
+	push	bx
 %ifdef MODULE_IRQ
 	call	Interrupts_UnmaskInterruptControllerForDriveInDSDI
 %endif
-%ifdef MODULE_ADVANCED_ATA
 	call	Device_ResetMasterAndSlaveController
-	jmp		AdvAtaInit_InitializeControllerForDPTinDSDI
-%else
-	jmp		Device_ResetMasterAndSlaveController
+%ifdef MODULE_ADVANCED_ATA
+	call	AdvAtaInit_InitializeControllerForDPTinDSDI
 %endif
-
-
-;--------------------------------------------------------------------
-; ControllerInitForMasterOrSingleDPTinDSDI
-;	Parameters:
-;		DS:DI:	Ptr to DPT for Master or Single Drive (initializes both Master and Slave drive)
-;		SS:BP:	Ptr to IDEPACK
-;	Returns:
-;		AH:		Int 13h return status
-;	Corrupts registers:
-;		AL, BX, CX, DX
-;--------------------------------------------------------------------
-ControllerInitForMasterOrSingleDPTinDSDI:
-	call	AH9h_InitializeDriveForUse			; Init Master or Single drive
-	push	ax									; Store error code
-
-	eMOVZX	ax, BYTE [di+DPT.bIdevarsOffset]	; Clear AH
-	add		di, BYTE LARGEST_DPT_SIZE			; Slave drive or next controller
-	cmp		[di+DPT.bIdevarsOffset], al
-	jne		SHORT .NoSlaveDrivePresent
-
-	call	AH9h_InitializeDriveForUse			; Init Slave drive
-.NoSlaveDrivePresent:
 	pop		bx
-	MAX_U	ah, bh								; Return error code from either drive
+	pop		dx
+
+	; Initialize Master Drive
+	call	AH9h_InitializeDriveForUse					; Initialize Master drive
+	call	BackupErrorCodeFromTheRequestedDriveToBH
+
+	; Initialize Slave Drive
+	call	FindDPT_SlaveForIdevarsOffsetInDL
+	jc		SHORT .SlaveDriveNotAvailable
+	call	AH9h_InitializeDriveForUse
+	; Here we have a small problem. Since DL now has offset to IDEVARS, it will be the same
+	; for both Master and Slave Drive. We simply ignore error from slave drive reset since most
+	; systems do not have slave drives at all and it is unlikely that AH=00h would be called for
+	; specific drive anyway. AH=Dh is for that.
+
+.SlaveDriveNotAvailable:
+	pop		cx
+.ControllerNotAvailable:
+	add		dl, IDEVARS_size							; move Idevars pointer forward
+	loop	.loop
 	ret

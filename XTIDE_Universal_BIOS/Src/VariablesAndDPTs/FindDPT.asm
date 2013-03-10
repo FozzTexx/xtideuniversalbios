@@ -135,7 +135,7 @@ ALIGN JUMP_ALIGN
 
 
 ;--------------------------------------------------------------------
-; FindDPT_ForIdevarsOffsetInDL
+; FindDPT_MasterOrSingleForIdevarsOffsetInDL
 ;	Parameters:
 ;		DL:		Offset to IDEVARS to search for
 ;		DS:		RAMVARS segment
@@ -146,16 +146,33 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		SI
 ;--------------------------------------------------------------------
-FindDPT_ForIdevarsOffsetInDL:
+FindDPT_MasterOrSingleForIdevarsOffsetInDL:
 	mov		si, IterateFindFirstDPTforIdevars			; iteration routine (see below)
 	jmp		SHORT FindDPT_IterateAllDPTs				; look for the first drive on this controller, if any
 
 ;--------------------------------------------------------------------
-; Iteration routine for FindDPT_ForIdevarsOffsetInDL,
-; for use with IterateAllDPTs
+; FindDPT_SlaveForIdevarsOffsetInDL
+;	Parameters:
+;		DL:		Offset to IDEVARS to search for
+;		DS:		RAMVARS segment
+;	Returns:
+;		DS:DI:		Ptr to second DPT with same IDEVARS as in DL
+;		CF:			Clear if wanted DPT found
+;					Set if DPT not found, or no DPTs present
+;	Corrupts registers:
+;		SI
+;--------------------------------------------------------------------
+FindDPT_SlaveForIdevarsOffsetInDL:
+	mov		si, IterateFindSecondDPTforIdevars			; iteration routine (see below)
+	jmp		SHORT FindDPT_IterateAllDPTs				; look for the second drive on this controller, if any
+
+;--------------------------------------------------------------------
+; Iteration routines for FindDPT_MasterOrSingleForIdevarsOffsetInDL and
+; FindDPT_SlaveForIdevarsOffsetInDL, for use with IterateAllDPTs
 ;
 ; Returns when DPT is found on the controller with Idevars offset in DL
 ;
+; IterateFindSecondDPTforIdevars
 ; IterateFindFirstDPTforIdevars
 ;       DL:		Offset to IDEVARS to search from DPTs
 ;		DS:DI:	Ptr to DPT to examine
@@ -163,6 +180,15 @@ FindDPT_ForIdevarsOffsetInDL:
 ;		CF:		Clear if wanted DPT found
 ;				Set if wrong DPT
 ;--------------------------------------------------------------------
+IterateFindSecondDPTforIdevars:
+	call	IterateFindFirstDPTforIdevars
+	jc		SHORT IterateFindFirstDPTforIdevars.done	; Wrong controller
+
+	; We have found DPT for Master Drive,
+	; next DPT is for slave drive or master for another controller
+	add		di, BYTE LARGEST_DPT_SIZE
+	; Fall to IterateFindFirstDPTforIdevars
+
 IterateFindFirstDPTforIdevars:
 	cmp		dl, [di+DPT.bIdevarsOffset]			; Clears CF if matched
 	je		.done
@@ -292,4 +318,3 @@ ALIGN JUMP_ALIGN
 .Found:
 	pop		cx
 	ret
-
