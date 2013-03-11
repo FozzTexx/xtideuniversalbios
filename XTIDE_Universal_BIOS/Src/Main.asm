@@ -45,7 +45,7 @@
 
 	; Included .inc files
 	%include "AssemblyLibrary.inc"	; Assembly Library. Must be included first!
-	%include "ModuleDependency.inc"	; Dependency checks for optional modules
+	%include "ModuleDependency.inc"	; Dependency checks for optional modules. Must be included second!
 	%include "Version.inc"
 	%include "ATA_ID.inc"			; For ATA Drive Information structs
 	%include "IdeRegisters.inc"		; For ATA Registers, flags and commands

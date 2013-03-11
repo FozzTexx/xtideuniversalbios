@@ -29,7 +29,7 @@
 #                                                                                                  #
 # Not modules but these affect the assembly:                                                       #
 # ELIMINATE_CGA_SNOW          Prevents CGA snowing at the cost of a few bytes                      #
-# RELOCATE_INT13H_STACK       Relocates INT 13h stack to top of stolen conventional memory         #
+# RELOCATE_INT13H_STACK **    Relocates INT 13h stack to beginning of stolen conventional memory   #
 # RESERVE_DIAGNOSTIC_CYLINDER Reserve one L-CHS cylinder for compatibility with old BIOSes         #
 # USE_186                     Use instructions supported by 80188/80186 and V20/V30 and later      #
 # USE_286                     Use instructions supported by 286 and later (defines USE_UNDOC_INTEL)#
@@ -37,6 +37,7 @@
 # USE_AT                      Use features supported on AT and later systems (not available on XT) #
 # USE_UNDOC_INTEL             Optimizations for Intel CPU:s - do NOT use on NEC V20/V30/Sony CPU:s #
 #                                                                                                  #
+# ** AT Builds only (when USE_AT is defined)                                                       #
 ####################################################################################################
 
 ###########################################

@@ -17,6 +17,12 @@
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 ;
 
+; Allow RELOCATE_INT13H_STACK only for AT builds
+%ifndef USE_AT
+	%undef RELOCATE_INT13H_STACK
+%endif
+
+
 %ifdef MODULE_SERIAL_FLOPPY
 	%ifndef MODULE_SERIAL
 		%define MODULE_SERIAL

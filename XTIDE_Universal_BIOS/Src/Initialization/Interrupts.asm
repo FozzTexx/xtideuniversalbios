@@ -79,10 +79,10 @@ Interrupts_InitializeInterruptVectors:
 %endif ; 0
 
 	mov		al, BIOS_DISK_INTERRUPT_13h			; INT 13h interrupt vector offset
-	mov		si, Int13h_DiskFunctionsHandler
 %ifdef RELOCATE_INT13H_STACK
-	test	BYTE [cs:ROMVARS.wFlags], FLG_ROMVARS_FULLMODE
-	eCMOVNZ	si, Int13h_DiskFunctionsHandlerWithStackChange
+	mov		si, Int13h_DiskFunctionsHandlerWithStackChange
+%else
+	mov		si, Int13h_DiskFunctionsHandler
 %endif
 
 %ifndef MODULE_IRQ

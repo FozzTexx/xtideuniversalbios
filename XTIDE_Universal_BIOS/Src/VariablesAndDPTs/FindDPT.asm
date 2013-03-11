@@ -115,7 +115,7 @@ ALIGN JUMP_ALIGN
 	mov		al, LARGEST_DPT_SIZE
 
 	mul		dl
-	add		ax, BYTE RAMVARS_size		; Clears CF (will not overflow)
+	add		ax, RAMVARS_size			; Clears CF (will not overflow)
 
 	pop		dx
 

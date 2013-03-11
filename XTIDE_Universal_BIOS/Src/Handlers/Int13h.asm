@@ -49,7 +49,7 @@ Int13h_DiskFunctionsHandlerWithStackChange:
 	; Load new stack and restore DS and DI
 	mov		di, ds		; We do not want to overwrite DS and DI in stack
 	mov		ss, di
-	mov		sp, [RAMVARS.wNewStackOffset]
+	mov		sp, RAMVARS.rgbTopOfStack
 	lds		di, [RAMVARS.dwStackChangeDSDI]
 
 	; Call INT 13h
