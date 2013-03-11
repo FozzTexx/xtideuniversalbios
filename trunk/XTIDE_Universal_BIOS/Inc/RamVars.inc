@@ -36,11 +36,12 @@
 ; at the top of interrupt vectors.
 struc RAMVARS
 %ifdef RELOCATE_INT13H_STACK
+						resb	256	; Size of our stack
+	.rgbTopOfStack:
 	.fpInt13hEntryStack	resb	4
 	.dwStackChangeDSDI:
 	.wStackChangeDI		resb	2
 	.wStackChangeDS		resb	2
-	.wNewStackOffset	resb	2
 %endif
 	.wDrvDetectSignature:			; Signature when BIOS is in drive detection mode
 	.fpOldI13h			resb	4	; Far pointer to old INT 13h handler
