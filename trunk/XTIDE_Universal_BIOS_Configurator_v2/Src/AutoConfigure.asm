@@ -42,6 +42,7 @@ AutoConfigure_ForThisSystem:
 	pop		ds								; ROMVARS now in DS:DI
 	call	ResetIdevarsToDefaultValues
 	call	DetectIdePortsAndDevices
+	call	EnableInterruptsForPrimaryAndSecondaryControllers
 	call	StoreAndDisplayNumberOfControllers
 
 	pop		ds
@@ -117,6 +118,45 @@ DetectIdePortsAndDevices:
 	cmp		si, ROMVARS.ideVars3
 	jbe		SHORT .DetectFromNextPort
 .AllPortsAlreadyDetected:
+	ret
+
+
+;--------------------------------------------------------------------
+; EnableInterruptsForPrimaryAndSecondaryControllers
+;	Parameters:
+;		DS:DI:	Ptr to ROMVARS
+;		CX:		Number of controllers detected
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, ES
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+EnableInterruptsForPrimaryAndSecondaryControllers:
+	jcxz	.NoControllersDetected
+	call	Buffers_IsXTbuildLoaded
+	je		SHORT .DoNotEnableIRQforXTbuilds
+	push	di
+	push	cx
+
+	add		di, BYTE ROMVARS.ideVars0	; DS:DI now points first IDEVARS
+.CheckNextController:
+	mov		al, 14
+	cmp		WORD [di+IDEVARS.wBasePort], DEVICE_ATA_PRIMARY_PORT
+	je		SHORT .EnableIrqAL
+
+	inc		ax	; 15
+	cmp		WORD [di+IDEVARS.wBasePort], DEVICE_ATA_SECONDARY_PORT
+	jne		SHORT .DoNotEnableIRQ
+
+.EnableIrqAL:
+	mov		[di+IDEVARS.bIRQ], al
+.DoNotEnableIRQ:
+	loop	.CheckNextController
+	pop		cx
+	pop		di
+.DoNotEnableIRQforXTbuilds:
+.NoControllersDetected:
 	ret
 
 

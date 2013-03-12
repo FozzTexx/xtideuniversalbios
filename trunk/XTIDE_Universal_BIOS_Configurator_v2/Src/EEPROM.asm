@@ -77,7 +77,7 @@ EEPROM_LoadXtideUniversalBiosFromRomToRamBufferAndReturnSizeInDXCX:
 ALIGN JUMP_ALIGN
 EEPROM_GetXtideUniversalBiosSizeFromESDItoDXCX:
 	xor		dx, dx
-	eMOVZX	cx, [es:di+ROMVARS.bRomSize]
+	eMOVZX	cx, BYTE [es:di+ROMVARS.bRomSize]
 	eSHL_IM	cx, 9				; *= 512 for byte count
 	ret
 
@@ -107,12 +107,13 @@ EEPROM_LoadOldSettingsFromRomToRamBuffer:
 ;		CF:		Set if EEPROM was found
 ;				Cleared if EEPROM not found
 ;	Corrupts registers:
-;		AX, BX, CX, SI, DI
+;		AX, BX, CX, SI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 LoadBytesFromRomToRamBuffer:
 	push	es
 	push	ds
+	push	di
 
 	call	EEPROM_FindXtideUniversalBiosROMtoESDI
 	jnc		SHORT .XtideUniversalBiosNotFound
@@ -127,6 +128,7 @@ LoadBytesFromRomToRamBuffer:
 	stc
 
 .XtideUniversalBiosNotFound:
+	pop		di
 	pop		ds
 	pop		es
 	ret
