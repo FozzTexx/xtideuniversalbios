@@ -32,8 +32,7 @@ SECTION .text
 ALIGN JUMP_ALIGN
 MenuEvents_DisplayMenu:
 	mov		bx, MenuEventHandler
-	CALL_MENU_LIBRARY DisplayWithHandlerInBXandUserDataInDXAX
-	ret
+	JMP_MENU_LIBRARY DisplayWithHandlerInBXandUserDataInDXAX
 
 
 ;--------------------------------------------------------------------
@@ -217,7 +216,8 @@ ALIGN JUMP_ALIGN
 	test	ax, FLG_CFGVARS_FILELOADED
 	jnz		SHORT .PrintNameOfLoadedFile
 	test	ax, FLG_CFGVARS_ROMLOADED
-	jnz		SHORT .PrintLoadedEeprom
+	mov		si, g_szEEPROM
+	jnz		SHORT .PrintNameOfLoadedFileOrEeprom
 	; Fall to .PrintNothingLoaded
 
 .PrintNothingLoaded:
@@ -227,16 +227,13 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 .PrintNameOfLoadedFile:
 	mov		si, g_cfgVars+CFGVARS.szOpenedFile
-	CALL_DISPLAY_LIBRARY PrintNullTerminatedStringFromCSSI
-	jmp		SHORT .PrintTypeOfLoadedBios
+	; Fall to .PrintNameOfLoadedFileOrEeprom
 
 ALIGN JUMP_ALIGN
-.PrintLoadedEeprom:
-	mov		si, g_szEEPROM
+.PrintNameOfLoadedFileOrEeprom:
 	CALL_DISPLAY_LIBRARY PrintNullTerminatedStringFromCSSI
 	; Fall to .PrintTypeOfLoadedBios
 
-ALIGN JUMP_ALIGN
 .PrintTypeOfLoadedBios:
 	mov		si, g_szSourceAndTypeSeparator
 	CALL_DISPLAY_LIBRARY PrintNullTerminatedStringFromCSSI

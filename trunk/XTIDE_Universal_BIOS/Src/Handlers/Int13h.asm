@@ -36,21 +36,28 @@ SECTION .text
 %ifdef RELOCATE_INT13H_STACK
 ALIGN JUMP_ALIGN
 Int13h_DiskFunctionsHandlerWithStackChange:
-	push	ds
+	sti			; Enable interrupts
+	; TODO: Maybe we need to save Flags (DF) as well?
+	push	ds	; Save DS:DI on the original stack
 	push	di
 	call	RamVars_GetSegmentToDS
 
 	; Store entry registers to RAMVARS
+%ifdef USE_386
+	pop		DWORD [RAMVARS.dwStackChangeDSDI]
+%else
+	pop		WORD [RAMVARS.wStackChangeDI]	; Pop DS:DI to the top of what
+	pop		WORD [RAMVARS.wStackChangeDS]	; is to become the new stack
+%endif
 	mov		[RAMVARS.fpInt13hEntryStack], sp
 	mov		[RAMVARS.fpInt13hEntryStack+2], ss
-	pop		WORD [RAMVARS.wStackChangeDI]
-	pop		WORD [RAMVARS.wStackChangeDS]
 
 	; Load new stack and restore DS and DI
-	mov		di, ds		; We do not want to overwrite DS and DI in stack
-	mov		ss, di
-	mov		sp, RAMVARS.rgbTopOfStack
-	lds		di, [RAMVARS.dwStackChangeDSDI]
+	mov		di, ds		; We can save 2 bytes by using PUSH/POP but it's slower
+	mov		ss, di		; No need to wrap with CLI/STI since this is for AT only (286+)
+	mov		sp, RAMVARS.rgbTopOfStack-4
+	pop		di			; DI before stack change
+	pop		ds			; DS before stack change
 
 	; Call INT 13h
 	pushf
@@ -58,15 +65,14 @@ Int13h_DiskFunctionsHandlerWithStackChange:
 	call	Int13h_DiskFunctionsHandler
 
 	; Restore stack (we must not corrupt FLAGS!)
-	cli
 %ifdef USE_386
 	lss		sp, [ss:RAMVARS.fpInt13hEntryStack]
 %else
+	cli
 	mov		sp, [ss:RAMVARS.fpInt13hEntryStack]
 	mov		ss, [ss:RAMVARS.fpInt13hEntryStack+2]
+	sti
 %endif
-	pop		di			; DI before stack change
-	pop		ds			; DS before stack change
 	retf	2			; Skip FLAGS from stack
 %endif ; RELOCATE_INT13H_STACK
 
@@ -87,7 +93,9 @@ Int13h_DiskFunctionsHandlerWithStackChange:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Int13h_DiskFunctionsHandler:
+%ifndef RELOCATE_INT13H_STACK
 	sti									; Enable interrupts
+%endif
 	cld									; String instructions to increment pointers
 	CREATE_FRAME_INTPACK_TO_SSBP	SIZE_OF_IDEPACK_WITHOUT_INTPACK
 	call	RamVars_GetSegmentToDS
@@ -397,7 +405,7 @@ g_rgw13hFuncJump:
 %ifdef MODULE_8BIT_IDE_ADVANCED
 	dw	AH1Eh_HandlerForXTCFfeatures				; 1Eh, Lo-tech XT-CF features (XTIDE Universal BIOS)
 %else
-	dw	UnsupportedFunction							; 1Eh, 
+	dw	UnsupportedFunction							; 1Eh,
 %endif
 	dw	UnsupportedFunction							; 1Fh,
 	dw	UnsupportedFunction							; 20h,

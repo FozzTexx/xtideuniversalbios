@@ -1,4 +1,4 @@
-; Project name	:	XTIDE Univeral BIOS Configurator v2
+; Project name	:	XTIDE Universal BIOS Configurator v2
 ; Description	:	Program start and exit.
 
 ;

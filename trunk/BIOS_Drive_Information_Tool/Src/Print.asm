@@ -209,7 +209,7 @@ ALIGN JUMP_ALIGN
 	stosw
 	loop	.ReverseNextWord
 	dec		di
-	xor		ax, ax
+	xchg	cx, ax
 	stosb				; Terminate with NULL
 
 	mov		bp, sp

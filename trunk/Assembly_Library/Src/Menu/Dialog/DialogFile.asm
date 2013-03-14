@@ -713,8 +713,7 @@ ALIGN JUMP_ALIGN
 .DisplayDriveSelectionDialogWithIoInDSSI:
 	call	InitializeNullStringsToDialogInputInDSSI
 	mov		WORD [si+DIALOG_INPUT.fszTitle], g_szSelectNewDrive
-	CALL_MENU_LIBRARY GetDriveWithIoInDSSI
-	ret
+	JMP_MENU_LIBRARY GetDriveWithIoInDSSI
 
 ;--------------------------------------------------------------------
 ; .ChangeDriveToUserSelectionFromIoInDSSI

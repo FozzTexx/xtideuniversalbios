@@ -111,17 +111,13 @@ AH1Eh_ChangeXTCFmodeBasedOnControlRegisterInAL:
 	cmp		al, XTCF_MEMORY_MAPPED_MODE
 	jae		SHORT .SetMemoryMappedMode
 
-; We need to limit block size here. Consider this scenario;
-; 1. While in PIO mode or memory mapped mode, the drive is set to do
-;    block transfers larger than XTCF_DMA_MODE_MAX_BLOCK_SIZE.
-; 2. A call is subsequently made to change device mode to DEVICE_8BIT_XTCF_DMA.
-; 3. The call to AH24h_SetBlockSize fails but the change in device mode has been made.
-
 	; Set DMA Mode
 	mov		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_XTCF_DMA
 	mov		al, [di+DPT_ATA.bBlockSize]
-	MIN_U	al, XTCF_DMA_MODE_MAX_BLOCK_SIZE
-	jmp		SHORT AH24h_SetBlockSize	; Returns via AH23h_Enable8bitPioMode
+	cmp		al, XTCF_DMA_MODE_MAX_BLOCK_SIZE
+	jbe		SHORT AH24h_SetBlockSize
+	mov		al, XTCF_DMA_MODE_MAX_BLOCK_SIZE
+	jmp		SHORT AH24h_SetBlockSize
 
 .SetMemoryMappedMode:
 	mov		al, DEVICE_8BIT_XTCF_MEMMAP

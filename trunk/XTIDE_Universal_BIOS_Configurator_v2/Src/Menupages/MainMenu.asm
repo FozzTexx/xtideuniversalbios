@@ -2,20 +2,20 @@
 ; Description	:	Main menu structs and functions.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
+; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
-;		
+;
 
 ; Section containing initialized data
 SECTION .data
@@ -28,16 +28,16 @@ istruc MENUPAGE
 	at	MENUPAGE.wMenuitems,		dw	9
 iend
 
-g_MenuitemMainMenuLicense:		
+g_MenuitemMainMenuLicense:
 istruc MENUITEM
 	at	MENUITEM.fnActivate,		dw	Menuitem_DisplayHelpMessageFromDSSI
 	at	MENUITEM.szName,			dw	g_szItemMainLicense
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoMainLicense
 	at	MENUITEM.szHelp,			dw	g_szHelpMainLicense
-	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE		
+	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE
 	at	MENUITEM.bType,				db	TYPE_MENUITEM_ACTION
 iend
-		
+
 g_MenuitemMainMenuLoadBiosFromFile:
 istruc MENUITEM
 	at	MENUITEM.fnActivate,		dw	LoadBiosFromFile
@@ -88,7 +88,7 @@ istruc MENUITEM
 	at	MENUITEM.bType,				db	TYPE_MENUITEM_PAGENEXT
 iend
 
-g_MenuitemMainMenuSaveFile:		
+g_MenuitemMainMenuSaveFile:
 istruc MENUITEM
 	at	MENUITEM.fnActivate,		dw	BiosFile_SaveUnsavedChanges
 	at	MENUITEM.szName,			dw	g_szItemMainSave
@@ -96,7 +96,7 @@ istruc MENUITEM
 	at	MENUITEM.szHelp,			dw	g_szNfoMainSave
 	at	MENUITEM.bFlags,			db	NULL
 	at	MENUITEM.bType,				db	TYPE_MENUITEM_ACTION
-iend		
+iend
 
 g_MenuitemMainMenuExitToDos:
 istruc MENUITEM
@@ -108,15 +108,15 @@ istruc MENUITEM
 	at	MENUITEM.bType,				db	TYPE_MENUITEM_ACTION
 iend
 
-g_MenuitemMainMenuHomePage:		
+g_MenuitemMainMenuHomePage:
 istruc MENUITEM
 	at	MENUITEM.fnActivate,		dw	Menuitem_DisplayHelpMessageFromDSSI
 	at	MENUITEM.szName,			dw	g_szItemMainHomePage
 	at	MENUITEM.szQuickInfo,		dw	g_szNfoMainHomePage
 	at	MENUITEM.szHelp,			dw	g_szNfoMainHomePage
-	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE		
+	at	MENUITEM.bFlags,			db	FLG_MENUITEM_VISIBLE
 	at	MENUITEM.bType,				db	TYPE_MENUITEM_ACTION
-iend						
+iend
 
 
 ; Section containing code
@@ -138,7 +138,7 @@ MainMenu_EnterMenuOrModifyItemVisibility:
 	call	.EnableOrDisableXtideRomItems
 	call	.EnableOrDisableConfigureXtideUniversalBios
 	call	.EnableOrDisableFlashEeprom
-	call	.EnableOrDisableSave			
+	call	.EnableOrDisableSave
 	mov		si, g_MenupageForMainMenu
 	jmp		Menupage_ChangeToNewMenupageInDSSI
 
@@ -219,18 +219,18 @@ ALIGN JUMP_ALIGN
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN		
-.EnableOrDisableSave:	
+ALIGN JUMP_ALIGN
+.EnableOrDisableSave:
 	test	WORD [g_cfgVars+CFGVARS.wFlags], FLG_CFGVARS_FILELOADED
 	jz		SHORT .DisableSave
 	or		BYTE [g_MenuitemMainMenuSaveFile+MENUITEM.bFlags], FLG_MENUITEM_VISIBLE
 	ret
 
-ALIGN JUMP_ALIGN				
+ALIGN JUMP_ALIGN
 .DisableSave:
 	and		BYTE [g_MenuitemMainMenuSaveFile+MENUITEM.bFlags], ~FLG_MENUITEM_VISIBLE
 	ret
-				
+
 ;--------------------------------------------------------------------
 ; MENUITEM activation functions (.fnActivate)
 ;	Parameters:
@@ -242,9 +242,7 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 ExitToDosSelectedFromMenu:
-	CALL_MENU_LIBRARY CloseMenuIfExitEventAllows
-ExitToDosFromBackButton:
-	ret
+	JMP_MENU_LIBRARY CloseMenuIfExitEventAllows
 
 
 ALIGN JUMP_ALIGN
@@ -261,6 +259,7 @@ LoadBiosFromFile:
 	call	MainMenu_EnterMenuOrModifyItemVisibility
 .CancelFileLoading:
 	add		sp, BYTE FILE_DIALOG_IO_size
+ExitToDosFromBackButton:
 	ret
 
 
@@ -283,5 +282,3 @@ LoadOldSettingsFromEeprom:
 	mov		dx, g_szDlgMainLoadStngs
 	jmp		Dialogs_DisplayNotificationFromCSDX
 
-
-	

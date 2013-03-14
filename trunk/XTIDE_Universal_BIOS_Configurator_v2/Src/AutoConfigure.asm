@@ -173,8 +173,11 @@ EnableInterruptsForPrimaryAndSecondaryControllers:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 StoreAndDisplayNumberOfControllers:
-	mov		ax, 1
-	MAX_U	al, cl						; Cannot store zero
+	xor		ax, ax
+	or		al, cl
+	jnz		SHORT .AtLeastOneController
+	inc		ax							; Cannot store zero
+.AtLeastOneController:
 	test	BYTE [di+ROMVARS.wFlags], FLG_ROMVARS_FULLMODE
 	jnz		SHORT .FullModeSoNoNeedToLimit
 	MIN_U	al, MAX_LITE_MODE_CONTROLLERS

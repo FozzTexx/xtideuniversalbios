@@ -4,10 +4,11 @@
 %define MENU_INC
 
 ;--------------------------------------------------------------------
-; Menu Library users need to use this macro since it will provide
+; Menu Library users need to use these macros since it will provide
 ; compatibility with future library versions.
 ;
 ; CALL_MENU_LIBRARY
+; JMP_MENU_LIBRARY
 ;	Parameters:
 ;		%1:			Function to call (functionName from MENU_LIB)
 ;		BP:			Menu handle
@@ -20,34 +21,50 @@
 %macro CALL_MENU_LIBRARY 1
 	%ifidn %1, CloseMenuIfExitEventAllows
 		call	MenuInit_CloseMenuIfExitEventAllows
-
 	%elifidn %1, Close
 		call	MenuInit_CloseMenuWindow
-
 	%elifidn %1, SetUserDataFromDSSI
 		call	MenuInit_SetUserDataFromDSSI
-
 	%elifidn %1, GetUserDataToDSSI
 		call	MenuInit_GetUserDataToDSSI
-
 	%elifidn %1, SetTitleHeightFromAL
 		call	MenuInit_SetTitleHeightFromAL
-
 	%elifidn %1, GetHighlightedItemToAX
 		call	MenuInit_GetHighlightedItemToAX
-
 	%elifidn %1, SetTotalItemsFromAX
 		call	MenuInit_SetTotalItemsFromAX
-
 	%elifidn %1, SetInformationHeightFromAL
 		call	MenuInit_SetInformationHeightFromAL
-
 	%elifidn %1, SetTimeoutValueFromAX
 		call	MenuTime_SetSelectionTimeoutValueFromAX
-
 	%else
 		mov		di, %1
 		call	Menu_FunctionFromDI
+	%endif
+%endmacro
+
+%macro JMP_MENU_LIBRARY 1
+	%ifidn %1, CloseMenuIfExitEventAllows
+		jmp		MenuInit_CloseMenuIfExitEventAllows
+	%elifidn %1, Close
+		jmp		MenuInit_CloseMenuWindow
+	%elifidn %1, SetUserDataFromDSSI
+		jmp		MenuInit_SetUserDataFromDSSI
+	%elifidn %1, GetUserDataToDSSI
+		jmp		MenuInit_GetUserDataToDSSI
+	%elifidn %1, SetTitleHeightFromAL
+		jmp		MenuInit_SetTitleHeightFromAL
+	%elifidn %1, GetHighlightedItemToAX
+		jmp		MenuInit_GetHighlightedItemToAX
+	%elifidn %1, SetTotalItemsFromAX
+		jmp		MenuInit_SetTotalItemsFromAX
+	%elifidn %1, SetInformationHeightFromAL
+		jmp		MenuInit_SetInformationHeightFromAL
+	%elifidn %1, SetTimeoutValueFromAX
+		jmp		MenuTime_SetSelectionTimeoutValueFromAX
+	%else
+		mov		di, %1
+		jmp		Menu_FunctionFromDI
 	%endif
 %endmacro
 
