@@ -35,43 +35,21 @@ BootVars_Initialize:
 	mov		WORD [es:BOOTVARS.wNextXTCFportToScan], XTCF_BASE_PORT_DETECTION_SEED
 %endif
 
-	; Clear to zero
+	; Clear all DRVDETECTINFO structs to zero
 	mov		al, DRVDETECTINFO_size
 	mul		BYTE [cs:ROMVARS.bIdeCnt]
-%ifdef MODULE_HOTKEYS ; We must not initialize anything before this!
-	mov		di, BOOTVARS.hotkeyVars + HOTKEYVARS.clearToZeroFromThisPoint	
-%else
-	mov		di, BOOTVARS.clearToZeroFromThisPoint
-%endif
-	add		ax, BOOTVARS_size
-	sub		ax, di
+	mov		di, BOOTVARS.rgDrvDetectInfo	; We must not initialize anything before this!
 	xchg	cx, ax
 
 %ifdef MODULE_HOTKEYS
 	call	Memory_ZeroESDIwithSizeInCX
 
-	; Store default drives to boot from
-	mov		dl, [cs:ROMVARS.bBootDrv]
-
-	; fall through to BootVars_StoreHotkeyForDriveNumberInDL
-
-;--------------------------------------------------------------------
-; BootVars_StoreHotkeyForDriveNumberInDL
-;	Parameters:
-;		DL:		Floppy or Hard Drive number
-;		DS:		RAMVARS Segment
-;		ES:		BDA Segment
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, CX, DI
-;--------------------------------------------------------------------
-BootVars_StoreHotkeyForDriveNumberInDL:
+	; Initialize HOTKEYVARS by storing default drives to boot from
 	mov		WORD [es:BOOTVARS.hotkeyVars+HOTKEYVARS.wFddAndHddLetters], DEFAULT_FLOPPY_DRIVE_LETTER | (DEFAULT_HARD_DRIVE_LETTER<<8)
+	mov		dl, [cs:ROMVARS.bBootDrv]
 	call	DriveXlate_ConvertDriveNumberFromDLtoDriveLetter
 	jmp		HotkeyBar_StoreHotkeyToBootvarsForDriveLetterInDL
 
 %else
 	jmp		Memory_ZeroESDIwithSizeInCX
-
 %endif ; MODULE_HOTKEYS

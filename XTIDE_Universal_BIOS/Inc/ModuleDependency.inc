@@ -19,7 +19,10 @@
 
 ; Allow RELOCATE_INT13H_STACK only for AT builds
 %ifndef USE_AT
-	%undef RELOCATE_INT13H_STACK
+	%ifdef RELOCATE_INT13H_STACK
+		%undef RELOCATE_INT13H_STACK
+		%warning "RELOCATE_INT13H_STACK is not supported for XT builds!"
+	%endif
 %endif
 
 
