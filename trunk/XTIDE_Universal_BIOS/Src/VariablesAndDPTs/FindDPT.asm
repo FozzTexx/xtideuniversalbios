@@ -175,6 +175,7 @@ FindDPT_SlaveForIdevarsOffsetInDL:
 ; IterateFindSecondDPTforIdevars
 ; IterateFindFirstDPTforIdevars
 ;       DL:		Offset to IDEVARS to search from DPTs
+;		SI:		Offset to this callback function
 ;		DS:DI:	Ptr to DPT to examine
 ;	Returns:
 ;		CF:		Clear if wanted DPT found
@@ -182,12 +183,11 @@ FindDPT_SlaveForIdevarsOffsetInDL:
 ;--------------------------------------------------------------------
 IterateFindSecondDPTforIdevars:
 	call	IterateFindFirstDPTforIdevars
-	jc		SHORT IterateFindFirstDPTforIdevars.done	; Wrong controller
-
-	; We have found DPT for Master Drive,
-	; next DPT is for slave drive or master for another controller
-	add		di, BYTE LARGEST_DPT_SIZE
-	; Fall to IterateFindFirstDPTforIdevars
+	jc		SHORT .WrongController
+	mov		si, IterateFindFirstDPTforIdevars
+.WrongController:
+	stc
+	ret
 
 IterateFindFirstDPTforIdevars:
 	cmp		dl, [di+DPT.bIdevarsOffset]			; Clears CF if matched

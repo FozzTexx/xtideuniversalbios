@@ -43,14 +43,9 @@ struc BOOTVARS
 %ifdef MODULE_8BIT_IDE_ADVANCED
 	.wNextXTCFportToScan	resb	2	; Needed for XT-CF port autodetection
 %endif
-
-	
 %ifdef MODULE_HOTKEYS
 	.hotkeyVars				resb	HOTKEYVARS_size
-%else
-	.clearToZeroFromThisPoint:
 %endif
-
 	.rgDrvDetectInfo:					; Array containing DRVDETECTINFO structs
 endstruc
 
@@ -58,8 +53,7 @@ endstruc
 %ifdef MODULE_HOTKEYS
 
 struc HOTKEYVARS
-	.wTimeToClose		resb	2		; Earliest system time when Hotkey Bar can be closed
-.clearToZeroFromThisPoint:
+	.wTimeWhenDisplayed	resb	2		; System time (ticks) when Hotkey bar was first displayed
 	.wFddAndHddLetters:
 	.bFddLetter			resb	1		; Floppy Drive letter hotkey (upper case)
 	.bHddLetter			resb	1		; Hard Drive letter hotkey (upper case)
@@ -73,8 +67,8 @@ endstruc
 %endif
 %endif
 
-; Bit defines for KEYBOARDVARS.bFlags
-FLG_HOTKEY_HD_FIRST		EQU		(1<<0)	; First try to boot from HDD, then FDD
+; Bit defines for HOTKEYVARS.bFlags
+FLG_HOTKEY_HD_FIRST			EQU		(1<<0)	; First try to boot from HDD, then FDD
 
 %endif ; MODULE_HOTKEYS
 

@@ -79,8 +79,7 @@ Int19h_BootLoaderHandler:
 ;--------------------------------------------------------------------
 %ifdef MODULE_HOTKEYS
 	call	TimerTicks_ReadFromBdaToAX
-	add		ax, BYTE MIN_TIME_TO_DISPLAY_HOTKEY_BAR
-	mov		[es:BOOTVARS.hotkeyVars+HOTKEYVARS.wTimeToClose], ax
+	mov		[es:BOOTVARS.hotkeyVars+HOTKEYVARS.wTimeWhenDisplayed], ax
 %endif
 
 	call	Initialize_AndDetectDrives
@@ -88,7 +87,8 @@ Int19h_BootLoaderHandler:
 %ifdef MODULE_HOTKEYS
 .WaitUntilTimeToCloseHotkeyBar:
 	call	TimerTicks_ReadFromBdaToAX
-	cmp		ax, [es:BOOTVARS.hotkeyVars+HOTKEYVARS.wTimeToClose]
+	sub		ax, [es:BOOTVARS.hotkeyVars+HOTKEYVARS.wTimeWhenDisplayed]
+	cmp		ax, MIN_TIME_TO_DISPLAY_HOTKEY_BAR
 	jb		SHORT .WaitUntilTimeToCloseHotkeyBar
 %endif
 	; Fall to SelectDriveToBootFrom

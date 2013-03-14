@@ -63,11 +63,7 @@ Interrupts_InitializeInterruptVectors:
 	mov		ax, [es:BIOS_DISK_INTERRUPT_13h*4]	; Load old INT 13h offset
 	mov		[RAMVARS.fpOldI13h], ax				; Store old INT 13h offset
 
-	; NOTE! Installing INT 40h handler is currently uncommented to test
-	; if it is really needed. I suspect that it is not. Many bytes can be
-	; saved if INT 40h related code can be removed.
-%if 0
-
+%ifdef COPY_13H_HANDLER_TO_40H
 	; Only store INT 13h handler to 40h if 40h is not already installed.
 	; At least AMI BIOS for 286 stores 40h handler by itself and calls
 	; 40h from 13h. That system locks to infinite loop if we copy 13h to 40h.
@@ -76,7 +72,7 @@ Interrupts_InitializeInterruptVectors:
 	mov		[es:BIOS_DISKETTE_INTERRUPT_40h*4], ax		; Store old INT 13h offset
 	mov		[es:BIOS_DISKETTE_INTERRUPT_40h*4+2], dx	; Store old INT 13h segment
 .Int40hAlreadyInstalled:
-%endif ; 0
+%endif ; COPY_13H_HANDLER_TO_40H
 
 	mov		al, BIOS_DISK_INTERRUPT_13h			; INT 13h interrupt vector offset
 %ifdef RELOCATE_INT13H_STACK

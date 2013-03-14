@@ -21,6 +21,7 @@
 ; Section containing code
 SECTION .text
 
+%ifdef COPY_13H_HANDLER_TO_40H
 ;--------------------------------------------------------------------
 ; Checks is floppy drive handler installed to interrupt vector 40h.
 ;
@@ -101,6 +102,8 @@ FloppyDrive_IsInt40hInstalled:
 	mov		es, dx				; ES:DI = 0000:0000h to guard against BIOS bugs
 	ret
 %endif
+
+%endif ; COPY_13H_HANDLER_TO_40H
 
 
 ;--------------------------------------------------------------------
