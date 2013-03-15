@@ -1,13 +1,9 @@
-; File name		:	Sort.asm
 ; Project name	:	Assembly Library
-; Created date	:	28.9.2010
-; Last update	:	24.10.2010
-; Author		:	Tomi Tilli
 ; Description	:	Sorting algorithms
 
 ;
 ; XTIDE Universal BIOS and Associated Tools
-; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
+; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2013 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by

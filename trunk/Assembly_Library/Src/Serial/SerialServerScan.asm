@@ -6,29 +6,29 @@
 ; of a TSR).
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
-; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
+; XTIDE Universal BIOS and Associated Tools
+; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2013 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 ;
-		
+
 
 %include "SerialServer.inc"
-		
+
 ; Section containing code
 SECTION .text
-		
+
 ;--------------------------------------------------------------------
-; SerialServerScan_ScanForServer:	
+; SerialServerScan_ScanForServer:
 ;	Parameters:
 ;       BH:		Drive Select byte for Drive and Head Select Register
 ;               0xAx: Scan for drive, low nibble indicates drive
@@ -41,7 +41,7 @@ SECTION .text
 ;	Corrupts registers:
 ;		AL, BX, CX, DX, DI
 ;--------------------------------------------------------------------
-SerialServerScan_ScanForServer:		
+SerialServerScan_ScanForServer:
 		mov		cx, 1			; one sector, not scanning (default)
 
 		test	dx, dx
@@ -102,7 +102,7 @@ SerialServerScan_ScanForServer:
 		call	SerialServerScan_CheckForServer_PortAndBaudInDX
 		jc		.nextBaud
 
-.error:	
+.error:
 		ret
 
 .scanPortAddresses: db	SERIAL_COM7_IOADDRESS >> 2
@@ -113,7 +113,7 @@ SerialServerScan_ScanForServer:
 					db	SERIAL_COM2_IOADDRESS >> 2
 					db	SERIAL_COM1_IOADDRESS >> 2
 					db	0
-		
+
 
 ;--------------------------------------------------------------------
 ; SerialServer_CheckForServer_PortAndBaudInDX:
@@ -144,7 +144,7 @@ SerialServerScan_CheckForServer_PortAndBaudInDX:
 		push	bx
 
 		mov		bp,sp
-		
+
 		call	SerialServer_SendReceive
 
 		pop		bx

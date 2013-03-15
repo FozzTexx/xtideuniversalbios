@@ -5,26 +5,26 @@
 // File:        file.h - File access via standard "stdio.h" routines
 //
 // Routines for accessing the file system using generic routines, which
-// should work on all systems.  The issue with using these is that 
+// should work on all systems.  The issue with using these is that
 // ftell() and fseek() are limited to 2 GB files (signed 32-bit quantities)
-// and there is no standard for 64-bit quantities.  So, look for a 
-// OS specific version of this file in the distribution, such as 
+// and there is no standard for 64-bit quantities.  So, look for a
+// OS specific version of this file in the distribution, such as
 // win32/win32file.h which may be in use instead.
-// 
+//
 
 //
-// XTIDE Universal BIOS and Associated Tools 
-// Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
+// XTIDE Universal BIOS and Associated Tools
+// Copyright (C) 2009-2010 by Tomi Tilli, 2011-2013 by XTIDE Universal BIOS Team.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.		
+// GNU General Public License for more details.
 // Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 //
 
@@ -43,12 +43,12 @@ public:
 			fclose( fp );
 			return( 0 );
 		}
-		
+
 		if( !(fp = fopen( p_name, "w" )) )
 			log( -1, "Could not create file '%s'", p_name );
 
 		name = p_name;
-		
+
 		return( 1 );
 	}
 
@@ -107,7 +107,7 @@ public:
 		name = NULL;
 	}
 
-	const static unsigned long MaxSectors = 4194303;  // limited by signed 32-bit file sizes 
+	const static unsigned long MaxSectors = 4194303;  // limited by signed 32-bit file sizes
 #define USAGE_MAXSECTORS "2048 MB (signed 32-bit file size limit)"
 
 private:

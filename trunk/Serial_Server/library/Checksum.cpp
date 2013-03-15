@@ -5,36 +5,36 @@
 // File:        checksum.cpp - Checksum function and test routines
 
 //
-// XTIDE Universal BIOS and Associated Tools 
-// Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
+// XTIDE Universal BIOS and Associated Tools
+// Copyright (C) 2009-2010 by Tomi Tilli, 2011-2013 by XTIDE Universal BIOS Team.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.		
+// GNU General Public License for more details.
 // Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 //
 
 //
-// This file implements Fletcher's Checksum.  The serial code uses this checksum, as it is very quick 
+// This file implements Fletcher's Checksum.  The serial code uses this checksum, as it is very quick
 // to calculate in assembly and offers reasonable error detection.
 // For more information, see http://en.wikipedia.org/wiki/Fletcher%27s_checksum.
 //
-// Since it is faster in 8088 assembly code to deal with 16-bit quantities than 8-bit quantities, 
+// Since it is faster in 8088 assembly code to deal with 16-bit quantities than 8-bit quantities,
 // Fletcher's Checksum has been modified to calculate the 32-bit checksum, and then "fold" the result into a
-// 16-bit quantity.  Fletcher's 32-bit Checksum consists of two parts: concatenated 16-bit accumulators.  
-// To "fold" to 16-bits, The upper and lower 8-bits of each of these accumulators is XOR'd independently, and then 
+// 16-bit quantity.  Fletcher's 32-bit Checksum consists of two parts: concatenated 16-bit accumulators.
+// To "fold" to 16-bits, The upper and lower 8-bits of each of these accumulators is XOR'd independently, and then
 // the two results concatenated together, resulting in 16-bits.  Although simpler, an early attempt to XOR the
 // 16-bit accumulators results in poorer error detection behavior.  Folding as described here results in error
 // detection on par with Fletcher's 16-bit Checksum.
 //
 // With #define CHECKSUM_TEST, this file becomes a self-contained command line program that runs
-// some statistical tests comparing various checksum algorithms with random 512-byte sectors and various 
+// some statistical tests comparing various checksum algorithms with random 512-byte sectors and various
 // levels of errors introduced.
 //
 
@@ -57,7 +57,7 @@ unsigned short checksum( unsigned short *wbuff, int wlen )
 	a = (a & 0xffff) + (a >> 16);
 	b = (b & 0xffff) + (b >> 16);
 
-// Although tempting to use, for its simplicity and size/speed in assembly, the following folding 
+// Although tempting to use, for its simplicity and size/speed in assembly, the following folding
 // algorithm results in many undetected single bit errors and therefore should not be used.
 //	return( (unsigned short) (a ^ b) );
 
@@ -67,7 +67,7 @@ unsigned short checksum( unsigned short *wbuff, int wlen )
 #ifdef CHECKSUM_TEST
 
 //====================================================================================================
-// 
+//
 // Test Code
 //
 
@@ -81,7 +81,7 @@ unsigned short checksum( unsigned short *wbuff, int wlen )
 
 unsigned char bit[] = { 1, 2, 4, 8, 16, 32, 64, 128 };
 
-class algorithm 
+class algorithm
 {
 public:
 	virtual unsigned short checksum( unsigned char *data, int len ) = 0;
@@ -112,7 +112,7 @@ algorithm::algorithm( algorithm *last, char *new_title )
 }
 
 //----------------------------------------------------------------------------------------------------
-// 
+//
 // Standard CRC-16
 //
 // http://sanity-free.org/134/standard_crc_16_in_csharp.html
@@ -130,7 +130,7 @@ public:
 		unsigned short i;
 		unsigned short j;
 
-		for(i = 0; i < 256; ++i) 
+		for(i = 0; i < 256; ++i)
 		{
 			value = 0;
 			temp = i;
@@ -146,7 +146,7 @@ public:
 		}
 	}
 
-	unsigned short checksum( unsigned char *data, int len );  
+	unsigned short checksum( unsigned char *data, int len );
 
 private:
 	static const unsigned short crc16_polynomial = 0xA001;
@@ -157,7 +157,7 @@ unsigned short crc16_algorithm::checksum( unsigned char *data, int len )
 	unsigned short crc = 0;
 	int i;
 
-	for(i = 0; i < len; ++i) 
+	for(i = 0; i < len; ++i)
 	{
 		unsigned char index = (unsigned char)(crc ^ data[i]);
 		crc = (unsigned short)((crc >> 8) ^ crc16_table[index]);
@@ -167,14 +167,14 @@ unsigned short crc16_algorithm::checksum( unsigned char *data, int len )
 }
 
 //----------------------------------------------------------------------------------------------------
-// 
+//
 // Basic checksum (just add up the bytes)
 //
 
 class basic_algorithm : public algorithm
 {
 public:
-	unsigned short checksum( unsigned char *data, int len );  
+	unsigned short checksum( unsigned char *data, int len );
 	basic_algorithm( algorithm *last ) : algorithm( last, (char *) "basic" ) { };
 };
 
@@ -192,7 +192,7 @@ unsigned short basic_algorithm::checksum( unsigned char *bbuff, int blen )
 class fletcher16_algorithm : public algorithm
 {
 public:
-	unsigned short checksum( unsigned char *data, int len );  
+	unsigned short checksum( unsigned char *data, int len );
 	fletcher16_algorithm( algorithm *last ) : algorithm( last, (char *) "f-16" ) { }
 };
 
@@ -212,14 +212,14 @@ unsigned short fletcher16_algorithm::checksum( unsigned char* data, int count )
 }
 
 //----------------------------------------------------------------------------------------------------
-// 
+//
 // Folded Fletcher's Checksum (what we use in the serial code, from the top of this file)
 //
 
 class folded_fletcher32_algorithm : public algorithm
 {
 public:
-	unsigned short checksum( unsigned char *data, int len );  
+	unsigned short checksum( unsigned char *data, int len );
 	folded_fletcher32_algorithm( algorithm *last ) : algorithm( last, (char *) "fold-f-32" ) { }
 };
 
@@ -229,7 +229,7 @@ unsigned short folded_fletcher32_algorithm::checksum( unsigned char* data, int c
 }
 
 //----------------------------------------------------------------------------------------------------
-// 
+//
 // Test Driver and Support routines
 //
 
@@ -282,12 +282,12 @@ int main( int argc, char *argv[] )
 	for( a = algorithms; a; a = a->next )
 	{
 		a->found = (unsigned long *) calloc( BUCKETS, sizeof(long) );
-		
+
 		a->zero = (unsigned long) a->checksum( bbuff, BBUFF_LENGTH );
 
 		a->min = iterations+1;
 	}
-	
+
 	printf( "\n" );
 	PRINTROW( "zero   ", "%10d  ", a->zero );
 
@@ -343,7 +343,7 @@ int main( int argc, char *argv[] )
 			}
 
 			bbuff[ rand() % 512 ] ^= bit[ rand() % 8 ];
-			
+
 			if( b > 0 )
 			{
 				for( a = algorithms; a; a = a->next )
@@ -353,7 +353,7 @@ int main( int argc, char *argv[] )
 				}
 			}
 		}
-	}  
+	}
 
 	printf( "\nbit change test:\n" );
 	for( int t = 1; t < BITTEST; t++ )

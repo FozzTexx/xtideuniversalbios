@@ -6,18 +6,18 @@
 //
 
 //
-// XTIDE Universal BIOS and Associated Tools 
-// Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
+// XTIDE Universal BIOS and Associated Tools
+// Copyright (C) 2009-2010 by Tomi Tilli, 2011-2013 by XTIDE Universal BIOS Team.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.		
+// GNU General Public License for more details.
 // Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 //
 
@@ -27,7 +27,7 @@
 #include <string.h>
 #include <stdio.h>
 
-struct floppyInfo floppyInfos[] = 
+struct floppyInfo floppyInfos[] =
 {
 	{ 1, 2949120 / 512, 6, 80, 2, 36 },   		// 2.88MB 3.5"
 	{ 0, 2867200 / 512, 6, 80, 2, 36 },   		// 2.88MB 3.5" (alternate spelling with 2.8)
@@ -88,7 +88,7 @@ void Image::init( char *name, int p_readOnly, int p_drive, unsigned long p_cyl, 
 		log( 1, "Can't parse '%s' for short file name\n\n", name );
 		shortFileName = "SerDrive";
 	}
-  
+
 	readOnly = p_readOnly;
 	drive = p_drive;
 
@@ -134,7 +134,7 @@ void Image::init( char *name, int p_readOnly, int p_drive, unsigned long p_cyl, 
 		{
 			log( -1, "'%s', file size does not match standard CHS geometry (x:16:63), please specify geometry explicitly with -g", name );
 		}
-		else 
+		else
 		{
 			sect = 63;
 			head = 16;
@@ -150,7 +150,7 @@ void Image::init( char *name, int p_readOnly, int p_drive, unsigned long p_cyl, 
 
 	sizef = totallba/2048.0;
 	sizeChar = 'M';
-	if( sizef < 1 ) 
+	if( sizef < 1 )
 	{
 		sizef *= 1024;
 		sizeChar = 'K';
@@ -159,7 +159,7 @@ void Image::init( char *name, int p_readOnly, int p_drive, unsigned long p_cyl, 
 		log( 0, "%s: %s with CHS geometry %u:%u:%u, size %.2lf %cB",
 			 name, (floppy ? "Floppy Disk" : "Hard Disk"), cyl, head, sect, sizef, sizeChar );
 	else
-		log( 0, "%s: %s with %lu LBA sectors, size %.2lf %cB (CHS geometry %u:%u:%u)", 
+		log( 0, "%s: %s with %lu LBA sectors, size %.2lf %cB (CHS geometry %u:%u:%u)",
 			 name, (floppy ? "Floppy Disk" : "Hard Disk"), totallba, sizef, sizeChar, cyl, head, sect );
 }
 
@@ -175,7 +175,7 @@ int Image::parseGeometry( char *str, unsigned long *p_cyl, unsigned long *p_head
 
 	*h = '\0';
 	h++;
-	for( s = h+1; *s && *s != ':' && *s != 'x' && *s != 'X'; s++ ) ; 
+	for( s = h+1; *s && *s != ':' && *s != 'x' && *s != 'X'; s++ ) ;
 	if( !*s )
 		return( 0 );
 
@@ -243,21 +243,21 @@ struct comPorts {
 	unsigned long port;
 	unsigned char com;
 };
-struct comPorts supportedComPorts[] = 
-{ 
-  { 0x3f8, '1' }, 
-  { 0x2f8, '2' }, 
-  { 0x3e8, '3' }, 
-  { 0x2e8, '4' }, 
-  { 0x2f0, '5' }, 
-  { 0x3e0, '6' }, 
-  { 0x2e0, '7' }, 
+struct comPorts supportedComPorts[] =
+{
+  { 0x3f8, '1' },
+  { 0x2f8, '2' },
+  { 0x3e8, '3' },
+  { 0x2e8, '4' },
+  { 0x2f0, '5' },
+  { 0x3e0, '6' },
+  { 0x2e0, '7' },
   { 0x260, '8' },
   { 0x368, '9' },
   { 0x268, 'A' },
   { 0x360, 'B' },
   { 0x270, 'C' },
-  { 0, 0 } 
+  { 0, 0 }
 };
 
 void Image::respondInquire( unsigned short *buff, unsigned short originalPortAndBaud, struct baudRate *baudRate, unsigned short port, unsigned char scan )
@@ -309,7 +309,7 @@ void Image::respondInquire( unsigned short *buff, unsigned short originalPortAnd
 		buff[ ATA_dwLBACnt+1 ] = (unsigned short) (totallba >> 16);
 	}
 
-	// We echo back the port and baud that we were called on from the client, 
+	// We echo back the port and baud that we were called on from the client,
 	// the client then uses this value to finalize the DPT.
 	//
 	buff[ ATA_wSerialPortAndBaud ] = originalPortAndBaud;
@@ -320,7 +320,7 @@ void Image::respondInquire( unsigned short *buff, unsigned short originalPortAnd
 
 	buff[ ATA_wSerialDriveFlags ] = ATA_wSerialDriveFlags_Present;
 	if( floppy )
-		buff[ ATA_wSerialDriveFlags ] |= 
+		buff[ ATA_wSerialDriveFlags ] |=
 			ATA_wSerialDriveFlags_Floppy | (floppyType << ATA_wSerialDriveFlags_FloppyType_FieldPosition);
 
 	// we always set this, so that the bulk of the BIOS will consider this disk as a hard disk
