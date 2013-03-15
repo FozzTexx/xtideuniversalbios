@@ -13,7 +13,7 @@
 
 ;
 ; XTIDE Universal BIOS and Associated Tools
-; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
+; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2013 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
@@ -482,7 +482,7 @@ StringsCompressed_NormalBase     equ   58
 
 StringsCompressed_FormatsBegin   equ   20
 
-StringsCompressed_TranslatesAndFormats: 
+StringsCompressed_TranslatesAndFormats:
         db     32  ; 0
         db     172  ; 1
         db     171  ; 2

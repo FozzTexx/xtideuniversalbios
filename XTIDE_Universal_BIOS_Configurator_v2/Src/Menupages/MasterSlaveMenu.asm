@@ -2,20 +2,20 @@
 ; Description	:	"Master/Slave Drive" menu structs and functions.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
-; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
+; XTIDE Universal BIOS and Associated Tools
+; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2013 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
-;		
+;
 
 ; Section containing initialized data
 SECTION .data
@@ -104,7 +104,7 @@ istruc MENUITEM
 	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoice,				dw	g_szMultichoiceBooleanFlag
 	at	MENUITEM.itemValue + ITEM_VALUE.rgszValueToStringLookup,	dw	g_rgszValueToStringLookupForFlagBooleans
 	at	MENUITEM.itemValue + ITEM_VALUE.wValueBitmask,				dw	FLG_DRVPARAMS_USERCHS
-	at	MENUITEM.itemValue + ITEM_VALUE.fnValueWriter,				dw	MasterSlaveMenu_WriteCHSFlag		
+	at	MENUITEM.itemValue + ITEM_VALUE.fnValueWriter,				dw	MasterSlaveMenu_WriteCHSFlag
 iend
 
 g_MenuitemMasterSlaveCylinders:
@@ -136,7 +136,7 @@ istruc MENUITEM
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgDrvHeads
 	at	MENUITEM.itemValue + ITEM_VALUE.wMinValue,					dw	1
 	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	MAX_USER_HEADS
-%define					MASTERSLAVE_HEADS_DEFAULT						MAX_USER_HEADS		
+%define					MASTERSLAVE_HEADS_DEFAULT						MAX_USER_HEADS
 iend
 
 g_MenuitemMasterSlaveSectors:
@@ -169,7 +169,7 @@ istruc MENUITEM
 	at	MENUITEM.itemValue + ITEM_VALUE.szMultichoice,				dw	g_szMultichoiceBooleanFlag
 	at	MENUITEM.itemValue + ITEM_VALUE.rgszValueToStringLookup,	dw	g_rgszValueToStringLookupForFlagBooleans
 	at	MENUITEM.itemValue + ITEM_VALUE.wValueBitmask,				dw	FLG_DRVPARAMS_USERLBA
-	at	MENUITEM.itemValue + ITEM_VALUE.fnValueWriter,				dw	MasterSlaveMenu_WriteLBAFlag				
+	at	MENUITEM.itemValue + ITEM_VALUE.fnValueWriter,				dw	MasterSlaveMenu_WriteLBAFlag
 iend
 
 g_MenuitemMasterSlaveUserLbaValue:
@@ -442,7 +442,7 @@ ValueWriterForUserLbaValue:
 ; No change to CHS flag, but we use this opportunity to change defaults stored in the CHS values if we are
 ; changing in/out of user CHS settings (since we use these bytes in different ways with the LBA setting).
 ;
-ALIGN JUMP_ALIGN		
+ALIGN JUMP_ALIGN
 MasterSlaveMenu_WriteCHSFlag:
 		test	word [es:di], FLG_DRVPARAMS_USERCHS
 		jnz		.alreadySet
@@ -454,16 +454,16 @@ MasterSlaveMenu_WriteCHSFlag:
 		mov		ax, MASTERSLAVE_CYLINDERS_DEFAULT
 		mov		si, g_MenuitemMasterSlaveCylinders
 		call	Menuitem_StoreValueFromAXtoMenuitemInDSSI
-		
-		mov		ax, MASTERSLAVE_HEADS_DEFAULT		
-		mov		si, g_MenuitemMasterSlaveHeads
-		call	Menuitem_StoreValueFromAXtoMenuitemInDSSI		
 
-		mov		ax, MASTERSLAVE_SECTORS_DEFAULT						
+		mov		ax, MASTERSLAVE_HEADS_DEFAULT
+		mov		si, g_MenuitemMasterSlaveHeads
+		call	Menuitem_StoreValueFromAXtoMenuitemInDSSI
+
+		mov		ax, MASTERSLAVE_SECTORS_DEFAULT
 		mov		si, g_MenuitemMasterSlaveSectors
-		call	Menuitem_StoreValueFromAXtoMenuitemInDSSI		
-		
-		pop		si						
+		call	Menuitem_StoreValueFromAXtoMenuitemInDSSI
+
+		pop		si
 		pop		di
 		pop		ax
 
@@ -474,7 +474,7 @@ MasterSlaveMenu_WriteCHSFlag:
 ; No change to LBA flag, but we use this opportunity to change defaults stored in the LBA value if we are
 ; changing in/out of user LBA settings (since we use these bytes in different ways with the CHS setting).
 ;
-ALIGN JUMP_ALIGN						
+ALIGN JUMP_ALIGN
 MasterSlaveMenu_WriteLBAFlag:
 		test	word [es:di], FLG_DRVPARAMS_USERLBA
 		jnz		.alreadySet
@@ -485,11 +485,11 @@ MasterSlaveMenu_WriteLBAFlag:
 
 		mov		ax, MASTERSLAVE_USERLBA_DEFAULT
 		mov		si, g_MenuitemMasterSlaveUserLbaValue
-		call	Menuitem_StoreValueFromAXtoMenuitemInDSSI				
+		call	Menuitem_StoreValueFromAXtoMenuitemInDSSI
 
 		pop		si
 		pop		di
 		pop		ax
-						
+
 .alreadySet:
-		ret		
+		ret

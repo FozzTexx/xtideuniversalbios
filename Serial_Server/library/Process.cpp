@@ -6,18 +6,18 @@
 //
 
 //
-// XTIDE Universal BIOS and Associated Tools 
-// Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
+// XTIDE Universal BIOS and Associated Tools
+// Copyright (C) 2009-2010 by Tomi Tilli, 2011-2013 by XTIDE Universal BIOS Team.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.		
+// GNU General Public License for more details.
 // Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 //
 
@@ -178,7 +178,7 @@ void processRequests( SerialAccess *serial, Image *image0, Image *image1, int ti
 
 		lasttick = GetTime();
 
-		// 
+		//
 		// No work currently to do, look at each character as they come in...
 		//
 		if( !readto )
@@ -288,9 +288,9 @@ void processRequests( SerialAccess *serial, Image *image0, Image *image1, int ti
 
 				if( (workCommand != SERIAL_COMMAND_INQUIRE) && (buff.chs.driveAndHead & ATA_COMMAND_LBA) )
 				{
-					mylba = ((((unsigned long) buff.lba.bits24) & ATA_COMMAND_HEADMASK) << 24) 
-						| (((unsigned long) buff.lba.bits16) << 16) 
-						| (((unsigned long) buff.lba.bits08) << 8) 
+					mylba = ((((unsigned long) buff.lba.bits24) & ATA_COMMAND_HEADMASK) << 24)
+						| (((unsigned long) buff.lba.bits16) << 16)
+						| (((unsigned long) buff.lba.bits08) << 8)
 						| ((unsigned long) buff.lba.bits00);
 				}
 				else
@@ -345,7 +345,7 @@ void processRequests( SerialAccess *serial, Image *image0, Image *image1, int ti
 				//
 				readto = 514;
 			}
-			else 
+			else
 			{
 				//
 				// Inquire command...
@@ -354,7 +354,7 @@ void processRequests( SerialAccess *serial, Image *image0, Image *image1, int ti
 				{
 					unsigned char localScan;
 
-					if( serial->speedEmulation && 
+					if( serial->speedEmulation &&
 						buff.inquire.baud != serial->baudRate->divisor )
 					{
 						log( 1, "    Ignoring Inquire with wrong baud rate" );
@@ -362,11 +362,11 @@ void processRequests( SerialAccess *serial, Image *image0, Image *image1, int ti
 						continue;
 					}
 
-					localScan = buff.inquire.scan;         // need to do this before the call to 
+					localScan = buff.inquire.scan;         // need to do this before the call to
 					                                       // img->respondInquire, as it will clear the buff
-					img->respondInquire( &buff.w[0], buff.inquirePacked.PackedPortAndBaud, 
-										 serial->baudRate, 
-										 ((unsigned short) buff.inquire.port) << 2, 
+					img->respondInquire( &buff.w[0], buff.inquirePacked.PackedPortAndBaud,
+										 serial->baudRate,
+										 ((unsigned short) buff.inquire.port) << 2,
 										 (img == image1 && lastScan) || buff.inquire.scan );
 					lastScan = localScan;
 				}

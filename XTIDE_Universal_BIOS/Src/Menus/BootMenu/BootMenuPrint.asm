@@ -3,7 +3,7 @@
 
 ;
 ; XTIDE Universal BIOS and Associated Tools
-; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
+; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2013 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
@@ -68,8 +68,8 @@ BootMenuPrint_RefreshItem:
 	push	bx										; sub string
 	add		al, 'A'									; floppy drive letter (we always push this although
 													; the hard disks don't ever use it, but it does no harm)
-.ROMBoot:		
-	push	ax										
+.ROMBoot:
+	push	ax
 
 	jmp		SHORT BootMenuPrint_RefreshInformation.FormatRelay
 

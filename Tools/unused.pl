@@ -2,7 +2,7 @@
 # Looks for unused entry points, to aid in discovering dead code that can be removed
 #
 # Usage: unused.pl listing unused.asm
-#        
+#
 # where: listing is the normal listing from assembly
 #        unused.asm is assembled with the -E nasm flag
 #
@@ -12,18 +12,18 @@
 #   c) "; jump table entrypoint" can be placed on the same line with the label
 #
 #
-# XTIDE Universal BIOS and Associated Tools 
-# Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
+# XTIDE Universal BIOS and Associated Tools
+# Copyright (C) 2009-2010 by Tomi Tilli, 2011-2013 by XTIDE Universal BIOS Team.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.		
+# GNU General Public License for more details.
 # Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 #
 
@@ -50,11 +50,11 @@ while(<LST>)
 
 while(<UNUSED>)
 {
-	if( /^([a-z0-9_]+\:)?\s+db\s+(.*)$/i || 
-        /^([a-z0-9_]+\:)?\s+dw\s+(.*)$/i || 
+	if( /^([a-z0-9_]+\:)?\s+db\s+(.*)$/i ||
+        /^([a-z0-9_]+\:)?\s+dw\s+(.*)$/i ||
         /^([a-z0-9_]+\:)?\s+mov\s+(.*)$/i ||
-		/^([a-z0-9_]+\:)?\s+call\s+(.*)$/i || 
-		/^([a-z0-9_]+\:)?\s+push\s+(.*)$/i || 
+		/^([a-z0-9_]+\:)?\s+call\s+(.*)$/i ||
+		/^([a-z0-9_]+\:)?\s+push\s+(.*)$/i ||
         /^([a-z0-9_]+\:)?\s+j[a-z]?[a-z]?[a-z]?[a-z]?[a-z]?\s+(.*)$/i ||
 		/^([a-z0-9_]+)?\s+equ\s+(.*)$/i )
 	{

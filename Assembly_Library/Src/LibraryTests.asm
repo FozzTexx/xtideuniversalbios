@@ -1,28 +1,24 @@
-; File name		:	LibraryTests.asm
 ; Project name	:	Assembly Library
-; Created date	:	27.6.2010
-; Last update	:	7.12.2010
-; Author		:	Tomi Tilli
 ; Description	:	Tests for Assembly Library.
 ;					This file should not be included when using the library on
-;					some other project.		
+;					some other project.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
-; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
+; XTIDE Universal BIOS and Associated Tools
+; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2013 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 ;
-		
+
 ; Include .inc files
 %define INCLUDE_MENU_DIALOGS
 %include "AssemblyLibrary.inc"	; Assembly Library. Must be included first!
@@ -44,7 +40,7 @@ Start:
 ; Program start
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-LibraryTests_Start:	
+LibraryTests_Start:
 	CALL_DISPLAY_LIBRARY InitializeDisplayContext
 	mov		ax, SCREEN_BACKGROUND_CHARACTER_AND_ATTRIBUTE
 	CALL_DISPLAY_LIBRARY ClearScreenWithCharInALandAttrInAH
@@ -87,7 +83,7 @@ ALIGN JUMP_ALIGN
 	mov		BYTE [si+MENUINIT.bTitleLines], TEST_MENU_TITLE_LINES
 	mov		BYTE [si+MENUINIT.bInfoLines], TEST_MENU_INFO_LINES
 	mov		WORD [si+MENUINIT.wHighlightedItem], 1
-	
+
 	mov		ax, 10000 / 55	; 10 seconds
 	CALL_MENU_LIBRARY StartSelectionTimeoutWithTicksInAX
 	stc
@@ -330,8 +326,8 @@ ALIGN JUMP_ALIGN
 	test	si, si
 	jnz		.ProgressTaskWithParamInDSSI
 	ret
-	
-	
+
+
 
 ALIGN WORD_ALIGN
 .rgfnMenuEvents:
@@ -425,7 +421,7 @@ LibraryTests_ForDisplayLibrary:
 	CALL_DISPLAY_LIBRARY PushDisplayContext
 	call	PrintHorizontalRuler
 	call	PrintVerticalRuler
-	
+
 	mov		al, COLOR_ATTRIBUTE(COLOR_BRIGHT_WHITE, COLOR_BLACK)
 	CALL_DISPLAY_LIBRARY SetCharacterAttributeFromAL
 
@@ -556,7 +552,7 @@ PrintFormattedStrings:
 	db	"Hello CSSI",NULL
 .szFar:
 	db	"Far",NULL
-	
+
 .RepeatChar:
 	mov		si, .szRepeat
 	mov		bp, sp

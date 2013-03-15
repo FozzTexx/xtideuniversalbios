@@ -2,20 +2,20 @@
 ; Description	:	Boot Menu event handler for menu library callbacks.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
-; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
+; XTIDE Universal BIOS and Associated Tools
+; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2013 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
-; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html		
-;		
+; GNU General Public License for more details.
+; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+;
 
 ; Section containing code
 SECTION .text
@@ -114,7 +114,7 @@ rgfnEventSpecificHandlers:
 ;	Corrupts registers:
 ;		Does not matter
 ;--------------------------------------------------------------------
-FirstEvent:	
+FirstEvent:
 EventInitializeMenuinitFromSSBP:
 	; Store default Menuitem (=default drive to boot from)
 	xor		dx, dx
@@ -127,7 +127,7 @@ EventInitializeMenuinitFromSSBP:
 	add		ax, cx
 	inc		ax								; extra entry for ROM Boot item
 	mov		[bp+MENUINIT.wItems], ax
-				
+
 	; Store menu size
 	mov		WORD [bp+MENUINIT.wTitleAndInfoLines], BOOT_MENU_TITLE_AND_INFO_LINES
 	mov		BYTE [bp+MENUINIT.bWidth], BOOT_MENU_WIDTH
@@ -160,11 +160,11 @@ EventInitializeMenuinitFromSSBP:
 ;--------------------------------------------------------------------
 EventItemHighlightedFromCX:
 	push	cx
-	call	BootMenu_GetDriveToDXforMenuitemInCX		
-	jnc		.noDriveSwap		
+	call	BootMenu_GetDriveToDXforMenuitemInCX
+	jnc		.noDriveSwap
 	call	DriveXlate_SetDriveToSwap
-.noDriveSwap:	
-		
+.noDriveSwap:
+
 	; Redraw changes in drive numbers
 	xor		ax, ax	; Update first floppy drive (for translated drive number)
 	CALL_MENU_LIBRARY	RefreshItemFromAX
@@ -178,7 +178,7 @@ EventItemHighlightedFromCX:
 	stc
 	ret
 
-		
+
 ;--------------------------------------------------------------------
 ; EventItemSelectedFromCX
 ;	Parameters
@@ -210,7 +210,7 @@ CloseBootMenu:
 	CALL_MENU_LIBRARY	Close
 	; Fall to BootMenuEvent_Completed
 
-		
+
 ;--------------------------------------------------------------------
 ; BootMenuEvent_Completed
 ;	Parameters

@@ -14,7 +14,7 @@
 
 ;
 ; XTIDE Universal BIOS and Associated Tools
-; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
+; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2013 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
@@ -127,7 +127,7 @@ istruc ROMVARS
 %ifdef MODULE_BOOT_MENU
 	at	ROMVARS.wBootTimeout,	dw	BOOT_MENU_DEFAULT_TIMEOUT
 %endif
-%ifdef MODULE_8BIT_IDE_ADVANCED		
+%ifdef MODULE_8BIT_IDE_ADVANCED
 	at	ROMVARS.bIdeCnt,		db	2						; Number of supported controllers
 %else
 	at  ROMVARS.bIdeCnt,		db	1
@@ -151,7 +151,7 @@ istruc ROMVARS
 %else
 	at	ROMVARS.ideVars1+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	db	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE | (TRANSLATEMODE_AUTO<<TRANSLATEMODE_FIELD_POSITION)
 	at	ROMVARS.ideVars1+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags,	db	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE | (TRANSLATEMODE_AUTO<<TRANSLATEMODE_FIELD_POSITION)
-%endif		
+%endif
 
 	at	ROMVARS.ideVars2+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	db	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE | (TRANSLATEMODE_AUTO<<TRANSLATEMODE_FIELD_POSITION)
 	at	ROMVARS.ideVars2+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags,	db	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE | (TRANSLATEMODE_AUTO<<TRANSLATEMODE_FIELD_POSITION)
@@ -205,7 +205,7 @@ iend
 	; Hotkey Bar
 %ifdef MODULE_HOTKEYS
 	%include "HotkeyBar.asm"		; For hotkeys during drive detection and boot menu
-%endif		
+%endif
 %ifdef MODULE_DRIVEXLATE
 	%include "DriveXlate.asm"		; For swapping drive numbers, must come immediately after HotkeyBar.asm
 %endif

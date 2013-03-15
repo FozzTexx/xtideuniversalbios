@@ -2,26 +2,26 @@
 ; Description	:	Serial Device Command functions.
 
 ;
-; XTIDE Universal BIOS and Associated Tools 
-; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2012 by XTIDE Universal BIOS Team.
+; XTIDE Universal BIOS and Associated Tools
+; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2013 by XTIDE Universal BIOS Team.
 ;
 ; This program is free software; you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation; either version 2 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; This program is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-; GNU General Public License for more details.		
+; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
-;		
+;
 
 ; Section containing code
 SECTION .text
 
 %define SERIALSERVER_AH_ALREADY_HAS_COMMAND_BYTE
-%define SERIALSERVER_NO_ZERO_SECTOR_COUNTS		
+%define SERIALSERVER_NO_ZERO_SECTOR_COUNTS
 
 ;--------------------------------------------------------------------
 ; SerialCommand_OutputWithParameters
@@ -60,30 +60,30 @@ SerialCommand_OutputWithParameters:
 		ret
 
 .readOrWrite:
-		mov		[bp+IDEPACK.bFeatures],ah		; store protocol command		
+		mov		[bp+IDEPACK.bFeatures],ah		; store protocol command
 		call	IdeTransfer_NormalizePointerInESSI
-				
+
 		mov		dx, [di+DPT_SERIAL.wSerialPortAndBaud]
 
 ; fall through to SerialCommand_FallThroughToSerialServer_SendReceive
-		
+
 ALIGN JUMP_ALIGN
-SerialCommand_FallThroughToSerialServer_SendReceive:		
+SerialCommand_FallThroughToSerialServer_SendReceive:
 
 ; fall through to SerialServer_SendReceive
-		
+
 %include "SerialServer.asm"
 
-%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS		
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
 	%if SerialCommand_FallThroughToSerialServer_SendReceive <> SerialServer_SendReceive
 		%error "SerialServer_SendReceive must be the first routine at the top of SerialServer.asm in the Assembly_Library"
 	%endif
 %endif
 
-ALIGN JUMP_ALIGN		
-SerialCommand_ReturnError:		
+ALIGN JUMP_ALIGN
+SerialCommand_ReturnError:
 		stc
-		ret		
+		ret
 
 ;--------------------------------------------------------------------
 ; SerialCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH
@@ -146,7 +146,7 @@ SerialCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 ;
 		mov		dx,[cs:bp+IDEVARS.wSerialPortAndBaud]
 		xor		ax,ax
-		
+
 		push	si
 		call	FindDPT_ToDSDIforSerialDevice
 		pop		si
@@ -181,15 +181,15 @@ SerialCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 .identifyDeviceInDX:
 
 ; fall through to SerialCommand_FallThroughToSerialServerScan_ScanForServer
-		
+
 ALIGN JUMP_ALIGN
 SerialCommand_FallThroughToSerialServerScan_ScanForServer:
 
 ; fall through to SerialServerScan_ScanForServer
-		
+
 %include "SerialServerScan.asm"
 
-%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS				
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
 	%if SerialCommand_FallThroughToSerialServerScan_ScanForServer <> SerialServerScan_ScanForServer
 		%error "SerialServerScan_ScanForServer must be the first routine at the top of SerialServerScan.asm in the Assembly_Library"
 	%endif
