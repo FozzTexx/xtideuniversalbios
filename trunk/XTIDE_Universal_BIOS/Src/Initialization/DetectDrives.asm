@@ -47,10 +47,6 @@ DetectDrives_FromAllIDEControllers:
 	mov		bh, MASK_DRVNHEAD_SET | FLG_DRVNHEAD_DRV
 	call	StartDetectionWithDriveSelectByteInBHandStringInCX
 
-%ifdef MODULE_HOTKEYS
-	call	HotkeyBar_ScanHotkeysFromKeyBufferAndStoreToBootvars		; Done here while CX is still protected
-%endif
-
 	pop		cx
 
 	add		bp, BYTE IDEVARS_size			; Point to next IDEVARS

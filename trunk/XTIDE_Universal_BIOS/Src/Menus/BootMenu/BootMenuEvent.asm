@@ -68,6 +68,7 @@ BootMenuEvent_Handler:
 MENUEVENT_InitializeMenuinitFromDSSI equ  (EventInitializeMenuinitFromSSBP - FirstEvent)
 MENUEVENT_ExitMenu equ  (BootMenuEvent_Completed - FirstEvent)
 MENUEVENT_ItemHighlightedFromCX equ (EventItemHighlightedFromCX - FirstEvent)
+MENUEVENT_KeyStrokeInAX equ	(EventKeyStrokeInAX - FirstEvent)
 MENUEVENT_ItemSelectedFromCX equ (EventItemSelectedFromCX - FirstEvent)
 MENUEVENT_RefreshTitle equ (BootMenuPrint_TitleStrings - FirstEvent)
 MENUEVENT_RefreshInformation equ (BootMenuPrint_RefreshInformation - FirstEvent)
@@ -93,6 +94,7 @@ rgfnEventSpecificHandlers:
 	dw		EventCompleted						; MENUEVENT.ExitMenu
 	dw		EventNotHandled						; MENUEVENT.IdleProcessing
 	dw		EventItemHighlightedFromCX			; MENUEVENT.ItemHighlightedFromCX
+	
 	dw		EventItemSelectedFromCX				; MENUEVENT.ItemSelectedFromCX
 	dw		EventKeyStrokeInAX					; MENUEVENT.KeyStrokeInAX
 	dw		BootMenuPrint_TitleStrings			; MENUEVENT.RefreshTitle
@@ -160,10 +162,39 @@ EventInitializeMenuinitFromSSBP:
 ;--------------------------------------------------------------------
 EventItemHighlightedFromCX:
 	push	cx
+
+	; Drive number translations and hotkeys must be reset to defaults so highlighted
+	; selections are correctly displayed on Hotkey Bar and on Boot Menu
+%ifdef MODULE_HOTKEYS
+	call	BootVars_StoreDefaultDriveLettersToHotkeyVars
+%endif
+	call	DriveXlate_Reset
+
+	; Set highlighted item to be drive to boot from for visual purposes only
 	call	BootMenu_GetDriveToDXforMenuitemInCX
-	jnc		.noDriveSwap
+	jnc		SHORT .noDriveSwapSinceRomBootSelected
 	call	DriveXlate_SetDriveToSwap
-.noDriveSwap:
+
+%ifdef MODULE_HOTKEYS
+	; Store highlighted drive as hotkey
+	call	HotkeyBar_StoreHotkeyToBootvarsForDriveNumberInDL
+	jmp		SHORT .UpdateHotkeyBar
+.noDriveSwapSinceRomBootSelected:
+	mov		ah, ROM_BOOT_HOTKEY_SCANCODE
+	call	HotkeyBar_StoreHotkeyToBootvarsIfValidKeystrokeInAX
+
+.UpdateHotkeyBar:
+	; Redraw Hotkey Bar for updated boot drive letters
+	mov		al, MONO_NORMAL
+	CALL_DISPLAY_LIBRARY	SetCharacterAttributeFromAL
+
+	mov		bl, ATTRIBUTES_ARE_USED
+	mov		ax, TELETYPE_OUTPUT_WITH_ATTRIBUTE
+	CALL_DISPLAY_LIBRARY	SetCharOutputFunctionFromAXwithAttribFlagInBL
+	call	HotkeyBar_DrawToTopOfScreen
+%else
+.noDriveSwapSinceRomBootSelected:
+%endif ; MODULE_HOTKEYS
 
 	; Redraw changes in drive numbers
 	xor		ax, ax	; Update first floppy drive (for translated drive number)
@@ -177,6 +208,31 @@ EventItemHighlightedFromCX:
 	CALL_MENU_LIBRARY	RefreshInformation
 	stc
 	ret
+
+
+;--------------------------------------------------------------------
+; EventKeyStrokeInAX
+;	Parameters
+;		AL:		ASCII character for the key
+;		AH:		Keyboard library scan code for the key
+;		DS:		Ptr to RAMVARS
+;		ES:		Ptr to BDA (zero)
+;		SS:BP:	Menu library handle
+;	Returns:
+;		CF:		Set if event processed
+;				Cleared if event not processed
+;	Corrupts registers:
+;		Does not matter
+;--------------------------------------------------------------------
+%ifdef MODULE_HOTKEYS
+EventKeyStrokeInAX:
+	; Keypress will be the primary boot drive
+	cmp		ah, BOOT_MENU_HOTKEY_SCANCODE
+	je		SHORT BootMenuEvent_Completed	; Ignore Boot Menu hotkey
+	call	HotkeyBar_StoreHotkeyToBootvarsIfValidKeystrokeInAX
+	jnc		SHORT BootMenuEvent_Completed
+	; Fall to CloseBootMenu through EventItemSelectedFromCX
+%endif
 
 
 ;--------------------------------------------------------------------
@@ -222,4 +278,7 @@ CloseBootMenu:
 ;--------------------------------------------------------------------
 BootMenuEvent_Completed:
 	stc
+%ifndef MODULE_HOTKEYS
+EventKeyStrokeInAX:
+%endif
 	ret
