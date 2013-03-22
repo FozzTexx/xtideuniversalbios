@@ -154,12 +154,10 @@ MenuEvent_HighlightItemFromCX:
 ;	Corrupts registers:
 ;		AX, BX, DX
 ;--------------------------------------------------------------------
-%ifdef MENUEVENT_KeyStrokeInAX
 ALIGN MENU_JUMP_ALIGN
 MenuEvent_KeyStrokeInAX:
 	mov		bl, MENUEVENT_KeyStrokeInAX
 	SKIP2B	dx	; mov dx, <next instruction>
-%endif
 
 ;--------------------------------------------------------------------
 ; MenuEvent_ItemSelectedFromCX

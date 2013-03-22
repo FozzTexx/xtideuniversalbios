@@ -84,12 +84,8 @@ ProcessKeystrokeFromAX:
 	call	MenuTime_StopSelectionTimeout
 	xchg	ax, cx
 	call	.ProcessMenuSystemKeystrokeFromAX
-%ifdef MENUEVENT_KeyStrokeInAX
 	jc		SHORT NoKeystrokeToProcess
 	jmp		MenuEvent_KeyStrokeInAX
-%else
-	jmp		SHORT NoKeystrokeToProcess
-%endif
 
 ;--------------------------------------------------------------------
 ; .ProcessMenuSystemKeystrokeFromAX
