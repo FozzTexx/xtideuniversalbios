@@ -164,12 +164,10 @@ MenuInit_HighlightItemFromAX:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-%ifndef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 ALIGN MENU_JUMP_ALIGN
 MenuInit_GetHighlightedItemToAX:
 	mov		ax, [bp+MENUINIT.wHighlightedItem]
 	ret
-%endif
 
 
 ;--------------------------------------------------------------------
