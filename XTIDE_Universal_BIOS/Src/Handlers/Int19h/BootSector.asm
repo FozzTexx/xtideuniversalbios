@@ -72,13 +72,6 @@ BootSector_TryToLoadFromDriveDL_AndBoot:
 	clc
 	ret
 
-%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
-  %ifdef MODULE_DRIVEXLATE
-    %if TryToBoot_FallThroughTo_BootSector_TryToLoadFromDriveDL_AndBoot <> BootSector_TryToLoadFromDriveDL_AndBoot
-	  %error "TryToBoot_FallThroughTo_BootSector_TryToLoadFromDriveDL_AndBoot <> BootSector_TryToLoadFromDriveDL_AndBoot, BootSector must come immediately after int19h.asm"
-    %endif
-  %endif
-%endif
 
 ;--------------------------------------------------------------------
 ; LoadFirstSectorFromDriveDL

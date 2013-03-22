@@ -40,16 +40,29 @@ BootVars_Initialize:
 	mul		BYTE [cs:ROMVARS.bIdeCnt]
 	mov		di, BOOTVARS.rgDrvDetectInfo	; We must not initialize anything before this!
 	xchg	cx, ax
+%ifndef MODULE_HOTKEYS
+	jmp		Memory_ZeroESDIwithSizeInCX
 
-%ifdef MODULE_HOTKEYS
+%else ; if MODULE_HOTKEYS
 	call	Memory_ZeroESDIwithSizeInCX
 
 	; Initialize HOTKEYVARS by storing default drives to boot from
-	mov		WORD [es:BOOTVARS.hotkeyVars+HOTKEYVARS.wFddAndHddLetters], DEFAULT_FLOPPY_DRIVE_LETTER | (DEFAULT_HARD_DRIVE_LETTER<<8)
+	call	BootVars_StoreDefaultDriveLettersToHotkeyVars
 	mov		dl, [cs:ROMVARS.bBootDrv]
-	call	DriveXlate_ConvertDriveNumberFromDLtoDriveLetter
-	jmp		HotkeyBar_StoreHotkeyToBootvarsForDriveLetterInDL
+	jmp		HotkeyBar_StoreHotkeyToBootvarsForDriveNumberInDL
 
-%else
-	jmp		Memory_ZeroESDIwithSizeInCX
+
+;--------------------------------------------------------------------
+; BootVars_StoreDefaultDriveLettersToHotkeyVars
+;	Parameters:
+;		ES:		BDA Segment
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+BootVars_StoreDefaultDriveLettersToHotkeyVars:
+	mov		WORD [es:BOOTVARS.hotkeyVars+HOTKEYVARS.wFddAndHddLetters], DEFAULT_FLOPPY_DRIVE_LETTER | (DEFAULT_HARD_DRIVE_LETTER<<8)
+	ret
+
 %endif ; MODULE_HOTKEYS

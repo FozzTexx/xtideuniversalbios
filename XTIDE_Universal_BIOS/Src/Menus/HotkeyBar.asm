@@ -21,6 +21,8 @@
 SECTION .text
 
 ;--------------------------------------------------------------------
+; Scans key presses and draws any hotkey changes.
+;
 ; HotkeyBar_UpdateDuringDriveDetection
 ;	Parameters:
 ;		DS:		RAMVARS segment
@@ -31,7 +33,7 @@ SECTION .text
 ;		AX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 HotkeyBar_UpdateDuringDriveDetection:
-	call	HotkeyBar_ScanHotkeysFromKeyBufferAndStoreToBootvars
+	call	ScanHotkeysFromKeyBufferAndStoreToBootvars
 	; Fall to HotkeyBar_DrawToTopOfScreen
 
 
@@ -310,7 +312,23 @@ HotkeyBar_RestoreCursorCoordinatesFromAX:
 
 
 ;--------------------------------------------------------------------
-; HotkeyBar_StoreHotkeyToBootvarsForDriveLetterInDL
+; HotkeyBar_StoreHotkeyToBootvarsForDriveNumberInDL
+;	Parameters:
+;		DS:		RAMVARS segment
+;		ES:		BDA segment (zero)
+;		DL:		Drive Number
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, CX, DL, DI
+;--------------------------------------------------------------------
+HotkeyBar_StoreHotkeyToBootvarsForDriveNumberInDL:
+	call	DriveXlate_ConvertDriveNumberFromDLtoDriveLetter
+	; Fall to StoreHotkeyToBootvarsForDriveLetterInDL
+
+
+;--------------------------------------------------------------------
+; StoreHotkeyToBootvarsForDriveLetterInDL
 ;	Parameters:
 ;		DS:		RAMVARS segment
 ;		ES:		BDA segment (zero)
@@ -320,14 +338,14 @@ HotkeyBar_RestoreCursorCoordinatesFromAX:
 ;	Corrupts registers:
 ;		AX, CX, DI
 ;--------------------------------------------------------------------
-HotkeyBar_StoreHotkeyToBootvarsForDriveLetterInDL:
+StoreHotkeyToBootvarsForDriveLetterInDL:
 	eMOVZX	ax, dl
 	or		al, 32	; Upper case drive letter to lower case keystroke
 	jmp		SHORT HotkeyBar_StoreHotkeyToBootvarsIfValidKeystrokeInAX
 
 
 ;--------------------------------------------------------------------
-; HotkeyBar_ScanHotkeysFromKeyBufferAndStoreToBootvars
+; ScanHotkeysFromKeyBufferAndStoreToBootvars
 ;	Parameters:
 ;		DS:		RAMVARS segment
 ;		ES:		BDA segment (zero)
@@ -336,11 +354,12 @@ HotkeyBar_StoreHotkeyToBootvarsForDriveLetterInDL:
 ;	Corrupts registers:
 ;		AH, CX
 ;--------------------------------------------------------------------
-HotkeyBar_ScanHotkeysFromKeyBufferAndStoreToBootvars:
+ScanHotkeysFromKeyBufferAndStoreToBootvars:
 	call	Keyboard_GetKeystrokeToAX
 	jz		SHORT NoHotkeyToProcess
 
-	ePUSH_T	cx, HotkeyBar_ScanHotkeysFromKeyBufferAndStoreToBootvars
+	; Prepare to read another key from buffer
+	ePUSH_T	cx, ScanHotkeysFromKeyBufferAndStoreToBootvars
 	; Fall to HotkeyBar_StoreHotkeyToBootvarsIfValidKeystrokeInAX
 
 
@@ -353,6 +372,8 @@ HotkeyBar_ScanHotkeysFromKeyBufferAndStoreToBootvars:
 ;		ES:		BDA segment (zero)
 ;	Returns:
 ;       AL:     Last scancode seen
+;		CF:		Set if valid hotkey in AL
+;				Clear if scancode in AL is not for any hotkey
 ;	Corrupts registers:
 ;		AH, CX, DI
 ;--------------------------------------------------------------------
@@ -386,11 +407,13 @@ HotkeyBar_StoreHotkeyToBootvarsIfValidKeystrokeInAX:
 	sbb		di, BYTE 1				; Sub CF if Floppy Drive
 	xchg	ax, cx
 	mov		[es:di], al
+	stc								; Valid hotkey scancode returned in AL
 
 .KeystrokeIsNotValidDriveLetter:
 NoHotkeyToProcess:
 	mov		al, [es:BOOTVARS.hotkeyVars+HOTKEYVARS.bScancode]
 	ret
+
 
 ;--------------------------------------------------------------------
 ; HotkeyBar_GetBootDriveNumbersToDX

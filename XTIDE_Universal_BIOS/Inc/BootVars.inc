@@ -56,7 +56,7 @@ struc HOTKEYVARS
 	.wTimeWhenDisplayed	resb	2		; System time (ticks) when Hotkey bar was first displayed
 	.wFddAndHddLetters:
 	.bFddLetter			resb	1		; Floppy Drive letter hotkey (upper case)
-	.bHddLetter			resb	1		; Hard Drive letter hotkey (upper case)
+	.bHddLetter			resb	1		; Hard Drive letter hotkey (upper case). Must be after .bFddLetter!
 	.bFlags				resb	1		; Must be just after .bHddLetter!  (dependency in Hotkeybar.asm)
 	.bScancode			resb	1		; Function hotkey scancode, must be just after .bFlags!
 endstruc

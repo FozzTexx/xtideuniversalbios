@@ -102,8 +102,6 @@ Int19h_BootLoaderHandler:
 ;	Returns:
 ;		Never returns (loads operating system)
 ;--------------------------------------------------------------------
-SelectDriveToBootFrom:
-
 ; The following macro could be easily inlined below.  Why a macro?  Depending on the combination
 ; of MODULE_HOTKEYS or MODULE_BOOT_MENU, this code needs to either come before or after the
 ; call to the boot menu.
@@ -111,48 +109,62 @@ SelectDriveToBootFrom:
 %macro TRY_TO_BOOT_DL_AND_DH_DRIVES 0
 	push	dx									; it's OK if this is left on the stack, if we are
 												; successful, the following call does not return
-	call	TryToBootFromPrimaryOrSecondaryBootDevice_AndBoot
+	call	BootSector_TryToLoadFromDriveDL_AndBoot
 	pop		dx
 	mov		dl, dh
-	call	TryToBootFromPrimaryOrSecondaryBootDevice_AndBoot
+	call	BootSector_TryToLoadFromDriveDL_AndBoot
 %endmacro
 
+
+SelectDriveToBootFrom:		; Function starts here
 %ifdef MODULE_HOTKEYS
-	call	HotkeyBar_ScanHotkeysFromKeyBufferAndStoreToBootvars
+	call	HotkeyBar_UpdateDuringDriveDetection
+	mov		al, [es:BOOTVARS.hotkeyVars+HOTKEYVARS.bScancode]
 	cmp		al, ROM_BOOT_HOTKEY_SCANCODE
-	je		.RomBoot							; CF clear so ROM boot
+	je		SHORT .RomBoot						; CF clear so ROM boot
 %ifdef MODULE_BOOT_MENU
 	cmp		al, BOOT_MENU_HOTKEY_SCANCODE
-	je		.BootMenu
-%endif
-	call	HotkeyBar_GetBootDriveNumbersToDX
+	je		SHORT .BootMenu
+%endif ; MODULE_BOOT_MENU
+
 .TryUsingHotKeysCode:
+	call	HotkeyBar_GetBootDriveNumbersToDX
+	call	DriveXlate_SetDriveToSwap			; Enable primary boot device translation
+	xchg	dl, dh
+	call	DriveXlate_SetDriveToSwap			; Enable secondary boot device translation
+	xchg	dl, dh
+	call	DriveXlate_ToOrBack					; Tranlate now so boot device will appear as 00h or 80h to OS
 	TRY_TO_BOOT_DL_AND_DH_DRIVES
 	;; falls through to boot menu, if it is present.  If not present, falls through to rom boot.
 %endif ; MODULE_HOTKEYS
 
+
 %ifdef MODULE_BOOT_MENU
 .BootMenu:
 	call	BootMenu_DisplayAndReturnDriveInDLRomBootClearCF
-	jnc		.RomBoot							; CF clear so ROM boot
+	jnc		SHORT .RomBoot						; CF clear so ROM boot
 
+	call	DriveXlate_Reset
+%ifdef MODULE_HOTKEYS
+	jmp		SHORT .TryUsingHotKeysCode			; Selected drive stored as hotkey
+%else ; Boot menu without hotkeys, secondary boot drive is always 00h or 80h
 	mov		dh, dl								; Setup for secondary drive
 	not		dh									; Floppy goes to HD, or vice versa
 	and		dh, 80h								; Go to first drive of the floppy or HD set
-
-%ifdef MODULE_HOTKEYS
-	jmp		.TryUsingHotKeysCode
-%else
+	call	DriveXlate_SetDriveToSwap
+	call	DriveXlate_ToOrBack
 	TRY_TO_BOOT_DL_AND_DH_DRIVES
-	jmp		.BootMenu
-%endif
+	jmp		SHORT .BootMenu						; Show boot menu again
+%endif ; MODULE_HOTKEYS
+
 %endif ; MODULE_BOOT_MENU
 
+; No hotkeys and no boot menu means fixed "A then C" boot order
 %ifndef MODULE_HOTKEYS OR MODULE_BOOT_MENU
-	xor		dl, dl			; Try to boot from Floppy Drive A
-	call	TryToBootFromPrimaryOrSecondaryBootDevice_AndBoot
-	mov		dl, 80h			; Try to boot from Hard Drive C
-	call	TryToBootFromPrimaryOrSecondaryBootDevice_AndBoot
+	xor		dl, dl							; Try to boot from Floppy Drive A
+	call	BootSector_TryToLoadFromDriveDL_AndBoot
+	mov		dl, DEFAULT_HARD_DRIVE_LETTER	; Try to boot from Hard Drive C
+	call	BootSector_TryToLoadFromDriveDL_AndBoot
 %endif
 
 .RomBoot:
@@ -200,32 +212,3 @@ Int19_JumpToBootSectorOrRomBoot:
 ; Boot by calling INT 18h (ROM Basic of ROM DOS)
 .romboot:
 	int		BIOS_BOOT_FAILURE_INTERRUPT_18h	; Never returns
-
-
-;--------------------------------------------------------------------
-; TryToBootFromPrimaryOrSecondaryBootDevice_AndBoot
-;	Parameters
-;		DL:		Drive selected as boot device
-;		DS:		RAMVARS segment
-;		ES:		BDA and interrupt vector segment (zero)
-;	Returns:
-;		DL:		Drive to boot from (translated, 00h or 80h)
-;       CF:     Set for Boot Sector Boot
-;               Clear for ROM Boot
-;	   	ES:BX:	(if CF set) Ptr to boot sector
-;	Corrupts registers:
-;		AX, CX, DH, SI, DI, (DL if failed to read boot sector)
-;--------------------------------------------------------------------
-%ifndef MODULE_DRIVEXLATE
-TryToBootFromPrimaryOrSecondaryBootDevice_AndBoot	EQU		BootSector_TryToLoadFromDriveDL_AndBoot
-
-%else
-TryToBootFromPrimaryOrSecondaryBootDevice_AndBoot:
-	call	DriveXlate_SetDriveToSwap
-	call	DriveXlate_ToOrBack
-	; fall through to TryToBoot_FallThroughTo_BootSector_TryToLoadFromDriveDL_AndBoot
-
-TryToBoot_FallThroughTo_BootSector_TryToLoadFromDriveDL_AndBoot:
-; fall through to BootSector_TryToLoadFromDriveDL_AndBoot
-%endif
-
