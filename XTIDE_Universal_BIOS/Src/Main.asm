@@ -257,23 +257,23 @@ iend
 
 	; INT 13h Hard Disk BIOS functions
 	%include "Int13h.asm"			; For Int 13h, Disk functions
-	%include "AH0h_HReset.asm"		; Required by Int13h_Jump.asm
-	%include "AH1h_HStatus.asm"		; Required by Int13h_Jump.asm
-	%include "AH2h_HRead.asm"		; Required by Int13h_Jump.asm
-	%include "AH3h_HWrite.asm"		; Required by Int13h_Jump.asm
-	%include "AH4h_HVerify.asm"		; Required by Int13h_Jump.asm
-	%include "AH8h_HParams.asm"		; Required by Int13h_Jump.asm
-	%include "AH9h_HInit.asm"		; Required by Int13h_Jump.asm
-	%include "AHCh_HSeek.asm"		; Required by Int13h_Jump.asm
-	%include "AH10h_HReady.asm"		; Required by Int13h_Jump.asm
-	%include "AH11h_HRecal.asm"		; Required by Int13h_Jump.asm
-	%include "AH15h_HSize.asm"		; Required by Int13h_Jump.asm
+	%include "AH0h_HReset.asm"
+	%include "AH1h_HStatus.asm"
+	%include "AH2h_HRead.asm"
+	%include "AH3h_HWrite.asm"
+	%include "AH4h_HVerify.asm"
+	%include "AH8h_HParams.asm"
+	%include "AH9h_HInit.asm"
+	%include "AHCh_HSeek.asm"
+	%include "AH10h_HReady.asm"
+	%include "AH11h_HRecal.asm"
+	%include "AH15h_HSize.asm"
 %ifdef MODULE_8BIT_IDE_ADVANCED
 	%include "AH1Eh_XTCF.asm"
 %endif
-	%include "AH23h_HFeatures.asm"	; Required by Int13h_Jump.asm
-	%include "AH24h_HSetBlocks.asm"	; Required by Int13h_Jump.asm
-	%include "AH25h_HDrvID.asm"		; Required by Int13h_Jump.asm
+	%include "AH23h_HFeatures.asm"
+	%include "AH24h_HSetBlocks.asm"
+	%include "AH25h_HDrvID.asm"
 	%include "Address.asm"			; For sector address translations
 	%include "Prepare.asm"			; For buffer pointer normalization
 %ifdef MODULE_EBIOS

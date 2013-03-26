@@ -133,7 +133,7 @@ SelectDriveToBootFrom:		; Function starts here
 	xchg	dl, dh
 	call	DriveXlate_SetDriveToSwap			; Enable secondary boot device translation
 	xchg	dl, dh
-	call	DriveXlate_ToOrBack					; Tranlate now so boot device will appear as 00h or 80h to OS
+	call	DriveXlate_ToOrBack					; Translate now so boot device will appear as 00h or 80h to OS
 	TRY_TO_BOOT_DL_AND_DH_DRIVES
 	;; falls through to boot menu, if it is present.  If not present, falls through to rom boot.
 %endif ; MODULE_HOTKEYS
@@ -161,9 +161,9 @@ SelectDriveToBootFrom:		; Function starts here
 
 ; No hotkeys and no boot menu means fixed "A then C" boot order
 %ifndef MODULE_HOTKEYS OR MODULE_BOOT_MENU
-	xor		dl, dl							; Try to boot from Floppy Drive A
+	xor		dl, dl								; Try to boot from Floppy Drive A
 	call	BootSector_TryToLoadFromDriveDL_AndBoot
-	mov		dl, DEFAULT_HARD_DRIVE_LETTER	; Try to boot from Hard Drive C
+	mov		dl, 80h								; Try to boot from Hard Drive C
 	call	BootSector_TryToLoadFromDriveDL_AndBoot
 %endif
 
