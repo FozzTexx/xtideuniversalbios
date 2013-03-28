@@ -21,7 +21,6 @@
 ; Section containing code
 SECTION .text
 
-%ifdef COPY_13H_HANDLER_TO_40H
 ;--------------------------------------------------------------------
 ; Checks is floppy drive handler installed to interrupt vector 40h.
 ;
@@ -35,38 +34,18 @@ SECTION .text
 ;		BX, CX, DI
 ;--------------------------------------------------------------------
 FloppyDrive_IsInt40hInstalled:
-	cmp		WORD [es:BIOS_DISKETTE_INTERRUPT_40h*4+2], 0C000h	; Any ROM segment?
-%ifdef USE_AT	; No need to verify on XT systems.
-	jb		SHORT .Int40hHandlerIsNotInstalled
-	call	.VerifyInt40hHandlerSinceSomeBiosesSimplyReturnFromInt40h
-.Int40hHandlerIsNotInstalled:
-%endif
-	cmc
-	ret
-
-;--------------------------------------------------------------------
-; .VerifyInt40hHandlerSinceSomeBiosesSimplyReturnFromInt40h
-;	Parameters:
-;		Nothing
-;	Returns:
-;		CF:		Cleared if INT 40h is installed
-;				Set if INT 40h is not installed
-;	Corrupts registers:
-;		BX, CX, DI
-;--------------------------------------------------------------------
 %ifdef USE_AT
-.VerifyInt40hHandlerSinceSomeBiosesSimplyReturnFromInt40h:
 	push	es
 	push	dx
 	push	ax
 
-	call	.LoadInt40hVerifyParameters
+	call	LoadInt40hVerifyParameters
 	int		BIOS_DISK_INTERRUPT_13h
 	jc		SHORT .Int40hIsInstalled	; Maybe there are not any floppy drives at all
-	push	es
-	push	di
+	push	es							; Drive Parameter Table segment
+	push	di							; Drive Parameter Table offset
 
-	call	.LoadInt40hVerifyParameters
+	call	LoadInt40hVerifyParameters
 	int		BIOS_DISKETTE_INTERRUPT_40h
 
 	pop		dx
@@ -82,10 +61,15 @@ FloppyDrive_IsInt40hInstalled:
 	pop		ax
 	pop		dx
 	pop		es
+
+%else ; if XT build
+	cmp		WORD [es:BIOS_DISKETTE_INTERRUPT_40h*4+2], 0C000h	; Any ROM segment? (set CF if not)
+%endif ; USE_AT
+	cmc
 	ret
 
 ;--------------------------------------------------------------------
-; .LoadInt40hVerifyParameters
+; LoadInt40hVerifyParameters
 ;	Parameters:
 ;		Nothing
 ;	Returns:
@@ -95,15 +79,14 @@ FloppyDrive_IsInt40hInstalled:
 ;	Corrupts registers:
 ;		DH
 ;--------------------------------------------------------------------
-.LoadInt40hVerifyParameters:
-	mov		ah, 08h				; Get Drive Parameters
-	cwd							; Floppy drive 0
+%ifdef USE_AT
+LoadInt40hVerifyParameters:
+	mov		ah, GET_DRIVE_PARAMETERS
+	cwd						; Floppy drive 0
 	mov		di, dx
-	mov		es, dx				; ES:DI = 0000:0000h to guard against BIOS bugs
+	mov		es, dx			; ES:DI = 0000:0000h to guard against BIOS bugs
 	ret
 %endif
-
-%endif ; COPY_13H_HANDLER_TO_40H
 
 
 ;--------------------------------------------------------------------
@@ -129,7 +112,7 @@ FloppyDrive_IsInt40hInstalled:
 ;--------------------------------------------------------------------
 %ifdef MODULE_BOOT_MENU
 FloppyDrive_GetType:
-	mov		ah, 08h			; Get Drive Parameters
+	mov		ah, GET_DRIVE_PARAMETERS
 	xor		bx, bx			; FLOPPY_TYPE_525_OR_35_DD when function not supported
 	int		BIOS_DISKETTE_INTERRUPT_40h
 	ret
@@ -150,7 +133,7 @@ FloppyDrive_GetCountToAX:
 	call	RamVars_UnpackFlopCntAndFirstToAL
 	js		.UseBIOSorBDA				; We didn't add in any drives, counts here are not valid
 
-	adc		al,1						; adds in the drive count bit, and adds 1 for count vs. 0-index,
+	adc		al ,1						; adds in the drive count bit, and adds 1 for count vs. 0-index,
 	jmp		.FinishCalc					; need to clear AH on the way out, and add in minimum drive numbers
 
 .UseBIOSorBDA:
@@ -164,15 +147,9 @@ FloppyDrive_GetCountToAX:
 
 	ret
 
-FloppyDrive_GetCountFromBIOS_or_BDA:
-	push	es
 
 ;--------------------------------------------------------------------
-; Reads Floppy Drive Count from BIOS.
-; Does not work on most XT systems. Call .GetCountFromBDA
-; if this function fails.
-;
-; .GetCountFromBIOS
+; FloppyDrive_GetCountFromBIOS_or_BDA
 ;	Parameters:
 ;		Nothing
 ;	Returns:
@@ -180,16 +157,21 @@ FloppyDrive_GetCountFromBIOS_or_BDA:
 ;		CF:		Cleared if successful
 ;				Set if BIOS function not supported
 ;	Corrupts registers:
-;		ES
+;		AH, ES
 ;--------------------------------------------------------------------
+FloppyDrive_GetCountFromBIOS_or_BDA:
+	push	es
+
+; Reads Floppy Drive Count from BIOS.
+; Does not work on most XT systems. Call .GetCountFromBDA
+; if this function fails.
 %ifdef USE_AT
-.GetCountFromBIOS:
 	push	di
 	push	bx
 	push	cx
 	push	dx
 
-	mov		ah, 08h					; Get Drive Parameters
+	mov		ah, GET_DRIVE_PARAMETERS
 	cwd								; Floppy Drive 00h
 	int		BIOS_DISKETTE_INTERRUPT_40h
 	mov		al, dl					; Number of Floppy Drives to AL
@@ -198,28 +180,16 @@ FloppyDrive_GetCountFromBIOS_or_BDA:
 	pop		cx
 	pop		bx
 	pop		di
-%endif
 
-;--------------------------------------------------------------------
 ; Reads Floppy Drive Count (0...4) from BIOS Data Area.
 ; This function should be used only if .GetCountFromBIOS fails.
-;
-; .GetCountFromBDA
-;	Parameters:
-;		Nothing
-;	Returns:
-;		AL:		Number of Floppy Drives
-;	Corrupts registers:
-;		AH, ES
-;--------------------------------------------------------------------
-%ifndef USE_AT
-.GetCountFromBDA:
+%else ; ifndef USE_AT
 	LOAD_BDA_SEGMENT_TO	es, ax
-	mov		al, [es:BDA.wEquipment]			; Load Equipment WORD low byte
-	mov		ah, al							; Copy it to AH
-	and		ax, 0C001h						; Leave bits 15..14 and 0
-	eROL_IM	ah, 2							; EW low byte bits 7..6 to 1..0
-	add		al, ah							; AL = Floppy Drive count
+	mov		al, [es:BDA.wEquipment]	; Load Equipment WORD low byte
+	mov		ah, al					; Copy it to AH
+	and		ax, 0C001h				; Leave bits 15..14 and 0
+	eROL_IM	ah, 2					; EW low byte bits 7..6 to 1..0
+	add		al, ah					; AL = Floppy Drive count
 %endif
 
 	pop		es
