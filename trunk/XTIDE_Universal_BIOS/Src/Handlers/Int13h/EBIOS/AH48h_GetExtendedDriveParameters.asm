@@ -57,29 +57,37 @@ AH48h_HandlerForGetExtendedDriveParameters:
 	; Fill Extended Drive Information Table in DS:SI
 .SkipEddConfigurationParameters:
 	mov		[si+EDRIVE_INFO.wSize], cx
-	mov		WORD [si+EDRIVE_INFO.wFlags], FLG_DMA_BOUNDARY_ERRORS_HANDLED_BY_BIOS | FLG_CHS_INFORMATION_IS_VALID
+	mov		WORD [si+EDRIVE_INFO.wFlags], FLG_DMA_BOUNDARY_ERRORS_HANDLED_BY_BIOS
 
 	; Store total sector count
 	mov		[si+EDRIVE_INFO.qwTotalSectors], ax
-	xor		ax, ax									; Return with success
 	mov		[si+EDRIVE_INFO.qwTotalSectors+2], dx
 	mov		[si+EDRIVE_INFO.qwTotalSectors+4], bx
-	mov		[si+EDRIVE_INFO.qwTotalSectors+6], ax	; Always zero
+	xor		cx, cx
+	mov		[si+EDRIVE_INFO.qwTotalSectors+6], cx	; Always zero
 	mov		WORD [si+EDRIVE_INFO.wSectorSize], 512
 
-	; Store P-CHS
+	; Store P-CHS. Based on phoenix specification this is returned only if
+	; total sector count is 15,482,880 or less.
+	sub		ax, 4001h
+	sbb		dx, 0ECh
+	sbb		bx, cx		; Zero
+	jnc		SHORT .ReturnWithSuccess	; More than EC4000h
+	or		WORD [si+EDRIVE_INFO.wFlags], FLG_CHS_INFORMATION_IS_VALID
+
 	eMOVZX	dx, BYTE [es:di+DPT.bPchsHeads]
-	xor		ax, ax									; Also a return code
 	mov		[si+EDRIVE_INFO.dwHeads], dx
-	mov		[si+EDRIVE_INFO.dwHeads+2], ax
+	mov		[si+EDRIVE_INFO.dwHeads+2], cx
 
 	mov		dl, [es:di+DPT.bPchsSectorsPerTrack]
 	mov		[si+EDRIVE_INFO.dwSectorsPerTrack], dx
-	mov		[si+EDRIVE_INFO.dwSectorsPerTrack+2], ax
+	mov		[si+EDRIVE_INFO.dwSectorsPerTrack+2], cx
 
 	mov		dx, [es:di+DPT.wPchsCylinders]
 	mov		[si+EDRIVE_INFO.dwCylinders], dx
-	mov		[si+EDRIVE_INFO.dwCylinders+2], ax
+	mov		[si+EDRIVE_INFO.dwCylinders+2], cx
 
+.ReturnWithSuccess:
+	xor		ax, ax
 .ReturnWithError:
 	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
