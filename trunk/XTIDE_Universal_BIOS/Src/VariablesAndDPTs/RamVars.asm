@@ -55,7 +55,7 @@ RamVars_Initialize:
 	LOAD_BDA_SEGMENT_TO	ds, ax, !		; Zero AX
 	mov		al, [cs:ROMVARS.bStealSize]
 	sub		[BDA.wBaseMem], ax
-	mov		ax, [BDA.wBaseMem]
+	mov		ax, [BDA.wBaseMem]			; We can save a byte here by using INT 12h instead
 	eSHL_IM	ax, 6						; Segment to first stolen kB (*=40h)
 	; Fall to .InitializeRamvars
 

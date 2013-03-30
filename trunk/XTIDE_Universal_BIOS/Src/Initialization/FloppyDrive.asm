@@ -63,7 +63,7 @@ FloppyDrive_IsInt40hInstalled:
 	pop		es
 
 %else ; if XT build
-	cmp		WORD [es:BIOS_DISKETTE_INTERRUPT_40h*4+2], 0C000h	; Any ROM segment? (set CF if not)
+	cmp		BYTE [es:BIOS_DISKETTE_INTERRUPT_40h*4+3], 0C0h	; Any ROM segment? (set CF if not)
 %endif ; USE_AT
 	cmc
 	ret
@@ -133,7 +133,7 @@ FloppyDrive_GetCountToAX:
 	call	RamVars_UnpackFlopCntAndFirstToAL
 	js		.UseBIOSorBDA				; We didn't add in any drives, counts here are not valid
 
-	adc		al ,1						; adds in the drive count bit, and adds 1 for count vs. 0-index,
+	adc		al, 1						; adds in the drive count bit, and adds 1 for count vs. 0-index,
 	jmp		.FinishCalc					; need to clear AH on the way out, and add in minimum drive numbers
 
 .UseBIOSorBDA:
@@ -174,7 +174,7 @@ FloppyDrive_GetCountFromBIOS_or_BDA:
 	mov		ah, GET_DRIVE_PARAMETERS
 	cwd								; Floppy Drive 00h
 	int		BIOS_DISKETTE_INTERRUPT_40h
-	mov		al, dl					; Number of Floppy Drives to AL
+	xchg	dx, ax					; Number of Floppy Drives to AL
 
 	pop		dx
 	pop		cx
@@ -186,11 +186,18 @@ FloppyDrive_GetCountFromBIOS_or_BDA:
 %else ; ifndef USE_AT
 	LOAD_BDA_SEGMENT_TO	es, ax
 	mov		al, [es:BDA.wEquipment]	; Load Equipment WORD low byte
+
+%ifdef USE_UNDOC_INTEL
+	and		al, 0C1h
+	eAAM	64
+%else
 	mov		ah, al					; Copy it to AH
 	and		ax, 0C001h				; Leave bits 15..14 and 0
 	eROL_IM	ah, 2					; EW low byte bits 7..6 to 1..0
+%endif ; USE_UNDOC_INTEL
+
 	add		al, ah					; AL = Floppy Drive count
-%endif
+%endif ; USE_AT
 
 	pop		es
 	ret

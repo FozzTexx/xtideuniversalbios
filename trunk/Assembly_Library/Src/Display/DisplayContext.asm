@@ -126,10 +126,17 @@ DisplayContext_Push:
 
 %ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
 	%assign i 0
-	%rep DISPLAY_CONTEXT_size / 2
-		push	WORD [VIDEO_BDA.displayContext + i]
-	%assign i i+2
-	%endrep
+	%ifdef USE_386
+		%rep DISPLAY_CONTEXT_size / 4
+			push	DWORD [VIDEO_BDA.displayContext + i]
+			%assign i i+4
+		%endrep
+	%else
+		%rep DISPLAY_CONTEXT_size / 2
+			push	WORD [VIDEO_BDA.displayContext + i]
+			%assign i i+2
+		%endrep
+	%endif
 %endif
 
 	mov		ds, di					; Restore DS
@@ -143,11 +150,19 @@ DisplayContext_Pop:
 	pop		ax						; Pop return address
 
 %ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
-	%assign i DISPLAY_CONTEXT_size-2
-	%rep DISPLAY_CONTEXT_size / 2
-		pop		WORD [VIDEO_BDA.displayContext + i]
-	%assign i i-2
-	%endrep
+	%ifdef USE_386
+		%assign i DISPLAY_CONTEXT_size-4
+		%rep DISPLAY_CONTEXT_size / 4
+			pop		DWORD [VIDEO_BDA.displayContext + i]
+			%assign i i-4
+		%endrep
+	%else
+		%assign i DISPLAY_CONTEXT_size-2
+		%rep DISPLAY_CONTEXT_size / 2
+			pop		WORD [VIDEO_BDA.displayContext + i]
+			%assign i i-2
+		%endrep
+	%endif
 %endif
 
 	push	ax						; Push return address
