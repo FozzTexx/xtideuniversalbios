@@ -1,6 +1,0 @@
-Software Data Protection Command:
-None    = Do not use Software Data Protection. Meant for EEPROMs that do not support SDP.
-
-Enable  = Write protects the EEPROM after flashing. Software Data Protection should always be enabled if EEPROM supports it.
-
-Disable = Disables Software Data Protection after flashing.

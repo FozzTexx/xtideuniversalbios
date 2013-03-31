@@ -1,1 +1,0 @@
-Select a serial port by I/O address. Any port address is supported up to 3f8h, but must be on an 8-byte boundary. If the entered value corresponds to one of the established COM port numbers, then the selection will snap to that COM port and "COMx" must be selected again for custom I/O address entry.

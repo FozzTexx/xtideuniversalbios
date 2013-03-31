@@ -136,7 +136,7 @@ ALIGN DISPLAY_JUMP_ALIGN
 	test	ax, ax				; All divided?
 	jnz		SHORT .DivideLoop	;  If not, loop
 
-PrintAllPushedDigits:
+PrintAllPushedDigits:			; Unused entrypoint OK
 	mov		bx, g_rgcDigitToCharacter
 ALIGN DISPLAY_JUMP_ALIGN
 .PrintNextDigit:
@@ -297,6 +297,9 @@ ALIGN DISPLAY_JUMP_ALIGN
 
 %ifdef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 	%define EXCLUDE
+	%ifndef MODULE_STRINGS_COMPRESSED
+		%undef EXCLUDE
+	%endif
 	%ifdef MODULE_HOTKEYS
 		%undef EXCLUDE
 	%endif
