@@ -76,6 +76,7 @@ IdeWait_PollStatusFlagInBLwithTimeoutInBH:
 	mov		ah, bl
 	mov		cl, bh
 	call	Timer_InitializeTimeoutWithTicksInCL
+	call	IdeIO_InputStatusRegisterToAL		; Discard contents of first read
 	and		ah, ~FLG_STATUS_BSY
 	jz		SHORT PollBsyOnly
 	; Fall to PollBsyAndFlgInAH
@@ -93,8 +94,6 @@ IdeWait_PollStatusFlagInBLwithTimeoutInBH:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
 PollBsyAndFlgInAH:
-	call	IdeIO_InputStatusRegisterToAL		; Discard contents of first read
-
 .PollLoop:
 	call	IdeIO_InputStatusRegisterToAL
 	test	al, FLG_STATUS_BSY					; Controller busy?
@@ -124,8 +123,6 @@ PollBsyAndFlgInAH:
 ;		AL, BX, CX, DX
 ;--------------------------------------------------------------------
 PollBsyOnly:
-	call	IdeIO_InputStatusRegisterToAL		; Discard contents of first read
-
 .PollLoop:
 	call	IdeIO_InputStatusRegisterToAL
 	test	al, FLG_STATUS_BSY					; Controller busy?

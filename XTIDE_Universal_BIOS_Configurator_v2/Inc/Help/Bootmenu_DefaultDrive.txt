@@ -1,1 +1,0 @@
-Drive to be set selected by default when Boot Menu is displayed.

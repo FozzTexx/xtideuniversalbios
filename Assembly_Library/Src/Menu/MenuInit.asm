@@ -152,7 +152,6 @@ ALIGN MENU_JUMP_ALIGN
 MenuInit_HighlightItemFromAX:
 	sub		ax, [bp+MENUINIT.wHighlightedItem]
 	jmp		MenuScrollbars_MoveHighlightedItemByAX
-%endif
 
 
 ;--------------------------------------------------------------------
@@ -168,6 +167,7 @@ ALIGN MENU_JUMP_ALIGN
 MenuInit_GetHighlightedItemToAX:
 	mov		ax, [bp+MENUINIT.wHighlightedItem]
 	ret
+%endif ; EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 
 
 ;--------------------------------------------------------------------
