@@ -117,8 +117,20 @@ CreateDPT_FromAtaInformation:
 	call	AtaGeometry_GetPCHStoAXBLBHfromAtaInfoInESSI
 	mov		[di+DPT.bPchsHeads], bl
 %ifdef MODULE_EBIOS
-	mov		[di+DPT.wPchsCylinders], ax
 	mov		[di+DPT.bPchsSectorsPerTrack], bh
+
+%ifdef RESERVE_DIAGNOSTIC_CYLINDER
+	; Do not store P-Cylinders, instead calculate it from L-CHS total sector count.
+	; Read AH=48h_GetExtendedDriveParameters.asm for more info.
+	xchg	ax, bx
+	mul		ah
+	push	ax							; P-Heads * P-Sectors per track
+	call	AH15h_GetSectorCountToBXDXAX
+	pop		bx
+	div		bx							; AX = Calculated cylinders
+%endif ; RESERVE_DIAGNOSTIC_CYLINDER
+
+	mov		[di+DPT.wPchsCylinders], ax
 	; Fall to .StoreNumberOfLbaSectors
 
 ;--------------------------------------------------------------------
@@ -140,7 +152,22 @@ CreateDPT_FromAtaInformation:
 	call	AtaGeometry_GetLbaSectorCountToBXDXAXfromAtaInfoInESSI
 	call	StoreLba48AddressingFromCLandTotalSectorCountFromBXDXAX
 
+	; If we have 15,482,880 or less sectors, we multiply P-CHS values
+	; and use that as total sector count.
+	; Read AH=48h_GetExtendedDriveParameters.asm for more info.
+	sub		ax, 4001h
+	sbb		dx, 0ECh
+	sbb		bx, BYTE 0
+	jnc		SHORT .NoNeedToUseCHSsectorCount	; More than EC4000h
+
+	mov		al, [di+DPT.bPchsHeads]
+	mul		BYTE [di+DPT.bPchsSectorsPerTrack]
+	mul		WORD [di+DPT.wPchsCylinders]
+	xor		bx, bx
+	call	StoreLba48AddressingFromCLandTotalSectorCountFromBXDXAX
+
 	; Load user defined LBA
+.NoNeedToUseCHSsectorCount:
 	call	GetUserDefinedCapacityToBXAXandFlagsToCXandModeToDXfromROMVARS
 	test	cl, FLG_DRVPARAMS_USERLBA
 	jz		SHORT .KeepTotalSectorsFromAtaID

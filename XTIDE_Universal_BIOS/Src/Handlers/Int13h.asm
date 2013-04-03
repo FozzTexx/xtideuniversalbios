@@ -250,7 +250,6 @@ Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAHandTransferredSectorsFromCL:
 ; Int13h_ReturnFromHandlerWithoutStoringErrorCode
 ;	Parameters:
 ;		AH:		BIOS Error code
-;		DS:		RAMVARS segment
 ;		SS:BP:	Ptr to IDEPACK
 ;	Returns:
 ;		All registers are loaded from INTPACK
