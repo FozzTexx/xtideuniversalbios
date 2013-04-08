@@ -31,6 +31,7 @@
 # ELIMINATE_CGA_SNOW          Prevents CGA snowing at the cost of a few bytes                      #
 # RELOCATE_INT13H_STACK **    Relocates INT 13h stack to beginning of stolen conventional memory   #
 # RESERVE_DIAGNOSTIC_CYLINDER Reserve one L-CHS cylinder for compatibility with old BIOSes         #
+# RETURN_DPTE_ON_AH48H        Returns extra hardware related information on AH=48h for OS drivers  #
 # USE_186                     Use instructions supported by 80188/80186 and V20/V30 and later      #
 # USE_286                     Use instructions supported by 286 and later (defines USE_UNDOC_INTEL)#
 # USE_386                     Use instructions supported by 386 and later (defines USE_286)        #
@@ -109,7 +110,7 @@ DEFINES_XTPLUS_LARGE = $(DEFINES_XTPLUS) $(DEFINES_COMMON_LARGE)
 DEFINES_AT_LARGE = $(DEFINES_AT) $(DEFINES_COMMON_LARGE)
 
 DEFINES_XT_TINY = MODULE_STRINGS_COMPRESSED MODULE_8BIT_IDE
-DEFINES_386_8K = $(DEFINES_AT) USE_386
+DEFINES_386_8K = $(DEFINES_AT) USE_386 RETURN_DPTE_ON_AH48H
 
 DEFINES_ALL_FEATURES = MODULE_8BIT_IDE MODULE_8BIT_IDE_ADVANCED MODULE_ADVANCED_ATA MODULE_EBIOS MODULE_BOOT_MENU MODULE_HOTKEYS MODULE_IRQ MODULE_SERIAL MODULE_SERIAL_FLOPPY MODULE_STRINGS_COMPRESSED MODULE_FEATURE_SETS
 DEFINES_ALL_FEATURES += ELIMINATE_CGA_SNOW RELOCATE_INT13H_STACK RESERVE_DIAGNOSTIC_CYLINDER
