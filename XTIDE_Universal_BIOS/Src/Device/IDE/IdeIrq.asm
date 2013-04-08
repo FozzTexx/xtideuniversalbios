@@ -25,25 +25,12 @@ SECTION .text
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
 ;	Returns:
-;		CF:		Set if wait done by operating system
-;				Cleared if BIOS must perform task flag polling
+;		Nothing
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 IdeIrq_WaitForIRQ:
-
-;--------------------------------------------------------------------
-; .NotifyOperatingSystemAboutWaitingForIRQ
-;	Parameters:
-;		Nothing
-;	Returns:
-;		CF:		Set if wait done by operating system
-;				Cleared if BIOS must perform task flag polling
-;	Corrupts registers:
-;		AX
-;--------------------------------------------------------------------
-.NotifyOperatingSystemAboutWaitingForIRQ:
 	push	ds
 
 	LOAD_BDA_SEGMENT_TO	ds, ax, !		; Zero AX
@@ -52,12 +39,7 @@ IdeIrq_WaitForIRQ:
 	cmp		al, [BDA.bHDTaskFlg]		; Task flag already set?
 	jc		SHORT .ReturnFromWaitNotify	;  If so, skip OS notification
 	int		BIOS_SYSTEM_INTERRUPT_15h	; OS hook, device busy
-	jnc		SHORT .ReturnFromWaitNotify	; CF cleared, BIOS handles waiting
 
-	; Make sure that OS hooks are supported, otherwise the CF means unsupported function
-	test	ah, ah						; OS hook supported? (clears CF)
-	jnz		SHORT .ReturnFromWaitNotify	; AH has error, BIOS must do the wait
-	stc									; Set CF since wait done by OS
 .ReturnFromWaitNotify:
 	sti									; Enable interrupts
 	pop		ds
@@ -98,6 +80,7 @@ AcknowledgeMasterInterruptController:
 	out		MASTER_8259_COMMAND_out, al	; Acknowledge Master 8259
 
 	; Issue Int 15h, function AX=9100h (Interrupt ready)
+	clc									; Must be called with CF clear
 	mov		ax, OS_HOOK_DEVICE_POST<<8	; Interrupt ready, device 0 (HD)
 	int		BIOS_SYSTEM_INTERRUPT_15h
 

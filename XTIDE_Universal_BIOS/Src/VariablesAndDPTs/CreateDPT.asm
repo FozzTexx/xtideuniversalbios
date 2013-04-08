@@ -119,6 +119,10 @@ CreateDPT_FromAtaInformation:
 %ifdef MODULE_EBIOS
 	mov		[di+DPT.bPchsSectorsPerTrack], bh
 
+; This is what Award BIOS from 1997 Pentium motherboard does. I can't think
+; of any good reason to do the same but let's keep this here just in case,
+; at least for a while.
+%if 0
 %ifdef RESERVE_DIAGNOSTIC_CYLINDER
 	; Do not store P-Cylinders, instead calculate it from L-CHS total sector count.
 	; Read AH=48h_GetExtendedDriveParameters.asm for more info.
@@ -129,6 +133,7 @@ CreateDPT_FromAtaInformation:
 	pop		bx
 	div		bx							; AX = Calculated cylinders
 %endif ; RESERVE_DIAGNOSTIC_CYLINDER
+%endif ; 0
 
 	mov		[di+DPT.wPchsCylinders], ax
 	; Fall to .StoreNumberOfLbaSectors
