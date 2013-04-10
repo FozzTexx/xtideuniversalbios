@@ -73,11 +73,11 @@ struc DPTE
 endstruc
 
 ; Flags for DPTE.wFlags
-FLG_FAST_PIO_ENABLED		EQU	(1<<0)	; Set is using PIO mode 1 or above (DPTE.bPioMode is valid when set)
+FLG_FAST_PIO_ENABLED		EQU	(1<<0)	; Set if using PIO mode 1 or above (DPTE.bPioMode is valid when set)
 FLG_DMA_ENABLED				EQU	(1<<1)	; Set if DMA enabled (DPTE.bDmaChannelAndType is valid when set)
 FLG_BLOCK_MODE_ENABLED		EQU	(1<<2)	; Set if Block Mode transfers are enabled (DPTE.bBlockSize is valid when set)
 FLG_CHS_TRANSLATION_ENABLED	EQU	(1<<3)	; Set for drives with more than 1024 cylinders
-FLG_LBA_TRANSLATION_ENABLED	EQU	(1<<4)	; Set when LBA addersses from DAP are passed directly to the drive
+FLG_LBA_TRANSLATION_ENABLED	EQU	(1<<4)	; Set when LBA addresses from DAP are passed directly to the drive
 FLG_REMOVABLE_MEDIA			EQU	(1<<5)
 FLG_ATAPI_DEVICE			EQU	(1<<6)
 FLG_32BIT_XFER_MODE			EQU	(1<<7)	; Set when using 32-bit data transfers

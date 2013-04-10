@@ -213,6 +213,7 @@ g_rgwChoiceToValueLookupForDevice:
 	dw	DEVICE_8BIT_XTCF_DMA
 	dw	DEVICE_8BIT_XTCF_MEMMAP
 	dw	DEVICE_8BIT_JRIDE_ISA
+	dw	DEVICE_8BIT_ADP50L
 	dw	DEVICE_SERIAL_PORT
 g_rgszValueToStringLookupForDevice:
 	dw	g_szValueCfgDevice16b
@@ -224,6 +225,7 @@ g_rgszValueToStringLookupForDevice:
 	dw	g_szValueCfgDeviceDmaXTCF
 	dw	g_szValueCfgDeviceMemXTCF
 	dw	g_szValueCfgDeviceJrIdeIsa
+	dw	g_szValueCfgDeviceADP50L
 	dw	g_szValueCfgDeviceSerial
 
 g_rgbChoiceToValueLookupForCOM:
@@ -380,7 +382,7 @@ ALIGN JUMP_ALIGN
 	call	Buffers_GetRomvarsValueToAXfromOffsetInBX
 	mov		bx, g_MenuitemIdeControllerControlBlockAddress
 	cmp		al, DEVICE_8BIT_XTCF_PIO8
-	jb		SHORT .EnableMenuitemFromCSBX	; Not needed for XT-CF and JR-IDE/ISA
+	jb		SHORT .EnableMenuitemFromCSBX	; Not needed for XT-CF, JR-IDE/ISA and ADP50L
 	jmp		SHORT .DisableMenuitemFromCSBX
 
 
@@ -602,6 +604,8 @@ IdeControllerMenu_WriteDevice:
 		je		SHORT .changingToSerial
 		cmp		al, DEVICE_8BIT_JRIDE_ISA
 		je		SHORT .ChangingToJrIdeIsa
+		cmp		al, DEVICE_8BIT_ADP50L
+		je		SHORT .ChangingToADP50L
 
 		; Restore ports to default values
 		cmp		al, DEVICE_8BIT_ATA					; Standard ATA controllers, including 8-bit mode
@@ -619,7 +623,12 @@ IdeControllerMenu_WriteDevice:
 		jmp		SHORT .done
 
 .ChangingToJrIdeIsa:
-		mov		ax, JRIDE_DEFAULT_SEGMENT_ADDRESS
+		mov		ah, JRIDE_DEFAULT_SEGMENT_ADDRESS >> 8
+		SKIP2B	bx
+
+.ChangingToADP50L:
+		mov		ah, ADP50L_DEFAULT_BIOS_SEGMENT_ADDRESS >> 8
+		xor		al, al
 		xor		bx, bx
 		jmp		SHORT .writeNonSerial
 

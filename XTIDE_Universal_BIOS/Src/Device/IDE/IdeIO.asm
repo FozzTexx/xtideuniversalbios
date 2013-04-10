@@ -60,25 +60,24 @@ IdeIO_InputToALfromIdeRegisterInDL:
 %ifdef MODULE_8BIT_IDE_ADVANCED
 	je		SHORT .ReverseA0andA3fromRegisterIndexInDX
 
+	eSHL_IM	dx, 1	; ADP50L and XT-CF
 	cmp		al, DEVICE_8BIT_JRIDE_ISA
-	jne		SHORT .ShlRegisterIndexInDX			; All XT-CF modes
-	; Fall to .InputToALfromMemoryMappedRegisterInDX
+	jb		SHORT .InputToALfromRegisterInDX	; All XT-CF modes
+	mov		bh, JRIDE_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET >> 8
+	je		SHORT .InputToALfromMemoryMappedRegisterInBX
+	mov		bl, dl
+	mov		bh,	ADP50L_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET >> 8
 
-.InputToALfromMemoryMappedRegisterInDX:
+.InputToALfromMemoryMappedRegisterInBX:
 	push	ds
-	mov		ds, [di+DPT.wBasePort]	; Segment for JR-IDE/ISA
-	mov		al, [bx+JRIDE_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET]
+	mov		ds, [di+DPT.wBasePort]	; Segment for JR-IDE/ISA and ADP50L
+	mov		al, [bx]
 	pop		ds
 	ret
 %endif
 
 .ReverseA0andA3fromRegisterIndexInDX:
 	mov		dl, [cs:bx+g_rgbSwapA0andA3fromIdeRegisterIndex]
-	SKIP2B	bx	; Skip shl dx, 1
-
-.ShlRegisterIndexInDX:
-	eSHL_IM	dx, 1
-	; Fall to .InputToALfromRegisterInDX
 
 .InputToALfromRegisterInDX:
 	add		dx, [di+DPT.wBasePort]
@@ -107,13 +106,19 @@ IdeIO_OutputALtoIdeControlBlockRegisterInDL:
 %ifdef MODULE_8BIT_IDE_ADVANCED
 	je		SHORT .ReverseA0andA3fromRegisterIndexInDX
 
+	; At this point remaining controllers (JRIDE, XTCF and ADP50L) all have a control
+	; block offset of 8 or (8<<1) so we add 8 here and do the SHL 1 later if needed.
+	add		dx, 8
 	cmp		bl, DEVICE_8BIT_JRIDE_ISA
-	jne		SHORT .ShlRegisterIndexInDX		; All XT-CF modes
-	; Fall to .OutputALtoMemoryMappedRegisterInDX
-
-.OutputALtoMemoryMappedRegisterInDX:
-	mov		bx, JRIDE_CONTROL_BLOCK_REGISTER_WINDOW_OFFSET
-	jmp 	SHORT IdeIO_OutputALtoIdeRegisterInDL.OutputALtoMemoryMappedRegisterInDXwithWindowOffsetInBX
+	jb		SHORT IdeIO_OutputALtoIdeRegisterInDL.ShlRegisterIndexInDXandOutputAL	; All XT-CF modes
+	mov		bx, JRIDE_CONTROL_BLOCK_REGISTER_WINDOW_OFFSET - 8			; Zeroes BL. -8 compensates for the ADD
+	je		SHORT IdeIO_OutputALtoIdeRegisterInDL.OutputALtoMemoryMappedRegisterInDXwithWindowOffsetInBX
+	; The commented instructions below shows what happens next (saved for clarity) but as an optimization
+	; we can accomplish the same thing with this jump.
+	jmp		SHORT IdeIO_OutputALtoIdeRegisterInDL.ShlDXandMovHighByteOfADP50LoffsetsToBH
+;	eSHL_IM	dx, 1
+;	mov		bh, (ADP50L_CONTROL_BLOCK_REGISTER_WINDOW_OFFSET - 16) >> 8	; -16 compensates for the ADD and SHL
+;	jmp 	SHORT IdeIO_OutputALtoIdeRegisterInDL.OutputALtoMemoryMappedRegisterInDXwithWindowOffsetInBX
 %endif
 
 .ReverseA0andA3fromRegisterIndexInDX:
@@ -121,19 +126,17 @@ IdeIO_OutputALtoIdeControlBlockRegisterInDL:
 	; Control Block Registers start from Command Block + 8h. We can do
 	; a small trick since we only access Device Control Register at
 	; offset 6h: Always clear A3 and set A0.
+	mov		bh, dh	; Zero BH
 	add		dx, [cs:bx+IDEVARS.wControlBlockPort]
 	xor		dl, 1001b						; Clear A3, Set A0
-	jmp		SHORT OutputALtoPortInDX
-
-.ShlRegisterIndexInDX:
-	eSHL_IM	dx, 1
-	add		dx, BYTE XTCF_CONTROL_BLOCK_OFFSET
-	jmp		SHORT OutputALtoRegisterInDX
+	out		dx, al
+	ret
 
 .OutputALtoControlBlockRegisterInDX:
-	call	AccessDPT_GetIdevarsToCSBX
+	call	AccessDPT_GetIdevarsToCSBX		; *FIXME* Why is this call here but not in the above block?
 	add		dx, [cs:bx+IDEVARS.wControlBlockPort]
-	jmp		SHORT OutputALtoPortInDX
+	out		dx, al
+	ret
 
 
 ;--------------------------------------------------------------------
@@ -159,15 +162,17 @@ IdeIO_OutputALtoIdeRegisterInDL:
 	je		SHORT .ReverseA0andA3fromRegisterIndexInDX
 
 	cmp		bl, DEVICE_8BIT_JRIDE_ISA
-	jne		SHORT .ShlRegisterIndexInDX		; All XT-CF modes
-	; Fall to .OutputALtoMemoryMappedRegisterInDX
+	jb		SHORT .ShlRegisterIndexInDXandOutputAL	; All XT-CF modes
+	mov		bx, JRIDE_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET	; Zeroes BL
+	je		SHORT .OutputALtoMemoryMappedRegisterInDXwithWindowOffsetInBX
+.ShlDXandMovHighByteOfADP50LoffsetsToBH:
+	eSHL_IM	dx, 1
+	mov		bh, ADP50L_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET >> 8	; BL is zero so we only need to change BH
 
-.OutputALtoMemoryMappedRegisterInDX:
-	mov		bx, JRIDE_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET
 .OutputALtoMemoryMappedRegisterInDXwithWindowOffsetInBX:
 	add		bx, dx
 	push	ds
-	mov		ds, [di+DPT.wBasePort]	; Segment for JR-IDE/ISA
+	mov		ds, [di+DPT.wBasePort]	; Segment for JR-IDE/ISA and ADP50L
 	mov		[bx], al
 	pop		ds
 	ret
@@ -176,16 +181,15 @@ IdeIO_OutputALtoIdeRegisterInDL:
 .ReverseA0andA3fromRegisterIndexInDX:
 	mov		bx, dx
 	mov		dl, [cs:bx+g_rgbSwapA0andA3fromIdeRegisterIndex]
-	SKIP2B	bx	; Skip shl dx, 1
+	SKIP2B	bx	; Skip eSHL_IM dx, 1
 
-.ShlRegisterIndexInDX:
+.ShlRegisterIndexInDXandOutputAL:
 	eSHL_IM	dx, 1
 	; Fall to OutputALtoRegisterInDX
 
 ALIGN JUMP_ALIGN
 OutputALtoRegisterInDX:
 	add		dx, [di+DPT.wBasePort]
-OutputALtoPortInDX:
 	out		dx, al
 	ret
 

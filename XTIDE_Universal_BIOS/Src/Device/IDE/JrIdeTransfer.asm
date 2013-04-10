@@ -27,8 +27,6 @@ struc MEMPIOVARS	; Must not be larger than 9 bytes! See IDEPACK in RamVars.inc.
 	.bSectorsDone			resb	1	; 8, Number of sectors xferred
 endstruc
 
-SECTOR_ACCESS_WINDOW_SIZE	EQU		512	; 512 bytes
-
 
 ; Section containing code
 SECTION .text
@@ -67,11 +65,13 @@ JrIdeTransfer_StartWithCommandInAL:
 	; Get far pointer to Sector Access Window
 	mov		dx, [di+DPT.wBasePort]
 	cmp		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_JRIDE_ISA
-	jne		SHORT .GetSectorAccessWindowForXTCF
+	jb		SHORT .GetSectorAccessWindowForXTCF
 
-	; Get Sector Access Window for JR-IDE/ISA
+	; Get Sector Access Window for JR-IDE/ISA and ADP50L
+	mov		ds, dx		; Segment for JR-IDE/ISA and ADP50L
 	mov		di, JRIDE_SECTOR_ACCESS_WINDOW_OFFSET
-	mov		ds, dx		; Segment for JR-IDE/ISA
+	je		SHORT .SectorAccessWindowLoadedToDSDI
+	mov		di, ADP50L_SECTOR_ACCESS_WINDOW_OFFSET
 	jmp		SHORT .SectorAccessWindowLoadedToDSDI
 
 .GetSectorAccessWindowForXTCF:
@@ -230,10 +230,10 @@ ALIGN JUMP_ALIGN
 WriteSingleBlockFromDSSIToSectorAccessWindowInESDI:
 	mov		bx, di
 	mov		dx, cx
-	xor		cl, cl
+	xor		cx, cx
 ALIGN JUMP_ALIGN
 .WriteNextSector:
-	mov		ch, SECTOR_ACCESS_WINDOW_SIZE >> 9
+	inc		ch
 	rep movsw
 	mov		di, bx	; Reset for next sector
 	dec		dx
@@ -257,10 +257,10 @@ ALIGN JUMP_ALIGN
 ReadSingleBlockFromSectorAccessWindowInDSSItoESDI:
 	mov		bx, si
 	mov		dx, cx
-	xor		cl, cl
+	xor		cx, cx
 ALIGN JUMP_ALIGN
 .ReadNextSector:
-	mov		ch, SECTOR_ACCESS_WINDOW_SIZE >> 9
+	inc		ch
 	rep movsw
 	mov		si, bx	; Reset for next sector
 	dec		dx
@@ -288,9 +288,3 @@ WaitUntilReadyToTransferNextBlock:
 	pop		ds
 	ret
 
-
-%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
-%if SECTOR_ACCESS_WINDOW_SIZE <> 512
-	%error "SECTOR_ACCESS_WINDOW_SIZE is no longer equal to 512. JrIdeTransfer.asm needs changes."
-%endif
-%endif

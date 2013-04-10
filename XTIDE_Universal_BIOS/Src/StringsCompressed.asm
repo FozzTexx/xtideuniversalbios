@@ -288,6 +288,10 @@ g_szDeviceTypeValues_JrIde:		; db	"M8 ",NULL
                            		; db	 4dh,  38h,  20h,  00h    ; uncompressed
                            		  db	 53h,  30h,  00h          ; compressed
 
+g_szDeviceTypeValues_ADP50L:	; db	"M8 ",NULL
+                            	; db	 4dh,  38h,  20h,  00h    ; uncompressed
+                            	  db	 53h,  30h,  00h          ; compressed
+
 g_szDeviceTypeValues_Serial:	; db	"SER",NULL
                             	; db	 53h,  45h,  52h,  00h    ; uncompressed
                             	  db	 59h,  4bh,  98h          ; compressed
@@ -325,8 +329,11 @@ g_szDeviceTypeValues_Displacement equ (g_szDeviceTypeValues_32bit - g_szDeviceTy
 %if g_szDeviceTypeValues_JrIde <> g_szDeviceTypeValues_XTCFmem + g_szDeviceTypeValues_Displacement
 %error "g_szDeviceTypeValues Displacement Incorrect 8"
 %endif
-%if g_szDeviceTypeValues_Serial <> g_szDeviceTypeValues_JrIde + g_szDeviceTypeValues_Displacement
+%if g_szDeviceTypeValues_ADP50L <> g_szDeviceTypeValues_JrIde + g_szDeviceTypeValues_Displacement
 %error "g_szDeviceTypeValues Displacement Incorrect 9"
+%endif
+%if g_szDeviceTypeValues_Serial <> g_szDeviceTypeValues_ADP50L + g_szDeviceTypeValues_Displacement
+%error "g_szDeviceTypeValues Displacement Incorrect 10"
 %endif
 %endif
 
@@ -334,29 +341,6 @@ g_szDeviceTypeValues_Displacement equ (g_szDeviceTypeValues_32bit - g_szDeviceTy
 g_szSelectionTimeout:	; db	DOUBLE_BOTTOM_LEFT_CORNER,DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL,"%ASelection in %2-u s",NULL
                      	; db	0c8h, 0b5h,  25h,  41h,  53h,  65h,  6ch,  65h,  63h,  74h,  69h,  6fh,  6eh,  20h,  69h,  6eh,  20h,  25h,  32h,  2dh,  75h,  20h,  73h,  00h    ; uncompressed
                      	  db	 31h,  32h,  3bh,  59h,  6bh,  72h,  6bh,  69h,  7ah,  6fh,  75h, 0f4h,  6fh, 0f4h,  3ah,  20h, 0b9h                                              ; compressed
-
-
-
-; Boot Menu information strings
-g_szCapacity:			; db	"Capacity : %s",NULL
-             			; db	 43h,  61h,  70h,  61h,  63h,  69h,  74h,  79h,  20h,  3ah,  20h,  25h,  73h,  00h    ; uncompressed
-             			  db	 49h,  67h,  76h,  67h,  69h,  6fh,  7ah, 0ffh, 0c0h,  1dh                            ; compressed
-
-g_szCapacityNum:		; db	"%5-u.%u %ciB",NULL
-                		; db	 25h,  35h,  2dh,  75h,  2eh,  25h,  75h,  20h,  25h,  63h,  69h,  42h,  00h    ; uncompressed
-                		  db	 36h,  29h,  35h,  20h,  3ch,  6fh,  88h                                        ; compressed
-
-g_szInformation:		; db	"%s",LF,CR
-                		; db	 25h,  73h,  0ah,  0dh    ; uncompressed
-                		  db	 3dh,  39h                ; compressed
-
-	; db	"Addr. ",SINGLE_VERTICAL,"Block",SINGLE_VERTICAL,"Bus",SINGLE_VERTICAL,"IRQ",SINGLE_VERTICAL,"Reset",LF,CR
-	; db	 41h,  64h,  64h,  72h,  2eh,  20h, 0b3h,  42h,  6ch,  6fh,  63h,  6bh, 0b3h,  42h,  75h,  73h, 0b3h,  49h,  52h,  51h, 0b3h,  52h,  65h,  73h,  65h,  74h,  0ah,  0dh    ; uncompressed
-	  db	 47h,  6ah,  6ah,  78h,  29h,  20h,  23h,  48h,  72h,  75h,  69h,  71h,  23h,  48h,  7bh,  79h,  23h,  4fh,  58h,  57h,  23h,  58h,  6bh,  79h,  6bh,  7ah,  39h          ; compressed
-
-	; db	"%s",SINGLE_VERTICAL,"%5-u",SINGLE_VERTICAL,"%s",SINGLE_VERTICAL," %2-I",SINGLE_VERTICAL,"%5-x",NULL
-	; db	 25h,  73h, 0b3h,  25h,  35h,  2dh,  75h, 0b3h,  25h,  73h, 0b3h,  20h,  25h,  32h,  2dh,  49h, 0b3h,  25h,  35h,  2dh,  78h,  00h    ; uncompressed
-	  db	 3dh,  23h,  36h,  23h,  3dh,  23h,  20h,  34h,  23h,  18h                                                                            ; compressed
 
 
 
@@ -403,6 +387,29 @@ g_szForeignHD:			; db	"Foreign Hard Disk",NULL
 %error "g_szDriveNumSpace or g_szDriveNumBNSpace are out of position"
 %endif
 %endif
+
+
+; Boot Menu information strings
+g_szCapacity:			; db	"Capacity : %s",NULL
+             			; db	 43h,  61h,  70h,  61h,  63h,  69h,  74h,  79h,  20h,  3ah,  20h,  25h,  73h,  00h    ; uncompressed
+             			  db	 49h,  67h,  76h,  67h,  69h,  6fh,  7ah, 0ffh, 0c0h,  1dh                            ; compressed
+
+g_szCapacityNum:		; db	"%5-u.%u %ciB",NULL
+                		; db	 25h,  35h,  2dh,  75h,  2eh,  25h,  75h,  20h,  25h,  63h,  69h,  42h,  00h    ; uncompressed
+                		  db	 36h,  29h,  35h,  20h,  3ch,  6fh,  88h                                        ; compressed
+
+g_szInformation:		; db	"%s",LF,CR
+                		; db	 25h,  73h,  0ah,  0dh    ; uncompressed
+                		  db	 3dh,  39h                ; compressed
+
+	; db	"Addr. ",SINGLE_VERTICAL,"Block",SINGLE_VERTICAL,"Bus",SINGLE_VERTICAL,"IRQ",SINGLE_VERTICAL,"Reset",LF,CR
+	; db	 41h,  64h,  64h,  72h,  2eh,  20h, 0b3h,  42h,  6ch,  6fh,  63h,  6bh, 0b3h,  42h,  75h,  73h, 0b3h,  49h,  52h,  51h, 0b3h,  52h,  65h,  73h,  65h,  74h,  0ah,  0dh    ; uncompressed
+	  db	 47h,  6ah,  6ah,  78h,  29h,  20h,  23h,  48h,  72h,  75h,  69h,  71h,  23h,  48h,  7bh,  79h,  23h,  4fh,  58h,  57h,  23h,  58h,  6bh,  79h,  6bh,  7ah,  39h          ; compressed
+
+	; db	"%s",SINGLE_VERTICAL,"%5-u",SINGLE_VERTICAL,"%s",SINGLE_VERTICAL," %2-I",SINGLE_VERTICAL,"%5-x",NULL
+	; db	 25h,  73h, 0b3h,  25h,  35h,  2dh,  75h, 0b3h,  25h,  73h, 0b3h,  20h,  25h,  32h,  2dh,  49h, 0b3h,  25h,  35h,  2dh,  78h,  00h    ; uncompressed
+	  db	 3dh,  23h,  36h,  23h,  3dh,  23h,  20h,  34h,  23h,  18h                                                                            ; compressed
+
 
 %endif ; MODULE_BOOT_MENU
 
@@ -553,7 +560,7 @@ StringsCompressed_TranslatesAndFormats:
 
 ;; translated usage stats
 ;; 33:1
-;; 32:34
+;; 32:35
 ;; 181:1
 ;; 53:2
 ;; 48:2
@@ -567,7 +574,7 @@ StringsCompressed_TranslatesAndFormats:
 ;; 172:2
 ;; 34:3
 ;; 49:1
-;; 56:7
+;; 56:8
 ;; 45:2
 ;; 175:1
 ;; 171:2
@@ -608,7 +615,7 @@ StringsCompressed_TranslatesAndFormats:
 ;; 74,J:
 ;; 75,K:1
 ;; 76,L:4
-;; 77,M:7
+;; 77,M:8
 ;; 78,N:2
 ;; 79,O:2
 ;; 80,P:1
