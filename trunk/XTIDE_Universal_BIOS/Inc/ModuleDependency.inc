@@ -37,6 +37,7 @@
 	%include "DmaController.inc"
 	%include "XTCF.inc"				; For Lo-tech XT-CF
 	%include "JRIDE_ISA.inc"		; For JR-IDE/ISA
+	%include "ADP50L.inc"			; For SVC ADP50L
 %endif
 
 ; Include module specific .INC files

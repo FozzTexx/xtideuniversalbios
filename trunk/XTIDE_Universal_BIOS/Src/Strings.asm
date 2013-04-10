@@ -143,6 +143,7 @@ g_szDeviceTypeValues_XTCFpio8:	db	"T8 ",NULL	; True 8-bit
 g_szDeviceTypeValues_XTCFdma:	db	"8MA",NULL	; DMA 8-bit
 g_szDeviceTypeValues_XTCFmem:	db	"M8 ",NULL	; Memory Mapped 8-bit
 g_szDeviceTypeValues_JrIde:		db	"M8 ",NULL
+g_szDeviceTypeValues_ADP50L:	db	"M8 ",NULL
 g_szDeviceTypeValues_Serial:	db	"SER",NULL
 
 g_szDeviceTypeValues_Displacement equ (g_szDeviceTypeValues_32bit - g_szDeviceTypeValues)
@@ -177,21 +178,16 @@ g_szDeviceTypeValues_Displacement equ (g_szDeviceTypeValues_32bit - g_szDeviceTy
 	%if g_szDeviceTypeValues_JrIde <> g_szDeviceTypeValues_XTCFmem + g_szDeviceTypeValues_Displacement
 		%error "g_szDeviceTypeValues Displacement Incorrect 8"
 	%endif
-	%if g_szDeviceTypeValues_Serial <> g_szDeviceTypeValues_JrIde + g_szDeviceTypeValues_Displacement
+	%if g_szDeviceTypeValues_ADP50L <> g_szDeviceTypeValues_JrIde + g_szDeviceTypeValues_Displacement
 		%error "g_szDeviceTypeValues Displacement Incorrect 9"
+	%endif
+	%if g_szDeviceTypeValues_Serial <> g_szDeviceTypeValues_ADP50L + g_szDeviceTypeValues_Displacement
+		%error "g_szDeviceTypeValues Displacement Incorrect 10"
 	%endif
 %endif
 
 
 g_szSelectionTimeout:	db	DOUBLE_BOTTOM_LEFT_CORNER,DOUBLE_LEFT_HORIZONTAL_TO_SINGLE_VERTICAL,"%ASelection in %2-u s",NULL
-
-
-; Boot Menu information strings
-g_szCapacity:			db	"Capacity : %s",NULL
-g_szCapacityNum:		db	"%5-u.%u %ciB",NULL
-g_szInformation:		db	"%s",LF,CR
-	db	"Addr. ",SINGLE_VERTICAL,"Block",SINGLE_VERTICAL,"Bus",SINGLE_VERTICAL,"IRQ",SINGLE_VERTICAL,"Reset",LF,CR
-	db	"%s",SINGLE_VERTICAL,"%5-u",SINGLE_VERTICAL,"%s",SINGLE_VERTICAL," %2-I",SINGLE_VERTICAL,"%5-x",NULL
 
 
 ; Boot Menu menuitem strings
@@ -219,6 +215,14 @@ g_szForeignHD:			db	"Foreign Hard Disk",NULL
 		%error "g_szDriveNumSpace or g_szDriveNumBNSpace are out of position"
 	%endif
 %endif
+
+
+; Boot Menu information strings
+g_szCapacity:			db	"Capacity : %s",NULL
+g_szCapacityNum:		db	"%5-u.%u %ciB",NULL
+g_szInformation:		db	"%s",LF,CR
+						db	"Addr. ",SINGLE_VERTICAL,"Block",SINGLE_VERTICAL,"Bus",SINGLE_VERTICAL,"IRQ",SINGLE_VERTICAL,"Reset",LF,CR
+						db	"%s",SINGLE_VERTICAL,"%5-u",SINGLE_VERTICAL,"%s",SINGLE_VERTICAL," %2-I",SINGLE_VERTICAL,"%5-x",NULL
 
 %endif ; MODULE_BOOT_MENU
 

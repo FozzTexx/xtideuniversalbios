@@ -26,6 +26,7 @@
 %include "Romvars.inc"			; XTIDE Universal BIOS variables
 %include "IdeRegisters.inc"		; Needed for port and device autodetection
 %include "JRIDE_ISA.inc"		; For JR-IDE/ISA default segment
+%include "ADP50L.inc"			; For ADP50L default segment
 %include "XTCF.inc"				; For XT-CF modes
 
 %include "Version.inc"

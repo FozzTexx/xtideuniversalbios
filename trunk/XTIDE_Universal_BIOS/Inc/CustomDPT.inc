@@ -29,7 +29,7 @@ struc DPT
 	.bFlagsHigh				resb	1
 	.bIdevarsOffset			resb	1	; Offset to IDEVARS for this drive
 	.bInitError				resb	1	; Flags for AH=09h initialization errors
-	.wBasePort				resb	2	; Segment for JR-IDE/ISA
+	.wBasePort				resb	2	; Segment for JR-IDE/ISA and ADP50L
 
 	; CHS variables
 	.wLchsCylinders			resb	2	; (1...1027, yes 1027)

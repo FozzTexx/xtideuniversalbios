@@ -227,7 +227,7 @@ g_szNfoIdeBackToCfgMenu:	db	"Back to XTIDE Universal BIOS Configuration Menu.",N
 g_szNfoIdeMaster:			db	"Settings for Master Drive.",NULL
 g_szNfoIdeSlave:			db	"Settings for Slave Drive.",NULL
 g_szNfoIdeDevice:			db	"Select controller device type.",NULL
-g_szNfoIdeCmdPort:			db	"IDE Controller Command Block (base port) address or segment address for JR-IDE/ISA.",NULL
+g_szNfoIdeCmdPort:			db	"IDE Controller Command Block (base port) address or segment address for JR-IDE/ISA and SVC ADP50L.",NULL
 g_szNfoIdeCtrlPort:			db	"IDE Controller Control Block address. Usually Cmd Block + 8 for XTIDE, and Cmd Block + 200h for ATA.",NULL
 g_szNfoIdeEnIRQ:			db	"Interrupt or polling mode.",NULL
 g_szNfoIdeIRQ:				db	"IRQ channel to use.",NULL
@@ -240,7 +240,7 @@ g_szNfoIdeSerialPort:		db	"Select a COM port by custom I/O port address. Any add
 g_szHelpIdeCmdPort:			db	"IDE controller command block address is the usual address mentioned for IDE controllers."
 							db	" By default the primary IDE controller uses port 1F0h and secondary controller uses port 170h."
 							db	" XTIDE card uses port 300h by default."
-							db	" JR-IDE/ISA do not use ports but you need to set ROM space segment address for JR-IDE/ISA.",NULL
+							db	" JR-IDE/ISA and SVC ADP50L do not use ports but needs the ROM segment address set here instead.",NULL
 
 g_szHelpIdeCtrlPort:		db	"IDE controller Control Block address is normally Command Block address + 200h."
 							db	" For XTIDE card the Control Block registers are mapped right after Command Block"
@@ -281,6 +281,7 @@ g_szMultichoiceCfgDevice:	db	"16-bit ISA/VLB/PCI IDE",LF
 							db	"XT-CF v2 in DMA mode",LF
 							db	"XT-CF v2 in memory mode",LF
 							db	"JR-IDE/ISA",LF
+							db	"SVC ADP50L",LF
 							db	"Serial port virtual device",NULL
 
 g_szValueCfgDevice16b:		db	"16-bit",NULL
@@ -292,6 +293,7 @@ g_szValueCfgDevicePioXTCF:	db	"XTCF PIO",NULL
 g_szValueCfgDeviceDmaXTCF:	db	"XTCF DMA",NULL
 g_szValueCfgDeviceMemXTCF:	db	"XTCF MEM",NULL
 g_szValueCfgDeviceJrIdeIsa:	db	"JR-ISA",NULL
+g_szValueCfgDeviceADP50L:	db	"ADP50L",NULL
 g_szValueCfgDeviceSerial:	db	"Serial",NULL
 
 g_szSerialCOMChoice:	db  "COM1 - address 3F8h",LF
