@@ -77,6 +77,9 @@ ReadFromDrive:
 	; Prepare to read data to ESSI
 	mov		bx, g_rgfnPioRead
 	call	InitializePiovarsInSSBPwithSectorCountInAH
+%ifdef USE_AT
+	jc		SHORT ReturnWithTransferErrorInAH
+%endif
 
 	; Wait until drive is ready to transfer
 	call	IdeWait_IRQorDRQ					; Wait until ready to transfer
@@ -153,6 +156,9 @@ WriteToDrive:
 	; Prepare to write data from ESSI
 	mov		bx, g_rgfnPioWrite
 	call	InitializePiovarsInSSBPwithSectorCountInAH
+%ifdef USE_AT
+	jc		SHORT ReturnWithTransferErrorInAH
+%endif
 
 	; Always poll when writing first block (IRQs are generated for following blocks)
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRQ, FLG_STATUS_DRQ)
@@ -200,14 +206,20 @@ ALIGN JUMP_ALIGN
 ;		ES:SI:	Ptr to data buffer
 ;		SS:BP:	Ptr to PIOVARS
 ;	Returns:
-;		Nothing
+;		ES:SI:	Normalized pointer
+;		AH:		INT 13h Error Code (only when CF set)
+;		CF:		Set of failed to normalize pointer (segment overflow)
+;				Cleared if success
 ;	Corrupts registers:
-;		AX, BX, DX
+;		AL, BX, DX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 InitializePiovarsInSSBPwithSectorCountInAH:
 	; Store sizes and Data Port
 	mov		[bp+PIOVARS.bSectorsLeft], ah
+%ifdef USE_AT
+	xchg	dx, ax
+%endif
 	mov		ax, [di+DPT.wBasePort]
 	mov		[bp+PIOVARS.wDataPort], ax
 	eMOVZX	ax, [di+DPT_ATA.bBlockSize]
@@ -279,6 +291,7 @@ InitializePiovarsInSSBPwithSectorCountInAH:
 	mov		es, dx		; 2		2/2
 	;------------------------------------
 %endif					; 26	29/26
+	clc
 	ret
 %endif ; MODULE_8BIT_IDE_ADVANCED
 	; Fall to IdeTransfer_NormalizePointerInESSI if no MODULE_8BIT_IDE
@@ -287,15 +300,39 @@ InitializePiovarsInSSBPwithSectorCountInAH:
 ;--------------------------------------------------------------------
 ; IdeTransfer_NormalizePointerInESSI
 ;	Parameters:
+;		DH:		Number of sectors to transfer (when USE_AT defined)
 ;		ES:SI:	Ptr to be normalized
 ;	Returns:
 ;		ES:SI:	Normalized pointer (SI = 0...15)
+;		AH:		INT 13h Error Code (only when CF set)
+;		CF:		Set of failed to normalize pointer (segment overflow)
+;				Cleared if success
 ;	Corrupts registers:
 ;		AX, DX
 ;--------------------------------------------------------------------
 IdeTransfer_NormalizePointerInESSI:
-	NORMALIZE_FAR_POINTER	es, si, ax, dx
+; Normalization can cause segment overflow if it is done when not needed
+; (I don't know if any software calls with such seg:off address).
+; This does not apply to XT systems since nothing will write to main BIOS ROM.
+; On AT systems things are quite different, even in protected mode the address
+; is passed in seg:offset form and HMA is accessible in real mode.
+%ifdef USE_AT
+	xor		dl, dl
+	shl		dx, 1
+	dec		dx		; Prevents normalization when bytes + offset will be zero
+	add		dx, si
+	jc		SHORT .NormalizationRequired
 	ret
+.NormalizationRequired:
+%endif ; USE_AT
+
+	NORMALIZE_FAR_POINTER	es, si, ax, dx
+%ifdef USE_AT		; CF is always clear for XT builds
+	mov		ah, 0	; Clear AH and preserve CF
+	rcl		ah, 1	; RET_HD_INVALID
+%endif
+	ret
+
 
 
 ; Lookup tables to get transfer function based on bus type

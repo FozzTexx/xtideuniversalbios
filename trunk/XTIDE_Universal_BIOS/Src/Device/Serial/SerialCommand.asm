@@ -61,7 +61,16 @@ SerialCommand_OutputWithParameters:
 
 .readOrWrite:
 		mov		[bp+IDEPACK.bFeatures],ah		; store protocol command
+%ifdef USE_AT
+		mov		dh, [bp+IDEPACK.bSectorCount]
+%endif
 		call	IdeTransfer_NormalizePointerInESSI
+%ifdef USE_AT
+		jnc		SHORT .PointerNormalizationWasSuccessfull
+		xor		cx, cx			; Nothing transferred
+		jmp		SerialCommand_ReturnError
+.PointerNormalizationWasSuccessfull:
+%endif
 
 		mov		dx, [di+DPT_SERIAL.wSerialPortAndBaud]
 
