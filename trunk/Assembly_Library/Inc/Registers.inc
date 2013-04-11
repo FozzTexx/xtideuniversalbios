@@ -140,16 +140,18 @@ FLG_FLAGS_OF		EQU (1<<11)
 ;		%4:			Scratch register
 ;	Returns:
 ;		%1:%2:		Normalized far pointer
+;		CF:			Set if overflow in (segment) normalization
+;					Clear if normalized successfully
 ;	Corrupts registers:
 ;		%3, %4
 ;--------------------------------------------------------------------
 %macro NORMALIZE_FAR_POINTER 4
-	mov		%4, %2				; Copy offset to scratch reg
-	and		%2, BYTE 0Fh		; Clear offset bits 15...4
-	eSHR_IM	%4, 4				; Divide offset by 16
-	mov		%3, %1				; Copy segment to scratch reg
-	add		%3, %4				; Add shifted offset to segment
-	mov		%1, %3				; Set normalized segment
+	mov		%4, %2			; Copy offset to scratch reg
+	and		%2, BYTE 0Fh	; Clear offset bits 15...4
+	eSHR_IM	%4, 4			; Divide offset by 16
+	mov		%3, %1			; Copy segment to scratch reg
+	add		%3, %4			; Add shifted offset to segment (sets or clears CF)
+	mov		%1, %3			; Set normalized segment
 %endmacro
 
 
