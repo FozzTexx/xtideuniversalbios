@@ -52,8 +52,8 @@ JrIdeTransfer_StartWithCommandInAL:
 	xchg	cx, ax			; IDE command to CL
 	xor		ax, ax
 	mov		[bp+MEMPIOVARS.bSectorsDone], al
-	mov		al, [bp+IDEPACK.bSectorCount]
-	mov		[bp+MEMPIOVARS.bSectorsLeft], al
+	mov		dh, [bp+IDEPACK.bSectorCount]
+	mov		[bp+MEMPIOVARS.bSectorsLeft], dh
 	mov		al, [di+DPT_ATA.bBlockSize]
 	mov		[bp+MEMPIOVARS.wSectorsInBlock], ax
 	mov		[bp+MEMPIOVARS.fpDPT], di
@@ -61,6 +61,9 @@ JrIdeTransfer_StartWithCommandInAL:
 
 	; Normalize pointer
 	call	IdeTransfer_NormalizePointerInESSI
+%ifdef USE_AT
+	jc		SHORT ReturnWithMemoryIOtransferErrorInAH
+%endif
 
 	; Get far pointer to Sector Access Window
 	mov		dx, [di+DPT.wBasePort]
