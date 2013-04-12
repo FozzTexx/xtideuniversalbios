@@ -24,13 +24,13 @@
 RET_HD_SUCCESS			EQU		0h		; Operation successful, no error occurred
 RET_HD_INVALID			EQU		1h		; Invalid value passed or unsupported func
 RET_HD_ADDRMARK			EQU		2h		; Missing address mark
-RET_HD_WRITEPROT		EQU		3h		; Removable media is write protected
+RET_HD_WRITEPROT		EQU		3h		; Removable media is write protected (floppy)
 RET_HD_NOT_FOUND		EQU		4h		; Requested sector not found
-RET_HD_RESETFAIL		EQU		5h		; Reset failed
-RET_HD_CHANGED			EQU		6h		; Media changed
-RET_HD_PARAMACT			EQU		7h		; Drive parameter activity failed
-RET_HD_OVERRUN			EQU		8h		; DMA overrun
-RET_HD_BOUNDARY			EQU		9h		; Data boundary error
+RET_HD_RESETFAIL		EQU		5h		; Reset failed (hard disk)
+RET_HD_CHANGED			EQU		6h		; Floppy disk removed/Disk changeline (floppy)
+RET_HD_PARAMACT			EQU		7h		; Drive parameter activity failed (Bad parameter table (hard disk)/Initialization failed)
+RET_HD_OVERRUN			EQU		8h		; DMA overrun (floppy)
+RET_HD_BOUNDARY			EQU		9h		; Data boundary error (DMA crossed 64K boundary)
 RET_HD_BADSECTOR		EQU		0Ah		; Bad sector detected
 RET_HD_BADTRACK			EQU		0Bh		; Bad track detected
 RET_HD_UNCORRECC		EQU		10h		; Uncorrectable ECC error
