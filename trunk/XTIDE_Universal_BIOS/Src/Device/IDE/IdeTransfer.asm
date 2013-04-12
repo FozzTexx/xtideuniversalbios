@@ -328,8 +328,10 @@ IdeTransfer_NormalizePointerInESSI:
 
 	NORMALIZE_FAR_POINTER	es, si, ax, dx
 %ifdef USE_AT		; CF is always clear for XT builds
-	mov		ah, 0	; Clear AH and preserve CF
-	rcl		ah, 1	; RET_HD_INVALID
+	jc		SHORT .SegmentOverflow
+	ret
+.SegmentOverflow:
+	mov		ah, RET_HD_INVALID
 %endif
 	ret
 
