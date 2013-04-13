@@ -139,10 +139,9 @@ IdeCommand_OutputWithParameters:
 	jnz		SHORT .DoNotSetInterruptInServiceFlag
 
 	; Clear Task Flag and set Interrupt In-Service Flag
-	or		BYTE [di+DPT.bFlagsHigh], FLGH_DPT_INTERRUPT_IN_SERVICE
 	push	ds
-	LOAD_BDA_SEGMENT_TO	ds, dx, !	; Also zero DX
-	mov		[BDA.bHDTaskFlg], dl
+	LOAD_BDA_SEGMENT_TO	ds, dx
+	mov		BYTE [BDA.bHDTaskFlg], 1	; Will be adjusted to zero later
 	pop		ds
 .DoNotSetInterruptInServiceFlag:
 %endif

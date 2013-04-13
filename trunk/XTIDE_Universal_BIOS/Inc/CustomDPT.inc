@@ -66,9 +66,6 @@ endstruc
 %ifdef MODULE_SERIAL
 	FLGH_DPT_SERIAL_DEVICE				EQU	(1<<2)	; Bit 2, Serial Port Device
 %endif
-%ifdef MODULE_IRQ
-	FLGH_DPT_INTERRUPT_IN_SERVICE		EQU	(1<<3)	; Bit 3, Set when waiting for IRQ
-%endif
 %ifdef MODULE_FEATURE_SETS
 	FLGH_DPT_POWER_MANAGEMENT_SUPPORTED	EQU (1<<5)	; Bit 5, Drive supports power management
 %endif

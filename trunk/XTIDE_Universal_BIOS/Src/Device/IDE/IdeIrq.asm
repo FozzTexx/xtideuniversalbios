@@ -32,17 +32,16 @@ SECTION .text
 ALIGN JUMP_ALIGN
 IdeIrq_WaitForIRQ:
 	push	ds
-
 	LOAD_BDA_SEGMENT_TO	ds, ax, !		; Zero AX
 	mov		ah, OS_HOOK_DEVICE_BUSY		; Hard disk busy (AX=9000h)
 	cli									; Disable interrupts
-	cmp		al, [BDA.bHDTaskFlg]		; Task flag already set?
-	jc		SHORT .ReturnFromWaitNotify	;  If so, skip OS notification
+	dec		BYTE [BDA.bHDTaskFlg]		; Clear to zero if still waiting for IRQ
+	pop		ds
+	jnz		SHORT .ReturnFromWaitNotify	; IRQ already! (CompactFlash was faster than CPU)	
 	int		BIOS_SYSTEM_INTERRUPT_15h	; OS hook, device busy
 
 .ReturnFromWaitNotify:
 	sti									; Enable interrupts
-	pop		ds
 	ret
 
 
@@ -60,66 +59,35 @@ IdeIrq_WaitForIRQ:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 IdeIrq_InterruptServiceRoutineForIrqs2to7:
-	push	di
 	push	ax
-	call	AcknowledgeIdeInterruptAndSetTaskFlag
-
 	mov		al, COMMAND_END_OF_INTERRUPT
-	jmp		SHORT AcknowledgeMasterInterruptController
 
+%ifdef USE_AT
+	jmp		SHORT AcknowledgeMasterInterruptController
 
 ALIGN JUMP_ALIGN
 IdeIrq_InterruptServiceRoutineForIrqs8to15:
-	push	di
 	push	ax
-	call	AcknowledgeIdeInterruptAndSetTaskFlag
-
 	mov		al, COMMAND_END_OF_INTERRUPT
 	out		SLAVE_8259_COMMAND_out, al	; Acknowledge Slave 8259
+	JMP_DELAY
 AcknowledgeMasterInterruptController:
+%endif ; USE_AT
+
 	out		MASTER_8259_COMMAND_out, al	; Acknowledge Master 8259
 
+	; Set Task Flag
+	push	ds
+	LOAD_BDA_SEGMENT_TO	ds, ax, !		; Clear AL and CF for INT 15h
+	dec		BYTE [BDA.bHDTaskFlg]		; Set task flag (or clear if IRQ occurred before call to INT 15h AH=90h)
+	sti									; Enable interrupts
+	pop		ds
+
 	; Issue Int 15h, function AX=9100h (Interrupt ready)
-	clc									; Must be called with CF clear
-	mov		ax, OS_HOOK_DEVICE_POST<<8	; Interrupt ready, device 0 (HD)
+	jz		SHORT .DoNotPostSinceIrqOccurredBeforeWait
+	mov		ah, OS_HOOK_DEVICE_POST		; Interrupt ready, device 0 (HD)
 	int		BIOS_SYSTEM_INTERRUPT_15h
+.DoNotPostSinceIrqOccurredBeforeWait:
 
 	pop		ax
-	pop		di
 	iret
-
-
-;--------------------------------------------------------------------
-; AcknowledgeIdeInterruptAndSetTaskFlag
-;	Parameters:
-;		Nothing
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-AcknowledgeIdeInterruptAndSetTaskFlag:
-	push	ds
-	push	si
-	push	dx
-	push	bx
-
-	; Reading Status Register acknowledges IDE interrupt
-	call	RamVars_GetSegmentToDS
-	mov		bl, FLGH_DPT_INTERRUPT_IN_SERVICE
-	call	FindDPT_ToDSDIforFlagsHighInBL
-	INPUT_TO_AL_FROM_IDE_REGISTER STATUS_REGISTER_in
-
-	; Clear Interrupt In-Service Flag from DPT
-	and		BYTE [di+DPT.bFlagsHigh], ~FLGH_DPT_INTERRUPT_IN_SERVICE
-
-	; Set Task Flag
-	LOAD_BDA_SEGMENT_TO	ds, ax
-	mov		BYTE [BDA.bHDTaskFlg], 0FFh		; Set task flag
-
-	pop		bx
-	pop		dx
-	pop		si
-	pop		ds
-	ret

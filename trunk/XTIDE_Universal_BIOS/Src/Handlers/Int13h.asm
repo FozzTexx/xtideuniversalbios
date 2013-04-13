@@ -391,7 +391,7 @@ g_rgw13hFuncJump:
 	dw	AH11h_HandlerForRecalibrate					; 11h, Recalibrate (All)
 	dw	UnsupportedFunction							; 12h, Controller RAM Diagnostic (XT)
 	dw	UnsupportedFunction							; 13h, Drive Diagnostic (XT)
-	dw	UnsupportedFunction							; 14h, Controller Internal Diagnostic (All)
+	dw	AH10h_HandlerForCheckDriveReady				; 14h, Controller Internal Diagnostic (All)
 	dw	AH15h_HandlerForReadDiskDriveSize			; 15h, Read Disk Drive Size (AT+)
 	dw	UnsupportedFunction							; 16h,
 	dw	UnsupportedFunction							; 17h,

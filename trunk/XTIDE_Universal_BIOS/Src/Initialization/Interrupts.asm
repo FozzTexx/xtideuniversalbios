@@ -118,6 +118,7 @@ Interrupts_InitializeInterruptVectors:
 .InstallLowOrHighIrqHandler:
 	test	al, al
 	jz		SHORT .Return	; IRQ not used
+%ifdef USE_AT
 	cmp		al, 8
 	jb		SHORT .InstallLowIrqHandler
 	; Fall to .InstallHighIrqHandler
@@ -136,6 +137,7 @@ Interrupts_InitializeInterruptVectors:
 	add		al, BYTE HARDWARE_IRQ_8_INTERRUPT_70h - 8	; Interrupt vector number
 	mov		si, IdeIrq_InterruptServiceRoutineForIrqs8to15
 	jmp		SHORT Interrupts_InstallHandlerToVectorInALFromCSSI
+%endif ; USE_AT
 
 ;--------------------------------------------------------------------
 ; .InstallLowIrqHandler
