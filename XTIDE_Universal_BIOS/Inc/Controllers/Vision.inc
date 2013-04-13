@@ -26,8 +26,8 @@
 
 ; Possible base addresses for QD6500 and QD6580
 QD65XX_BASE_PORT					EQU		30h
-QD65XX_ALTERNATIVE_BASE_PORT		EQU		0B0h
-
+QD65XX_ALTERNATIVE_BASE_PORT		EQU		0B0h	; This is the default setting but Intel PIIX4 South Bridge
+													; (and likely other PCI chisets as well) mirror PIC registers here
 
 ; Vision Register offsets from QD chip base port
 QD6500_IDE_TIMING_REGISTER				EQU	0
