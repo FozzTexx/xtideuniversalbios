@@ -281,4 +281,7 @@ iend
 	%include "AH47h_ExtendedSeek.asm"
 	%include "AH48h_GetExtendedDriveParameters.asm"
 	%include "AH41h_CheckIfExtensionsPresent.asm"
+%ifdef CREATE_COMPATIBLE_DPT
+	%include "CompatibleDPT.asm"
+%endif
 %endif

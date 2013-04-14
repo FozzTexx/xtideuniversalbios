@@ -83,11 +83,11 @@ AH48h_HandlerForGetExtendedDriveParameters:
 	dec		bx		; Set to FFFFh to assume we do not return DPTE
 
 	; Create DPTE (hardware information for device drivers)
-%ifdef RETURN_DPTE_ON_AH48H
+%ifdef CREATE_COMPATIBLE_DPT
 	call	AH41h_GetSupportBitsToCX
 	test	cl, ENHANCED_DISK_DRIVE_SUPPORT
 	jz		SHORT .DoNotCreateDPTE
-	call	CreateDeviceParameterTableExtensionToESBXfromDPTinDSSI
+	call	CompatibleDPT_CreateDeviceParameterTableExtensionToESBXfromDPTinDSSI
 .DoNotCreateDPTE:
 %endif
 
@@ -109,7 +109,7 @@ AH48h_HandlerForGetExtendedDriveParameters:
 
 	; Store DPTE for standard controllers only,
 	; FFFF:FFFF for non standard controllers
-%ifdef RETURN_DPTE_ON_AH48H
+%ifdef CREATE_COMPATIBLE_DPT
 	mov		[di+EDRIVE_INFO.fpDPTE], bx
 	mov		[di+EDRIVE_INFO.fpDPTE+2], es
 	inc		bx
@@ -160,108 +160,3 @@ AH48h_HandlerForGetExtendedDriveParameters:
 	xor		ax, ax
 .ReturnWithError:
 	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
-
-
-%ifdef RETURN_DPTE_ON_AH48H
-;--------------------------------------------------------------------
-; CreateDeviceParameterTableExtensionToESBXfromDPTinDSSI
-;	Parameters:
-;		DS:SI:	Ptr to DPT (in RAMVARS segment)
-;		ES:		RAMVARS segment
-;	Returns:
-;		ES:BX:	Ptr to Device Parameter Table Extension (DPTE)
-;	Corrupts registers:
-;		AX, CX, DX, DI
-;--------------------------------------------------------------------
-CreateDeviceParameterTableExtensionToESBXfromDPTinDSSI:
-	; Point ES:DI to DPTE buffer (valid until next AH=48h call)
-	mov		di, [cs:ROMVARS.bStealSize]
-	eSHL_IM	di, 10							; DI = RAMVARS size in bytes
-	sub		di, BYTE DPTE_size				; DI = Offset to DPTE
-	xor		dx, dx							; Clear for checksum
-
-	; Set 32-bit flag for 32-bit controllers
-	mov		cx, FLG_LBA_TRANSLATION_ENABLED	; DPTE.wFlags
-	cmp		BYTE [si+DPT_ATA.bDevice], DEVICE_32BIT_ATA
-	eCMOVE	cl, FLG_LBA_TRANSLATION_ENABLED | FLG_32BIT_XFER_MODE
-
-	; DPTE.wBasePort
-	mov		ax, [si+DPT.wBasePort]
-	call	StoswThenAddALandAHtoDL			; Bytes 0 and 1
-
-	; DPTE.wControlBlockPort
-	eMOVZX	bx, BYTE [si+DPT.bIdevarsOffset]
-	mov		ax, [cs:bx+IDEVARS.wControlBlockPort]
-	call	StoswThenAddALandAHtoDL			; Bytes 2 and 3
-
-	; DPTE.bDrvnhead and DPTE.bBiosVendor
-	xchg	di, si
-	call	AccessDPT_GetDriveSelectByteForEbiosToAL
-	xchg	si, di
-	call	StoswThenAddALandAHtoDL			; Bytes 4 and 5
-
-	; DPTE.bIRQ and DPTE.bBlockSize
-	mov		al, [cs:bx+IDEVARS.bIRQ]		; No way to define that we might not use IRQ
-	mov		ah, [si+DPT_ATA.bBlockSize]
-	cmp		ah, 1
-	jbe		SHORT .DoNotSetBlockModeFlag
-	or		cl, FLG_BLOCK_MODE_ENABLED
-.DoNotSetBlockModeFlag:
-	call	StoswThenAddALandAHtoDL			; Bytes 6 and 7
-
-	; DPTE.bDmaChannelAndType and DPTE.bPioMode
-	xor		ax, ax
-%ifdef MODULE_ADVANCED_ATA
-	or		ah, [si+DPT_ADVANCED_ATA.bPioMode]
-	jz		SHORT .NoDotSetFastPioFlag
-	cmp		WORD [si+DPT_ADVANCED_ATA.wControllerID], BYTE 0
-	je		SHORT .NoDotSetFastPioFlag
-	inc		cx		; FLG_FAST_PIO_ENABLED
-.NoDotSetFastPioFlag:
-%endif
-	call	StoswThenAddALandAHtoDL			; Bytes 8 and 9
-
-	; Set CHS translation flags and store DPTE.wFlags
-	mov		al, [si+DPT.bFlagsLow]
-	and		al, MASKL_DPT_TRANSLATEMODE
-	jz		SHORT .NoChsTranslationOrBitShiftTranslationSet
-	or		cl, FLG_CHS_TRANSLATION_ENABLED
-	test	al, FLGL_DPT_ASSISTED_LBA
-	jz		SHORT .NoChsTranslationOrBitShiftTranslationSet
-	or		cx, LBA_ASSISTED_TRANSLATION << TRANSLATION_TYPE_FIELD_POSITION
-.NoChsTranslationOrBitShiftTranslationSet:
-	xchg	ax, cx
-	call	StoswThenAddALandAHtoDL			; Bytes 10 and 11
-
-	; DPTE.wReserved (must be zero)
-	xor		ax, ax
-	call	StoswThenAddALandAHtoDL			; Bytes 12 and 13
-
-	; DPTE.bRevision and DPTE.bChecksum
-	mov		ax, DPTE_REVISION | (DPTE_REVISION<<8)
-	add		ah, dl
-	neg		ah
-	stosw
-	lea		bx, [di-DPTE_size]
-	ret
-
-
-;--------------------------------------------------------------------
-; StoswThenAddALandAHtoDL
-;	Parameters:
-;		AX:		WORD to store
-;		ES:DI:	Ptr to where to store AX
-;		DL:		Checksum byte
-;	Returns:
-;		DL:		Checksum byte
-;		DI:		Incremented by 2
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-StoswThenAddALandAHtoDL:
-	stosw
-	add		dl, al
-	add		dl, ah
-	ret
-
-%endif ; RETURN_DPTE_ON_AH48H

@@ -51,6 +51,9 @@
 
 %ifdef MODULE_EBIOS
 	%include "EBIOS.inc"			; Equates for EBIOS functions
+	%ifdef CREATE_COMPATIBLE_DPT
+		%include "CompatibleDPT.inc"
+	%endif
 %endif
 
 %ifdef MODULE_HOTKEYS

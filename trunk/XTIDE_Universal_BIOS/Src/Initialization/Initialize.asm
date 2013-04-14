@@ -79,7 +79,41 @@ Initialize_AndDetectDrives:
 	call	BootVars_Initialize
 	call	DetectDrives_FromAllIDEControllers
 	call	Interrupts_InitializeInterruptVectors
+	; Fall to .StoreDptPointersToIntVectors
+
+
+%ifdef CREATE_COMPATIBLE_DPT
+;--------------------------------------------------------------------
+; .StoreDptPointersToIntVectors
+;	Parameters:
+;		DS:		RAMVARS segment
+;		ES:		BDA and interrupt vector segment (zero)
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, CX, DX, SI, DI
+;--------------------------------------------------------------------
+.StoreDptPointersToIntVectors:
+	mov		dl, 80h
+	call	FindDPT_ForDriveNumberInDL	; DPT to DS:DI
+	jc		SHORT .FindForDrive81h		; Store nothing if not our drive
+
+	call	CompatibleDPT_CreateToAXSIforDriveDL
+	mov		[es:HD0_DPT_POINTER_41h*4], si
+	mov		[es:HD0_DPT_POINTER_41h*4+2], ax
+
+.FindForDrive81h:
+	mov		dl, 81h
+	call	FindDPT_ForDriveNumberInDL
+	jc		SHORT .CompatibleDPTsCreated
+
+	call	CompatibleDPT_CreateToAXSIforDriveDL
+	mov		[es:HD1_DPT_POINTER_46h*4], si
+	mov		[es:HD1_DPT_POINTER_46h*4+2], ax
+.CompatibleDPTsCreated:
 	; Fall to .ResetDetectedDrives
+%endif ; CREATE_COMPATIBLE_DPT
+
 
 ;--------------------------------------------------------------------
 ; .ResetDetectedDrives
