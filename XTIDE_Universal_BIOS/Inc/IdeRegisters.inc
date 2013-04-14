@@ -75,7 +75,7 @@ FLG_STATUS_ERR			EQU		(1<<0)	; Error
 ; Bit definitions for IDE Device Control Register
 ; Bit 0 must be zero, unlisted bits are reserved.
 ;FLG_DEVCONTROL_HOB		EQU		(1<<7)	; High Order Byte (ATA6+)
-;FLG_DEVCONTROL_O8H		EQU		(1<<3)	; Drive has more than 8 heads (pre-ATA only, 1 on ATA1, reserved on ATA2+)
+FLG_DEVCONTROL_O8H		EQU		(1<<3)	; Drive has more than 8 heads (pre-ATA only, 1 on ATA1, reserved on ATA2+)
 FLG_DEVCONTROL_SRST		EQU		(1<<2)	; Software Reset
 FLG_DEVCONTROL_nIEN		EQU		(1<<1)	; Negated Interrupt Enable (IRQ disabled when set)
 

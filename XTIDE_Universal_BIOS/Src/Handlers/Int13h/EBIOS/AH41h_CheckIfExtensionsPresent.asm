@@ -43,7 +43,7 @@ AH41h_HandlerForCheckIfExtensionsPresent:
 	mov		BYTE [bp+IDEPACK.intpack+INTPACK.ah], EBIOS_VERSION
 	mov		WORD [bp+IDEPACK.intpack+INTPACK.bx], 0AA55h
 
-%ifdef RETURN_DPTE_ON_AH48H
+%ifdef CREATE_COMPATIBLE_DPT
 	call	AH41h_GetSupportBitsToCX
 	mov		[bp+IDEPACK.intpack+INTPACK.cx], cx
 %else
@@ -56,7 +56,7 @@ AH41h_HandlerForCheckIfExtensionsPresent:
 	jmp		Int13h_DirectCallToAnotherBios
 
 
-%ifdef RETURN_DPTE_ON_AH48H
+%ifdef CREATE_COMPATIBLE_DPT
 ;--------------------------------------------------------------------
 ; AH41h_GetSupportBitsToCX
 ;	Parameters:
@@ -86,4 +86,4 @@ AH41h_GetSupportBitsToCX:
 .DoNotSetEDDflag:
 	ret
 
-%endif ; RETURN_DPTE_ON_AH48H
+%endif ; CREATE_COMPATIBLE_DPT
