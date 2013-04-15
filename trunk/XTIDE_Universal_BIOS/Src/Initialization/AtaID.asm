@@ -94,6 +94,76 @@ AtaID_VerifyFromESSI:
 	ret
 
 
+;--------------------------------------------------------------------
+; Writes user defined limits from ROMVARS to ATA ID read from the drive.
+; Modifying the ATA ID reduces code and possibilites for bugs since
+; only little furher checks are needed elsewhere.
+;
+; AtaID_ModifyESSIforUserDefinedLimitsAndReturnTranslateModeInDX
+;	Parameters:
+;		DS:DI:	Ptr to incomplete Disk Parameter Table
+;		ES:SI:	Ptr to 512-byte ATA information read from the drive
+;		CS:BP:	Ptr to IDEVARS for the controller
+;	Returns:
+;		DX:		User defined P-CHS to L-CHS translate mode
+;	Corrupts registers:
+;		AX, BX, CX
+;--------------------------------------------------------------------
+AtaID_ModifyESSIforUserDefinedLimitsAndReturnTranslateModeInDX:
+	call	AccessDPT_GetPointerToDRVPARAMStoCSBX
+	push	ds
+	push	es
+	pop		ds		; DS:SI now points to ATA information
+
+	; Load User Defined CHS or LBA to CX:AX
+	mov		dx, [cs:bx+DRVPARAMS.wFlags]
+	mov		ax, [cs:bx+DRVPARAMS.wCylinders]		; Or .dwMaximumLBA
+	mov		cx, [cs:bx+DRVPARAMS.wHeadsAndSectors]	; Or .dwMaximumLBA+2
+
+	; * User defined CHS *
+	test	dl, FLG_DRVPARAMS_USERCHS
+	jz		SHORT .NoUserDefinedCHS
+
+	; Apply new CHS and disable LBA (we also want to set CHS addressing)
+	mov		[si+ATA1.wCylCnt], ax
+	eMOVZX	ax, cl
+	mov		[si+ATA1.wHeadCnt], ax
+	mov		al, ch
+	mov		[si+ATA1.wSPT], ax
+	and		BYTE [si+ATA1.wCaps+1], ~(A1_wCaps_LBA>>8)
+	and		BYTE [si+ATA6.wSetSup83+1], ~(A6_wSetSup83_LBA48>>8)
+.NoUserDefinedCHS:
+
+	; * User defined LBA *
+	test	dl, FLG_DRVPARAMS_USERLBA
+	jz		SHORT .NoUserDefinedLBA
+
+	; Apply new LBA and disable LBA48
+	cmp		cx, [si+ATA1.dwLBACnt+2]
+	ja		SHORT .NoUserDefinedLBA		; Do not set larger than drive
+	jb		SHORT .StoreNewLBA
+	cmp		ax, [si+ATA1.dwLBACnt]
+	ja		SHORT .NoUserDefinedLBA		; Allow same size to disable LBA48
+.StoreNewLBA:
+	mov		[si+ATA1.dwLBACnt], ax
+	mov		[si+ATA1.dwLBACnt+2], cx
+	and		BYTE [si+ATA6.wSetSup83+1], ~(A6_wSetSup83_LBA48>>8)
+.NoUserDefinedLBA:
+
+	; * Disable Block Mode transfers *
+	test	dl, FLG_DRVPARAMS_BLOCKMODE
+	jnz		SHORT .NoNeedToDisableBlockMode
+	mov		BYTE [si+ATA1.bBlckSize], 1	; sectors
+.NoNeedToDisableBlockMode:
+
+	; * Load P-CHS to L-CHS translate mode to DX *
+	and		dx, BYTE MASK_DRVPARAMS_TRANSLATEMODE
+	eSHR_IM	dx, TRANSLATEMODE_FIELD_POSITION
+
+	pop		ds
+	ret
+
+
 %ifdef MODULE_ADVANCED_ATA
 ;--------------------------------------------------------------------
 ; AtaID_GetMaxPioModeToAXandMinCycleTimeToCX

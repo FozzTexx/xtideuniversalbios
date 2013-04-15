@@ -40,7 +40,7 @@ Vision_DetectAndReturnIDinAXandPortInDXifControllerPresent:
 	mov		dx, QD65XX_BASE_PORT
 	in		al, QD65XX_BASE_PORT + QD65XX_CONFIG_REGISTER_in
 
-%if 0
+%ifdef DANGEROUS_DETECTION
 	; Checking alternative base port is currently commented away
 	; since Intel PIIX4 south bridge mirrors Interrupt Controller registers
 	; from Axh to Bxh.
@@ -50,7 +50,7 @@ Vision_DetectAndReturnIDinAXandPortInDXifControllerPresent:
 	; Check QD65xx alternative base port
 	or		dl, QD65XX_ALTERNATIVE_BASE_PORT
 	in		al, QD65XX_ALTERNATIVE_BASE_PORT + QD65XX_CONFIG_REGISTER_in
-%endif ; 0
+%endif ; DANGEROUS_DETECTION
 	; Fall to IsConfigRegisterWithIDinAL
 
 ;--------------------------------------------------------------------
@@ -64,7 +64,7 @@ Vision_DetectAndReturnIDinAXandPortInDXifControllerPresent:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-;IsConfigRegisterWithIDinAL:
+IsConfigRegisterWithIDinAL:
 	mov		ah, al
 	and		al, MASK_QDCONFIG_CONTROLLER_ID
 	cmp		al, ID_QD6500 << 4

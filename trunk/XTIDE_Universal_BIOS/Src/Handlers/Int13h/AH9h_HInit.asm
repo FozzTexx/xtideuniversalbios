@@ -98,7 +98,7 @@ AH9h_InitializeDriveForUse:
 
 ;;;	SelectDrive
 	; Try to select drive and wait until ready
-	call	AccessDPT_GetDriveSelectByteForOldInt13hToAL
+	call	AccessDPT_GetDriveSelectByteToAL
 	mov		[bp+IDEPACK.bDrvAndHead], al
 	call	Device_SelectDrive
 	STORE_ERROR_FLAG_TO_DPT		FLG_INITERROR_FAILED_TO_SELECT_DRIVE
@@ -129,19 +129,11 @@ AH9h_InitializeDriveForUse:
 
 
 ;;;	InitializeDeviceParameters
-	; Initialize CHS parameters if LBA is not used and
-	; user has specified P-CHS parameters
-	test	BYTE [di+DPT.bFlagsLow], FLGL_DPT_ASSISTED_LBA
-	jnz		SHORT .SkipInitializeDeviceParameters		; No need to initialize CHS parameters if LBA mode enabled
-	call	AccessDPT_GetPointerToDRVPARAMStoCSBX
-	test	BYTE [cs:bx+DRVPARAMS.wFlags], FLG_DRVPARAMS_USERCHS    ; User specified P-CHS?
-	jz		SHORT .SkipInitializeDeviceParameters
-
 	; Initialize Logical Sectors per Track and Max Head number
-	mov		ax, [cs:bx+DRVPARAMS.wHeadsAndSectors]
+	mov		ax, [di+DPT.wPchsHeadsAndSectors]
 	dec		ax							; Max Head number
-	xchg	al, ah						; Heads now in AH
-	mov		dx, ax						; Sectors per Track now in DL
+	xchg	ah, al
+	mov		dl, al						; Sectors per track
 	mov		al, COMMAND_INITIALIZE_DEVICE_PARAMETERS
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_BSY, FLG_STATUS_BSY)
 	call	Idepack_StoreNonExtParametersAndIssueCommandFromAL

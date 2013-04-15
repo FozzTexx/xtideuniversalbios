@@ -94,6 +94,11 @@ Initialize_AndDetectDrives:
 ;		AX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 .StoreDptPointersToIntVectors:
+%ifndef USE_AT
+	test	BYTE [cs:ROMVARS.wFlags], FLG_ROMVARS_FULLMODE
+	jz		SHORT .CompatibleDPTsCreated	; Only Full operating mode has extra RAM to spare
+%endif
+
 	mov		dl, 80h
 	call	FindDPT_ForDriveNumberInDL	; DPT to DS:DI
 	jc		SHORT .FindForDrive81h		; Store nothing if not our drive

@@ -51,15 +51,12 @@ SECTION .text
 ;    AH=48h P-CHS: 11873,  16, 63
 ;    AH=48h Total Sector Count: 11873* 16*63 = 11,967,984
 ;
-; Notice how AH=48h returns lesser total sector count than AH=8h! The only
+; Notice how AH=48h returns lesser total sector count than AH=08h! The only
 ; way I could think of to get 11873 cylinders is to divide AH=08h sector
 ; count with P-CHS heads and sectors: (745*255*63) / (16*63) = 11873
 ;
-; I have no idea what is the reasoning behind it but at least there is one
-; BIOS that does just that.
-;
-; I decided that we multiply P-CHS values and do not waste space like the
-; Award BIOS does.
+; The only reason I can think of is that the Award BIOS has a bug and
+; uses L-CHS when it should use P-CHS values in the calculation.
 ;
 ;
 ; AH48h_GetExtendedDriveParameters
@@ -138,11 +135,11 @@ AH48h_HandlerForGetExtendedDriveParameters:
 
 	; Store P-CHS. Based on phoenix specification this is returned only if
 	; total sector count is 15,482,880 or less.
-	sub		ax, 4001h
-	sbb		dx, 0ECh
+	sub		ax, MAX_SECTOR_COUNT_TO_RETURN_PCHS & 0FFFFh
+	sbb		dx, MAX_SECTOR_COUNT_TO_RETURN_PCHS >> 16
 	sbb		bx, cx		; Zero
-	jnc		SHORT .ReturnWithSuccess	; More than EC4000h
-	or		WORD [di+EDRIVE_INFO.wFlags], FLG_CHS_INFORMATION_IS_VALID
+	ja		SHORT .ReturnWithSuccess
+	or		BYTE [di+EDRIVE_INFO.wFlags], FLG_CHS_INFORMATION_IS_VALID
 
 	eMOVZX	dx, BYTE [es:si+DPT.bPchsHeads]
 	mov		[di+EDRIVE_INFO.dwHeads], dx

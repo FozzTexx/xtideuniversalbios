@@ -65,7 +65,6 @@ AtaGeometry_GetLbaSectorCountToBXDXAXfromAtaInfoInESSI:
 
 ;--------------------------------------------------------------------
 ; AtaGeometry_GetLCHStoAXBLBHfromAtaInfoInESSIandTranslateModeInDX
-; AtaGeometry_GetLCHStoAXBLBHfromPCHSinAXBLBHandTranslateModeInDX
 ;	Parameters:
 ;		DX:		Wanted translate mode or TRANSLATEMODE_AUTO to autodetect
 ;		ES:SI:	Ptr to 512-byte ATA information read from the drive
@@ -80,9 +79,7 @@ AtaGeometry_GetLbaSectorCountToBXDXAXfromAtaInfoInESSI:
 ;--------------------------------------------------------------------
 AtaGeometry_GetLCHStoAXBLBHfromAtaInfoInESSIandTranslateModeInDX:
 	call	AtaGeometry_GetPCHStoAXBLBHfromAtaInfoInESSI
-	; Fall to AtaGeometry_GetLCHStoAXBLBHfromPCHSinAXBLBHandTranslateModeInDX
 
-AtaGeometry_GetLCHStoAXBLBHfromPCHSinAXBLBHandTranslateModeInDX:
 	; Check if user defined translate mode
 	dec		dx						; Set ZF if TRANSLATEMODE_LARGE, SF if TRANSLATEMODE_NORMAL
 	jns		SHORT .CheckIfLargeTranslationWanted

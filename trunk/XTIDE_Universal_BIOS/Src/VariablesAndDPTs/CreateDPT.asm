@@ -37,7 +37,7 @@ SECTION .text
 ;		CF:		Cleared if DPT created successfully
 ;				Set if any error
 ;	Corrupts registers:
-;		AX, BX, CX, DH
+;		AX, BX, CX, DX
 ;--------------------------------------------------------------------
 CreateDPT_FromAtaInformation:
 	call	FindDPT_ForNewDriveToDSDI
@@ -95,47 +95,61 @@ CreateDPT_FromAtaInformation:
 ;		AX, BX, CX, DX
 ;--------------------------------------------------------------------
 .StoreCHSparametersAndAddressingMode:
-	; Check if CHS defined in ROMVARS
-	call	GetUserDefinedCapacityToBXAXandFlagsToCXandModeToDXfromROMVARS
-	test	cl, FLG_DRVPARAMS_USERCHS
-	jz		SHORT .AutodetectPCHSvalues
+	; Apply any user limited values to ATA ID
+	call	AtaID_ModifyESSIforUserDefinedLimitsAndReturnTranslateModeInDX
 
 	; Translate P-CHS to L-CHS
-	call	AtaGeometry_GetLCHStoAXBLBHfromPCHSinAXBLBHandTranslateModeInDX
-	jmp		SHORT .StoreLCHStoDPT
-.AutodetectPCHSvalues:
 	call	AtaGeometry_GetLCHStoAXBLBHfromAtaInfoInESSIandTranslateModeInDX
-
-.StoreLCHStoDPT:
-	eSHL_IM	dl, TRANSLATEMODE_FIELD_POSITION
-	or		cl, dl
-	or		[di+DPT.bFlagsLow], cl		; Shift count and addressing mode
 	mov		[di+DPT.wLchsCylinders], ax
 	mov		[di+DPT.wLchsHeadsAndSectors], bx
+	mov		al, dl
+	eSHL_IM	al, TRANSLATEMODE_FIELD_POSITION
+	or		cl, al
 
-	; Store P-CHS to DPT
+	; Store P-CHS and flags
 	call	AtaGeometry_GetPCHStoAXBLBHfromAtaInfoInESSI
-	mov		[di+DPT.bPchsHeads], bl
+	dec		dx						; Set ZF if TRANSLATEMODE_LARGE, SF if TRANSLATEMODE_NORMAL
+	js		SHORT .NothingToChange
+	jz		SHORT .LimitHeadsForLargeAddressingMode
+
+	or		cl, FLGL_DPT_LBA		; Set LBA bit for Assisted LBA
+	jmp		SHORT .NothingToChange
+.LimitHeadsForLargeAddressingMode:
+	MIN_U	bl, 15					; Cannot have 16 P-Heads in LARGE addressing mode
+.NothingToChange:
+	or		[di+DPT.bFlagsLow], cl	; Shift count and addressing mode
+	mov		[di+DPT.wPchsHeadsAndSectors], bx
+
 %ifdef MODULE_EBIOS
-	mov		[di+DPT.bPchsSectorsPerTrack], bh
+	test	cl, FLGL_DPT_LBA
+	jz		SHORT .NoLbaSoNoEBIOS
 
-; This is what Award BIOS from 1997 Pentium motherboard does. I can't think
-; of any good reason to do the same but let's keep this here just in case,
-; at least for a while.
-%if 0
-%ifdef RESERVE_DIAGNOSTIC_CYLINDER
-	; Do not store P-Cylinders, instead calculate it from L-CHS total sector count.
-	; Read AH=48h_GetExtendedDriveParameters.asm for more info.
-	xchg	ax, bx
-	mul		ah
-	push	ax							; P-Heads * P-Sectors per track
-	call	AH15h_GetSectorCountToBXDXAX
-	pop		bx
-	div		bx							; AX = Calculated cylinders
-%endif ; RESERVE_DIAGNOSTIC_CYLINDER
-%endif ; 0
+	; Store P-Cylinders but only if we have 15,482,880 or less sectors since
+	; we only need P-Cylinders so we can return it from AH=48h
+	call	AtaGeometry_GetLbaSectorCountToBXDXAXfromAtaInfoInESSI
+	sub		ax, MAX_SECTOR_COUNT_TO_RETURN_PCHS & 0FFFFh
+	sbb		dx, MAX_SECTOR_COUNT_TO_RETURN_PCHS >> 16
+	sbb		bx, BYTE 0
+	ja		SHORT .StoreNumberOfLbaSectors
 
+	; Since we might have altered the default P-CHS parameters to be
+	; presented to the drive (AH=09h), we need to calculate new
+	; P-Cylinders. It could be read from the ATA ID after
+	; COMMAND_INITIALIZE_DEVICE_PARAMETERS but that is too much trouble.
+	; P-Cyls = MIN(16383*16*63, LBA sector count) / (P-Heads * P-Sectors per track)
+	call	AtaGeometry_GetLbaSectorCountToBXDXAXfromAtaInfoInESSI
+	xchg	cx, ax							; Sector count to DX:CX
+	mov		al, [di+DPT.bPchsHeads]
+	mul		BYTE [di+DPT.bPchsSectorsPerTrack]
+	xchg	cx, ax
+	div		cx								; AX = new P-Cylinders
 	mov		[di+DPT.wPchsCylinders], ax
+
+	; Store CHS sector count as total sector count
+	mul		cx
+	xor		bx, bx
+	xor		cx, cx							; Clear LBA48 flag
+	jmp		SHORT .StoreTotalSectorsFromBXDXAXandLBA48flagFromCL
 	; Fall to .StoreNumberOfLbaSectors
 
 ;--------------------------------------------------------------------
@@ -149,50 +163,15 @@ CreateDPT_FromAtaInformation:
 ;	Corrupts registers:
 ;		AX, BX, CX, DX
 ;--------------------------------------------------------------------
-	; Check if LBA supported
-	test	BYTE [es:si+ATA1.wCaps+1], A1_wCaps_LBA>>8
-	jz		SHORT .NoLbaSupportedSoNoEBIOS
-
+.StoreNumberOfLbaSectors:
 	; Store LBA 28/48 total sector count
 	call	AtaGeometry_GetLbaSectorCountToBXDXAXfromAtaInfoInESSI
-	call	StoreLba48AddressingFromCLandTotalSectorCountFromBXDXAX
-
-	; If we have 15,482,880 or less sectors, we multiply P-CHS values
-	; and use that as total sector count.
-	; Read AH=48h_GetExtendedDriveParameters.asm for more info.
-	sub		ax, 4001h
-	sbb		dx, 0ECh
-	sbb		bx, BYTE 0
-	jnc		SHORT .NoNeedToUseCHSsectorCount	; More than EC4000h
-
-	mov		al, [di+DPT.bPchsHeads]
-	mul		BYTE [di+DPT.bPchsSectorsPerTrack]
-	mul		WORD [di+DPT.wPchsCylinders]
-	xor		bx, bx
-	call	StoreLba48AddressingFromCLandTotalSectorCountFromBXDXAX
-
-	; Load user defined LBA
-.NoNeedToUseCHSsectorCount:
-	call	GetUserDefinedCapacityToBXAXandFlagsToCXandModeToDXfromROMVARS
-	test	cl, FLG_DRVPARAMS_USERLBA
-	jz		SHORT .KeepTotalSectorsFromAtaID
-
-	; Compare user defined and ATA-ID sector count and select smaller
-	mov		dx, bx
-	xor		bx, bx		; User defined LBA now in BX:DX:AX
-	cmp		bx, [di+DPT.twLbaSectors+4]
-	jb		SHORT .StoreUserDefinedSectorCountToDPT
-	cmp		dx, [di+DPT.twLbaSectors+2]
-	jb		SHORT .StoreUserDefinedSectorCountToDPT
-	ja		SHORT .KeepTotalSectorsFromAtaID
-	cmp		ax, [di+DPT.twLbaSectors]
-	jae		SHORT .KeepTotalSectorsFromAtaID
-.StoreUserDefinedSectorCountToDPT:
-	; CL bit FLGL_DPT_LBA48 is clear at this point
-	call	StoreLba48AddressingFromCLandTotalSectorCountFromBXDXAX
-
-.KeepTotalSectorsFromAtaID:
-.NoLbaSupportedSoNoEBIOS:
+.StoreTotalSectorsFromBXDXAXandLBA48flagFromCL:
+	or		[di+DPT.bFlagsLow], cl
+	mov		[di+DPT.twLbaSectors], ax
+	mov		[di+DPT.twLbaSectors+2], dx
+	mov		[di+DPT.twLbaSectors+4], bx
+.NoLbaSoNoEBIOS:
 %endif ; MODULE_EBIOS
 	; Fall to .StoreBlockMode
 
@@ -287,56 +266,3 @@ CreateDPT_StoreIdevarsOffsetAndBasePortFromCSBPtoDPTinDSDI:
 	mov		ax, [cs:bp+IDEVARS.wBasePort]
 	mov		[di+DPT.wBasePort], ax
 	ret
-
-
-;--------------------------------------------------------------------
-; GetUserDefinedCapacityToBXAXandFlagsToCXandModeToDXfromROMVARS
-;	Parameters:
-;		DS:DI:		Ptr to Disk Parameter Table
-;	Returns:
-;		AX:			User defined P-CHS Cylinders or LBA low word
-;		BX:			User defined P-CHS Heads and Sectors or LBA high word
-;		DX:			Translate mode or TRANSLATEMODE_AUTO
-;		CX:			FLG_DRVPARAMS_USERCHS if user defined CHS in BX:AX
-;					FLG_DRVPARAMS_USERLBA if user defined LBA in BX:AX
-;					Zero if user has not defined capacity
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-GetUserDefinedCapacityToBXAXandFlagsToCXandModeToDXfromROMVARS:
-	call	AccessDPT_GetPointerToDRVPARAMStoCSBX
-
-	; Get settings
-	mov		cx, [cs:bx+DRVPARAMS.wFlags]
-	mov		dx, cx
-	and		cx, BYTE FLG_DRVPARAMS_USERCHS | FLG_DRVPARAMS_USERLBA
-	and		dx, BYTE MASK_DRVPARAMS_TRANSLATEMODE
-	eSHR_IM	dx, TRANSLATEMODE_FIELD_POSITION
-
-	; Get capacity
-	mov		ax, [cs:bx+DRVPARAMS.wCylinders]		; Or .dwMaximumLBA
-	mov		bx, [cs:bx+DRVPARAMS.wHeadsAndSectors]	; Or .dwMaximumLBA+2
-	ret
-
-
-%ifdef MODULE_EBIOS
-;--------------------------------------------------------------------
-; StoreLba48AddressingFromCLandTotalSectorCountFromBXDXAX
-;	Parameters:
-;		BX:DX:AX:	Total Sector Count
-;		CL:			FLGL_DPT_LBA48 if LBA48 supported
-;		DS:DI:		Ptr to Disk Parameter Table
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		CL
-;--------------------------------------------------------------------
-StoreLba48AddressingFromCLandTotalSectorCountFromBXDXAX:
-	or		cl, FLGL_DPT_LBA_AND_EBIOS_SUPPORTED
-	and		BYTE [di+DPT.bFlagsLow], ~FLGL_DPT_LBA48
-	or		[di+DPT.bFlagsLow], cl
-	mov		[di+DPT.twLbaSectors], ax
-	mov		[di+DPT.twLbaSectors+2], dx
-	mov		[di+DPT.twLbaSectors+4], bx
-	ret
-%endif ; MODULE_EBIOS

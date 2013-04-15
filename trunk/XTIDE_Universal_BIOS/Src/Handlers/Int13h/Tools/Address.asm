@@ -119,6 +119,7 @@ Address_OldInt13hAddressToIdeAddress:
 ; Converts LCHS parameters to 28-bit LBA address.
 ; Only 24-bits are used since LHCS to LBA28 conversion has 8.4GB limit.
 ; LBA = ((cylToSeek*headsPerCyl+headToSeek)*sectPerTrack)+sectToSeek-1
+; headsPerCyl and sectPerTrack are the current translation values (L-CHS).
 ;
 ; Returned address is in same registers that
 ; DoNotConvertLCHS and ConvertLargeModeLCHStoPCHS returns.
