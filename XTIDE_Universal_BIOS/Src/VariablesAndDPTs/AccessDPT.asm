@@ -21,8 +21,7 @@
 SECTION .text
 
 ;--------------------------------------------------------------------
-; AccessDPT_GetDriveSelectByteForOldInt13hToAL
-; AccessDPT_GetDriveSelectByteForEbiosToAL
+; AccessDPT_GetDriveSelectByteToAL
 ;	Parameters:
 ;		DS:DI:	Ptr to Disk Parameter Table
 ;	Returns:
@@ -31,26 +30,10 @@ SECTION .text
 ;		Nothing
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-AccessDPT_GetDriveSelectByteForOldInt13hToAL:
+AccessDPT_GetDriveSelectByteToAL:
 	mov		al, [di+DPT.bFlagsLow]
-	test	al, FLGL_DPT_ASSISTED_LBA
-	jnz		SHORT GetDriveSelectByteForAssistedLBAtoAL
-
-	and		al, FLG_DRVNHEAD_DRV	; Clear all but drive select bit
+	and		al, FLGL_DPT_SLAVE | FLGL_DPT_LBA
 	or		al, MASK_DRVNHEAD_SET	; Bits set to 1 for old drives
-	ret
-
-%ifdef MODULE_EBIOS
-ALIGN JUMP_ALIGN
-AccessDPT_GetDriveSelectByteForEbiosToAL:
-	mov		al, [di+DPT.bFlagsLow]
-	; Fall to GetDriveSelectByteForAssistedLBAtoAL
-%endif ; MODULE_EBIOS
-
-ALIGN JUMP_ALIGN
-GetDriveSelectByteForAssistedLBAtoAL:
-	and		al, FLG_DRVNHEAD_DRV	; Master / Slave select
-	or		al, FLG_DRVNHEAD_LBA | MASK_DRVNHEAD_SET
 	ret
 
 

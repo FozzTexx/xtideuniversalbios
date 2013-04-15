@@ -106,7 +106,7 @@ FillToESDIusingDPTfromDSSI:
 FillTranslatedDPTtoESDIfromDPTinDSSI:
 	xor		dx, dx						; Clear for checksum
 	mov		ax, [si+DPT.wLchsCylinders]
-	MIN_U	ax, MAX_LCHS_CYLINDERS		; Our DPT can have up to 1027
+	;MIN_U	ax, MAX_LCHS_CYLINDERS		; Our DPT can have up to 1027
 	call	StoswThenAddALandAHtoDL		; Bytes 0 and 1 (Logical number of cylinders)
 
 	mov		al, BYTE [si+DPT.bLchsHeads]
@@ -200,7 +200,7 @@ CompatibleDPT_CreateDeviceParameterTableExtensionToESBXfromDPTinDSSI:
 
 	; DPTE.bDrvnhead and DPTE.bBiosVendor
 	xchg	di, si
-	call	AccessDPT_GetDriveSelectByteForEbiosToAL
+	call	AccessDPT_GetDriveSelectByteToAL
 	xchg	si, di
 	call	StoswThenAddALandAHtoDL			; Bytes 4 and 5
 

@@ -69,7 +69,7 @@ Idepack_ConvertDapToIdepackAndIssueCommandFromAH:
 	mov		[bp+IDEPACK.wLbaMiddleAndHighExt], cx
 
 	and		ah, 0Fh						; Limit bits for LBA28
-	call	AccessDPT_GetDriveSelectByteForEbiosToAL
+	call	AccessDPT_GetDriveSelectByteToAL
 	or		al, ah
 	mov		[bp+IDEPACK.bDrvAndHead], al
 
@@ -107,7 +107,7 @@ Idepack_TranslateOldInt13hAddressAndIssueCommandFromAH:
 
 	push	bx
 	call	Address_OldInt13hAddressToIdeAddress
-	call	AccessDPT_GetDriveSelectByteForOldInt13hToAL
+	call	AccessDPT_GetDriveSelectByteToAL
 	or		al, bh			; AL now has Drive and Head Select Byte
 	mov		[bp+IDEPACK.bDrvAndHead], al
 	mov		[bp+IDEPACK.bLbaLow], bl
@@ -149,7 +149,7 @@ Idepack_StoreNonExtParametersAndIssueCommandFromAL:
 
 	; Drive and Head select byte
 	and		ah, MASK_DRVNHEAD_HEAD		; Keep head bits only
-	call	AccessDPT_GetDriveSelectByteForOldInt13hToAL
+	call	AccessDPT_GetDriveSelectByteToAL
 	or		al, ah
 	mov		[bp+IDEPACK.bDrvAndHead], al
 

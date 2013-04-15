@@ -43,8 +43,9 @@ struc EDRIVE_INFO
 	.fpDPTE					resb	4	; 26, Optional pointer to Device Parameter Table Extension
 endstruc
 
-MINIMUM_EDRIVEINFO_SIZE		EQU		26	; 26 bytes does not include EDD pointer
-EDRIVEINFO_SIZE_WITH_DPTE	EQU		EDRIVE_INFO_size
+MINIMUM_EDRIVEINFO_SIZE			EQU		26	; 26 bytes does not include EDD pointer
+EDRIVEINFO_SIZE_WITH_DPTE		EQU		EDRIVE_INFO_size
+MAX_SECTOR_COUNT_TO_RETURN_PCHS	EQU		15482880
 
 ; Flags for EDRIVE_INFO.wFlags
 FLG_DMA_BOUNDARY_ERRORS_HANDLED_BY_BIOS				EQU	(1<<0)

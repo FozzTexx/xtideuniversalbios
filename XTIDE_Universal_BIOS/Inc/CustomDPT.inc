@@ -36,11 +36,12 @@ struc DPT
 	.wLchsHeadsAndSectors:
 	.bLchsHeads				resb	1	; (1...255)
 	.bLchsSectorsPerTrack	resb	1	; (1...63)
+	.wPchsHeadsAndSectors:
 	.bPchsHeads				resb	1	; (1...16)
+	.bPchsSectorsPerTrack	resb	1	; (1...63)
 
 	; LBA and remaining P-CHS variables
 %ifdef MODULE_EBIOS
-	.bPchsSectorsPerTrack	resb	1
 	.wPchsCylinders			resb	2
 	.twLbaSectors			resb	6	; 48-bit sector count for LBA addressing
 %endif
@@ -55,8 +56,8 @@ endstruc
 %ifdef MODULE_IRQ
 	FLGL_DPT_ENABLE_IRQ					EQU	(1<<5)				; Bit 5, Enable IRQ
 %endif
+	FLGL_DPT_LBA						EQU	FLG_DRVNHEAD_LBA	; Bit 6, Drive supports LBA and so EBIOS functions can be supported
 %ifdef MODULE_EBIOS
-	FLGL_DPT_LBA_AND_EBIOS_SUPPORTED	EQU	FLG_DRVNHEAD_LBA	; Bit 6, Drive supports LBA and so EBIOS functions can be supported
 	FLGL_DPT_LBA48						EQU	(1<<7)				; Bit 7, Drive supports 48-bit LBA (Must be bit 7!)
 %endif
 
