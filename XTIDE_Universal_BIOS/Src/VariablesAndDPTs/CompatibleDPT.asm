@@ -88,6 +88,8 @@ GetBufferForDrive80hToESDI:
 ;		AX, CX, DX
 ;--------------------------------------------------------------------
 FillToESDIusingDPTfromDSSI:
+	mov		ax, [si+DPT.wLchsCylinders]
+	call	AH8h_LimitAXtoMaximumLCylinders
 	test	BYTE [si+DPT.bFlagsLow], MASKL_DPT_TRANSLATEMODE
 	jz		SHORT FillStandardDPTtoESDIfromDPTinDSSI
 	; Fall to FillTranslatedDPTtoESDIfromDPTinDSSI
@@ -95,6 +97,7 @@ FillToESDIusingDPTfromDSSI:
 ;--------------------------------------------------------------------
 ; FillTranslatedDPTtoESDIfromDPTinDSSI
 ;	Parameters:
+;		AX:		Number of Logical Cylinders
 ;		CL:		Device Control Byte
 ;		DS:SI:	Ptr to DPT
 ;		ES:DI:	Ptr to destination buffer
@@ -105,8 +108,6 @@ FillToESDIusingDPTfromDSSI:
 ;--------------------------------------------------------------------
 FillTranslatedDPTtoESDIfromDPTinDSSI:
 	xor		dx, dx						; Clear for checksum
-	mov		ax, [si+DPT.wLchsCylinders]
-	;MIN_U	ax, MAX_LCHS_CYLINDERS		; Our DPT can have up to 1027
 	call	StoswThenAddALandAHtoDL		; Bytes 0 and 1 (Logical number of cylinders)
 
 	mov		al, BYTE [si+DPT.bLchsHeads]
@@ -143,6 +144,7 @@ FillTranslatedDPTtoESDIfromDPTinDSSI:
 ;--------------------------------------------------------------------
 ; FillStandardDPTtoESDIfromDPTinDSSI
 ;	Parameters:
+;		AX:		Number of Physical Cylinders == Number of Logical Cylinders
 ;		CL:		Device Control Byte
 ;		DS:SI:	Ptr to DPT
 ;		ES:DI:	Ptr to destination buffer
@@ -152,7 +154,6 @@ FillTranslatedDPTtoESDIfromDPTinDSSI:
 ;		AX
 ;--------------------------------------------------------------------
 FillStandardDPTtoESDIfromDPTinDSSI:
-	mov		ax, [si+DPT.wLchsCylinders]
 	stosw				; Bytes 0 and 1 (Physical number of cylinders)
 	eMOVZX	ax, BYTE [si+DPT.bLchsHeads]
 	stosw				; Bytes 2 (Physical number of heads) and 3

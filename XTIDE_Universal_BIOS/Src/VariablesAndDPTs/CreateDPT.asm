@@ -143,13 +143,16 @@ CreateDPT_FromAtaInformation:
 	mul		BYTE [di+DPT.bPchsSectorsPerTrack]
 	xchg	cx, ax
 	div		cx								; AX = new P-Cylinders
+
+	; We could remove wPchsCylinders from DPT if we calculate it on AH=48h
+	; but that would require extra code so we save ROM space instead.
 	mov		[di+DPT.wPchsCylinders], ax
 
-	; Store CHS sector count as total sector count
+	; Store CHS sector count as total sector count. We must not use
+	; LBA sector count if it is 15,482,880 or less.
 	mul		cx
 	xor		bx, bx
-	xor		cx, cx							; Clear LBA48 flag
-	jmp		SHORT .StoreTotalSectorsFromBXDXAXandLBA48flagFromCL
+	jmp		SHORT .StoreTotalSectorsFromBXDXAX
 	; Fall to .StoreNumberOfLbaSectors
 
 ;--------------------------------------------------------------------
@@ -166,8 +169,8 @@ CreateDPT_FromAtaInformation:
 .StoreNumberOfLbaSectors:
 	; Store LBA 28/48 total sector count
 	call	AtaGeometry_GetLbaSectorCountToBXDXAXfromAtaInfoInESSI
-.StoreTotalSectorsFromBXDXAXandLBA48flagFromCL:
-	or		[di+DPT.bFlagsLow], cl
+	or		[di+DPT.bFlagsLow], cl		; LBA48 flag
+.StoreTotalSectorsFromBXDXAX:
 	mov		[di+DPT.twLbaSectors], ax
 	mov		[di+DPT.twLbaSectors+2], dx
 	mov		[di+DPT.twLbaSectors+4], bx
