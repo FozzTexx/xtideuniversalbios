@@ -20,6 +20,7 @@
 ; Section containing code
 SECTION .text
 
+
 ;--------------------------------------------------------------------
 ; Int 13h function AH=8h, Read Disk Drive Parameters.
 ;
@@ -100,10 +101,7 @@ AH8h_HandlerForReadDiskDriveParameters:
 ;--------------------------------------------------------------------
 AH8h_GetDriveParameters:
 	call	AccessDPT_GetLCHStoAXBLBH
-%ifdef RESERVE_DIAGNOSTIC_CYLINDER
-	dec		ax
-%endif
-	MIN_U	ax, MAX_LCHS_CYLINDERS
+	call	AH8h_LimitAXtoMaximumLCylinders
 	; Fall to .PackReturnValues
 
 ;--------------------------------------------------------------------
@@ -139,6 +137,24 @@ AH8h_GetDriveParameters:
 %endif
 %endif
 	ret
+
+
+;--------------------------------------------------------------------
+; AH8h_LimitAXtoMaximumLCylinders
+;	Parameters:
+;		AX:		Number of total L-CHS cylinders (1...1027)
+;	Returns:
+;		AX:		Number of usable L-CHS cylinders (1...1024)
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+AH8h_LimitAXtoMaximumLCylinders:
+%ifdef RESERVE_DIAGNOSTIC_CYLINDER
+	dec		ax
+%endif
+	MIN_U	ax, MAX_LCHS_CYLINDERS
+	ret
+
 
 %ifdef MODULE_SERIAL_FLOPPY
 ;

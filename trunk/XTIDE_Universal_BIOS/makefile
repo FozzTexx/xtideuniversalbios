@@ -32,6 +32,7 @@
 # RELOCATE_INT13H_STACK **    Relocates INT 13h stack to beginning of stolen conventional memory   #
 # RESERVE_DIAGNOSTIC_CYLINDER Reserve one L-CHS cylinder for compatibility with old BIOSes         #
 # CREATE_COMPATIBLE_DPT       Presents compatible DPTs for ill behaving applications               #
+# DANGEROUS_DETECTION         Scans Advanced Controllers from dangerous ports like mirrored PIC    #
 # USE_186                     Use instructions supported by 80188/80186 and V20/V30 and later      #
 # USE_286                     Use instructions supported by 286 and later (defines USE_UNDOC_INTEL)#
 # USE_386                     Use instructions supported by 386 and later (defines USE_286)        #
