@@ -135,10 +135,10 @@ AH48h_HandlerForGetExtendedDriveParameters:
 
 	; Store P-CHS. Based on phoenix specification this is returned only if
 	; total sector count is 15,482,880 or less.
-	sub		ax, MAX_SECTOR_COUNT_TO_RETURN_PCHS & 0FFFFh
-	sbb		dx, MAX_SECTOR_COUNT_TO_RETURN_PCHS >> 16
+	sub		ax, (MAX_SECTOR_COUNT_TO_RETURN_PCHS+1) & 0FFFFh
+	sbb		dx, (MAX_SECTOR_COUNT_TO_RETURN_PCHS+1) >> 16
 	sbb		bx, cx		; Zero
-	ja		SHORT .ReturnWithSuccess
+	jnc		SHORT .ReturnWithSuccess
 	or		BYTE [di+EDRIVE_INFO.wFlags], FLG_CHS_INFORMATION_IS_VALID
 
 	eMOVZX	dx, BYTE [es:si+DPT.bPchsHeads]

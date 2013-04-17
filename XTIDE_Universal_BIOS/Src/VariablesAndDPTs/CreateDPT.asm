@@ -121,16 +121,21 @@ CreateDPT_FromAtaInformation:
 	mov		[di+DPT.wPchsHeadsAndSectors], bx
 
 %ifdef MODULE_EBIOS
+%ifdef CREATE_COMPATIBLE_DPT
+	; Store P-Cylinders here for Compatible DPTs when FLGL_DPT_LBA is not set
+	; or when drive has over 15,482,880 sectors
+	mov		[di+DPT.wPchsCylinders], ax
+%endif
 	test	cl, FLGL_DPT_LBA
 	jz		SHORT .NoLbaSoNoEBIOS
 
 	; Store P-Cylinders but only if we have 15,482,880 or less sectors since
 	; we only need P-Cylinders so we can return it from AH=48h
 	call	AtaGeometry_GetLbaSectorCountToBXDXAXfromAtaInfoInESSI
-	sub		ax, MAX_SECTOR_COUNT_TO_RETURN_PCHS & 0FFFFh
-	sbb		dx, MAX_SECTOR_COUNT_TO_RETURN_PCHS >> 16
+	sub		ax, (MAX_SECTOR_COUNT_TO_RETURN_PCHS+1) & 0FFFFh
+	sbb		dx, (MAX_SECTOR_COUNT_TO_RETURN_PCHS+1) >> 16
 	sbb		bx, BYTE 0
-	ja		SHORT .StoreNumberOfLbaSectors
+	jnc		SHORT .StoreNumberOfLbaSectors
 
 	; Since we might have altered the default P-CHS parameters to be
 	; presented to the drive (AH=09h), we need to calculate new
@@ -145,7 +150,7 @@ CreateDPT_FromAtaInformation:
 	div		cx								; AX = new P-Cylinders
 
 	; We could remove wPchsCylinders from DPT if we calculate it on AH=48h
-	; but that would require extra code so we save ROM space instead.
+	; (and for compatible DPTs) but that would require extra code so we save ROM space instead.
 	mov		[di+DPT.wPchsCylinders], ax
 
 	; Store CHS sector count as total sector count. We must not use
