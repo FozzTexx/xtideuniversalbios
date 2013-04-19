@@ -66,23 +66,10 @@ JrIdeTransfer_StartWithCommandInAL:
 %endif
 
 	; Get far pointer to Sector Access Window
-	mov		dx, [di+DPT.wBasePort]
 	cmp		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_JRIDE_ISA
-	jb		SHORT .GetSectorAccessWindowForXTCF
-
-	; Get Sector Access Window for JR-IDE/ISA and ADP50L
-	mov		ds, dx		; Segment for JR-IDE/ISA and ADP50L
-	mov		di, JRIDE_SECTOR_ACCESS_WINDOW_OFFSET
-	je		SHORT .SectorAccessWindowLoadedToDSDI
+	mov		ds, [di+DPT.wBasePort]	; Segment for JR-IDE/ISA and ADP50L
 	mov		di, ADP50L_SECTOR_ACCESS_WINDOW_OFFSET
-	jmp		SHORT .SectorAccessWindowLoadedToDSDI
-
-.GetSectorAccessWindowForXTCF:
-	xor		di, di
-	add		dl, XTCF_CONTROL_REGISTER
-	in		al, dx					; Read high byte for Sector Access Window segment
-	xchg	ah, al
-	mov		ds, ax
+	eCMOVE	di, JRIDE_SECTOR_ACCESS_WINDOW_OFFSET
 
 	; Are we reading or writing?
 .SectorAccessWindowLoadedToDSDI:

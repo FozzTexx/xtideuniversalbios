@@ -51,11 +51,11 @@ IdeIO_InputStatusRegisterToAL:
 ;		BX, DX
 ;--------------------------------------------------------------------
 IdeIO_InputToALfromIdeRegisterInDL:
-	xor		dh, dh	; IDE Register index now in DX
-	mov		bx, dx	; and BX
+	xor		dh, dh	; IDE Register index now in DX...
 	mov		al, [di+DPT_ATA.bDevice]
 	cmp		al, DEVICE_8BIT_XTIDE_REV2
 	jb		SHORT .InputToALfromRegisterInDX	; Standard IDE controllers and XTIDE rev 1
+	mov		bx, dx	; ...and BX for A0<->A3 swap and for memory mapped I/O
 
 %ifdef MODULE_8BIT_IDE_ADVANCED
 	je		SHORT .ReverseA0andA3fromRegisterIndexInDX
@@ -108,7 +108,7 @@ IdeIO_OutputALtoIdeControlBlockRegisterInDL:
 
 	; At this point remaining controllers (JRIDE, XTCF and ADP50L) all have a control
 	; block offset of 8 or (8<<1) so we add 8 here and do the SHL 1 later if needed.
-	add		dx, 8
+	add		dx, BYTE 8
 	cmp		bl, DEVICE_8BIT_JRIDE_ISA
 	jb		SHORT IdeIO_OutputALtoIdeRegisterInDL.ShlRegisterIndexInDXandOutputAL	; All XT-CF modes
 	mov		bx, JRIDE_CONTROL_BLOCK_REGISTER_WINDOW_OFFSET - 8			; Zeroes BL. -8 compensates for the ADD
@@ -126,14 +126,14 @@ IdeIO_OutputALtoIdeControlBlockRegisterInDL:
 	; Control Block Registers start from Command Block + 8h. We can do
 	; a small trick since we only access Device Control Register at
 	; offset 6h: Always clear A3 and set A0.
-	mov		bh, dh	; Zero BH
+	call	AccessDPT_GetIdevarsToCSBX
 	add		dx, [cs:bx+IDEVARS.wControlBlockPort]
 	xor		dl, 1001b						; Clear A3, Set A0
 	out		dx, al
 	ret
 
 .OutputALtoControlBlockRegisterInDX:
-	call	AccessDPT_GetIdevarsToCSBX		; *FIXME* Why is this call here but not in the above block?
+	call	AccessDPT_GetIdevarsToCSBX
 	add		dx, [cs:bx+IDEVARS.wControlBlockPort]
 	out		dx, al
 	ret

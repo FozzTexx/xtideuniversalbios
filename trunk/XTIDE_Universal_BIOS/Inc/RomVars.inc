@@ -98,7 +98,6 @@ struc IDEVARS
 
 ;;; Word 1
 	.wControlBlockPort:
-	.bXTCFcontrolRegister:					; XT-CF autodetects ports
 	.bSerialUnused				resb	1	; IDE Base Port for Control Block Registers
 
 	.wSerialCOMPortCharAndDevice:			; In DetectPrint, we grab the COM Port char and Device at the same time
@@ -120,14 +119,16 @@ endstruc
 %endif
 
 STANDARD_CONTROL_BLOCK_OFFSET			EQU		200h
-XTIDE_CONTROL_BLOCK_OFFSET				EQU		8h
-XTCF_CONTROL_BLOCK_OFFSET				EQU		10h
+XTIDE_CONTROL_BLOCK_OFFSET				EQU		8h		; for XTIDE, A3 is used to control selected register (CS0 vs CS1)...
+XTCF_CONTROL_BLOCK_OFFSET				EQU		10h		; ...and for XT-CF (all varients), it's A4
 ADP50L_CONTROL_BLOCK_OFFSET				EQU		10h
 
 ; Default values for Port and PortCtrl, shared with the configurator
 ;
-DEVICE_XTIDE_DEFAULT_PORT				EQU		300h
+DEVICE_XTIDE_DEFAULT_PORT				EQU		300h	; Also the default port for XT-CF
 DEVICE_XTIDE_DEFAULT_PORTCTRL			EQU		(DEVICE_XTIDE_DEFAULT_PORT + XTIDE_CONTROL_BLOCK_OFFSET)
+; Note XT-CF control port is SHL 1 relative to XTIDE, and coded that way hence no need for specific definition like...
+; DEVICE_XTCF_DEFAULT_PORTCTRL				EQU		(DEVICE_XTIDE_DEFAULT_PORT + XTCF_CONTROL_BLOCK_OFFSET)
 
 DEVICE_ATA_PRIMARY_PORT					EQU		1F0h
 DEVICE_ATA_PRIMARY_PORTCTRL				EQU		(DEVICE_ATA_PRIMARY_PORT + STANDARD_CONTROL_BLOCK_OFFSET)
@@ -157,8 +158,8 @@ DEVICE_8BIT_XTIDE_REV1					EQU	((COUNT_OF_STANDARD_IDE_DEVICES+1)<<1)
 DEVICE_8BIT_XTIDE_REV2					EQU	((COUNT_OF_STANDARD_IDE_DEVICES+2)<<1)	; Or rev 1 with swapped A0 and A3
 ; IDE Register offsets are SHL 1
 DEVICE_8BIT_XTCF_PIO8					EQU	((COUNT_OF_STANDARD_IDE_DEVICES+3)<<1)	; XT-CF using 8-bit PIO mode
-DEVICE_8BIT_XTCF_DMA					EQU	((COUNT_OF_STANDARD_IDE_DEVICES+4)<<1)	; XT-CF using DMA
-DEVICE_8BIT_XTCF_MEMMAP					EQU	((COUNT_OF_STANDARD_IDE_DEVICES+5)<<1)	; XT-CF using Memory Mapped transfers (not I/O)
+DEVICE_8BIT_XTCF_PIO8_WITH_BIU_OFFLOAD	EQU	((COUNT_OF_STANDARD_IDE_DEVICES+4)<<1)	; XT-CF using 8-bit PIO mode, but with 16-bit instructions
+DEVICE_8BIT_XTCF_DMA					EQU	((COUNT_OF_STANDARD_IDE_DEVICES+5)<<1)	; XT-CFv3 using DMA
 ; Memory Mapped I/O
 DEVICE_8BIT_JRIDE_ISA					EQU	((COUNT_OF_STANDARD_IDE_DEVICES+6)<<1)	; JR-IDE/ISA (Memory Mapped I/O)
 DEVICE_8BIT_ADP50L						EQU	((COUNT_OF_STANDARD_IDE_DEVICES+7)<<1)	; SVC ADP50L (Memory Mapped I/O)
@@ -195,8 +196,7 @@ FLG_DRVPARAMS_USERCHS			EQU	(1<<5)	; User specified P-CHS values
 	MAX_USER_SECTORS_PER_TRACK		EQU	63
 	MAX_USER_CHS_COUNT				EQU	(MAX_USER_CYLINDERS * MAX_USER_HEADS * MAX_USER_SECTORS_PER_TRACK)
 FLG_DRVPARAMS_USERLBA			EQU	(1<<6)	; User specified LBA value
-	MIN_USER_LBA_COUNT				EQU	(MAX_USER_CHS_COUNT+1)
-	MAX_USER_LBA_COUNT				EQU	((2^28)-1)
-
+	MIN_USER_LBA_COUNT				EQU	(MAX_USER_CHS_COUNT+1)	; Must be more than max CHS
+	MAX_USER_LBA_COUNT				EQU	((2^28)-1)				; LBA28 limit
 
 %endif ; ROMVARS_INC

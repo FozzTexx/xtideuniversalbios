@@ -113,8 +113,7 @@ AH9h_InitializeDriveForUse:
 
 ;;; Set XT-CF mode
 %ifdef MODULE_8BIT_IDE_ADVANCED
-	call	AccessDPT_GetIdevarsToCSBX
-	mov		al, [cs:bx+IDEVARS.bXTCFcontrolRegister]
+	call	AH1Eh_GetCurrentXTCFmodeToAX
 	call	AH9h_SetModeFromALtoXTCF
 	STORE_ERROR_FLAG_TO_DPT		FLG_INITERROR_FAILED_TO_SET_XTCF_MODE
 .DoNotSetXTCFmode:
@@ -283,7 +282,7 @@ SetErrorFlagFromALwithErrorCodeInAH:
 AH9h_SetModeFromALtoXTCF:
 	call	AccessDPT_IsThisDeviceXTCF
 	jne		SHORT IgnoreInvalidCommandError
-	jmp		AH1Eh_ChangeXTCFmodeBasedOnControlRegisterInAL
+	jmp		AH1Eh_ChangeXTCFmodeBasedOnModeInAL
 %endif ; MODULE_8BIT_IDE_ADVANCED
 
 %ifdef MODULE_8BIT_IDE

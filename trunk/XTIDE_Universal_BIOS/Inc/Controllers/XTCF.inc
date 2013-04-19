@@ -1,7 +1,7 @@
 ; Project name	:	XTIDE Universal BIOS
 ; Description	:	Lo-tech XT-CFv2 board specifications.
 ;
-;					More information at http://www.lo-tech.co.uk/wiki/Lo-tech_XT-CFv2_Board
+; More information at http://www.lo-tech.co.uk/XT-CF
 
 ;
 ; XTIDE Universal BIOS and Associated Tools
@@ -19,20 +19,22 @@
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 ;
 
+; Modified by JJP for XT-CFv3 support, Mar-13
+
+
 %ifndef XTCF_INC
 %define XTCF_INC
 
-DEFAULT_XTCF_SECTOR_WINDOW_SEGMENT	EQU		0D800h
-
-; XT-CF requires that block must be less than 128 sectors (64 kiB).
-; Instead of limiting block size to 64, we limit it to 32 (16 kiB).
-; Transferring more than 16 kiB with 8237 DMA controller block or demand
-; mode might interfere with DRAM refresh on XT systems.
-XTCF_DMA_MODE_MAX_BLOCK_SIZE		EQU		32		; Sectors
+; XT-CF requires that block must be less than 128 sectors (64 kiB) for DMA
+; transfers.
+; 
+; Note: XT-CFv3 DMA will not interfere with PC & PC/XT memory refresh,
+; since the XT-CFv3 detaches itself from the bus every 16 bytes transferred.
+;
+XTCF_DMA_MODE_MAX_BLOCK_SIZE		EQU		64		; Sectors
 
 ; Possible base addresses. Note that all XT-CF IDE registers are SHL 1 compared
 ; to standard IDE registers.
-XTCF_BASE_PORT_DETECTION_SEED		EQU		140h	; Not a valid base address but needed for autodetection
 XTCF_BASE_PORT_1					EQU		200h
 XTCF_BASE_PORT_2					EQU		240h
 XTCF_BASE_PORT_3					EQU		300h	; Default setting
@@ -40,22 +42,26 @@ XTCF_BASE_PORT_4					EQU		340h
 
 
 ; XT-CF Control Register (do not SHL 1 these!)
-XTCF_CONTROL_REGISTER				EQU		1Fh
-XTCF_CONTROL_REGISTER_INVERTED_in	EQU		1Eh
-
-; Control Register contents:
+; Note: XT-CFv3 control register is used *only* to raise DRQ.  The register cannot be read.
 ;
-; Control Register holds high byte from Sector Window segment if >= A0h
-; (First possible segment for Sector Window is A000h)
+XTCF_CONTROL_REGISTER				EQU		1Eh
+
+; Transfer Mode Constants
 ;
-; 8-bit PIO transfers (port I/O) are used if Control Register is zero.
-; Any other value means DMA transfers (using DMA channel 3).
-XTCF_8BIT_PIO_MODE						EQU		0
-XTCF_DMA_MODE							EQU		10h
-XTCF_MEMORY_MAPPED_MODE					EQU		0A0h
-RAISE_DRQ_AND_CLEAR_XTCF_XFER_COUNTER	EQU		40h
-
-
+; Available transfer modes depend on the controller.  All XT-CF controllers
+; support 8-bit PIO, either with 8-bit or 16-bit instructions (i.e., data
+; can be fetched from the controller with REP INSW or REP INSB since A0 is
+; not decoded).  However, errors in the implementation of the BIU on some
+; machines will prevent 16-bit instructions delivering data correctly.
+;
+; For XT-CFv3 adapter, DMA transfers are also supported via channel 3.
+;
+; XT-CFv3 cannot be distinguised by software, so user must decide and set
+; the mode via a call to Int 13h function 1Eh accordingly (see AH1E_XTCF.asm).
+;;
+XTCF_8BIT_PIO_MODE					EQU		00h
+XTCF_8BIT_PIO_MODE_WITH_BIU_OFFLOAD	EQU		01h
+XTCF_DMA_MODE						EQU		02h
 
 ; Subcommands for AH=1Eh, Lo-tech XT-CF features.
 ; Return values common for all subcommands:
@@ -71,21 +77,29 @@ RAISE_DRQ_AND_CLEAR_XTCF_XFER_COUNTER	EQU		40h
 IS_THIS_DRIVE_XTCF					EQU		0
 
 ;--------------------------------------------------------------------
-; READ_XTCF_CONTROL_REGISTER_TO_DH
+; SET_XTCF_TRANSFER_MODE
+;	Parameters:
+;		DH:		Mode to select,
+;                               i.e. XTCF_8BIT_PIO_MODE
+;				Note there's no way to know if an
+;				XT-CF adapter supports DMA, so the
+;				user should enable DMA only if a
+;				DMA-enabled XT-CFv3 is fitted.
+;		DL:		Drive Number
+;--------------------------------------------------------------------
+SET_XTCF_TRANSFER_MODE				EQU		1
+
+;--------------------------------------------------------------------
+; GET_XTCF_TRANSFER_MODE
 ;	Parameters:
 ;		DL:		Drive Number
 ;	Returns:
-;		DH:		XT-CF Control Register contents
+;		DL:		Block mode sectors per block
+;				configured
+;		DH:		One of the mode values listed above,
+;                               i.e. XTCF_8BIT_PIO_MODE
 ;--------------------------------------------------------------------
-READ_XTCF_CONTROL_REGISTER_TO_DH	EQU		1
-
-;--------------------------------------------------------------------
-; WRITE_DH_TO_XTCF_CONTROL_REGISTER
-;	Parameters:
-;		DH:		Byte to write to XT-CF Control Register
-;		DL:		Drive Number
-;--------------------------------------------------------------------
-WRITE_DH_TO_XTCF_CONTROL_REGISTER	EQU		2
+GET_XTCF_TRANSFER_MODE				EQU		2
 
 
 %endif ; XTCF_INC

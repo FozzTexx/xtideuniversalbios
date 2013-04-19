@@ -77,7 +77,7 @@ TransferBlockToOrFromXTCF:
 	; XT-CF support maximum of 64 sector (32768 bytes) blocks in DMA mode
 	; so we never need to separate transfer to more than 2 separate DMA operations.
 
-	; Load XT-CF Control Register port to DX
+	; Load XT-CFv3 Control Register port to DX
 	add		dl, XTCF_CONTROL_REGISTER
 
 	; Calculate bytes for first page
@@ -89,13 +89,13 @@ TransferBlockToOrFromXTCF:
 	xchg	cl, ch
 	shl		cx, 1
 %endif
-	cmp		cx, ax
-	jbe		SHORT .TransferLastDmaPageWithSizeInCX
+	cmp		cx, ax									; if we won't cross a physical page boundary...
+	jbe		SHORT .TransferLastDmaPageWithSizeInCX	; ...perform the transfer in one operation
 
-	; Push size for second DMA page
+	; Calculate how much we can transfer on first and second rounds
 	xchg	cx, ax									; CX = BYTEs for first page
 	sub		ax, cx									; AX = BYTEs for second page
-	push	ax
+	push	ax										; Save bytes for second transfer on stack
 
 	; Transfer first DMA page
 	call	StartDMAtransferForXTCFwithDmaModeInBL
@@ -107,12 +107,15 @@ TransferBlockToOrFromXTCF:
 
 ;--------------------------------------------------------------------
 ; StartDMAtransferForXTCFwithDmaModeInBL
+; Updated for XT-CFv3, 11-Apr-13
 ;	Parameters:
 ;		BL:		Byte for DMA Mode Register
-;		CX:		Number of BYTEs to transfer (1...32768 since max block size is limited to 64)
-;		DX:		XTCF Control Register
+;		CX:		Number of BYTEs to transfer (512...32768 since max block size is limited to 64)
+;		DX:		XT-CFv3 Control Register
+;		ES:		Bits 3..0 have physical address bits 19..16
+;		DI:		Physical address bits 15..0
 ;	Returns:
-;		Nothing
+;		ES:DI updated (CX is added)
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
@@ -121,78 +124,72 @@ StartDMAtransferForXTCFwithDmaModeInBL:
 	; Program 8-bit DMA Controller
 	; Disable Interrupts and DMA Channel 3 during DMA setup
 	mov		al, SET_CH3_MASK_BIT
-	cli										; Disable interrupts
-	out		MASK_REGISTER_DMA8_out, al		; Disable DMA Channel 3
+	cli									; Disable interrupts - programming must be atomic
+	out		MASK_REGISTER_DMA8_out, al	; Disable DMA Channel 3
 
 	; Set DMA Mode (read or write using channel 3)
 	mov		al, bl
 	out		MODE_REGISTER_DMA8_out, al
 
-	; Set address to DMA controller
-	out		CLEAR_FLIPFLOP_DMA8_out, al		; Reset flip-flop to low byte
+	; Send start address to DMA controller
 	mov		ax, es
 	out		PAGE_DMA8_CH_3, al
 	mov		ax, di
+	out		CLEAR_FLIPFLOP_DMA8_out, al							; Reset flip-flop to low byte
 	out		BASE_AND_CURRENT_ADDRESS_REGISTER_DMA8_CH3_out, al	; Low byte
 	mov		al, ah
 	out		BASE_AND_CURRENT_ADDRESS_REGISTER_DMA8_CH3_out, al	; High byte
 
 	; Set number of bytes to transfer (DMA controller must be programmed number of bytes - 1)
 	mov		ax, cx
-	dec		ax								; DMA controller is programmed for one byte less
+	dec		ax													; DMA controller is programmed for one byte less
 	out		BASE_AND_CURRENT_COUNT_REGISTER_DMA8_CH3_out, al	; Low byte
 	mov		al, ah
 	out		BASE_AND_CURRENT_COUNT_REGISTER_DMA8_CH3_out, al	; High byte
 
 	; Enable DMA Channel 3
 	mov		al, CLEAR_CH3_MASK_BIT
-	out		MASK_REGISTER_DMA8_out, al		; Enable DMA Channel 3
-	sti										; Enable interrupts
+	out		MASK_REGISTER_DMA8_out, al							; Enable DMA Channel 3
+	sti															; Enable interrupts
 
+	; XT-CF transfers 16 bytes at a time. We need to manually start transfer for every block by writing (anything)
+	; to the XT-CFv3 Control Register, which raises DRQ thereby passing system control to the 8237 DMA controller.
+	; The XT-CFv3 logic releases DRQ after 16 transfers, thereby handing control back to the CPU and allowing any other IRQs or
+	; DRQs to be serviced (which, on the PC and PC/XT will include DRAM refresh via DMA channel 0).  The 16-byte transfers can
+	; also be interrupted by the DMA controller raising TC (i.e. when done).  Each transfer cannot be otherwise interrupted
+	; and is therefore atomic (and hence fast).
 
-%if 0 ; Slow DMA code
-	; XT-CF transfers 16 bytes at a time. We need to manually
-	; start transfer for every block.
-ALIGN JUMP_ALIGN
-.TransferNextBlock:
-	mov		al, RAISE_DRQ_AND_CLEAR_XTCF_XFER_COUNTER
-	cli									; We want no ISR to read DMA Status Register before we do
-	out		dx, al						; Transfer up to 16 bytes to/from XT-CF card
-	; * Here XT-CF sets CPU to wait states during transfer *
-	in		al, STATUS_REGISTER_DMA8_in
-	sti
-	test	al, FLG_CH3_HAS_REACHED_TERMINAL_COUNT
-	jz		SHORT .TransferNextBlock	; All bytes transferred?
+%if 0	; Slow DMA code - works by checking 8237 status register after each 16-byte transfer, until it reports TC has been raised.
+;ALIGN JUMP_ALIGN
+;.TransferNextBlock:
+;	cli									; We want no ISR to read DMA Status Register before we do
+;	out		dx, al						; Transfer up to 16 bytes to/from XT-CF card
+;	in		al, STATUS_REGISTER_DMA8_in
+;	sti
+;	test	al, FLG_CH3_HAS_REACHED_TERMINAL_COUNT
+;	jz		SHORT .TransferNextBlock	; All bytes transferred?
 %endif ; Slow DMA code
 
-
-%if 1 ; Fast DMA code
-	push	cx
-	add		cx, BYTE 15					; Include any partial DMA block (since we had to divide transfer to 64k physical pages)
-	eSHR_IM	cx, 4						; Drive Block size to 16 Byte DMA Block Size
-
-.JustOneMoreDmaBlock:
-	mov		al, RAISE_DRQ_AND_CLEAR_XTCF_XFER_COUNTER
-ALIGN JUMP_ALIGN
+%if 1	; Fast DMA code - perform computed number of transfers, then check DMA status register to be sure
+	push	cx							; need byte count to update pointer at the end
+	add		cx, BYTE 15					; We'll divide transfers in 16-byte atomic transfers,
+	eSHR_IM	cx, 4						; so include any partial block, which will be terminated
+ALIGN JUMP_ALIGN						; by the DMA controller raising T/C
 .TransferNextDmaBlock:
-	out		dx, al						; Transfer 16 bytes to/from XT-CF card
-	loop	.TransferNextDmaBlock
-
+	out		dx, al						; Transfer up to 16 bytes to/from XT-CF card
+	loop	.TransferNextDmaBlock		; dec CX and loop if CX > 0, also adds required wait-state
 	inc		cx							; set up CX, in case we need to do an extra iteration
-	in		al, STATUS_REGISTER_DMA8_in
-	test	al, FLG_CH3_HAS_REACHED_TERMINAL_COUNT
-	jz		SHORT .JustOneMoreDmaBlock			; it wasn't set so get more bytes
-	pop		cx
+	in		al, STATUS_REGISTER_DMA8_in	; check 8237 DMA controller status flags...
+	test	al, FLG_CH3_HAS_REACHED_TERMINAL_COUNT	; ... for channel 3 terminal count
+	jz		SHORT .TransferNextDmaBlock	; If not set, get more bytes
+	pop		cx							; get back requested bytes
 %endif ; Fast DMA code
 
+	; Update physical address in ES:DI - since IO might need several calls through this function either from here
+	; if crossing a physical page boundary, and from IdeTransfer.asm if requested sectors was > PIOVARS.wSectorsInBlock
+	mov		ax, es						; copy physical page address to ax
+	add		di, cx						; add requested bytes to di
+	adc		al, 0						; and increment physical page address, if required
+	mov		es, ax						; and save it back in es
 
-	; Restore XT-CF to normal operation
-	mov		al, XTCF_DMA_MODE
-	out		dx, al
-
-	; Increment physical address in ES:DI
-	mov		ax, es
-	add		di, cx
-	adc		al, ah
-	mov		es, ax
 	ret

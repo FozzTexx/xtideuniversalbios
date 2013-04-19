@@ -138,9 +138,14 @@ AH48h_HandlerForGetExtendedDriveParameters:
 	sub		ax, (MAX_SECTOR_COUNT_TO_RETURN_PCHS+1) & 0FFFFh
 	sbb		dx, (MAX_SECTOR_COUNT_TO_RETURN_PCHS+1) >> 16
 	sbb		bx, cx		; Zero
-	jnc		SHORT .ReturnWithSuccess
+	jnc		SHORT .DoNotSetChsFlag
 	or		BYTE [di+EDRIVE_INFO.wFlags], FLG_CHS_INFORMATION_IS_VALID
 
+	; We store something to P-CHS anyway since some HW detection programs
+	; ignore the CHS flag. And we should at least clear the variables anyway
+	; since the same buffer is used for all drives so it contains parameters
+	; from previously scanned drive.
+.DoNotSetChsFlag:
 	eMOVZX	dx, BYTE [es:si+DPT.bPchsHeads]
 	mov		[di+EDRIVE_INFO.dwHeads], dx
 	mov		[di+EDRIVE_INFO.dwHeads+2], cx

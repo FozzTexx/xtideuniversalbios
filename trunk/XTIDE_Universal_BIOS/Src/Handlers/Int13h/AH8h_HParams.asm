@@ -57,7 +57,7 @@ AH8h_HandlerForReadDiskDriveParameters:
 	call	RamVars_GetCountOfKnownDrivesToAX		; assume hard disk for now, will discard if for floppies
 
 	test	byte [bp+IDEPACK.intpack+INTPACK.dl], 080h
-	jnz		.Done
+	jnz		SHORT .CalledForHardDrive
 
 	mov		[bp+IDEPACK.intpack+INTPACK.bl], bl
 
@@ -66,7 +66,7 @@ AH8h_HandlerForReadDiskDriveParameters:
 
 	call	FloppyDrive_GetCountToAX
 
-.Done:
+.CalledForHardDrive:
 	mov		ah, dh
 
 	mov		[bp+IDEPACK.intpack+INTPACK.cx], cx
@@ -132,9 +132,7 @@ AH8h_GetDriveParameters:
 
 %ifdef MODULE_SERIAL_FLOPPY
 	mov		bl, [di+DPT.bFlagsHigh]
-%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS             ; not sure why this is needed for preprocessor-only
 	eSHR_IM	bl, FLGH_DPT_SERIAL_FLOPPY_TYPE_FIELD_POSITION
-%endif
 %endif
 	ret
 
