@@ -62,8 +62,12 @@ AH24h_SetBlockSize:
 	; XT-CF does not support largest block size in DMA mode.
 	cmp		al, XTCF_DMA_MODE_MAX_BLOCK_SIZE
 	jbe		SHORT .NoNeedToLimitBlockSize
+
+	; Return error if we tried too large block for XT-CF.
+	; Do not limit it to maximum supported since software calling AH=24h
+	; must know what the actual block size is.
 	cmp		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_XTCF_DMA
-	je		SHORT AH1Eh_LoadInvalidCommandToAHandSetCF
+	je		SHORT ProcessXTCFsubcommandFromAL.AH1Eh_LoadInvalidCommandToAHandSetCF
 .NoNeedToLimitBlockSize:
 %endif ; MODULE_8BIT_IDE_ADVANCED
 
@@ -76,7 +80,10 @@ AH24h_SetBlockSize:
 	call	Idepack_StoreNonExtParametersAndIssueCommandFromAL
 	pop		bx
 	jnc		SHORT .StoreBlockSize
-	mov		bl, 1		; Block size 1 will always work
+
+	; Drive disabled block mode since we tried unsupported block size.
+	; We must adjust DPT accordingly.
+	mov		bl, 1		; Block size 1 will always work (=Block mode disabled)
 .StoreBlockSize:		; Store new block size to DPT and return
 	mov		[di+DPT_ATA.bBlockSize], bl
 

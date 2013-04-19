@@ -157,49 +157,20 @@ DetectDrives_FromAllIDEControllers:
 ;		AX, BL, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 StartDetectionWithDriveSelectByteInBHandStringInCX:
-%ifdef MODULE_8BIT_IDE_ADVANCED
-	; Autodetect port for XT-CF
+%ifdef MODULE_8BIT_IDE
 	call	DetectDrives_DoesIdevarsInCSBPbelongToXTCF
-	jne		SHORT .SkipXTCFportDetection
+	jne		SHORT .ShouldNotSkipSlaveDriveDetection
 
 	; XT-CF do not support slave drives so skip detection
 	test	bh, FLG_DRVNHEAD_DRV
 	jnz		SHORT NoSlaveDriveAvailable
-
-	; XT-CF do not support slave drives so we can safely update port
-	; for next drive (another XT-CF card on same system)
-.DetectNextPort:
-	mov		dx, [es:BOOTVARS.wNextXTCFportToScan]
-	xor		dl, 40h
-	jnz		SHORT .StoreNextXTCFportToScan
-	inc		dh
-	cmp		dh, XTCF_BASE_PORT_4 >> 8
-	ja		SHORT .SkipXTCFportDetection		; XT-CF not found from any port
-.StoreNextXTCFportToScan:
-	mov		[es:BOOTVARS.wNextXTCFportToScan], dx
-
-	call	AH1Eh_DetectXTCFwithBasePortInDX
-	jc		SHORT .DetectNextPort				; XT-CF not found from this port
-
-	; We now have autodetected port in DX
-	push	dx
-	xchg	ax, dx								; Port to print in AX
-	call	DetectPrint_StartDetectWithAutodetectedBasePortInAXandIdeVarsInCSBP
-	jmp		SHORT .DriveDetectionStringPrintedOnScreen
-
-	; Print detect string for devices that do not support autodetection
-.SkipXTCFportDetection:
-	push	dx
-%endif ; MODULE_8BIT_IDE_ADVANCED
+.ShouldNotSkipSlaveDriveDetection:
+%endif ; MODULE_8BIT_IDE
 
 	call	DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP
 .DriveDetectionStringPrintedOnScreen:
 %ifdef MODULE_HOTKEYS
 	call	HotkeyBar_UpdateDuringDriveDetection
-%endif
-
-%ifdef MODULE_8BIT_IDE_ADVANCED
-	pop		dx
 %endif
 	; Fall to .ReadAtaInfoFromHardDisk
 
@@ -277,7 +248,7 @@ CreateBiosTablesForHardDisk:
 	jmp		SHORT DetectPrint_DriveNameFromDrvDetectInfoInESBX
 
 
-%ifdef MODULE_8BIT_IDE_ADVANCED
+%ifdef MODULE_8BIT_IDE
 ;--------------------------------------------------------------------
 ; DetectDrives_DoesIdevarsInCSBPbelongToXTCF
 ;	Parameters:
@@ -291,11 +262,15 @@ CreateBiosTablesForHardDisk:
 DetectDrives_DoesIdevarsInCSBPbelongToXTCF:
 	mov		al, [cs:bp+IDEVARS.bDevice]
 	cmp		al, DEVICE_8BIT_XTCF_PIO8
-	je		SHORT .DeviceIsXTCF
+	je		SHORT .Done
+	cmp		al, DEVICE_8BIT_XTCF_PIO8_WITH_BIU_OFFLOAD
+
+%ifdef MODULE_8BIT_IDE_ADVANCED
+	je		SHORT .Done
 	cmp		al, DEVICE_8BIT_XTCF_DMA
-	je		SHORT .DeviceIsXTCF
-	cmp		al, DEVICE_8BIT_XTCF_MEMMAP
-.DeviceIsXTCF:
+%endif ; MODULE_8BIT_IDE_ADVANCED
+
+.Done:		; return state via ZF, set from the cmp instructions
 NoSlaveDriveAvailable:
 	ret
-%endif ; MODULE_8BIT_IDE_ADVANCED
+%endif ; MODULE_8BIT_IDE

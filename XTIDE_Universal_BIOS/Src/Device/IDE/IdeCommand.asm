@@ -79,7 +79,7 @@ IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 	jne		SHORT .SkipLongWaitSinceDriveIsNotPrimaryMaster
 	test	bh, FLG_DRVNHEAD_DRV		; Wait already done for Master
 	jnz		SHORT .SkipLongWaitSinceDriveIsNotPrimaryMaster
-	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_MOTOR_STARTUP, FLG_STATUS_DRDY)
+	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_MOTOR_STARTUP, FLG_STATUS_BSY)
 	call	IdeWait_PollStatusFlagInBLwithTimeoutInBH
 .SkipLongWaitSinceDriveIsNotPrimaryMaster:
 
@@ -87,14 +87,16 @@ IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 	push	bp
 	call	Idepack_FakeToSSBP
 
-%ifdef MODULE_8BIT_IDE_ADVANCED
+%ifdef MODULE_8BIT_IDE
 	; Enable 8-bit PIO mode for 8-bit ATA and XT-CF
 	push	si
 	call	AH9h_Enable8bitModeForDevice8bitAta
-	xor		al, al						; XTCF_8BIT_PIO_MODE
+%ifdef MODULE_8BIT_IDE_ADVANCED
+	mov		al, XTCF_8BIT_PIO_MODE		; initialise with most basic transfer mode
 	call	AH9h_SetModeFromALtoXTCF
-	pop		si
 %endif ; MODULE_8BIT_IDE_ADVANCED
+	pop		si
+%endif ; MODULE_8BIT_IDE
 
 	; Prepare to output Identify Device command
 	mov		dl, 1						; Sector count (required by IdeTransfer.asm)
@@ -172,8 +174,8 @@ IdeCommand_OutputWithParameters:
 	cmp		bl, FLG_STATUS_DRQ				; Data transfer started?
 	jne		SHORT .WaitUntilNonTransferCommandCompletes
 %ifdef MODULE_8BIT_IDE_ADVANCED
-	cmp		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_XTCF_MEMMAP
-	jae		SHORT JrIdeTransfer_StartWithCommandInAL	; DEVICE_8BIT_XTCF_MEMMAP, DEVICE_8BIT_JRIDE_ISA or DEVICE_8BIT_ADP50L
+	cmp		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_JRIDE_ISA
+	jae		SHORT JrIdeTransfer_StartWithCommandInAL	; DEVICE_8BIT_JRIDE_ISA or DEVICE_8BIT_ADP50L
 %endif
 	jmp		IdeTransfer_StartWithCommandInAL
 

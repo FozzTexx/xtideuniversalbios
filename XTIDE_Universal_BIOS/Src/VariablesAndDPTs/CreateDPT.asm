@@ -121,11 +121,9 @@ CreateDPT_FromAtaInformation:
 	mov		[di+DPT.wPchsHeadsAndSectors], bx
 
 %ifdef MODULE_EBIOS
-%ifdef CREATE_COMPATIBLE_DPT
 	; Store P-Cylinders here for Compatible DPTs when FLGL_DPT_LBA is not set
 	; or when drive has over 15,482,880 sectors
 	mov		[di+DPT.wPchsCylinders], ax
-%endif
 	test	cl, FLGL_DPT_LBA
 	jz		SHORT .NoLbaSoNoEBIOS
 
@@ -262,15 +260,6 @@ CreateDPT_FromAtaInformation:
 ;--------------------------------------------------------------------
 CreateDPT_StoreIdevarsOffsetAndBasePortFromCSBPtoDPTinDSDI:
 	mov		[di+DPT.bIdevarsOffset], bp		; IDEVARS must start in first 256 bytes of ROM
-
-%ifdef MODULE_8BIT_IDE_ADVANCED
-	call	DetectDrives_DoesIdevarsInCSBPbelongToXTCF
-	jne		SHORT .DeviceUsesPortSpecifiedInIDEVARS
-	mov		[di+DPT.wBasePort], dx
-	ret
-.DeviceUsesPortSpecifiedInIDEVARS:
-%endif ; MODULE_8BIT_IDE_ADVANCED
-
 	mov		ax, [cs:bp+IDEVARS.wBasePort]
 	mov		[di+DPT.wBasePort], ax
 	ret

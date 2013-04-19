@@ -102,9 +102,9 @@ AccessDPT_IsThisDeviceXTCF:
 	mov		ah, [di+DPT_ATA.bDevice]
 	cmp		ah, DEVICE_8BIT_XTCF_PIO8
 	je		SHORT .DeviceIsXTCF
-	cmp		ah, DEVICE_8BIT_XTCF_DMA
+	cmp		ah, DEVICE_8BIT_XTCF_PIO8_WITH_BIU_OFFLOAD
 	je		SHORT .DeviceIsXTCF
-	cmp		ah, DEVICE_8BIT_XTCF_MEMMAP
+	cmp		ah, DEVICE_8BIT_XTCF_DMA
 .DeviceIsXTCF:
 	ret
 %endif ; MODULE_8BIT_IDE_ADVANCED

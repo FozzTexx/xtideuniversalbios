@@ -39,10 +39,6 @@ struc BOOTVARS
 						resb	256		; Boot Menu stack
 	.rgbMnuStack:
 	.dwPostStack		resb	4		; POST stack pointer when entering INT 19h
-
-%ifdef MODULE_8BIT_IDE_ADVANCED
-	.wNextXTCFportToScan	resb	2	; Needed for XT-CF port autodetection
-%endif
 %ifdef MODULE_HOTKEYS
 	.hotkeyVars				resb	HOTKEYVARS_size
 %endif

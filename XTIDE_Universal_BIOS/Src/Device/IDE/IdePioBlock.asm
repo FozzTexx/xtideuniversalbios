@@ -19,8 +19,18 @@
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 ;
 
+; Modified by JJP for XT-CFv3 support, Mar-13
+
 ; Section containing code
 SECTION .text
+
+
+; --------------------------------------------------------------------------------------------------
+;
+; READ routines follow
+;
+; --------------------------------------------------------------------------------------------------
+
 
 %ifdef MODULE_8BIT_IDE
 
@@ -49,38 +59,13 @@ ALIGN JUMP_ALIGN
 
 
 ;--------------------------------------------------------------------
-; IdePioBlock_ReadFromXtideRev2		or rev 1 with swapped A0 and A3 (chuck-mod)
+; IdePioBlock_ReadFrom8bitDataPort
+;
+; 8-bit PIO from a single data port.
+;
 ;	Parameters:
-;		CX:		Block size in 512 byte sectors
-;		DX:		IDE Data port address
-;		ES:DI:	Normalized ptr to buffer to receive data
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, BX, CX
-;--------------------------------------------------------------------
-%ifndef USE_186			; 8086/8088 compatible WORD read
-
-ALIGN JUMP_ALIGN
-IdePioBlock_ReadFromXtideRev2:
-	UNROLL_SECTORS_IN_CX_TO_OWORDS
-ALIGN JUMP_ALIGN
-.ReadNextOword:
-	%rep 8	; WORDs
-		in		ax, dx		; Read WORD
-		stosw				; Store WORD to [ES:DI]
-	%endrep
-		loop	.ReadNextOword
-		ret
-
-%endif
-
-
-;--------------------------------------------------------------------
-; IdePioBlock_ReadFrom8bitDataPort		CF-XT when using 8-bit PIO
-;	Parameters:
-;		CX:		Block size in 512 byte sectors
-;		DX:		IDE Data port address
+;		CX:	Block size in 512 byte sectors
+;		DX:	IDE Data port address
 ;		ES:DI:	Normalized ptr to buffer to receive data
 ;	Returns:
 ;		Nothing
@@ -93,14 +78,49 @@ IdePioBlock_ReadFrom8bitDataPort:
 	shl		cx, 9		; Sectors to BYTEs
 	rep insb
 	ret
-
 %else ; If 8088/8086
 	UNROLL_SECTORS_IN_CX_TO_OWORDS
 ALIGN JUMP_ALIGN
 .ReadNextOword:
 	%rep 16	; BYTEs
-		in		al, dx		; Read BYTE
-		stosb				; Store BYTE to [ES:DI]
+		in		al, dx	; Read BYTE
+		stosb			; Store BYTE to [ES:DI]
+	%endrep
+	loop	.ReadNextOword
+	ret
+%endif
+
+%endif	; MODULE_8BIT_IDE
+
+
+;--------------------------------------------------------------------
+; IdePioBlock_ReadFrom16bitDataPort
+;
+; 16-bit PIO from a single data port.
+;
+;	Parameters:
+;		CX:	Block size in 512 byte sectors
+;		DX:	IDE Data port address
+;		ES:DI:	Normalized ptr to buffer to receive data
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, BX, CX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+IdePioBlock_ReadFrom16bitDataPort:
+%ifdef USE_186
+	xchg		cl, ch	; Sectors to WORDs
+	rep insw
+	ret
+
+%else ; If 8088/8086
+	UNROLL_SECTORS_IN_CX_TO_OWORDS
+ALIGN JUMP_ALIGN
+.ReadNextOword:
+	%rep 8	; WORDs
+		in		ax, dx	; Read BYTE
+		stosw			; Store BYTE to [ES:DI]
 	%endrep
 	loop	.ReadNextOword
 	ret
@@ -108,10 +128,31 @@ ALIGN JUMP_ALIGN
 
 
 ;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+IdePioBlock_ReadFrom32bitDataPort:
+	db		0C1h		; SHL
+	db		0E1h		; CX
+	db		7			; 7	(Sectors to DWORDs)
+	rep
+	db		66h			; Override operand size to 32-bit
+	db		6Dh			; INSW/INSD
+	ret
+
+
+
+; --------------------------------------------------------------------------------------------------
+;
+; WRITE routines follow
+;
+; --------------------------------------------------------------------------------------------------
+
+%ifdef MODULE_8BIT_IDE
+
+;--------------------------------------------------------------------
 ; IdePioBlock_WriteToXtideRev1
 ;	Parameters:
-;		CX:		Block size in 512-byte sectors
-;		DX:		IDE Data port address
+;		CX:	Block size in 512-byte sectors
+;		DX:	IDE Data port address
 ;		ES:SI:	Normalized ptr to buffer containing data
 ;	Returns:
 ;		Nothing
@@ -138,8 +179,8 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ; IdePioBlock_WriteToXtideRev2	or rev 1 with swapped A0 and A3 (chuck-mod)
 ;	Parameters:
-;		CX:		Block size in 512-byte sectors
-;		DX:		IDE Data port address
+;		CX:	Block size in 512-byte sectors
+;		DX:	IDE Data port address
 ;		ES:SI:	Normalized ptr to buffer containing data
 ;	Returns:
 ;		Nothing
@@ -149,13 +190,13 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 IdePioBlock_WriteToXtideRev2:
 	UNROLL_SECTORS_IN_CX_TO_QWORDS
-	push	ds
-	push	es			; Copy ES...
-	pop		ds			; ...to DS
+	push		ds
+	push		es		; Copy ES...
+	pop			ds		; ...to DS
 ALIGN JUMP_ALIGN
 .WriteNextQword:
 	%rep 4	; WORDs
-		XTIDE_MOD_OUTSW
+		XTIDE_MOD_OUTSW	; special macro
 	%endrep
 	loop	.WriteNextQword
 	pop		ds
@@ -163,10 +204,10 @@ ALIGN JUMP_ALIGN
 
 
 ;--------------------------------------------------------------------
-; IdePioBlock_WriteTo8bitDataPort		XT-CF when using 8-bit PIO
+; IdePioBlock_WriteTo8bitDataPort
 ;	Parameters:
-;		CX:		Block size in 512-byte sectors
-;		DX:		IDE Data port address
+;		CX:	Block size in 512-byte sectors
+;		DX:	IDE Data port address
 ;		ES:SI:	Normalized ptr to buffer containing data
 ;	Returns:
 ;		Nothing
@@ -175,7 +216,6 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 IdePioBlock_WriteTo8bitDataPort:
-
 %ifdef USE_186
 	shl		cx, 9		; Sectors to BYTEs
 	es					; Source is ES segment
@@ -183,17 +223,19 @@ IdePioBlock_WriteTo8bitDataPort:
 	ret
 
 %else ; If 8088/8086
-	UNROLL_SECTORS_IN_CX_TO_DWORDS
-	push	ds
-	push	es
-	pop		ds
+	UNROLL_SECTORS_IN_CX_TO_QWORDS
+	push		ds
+	;mov		ax, es
+	;mov		ds, ax	; move es to ds via ax (does this run faster on 8088?)
+	push		es
+	pop			ds
 ALIGN JUMP_ALIGN
-.WriteNextDword:
-	%rep 4	; BYTEs
-		lodsb				; Load BYTE from [DS:SI]
-		out		dx, al		; Write BYTE
+.WriteNextQword:
+	%rep 8	; BYTEs
+		lodsb			; Load BYTE from [DS:SI]
+		out	dx, al		; Write BYTE
 	%endrep
-	loop	.WriteNextDword
+	loop	.WriteNextQword
 	pop		ds
 	ret
 %endif
@@ -202,48 +244,11 @@ ALIGN JUMP_ALIGN
 
 
 ;--------------------------------------------------------------------
-; IdePioBlock_ReadFromXtideRev2			(when 80186/80188 instructions are available)
-; IdePioBlock_ReadFrom16bitDataPort		Normal 16-bit IDE
-; IdePioBlock_ReadFrom32bitDataPort		VLB/PCI 32-bit IDE
-;	Parameters:
-;		CX:		Block size in 512 byte sectors
-;		DX:		IDE Data port address
-;		ES:DI:	Normalized ptr to buffer to receive data
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, BX, CX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-%ifdef USE_186
-%ifdef MODULE_8BIT_IDE
-IdePioBlock_ReadFromXtideRev2:
-%endif
-%endif
-IdePioBlock_ReadFrom16bitDataPort:
-	xchg	cl, ch		; Sectors to WORDs
-	rep
-	db		6Dh			; INSW
-	ret
-
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-IdePioBlock_ReadFrom32bitDataPort:
-	db		0C1h		; SHL
-	db		0E1h		; CX
-	db		7			; 7	(Sectors to DWORDs)
-	rep
-	db		66h			; Override operand size to 32-bit
-	db		6Dh			; INSW/INSD
-	ret
-
-
-;--------------------------------------------------------------------
-; IdePioBlock_WriteTo16bitDataPort		Normal 16-bit IDE
+; IdePioBlock_WriteTo16bitDataPort		Normal 16-bit IDE, XT-CFv3 in BIU Mode
 ; IdePioBlock_WriteTo32bitDataPort		VLB/PCI 32-bit IDE
 ;	Parameters:
-;		CX:		Block size in 512-byte sectors
-;		DX:		IDE Data port address
+;		CX:	Block size in 512-byte sectors
+;		DX:	IDE Data port address
 ;		ES:SI:	Normalized ptr to buffer containing data
 ;	Returns:
 ;		Nothing
@@ -252,11 +257,29 @@ IdePioBlock_ReadFrom32bitDataPort:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 IdePioBlock_WriteTo16bitDataPort:
+%ifdef USE_186
 	xchg	cl, ch		; Sectors to WORDs
 	es					; Source is ES segment
-	rep
-	db		6Fh			; OUTSW
+	rep outsw
 	ret
+
+%else ; If 8088/8086
+	UNROLL_SECTORS_IN_CX_TO_QWORDS
+	push	ds
+	;mov	ax, es
+	;mov	ds, ax		; move es to ds via ax (does this run faster on 8088?)
+	push	es
+	pop		ds
+ALIGN JUMP_ALIGN
+.WriteNextQword:
+	%rep 4	; WORDs
+		lodsw			; Load BYTE from [DS:SI]
+		out	dx, ax		; Write BYTE
+	%endrep
+	loop	.WriteNextQword
+	pop		ds
+	ret
+%endif	; if/else USE_186
 
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
