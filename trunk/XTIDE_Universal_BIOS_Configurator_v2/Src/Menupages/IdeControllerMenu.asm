@@ -25,7 +25,7 @@ g_MenupageForIdeControllerMenu:
 istruc MENUPAGE
 	at	MENUPAGE.fnEnter,			dw	IdeControllerMenu_EnterMenuOrModifyItemVisibility
 	at	MENUPAGE.fnBack,			dw	ConfigurationMenu_EnterMenuOrModifyItemVisibility
-	at	MENUPAGE.wMenuitems,		dw	12
+	at	MENUPAGE.wMenuitems,		dw	11
 iend
 
 g_MenuitemIdeControllerBackToConfigurationMenu:
@@ -186,23 +186,6 @@ istruc MENUITEM
 	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	15
 iend
 
-g_MenuitemIdeControllerXTCFwindow:
-istruc MENUITEM
-	at	MENUITEM.fnActivate,		dw	Menuitem_ActivateHexInputForMenuitemInDSSI
-	at	MENUITEM.fnFormatValue,		dw	MenuitemPrint_WriteHexValueStringToBufferInESDIfromItemInDSSI
-	at	MENUITEM.szName,			dw	g_szItemIdeXTCFwindow
-	at	MENUITEM.szQuickInfo,		dw	g_szNfoIdeXTCFwindow
-	at	MENUITEM.szHelp,			dw	g_szNfoIdeXTCFwindow
-	at	MENUITEM.bFlags,			db	FLG_MENUITEM_BYTEVALUE
-	at	MENUITEM.bType,				db	TYPE_MENUITEM_HEX
-	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	NULL
-	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgIdeXTCFwindow
-	at	MENUITEM.itemValue + ITEM_VALUE.wMinValue,					dw	0A000h
-	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	0E800h
-	at	MENUITEM.itemValue + ITEM_VALUE.fnValueReader,				dw	ReaderForXTCFwindow
-	at	MENUITEM.itemValue + ITEM_VALUE.fnValueWriter,				dw	WriterForXTCFwindow
-iend
-
 g_rgwChoiceToValueLookupForDevice:
 	dw	DEVICE_16BIT_ATA
 	dw	DEVICE_32BIT_ATA
@@ -210,8 +193,8 @@ g_rgwChoiceToValueLookupForDevice:
 	dw	DEVICE_8BIT_XTIDE_REV1
 	dw	DEVICE_8BIT_XTIDE_REV2
 	dw	DEVICE_8BIT_XTCF_PIO8
+	dw	DEVICE_8BIT_XTCF_PIO8_WITH_BIU_OFFLOAD
 	dw	DEVICE_8BIT_XTCF_DMA
-	dw	DEVICE_8BIT_XTCF_MEMMAP
 	dw	DEVICE_8BIT_JRIDE_ISA
 	dw	DEVICE_8BIT_ADP50L
 	dw	DEVICE_SERIAL_PORT
@@ -221,9 +204,9 @@ g_rgszValueToStringLookupForDevice:
 	dw	g_szValueCfgDevice8b
 	dw	g_szValueCfgDeviceRev1
 	dw	g_szValueCfgDeviceRev2
-	dw	g_szValueCfgDevicePioXTCF
-	dw	g_szValueCfgDeviceDmaXTCF
-	dw	g_szValueCfgDeviceMemXTCF
+	dw	g_szValueCfgDeviceXTCFPio8
+	dw	g_szValueCfgDeviceXTCFPio8WithBIUOffload
+	dw	g_szValueCfgDeviceXTCFDMA
 	dw	g_szValueCfgDeviceJrIdeIsa
 	dw	g_szValueCfgDeviceADP50L
 	dw	g_szValueCfgDeviceSerial
@@ -332,9 +315,6 @@ IdeControllerMenu_InitializeToIdevarsOffsetInBX:
 	lea		ax, [bx+IDEVARS.wControlBlockPort]
 	mov		[cs:g_MenuitemIdeControllerControlBlockAddress+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset], ax
 
-	lea		ax, [bx+IDEVARS.bXTCFcontrolRegister]
-	mov		[cs:g_MenuitemIdeControllerXTCFwindow+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset], ax
-
 	lea		ax, [bx+IDEVARS.bSerialCOMPortChar]
 	mov		[cs:g_MenuitemIdeControllerSerialCOM+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset], ax
 
@@ -361,7 +341,6 @@ IdeControllerMenu_EnterMenuOrModifyItemVisibility:
 	call	.EnableOrDisableControlBlockPort
 	call	.DisableIRQchannelSelection
 	call	.EnableOrDisableEnableInterrupt
-	call	.EnableOrDisableXTCFwindow
 	call	.EnableOrDisableSerial
 	mov		si, g_MenupageForIdeControllerMenu
 	jmp		Menupage_ChangeToNewMenupageInDSSI
@@ -429,25 +408,6 @@ ALIGN JUMP_ALIGN
 	jnz		SHORT .EnableMenuitemFromCSBX
 .DisableIRQchannelSelection:
 	mov		bx, g_MenuitemIdeControllerIdeIRQ
-	jmp		SHORT .DisableMenuitemFromCSBX
-
-
-;--------------------------------------------------------------------
-; .EnableOrDisableXTCFwindow
-;	Parameters:
-;		SS:BP:	Menu handle
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, BX
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-.EnableOrDisableXTCFwindow:
-	mov		bx, [cs:g_MenuitemIdeControllerDevice+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset]
-	call	Buffers_GetRomvarsValueToAXfromOffsetInBX
-	mov		bx, g_MenuitemIdeControllerXTCFwindow
-	cmp		al, DEVICE_8BIT_XTCF_MEMMAP
-	je		SHORT .EnableMenuitemFromCSBX
 	; Fall to .DisableMenuitemFromCSBX
 
 
@@ -613,7 +573,7 @@ IdeControllerMenu_WriteDevice:
 		mov		bx, DEVICE_ATA_PRIMARY_PORTCTRL
 		jbe		SHORT .writeNonSerial
 
-		mov		ax, DEVICE_XTIDE_DEFAULT_PORT		; Defaults for 8-bit XTIDE devices
+		mov		ax, DEVICE_XTIDE_DEFAULT_PORT		; Defaults for 8-bit XTIDE and XT-CF devices
 		mov		bx, DEVICE_XTIDE_DEFAULT_PORTCTRL
 
 .writeNonSerial:
@@ -644,29 +604,8 @@ IdeControllerMenu_WriteDevice:
 		stosb
 
 .done:
-		; See if we are changing to XT-CF. If we are, store
-		; byte for Control Register.
 		pop		ax
 		pop		di			; IDEVARS.bDevice
-		sub		di, BYTE IDEVARS.bDevice - IDEVARS.bXTCFcontrolRegister	; IDEVARS.bXTCFcontrolRegister
-		cmp		al, DEVICE_8BIT_XTCF_PIO8 >> 1
-		je		SHORT .ChangingToPioModeXTCF
-		cmp		al, DEVICE_8BIT_XTCF_DMA >> 1
-		je		SHORT .ChangingToDmaModeXTCF
-		cmp		al, DEVICE_8BIT_XTCF_MEMMAP >> 1
-		jne		SHORT .NoNeedToChangeXTCFsettings
-
-		; XT-CF Memory Mapped Mode
-		mov		WORD [es:di], DEFAULT_XTCF_SECTOR_WINDOW_SEGMENT >> 8	; Store word to clear Control Block Port high byte
-		jmp		SHORT .NoNeedToChangeXTCFsettings
-.ChangingToPioModeXTCF:
-		mov		BYTE [es:di], XTCF_8BIT_PIO_MODE
-		jmp		SHORT .NoNeedToChangeXTCFsettings
-.ChangingToDmaModeXTCF:
-		mov		BYTE [es:di], XTCF_DMA_MODE
-		; Fall to .NoNeedToChangeXTCFsettings
-
-.NoNeedToChangeXTCFsettings:
 		pop		di
 		pop		bx
 		ret

@@ -278,7 +278,7 @@ ALIGN JUMP_ALIGN
 LoadOldSettingsFromEeprom:
 	call	Buffers_SaveChangesIfFileLoaded
 	call	EEPROM_LoadOldSettingsFromRomToRamBuffer
-	and		WORD [g_cfgVars+CFGVARS.wFlags], ~FLG_CFGVARS_UNSAVED
+	call	Buffers_SetUnsavedChanges
 	mov		dx, g_szDlgMainLoadStngs
 	jmp		Dialogs_DisplayNotificationFromCSDX
 

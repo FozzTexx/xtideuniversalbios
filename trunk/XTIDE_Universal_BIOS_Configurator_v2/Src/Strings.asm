@@ -277,9 +277,9 @@ g_szMultichoiceCfgDevice:	db	"16-bit ISA/VLB/PCI IDE",LF
 							db	"16-bit ISA IDE in 8-bit mode",LF
 							db	"XTIDE rev 1",LF
 							db	"XTIDE rev 2 or modded rev 1",LF
-							db	"XT-CF v2/v3/Lite in PIO mode",LF
-							db	"XT-CF v2 in DMA mode",LF
-							db	"XT-CF v2 in memory mode",LF
+							db	"XT-CF (PIO)",LF
+							db	"XT-CF (PIO w/BIU offload)",LF
+							db	"XT-CF DMA (v3 only)",LF
 							db	"JR-IDE/ISA",LF
 							db	"SVC ADP50L",LF
 							db	"Serial port virtual device",NULL
@@ -289,9 +289,9 @@ g_szValueCfgDevice32b:		db	"32-bit",NULL
 g_szValueCfgDevice8b:		db	"8-bit",NULL
 g_szValueCfgDeviceRev1:		db	"XTIDE r1",NULL
 g_szValueCfgDeviceRev2:		db	"XTIDE r2",NULL
-g_szValueCfgDevicePioXTCF:	db	"XTCF PIO",NULL
-g_szValueCfgDeviceDmaXTCF:	db	"XTCF DMA",NULL
-g_szValueCfgDeviceMemXTCF:	db	"XTCF MEM",NULL
+g_szValueCfgDeviceXTCFPio8:	db	"XTCF PIO",NULL
+g_szValueCfgDeviceXTCFPio8WithBIUOffload:	db	"XTCF BIU",NULL
+g_szValueCfgDeviceXTCFDMA:	db	"XTCF DMA",NULL
 g_szValueCfgDeviceJrIdeIsa:	db	"JR-ISA",NULL
 g_szValueCfgDeviceADP50L:	db	"ADP50L",NULL
 g_szValueCfgDeviceSerial:	db	"Serial",NULL
@@ -372,8 +372,8 @@ g_szNfoDrvUserCHS:		db	"Specify (P-)CHS parameters manually instead of autodetec
 g_szNfoDrvCyls:			db	"Number of user specified P-CHS cylinders.",NULL
 g_szNfoDrvHeads:		db	"Number of user specified P-CHS heads.",NULL
 g_szNfoDrvSect:			db	"Number of user specified P-CHS sectors per track.",NULL
-g_szNfoDrvUserLBA:		db	"Limit drive capacity to X million sectors.",NULL
-g_szNfoDrvLbaSectors:	db	"Millions of sectors (1024*1024). 1M sectors = 512 MiB.",NULL
+g_szNfoDrvUserLBA:		db	"Limit drive capacity to fix compatibility problems with Windows 9x.",NULL
+g_szNfoDrvLbaSectors:	db	"Millions of sectors (1024*1024). 1M sectors = 512 MiB. Recommended limits are 64 for Windows 95, 128 for Windows 98 and 256 for Windows ME (and 98 with updated fdisk).",NULL
 
 g_szHelpDrvBlockMode:	db	"Block Mode will speed up transfers since multiple sectors can be transferred before waiting next data request."
 						db	" Normally Block Mode should always be kept enabled but there is at"
