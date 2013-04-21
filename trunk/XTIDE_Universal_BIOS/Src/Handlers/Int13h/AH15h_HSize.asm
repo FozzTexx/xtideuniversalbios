@@ -23,6 +23,11 @@ SECTION .text
 ;--------------------------------------------------------------------
 ; Int 13h function AH=15h, Read Disk Drive Size.
 ;
+; It is unclear what is the total number of sectors to return.
+; Award BIOS from 1997 returns full capacity instead of L-CHS limit
+; like we do. I think it makes more sense if this function returns
+; L-CHS limit.
+;
 ; AH15h_HandlerForReadDiskDriveSize
 ;	Parameters:
 ;		DL:		Translated Drive number

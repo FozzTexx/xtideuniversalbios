@@ -58,7 +58,29 @@ BootVars_Initialize:
 ;		Nothing
 ;--------------------------------------------------------------------
 BootVars_StoreDefaultDriveLettersToHotkeyVars:
-	mov		WORD [es:BOOTVARS.hotkeyVars+HOTKEYVARS.wFddAndHddLetters], DEFAULT_FLOPPY_DRIVE_LETTER | (DEFAULT_HARD_DRIVE_LETTER<<8)
+	call	BootVars_GetLetterForFirstHardDriveToAX
+	mov		ah, DEFAULT_FLOPPY_DRIVE_LETTER
+	xchg	al, ah
+	mov		[es:BOOTVARS.hotkeyVars+HOTKEYVARS.wFddAndHddLetters], ax
 	ret
 
 %endif ; MODULE_HOTKEYS
+
+
+;--------------------------------------------------------------------
+; Returns letter for first hard disk. Usually it will be 'C' but it
+; can be higher if more than two floppy drives are found.
+;
+; BootVars_GetLetterForFirstHardDriveToAX
+;	Parameters:
+;		DS:		RAMVARS segment
+;	Returns:
+;		AX:		Upper case letter for first hard disk
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+BootVars_GetLetterForFirstHardDriveToAX:
+	call	FloppyDrive_GetCountToAX
+	add		al, DEFAULT_FLOPPY_DRIVE_LETTER		; First Hard Drive letter comes after last floppy drive letter...
+	MAX_U	al, DEFAULT_HARD_DRIVE_LETTER		; ...but it can never be 'A' or 'B'
+	ret

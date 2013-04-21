@@ -245,12 +245,9 @@ DetectPrint_TryToBootFromDL:
 	ePUSH_T	ax, ' '			; No drive translation so print space
 
 	; Get boot drive letters
-	call	FloppyDrive_GetCountToAX
-	mov		ah, 'A'			; AH = First Floppy Drive letter (always 'A')
-	add		al, ah
-	MAX_U	al, 'C'			; AL = First Hard Drive letter ('C', 'D', or 'E')
+	call	BootVars_GetLetterForFirstHardDriveToAX
 	test	dl, dl
-	eCMOVNS	al, ah
+	eCMOVNS	al, DEFAULT_FLOPPY_DRIVE_LETTER
 	push	ax
 
 %endif ; MODULE_DRIVEXLATE

@@ -196,19 +196,3 @@ RamVars_UnpackFlopCntAndFirstToAL:
 	sar		al, 1
 	ret
 %endif
-
-
-%if 0							; unused...
-;--------------------------------------------------------------------
-; RamVars_IsDriveDetectionInProgress
-;	Parameters:
-;		DS:		RAMVARS segment
-;	Returns:
-;		ZF:		Set if drive detection is in progress (ROM initialization)
-;	Corrupts registers:
-;		None
-;--------------------------------------------------------------------
-RamVars_IsDriveDetectionInProgress:
-	cmp		WORD [RAMVARS.wSignature], RAMVARS_DRV_DETECT_SIGNATURE
-	ret
-%endif
