@@ -157,7 +157,7 @@ FloppyDrive_GetCountToAX:
 ;		CF:		Cleared if successful
 ;				Set if BIOS function not supported
 ;	Corrupts registers:
-;		AH, ES
+;		AH
 ;--------------------------------------------------------------------
 FloppyDrive_GetCountFromBIOS_or_BDA:
 	push	es

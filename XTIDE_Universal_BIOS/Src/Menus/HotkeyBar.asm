@@ -89,7 +89,7 @@ HotkeyBar_DrawToTopOfScreen:
 ;	Corrupts registers:
 ;		AX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
-	call	DriveXlate_GetLetterForFirstHardDriveToAX
+	call	BootVars_GetLetterForFirstHardDriveToAX
 	mov		ah, ANGLE_QUOTE_RIGHT
 	mov		cl, [es:BOOTVARS.hotkeyVars+HOTKEYVARS.bHddLetter]
 	mov		di, g_szHDD
@@ -396,7 +396,7 @@ HotkeyBar_StoreHotkeyToBootvarsIfValidKeystrokeInAX:
 
 	; Determine if Floppy or Hard Drive hotkey
 	xchg	cx, ax
-	call	DriveXlate_GetLetterForFirstHardDriveToAX
+	call	BootVars_GetLetterForFirstHardDriveToAX
 	cmp		cl, al
 	jb		SHORT .StoreDriveLetter	; Store Floppy Drive letter
 

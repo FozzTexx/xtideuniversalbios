@@ -175,7 +175,7 @@ GetSectorCountToDXAXfromCHSinAXBLBH:
 ;		AX:		Number of L-CHS cylinders (?...1024)
 ;		BL:		Number of L-CHS heads (?...240)
 ;		CX:		Number of bits shifted (0...3)
-;		DL:		ADDRESSING_MODE_NORMAL or ADDRESSING_MODE_LARGE
+;		DX:		ADDRESSING_MODE_NORMAL or ADDRESSING_MODE_LARGE
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
@@ -217,19 +217,19 @@ ConvertPCHfromAXBLtoRevisedEnhancedCHinAXBL:
 ;
 ; ConvertPCHfromAXBLtoEnhancedCHinAXBL:
 ;	Parameters:
-;		AX:		Number of P-CHS cylinders (1...8192)
+;		AX:		Number of P-CHS cylinders (1...8192, or up to 17475 if fell from above)
 ;		BL:		Number of P-CHS heads (1...16)
 ;	Returns:
 ;		AX:		Number of L-CHS cylinders (?...1024)
-;		BL:		Number of L-CHS heads (?...128)
+;		BL:		Number of L-CHS heads (?...128, or up to 240 if fell from above)
 ;		CX:		Number of bits shifted (0...3)
-;		DL:		TRANSLATEMODE_NORMAL or TRANSLATEMODE_LARGE
+;		DX:		TRANSLATEMODE_NORMAL or TRANSLATEMODE_LARGE
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
 ConvertPCHfromAXBLtoEnhancedCHinAXBL:
+	cwd					; Assume TRANSLATEMODE_NORMAL
 	xor		cx, cx		; No bits to shift initially
-	xor		dl, dl		; Assume TRANSLATEMODE_NORMAL
 .ShiftIfMoreThan1024Cylinder:
 	cmp		ax, MAX_LCHS_CYLINDERS
 	jbe		SHORT ReturnLCHSinAXBLBH

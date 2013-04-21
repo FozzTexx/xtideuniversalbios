@@ -47,7 +47,13 @@ SerialDPT_Finalize:
 		ret
 
 %ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
-	%if FLGH_DPT_SERIAL_DEVICE != 0x4 || FLGH_DPT_SERIAL_FLOPPY != 0x10 || FLGH_DPT_SERIAL_FLOPPY_TYPE_MASK != 0xe0 || FLGH_DPT_SERIAL_FLOPPY_TYPE_FIELD_POSITION != 5
-		%error "The serial server passes FLGH values into SerialDPT_Finalize directly.  If the flag positions are changed, corresponding changes will need to be made in the serial server, and likely a version check put in to deal with servers talking to incompatible clients"
-	%endif
+	%ifdef MODULE_SERIAL_FLOPPY
+		%if FLGH_DPT_SERIAL_DEVICE != 0x4 || FLGH_DPT_SERIAL_FLOPPY != 0x10 || FLGH_DPT_SERIAL_FLOPPY_TYPE_MASK != 0xe0 || FLGH_DPT_SERIAL_FLOPPY_TYPE_FIELD_POSITION != 5
+			%error "The serial server passes FLGH values into SerialDPT_Finalize directly.  If the flag positions are changed, corresponding changes will need to be made in the serial server, and likely a version check put in to deal with servers talking to incompatible clients"
+		%endif
+	%else
+		%if FLGH_DPT_SERIAL_DEVICE != 0x4
+			%error "The serial server passes FLGH values into SerialDPT_Finalize directly.  If the flag positions are changed, corresponding changes will need to be made in the serial server, and likely a version check put in to deal with servers talking to incompatible clients"
+		%endif
+	%endif ; MODULE_SERIAL_FLOPPY
 %endif

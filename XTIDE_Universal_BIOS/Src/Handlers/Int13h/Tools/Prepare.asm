@@ -44,17 +44,24 @@ Prepare_ByLoadingDapToESSIandVerifyingForTransfer:
 	jb		SHORT InvalidDAP
 
 	; Make sure that sector count is valid
+	mov		al, [es:si+DAP.wSectorCount]
+	test	al, al
+	jz		SHORT ZeroSectorsRequestedSoNoErrors
+	js		SHORT InvalidNumberOfSectorsRequested
+
+%if 0	; Slow version in the unlikely case that high byte needs to be checked.
 	mov		ax, [es:si+DAP.wSectorCount]
 	test	ax, ax
 	jz		SHORT ZeroSectorsRequestedSoNoErrors
 	cmp		ax, BYTE 127
 	ja		SHORT InvalidNumberOfSectorsRequested
+%endif
 
 	; Get EBIOS command index to BX
 	; LBA28 or LBA48 command
 	call	Prepare_GetOldInt13hCommandIndexToBX
 	mov		al, [di+DPT.bFlagsLow]
-	eSHL_IM	al, 1					; Set CF if LBA48 supported
+	shl		al, 1					; Set CF if LBA48 supported
 	adc		bl, bh					; LBA48 EXT commands
 	ret
 %endif ; MODULE_EBIOS

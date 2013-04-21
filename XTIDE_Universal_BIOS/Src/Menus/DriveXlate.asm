@@ -31,7 +31,7 @@ SECTION .text
 ;		AX
 ;--------------------------------------------------------------------
 DriveXlate_ConvertDriveLetterInDLtoDriveNumber:
-	call	DriveXlate_GetLetterForFirstHardDriveToAX
+	call	BootVars_GetLetterForFirstHardDriveToAX
 	cmp		dl, al
 	jb		SHORT .ConvertLetterInDLtoFloppyDriveNumber
 
@@ -67,32 +67,13 @@ DriveXlate_ConvertDriveNumberFromDLtoDriveLetter:
 	js		SHORT .GetDefaultFloppyDrive
 
 	; Store default hard drive to boot from
-	call	DriveXlate_GetLetterForFirstHardDriveToAX
+	call	BootVars_GetLetterForFirstHardDriveToAX
 	add		dl, al
 	stc
 	ret
 
 .GetDefaultFloppyDrive:
 	sub		dl, 80h - DEFAULT_FLOPPY_DRIVE_LETTER	; Clears CF
-	ret
-
-
-;--------------------------------------------------------------------
-; Returns letter for first hard disk. Usually it will be 'C' but it
-; can be higher if more than two floppy drives are found.
-;
-; DriveXlate_GetLetterForFirstHardDriveToAX
-;	Parameters:
-;		DS:		RAMVARS segment
-;	Returns:
-;		AX:		Upper case letter for first hard disk
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-DriveXlate_GetLetterForFirstHardDriveToAX:
-	call	FloppyDrive_GetCountToAX
-	add		al, DEFAULT_FLOPPY_DRIVE_LETTER
-	MAX_U	al, DEFAULT_HARD_DRIVE_LETTER
 	ret
 
 

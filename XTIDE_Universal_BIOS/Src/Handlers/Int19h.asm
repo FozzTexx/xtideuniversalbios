@@ -85,6 +85,10 @@ Int19h_BootLoaderHandler:
 	call	Initialize_AndDetectDrives
 
 %ifdef MODULE_HOTKEYS
+	; Last hard drive might have scrolled Hotkey Bar out of screen.
+	; We want to display it during wait.
+	call	HotkeyBar_UpdateDuringDriveDetection
+
 .WaitUntilTimeToCloseHotkeyBar:
 	call	TimerTicks_ReadFromBdaToAX
 	sub		ax, [es:BOOTVARS.hotkeyVars+HOTKEYVARS.wTimeWhenDisplayed]

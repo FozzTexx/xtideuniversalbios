@@ -108,7 +108,7 @@ CreateDPT_FromAtaInformation:
 
 	; Store P-CHS and flags
 	call	AtaGeometry_GetPCHStoAXBLBHfromAtaInfoInESSI
-	dec		dx						; Set ZF if TRANSLATEMODE_LARGE, SF if TRANSLATEMODE_NORMAL
+	dec		dl						; Set ZF if TRANSLATEMODE_LARGE, SF if TRANSLATEMODE_NORMAL
 	js		SHORT .NothingToChange
 	jz		SHORT .LimitHeadsForLargeAddressingMode
 
