@@ -64,7 +64,7 @@ AtaGeometry_GetLbaSectorCountToBXDXAXfromAtaInfoInESSI:
 
 
 ;--------------------------------------------------------------------
-; AtaGeometry_GetLCHStoAXBLBHfromAtaInfoInESSIandTranslateModeInDX
+; AtaGeometry_GetLCHStoAXBLBHfromAtaInfoInESSIwithTranslateModeInDX
 ;	Parameters:
 ;		DX:		Wanted translate mode or TRANSLATEMODE_AUTO to autodetect
 ;		ES:SI:	Ptr to 512-byte ATA information read from the drive
@@ -77,7 +77,7 @@ AtaGeometry_GetLbaSectorCountToBXDXAXfromAtaInfoInESSI:
 ;	Corrupts registers:
 ;		DH
 ;--------------------------------------------------------------------
-AtaGeometry_GetLCHStoAXBLBHfromAtaInfoInESSIandTranslateModeInDX:
+AtaGeometry_GetLCHStoAXBLBHfromAtaInfoInESSIwithTranslateModeInDX:
 	call	AtaGeometry_GetPCHStoAXBLBHfromAtaInfoInESSI
 
 	; Check if user defined translate mode
@@ -91,20 +91,28 @@ AtaGeometry_GetLCHStoAXBLBHfromAtaInfoInESSIandTranslateModeInDX:
 	jz		SHORT .UseAssistedLBA
 	; TRANSLATEMODE_AUTO set
 
+%ifndef MODULE_EBIOS
+	; Since we do not have EBIOS functions, we might as well use the faster
+	; LARGE mode for small drives. Assisted LBA provides more capacity for
+	; larger drives.
 	; Generate L-CHS using simple bit shift algorithm (ECHS) if
 	; 8192 or less cylinders.
 	cmp		ax, 8192
 	jbe		SHORT ConvertPCHfromAXBLtoEnhancedCHinAXBL
+%endif
 
-	; We have 8193 or more cylinders so two algorithms are available:
-	; Revised ECHS or Assisted LBA. The Assisted LBA provides larger
-	; capacity but requires LBA support from drive (drives this large
-	; always support LBA but user might have unintentionally set LBA).
-.UseAssistedLBA:
+	; If we have EBIOS functions, we should always use Assisted LBA
+	; for drives with LBA support. Otherwise the EBIOS functions are
+	; useless since we never do LBA to P-CHS translation.
+	; Even if we do not have EBIOS functions, we must do this check
+	; since user might have forced LBA mode even though the drive does
+	; not support LBA addressing.
 	test	BYTE [es:si+ATA1.wCaps+1], A1_wCaps_LBA>>8
 	jz		SHORT ConvertPCHfromAXBLtoRevisedEnhancedCHinAXBL
 
-	; Drive supports LBA
+	; Assisted LBA provides most capacity but translation algorithm is
+	; slower. The speed difference doesn't matter on AT systems.
+.UseAssistedLBA:
 	call	GetSectorCountToDXAXfromCHSinAXBLBH
 	call	ConvertChsSectorCountFromDXAXtoLbaAssistedLCHSinAXBLBH
 	xor		cx, cx		; No bits to shift
@@ -182,10 +190,8 @@ GetSectorCountToDXAXfromCHSinAXBLBH:
 ConvertPCHfromAXBLtoRevisedEnhancedCHinAXBL:
 	; Generate L-CHS using simple bit shift algorithm (ECHS) if
 	; 8192 or less cylinders
-	cmp		ax, 8192
-	jbe		SHORT ConvertPCHfromAXBLtoEnhancedCHinAXBL
-	cmp		bl, 16	; Drives with 8193 or more cylinders can report 15 heads
-	jb		SHORT ConvertPCHfromAXBLtoEnhancedCHinAXBL
+	call	AtaGeometry_IsDriveSmallEnoughForECHS
+	jc		SHORT ConvertPCHfromAXBLtoEnhancedCHinAXBL
 
 	eMOVZX	cx, bl	; CX = 16
 	dec		bx		; Heads = 15
@@ -238,6 +244,32 @@ ConvertPCHfromAXBLtoEnhancedCHinAXBL:
 	inc		cx			; Increment bit shift count
 	mov		dl, TRANSLATEMODE_LARGE
 	jmp		SHORT .ShiftIfMoreThan1024Cylinder
+
+
+;--------------------------------------------------------------------
+; Checks should LARGE mode L-CHS be calculated with ECHS or Revised ECHS
+; algorithm. Revised ECHS is needed for drives with 8193 or more cylinders
+; AND 16 heads.
+;
+; AtaGeometry_IsDriveSmallEnoughForECHS:
+;	Parameters:
+;		AX:		Number of P-Cylinders
+;		BL:		Number of P-Heads
+;	Returns:
+;		CF:		Clear if Reviced ECHS is necessary
+;				Set if ECHS is enough
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+AtaGeometry_IsDriveSmallEnoughForECHS:
+	; Generate L-CHS using simple bit shift algorithm (ECHS) if
+	; 8192 or less cylinders. Use Revised ECHS if 8193 or more cylinders
+	; AND 16 heads.
+	cmp		ax, 8193
+	jb		SHORT .RevisedECHSisNotNeeded
+	cmp		bl, 16	; Drives with 8193 or more cylinders can report 15 heads
+.RevisedECHSisNotNeeded:
+	ret
 
 
 ;--------------------------------------------------------------------
