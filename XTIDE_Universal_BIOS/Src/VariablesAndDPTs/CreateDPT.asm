@@ -99,7 +99,7 @@ CreateDPT_FromAtaInformation:
 	call	AtaID_ModifyESSIforUserDefinedLimitsAndReturnTranslateModeInDX
 
 	; Translate P-CHS to L-CHS
-	call	AtaGeometry_GetLCHStoAXBLBHfromAtaInfoInESSIandTranslateModeInDX
+	call	AtaGeometry_GetLCHStoAXBLBHfromAtaInfoInESSIwithTranslateModeInDX
 	mov		[di+DPT.wLchsCylinders], ax
 	mov		[di+DPT.wLchsHeadsAndSectors], bx
 	mov		al, dl
@@ -112,10 +112,18 @@ CreateDPT_FromAtaInformation:
 	js		SHORT .NothingToChange
 	jz		SHORT .LimitHeadsForLargeAddressingMode
 
-	or		cl, FLGL_DPT_LBA		; Set LBA bit for Assisted LBA
+	; Set LBA bit for Assisted LBA
+	or		cl, FLGL_DPT_LBA
 	jmp		SHORT .NothingToChange
+
 .LimitHeadsForLargeAddressingMode:
-	MIN_U	bl, 15					; Cannot have 16 P-Heads in LARGE addressing mode
+	; We cannot have 16 P-Heads heads in Revised ECHS mode (8193 or more cylinders)
+	; but 16 heads are allowed when there are 8192 or less cylinders (ECHS).
+	; Both of these are LARGE modes so do not confuse with NORMAL mode.
+	call	AtaGeometry_IsDriveSmallEnoughForECHS
+	jc		SHORT .NothingToChange
+	dec		bx						; Adjust 16 P-Heads to 15
+
 .NothingToChange:
 	or		[di+DPT.bFlagsLow], cl	; Shift count and addressing mode
 	mov		[di+DPT.wPchsHeadsAndSectors], bx
