@@ -119,8 +119,8 @@ istruc MENUITEM
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	NULL
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgDrvCyls
 	at	MENUITEM.itemValue + ITEM_VALUE.wMinValue,					dw	1
-	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	MAX_USER_CYLINDERS
-%define					MASTERSLAVE_CYLINDERS_DEFAULT					65
+	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	MAX_PCHS_CYLINDERS
+%define					MASTERSLAVE_CYLINDERS_DEFAULT					1024		; Max L-CHS Cylinders
 iend
 
 g_MenuitemMasterSlaveHeads:
@@ -135,8 +135,8 @@ istruc MENUITEM
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	NULL
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgDrvHeads
 	at	MENUITEM.itemValue + ITEM_VALUE.wMinValue,					dw	1
-	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	MAX_USER_HEADS
-%define					MASTERSLAVE_HEADS_DEFAULT						MAX_USER_HEADS
+	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	MAX_PCHS_HEADS
+%define					MASTERSLAVE_HEADS_DEFAULT						MAX_PCHS_HEADS
 iend
 
 g_MenuitemMasterSlaveSectors:
@@ -151,8 +151,8 @@ istruc MENUITEM
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	NULL
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgDrvSect
 	at	MENUITEM.itemValue + ITEM_VALUE.wMinValue,					dw	1
-	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	MAX_USER_SECTORS_PER_TRACK
-%define					MASTERSLAVE_SECTORS_DEFAULT						MAX_USER_SECTORS_PER_TRACK
+	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	MAX_PCHS_SECTORS_PER_TRACK
+%define					MASTERSLAVE_SECTORS_DEFAULT						MAX_PCHS_SECTORS_PER_TRACK
 iend
 
 g_MenuitemMasterSlaveUserLBA:
@@ -183,11 +183,11 @@ istruc MENUITEM
 	at	MENUITEM.bType,				db	TYPE_MENUITEM_UNSIGNED
 	at	MENUITEM.itemValue + ITEM_VALUE.wRomvarsValueOffset,		dw	NULL
 	at	MENUITEM.itemValue + ITEM_VALUE.szDialogTitle,				dw	g_szDlgDrvLbaSectors
-	at	MENUITEM.itemValue + ITEM_VALUE.wMinValue,					dw	16							; 8 GiB
+	at	MENUITEM.itemValue + ITEM_VALUE.wMinValue,					dw	16							; 8 GiB (but a little more than L-CHS limit)
 	at	MENUITEM.itemValue + ITEM_VALUE.wMaxValue,					dw	10000000h / (1024 * 1024)	; Limit to 28-bit LBA
 	at	MENUITEM.itemValue + ITEM_VALUE.fnValueReader,				dw	ValueReaderForUserLbaValue
 	at	MENUITEM.itemValue + ITEM_VALUE.fnValueWriter,				dw	ValueWriterForUserLbaValue
-%define				MASTERSLAVE_USERLBA_DEFAULT						64
+%define				MASTERSLAVE_USERLBA_DEFAULT						64								; 32 GiB (max supported by Win95)
 iend
 
 
