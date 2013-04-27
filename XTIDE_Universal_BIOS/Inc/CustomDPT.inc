@@ -39,10 +39,12 @@ struc DPT
 	.wPchsHeadsAndSectors:
 	.bPchsHeads				resb	1	; (1...16)
 	.bPchsSectorsPerTrack	resb	1	; (1...63)
-
-	; LBA and remaining P-CHS variables
-%ifdef MODULE_EBIOS
+%ifdef MODULE_COMPATIBLE_TABLES OR MODULE_EBIOS
 	.wPchsCylinders			resb	2
+%endif
+
+	; Total LBA sector count
+%ifdef MODULE_EBIOS
 	.twLbaSectors			resb	6	; 48-bit sector count for LBA addressing
 %endif
 							alignb	2	; WORD alignment for DPT_SERIAL or DPT_ATA
@@ -63,7 +65,7 @@ endstruc
 
 
 	; Bit definitions for DPT.bFlagsHigh
-	FLGH_DPT_BLOCK_MODE_SUPPORTED		EQU	(1<<1)	; Bit 1, Use block transfer commands (must be bit 1!)
+	FLGH_DPT_USE_BLOCK_MODE_COMMANDS	EQU	(1<<1)	; Bit 1, Use block transfer commands (must be bit 1!)
 %ifdef MODULE_SERIAL
 	FLGH_DPT_SERIAL_DEVICE				EQU	(1<<2)	; Bit 2, Serial Port Device
 %endif

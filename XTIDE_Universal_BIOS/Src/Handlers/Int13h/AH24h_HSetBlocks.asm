@@ -67,25 +67,35 @@ AH24h_SetBlockSize:
 	; Do not limit it to maximum supported since software calling AH=24h
 	; must know what the actual block size is.
 	cmp		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_XTCF_DMA
-	je		SHORT ProcessXTCFsubcommandFromAL.AH1Eh_LoadInvalidCommandToAHandSetCF
+	je		SHORT .DisableBlockMode
 .NoNeedToLimitBlockSize:
 %endif ; MODULE_8BIT_IDE_ADVANCED
 
 	push	bx
 
-	push	ax
+	push	ax			; Store block size for later use
 	xchg	dx, ax		; DL = Block size (Sector Count Register)
 	mov		al, COMMAND_SET_MULTIPLE_MODE
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRDY, FLG_STATUS_DRDY)
 	call	Idepack_StoreNonExtParametersAndIssueCommandFromAL
-	pop		bx
-	jnc		SHORT .StoreBlockSize
 
-	; Drive disabled block mode since we tried unsupported block size.
-	; We must adjust DPT accordingly.
-	mov		bl, 1		; Block size 1 will always work (=Block mode disabled)
-.StoreBlockSize:		; Store new block size to DPT and return
+	; Disable block mode if failure or if called with block size of 1 sector.
+	; Some drives allow block mode commands for 1 sector blocks and some do not.
+	pop		bx			; Pop block size to BL
+	jc		SHORT .DisableBlockMode
+	mov		bh, bl		; BL and BH both have block size we tried to set
+	dec		bh
+	jz		SHORT .DisableBlockMode
+
+	; Enable block mode and store block size
+	or		BYTE [di+DPT.bFlagsHigh], FLGH_DPT_USE_BLOCK_MODE_COMMANDS
+	jmp		SHORT .StoreBlockSizeFromBLandReturn
+
+.DisableBlockMode:
+	and		BYTE [di+DPT.bFlagsHigh], ~FLGH_DPT_USE_BLOCK_MODE_COMMANDS
+	mov		bl, 1
+	stc
+.StoreBlockSizeFromBLandReturn:
 	mov		[di+DPT_ATA.bBlockSize], bl
-
 	pop		bx
 	ret

@@ -43,12 +43,12 @@ AH41h_HandlerForCheckIfExtensionsPresent:
 	mov		BYTE [bp+IDEPACK.intpack+INTPACK.ah], EBIOS_VERSION
 	mov		WORD [bp+IDEPACK.intpack+INTPACK.bx], 0AA55h
 
-%ifdef CREATE_COMPATIBLE_DPT
+%ifdef MODULE_COMPATIBLE_TABLES
 	call	AH41h_GetSupportBitsToCX
 	mov		[bp+IDEPACK.intpack+INTPACK.cx], cx
 %else
 	mov		WORD [bp+IDEPACK.intpack+INTPACK.cx], ENHANCED_DRIVE_ACCESS_SUPPORT
-%endif
+%endif ; MODULE_COMPATIBLE_TABLES
 
 	and		BYTE [bp+IDEPACK.intpack+INTPACK.flags], ~FLG_FLAGS_CF	; Return with CF cleared
 	jmp		Int13h_ReturnFromHandlerWithoutStoringErrorCode
@@ -56,7 +56,7 @@ AH41h_HandlerForCheckIfExtensionsPresent:
 	jmp		Int13h_DirectCallToAnotherBios
 
 
-%ifdef CREATE_COMPATIBLE_DPT
+%ifdef MODULE_COMPATIBLE_TABLES
 ;--------------------------------------------------------------------
 ; AH41h_GetSupportBitsToCX
 ;	Parameters:
@@ -86,4 +86,4 @@ AH41h_GetSupportBitsToCX:
 .DoNotSetEDDflag:
 	ret
 
-%endif ; CREATE_COMPATIBLE_DPT
+%endif ; MODULE_COMPATIBLE_TABLES

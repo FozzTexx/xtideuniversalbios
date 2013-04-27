@@ -80,13 +80,13 @@ AH48h_HandlerForGetExtendedDriveParameters:
 	dec		bx		; Set to FFFFh to assume we do not return DPTE
 
 	; Create DPTE (hardware information for device drivers)
-%ifdef CREATE_COMPATIBLE_DPT
+%ifdef MODULE_COMPATIBLE_TABLES
 	call	AH41h_GetSupportBitsToCX
 	test	cl, ENHANCED_DISK_DRIVE_SUPPORT
 	jz		SHORT .DoNotCreateDPTE
 	call	CompatibleDPT_CreateDeviceParameterTableExtensionToESBXfromDPTinDSSI
 .DoNotCreateDPTE:
-%endif
+%endif ; MODULE_COMPATIBLE_TABLES
 
 	; Point DS:DI to Extended Drive Information Table to fill
 	mov		di, [bp+IDEPACK.intpack+INTPACK.si]
@@ -106,7 +106,7 @@ AH48h_HandlerForGetExtendedDriveParameters:
 
 	; Store DPTE for standard controllers only,
 	; FFFF:FFFF for non standard controllers
-%ifdef CREATE_COMPATIBLE_DPT
+%ifdef MODULE_COMPATIBLE_TABLES
 	mov		[di+EDRIVE_INFO.fpDPTE], bx
 	mov		[di+EDRIVE_INFO.fpDPTE+2], es
 	inc		bx
@@ -116,7 +116,7 @@ AH48h_HandlerForGetExtendedDriveParameters:
 %else
 	mov		[di+EDRIVE_INFO.fpDPTE], bx
 	mov		[di+EDRIVE_INFO.fpDPTE+2], bx
-%endif
+%endif ; MODULE_COMPATIBLE_TABLES
 
 	; Fill Extended Drive Information Table in DS:DI from DPT in ES:SI
 .SkipEddConfigurationParameters:

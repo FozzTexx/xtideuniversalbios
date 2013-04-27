@@ -162,10 +162,8 @@ AH9h_InitializeDriveForUse:
 ;;;	InitializeBlockMode
 	; Initialize block mode transfers
 	pop		ax	; Restore .wFlags saved in SetWriteCache
-	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_BLOCK_MODE_SUPPORTED
-	jz		SHORT .BlockModeNotSupportedOrDisabled
-	test	al, FLG_DRVPARAMS_BLOCKMODE
-	jz		SHORT .BlockModeNotSupportedOrDisabled
+	test	al, FLG_DRVPARAMS_BLOCKMODE	; Tested here so block mode can be enabled with AH=24h
+	jz		SHORT .BlockModeDisabled
 
 	; Try block sizes until we find largest possible supported by drive
 	mov		bl, 128
@@ -176,7 +174,7 @@ AH9h_InitializeDriveForUse:
 	shr		bl, 1
 	jnc		SHORT .TryNextBlockSize
 	STORE_ERROR_FLAG_TO_DPT		FLG_INITERROR_FAILED_TO_SET_BLOCK_MODE
-.BlockModeNotSupportedOrDisabled:
+.BlockModeDisabled:
 .SupportedBlockSizeFound:
 
 
@@ -284,6 +282,7 @@ AH9h_SetModeFromALtoXTCF:
 	jne		SHORT IgnoreInvalidCommandError
 	jmp		AH1Eh_ChangeXTCFmodeBasedOnModeInAL
 %endif ; MODULE_8BIT_IDE_ADVANCED
+
 
 %ifdef MODULE_8BIT_IDE
 ;--------------------------------------------------------------------

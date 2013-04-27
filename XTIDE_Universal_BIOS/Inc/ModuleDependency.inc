@@ -49,11 +49,12 @@
 	%include "Vision.inc"			; For QDI Vision QD65xx VLB IDE Controllers
 %endif
 
+%ifdef MODULE_COMPATIBLE_TABLES
+	%include "CompatibleDPT.inc"
+%endif
+
 %ifdef MODULE_EBIOS
 	%include "EBIOS.inc"			; Equates for EBIOS functions
-	%ifdef CREATE_COMPATIBLE_DPT
-		%include "CompatibleDPT.inc"
-	%endif
 %endif
 
 %ifdef MODULE_HOTKEYS

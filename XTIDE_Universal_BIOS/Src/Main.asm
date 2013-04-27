@@ -198,6 +198,9 @@ iend
 	%include "AtaID.asm"			; For ATA Identify Device information
 	%include "DetectDrives.asm"		; For detecting IDE drives
 	%include "DetectPrint.asm"		; For printing drive detection strings
+%ifdef MODULE_COMPATIBLE_TABLES
+	%include "CompatibleDPT.asm"
+%endif
 
 	; Hotkey Bar
 %ifdef MODULE_HOTKEYS
@@ -280,7 +283,4 @@ iend
 	%include "AH47h_ExtendedSeek.asm"
 	%include "AH48h_GetExtendedDriveParameters.asm"
 	%include "AH41h_CheckIfExtensionsPresent.asm"
-%ifdef CREATE_COMPATIBLE_DPT
-	%include "CompatibleDPT.asm"
-%endif
 %endif

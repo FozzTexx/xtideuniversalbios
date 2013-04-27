@@ -62,17 +62,23 @@ CompatibleDPT_CreateToAXSIforDriveDL:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+%ifdef MODULE_EBIOS
 GetTemporaryBufferForDPTEtoESDI:
 	call	GetBufferForDrive80hToESDI
 	add		di, BYTE TRANSLATED_DPT_size * 2
 	ret
+%endif
 
 GetBufferForDrive80hToESDI:
 	push	ds
 	pop		es
 	mov		di, [cs:ROMVARS.bStealSize]	; No harm to read WORD
 	eSHL_IM	di, 10						; DI = RAMVARS size in bytes
+%ifdef MODULE_EBIOS
 	sub		di, BYTE (TRANSLATED_DPT_size * 2) + DPTE_size
+%else
+	sub		di, BYTE TRANSLATED_DPT_size * 2
+%endif
 	ret
 
 
@@ -173,6 +179,7 @@ FillStandardDPTtoESDIfromDPTinDSSI:
 	ret
 
 
+%ifdef MODULE_EBIOS
 ;--------------------------------------------------------------------
 ; CompatibleDPT_CreateDeviceParameterTableExtensionToESBXfromDPTinDSSI
 ;	Parameters:
@@ -247,6 +254,7 @@ CompatibleDPT_CreateDeviceParameterTableExtensionToESBXfromDPTinDSSI:
 	call	StoswALandChecksumFromDL		; Bytes 14 and 15
 	lea		bx, [di-DPTE_size]
 	ret
+%endif ; MODULE_EBIOS
 
 
 ;--------------------------------------------------------------------

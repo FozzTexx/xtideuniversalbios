@@ -82,7 +82,7 @@ Initialize_AndDetectDrives:
 	; Fall to .StoreDptPointersToIntVectors
 
 
-%ifdef CREATE_COMPATIBLE_DPT
+%ifdef MODULE_COMPATIBLE_TABLES
 ;--------------------------------------------------------------------
 ; .StoreDptPointersToIntVectors
 ;	Parameters:
@@ -117,7 +117,7 @@ Initialize_AndDetectDrives:
 	mov		[es:HD1_DPT_POINTER_46h*4+2], ax
 .CompatibleDPTsCreated:
 	; Fall to .ResetDetectedDrives
-%endif ; CREATE_COMPATIBLE_DPT
+%endif ; MODULE_COMPATIBLE_TABLES
 
 
 ;--------------------------------------------------------------------
