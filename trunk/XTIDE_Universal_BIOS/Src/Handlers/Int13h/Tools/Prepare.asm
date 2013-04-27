@@ -80,7 +80,7 @@ ALIGN JUMP_ALIGN
 Prepare_GetOldInt13hCommandIndexToBX:
 	; Block mode or single sector
 	mov		bl, [di+DPT.bFlagsHigh]
-	and		bx, BYTE FLGH_DPT_BLOCK_MODE_SUPPORTED	; Bit 1
+	and		bx, BYTE FLGH_DPT_USE_BLOCK_MODE_COMMANDS	; Bit 1
 	ret
 
 

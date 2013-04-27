@@ -80,7 +80,7 @@ SECTION .text
 ;--------------------------------------------------------------------
 .PushBlockMode:
 	mov		ax, 1
-	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_BLOCK_MODE_SUPPORTED
+	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_USE_BLOCK_MODE_COMMANDS
 	jz		SHORT .PushBlockSizeFromAX
 	mov		al, [di+DPT_ATA.bBlockSize]
 .PushBlockSizeFromAX:

@@ -95,6 +95,7 @@ DriveXlate_ToOrBack:
 	mov		al, [RAMVARS.xlateVars+XLATEVARS.bHDSwap]
 	test	dl, ah					; Hard disk?
 	jnz		SHORT .SwapDrive		; If so, jump to swap
+
 	mov		al, [RAMVARS.xlateVars+XLATEVARS.bFDSwap]
 	cbw
 
@@ -105,9 +106,28 @@ ALIGN JUMP_ALIGN
 	cmp		al, dl					; Swap DL from xxh to 00h/80h?
 	jne		SHORT .RestoreAXandReturn
 	mov		al, ah
+
 ALIGN JUMP_ALIGN
 .SwapToXXhInAL:
 	mov		dl, al
+
+%ifdef MODULE_COMPATIBLE_TABLES
+	cmp		al, 81h
+	jne		SHORT .RestoreAXandReturn
+
+	; Since swapping drive 80h <=> 81h, we need to swap
+	; DPT pointers in interrupt vectors 41h and 46h.
+	push	ds
+	LOAD_BDA_SEGMENT_TO	ds, ax
+	mov		ax, [HD0_DPT_POINTER_41h*4]
+	xchg	[HD1_DPT_POINTER_46h*4], ax
+	mov		[HD0_DPT_POINTER_41h*4], ax
+	mov		ax, [HD0_DPT_POINTER_41h*4+2]
+	xchg	[HD1_DPT_POINTER_46h*4+2], ax
+	mov		[HD0_DPT_POINTER_41h*4+2], ax
+	pop		ds
+%endif ; MODULE_COMPATIBLE_TABLES
+
 ALIGN JUMP_ALIGN
 .RestoreAXandReturn:
 	xchg	ax, di					; Restore AX

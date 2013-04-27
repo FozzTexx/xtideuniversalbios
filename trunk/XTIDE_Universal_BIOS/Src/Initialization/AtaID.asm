@@ -150,12 +150,6 @@ AtaID_ModifyESSIforUserDefinedLimitsAndReturnTranslateModeInDX:
 	and		BYTE [si+ATA6.wSetSup83+1], ~(A6_wSetSup83_LBA48>>8)
 .NoUserDefinedLBA:
 
-	; * Disable Block Mode transfers *
-	test	dl, FLG_DRVPARAMS_BLOCKMODE
-	jnz		SHORT .NoNeedToDisableBlockMode
-	mov		BYTE [si+ATA1.bBlckSize], 1	; sectors
-.NoNeedToDisableBlockMode:
-
 	; * Load P-CHS to L-CHS translate mode to DX *
 	and		dx, BYTE MASK_DRVPARAMS_TRANSLATEMODE
 	eSHR_IM	dx, TRANSLATEMODE_FIELD_POSITION

@@ -127,11 +127,13 @@ CreateDPT_FromAtaInformation:
 .NothingToChange:
 	or		[di+DPT.bFlagsLow], cl	; Shift count and addressing mode
 	mov		[di+DPT.wPchsHeadsAndSectors], bx
-
-%ifdef MODULE_EBIOS
+%ifdef MODULE_COMPATIBLE_TABLES OR MODULE_EBIOS
 	; Store P-Cylinders here for Compatible DPTs when FLGL_DPT_LBA is not set
 	; or when drive has over 15,482,880 sectors
 	mov		[di+DPT.wPchsCylinders], ax
+%endif
+
+%ifdef MODULE_EBIOS
 	test	cl, FLGL_DPT_LBA
 	jz		SHORT .NoLbaSoNoEBIOS
 
@@ -187,24 +189,6 @@ CreateDPT_FromAtaInformation:
 	mov		[di+DPT.twLbaSectors+4], bx
 .NoLbaSoNoEBIOS:
 %endif ; MODULE_EBIOS
-	; Fall to .StoreBlockMode
-
-;--------------------------------------------------------------------
-; .StoreBlockMode
-;	Parameters:
-;		DS:DI:	Ptr to Disk Parameter Table
-;		ES:SI:	Ptr to 512-byte ATA information read from the drive
-;		CS:BP:	Ptr to IDEVARS for the controller
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-.StoreBlockMode:
-	cmp		BYTE [es:si+ATA1.bBlckSize], 1	; Max block size in sectors
-	jbe		SHORT .BlockModeTransfersNotSupported
-	or		BYTE [di+DPT.bFlagsHigh], FLGH_DPT_BLOCK_MODE_SUPPORTED
-.BlockModeTransfersNotSupported:
 	; Fall to .StoreDeviceSpecificParameters
 
 ;--------------------------------------------------------------------
