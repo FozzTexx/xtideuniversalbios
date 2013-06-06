@@ -1,8 +1,8 @@
 ; Project name	:	XTIDE Universal BIOS
 ; Description	:	IDE Read/Write functions for transferring
-;					block using DMA.
-;					These functions should only be called from IdeTransfer.asm.
-
+;			block using DMA.
+;			These functions should only be called from IdeTransfer.asm.
+; Modified JJP 05-Jun-13
 ;
 ; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2013 by XTIDE Universal BIOS Team.
@@ -18,7 +18,6 @@
 ; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 ;
-
 
 ; Section containing code
 SECTION .text
@@ -80,22 +79,31 @@ TransferBlockToOrFromXTCF:
 	; Load XT-CFv3 Control Register port to DX
 	add		dl, XTCF_CONTROL_REGISTER
 
-	; Calculate bytes for first page
-	mov		ax, di
-	neg		ax										; AX = Max BYTEs for first page
+	; convert sectors in CX to BYTES
 %ifdef USE_186
 	shl		cx, 9									; CX = Block size in BYTEs
 %else
-	xchg	cl, ch
+	xchg		cl, ch
 	shl		cx, 1
 %endif
+
+	; Calculate bytes for first page
+	mov		ax, di
+	neg		ax			; 2s compliment
+
+	; if DI was zero carry flag will be cleared (and set otherwise)
+	; When DI is zero only one transfer is required since we've limited the
+	; XT-CFv3 block size to 32k
+	jnc	.TransferLastDmaPageWithSizeInCX
+
+	; CF was set, so DI != 0 and we might need one or two transfers
 	cmp		cx, ax									; if we won't cross a physical page boundary...
-	jbe		SHORT .TransferLastDmaPageWithSizeInCX	; ...perform the transfer in one operation
+	jbe	SHORT .TransferLastDmaPageWithSizeInCX	; ...perform the transfer in one operation
 
 	; Calculate how much we can transfer on first and second rounds
-	xchg	cx, ax									; CX = BYTEs for first page
-	sub		ax, cx									; AX = BYTEs for second page
-	push	ax										; Save bytes for second transfer on stack
+	xchg		cx, ax			; CX = BYTEs for first page
+	sub		ax, cx			; AX = BYTEs for second page
+	push		ax			; Save bytes for second transfer on stack
 
 	; Transfer first DMA page
 	call	StartDMAtransferForXTCFwithDmaModeInBL
@@ -110,7 +118,7 @@ TransferBlockToOrFromXTCF:
 ; Updated for XT-CFv3, 11-Apr-13
 ;	Parameters:
 ;		BL:		Byte for DMA Mode Register
-;		CX:		Number of BYTEs to transfer (512...32768 since max block size is limited to 64)
+;		CX:		Number of BYTEs to transfer (1...32768 since max block size is limited to 64)
 ;		DX:		XT-CFv3 Control Register
 ;		ES:		Bits 3..0 have physical address bits 19..16
 ;		DI:		Physical address bits 15..0
