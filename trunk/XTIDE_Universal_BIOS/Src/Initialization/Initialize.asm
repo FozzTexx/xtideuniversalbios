@@ -51,6 +51,8 @@ Initialize_FromMainBiosRomSearch:		; unused entrypoint ok
 	; Install INT 19h handler (boot loader) where drives are detected
 	mov		WORD [BIOS_BOOT_LOADER_INTERRUPT_19h*4], Int19h_BootLoaderHandler
 	mov		[BIOS_BOOT_LOADER_INTERRUPT_19h*4+2], cs
+	;mov		WORD [BIOS_BOOT_FAILURE_INTERRUPT_18h*4], Int19h_BootLoaderHandler
+	;mov		[BIOS_BOOT_FAILURE_INTERRUPT_18h*4+2], cs
 
 .SkipRomInitialization:
 %ifndef USE_186
@@ -77,8 +79,8 @@ Initialize_AndDetectDrives:
 	call	DetectPrint_RomFoundAtSegment
 	call	RamVars_Initialize
 	call	BootVars_Initialize
+	call	Interrupts_InitializeInterruptVectors	; HotkeyBar requires INT 40h so install handlers before drive detection
 	call	DetectDrives_FromAllIDEControllers
-	call	Interrupts_InitializeInterruptVectors
 	; Fall to .StoreDptPointersToIntVectors
 
 

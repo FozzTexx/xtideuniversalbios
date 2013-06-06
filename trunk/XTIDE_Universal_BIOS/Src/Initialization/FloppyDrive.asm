@@ -174,7 +174,7 @@ FloppyDrive_GetCountFromBIOS_or_BDA:
 	mov		ah, GET_DRIVE_PARAMETERS
 	cwd								; Floppy Drive 00h
 	int		BIOS_DISKETTE_INTERRUPT_40h
-	xchg	dx, ax					; Number of Floppy Drives to AL
+	xchg	ax, dx					; Number of Floppy Drives to AL
 
 	pop		dx
 	pop		cx
