@@ -256,6 +256,7 @@ iend
 %endif
 
 	; INT 13h Hard Disk BIOS functions
+	%include "Int13hBiosInit.asm"
 	%include "Int13h.asm"			; For Int 13h, Disk functions
 	%include "AH0h_HReset.asm"
 	%include "AH1h_HStatus.asm"
