@@ -51,8 +51,14 @@ Initialize_FromMainBiosRomSearch:		; unused entrypoint ok
 	; Install INT 19h handler (boot loader) where drives are detected
 	mov		WORD [BIOS_BOOT_LOADER_INTERRUPT_19h*4], Int19h_BootLoaderHandler
 	mov		[BIOS_BOOT_LOADER_INTERRUPT_19h*4+2], cs
-	;mov		WORD [BIOS_BOOT_FAILURE_INTERRUPT_18h*4], Int19h_BootLoaderHandler
-	;mov		[BIOS_BOOT_FAILURE_INTERRUPT_18h*4+2], cs
+
+	; Install special INT 13h hander that initialized XTIDE Universal BIOS
+	; when our INT 19h is not called
+	les		ax, [BIOS_DISK_INTERRUPT_13h*4]	; Load system INT 13h handler
+	mov		[TEMPORARY_VECTOR_FOR_SYSTEM_INT13h*4], ax
+	mov		[TEMPORARY_VECTOR_FOR_SYSTEM_INT13h*4+2], es
+	mov		WORD [BIOS_DISK_INTERRUPT_13h*4], Int13hBiosInit_Handler
+	mov		[BIOS_DISK_INTERRUPT_13h*4+2], cs
 
 .SkipRomInitialization:
 %ifndef USE_186
