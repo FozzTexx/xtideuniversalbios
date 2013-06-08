@@ -52,7 +52,7 @@ Initialize_FromMainBiosRomSearch:		; unused entrypoint ok
 	mov		WORD [BIOS_BOOT_LOADER_INTERRUPT_19h*4], Int19h_BootLoaderHandler
 	mov		[BIOS_BOOT_LOADER_INTERRUPT_19h*4+2], cs
 
-	; Install special INT 13h hander that initialized XTIDE Universal BIOS
+	; Install special INT 13h hander that initializes XTIDE Universal BIOS
 	; when our INT 19h is not called
 	les		ax, [BIOS_DISK_INTERRUPT_13h*4]	; Load system INT 13h handler
 	mov		[TEMPORARY_VECTOR_FOR_SYSTEM_INT13h*4], ax
