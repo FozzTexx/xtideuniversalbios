@@ -23,7 +23,7 @@
 %define INCLUDE_SERIAL_LIBRARY
 
 %include "AssemblyLibrary.inc"	; Assembly Library. Must be included first!
-%include "Romvars.inc"			; XTIDE Universal BIOS variables
+%include "RomVars.inc"			; XTIDE Universal BIOS variables
 %include "IdeRegisters.inc"		; Needed for port and device autodetection
 %include "JRIDE_ISA.inc"		; For JR-IDE/ISA default segment
 %include "ADP50L.inc"			; For ADP50L default segment
