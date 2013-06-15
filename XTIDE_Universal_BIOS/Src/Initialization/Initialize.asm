@@ -87,10 +87,9 @@ Initialize_AndDetectDrives:
 	call	BootVars_Initialize
 	call	Interrupts_InitializeInterruptVectors	; HotkeyBar requires INT 40h so install handlers before drive detection
 	call	DetectDrives_FromAllIDEControllers
+	mov		[RAMVARS.wDrvDetectSignature], es		; No longer in drive detection mode (set normal timeouts)
 	; Fall to .StoreDptPointersToIntVectors
 
-
-%ifdef MODULE_COMPATIBLE_TABLES
 ;--------------------------------------------------------------------
 ; .StoreDptPointersToIntVectors
 ;	Parameters:
@@ -101,6 +100,7 @@ Initialize_AndDetectDrives:
 ;	Corrupts registers:
 ;		AX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
+%ifdef MODULE_COMPATIBLE_TABLES
 .StoreDptPointersToIntVectors:
 %ifndef USE_AT
 	test	BYTE [cs:ROMVARS.wFlags], FLG_ROMVARS_FULLMODE
@@ -124,22 +124,5 @@ Initialize_AndDetectDrives:
 	mov		[es:HD1_DPT_POINTER_46h*4], si
 	mov		[es:HD1_DPT_POINTER_46h*4+2], ax
 .CompatibleDPTsCreated:
-	; Fall to .ResetDetectedDrives
 %endif ; MODULE_COMPATIBLE_TABLES
-
-
-;--------------------------------------------------------------------
-; .ResetDetectedDrives
-;	Parameters:
-;		DS:		RAMVARS segment
-;		ES:		BDA and interrupt vector segment (zero)
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		All, except DS and ES
-;--------------------------------------------------------------------
-.ResetDetectedDrives:
-	call	Idepack_FakeToSSBP
-	call	AH0h_ResetAllOurHardDisksAtTheEndOfDriveInitialization
-	add		sp, BYTE SIZE_OF_IDEPACK_WITHOUT_INTPACK
 	ret

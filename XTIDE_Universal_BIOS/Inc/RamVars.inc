@@ -36,28 +36,28 @@
 ; at the top of interrupt vectors.
 struc RAMVARS
 %ifdef RELOCATE_INT13H_STACK
-						resb	252
+							resb	252
 	.dwStackChangeDSDI:
-	.wStackChangeDI		resb	2	; Used during stack
-	.wStackChangeDS		resb	2	; switching only
-	.rgbTopOfStack:					; 256 bytes of stack
-	.fpInt13hEntryStack	resb	4
+	.wStackChangeDI			resb	2	; Used during stack
+	.wStackChangeDS			resb	2	; switching only
+	.rgbTopOfStack:						; 256 bytes of stack
+	.fpInt13hEntryStack		resb	4
 %endif
-	.wDrvDetectSignature:			; Signature when BIOS is in drive detection mode
-	.fpOldI13h			resb	4	; Far pointer to old INT 13h handler
-	.wSignature			resb	2	; Sign for finding stolen 1...64 kiB
-	.bTimeoutTicksLeft	resb	1
-	.bLastTimeoutUpdate	resb	1
+	.fpOldI13h				resb	4	; Far pointer to old INT 13h handler
+	.wDrvDetectSignature	resb	2	; Signature when BIOS is in drive detection mode
+	.wSignature				resb	2	; Sign for finding stolen 1...64 kiB
+	.bTimeoutTicksLeft		resb	1
+	.bLastTimeoutUpdate		resb	1
 
 	.wFirstDrvAndCount:
-	.bFirstDrv			resb	1	; Number of first drive for this BIOS
-	.wDrvCntAndFlopCnt:				; Both the hard disk and floppy counts in one word
-									; (yes, misaligned, but it is only used this way during initialization)
-	.bDrvCnt			resb	1	; Number of drives handled by this BIOS
+	.bFirstDrv				resb	1	; Number of first drive for this BIOS
+	.wDrvCntAndFlopCnt:					; Both the hard disk and floppy counts in one word
+										; (yes, misaligned, but it is only used this way during initialization)
+	.bDrvCnt				resb	1	; Number of drives handled by this BIOS
 
 	; Variables for drive number translation
 %ifdef NEED_XLATEVARS
-	.xlateVars			resb	XLATEVARS_size
+	.xlateVars				resb	XLATEVARS_size
 %endif
 endstruc
 

@@ -78,6 +78,7 @@ Int19h_BootLoaderHandler:
 ;	Returns:
 ;		DS:		RAMVARS segment
 ;--------------------------------------------------------------------
+.InitializeBiosAndDetectDrives:
 %ifdef MODULE_HOTKEYS
 	call	TimerTicks_ReadFromBdaToAX
 	mov		[es:BOOTVARS.hotkeyVars+HOTKEYVARS.wTimeWhenDisplayed], ax
@@ -96,6 +97,23 @@ Int19h_BootLoaderHandler:
 	cmp		ax, MIN_TIME_TO_DISPLAY_HOTKEY_BAR
 	jb		SHORT .WaitUntilTimeToCloseHotkeyBar
 %endif
+	; Fall to .ResetAllDrives
+
+
+;--------------------------------------------------------------------
+; .ResetAllDrives
+;	Parameters:
+;		DS:		RAMVARS segment
+;		ES:		BDA and interrupt vector segment (zero)
+;	Returns:
+;		Nothing
+;--------------------------------------------------------------------
+.ResetAllDrives:
+	; Reset all drives in the system, not just our drives.
+	xor		ax, ax		; Disk Controller Reset
+	mov		dl, 80h		; Reset all hard drives and floppy drives
+	int		BIOS_DISK_INTERRUPT_13h
+	;call	ResetHardDisksHandledByOurBIOS.ErrorCodeNotUsed	; Our drives only
 	; Fall to SelectDriveToBootFrom
 
 
