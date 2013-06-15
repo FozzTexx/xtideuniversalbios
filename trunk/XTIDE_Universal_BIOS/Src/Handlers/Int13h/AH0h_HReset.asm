@@ -96,10 +96,6 @@ BackupErrorCodeFromTheRequestedDriveToBH:
 	ret
 
 
-
-; This defines what is called when resetting our drives at the end of drive detection.
-AH0h_ResetAllOurHardDisksAtTheEndOfDriveInitialization equ ResetHardDisksHandledByOurBIOS.ErrorCodeNotUsed
-
 ;--------------------------------------------------------------------
 ; ResetHardDisksHandledByOurBIOS
 ;	Parameters:
