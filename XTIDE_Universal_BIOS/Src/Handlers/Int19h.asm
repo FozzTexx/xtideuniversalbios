@@ -30,7 +30,9 @@ SECTION .text
 Int19h_BootLoaderHandler:
 	sti											; Enable interrupts
 	cld											; String instructions to increment pointers
+%ifndef USE_AT
 	call	Int13hBiosInit_RestoreSystemHandler	; Needed if initialization was started on INT 13h instead on 19h
+%endif
 	LOAD_BDA_SEGMENT_TO	es, ax					; Load BDA segment (zero) to ES
 	; Fall to .PrepareBootLoaderStack
 
@@ -113,7 +115,6 @@ Int19h_BootLoaderHandler:
 	xor		ax, ax		; Disk Controller Reset
 	mov		dl, 80h		; Reset all hard drives and floppy drives
 	int		BIOS_DISK_INTERRUPT_13h
-	;call	ResetHardDisksHandledByOurBIOS.ErrorCodeNotUsed	; Our drives only
 	; Fall to SelectDriveToBootFrom
 
 

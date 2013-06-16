@@ -76,9 +76,9 @@ RamVars_Initialize:
 	call	Memory_ZeroESDIwithSizeInCX
 	mov		WORD [RAMVARS.wDrvDetectSignature], RAMVARS_DRV_DETECT_SIGNATURE
 	mov		WORD [RAMVARS.wSignature], RAMVARS_RAM_SIGNATURE
-;; There used to be a DriveXlate_Reset call here.  It isn't necessary, as we reset
-;; when entering the boot menu and also before transferring control at boot time and
-;; for ROM boots (in int19h.asm).
+%ifdef MODULE_DRIVEXLATE
+	call	DriveXlate_Reset
+%endif
 
 	pop		es
 	ret
