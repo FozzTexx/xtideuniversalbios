@@ -78,31 +78,6 @@ Int13h_DiskFunctionsHandlerWithStackChange:
 
 
 ;--------------------------------------------------------------------
-; Int 13h (Hard Drive) to Int 40h (Floppy Drive)
-; We must not call previous INT 13h for floppy drives since it
-; does not work on Windows 98 (when using HSFLOP.PDR driver) for some reason.
-;
-; DirectCallToFloppyHandler40h
-;	Parameters:
-;		AH:		Bios function
-;		DL:		Drive number
-;		Other:	Depends on function
-;	Returns:
-;		Depends on function
-;--------------------------------------------------------------------
-DirectCallToFloppyHandler40h:
-; With serial floppy support, we handle all traffic for function 08h,
-; as we need to wrap both hard disk and floppy drive counts.
-%ifdef MODULE_SERIAL_FLOPPY
-	cmp		ah, GET_DRIVE_PARAMETERS	; 08h
-	je		SHORT WeHandleTheFloppyFunction
-%endif
-
-	int		BIOS_DISKETTE_INTERRUPT_40h
-	retf	2			; Skip FLAGS from stack
-
-
-;--------------------------------------------------------------------
 ; Int 13h software interrupt handler.
 ; Jumps to specific function defined in AH.
 ;
@@ -118,13 +93,9 @@ DirectCallToFloppyHandler40h:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Int13h_DiskFunctionsHandler:
-	test	dl, dl						; Floppy Drive?
-	jns		SHORT DirectCallToFloppyHandler40h
-WeHandleTheFloppyFunction:
-
 %ifndef RELOCATE_INT13H_STACK
 	sti									; Enable interrupts
-%endif	
+%endif
 	cld									; String instructions to increment pointers
 	CREATE_FRAME_INTPACK_TO_SSBP	SIZE_OF_IDEPACK_WITHOUT_INTPACK
 	call	RamVars_GetSegmentToDS
@@ -166,8 +137,13 @@ ALIGN JUMP_ALIGN
 	test	ah, ah
 	jz		SHORT .OurFunction			; We handle all function 0h requests (resets)
 
-; We handle all traffic for function 08h, as we need to wrap both hard disk and floppy drive counts.
-	cmp		ah, GET_DRIVE_PARAMETERS	; 08h
+%ifndef MODULE_SERIAL_FLOPPY
+; Without floppy support, we handle only hard disk traffic for function 08h.
+	test	dl, dl
+	jns		SHORT Int13h_DirectCallToAnotherBios
+%endif
+; With floppy support, we handle all traffic for function 08h, as we need to wrap both hard disk and floppy drive counts.
+	cmp		ah, GET_DRIVE_PARAMETERS
 	je		SHORT .OurFunction
 	; Fall to Int13h_DirectCallToAnotherBios
 
@@ -197,7 +173,13 @@ Int13h_DirectCallToAnotherBios:
 	popf
 	push	bp
 	mov		bp, [bp+IDEPACK.intpack+INTPACK.bp]
-	int		BIOS_DISK_INTERRUPT_13h	; Can safely do as much recursion as it wants
+
+	test	dl, dl
+	js		SHORT .CallHardDiskHandler
+	int		BIOS_DISKETTE_INTERRUPT_40h	; Windows 98 requires we call INT 40h for floppy drives (reason unknown)
+	SKIP2B	bp							; Skip INT 13h
+.CallHardDiskHandler:
+	int		BIOS_DISK_INTERRUPT_13h		; Can safely do as much recursion as it wants
 
 	; Store returned values to INTPACK
 	pop		bp	; Standard INT 13h functions never uses BP as return register

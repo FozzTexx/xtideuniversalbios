@@ -144,6 +144,7 @@ istruc ROMVARS
 	at	ROMVARS.ideVars0+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags,	db	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE | (TRANSLATEMODE_AUTO<<TRANSLATEMODE_FIELD_POSITION)
 
 %ifdef MODULE_8BIT_IDE_ADVANCED
+	at	ROMVARS.ideVars1+IDEVARS.wBasePort,				dw	DEVICE_XTIDE_DEFAULT_PORT		; Controller Command Block base port
 	at	ROMVARS.ideVars1+IDEVARS.bDevice,				db	DEVICE_8BIT_XTCF_PIO8
 %endif
 
@@ -256,7 +257,9 @@ iend
 %endif
 
 	; INT 13h Hard Disk BIOS functions
+%ifndef USE_AT
 	%include "Int13hBiosInit.asm"
+%endif
 	%include "Int13h.asm"			; For Int 13h, Disk functions
 	%include "AH0h_HReset.asm"
 	%include "AH1h_HStatus.asm"
