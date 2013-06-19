@@ -102,7 +102,6 @@ Int13h_DiskFunctionsHandler:
 
 %ifdef MODULE_DRIVEXLATE
 	call	DriveXlate_ToOrBack
-	mov		[RAMVARS.xlateVars+XLATEVARS.bXlatedDrv], dl
 %endif
 	call	FindDPT_ForDriveNumberInDL	; DS:DI points to our DPT, or NULL if not our drive
 	jc		SHORT .NotOurDrive			; DPT not found so this is not one of our drives
@@ -165,25 +164,51 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 UnsupportedFunction:
 Int13h_DirectCallToAnotherBios:
-	call	ExchangeCurrentInt13hHandlerWithOldInt13hHandler
+%ifdef MODULE_DRIVEXLATE
+	; Disable drive number translations in case of recursive INT 13h calls
+	mov		[RAMVARS.xlateVars+XLATEVARS.bXlatedDrv], dl
+	push	WORD [RAMVARS.xlateVars+XLATEVARS.wFDandHDswap]
+	mov		WORD [RAMVARS.xlateVars+XLATEVARS.wFDandHDswap], 8000h	; No translation
+%endif
+
+	push	bp							; Store offset to IDEPACK (SS:SP now points it)
+
+	; Simulate INT by pushing flags and return address
+	push	WORD [bp+IDEPACK.intpack+INTPACK.flags]
+	popf
+	pushf								; Simulate INT by pushing flags
+	push	cs
+	ePUSH_T	di, .ReturnFromAnotherBios	; Can not corrupt flags
+
+	; Push old INT 13h handler and restore registers
+	push	WORD [RAMVARS.fpOldI13h+2]
+	push	WORD [RAMVARS.fpOldI13h]
 	mov		bx, [bp+IDEPACK.intpack+INTPACK.bx]
 	mov		di, [bp+IDEPACK.intpack+INTPACK.di]
 	mov		ds, [bp+IDEPACK.intpack+INTPACK.ds]
-	push	WORD [bp+IDEPACK.intpack+INTPACK.flags]
-	popf
-	push	bp
 	mov		bp, [bp+IDEPACK.intpack+INTPACK.bp]
+	retf								; "Return" to old INT 13h
+.ReturnFromAnotherBios:
 
-	test	dl, dl
-	js		SHORT .CallHardDiskHandler
-	int		BIOS_DISKETTE_INTERRUPT_40h	; Windows 98 requires we call INT 40h for floppy drives (reason unknown)
-	SKIP2B	bp							; Skip INT 13h
-.CallHardDiskHandler:
-	int		BIOS_DISK_INTERRUPT_13h		; Can safely do as much recursion as it wants
+%if 0
+	; We need to restore our pointer to IDEPACK but we cannot corrupt any register
+	push	ax							; Dummy WORD
+	cli
+	xchg	bp, sp
+	mov		[bp], sp					; Replace dummy WORD with returned BP
+	mov		sp, [bp+2]					; Load offset to IDEPACK
+	xchg	sp, bp
+	sti									; We would have set IF anyway when exiting INT 13h
+	pop		WORD [bp+IDEPACK.intpack+INTPACK.bp]
+%endif
+	; Actually we can corrupt BP since no standard INT 13h function uses it as return
+	; register. Above code is kept here just in case if there is some non-standard function.
+	; POP BP below also belongs to the above code.
+	pop		bp							; Clean IDEPACK offset from stack
 
-	; Store returned values to INTPACK
-	pop		bp	; Standard INT 13h functions never uses BP as return register
+	; Store remaining returned values to INTPACK
 %ifdef USE_386
+; We do not use GS or FS at the moment
 ;	mov		[bp+IDEPACK.intpack+INTPACK.gs], gs
 ;	mov		[bp+IDEPACK.intpack+INTPACK.fs], fs
 %endif
@@ -204,20 +229,13 @@ Int13h_DirectCallToAnotherBios:
 	call	RamVars_GetSegmentToDS
 
 %ifdef MODULE_DRIVEXLATE
+	; Restore drive number translation back to what it was
+	pop		WORD [RAMVARS.xlateVars+XLATEVARS.wFDandHDswap]
 	cmp		dl, [RAMVARS.xlateVars+XLATEVARS.bXlatedDrv]	; DL is still drive number?
-	je		SHORT .ExchangeInt13hHandlers
+	je		SHORT Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
 	mov		[bp+IDEPACK.intpack+INTPACK.dl], dl	; Something is returned in DL
-ALIGN JUMP_ALIGN
-.ExchangeInt13hHandlers:
 %endif
-
-%ifdef USE_186
-	push	Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
-	jmp		SHORT ExchangeCurrentInt13hHandlerWithOldInt13hHandler
-%else
-	call	ExchangeCurrentInt13hHandlerWithOldInt13hHandler
 	jmp		SHORT Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH
-%endif
 
 
 %ifdef MODULE_SERIAL_FLOPPY
@@ -294,35 +312,8 @@ Int13h_ReturnFromHandlerWithoutStoringErrorCode:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Int13h_CallPreviousInt13hHandler:
-	call	ExchangeCurrentInt13hHandlerWithOldInt13hHandler
-	int		BIOS_DISK_INTERRUPT_13h
-;;;  fall-through to ExchangeCurrentInt13hHandlerWithOldInt13hHandler
-
-;--------------------------------------------------------------------
-; ExchangeCurrentInt13hHandlerWithOldInt13hHandler
-;	Parameters:
-;		DS:		RAMVARS segment
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;       Nothing
-;       Note: Flags are preserved
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-ExchangeCurrentInt13hHandlerWithOldInt13hHandler:
-	push	es
-	push	si
-	LOAD_BDA_SEGMENT_PRESERVE_FLAGS_TO	es, si
-	mov		si, [RAMVARS.fpOldI13h]
-	cli
-	xchg	si, [es:BIOS_DISK_INTERRUPT_13h*4]
-	mov		[RAMVARS.fpOldI13h], si
-	mov		si, [RAMVARS.fpOldI13h+2]
-	xchg	si, [es:BIOS_DISK_INTERRUPT_13h*4+2]
-	sti
-	mov		[RAMVARS.fpOldI13h+2], si
-	pop		si
-	pop		es
+	pushf						; Simulate INT by pushing flags
+	call far [RAMVARS.fpOldI13h]
 	ret
 
 
