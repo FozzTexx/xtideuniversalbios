@@ -33,9 +33,8 @@ SECTION .text
 ;		DS:		RAMVARS segment
 ;		ES:		BDA Segment
 ;	Returns:
-;		DS:DI:	Ptr to Disk Parameter Table (if successful)
-;		CF:		Cleared if DPT created successfully
-;				Set if any error
+;		DS:DI:	Ptr to Disk Parameter Table
+;		CF:		Cleared
 ;	Corrupts registers:
 ;		AX, BX, CX, DX
 ;--------------------------------------------------------------------
@@ -166,7 +165,7 @@ CreateDPT_FromAtaInformation:
 	mul		cx
 	xor		bx, bx
 	jmp		SHORT .StoreTotalSectorsFromBXDXAX
-	; Fall to .StoreNumberOfLbaSectors
+
 
 ;--------------------------------------------------------------------
 ; .StoreNumberOfLbaSectors
@@ -208,7 +207,8 @@ CreateDPT_FromAtaInformation:
 ;----------------------------------------------------------------------
 ; Update drive counts (hard and floppy)
 ;----------------------------------------------------------------------
-
+%ifdef MODULE_SERIAL
+; Device_FinalizeDPT returns with CF set only when a floppy was found which can't happen without MODULE_SERIAL
 %ifdef MODULE_SERIAL_FLOPPY
 ;
 ; These two instructions serve two purposes:
@@ -223,19 +223,23 @@ CreateDPT_FromAtaInformation:
 ;
 	adc		byte [RAMVARS.xlateVars+XLATEVARS.bFlopCreateCnt], 0
 	jnz		.AllDone
-%else
+%else ; ~MODULE_SERIAL_FLOPPY
 ;
 ; Even without floppy support enabled, we shouldn't try to mount a floppy image as a hard disk, which
 ; could lead to unpredictable results since no MBR will be present, etc.  The server doesn't know that
 ; floppies are supported, so it is important to still fail here if a floppy is seen during the drive scan.
 ;
 	jc		.AllDone
-%endif
+%endif ; MODULE_SERIAL_FLOPPY
+%endif ; MODULE_SERIAL
 
 	inc		BYTE [RAMVARS.bDrvCnt]		; Increment drive count to RAMVARS
 
+%ifdef MODULE_SERIAL
 .AllDone:
 	clc
+%endif
+
 	ret
 
 

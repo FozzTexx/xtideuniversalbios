@@ -120,7 +120,7 @@ endstruc
 
 STANDARD_CONTROL_BLOCK_OFFSET			EQU		200h
 XTIDE_CONTROL_BLOCK_OFFSET				EQU		8h		; for XTIDE, A3 is used to control selected register (CS0 vs CS1)...
-XTCF_CONTROL_BLOCK_OFFSET				EQU		10h		; ...and for XT-CF (all varients), it's A4
+XTCF_CONTROL_BLOCK_OFFSET				EQU		10h		; ...and for XT-CF (all variants), it's A4
 ADP50L_CONTROL_BLOCK_OFFSET				EQU		10h
 
 ; Default values for Port and PortCtrl, shared with the configurator

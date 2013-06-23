@@ -1,6 +1,5 @@
 ; Project name	:	XTIDE Universal BIOS
-; Description	:	IDE Read/Write functions for transferring
-;					block using PIO modes.
+; Description	:	IDE Read/Write functions for transferring block using PIO modes.
 ;					These functions should only be called from IdeTransfer.asm.
 
 ;
@@ -64,8 +63,8 @@ ALIGN JUMP_ALIGN
 ; 8-bit PIO from a single data port.
 ;
 ;	Parameters:
-;		CX:	Block size in 512 byte sectors
-;		DX:	IDE Data port address
+;		CX:		Block size in 512 byte sectors
+;		DX:		IDE Data port address
 ;		ES:DI:	Normalized ptr to buffer to receive data
 ;	Returns:
 ;		Nothing
@@ -99,8 +98,8 @@ ALIGN JUMP_ALIGN
 ; 16-bit PIO from a single data port.
 ;
 ;	Parameters:
-;		CX:	Block size in 512 byte sectors
-;		DX:	IDE Data port address
+;		CX:		Block size in 512 byte sectors
+;		DX:		IDE Data port address
 ;		ES:DI:	Normalized ptr to buffer to receive data
 ;	Returns:
 ;		Nothing
@@ -110,7 +109,7 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 IdePioBlock_ReadFrom16bitDataPort:
 %ifdef USE_186
-	xchg		cl, ch	; Sectors to WORDs
+	xchg	cl, ch	; Sectors to WORDs
 	rep insw
 	ret
 
@@ -119,8 +118,8 @@ IdePioBlock_ReadFrom16bitDataPort:
 ALIGN JUMP_ALIGN
 .ReadNextOword:
 	%rep 8	; WORDs
-		in		ax, dx	; Read BYTE
-		stosw			; Store BYTE to [ES:DI]
+		in		ax, dx	; Read WORD
+		stosw			; Store WORD to [ES:DI]
 	%endrep
 	loop	.ReadNextOword
 	ret
@@ -151,8 +150,8 @@ IdePioBlock_ReadFrom32bitDataPort:
 ;--------------------------------------------------------------------
 ; IdePioBlock_WriteToXtideRev1
 ;	Parameters:
-;		CX:	Block size in 512-byte sectors
-;		DX:	IDE Data port address
+;		CX:		Block size in 512-byte sectors
+;		DX:		IDE Data port address
 ;		ES:SI:	Normalized ptr to buffer containing data
 ;	Returns:
 ;		Nothing
@@ -179,8 +178,8 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ; IdePioBlock_WriteToXtideRev2	or rev 1 with swapped A0 and A3 (chuck-mod)
 ;	Parameters:
-;		CX:	Block size in 512-byte sectors
-;		DX:	IDE Data port address
+;		CX:		Block size in 512-byte sectors
+;		DX:		IDE Data port address
 ;		ES:SI:	Normalized ptr to buffer containing data
 ;	Returns:
 ;		Nothing
@@ -190,9 +189,9 @@ ALIGN JUMP_ALIGN
 ALIGN JUMP_ALIGN
 IdePioBlock_WriteToXtideRev2:
 	UNROLL_SECTORS_IN_CX_TO_QWORDS
-	push		ds
-	push		es		; Copy ES...
-	pop			ds		; ...to DS
+	push	ds
+	push	es		; Copy ES...
+	pop		ds		; ...to DS
 ALIGN JUMP_ALIGN
 .WriteNextQword:
 	%rep 4	; WORDs
@@ -206,8 +205,8 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ; IdePioBlock_WriteTo8bitDataPort
 ;	Parameters:
-;		CX:	Block size in 512-byte sectors
-;		DX:	IDE Data port address
+;		CX:		Block size in 512-byte sectors
+;		DX:		IDE Data port address
 ;		ES:SI:	Normalized ptr to buffer containing data
 ;	Returns:
 ;		Nothing
@@ -224,11 +223,11 @@ IdePioBlock_WriteTo8bitDataPort:
 
 %else ; If 8088/8086
 	UNROLL_SECTORS_IN_CX_TO_QWORDS
-	push		ds
-	;mov		ax, es
-	;mov		ds, ax	; move es to ds via ax (does this run faster on 8088?)
-	push		es
-	pop			ds
+	push	ds
+	;mov	ax, es
+	;mov	ds, ax	; move es to ds via ax (does this run faster on 8088?)
+	push	es
+	pop		ds
 ALIGN JUMP_ALIGN
 .WriteNextQword:
 	%rep 8	; BYTEs
@@ -247,8 +246,8 @@ ALIGN JUMP_ALIGN
 ; IdePioBlock_WriteTo16bitDataPort		Normal 16-bit IDE, XT-CFv3 in BIU Mode
 ; IdePioBlock_WriteTo32bitDataPort		VLB/PCI 32-bit IDE
 ;	Parameters:
-;		CX:	Block size in 512-byte sectors
-;		DX:	IDE Data port address
+;		CX:		Block size in 512-byte sectors
+;		DX:		IDE Data port address
 ;		ES:SI:	Normalized ptr to buffer containing data
 ;	Returns:
 ;		Nothing
@@ -273,8 +272,8 @@ IdePioBlock_WriteTo16bitDataPort:
 ALIGN JUMP_ALIGN
 .WriteNextQword:
 	%rep 4	; WORDs
-		lodsw			; Load BYTE from [DS:SI]
-		out	dx, ax		; Write BYTE
+		lodsw			; Load WORD from [DS:SI]
+		out	dx, ax		; Write WORD
 	%endrep
 	loop	.WriteNextQword
 	pop		ds

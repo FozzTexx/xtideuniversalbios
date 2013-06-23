@@ -44,8 +44,13 @@ Prepare_ByLoadingDapToESSIandVerifyingForTransfer:
 	jb		SHORT InvalidDAP
 
 	; Make sure that sector count is valid
+%ifdef USE_UNDOC_INTEL
+	eSALC	; Clear AL using CF (CF is cleared since JB above fell through)
+	or		al, [es:si+DAP.wSectorCount]
+%else
 	mov		al, [es:si+DAP.wSectorCount]
 	test	al, al
+%endif
 	jz		SHORT ZeroSectorsRequestedSoNoErrors
 	js		SHORT InvalidNumberOfSectorsRequested
 
@@ -61,7 +66,7 @@ Prepare_ByLoadingDapToESSIandVerifyingForTransfer:
 	; LBA28 or LBA48 command
 	call	Prepare_GetOldInt13hCommandIndexToBX
 	mov		al, [di+DPT.bFlagsLow]
-	shl		al, 1					; Set CF if LBA48 supported
+	eSHL_IM	al, 1					; Set CF if LBA48 supported
 	adc		bl, bh					; LBA48 EXT commands
 	ret
 %endif ; MODULE_EBIOS

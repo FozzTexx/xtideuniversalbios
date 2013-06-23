@@ -168,7 +168,7 @@ Int13h_DirectCallToAnotherBios:
 	; Disable drive number translations in case of recursive INT 13h calls
 	mov		[RAMVARS.xlateVars+XLATEVARS.bXlatedDrv], dl
 	push	WORD [RAMVARS.xlateVars+XLATEVARS.wFDandHDswap]
-	mov		WORD [RAMVARS.xlateVars+XLATEVARS.wFDandHDswap], 8000h	; No translation
+	call	DriveXlate_Reset			; No translation
 %endif
 
 	push	bp							; Store offset to IDEPACK (SS:SP now points it)

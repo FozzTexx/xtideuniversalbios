@@ -66,7 +66,7 @@ IdeIO_InputToALfromIdeRegisterInDL:
 	mov		bh, JRIDE_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET >> 8
 	je		SHORT .InputToALfromMemoryMappedRegisterInBX
 	mov		bl, dl
-	mov		bh,	ADP50L_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET >> 8
+	mov		bh, ADP50L_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET >> 8
 
 .InputToALfromMemoryMappedRegisterInBX:
 	push	ds

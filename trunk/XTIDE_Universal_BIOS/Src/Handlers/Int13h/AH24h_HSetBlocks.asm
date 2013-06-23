@@ -83,9 +83,13 @@ AH24h_SetBlockSize:
 	; Some drives allow block mode commands for 1 sector blocks and some do not.
 	pop		bx			; Pop block size to BL
 	jc		SHORT .DisableBlockMode
-	mov		bh, bl		; BL and BH both have block size we tried to set
-	dec		bh
-	jz		SHORT .DisableBlockMode
+
+	; All valid block sizes are powers of 2 which means BL have just one bit set (parity odd).
+	; Incrementing BX will cause all block sizes except 1 to have two bits set (parity even).
+	; Note that PF reflects only the lowest 8 bits of any register being modified.
+	inc		bx						; 1 -> 2 ?
+	jpo		SHORT .DisableBlockMode	; Jump if BL = 2
+	dec		bx						; Restore block size (was larger than 1)
 
 	; Enable block mode and store block size
 	or		BYTE [di+DPT.bFlagsHigh], FLGH_DPT_USE_BLOCK_MODE_COMMANDS

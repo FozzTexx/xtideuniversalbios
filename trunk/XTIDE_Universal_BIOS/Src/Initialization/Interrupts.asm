@@ -96,7 +96,7 @@ Interrupts_InitializeInterruptVectors:
 ;--------------------------------------------------------------------
 .InitializeHardwareIrqHandlers:
 	call	RamVars_GetIdeControllerCountToCX
-	mov		di, ROMVARS.ideVars0+IDEVARS.bIRQ	; CS:SI points to first IDEVARS
+	mov		di, ROMVARS.ideVars0+IDEVARS.bIRQ
 .IdeControllerLoop:
 	mov		al, [cs:di]
 	add		di, BYTE IDEVARS_size			; Increment to next controller

@@ -34,6 +34,7 @@ SECTION .text
 ;--------------------------------------------------------------------
 Initialize_FromMainBiosRomSearch:		; unused entrypoint ok
 	pushf								; To store IF
+	sti									; Enable interrupts for keystrokes
 	push	ds
 
 %ifdef USE_AT
@@ -44,7 +45,6 @@ Initialize_FromMainBiosRomSearch:		; unused entrypoint ok
 	LOAD_BDA_SEGMENT_TO	ds, ax
 %endif
 
-	sti									; Enable interrupts for keystrokes
 	test	BYTE [BDA.bKBFlgs1], (1<<2)	; Clears ZF if CTRL is held down
 	jnz		SHORT .SkipRomInitialization
 

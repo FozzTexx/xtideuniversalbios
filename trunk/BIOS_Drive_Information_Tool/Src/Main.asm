@@ -26,7 +26,7 @@
 %include "ATA_ID.inc"			; From XTIDE Universal BIOS
 %include "Int13h.inc"			; From XTIDE Universal BIOS
 %include "EBIOS.inc"			; From XTIDE Universal BIOS
-FLG_DRVNHEAD_DRV	EQU	(1<<4)	; Required by CustomDPT.inc
+%include "IdeRegisters.inc"		; From XTIDE Universal BIOS
 %include "Romvars.inc"			; From XTIDE Universal BIOS
 %include "CustomDPT.inc"		; From XTIDE Universal BIOS
 
