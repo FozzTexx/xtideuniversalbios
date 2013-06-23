@@ -66,10 +66,11 @@ SerialCommand_OutputWithParameters:
 %endif
 		call	IdeTransfer_NormalizePointerInESSI
 %ifdef USE_AT
-		jnc		SHORT .PointerNormalizationWasSuccessfull
+		jnc		SHORT .PointerNormalizationWasSuccessful
 		xor		cx, cx			; Nothing transferred
-		jmp		SerialCommand_ReturnError
-.PointerNormalizationWasSuccessfull:
+		stc
+		ret
+.PointerNormalizationWasSuccessful:
 %endif
 
 		mov		dx, [di+DPT_SERIAL.wSerialPortAndBaud]

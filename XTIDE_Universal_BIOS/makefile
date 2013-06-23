@@ -188,7 +188,7 @@ at:
 
 at_large:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_AT_LARGE) -l"$(TARGET)_atl.lst" -o"$(TARGET)_atl.bin"
-	@echo *Large AT version "$(TARGET)_atl.bin" built.
+	@echo * Large AT version "$(TARGET)_atl.bin" built.
 
 xtplus:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XTPLUS) -l"$(TARGET)_xtp.lst" -o"$(TARGET)_xtp.bin"
@@ -196,7 +196,7 @@ xtplus:
 
 xtplus_large:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XTPLUS_LARGE) -l"$(TARGET)_xtpl.lst" -o"$(TARGET)_xtpl.bin"
-	@echo *Large XT Plus version "$(TARGET)_xtpl.bin" built.
+	@echo * Large XT Plus version "$(TARGET)_xtpl.bin" built.
 
 xt:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XT) -l"$(TARGET)_xt.lst" -o"$(TARGET)_xt.bin"
@@ -204,7 +204,7 @@ xt:
 
 xt_large:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XT_LARGE) -l"$(TARGET)_xtl.lst" -o"$(TARGET)_xtl.bin"
-	@echo *Large XT version "$(TARGET)_xtl.bin" built.
+	@echo * Large XT version "$(TARGET)_xtl.bin" built.
 
 xt_tiny:
 	@$(AS) "$(SRC_ASM)" $(ASFLAGS) $(DEFS_XT_TINY) -l"$(TARGET)_tiny.lst" -o"$(TARGET)_tiny.bin"

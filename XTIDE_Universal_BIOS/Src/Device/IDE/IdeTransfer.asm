@@ -208,7 +208,7 @@ ALIGN JUMP_ALIGN
 ;	Returns:
 ;		ES:SI:	Normalized pointer
 ;		AH:		INT 13h Error Code (only when CF set)
-;		CF:		Set of failed to normalize pointer (segment overflow)
+;		CF:		Set if failed to normalize pointer (segment overflow)
 ;				Cleared if success
 ;	Corrupts registers:
 ;		AL, BX, DX
@@ -294,7 +294,7 @@ InitializePiovarsInSSBPwithSectorCountInAH:
 	clc
 	ret
 %endif ; MODULE_8BIT_IDE_ADVANCED
-	; Fall to IdeTransfer_NormalizePointerInESSI if no MODULE_8BIT_IDE
+	; Fall to IdeTransfer_NormalizePointerInESSI if no MODULE_8BIT_IDE_ADVANCED
 
 
 ;--------------------------------------------------------------------
@@ -304,8 +304,8 @@ InitializePiovarsInSSBPwithSectorCountInAH:
 ;		ES:SI:	Ptr to be normalized
 ;	Returns:
 ;		ES:SI:	Normalized pointer (SI = 0...15)
-;		AH:		INT 13h Error Code (only when CF set)
-;		CF:		Set of failed to normalize pointer (segment overflow)
+;		AH:		INT 13h Error Code (when USE_AT defined and normalization was attempted)
+;		CF:		Set if failed to normalize pointer (segment overflow)
 ;				Cleared if success
 ;	Corrupts registers:
 ;		AX, DX
@@ -318,7 +318,7 @@ IdeTransfer_NormalizePointerInESSI:
 ; is passed in seg:offset form and HMA is accessible in real mode.
 %ifdef USE_AT
 	xor		dl, dl
-	shl		dx, 1
+	eSHL_IM	dx, 1
 	dec		dx		; Prevents normalization when bytes + offset will be zero
 	add		dx, si
 	jc		SHORT .NormalizationRequired
@@ -328,10 +328,9 @@ IdeTransfer_NormalizePointerInESSI:
 
 	NORMALIZE_FAR_POINTER	es, si, ax, dx
 %ifdef USE_AT		; CF is always clear for XT builds
-	jc		SHORT .SegmentOverflow
-	ret
-.SegmentOverflow:
-	mov		ah, RET_HD_INVALID
+	; AH = RET_HD_INVALID (01) if CF set, RET_HD_SUCCESS (00) if not. CF unchanged.
+	sbb		ah, ah
+	neg		ah
 %endif
 	ret
 

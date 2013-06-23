@@ -77,8 +77,9 @@ EEPROM_LoadXtideUniversalBiosFromRomToRamBufferAndReturnSizeInDXCX:
 ALIGN JUMP_ALIGN
 EEPROM_GetXtideUniversalBiosSizeFromESDItoDXCX:
 	xor		dx, dx
-	eMOVZX	cx, BYTE [es:di+ROMVARS.bRomSize]
-	eSHL_IM	cx, 9				; *= 512 for byte count
+	mov		ch, [es:di+ROMVARS.bRomSize]
+	mov		cl, dl
+	eSHL_IM	ch, 1
 	ret
 
 

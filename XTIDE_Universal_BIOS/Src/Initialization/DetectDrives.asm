@@ -134,6 +134,9 @@ DetectDrives_FromAllIDEControllers:
 	mov		[RAMVARS.xlateVars+XLATEVARS.bFlopCntAndFirst], al
 %endif
 
+%ifdef MODULE_8BIT_IDE_ADVANCED
+NoSlaveDriveAvailable:
+%endif
 	ret
 
 %ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
@@ -152,23 +155,26 @@ DetectDrives_FromAllIDEControllers:
 ;		DS:		RAMVARS segment
 ;		ES:		Zero (BDA segment)
 ;	Returns:
-;       None
+;       Nothing
 ;	Corrupts registers:
 ;		AX, BL, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 StartDetectionWithDriveSelectByteInBHandStringInCX:
-%ifdef MODULE_8BIT_IDE
-	call	DetectDrives_DoesIdevarsInCSBPbelongToXTCF
-	jne		SHORT .ShouldNotSkipSlaveDriveDetection
+%ifdef MODULE_8BIT_IDE_ADVANCED
+	mov		al, [cs:bp+IDEVARS.bDevice]
+	cmp		al, DEVICE_8BIT_XTCF_PIO8
+	jb		SHORT .DoNotSkipSlaveDriveDetection
+	cmp		al, DEVICE_8BIT_XTCF_DMA
+	ja		SHORT .DoNotSkipSlaveDriveDetection
 
 	; XT-CF do not support slave drives so skip detection
 	test	bh, FLG_DRVNHEAD_DRV
 	jnz		SHORT NoSlaveDriveAvailable
-.ShouldNotSkipSlaveDriveDetection:
-%endif ; MODULE_8BIT_IDE
+.DoNotSkipSlaveDriveDetection:
+%endif ; MODULE_8BIT_IDE_ADVANCED
 
 	call	DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP
-.DriveDetectionStringPrintedOnScreen:
+
 %ifdef MODULE_HOTKEYS
 	call	HotkeyBar_UpdateDuringDriveDetection
 %endif
@@ -246,31 +252,3 @@ CreateBiosTablesForHardDisk:
 	jc		SHORT DetectDrives_DriveNotFound
 	call	DriveDetectInfo_CreateForHardDisk
 	jmp		SHORT DetectPrint_DriveNameFromDrvDetectInfoInESBX
-
-
-%ifdef MODULE_8BIT_IDE
-;--------------------------------------------------------------------
-; DetectDrives_DoesIdevarsInCSBPbelongToXTCF
-;	Parameters:
-;		CS:BP:	Ptr to IDEVARS for the drive
-;	Returns:
-;		ZF:		Set if IDEVARS belongs to XT-CF device
-;				Cleared if some other device
-;	Corrupts registers:
-;		AL
-;--------------------------------------------------------------------
-DetectDrives_DoesIdevarsInCSBPbelongToXTCF:
-	mov		al, [cs:bp+IDEVARS.bDevice]
-	cmp		al, DEVICE_8BIT_XTCF_PIO8
-	je		SHORT .Done
-	cmp		al, DEVICE_8BIT_XTCF_PIO8_WITH_BIU_OFFLOAD
-
-%ifdef MODULE_8BIT_IDE_ADVANCED
-	je		SHORT .Done
-	cmp		al, DEVICE_8BIT_XTCF_DMA
-%endif ; MODULE_8BIT_IDE_ADVANCED
-
-.Done:		; return state via ZF, set from the cmp instructions
-NoSlaveDriveAvailable:
-	ret
-%endif ; MODULE_8BIT_IDE

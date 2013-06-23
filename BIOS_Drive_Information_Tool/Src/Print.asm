@@ -261,7 +261,7 @@ Print_EbiosVersionFromBXandExtensionsFromCX:
 	push	bx
 	push	cx
 	mov		si, g_szNewExtensions
-	jmp		SHORT JumpToFormatNullTerminatedStringFromSI
+	; Fall to JumpToFormatNullTerminatedStringFromSI
 
 
 ;---------------------------------------------------------------------

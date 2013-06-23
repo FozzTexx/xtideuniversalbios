@@ -138,13 +138,33 @@ FillTranslatedDPTtoESDIfromDPTinDSSI:
 	call	StoswThenAddALandAHtoDL		; Bytes 12 and 13 (Landing Zone Cylinder)
 
 	mov		al, [si+DPT.bLchsSectorsPerTrack]
-%ifdef USE_186
-	push	FillStandardDPTtoESDIfromDPTinDSSI.RestoreOffsetsAndReturn
-	jmp		StoswALandChecksumFromDL	; Bytes 14 (Logical sectors per track) and 15 (Checksum)
-%else
-	call	StoswALandChecksumFromDL
+%ifndef USE_186
+	call	StoswALandChecksumFromDL	; Bytes 14 (Logical sectors per track) and 15 (Checksum)
 	jmp		SHORT FillStandardDPTtoESDIfromDPTinDSSI.RestoreOffsetsAndReturn
+%else
+	push	FillStandardDPTtoESDIfromDPTinDSSI.RestoreOffsetsAndReturn
+	; Fall to StoswALandChecksumFromDL
 %endif
+
+
+;--------------------------------------------------------------------
+; StoswALandChecksumFromDL
+;	Parameters:
+;		AL:		Last byte to store before checksum byte
+;		DL:		Sum of bytes so far
+;		ES:DI:	Ptr to where to store AL and Checksum byte
+;	Returns:
+;		DL:		Sum of bytes so far
+;		DI:		Incremented by 2
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+StoswALandChecksumFromDL:
+	mov		ah, al
+	add		ah, dl
+	neg		ah
+	stosw
+	ret
 
 
 ;--------------------------------------------------------------------
@@ -225,11 +245,11 @@ CompatibleDPT_CreateDeviceParameterTableExtensionToESBXfromDPTinDSSI:
 	xor		ax, ax
 %ifdef MODULE_ADVANCED_ATA
 	or		ah, [si+DPT_ADVANCED_ATA.bPioMode]
-	jz		SHORT .NoDotSetFastPioFlag
+	jz		SHORT .DoNotSetFastPioFlag
 	cmp		WORD [si+DPT_ADVANCED_ATA.wControllerID], BYTE 0
-	je		SHORT .NoDotSetFastPioFlag
+	je		SHORT .DoNotSetFastPioFlag
 	inc		cx		; FLG_FAST_PIO_ENABLED
-.NoDotSetFastPioFlag:
+.DoNotSetFastPioFlag:
 %endif
 	call	StoswThenAddALandAHtoDL			; Bytes 8 and 9
 
@@ -275,22 +295,3 @@ StoswThenAddALandAHtoDL:
 	add		dl, ah
 	ret
 
-
-;--------------------------------------------------------------------
-; StoswALandChecksumFromDL
-;	Parameters:
-;		AL:		Last byte to store before checksum byte
-;		DL:		Sum of bytes so far
-;		ES:DI:	Ptr to where to store AL and Checksum byte
-;	Returns:
-;		DL:		Sum of bytes so far
-;		DI:		Incremented by 2
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-StoswALandChecksumFromDL:
-	mov		ah, al
-	add		ah, dl
-	neg		ah
-	stosw
-	ret

@@ -25,9 +25,8 @@
 %ifndef XTCF_INC
 %define XTCF_INC
 
-; XT-CF requires that block must be less than 128 sectors (64 kiB) for DMA
-; transfers.
-; 
+; XT-CF requires that block must be less than 128 sectors (64 kiB) for DMA transfers.
+;
 ; Note: XT-CFv3 DMA will not interfere with PC & PC/XT memory refresh,
 ; since the XT-CFv3 detaches itself from the bus every 16 bytes transferred.
 ;
@@ -58,7 +57,7 @@ XTCF_CONTROL_REGISTER				EQU		1Eh
 ;
 ; XT-CFv3 cannot be distinguised by software, so user must decide and set
 ; the mode via a call to Int 13h function 1Eh accordingly (see AH1E_XTCF.asm).
-;;
+;
 XTCF_8BIT_PIO_MODE					EQU		00h
 XTCF_8BIT_PIO_MODE_WITH_BIU_OFFLOAD	EQU		01h
 XTCF_DMA_MODE						EQU		02h
@@ -79,12 +78,10 @@ IS_THIS_DRIVE_XTCF					EQU		0
 ;--------------------------------------------------------------------
 ; SET_XTCF_TRANSFER_MODE
 ;	Parameters:
-;		DH:		Mode to select,
-;                               i.e. XTCF_8BIT_PIO_MODE
-;				Note there's no way to know if an
-;				XT-CF adapter supports DMA, so the
-;				user should enable DMA only if a
-;				DMA-enabled XT-CFv3 is fitted.
+;		DH:		Mode to select, i.e. XTCF_8BIT_PIO_MODE
+;				Note there's no way to know if an XT-CF adapter
+;				supports DMA, so the user should enable DMA
+;				only if a DMA-enabled XT-CFv3 is fitted.
 ;		DL:		Drive Number
 ;--------------------------------------------------------------------
 SET_XTCF_TRANSFER_MODE				EQU		1
@@ -94,10 +91,9 @@ SET_XTCF_TRANSFER_MODE				EQU		1
 ;	Parameters:
 ;		DL:		Drive Number
 ;	Returns:
-;		DL:		Block mode sectors per block
-;				configured
 ;		DH:		One of the mode values listed above,
-;                               i.e. XTCF_8BIT_PIO_MODE
+;				i.e. XTCF_8BIT_PIO_MODE
+;		DL:		Block mode sectors per block configured
 ;--------------------------------------------------------------------
 GET_XTCF_TRANSFER_MODE				EQU		2
 

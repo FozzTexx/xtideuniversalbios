@@ -111,19 +111,17 @@ AH9h_InitializeDriveForUse:
 %endif
 
 
-;;; Set XT-CF mode
 %ifdef MODULE_8BIT_IDE_ADVANCED
+;;; Set XT-CF mode
 	call	AH1Eh_GetCurrentXTCFmodeToAX
 	call	AH9h_SetModeFromALtoXTCF
 	STORE_ERROR_FLAG_TO_DPT		FLG_INITERROR_FAILED_TO_SET_XTCF_MODE
-.DoNotSetXTCFmode:
 %endif	; MODULE_8BIT_IDE_ADVANCED
 
 %ifdef MODULE_8BIT_IDE
 ;;; Set 8-bit PIO mode
 	call	AH9h_Enable8bitModeForDevice8bitAta
 	STORE_ERROR_FLAG_TO_DPT		FLG_INITERROR_FAILED_TO_SET_8BIT_MODE
-.DoNotSet8bitMode:
 %endif ; MODULE_8BIT_IDE
 
 
@@ -137,7 +135,6 @@ AH9h_InitializeDriveForUse:
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_BSY, FLG_STATUS_BSY)
 	call	Idepack_StoreNonExtParametersAndIssueCommandFromAL
 	STORE_ERROR_FLAG_TO_DPT		FLG_INITERROR_FAILED_TO_INITIALIZE_CHS_PARAMETERS
-.SkipInitializeDeviceParameters:
 
 
 ;;;	SetWriteCache
@@ -301,4 +298,4 @@ AH9h_Enable8bitModeForDevice8bitAta:
 	cmp		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_ATA
 	jne		SHORT IgnoreInvalidCommandError
 	jmp		AH23h_Enable8bitPioMode
-%endif
+%endif ; MODULE_8BIT_IDE

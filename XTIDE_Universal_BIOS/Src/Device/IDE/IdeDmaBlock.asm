@@ -1,8 +1,9 @@
 ; Project name	:	XTIDE Universal BIOS
-; Description	:	IDE Read/Write functions for transferring
-;			block using DMA.
-;			These functions should only be called from IdeTransfer.asm.
+; Description	:	IDE Read/Write functions for transferring block using DMA.
+;					These functions should only be called from IdeTransfer.asm.
+
 ; Modified JJP 05-Jun-13
+
 ;
 ; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2013 by XTIDE Universal BIOS Team.
@@ -83,7 +84,7 @@ TransferBlockToOrFromXTCF:
 %ifdef USE_186
 	shl		cx, 9									; CX = Block size in BYTEs
 %else
-	xchg		cl, ch
+	xchg	cl, ch
 	shl		cx, 1
 %endif
 
@@ -91,19 +92,19 @@ TransferBlockToOrFromXTCF:
 	mov		ax, di
 	neg		ax			; 2s compliment
 
-	; if DI was zero carry flag will be cleared (and set otherwise)
+	; If DI was zero carry flag will be cleared (and set otherwise)
 	; When DI is zero only one transfer is required since we've limited the
 	; XT-CFv3 block size to 32k
-	jnc	.TransferLastDmaPageWithSizeInCX
+	jnc		SHORT .TransferLastDmaPageWithSizeInCX
 
 	; CF was set, so DI != 0 and we might need one or two transfers
 	cmp		cx, ax									; if we won't cross a physical page boundary...
-	jbe	SHORT .TransferLastDmaPageWithSizeInCX	; ...perform the transfer in one operation
+	jbe		SHORT .TransferLastDmaPageWithSizeInCX	; ...perform the transfer in one operation
 
 	; Calculate how much we can transfer on first and second rounds
-	xchg		cx, ax			; CX = BYTEs for first page
-	sub		ax, cx			; AX = BYTEs for second page
-	push		ax			; Save bytes for second transfer on stack
+	xchg	cx, ax		; CX = BYTEs for first page
+	sub		ax, cx		; AX = BYTEs for second page
+	push	ax			; Save bytes for second transfer on stack
 
 	; Transfer first DMA page
 	call	StartDMAtransferForXTCFwithDmaModeInBL
@@ -125,7 +126,7 @@ TransferBlockToOrFromXTCF:
 ;	Returns:
 ;		ES:DI updated (CX is added)
 ;	Corrupts registers:
-;		AX
+;		AX, CX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 StartDMAtransferForXTCFwithDmaModeInBL:
@@ -160,6 +161,14 @@ StartDMAtransferForXTCFwithDmaModeInBL:
 	out		MASK_REGISTER_DMA8_out, al							; Enable DMA Channel 3
 	sti															; Enable interrupts
 
+	; Update physical address in ES:DI - since IO might need several calls through this function either from here
+	; if crossing a physical page boundary, or from IdeTransfer.asm if requested sectors was > PIOVARS.wSectorsInBlock
+	; We update the pointer here (before the actual transfer) to avoid having to save the byte count on the stack
+	mov		ax, es						; copy physical page address to ax
+	add		di, cx						; add requested bytes to di
+	adc		al, 0						; and increment physical page address, if required
+	mov		es, ax						; and save it back in es
+
 	; XT-CF transfers 16 bytes at a time. We need to manually start transfer for every block by writing (anything)
 	; to the XT-CFv3 Control Register, which raises DRQ thereby passing system control to the 8237 DMA controller.
 	; The XT-CFv3 logic releases DRQ after 16 transfers, thereby handing control back to the CPU and allowing any other IRQs or
@@ -168,18 +177,15 @@ StartDMAtransferForXTCFwithDmaModeInBL:
 	; and is therefore atomic (and hence fast).
 
 %if 0	; Slow DMA code - works by checking 8237 status register after each 16-byte transfer, until it reports TC has been raised.
-;ALIGN JUMP_ALIGN
-;.TransferNextBlock:
-;	cli									; We want no ISR to read DMA Status Register before we do
-;	out		dx, al						; Transfer up to 16 bytes to/from XT-CF card
-;	in		al, STATUS_REGISTER_DMA8_in
-;	sti
-;	test	al, FLG_CH3_HAS_REACHED_TERMINAL_COUNT
-;	jz		SHORT .TransferNextBlock	; All bytes transferred?
-%endif ; Slow DMA code
-
-%if 1	; Fast DMA code - perform computed number of transfers, then check DMA status register to be sure
-	push	cx							; need byte count to update pointer at the end
+ALIGN JUMP_ALIGN
+.TransferNextBlock:
+	cli									; We want no ISR to read DMA Status Register before we do
+	out		dx, al						; Transfer up to 16 bytes to/from XT-CF card
+	in		al, STATUS_REGISTER_DMA8_in
+	sti
+	test	al, FLG_CH3_HAS_REACHED_TERMINAL_COUNT
+	jz		SHORT .TransferNextBlock	; All bytes transferred?
+%else	; Fast DMA code - perform computed number of transfers, then check DMA status register to be sure
 	add		cx, BYTE 15					; We'll divide transfers in 16-byte atomic transfers,
 	eSHR_IM	cx, 4						; so include any partial block, which will be terminated
 ALIGN JUMP_ALIGN						; by the DMA controller raising T/C
@@ -190,14 +196,6 @@ ALIGN JUMP_ALIGN						; by the DMA controller raising T/C
 	in		al, STATUS_REGISTER_DMA8_in	; check 8237 DMA controller status flags...
 	test	al, FLG_CH3_HAS_REACHED_TERMINAL_COUNT	; ... for channel 3 terminal count
 	jz		SHORT .TransferNextDmaBlock	; If not set, get more bytes
-	pop		cx							; get back requested bytes
-%endif ; Fast DMA code
-
-	; Update physical address in ES:DI - since IO might need several calls through this function either from here
-	; if crossing a physical page boundary, and from IdeTransfer.asm if requested sectors was > PIOVARS.wSectorsInBlock
-	mov		ax, es						; copy physical page address to ax
-	add		di, cx						; add requested bytes to di
-	adc		al, 0						; and increment physical page address, if required
-	mov		es, ax						; and save it back in es
+%endif
 
 	ret
