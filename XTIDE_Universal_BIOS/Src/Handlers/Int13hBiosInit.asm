@@ -25,6 +25,10 @@ TEMPORARY_VECTOR_FOR_SYSTEM_INT13h		EQU		21h	; MS-DOS
 
 
 Int13hBiosInit_Handler:
+	; Ignore all but read command (assumed to read boot sector)
+	cmp		ah, READ_SECTORS_INTO_MEMORY
+	jne		SHORT .MainBiosStillInInitializationMode
+
 	LOAD_BDA_SEGMENT_TO	ds, ax
 
 	; Now install our handler and call 19h since non-standard motherboard BIOS did not
@@ -32,6 +36,12 @@ Int13hBiosInit_Handler:
 	mov		WORD [BIOS_BOOT_LOADER_INTERRUPT_19h*4], Int19h_BootLoaderHandler
 	mov		[BIOS_BOOT_LOADER_INTERRUPT_19h*4+2], cs
 	int		BIOS_BOOT_LOADER_INTERRUPT_19h	; Does not return
+
+	; Main BIOS might reset floppy drives etc. so let's wait longer
+	; before installing our INT 19h handler.
+.MainBiosStillInInitializationMode:
+	int		TEMPORARY_VECTOR_FOR_SYSTEM_INT13h
+	retf	2
 
 
 ;--------------------------------------------------------------------

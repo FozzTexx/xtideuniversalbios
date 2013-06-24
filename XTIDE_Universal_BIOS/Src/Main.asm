@@ -127,26 +127,22 @@ istruc ROMVARS
 %ifdef MODULE_BOOT_MENU
 	at	ROMVARS.wBootTimeout,	dw	BOOT_MENU_DEFAULT_TIMEOUT
 %endif
-%ifdef MODULE_8BIT_IDE_ADVANCED
-	at	ROMVARS.bIdeCnt,		db	2						; Number of supported controllers
-%else
 	at  ROMVARS.bIdeCnt,		db	1
-%endif
 	at	ROMVARS.bBootDrv,		db	80h						; Boot Menu default drive
 	at	ROMVARS.bMinFddCnt, 	db	0						; Do not force minimum number of floppy drives
 	at	ROMVARS.bStealSize,		db	1						; Steal 1kB from base memory in full mode
 	at	ROMVARS.bIdleTimeout,	db	0						; Standby timer disabled by default
 
-	at	ROMVARS.ideVars0+IDEVARS.wBasePort,			dw	DEVICE_XTIDE_DEFAULT_PORT			; Controller Command Block base port
-	at	ROMVARS.ideVars0+IDEVARS.wControlBlockPort,	dw	DEVICE_XTIDE_DEFAULT_PORTCTRL		; Controller Control Block base port
-	at	ROMVARS.ideVars0+IDEVARS.bDevice,			db	DEVICE_8BIT_XTIDE_REV1
+%ifdef MODULE_8BIT_IDE_ADVANCED
+	at	ROMVARS.ideVars0+IDEVARS.wBasePort,				dw	DEVICE_XTIDE_DEFAULT_PORT		; Controller Command Block base port
+	at	ROMVARS.ideVars0+IDEVARS.bDevice,				db	DEVICE_8BIT_XTCF_PIO8
+%else
+	at	ROMVARS.ideVars0+IDEVARS.wBasePort,				dw	DEVICE_XTIDE_DEFAULT_PORT		; Controller Command Block base port
+	at	ROMVARS.ideVars0+IDEVARS.wControlBlockPort,		dw	DEVICE_XTIDE_DEFAULT_PORTCTRL	; Controller Control Block base port
+	at	ROMVARS.ideVars0+IDEVARS.bDevice,				db	DEVICE_8BIT_XTIDE_REV1
+%endif
 	at	ROMVARS.ideVars0+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	db	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE | (TRANSLATEMODE_AUTO<<TRANSLATEMODE_FIELD_POSITION)
 	at	ROMVARS.ideVars0+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags,	db	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE | (TRANSLATEMODE_AUTO<<TRANSLATEMODE_FIELD_POSITION)
-
-%ifdef MODULE_8BIT_IDE_ADVANCED
-	at	ROMVARS.ideVars1+IDEVARS.wBasePort,				dw	DEVICE_XTIDE_DEFAULT_PORT		; Controller Command Block base port
-	at	ROMVARS.ideVars1+IDEVARS.bDevice,				db	DEVICE_8BIT_XTCF_PIO8
-%endif
 
 	at	ROMVARS.ideVars1+IDEVARS.drvParamsMaster+DRVPARAMS.wFlags,	db	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE | (TRANSLATEMODE_AUTO<<TRANSLATEMODE_FIELD_POSITION)
 	at	ROMVARS.ideVars1+IDEVARS.drvParamsSlave+DRVPARAMS.wFlags,	db	DISABLE_WRITE_CACHE | FLG_DRVPARAMS_BLOCKMODE | (TRANSLATEMODE_AUTO<<TRANSLATEMODE_FIELD_POSITION)
