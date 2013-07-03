@@ -30,10 +30,12 @@ SECTION .text
 Int19h_BootLoaderHandler:
 	sti											; Enable interrupts
 	cld											; String instructions to increment pointers
-%ifndef USE_AT
-	call	Int13hBiosInit_RestoreSystemHandler	; Needed if initialization was started on INT 13h instead on 19h
-%endif
 	LOAD_BDA_SEGMENT_TO	es, ax					; Load BDA segment (zero) to ES
+%ifdef MODULE_VERY_LATE_INITIALIZATION
+	lds		ax, [es:TEMPORARY_VECTOR_FOR_SYSTEM_INT13h*4]
+	mov		[es:BIOS_DISK_INTERRUPT_13h*4], ax
+	mov		[es:BIOS_DISK_INTERRUPT_13h*4+2], ds
+%endif
 	; Fall to .PrepareBootLoaderStack
 
 

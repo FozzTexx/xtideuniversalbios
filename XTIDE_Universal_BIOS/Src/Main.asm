@@ -217,6 +217,9 @@ iend
 %endif
 
 	; Boot loader
+%ifdef MODULE_VERY_LATE_INITIALIZATION
+	%include "Int13hBiosInit.asm"
+%endif
 	%include "Int19h.asm"			; For Int 19h, Boot Loader
 	%include "BootSector.asm"		; For loading boot sector
 	%include "Int19hReset.asm"		; INT 19h handler for proper system reset
@@ -253,9 +256,6 @@ iend
 %endif
 
 	; INT 13h Hard Disk BIOS functions
-%ifndef USE_AT
-	%include "Int13hBiosInit.asm"
-%endif
 	%include "Int13h.asm"			; For Int 13h, Disk functions
 	%include "AH0h_HReset.asm"
 	%include "AH1h_HStatus.asm"
