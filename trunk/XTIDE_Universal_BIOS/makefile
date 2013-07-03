@@ -26,6 +26,7 @@
 # MODULE_SERIAL               Virtual hard disks using serial port                                 #
 # MODULE_SERIAL_FLOPPY        Virtual floppy drives using serial port (requires MODULE_SERIAL)     #
 # MODULE_STRINGS_COMPRESSED   Use compressed strings to save space                                 #
+# MODULE_VERY_LATE_INITIALIZATION Initialize on INT 13h if our INT 19h handler is not called       #
 # MODULE_FEATURE_SETS         Power Management support                                             #
 #                                                                                                  #
 # Not modules but these affect the assembly:                                                       #
@@ -99,7 +100,7 @@ HEADERS += $(LIBS)
 #################################################################
 # Assembler preprocessor defines.                               #
 #################################################################
-DEFINES_COMMON = MODULE_STRINGS_COMPRESSED MODULE_HOTKEYS MODULE_8BIT_IDE MODULE_EBIOS MODULE_SERIAL MODULE_SERIAL_FLOPPY MODULE_FEATURE_SETS RESERVE_DIAGNOSTIC_CYLINDER
+DEFINES_COMMON = MODULE_STRINGS_COMPRESSED MODULE_HOTKEYS MODULE_8BIT_IDE MODULE_EBIOS MODULE_SERIAL MODULE_SERIAL_FLOPPY MODULE_VERY_LATE_INITIALIZATION MODULE_FEATURE_SETS RESERVE_DIAGNOSTIC_CYLINDER
 DEFINES_COMMON_LARGE = MODULE_BOOT_MENU MODULE_8BIT_IDE_ADVANCED MODULE_COMPATIBLE_TABLES
 
 DEFINES_XT = $(DEFINES_COMMON) ELIMINATE_CGA_SNOW MODULE_8BIT_IDE_ADVANCED

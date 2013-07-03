@@ -36,14 +36,8 @@ Initialize_FromMainBiosRomSearch:		; unused entrypoint ok
 	pushf								; To store IF
 	sti									; Enable interrupts for keystrokes
 	push	ds
-
-%ifdef USE_AT
-	push	BYTE 0
-	pop		ds
-%else
 	push	ax							; We use AX to install very late init handler
 	LOAD_BDA_SEGMENT_TO	ds, ax
-%endif
 
 	test	BYTE [BDA.bKBFlgs1], (1<<2)	; Clears ZF if CTRL is held down
 	jnz		SHORT .SkipRomInitialization
@@ -52,8 +46,7 @@ Initialize_FromMainBiosRomSearch:		; unused entrypoint ok
 	mov		WORD [BIOS_BOOT_LOADER_INTERRUPT_19h*4], Int19h_BootLoaderHandler
 	mov		[BIOS_BOOT_LOADER_INTERRUPT_19h*4+2], cs
 
-	; Very late initialization for XT builds only
-%ifndef USE_AT
+%ifdef MODULE_VERY_LATE_INITIALIZATION
 	push	es
 	; Install special INT 13h hander that initializes XTIDE Universal BIOS
 	; when our INT 19h is not called
@@ -66,9 +59,7 @@ Initialize_FromMainBiosRomSearch:		; unused entrypoint ok
 %endif
 
 .SkipRomInitialization:
-%ifndef USE_AT
 	pop		ax
-%endif
 	pop		ds
 	popf
 	retf

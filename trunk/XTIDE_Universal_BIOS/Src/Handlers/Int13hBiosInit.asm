@@ -21,47 +21,41 @@
 ; Section containing code
 SECTION .text
 
-TEMPORARY_VECTOR_FOR_SYSTEM_INT13h		EQU		21h	; MS-DOS
+TEMPORARY_VECTOR_FOR_SYSTEM_INT13h		EQU		20h	; MS-DOS so BIOSes most likely do not use this
 
 
+;--------------------------------------------------------------------
+; Int 13h software interrupt handler.
+; This handler captures boot sector read from foreign drive when our
+; INT 19h is not called. This way we can for XTIDE Universal BIOS
+; initialization even without INT 19h being called.
+;
+; Int13hBiosInit_Handler
+;	Parameters:
+;		AH:		Bios function
+;				READ_SECTORS_INTO_MEMORY will initialize XTIDE Universal BIOS
+;--------------------------------------------------------------------
 Int13hBiosInit_Handler:
+	; Initialize XTIDE Universal BIOS only if Int13hBiosInit_Handler is still at
+	; vector 13h. Otherwise some other BIOS has hooked us and our very late
+	; initialization is not possible.
+	push	ds
+	push	ax
+	LOAD_BDA_SEGMENT_TO	ds, ax
+	pop		ax
+	cmp		WORD [BIOS_DISK_INTERRUPT_13h*4], Int13hBiosInit_Handler
+	pop		ds
+	jne		SHORT .VeryLateInitFailed	; XTIDE Universal BIOS does not work
+
 	; Ignore all but read command (assumed to read boot sector)
 	cmp		ah, READ_SECTORS_INTO_MEMORY
-	jne		SHORT .MainBiosStillInInitializationMode
+	je		SHORT Int19h_BootLoaderHandler
 
-	LOAD_BDA_SEGMENT_TO	ds, ax
-
-	; Now install our handler and call 19h since non-standard motherboard BIOS did not
-	; do that or our INT 19h hander was replaced by other BIOS.
-	mov		WORD [BIOS_BOOT_LOADER_INTERRUPT_19h*4], Int19h_BootLoaderHandler
-	mov		[BIOS_BOOT_LOADER_INTERRUPT_19h*4+2], cs
-	int		BIOS_BOOT_LOADER_INTERRUPT_19h	; Does not return
-
-	; Main BIOS might reset floppy drives etc. so let's wait longer
-	; before installing our INT 19h handler.
-.MainBiosStillInInitializationMode:
+	; Call system INT 13h since not trying to read boot sector
 	int		TEMPORARY_VECTOR_FOR_SYSTEM_INT13h
 	retf	2
 
-
-;--------------------------------------------------------------------
-; Int13hBiosInit_RestoreSystemHandler
-;	Parameters:
-;		Nothing
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, DS, ES
-;--------------------------------------------------------------------
-Int13hBiosInit_RestoreSystemHandler:
-	LOAD_BDA_SEGMENT_TO	ds, ax
-
-	; Is our very late init handler in place
-	cmp		WORD [BIOS_DISK_INTERRUPT_13h*4], Int13hBiosInit_Handler
-	jne		SHORT .SystemHandlerAlreadyInPlace
-
-	les		ax, [TEMPORARY_VECTOR_FOR_SYSTEM_INT13h*4]
-	mov		[BIOS_DISK_INTERRUPT_13h*4], ax
-	mov		[BIOS_DISK_INTERRUPT_13h*4+2], es
-.SystemHandlerAlreadyInPlace:
-	ret
+.VeryLateInitFailed:
+	mov		ah, RET_HD_INVALID
+	stc
+	retf	2
