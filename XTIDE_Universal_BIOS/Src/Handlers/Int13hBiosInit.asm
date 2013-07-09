@@ -21,7 +21,7 @@
 ; Section containing code
 SECTION .text
 
-TEMPORARY_VECTOR_FOR_SYSTEM_INT13h		EQU		20h	; MS-DOS so BIOSes most likely do not use this
+TEMPORARY_VECTOR_FOR_SYSTEM_INT13h		EQU		32h	; Unused by BIOS
 
 
 ;--------------------------------------------------------------------
