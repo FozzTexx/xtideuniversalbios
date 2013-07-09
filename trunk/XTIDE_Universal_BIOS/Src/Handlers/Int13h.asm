@@ -175,8 +175,11 @@ Int13h_DirectCallToAnotherBios:
 
 	; Simulate INT by pushing flags and return address
 	push	WORD [bp+IDEPACK.intpack+INTPACK.flags]
+%if 0
+	; No standard INT 13h function uses FLAGS as parameters so no need to restore them
 	popf
-	pushf								; Simulate INT by pushing flags
+	pushf
+%endif
 	push	cs
 	ePUSH_T	di, .ReturnFromAnotherBios	; Can not corrupt flags
 

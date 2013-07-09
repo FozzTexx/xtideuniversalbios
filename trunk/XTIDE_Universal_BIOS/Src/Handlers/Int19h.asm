@@ -30,11 +30,15 @@ SECTION .text
 Int19h_BootLoaderHandler:
 	sti											; Enable interrupts
 	cld											; String instructions to increment pointers
-	LOAD_BDA_SEGMENT_TO	es, ax					; Load BDA segment (zero) to ES
 %ifdef MODULE_VERY_LATE_INITIALIZATION
-	lds		ax, [es:TEMPORARY_VECTOR_FOR_SYSTEM_INT13h*4]
-	mov		[es:BIOS_DISK_INTERRUPT_13h*4], ax
-	mov		[es:BIOS_DISK_INTERRUPT_13h*4+2], ds
+	LOAD_BDA_SEGMENT_TO	ds, ax					; Load BDA segment (zero) to DS
+	les		ax, [TEMPORARY_VECTOR_FOR_SYSTEM_INT13h*4]
+	mov		[BIOS_DISK_INTERRUPT_13h*4], ax
+	mov		[BIOS_DISK_INTERRUPT_13h*4+2], es
+	push	ds									; BDA segment (zero)...
+	pop		es									; ...to ES
+%else
+	LOAD_BDA_SEGMENT_TO	es, ax					; Load BDA segment (zero) to ES
 %endif
 	; Fall to .PrepareBootLoaderStack
 
