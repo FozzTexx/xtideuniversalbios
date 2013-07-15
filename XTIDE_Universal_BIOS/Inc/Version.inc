@@ -42,7 +42,7 @@
 
 %define	TITLE_STRING			TITLE_STRING_START, TITLE_STRING_END
 %define	ROM_VERSION_STRING		"v2.0.0",BETA,"3+ (",__DATE__,")",NULL
-%define	FLASH_SIGNATURE			"XTIDE203"	; Do not terminate with NULL
+%define	FLASH_SIGNATURE			"XTIDE204"	; Do not terminate with NULL
 
 
 %endif ; VERSION_INC
