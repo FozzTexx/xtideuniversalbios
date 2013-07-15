@@ -118,10 +118,6 @@ rgfnEventSpecificHandlers:
 ;--------------------------------------------------------------------
 FirstEvent:
 EventInitializeMenuinitFromSSBP:
-	; Store default Menuitem (=default drive to boot from)
-	xor		dx, dx
-	mov		[bp+MENUINIT.wHighlightedItem], dx
-
 	; Store number of Menuitems
 	call	RamVars_GetHardDiskCountFromBDAtoAX
 	xchg	ax, cx
@@ -142,6 +138,12 @@ EventInitializeMenuinitFromSSBP:
 	; Store selection timeout
 	mov		ax, [cs:ROMVARS.wBootTimeout]
 	CALL_MENU_LIBRARY StartSelectionTimeoutWithTicksInAX
+
+	; Store default Menuitem (=default drive to boot from)
+	eMOVZX	dx, BYTE [cs:ROMVARS.bBootDrv]
+	call	GetMenuitemToDXforDriveInDL
+	mov		[bp+MENUINIT.wHighlightedItem], dx
+
 	stc
 	ret
 
