@@ -49,18 +49,19 @@ AdvAtaInit_DetectControllerForIdeBaseInBX:
 
 
 ;--------------------------------------------------------------------
-; AdvAtaInit_GetControllerMaxPioModeToAL
+; AdvAtaInit_GetControllerMaxPioModeToALandMinPioCycleTimeToBX
 ;	Parameters:
 ;		AX:		ID WORD specific for detected controller
 ;	Returns:
 ;		AL:		Max supported PIO mode
 ;		AH:		FLGH_DPT_IORDY if IORDY supported, zero otherwise
+;		BX:		Min PIO cycle time (only if CF set)
 ;		CF:		Set if PIO limit necessary
 ;				Cleared if no need to limit timings
 ;	Corrupts registers:
 ;		(AX if CF cleared)
 ;--------------------------------------------------------------------
-AdvAtaInit_GetControllerMaxPioModeToAL	equ	Vision_GetMaxPioModeToAL
+AdvAtaInit_GetControllerMaxPioModeToALandMinPioCycleTimeToBX	equ	Vision_GetMaxPioModeToALandMinCycleTimeToBX
 
 
 ;--------------------------------------------------------------------
