@@ -105,9 +105,9 @@ AH9h_InitializeDriveForUse:
 %ifdef USE_386
 	jc		.ReturnWithErrorCodeInAH
 %else
-	jnc		SHORT .ContinueInitializationSinceDriveSelectedSuccesfully
+	jnc		SHORT .ContinueInitializationSinceDriveSelectedSuccessfully
 	jmp		.ReturnWithErrorCodeInAH
-.ContinueInitializationSinceDriveSelectedSuccesfully:
+.ContinueInitializationSinceDriveSelectedSuccessfully:
 %endif
 
 

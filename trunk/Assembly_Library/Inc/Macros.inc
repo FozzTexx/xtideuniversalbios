@@ -1,6 +1,6 @@
 ; Project name	:	Assembly Library
 ; Description	:	This is the place to put various generic macros.
-;					Should be included immediately after emulate.inc
+;					Should be included immediately after Emulate.inc
 %ifndef MACROS_INC
 %define MACROS_INC
 
