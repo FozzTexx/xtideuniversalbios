@@ -27,7 +27,7 @@ TEMPORARY_VECTOR_FOR_SYSTEM_INT13h		EQU		32h	; Unused by BIOS
 ;--------------------------------------------------------------------
 ; Int 13h software interrupt handler.
 ; This handler captures boot sector read from foreign drive when our
-; INT 19h is not called. This way we can for XTIDE Universal BIOS
+; INT 19h is not called. This way we can force XTIDE Universal BIOS
 ; initialization even without INT 19h being called.
 ;
 ; Int13hBiosInit_Handler

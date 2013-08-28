@@ -54,40 +54,38 @@ IdeError_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 GetBiosErrorCodeToAHfromStatusAndErrorRegistersInAX:
-	test	al, FLG_STATUS_BSY
-	jz		SHORT .CheckErrorBitsFromStatusRegisterInAL
-	mov		ah, RET_HD_TIMEOUT
-	jmp		SHORT .ReturnBiosErrorCodeInAH
+	test	al, FLG_STATUS_BSY | FLG_STATUS_DF | FLG_STATUS_CORR | FLG_STATUS_ERR	; Clears CF
+	jnz		SHORT .CheckErrorBitsFromStatusRegisterInAL
+	; The MSB of AL (FLG_STATUS_BSY) is cleared at this point.
+	cbw								; No errors, zero AH (CF already cleared)
+	ret
 
 ALIGN JUMP_ALIGN
 .CheckErrorBitsFromStatusRegisterInAL:
-	test	al, FLG_STATUS_DF | FLG_STATUS_CORR | FLG_STATUS_ERR
-	jnz		SHORT .ProcessErrorFromStatusRegisterInAL
-	xor		ah, ah					; No errors, zero AH and CF
-	ret
-
-.ProcessErrorFromStatusRegisterInAL:
+	js		SHORT .Flg_Status_Bsy	; Jump if FLG_STATUS_BSY
 	test	al, FLG_STATUS_ERR		; Error specified in Error register?
 	jnz		SHORT .ConvertBiosErrorToAHfromErrorRegisterInAH
 	mov		ah, RET_HD_ECC			; Assume ECC corrected error
 	test	al, FLG_STATUS_CORR		; ECC corrected error?
 	jnz		SHORT .ReturnBiosErrorCodeInAH
 	mov		ah, RET_HD_CONTROLLER	; Must be Device Fault
-	jmp		SHORT .ReturnBiosErrorCodeInAH
+	SKIP2B	bx
+.Flg_Status_Bsy:
+	mov		ah, RET_HD_TIMEOUT
+.ReturnBiosErrorCodeInAH:
+	stc
+	ret
 
 .ConvertBiosErrorToAHfromErrorRegisterInAH:
-	xor		bx, bx					; Clear CF
+	stc								; Needed in case Error register (AH) is zero
+	mov		bx, .rgbRetCodeLookup-1
 .ErrorBitLoop:
-	rcr		ah, 1					; Set CF if error bit set
-	jc		SHORT .LookupErrorCode
 	inc		bx
-	test	ah, ah					; Clear CF
-	jnz		SHORT .ErrorBitLoop
-.LookupErrorCode:
-	mov		ah, [cs:bx+.rgbRetCodeLookup]
-.ReturnBiosErrorCodeInAH:
-	stc								; Set CF since error
+	rcr		ah, 1
+	jnc		SHORT .ErrorBitLoop		; CF will be set eventually
+	mov		ah, [cs:bx]
 	ret
+
 
 .rgbRetCodeLookup:
 	db	RET_HD_ADDRMARK		; Bit0=AMNF, Address Mark Not Found

@@ -91,18 +91,18 @@ SerialServer_SendReceive:
 		out		dx,al
 
 		mov		al,047h
-		inc		dx				;  fifo
+		inc		dx				; fifo
 		out		dx,al
 
 		mov		al,03h
-		inc		dx				;  linecontrol
+		inc		dx				; linecontrol
 		out		dx,al
 
 		mov		al,0bh
-		inc		dx				;  modemcontrol
+		inc		dx				; modemcontrol
 		out		dx,al
 
-		inc		dx				;  linestatus (no output now, just setting up BH for later use)
+		inc		dx				; linestatus (no output now, just setting up BH for later use)
 		mov		bh,dl
 
 		pop		dx				; base, interrupts disabled
@@ -157,7 +157,7 @@ SerialServer_SendReceive:
 
 		mov		cx,0101h		; writing 256 words (plus 1)
 
-		shr		ah,1			; command byte, are we doing a write?
+		sahf					; command byte, are we doing a write?
 		jnc		.readEntry
 
 		xchg	si,di			; swap pointer and checksum, will be re-swap'ed in WriteProtocol
@@ -284,7 +284,7 @@ SerialServer_OutputWithParameters_Error:
 ; In theory the initialization of the UART registers above should have
 ; taken care of this, but I have seen cases where this is not true.
 ;
-		xor		cx,cx					; timeout this clearing routine, in case the UART isn't there
+		xor		cx,cx			; timeout this clearing routine, in case the UART isn't there
 .clearBuffer:
 		mov		dl,bh
 		in		al,dx
@@ -293,20 +293,20 @@ SerialServer_OutputWithParameters_Error:
 		jz		.clearBufferComplete
 		test	al,1
 		in		al,dx
-		loopnz	.clearBuffer			; note ZF from test above
+		loopnz	.clearBuffer	; note ZF from test above
 
 .clearBufferComplete:
-		mov		al, 3			;  error return code and CF (low order bit)
+		mov		al, 1			; error return code
 
 ALIGN JUMP_ALIGN
 SerialServer_OutputWithParameters_ReturnCodeInAL:
 %if 0
-		sti						;  all paths here will already have interrupts turned back on
+		sti						; all paths here will already have interrupts turned back on
 %endif
-		mov		ah, al			;  for success, AL will already be zero
+		mov		ah, al			; for success, AL will already be zero
 
-		pop		bx				;  recover "ax" (command and count) from stack
-		pop		cx				;  recover saved sector count
+		pop		bx				; recover "ax" (command and count) from stack
+		pop		cx				; recover saved sector count
 		xor		ch, ch
 		sub		cl, bl			; subtract off the number of sectors that remained
 
@@ -314,7 +314,7 @@ SerialServer_OutputWithParameters_ReturnCodeInAL:
 		pop		di
 		pop		si
 
-		shr		ah, 1			; shift down return code and CF
+		sahf					; error return code to CF
 
 		ret
 
@@ -439,8 +439,8 @@ SerialServer_WaitAndPoll_Read:
 ; and wait for a given number of timer ticks to pass.
 ;
 		sti
-		mov		cl,SerialServer_WaitAndPoll_SoftDelayTicks
 %ifndef SERIALSERVER_TIMER_LOCATION
+		mov		cl,SerialServer_WaitAndPoll_SoftDelayTicks
 		call	Timer_InitializeTimeoutWithTicksInCL
 %else
 		push	ax

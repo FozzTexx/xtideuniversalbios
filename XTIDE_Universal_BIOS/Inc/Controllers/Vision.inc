@@ -49,7 +49,7 @@ MASK_QD6500IDE_RECOVERY_TIME			EQU	0F0h	; Recovery time in VLB clocks (bits 4...
 													; 1111b = 3 clocks (<= 33 MHz), 0 clocks (>33 MHz)
 MASK_QD6580IDE_RECOVERY_TIME			EQU	MASK_QD6500IDE_RECOVERY_TIME
 													; 0000b = 15 clocks, 1101b = 2 clocks
-POSITON_QD65XXIDE_RECOVERY_TIME			EQU	4
+POSITION_QD65XXIDE_RECOVERY_TIME		EQU	4
 
 
 ; Bit definitions for QD65xx Config Register (read only)

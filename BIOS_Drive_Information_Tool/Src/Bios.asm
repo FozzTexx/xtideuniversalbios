@@ -25,7 +25,7 @@ SECTION .text
 ;	Parameters:
 ;		Nothing
 ;	Returns: (if no errors)
-;       DX:		Number of hard drives in system
+;		DX:		Number of hard drives in system
 ;		CF:		Set if no hard drives found
 ;	Corrupts registers:
 ;		AX, BX, CX
@@ -43,7 +43,7 @@ Bios_GetNumberOfHardDrivesToDX:
 ;	Parameters:
 ;		DL:		BIOS drive number
 ;	Returns: (if no errors)
-;       BL:     Drive Type (for floppies only)
+;		BL:		Drive Type (for floppies only)
 ;		AX:		Sectors per track (1...63)
 ;		DX:		Number of heads (1...255)
 ;		CX:		Number of cylinders (1...1024)
@@ -66,7 +66,7 @@ Bios_ReadOldInt13hParametersFromDriveDL:
 ;				Bits 5...0:	Maximum sector number (1...63)
 ;		DH:		Maximum head number (0...254)
 ;	Returns:
-;       BL:     Drive Type (for floppies only)
+;		BL:		Drive Type (for floppies only)
 ;		AX:		Sectors per track (1...63)
 ;		DX:		Number of heads (1...255)
 ;		CX:		Number of cylinders (1...1024)
@@ -92,8 +92,8 @@ ExtractCHSfromOldInt13hDriveParameters:
 ;	Parameters:
 ;		DL:		BIOS drive number
 ;	Returns: (if no errors)
-;       CX:DX:	Total number of sectors
-;       AH:		BIOS Error code
+;		CX:DX:	Total number of sectors
+;		AH:		BIOS Error code
 ;		CF:		Cleared = no errors
 ;				Set = BIOS error code stored in AH
 ;	Corrupts registers:
@@ -112,8 +112,8 @@ Bios_ReadOldInt13hCapacityFromDriveDL:
 ;	Parameters:
 ;		DL:		BIOS drive number
 ;	Returns: (if no errors)
-;      	DS:BX:	Ptr to ATA information
-;       AH:		BIOS Error code
+;		DS:BX:	Ptr to ATA information
+;		AH:		BIOS Error code
 ;		CF:		Cleared = no errors
 ;				Set = BIOS error code stored in AH
 ;	Corrupts registers:
@@ -134,7 +134,7 @@ Bios_ReadAtaInfoFromDriveDLtoBX:
 ;		DL:		BIOS drive number
 ;	Returns:
 ;		AH:		BIOS error code
-;       BX:		Version of extensions
+;		BX:		Version of extensions
 ;		CX:		Interface support bit map
 ;		CF:		Cleared = no errors
 ;				Set = BIOS error code stored in AH
@@ -162,8 +162,8 @@ Bios_ReadEbiosVersionFromDriveDL:
 ;	Parameters:
 ;		DL:		BIOS drive number
 ;	Returns: (if no errors)
-;      	DS:SI:	Ptr to EDRIVE_INFO
-;       AH:		BIOS Error code
+;		DS:SI:	Ptr to EDRIVE_INFO
+;		AH:		BIOS Error code
 ;		CF:		Cleared = no errors
 ;				Set = BIOS error code stored in AH
 ;	Corrupts registers:
@@ -183,7 +183,7 @@ Bios_ReadEbiosInfoFromDriveDLtoDSSI:
 ;	Parameters:
 ;		Nothing
 ;	Returns: (if no errors)
-;       AH:		BIOS Error code
+;		AH:		BIOS Error code
 ;		CF:		Set
 ;	Corrupts registers:
 ;		Nothing

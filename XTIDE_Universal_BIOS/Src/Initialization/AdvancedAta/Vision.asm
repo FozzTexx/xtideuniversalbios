@@ -178,16 +178,15 @@ Vision_InitializeWithIDinAHandConfigInAL:
 	in		al, dx									; Read to get ATAPI jumper status
 	test	al, FLG_QDCONTROL_HDONLY_in
 	eCMOVNZ	ah, FLG_QDCONTROL_NONATAPI				; Enable Read-Ahead and Post-Write Buffers
-	or		ah, MASK_QDCONTROL_FLAGS_TO_SET
 	mov		al, ah
+	or		al, MASK_QDCONTROL_FLAGS_TO_SET
 	out		dx, al
 	sub		dx, BYTE QD6580_CONTROL_REGISTER
 
 	; Now we need to determine is the drive connected to the Primary or Secondary channel.
 	; QD6500 has only one channel that can be Primary at 1F0h or Secondary at 170h.
 	; QD6580 always has Primary channel at 1F0h. Secondary channel at 170h can be Enabled or Disabled.
-	mov		bx, [di+DPT.wBasePort]
-	cmp		bx, DEVICE_ATA_PRIMARY_PORT
+	cmp		WORD [di+DPT.wBasePort], DEVICE_ATA_PRIMARY_PORT
 	je		SHORT .CalculateTimingTicksForQD6580	; Primary Channel so no need to modify DX
 	times 2 inc dx									; Secondary Channel IDE Timing Register
 
@@ -215,7 +214,7 @@ Vision_InitializeWithIDinAHandConfigInAL:
 	call	ConvertNanosecsFromAXwithLimitsInBPtoRegisterValue
 
 	; Merge the values to a single byte to output
-	eSHIFT_IM	al, POSITON_QD65XXIDE_RECOVERY_TIME, shl
+	eSHL_IM	al, POSITION_QD65XXIDE_RECOVERY_TIME
 	or		al, bl
 	out		dx, al
 	ret									; Return with CF cleared
