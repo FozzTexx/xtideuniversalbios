@@ -234,13 +234,11 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 .EnableMenuitemFromCSBX:
-	or		BYTE [cs:bx+MENUITEM.bFlags], FLG_MENUITEM_VISIBLE
-	ret
+	jmp		EnableMenuitemFromCSBX
 
 ALIGN JUMP_ALIGN
 .DisableMenuitemFromCSBX:
-	and		BYTE [cs:bx+MENUITEM.bFlags], ~FLG_MENUITEM_VISIBLE
-	ret
+	jmp		DisableMenuitemFromCSBX
 
 
 ;--------------------------------------------------------------------

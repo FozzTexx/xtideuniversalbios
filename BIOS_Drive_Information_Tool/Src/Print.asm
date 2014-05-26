@@ -249,7 +249,7 @@ Print_TotalSectorsFromBXDXAX:
 ;---------------------------------------------------------------------
 ; Print_EbiosVersionFromBXandExtensionsFromCX
 ;	Parameters:
-;       BX:		Version of extensions
+;		BX:		Version of extensions
 ;		CX:		Interface support bit map
 ;	Returns:
 ;		Nothing

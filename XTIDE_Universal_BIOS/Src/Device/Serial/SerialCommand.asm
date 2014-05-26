@@ -27,9 +27,9 @@ SECTION .text
 ; SerialCommand_OutputWithParameters
 ;	Parameters:
 ;		BH:		Non-zero if 48-bit addressing used
-;               (ignored at present as 48-bit addressing is not supported)
+;				(ignored at present as 48-bit addressing is not supported)
 ;		BL:		IDE Status Register bit to poll after command
-;               (ignored at present, since there is no IDE status register to poll)
+;				(ignored at present, since there is no IDE status register to poll)
 ;		ES:SI:	Ptr to buffer (for data transfer commands)
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
 ;		SS:BP:	Ptr to IDEREGS_AND_INTPACK
@@ -121,15 +121,15 @@ SerialCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 ;    Master:
 ;		   wSerialPortAndBaud Non-Zero:           -> Continue with wSerialPortAndBaud (1)
 ;		   wSerialPortAndBaud Zero:
-;		       previous serial drive not found:   -> Scan (2)
-;		       previous serial drive found:       -> Continue with previous serial drive info (3)
+;			   previous serial drive not found:   -> Scan (2)
+;			   previous serial drive found:       -> Continue with previous serial drive info (3)
 ;
 ;    Slave:
 ;		   wSerialPortAndBaud Non-Zero:
-;		   	   previous serial drive not found:   -> Error - Not Found (4)
+;			   previous serial drive not found:   -> Error - Not Found (4)
 ;			   previous serial drive found:       -> Continue with wSerialPackedAndBaud (5)
-;          wSerialPortAndBaud Zero:
-;		   	   previous serial drive not found:	  -> Error - Not Found (4)
+;		   wSerialPortAndBaud Zero:
+;			   previous serial drive not found:	  -> Error - Not Found (4)
 ;			   previous serial drive found:       -> Continue with previous serial drive info (6)
 ;
 ; (1) This was a port/baud that was explicitly set with the configurator.  In the drive detection case, as this

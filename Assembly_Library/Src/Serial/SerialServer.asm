@@ -26,12 +26,12 @@ SECTION .text
 ;--------------------------------------------------------------------
 ; SerialServer_SendReceive:
 ;	Parameters:
-;       DX:		Packed I/O port and baud rate
+;		DX:		Packed I/O port and baud rate
 ;		ES:SI:	Ptr to buffer (for data transfer commands)
 ;		SS:BP:	Ptr to SerialServer_Command structure
 ;	Returns:
 ;		AH:		INT 13h Error Code
-;       CX:     Number of 512-byte blocks transferred
+;		CX:		Number of 512-byte blocks transferred
 ;		CF:		Cleared if success, Set if error
 ;	Corrupts registers:
 ;		AL, BX, CX, DX
@@ -333,9 +333,9 @@ SerialServer_OutputWithParameters_ReturnCodeInAL:
 ;		BX:		LineStatus Register address (BH) and Receive/Transmit Register address (BL)
 ;	Returns:
 ;		BP/SI:	Checksum for written bytes, compared against ACK from server in .readLoop
-;		CX:     Zero
+;		CX:		Zero
 ;		DL:		Receive/Transmit Register address
-;		ES:DI:  Ptr to buffer
+;		ES:DI:	Ptr to buffer
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
@@ -400,15 +400,15 @@ SerialServer_WriteProtocol:
 ;
 ;	Parameters:
 ;		AH:		UART_LineStatus bit to test (20h for write, or 1h for read)
-;               One entry point fills in AH with 20h for write
+;				One entry point fills in AH with 20h for write
 ;		DX:		Port address (OK if already incremented to UART_lineStatus)
-;       BX:
-;       Stack:	2 words on the stack below the command/count word
+;		BX:
+;		Stack:	2 words on the stack below the command/count word
 ;	Returns:
-;       Returns when desired UART_LineStatus bit is cleared
-;       Jumps directly to error exit if timeout elapses (and cleans up stack)
+;		Returns when desired UART_LineStatus bit is cleared
+;		Jumps directly to error exit if timeout elapses (and cleans up stack)
 ;	Corrupts registers:
-;       AX
+;		AX
 ;--------------------------------------------------------------------
 
 SerialServer_WaitAndPoll_SoftDelayTicks   EQU   20

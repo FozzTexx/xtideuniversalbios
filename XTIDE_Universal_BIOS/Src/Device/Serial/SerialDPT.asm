@@ -27,7 +27,7 @@ SECTION .text
 ;		ES:SI:	Ptr to 512-byte ATA information read from the drive
 ;	Returns:
 ;		CF:		Set, indicates that this is a floppy disk
-;               Clear, indicates that this is a hard disk
+;				Clear, indicates that this is a hard disk
 ;	Corrupts registers:
 ;		AX
 ;--------------------------------------------------------------------
@@ -48,7 +48,7 @@ SerialDPT_Finalize:
 
 %ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
 	%ifdef MODULE_SERIAL_FLOPPY
-		%if FLGH_DPT_SERIAL_DEVICE != 0x4 || FLGH_DPT_SERIAL_FLOPPY != 0x10 || FLGH_DPT_SERIAL_FLOPPY_TYPE_MASK != 0xe0 || FLGH_DPT_SERIAL_FLOPPY_TYPE_FIELD_POSITION != 5
+		%if FLGH_DPT_SERIAL_DEVICE != 0x4 || FLGH_DPT_SERIAL_FLOPPY != 0x10 || FLGH_DPT_SERIAL_FLOPPY_TYPE_FIELD_POSITION != 5
 			%error "The serial server passes FLGH values into SerialDPT_Finalize directly.  If the flag positions are changed, corresponding changes will need to be made in the serial server, and likely a version check put in to deal with servers talking to incompatible clients"
 		%endif
 	%else

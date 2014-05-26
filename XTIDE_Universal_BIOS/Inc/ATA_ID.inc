@@ -85,8 +85,8 @@ struc ATA1
 	.strFirmW	resb 8	; 23...26F, Firmware revision (8 ASCII characters, 0000h=not specified)
 	.strModel	resb 40	; 27...46F, Model number (40 ASCII characters, 0000h=not specified)
 	.bBlckSize	resb 1	; 47[0-7]F, Maximum number of sectors that can be transferred
-						;          per interrupt on read and write multiple commands
-						;		   (00h=Read/write multiple commands not implemented)
+						;			per interrupt on read and write multiple commands
+						;			(00h=Read/write multiple commands not implemented)
 				resb 1	; 47[8-15]X
 	.wDWIO		resw 1	; 48F, Can perform doubleword I/O (boolean)
 	.wCaps		resw 1	; 49FRX, Capabilities
@@ -105,7 +105,7 @@ struc ATA1
 
 	; Words 59-63 are always valid
 	.bBlockSel	resb 1	; 59[0-7]V, Current setting for number of sectors that
-						;           can be transferred per interrupt on R/W multiple command
+						;			can be transferred per interrupt on R/W multiple command
 	.bBlockFlgs	resb 1	; 59[8-15]VR, bit 0 set if Multiple sector setting is valid
 	.dwLBACnt	resd 1	; 60...61F, Total number of user addressable sectors (LBA mode only)
 	.bSDMASupp	resb 1	; 62[0-7]F, Single word DMA transfer modes supported
@@ -167,8 +167,8 @@ struc ATA2
 	.strFirmW	resb 8	; 23...26F, Firmware revision (8 ASCII characters, 0000h=not specified)
 	.strModel	resb 40	; 27...46F, Model number (40 ASCII characters, 0000h=not specified)
 	.bBlckSize	resb 1	; 47[0-7]F, Maximum number of sectors that can be transferred
-						;          per interrupt on read and write multiple commands
-						;		   (00h=Read/write multiple commands not implemented)
+						;			per interrupt on read and write multiple commands
+						;			(00h=Read/write multiple commands not implemented)
 				resb 1	; 47[8-15]X
 				resw 1	; 48R
 	.wCaps		resw 1	; 49FRX, Capabilities
@@ -187,7 +187,7 @@ struc ATA2
 
 	; Words 59-63 are always valid
 	.bBlockSel	resb 1	; 59[0-7]V, Current setting for number of sectors that
-						;           can be transferred per interrupt on R/W multiple command
+						;			can be transferred per interrupt on R/W multiple command
 	.bBlockFlgs	resb 1	; 59[8-15]VR, bit 0 set if Multiple sector setting is valid
 	.dwLBACnt	resd 1	; 60...61F, Total number of user addressable sectors (LBA mode only)
 	.bSDMASupp	resb 1	; 62[0-7]F, Single word DMA transfer modes supported
@@ -252,8 +252,8 @@ struc ATA6
 	.strFirmW	resb 8	; 23...26F, Firmware revision (8 ASCII characters, 0000h=not specified)
 	.strModel	resb 40	; 27...46F, Model number (40 ASCII characters, 0000h=not specified)
 	.bBlckSize	resb 1	; 47[0-7]F, Maximum number of sectors that can be transferred
-						;           per interrupt on read and write multiple commands
-						;		    (00h=Read/write multiple commands not implemented)
+						;			per interrupt on read and write multiple commands
+						;			(00h=Read/write multiple commands not implemented)
 				resb 1	; 47[8-15]F, 80h
 				resw 1	; 48R
 	.wCaps		resw 1	; 49FX, Capabilities
@@ -270,7 +270,7 @@ struc ATA6
 
 	; Words 59-63 are always valid
 	.bBlockSel	resb 1	; 59[0-7]V, Current setting for number of sectors that
-						;           can be transferred per interrupt on R/W multiple command
+						;			can be transferred per interrupt on R/W multiple command
 	.bBlockFlgs	resb 1	; 59[8-15]VR, bit 0 set if Multiple sector setting is valid
 	.dwLBACnt	resd 1	; 60...61F, Total number of user addressable sectors (LBA-28)
 				resb 1	; 62[0-7]X, Obsolete (Single word DMA transfer modes supported)

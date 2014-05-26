@@ -399,7 +399,7 @@ DisplayPrint_Newline:
 ; DisplayPrint_CharacterFromAL
 ;	Parameters:
 ;		AL:		Character to display
-;               Zero value is ignored (no character is printed)
+;				Zero value is ignored (no character is printed)
 ;		DS:		BDA segment (zero)
 ;		ES:DI:	Ptr to cursor location in video RAM
 ;	Returns:

@@ -71,7 +71,7 @@ FLG_ROMVARS_SERIAL_SCANDETECT 		EQU	(1<<3)	; Scan COM ports at the end of drive 
 												; (Conveniently, this is 8, a fact we exploit when testing the bit)
 
 ; Here in case the configuration needs to know functionality is present
-FLG_ROMVARS_MODULE_FEATURE_SETS			EQU	(1<<5)
+FLG_ROMVARS_MODULE_POWER_MANAGEMENT		EQU	(1<<5)
 FLG_ROMVARS_MODULE_8BIT_IDE				EQU	(1<<6)
 FLG_ROMVARS_MODULE_8BIT_IDE_ADVANCED	EQU (1<<7)
 FLG_ROMVARS_MODULE_ADVANCED_ATA			EQU	(1<<8)

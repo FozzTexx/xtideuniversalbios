@@ -30,13 +30,13 @@ SECTION .text
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
 ;		SS:BP:	Ptr to IDEPACK
 ;	Returns with INTPACK:
-;       BL:     Drive Type (for floppies only)
+;		BL:		Drive Type (for serial floppies only)
 ;		CH:		Maximum cylinder number, bits 7...0
 ;		CL:		Bits 7...6: Cylinder number bits 9...8
 ;				Bits 5...0:	Maximum sector number (1...63)
 ;		DH:		Maximum head number (0...254)
 ;		DL:		Number of drives!!!
-;       ES:DI:  Floppy DPT (for floppies only)
+;		ES:DI:	Floppy DPT (for serial floppies only)
 ;		AH:		Int 13h/40h floppy return status
 ;		CF:		0 if successful, 1 if error
 ;--------------------------------------------------------------------
@@ -56,7 +56,7 @@ AH8h_HandlerForReadDiskDriveParameters:
 .MidGame:
 	call	RamVars_GetCountOfKnownDrivesToAX		; assume hard disk for now, will discard if for floppies
 
-	test	byte [bp+IDEPACK.intpack+INTPACK.dl], 080h
+	test	BYTE [bp+IDEPACK.intpack+INTPACK.dl], 80h
 	jnz		SHORT .CalledForHardDrive
 
 	mov		[bp+IDEPACK.intpack+INTPACK.bl], bl
@@ -92,12 +92,13 @@ AH8h_HandlerForReadDiskDriveParameters:
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT (in RAMVARS segment)
 ;	Returns:
+;		BL:		Drive Type (for serial floppies only)
 ;		CH:		Maximum cylinder number, bits 7...0
 ;		CL:		Bits 7...6: Cylinder number bits 9...8
 ;				Bits 5...0:	Maximum sector number (1...63)
 ;		DH:		Maximum head number (0...254)
 ;	Corrupts registers:
-;		AX, BX
+;		AX, BH
 ;--------------------------------------------------------------------
 AH8h_GetDriveParameters:
 	call	AccessDPT_GetLCHStoAXBLBH
@@ -114,12 +115,13 @@ AH8h_GetDriveParameters:
 ;		BH:		Number of L-CHS sectors per track (1...63)
 ;		DS:		RAMVARS segment
 ;	Returns:
+;		BL:		Drive Type (for serial floppies only)
 ;		CH:		Maximum cylinder number, bits 7...0
 ;		CL:		Bits 7...6: Cylinder number bits 9...8
 ;				Bits 5...0:	Maximum sector number (1...63)
 ;		DH:		Maximum head number (0...254)
 ;	Corrupts registers:
-;		AX, BX
+;		AX, BH
 ;--------------------------------------------------------------------
 .PackReturnValues:
 	dec		ax						; AX = Number of last cylinder
@@ -171,7 +173,7 @@ AH8h_FloppyDPT:
 %endif
 
 	db		1h << 1 | 0				; Offset 1: Typical values of 1 for head load time
-									;           DMA used (although it actually is not, but is more restrictive)
+									; 			DMA used (although it actually is not, but is more restrictive)
 	db		25h						; Offset 2: Inactivity motor turn-off delay,
 									; 			Typical value of 25h for 2 second delay
 	db		02h						; Offset 3: Sector size, always 512

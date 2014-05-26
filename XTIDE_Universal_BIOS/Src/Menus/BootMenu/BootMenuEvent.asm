@@ -65,14 +65,14 @@ BootMenuEvent_Handler:
 	xor		dx, dx		; Clear CF (and menuitem index for DoNotSetDefaultMenuitem)
 	ret
 
-MENUEVENT_InitializeMenuinitFromDSSI equ  (EventInitializeMenuinitFromSSBP - FirstEvent)
-MENUEVENT_ExitMenu equ  (BootMenuEvent_Completed - FirstEvent)
-MENUEVENT_ItemHighlightedFromCX equ (EventItemHighlightedFromCX - FirstEvent)
-MENUEVENT_KeyStrokeInAX equ	(EventKeyStrokeInAX - FirstEvent)
-MENUEVENT_ItemSelectedFromCX equ (EventItemSelectedFromCX - FirstEvent)
-MENUEVENT_RefreshTitle equ (BootMenuPrint_TitleStrings - FirstEvent)
-MENUEVENT_RefreshInformation equ (BootMenuPrint_RefreshInformation - FirstEvent)
-MENUEVENT_RefreshItemFromCX equ (BootMenuPrint_RefreshItem - FirstEvent)
+MENUEVENT_InitializeMenuinitFromDSSI	equ (EventInitializeMenuinitFromSSBP	- FirstEvent)
+MENUEVENT_ExitMenu						equ (BootMenuEvent_Completed			- FirstEvent)
+MENUEVENT_ItemHighlightedFromCX			equ (EventItemHighlightedFromCX			- FirstEvent)
+MENUEVENT_KeyStrokeInAX					equ (EventKeyStrokeInAX					- FirstEvent)
+MENUEVENT_ItemSelectedFromCX			equ (EventItemSelectedFromCX			- FirstEvent)
+MENUEVENT_RefreshTitle					equ (BootMenuPrint_TitleStrings			- FirstEvent)
+MENUEVENT_RefreshInformation			equ (BootMenuPrint_RefreshInformation	- FirstEvent)
+MENUEVENT_RefreshItemFromCX				equ (BootMenuPrint_RefreshItem			- FirstEvent)
 ;
 ; Note that there is no entry for MENUEVENT_IdleProcessing.  If MENUEVENT_IDLEPROCESSING_ENABLE is not %defined,
 ; then the entry point will not be called (saving memory on this end and at the CALL point).
@@ -94,7 +94,7 @@ rgfnEventSpecificHandlers:
 	dw		EventCompleted						; MENUEVENT.ExitMenu
 	dw		EventNotHandled						; MENUEVENT.IdleProcessing
 	dw		EventItemHighlightedFromCX			; MENUEVENT.ItemHighlightedFromCX
-	
+
 	dw		EventItemSelectedFromCX				; MENUEVENT.ItemSelectedFromCX
 	dw		EventKeyStrokeInAX					; MENUEVENT.KeyStrokeInAX
 	dw		BootMenuPrint_TitleStrings			; MENUEVENT.RefreshTitle

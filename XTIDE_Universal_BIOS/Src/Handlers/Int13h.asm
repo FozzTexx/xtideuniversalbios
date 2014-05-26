@@ -308,8 +308,8 @@ Int13h_ReturnFromHandlerWithoutStoringErrorCode:
 ;		DS:		RAMVARS segment
 ;	Returns:
 ;		Depends on function
-;       NOTE: ES:DI needs to be returned from the previous interrupt
-;		      handler, for floppy DPT in function 08h
+;		NOTE: ES:DI needs to be returned from the previous interrupt
+;			  handler, for floppy DPT in function 08h
 ;	Corrupts registers:
 ;		None
 ;--------------------------------------------------------------------

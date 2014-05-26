@@ -37,7 +37,7 @@ FIRST_MEMORY_SEGMENT_ADDRESS		EQU	0C000h
 ;		AH, BX
 ;--------------------------------------------------------------------
 IdeAutodetect_DetectIdeDeviceFromPortDXAndReturnControlBlockInSI:
-	cmp		dx, FIRST_MEMORY_SEGMENT_ADDRESS
+	cmp		dh, FIRST_MEMORY_SEGMENT_ADDRESS >> 8
 	jb		SHORT DetectPortMappedDeviceFromPortDX
 	; Fall to DetectMemoryMappedDeviceFromSegmentDX
 
@@ -54,21 +54,34 @@ IdeAutodetect_DetectIdeDeviceFromPortDXAndReturnControlBlockInSI:
 ;		AH, BX
 ;--------------------------------------------------------------------
 DetectMemoryMappedDeviceFromSegmentDX:
-	; *** Try to detect JR-IDE/ISA (only if MODULE_8BIT_IDE_ADVANCED is present) ***
+	; *** Try to detect JR-IDE/ISA and ADP50L (only if MODULE_8BIT_IDE_ADVANCED is present) ***
 	test	WORD [di+ROMVARS.wFlags], FLG_ROMVARS_MODULE_8BIT_IDE_ADVANCED
-	jz		SHORT NoIdeDeviceFound
+	stc
+	jz		SHORT .NoIdeDeviceFound
 
 	push	ds
 	mov		ds, dx
-	cli									; Disable Interrupts
+
+	cli
 	mov		ah, [JRIDE_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET + STATUS_REGISTER_in]
 	mov		al, [JRIDE_CONTROL_BLOCK_REGISTER_WINDOW_OFFSET + ALTERNATE_STATUS_REGISTER_in]
-	sti									; Enable Interrupts
-	pop		ds
+	sti
 	call	CompareIdeStatusRegistersFromALandAH
-	mov		al, DEVICE_8BIT_JRIDE_ISA	; Assume CF was cleared
+	mov		al, DEVICE_8BIT_JRIDE_ISA
+	jnc		.IdeDeviceFound
+
+	cli
+	mov		ah, [ADP50L_COMMAND_BLOCK_REGISTER_WINDOW_OFFSET + (STATUS_REGISTER_in << 1)]
+	mov		al, [ADP50L_CONTROL_BLOCK_REGISTER_WINDOW_OFFSET + (ALTERNATE_STATUS_REGISTER_in << 1)]
+	sti
+	call	CompareIdeStatusRegistersFromALandAH
+	mov		al, DEVICE_8BIT_ADP50L
+
+.IdeDeviceFound:
 	mov		si, dx						; For IDEDTCT.COM
-	ret									; No need to return Control Block Port
+	pop		ds
+.NoIdeDeviceFound:
+	ret
 
 
 ;--------------------------------------------------------------------
@@ -109,8 +122,9 @@ DetectPortMappedDeviceFromPortDX:
 
 
 	; Detect 8-bit devices only if MODULE_8BIT_IDE is available
-	test	BYTE [di+ROMVARS.wFlags], FLG_ROMVARS_MODULE_8BIT_IDE
+	test	BYTE [di+ROMVARS.wFlags], FLG_ROMVARS_MODULE_8BIT_IDE | FLG_ROMVARS_MODULE_8BIT_IDE_ADVANCED
 	jz		SHORT NoIdeDeviceFound
+	jpo		SHORT .SkipXTCF				; Only 1 bit set means no MODULE_8BIT_IDE_ADVANCED
 
 	; *** Try to detect XT-CF ***
 	mov		si, dx
@@ -119,14 +133,15 @@ DetectPortMappedDeviceFromPortDX:
 	call	DetectIdeDeviceFromPortsDXandSIwithOffsetsInBLandBH
 	mov		al, DEVICE_8BIT_XTCF_PIO8
 	jnc		SHORT .IdeDeviceFound
-
+	shr		bx, 1
+.SkipXTCF:
 
 	; *** Try to detect 8-bit XT-IDE rev 1 or rev 2 ***
 	; Note that A0<->A3 address swaps Status Register and Alternative
 	; Status Register addresses. That is why we need another step
 	; to check is this XT-IDE rev 1 or rev 2.
-	sub		si, BYTE XTCF_CONTROL_BLOCK_OFFSET >> 1
-	shr		bx, 1
+	mov		si, dx
+	add		si, BYTE XTIDE_CONTROL_BLOCK_OFFSET
 	call	DetectIdeDeviceFromPortsDXandSIwithOffsetsInBLandBH
 	jc		SHORT NoIdeDeviceFound		; No XT-IDE rev 1 or rev 2 found
 
@@ -209,7 +224,7 @@ CompareIdeStatusRegistersFromALandAH:
 	jnz		SHORT NoIdeDeviceFound	; Busy or Errors cannot be set
 	test	al, FLG_STATUS_DRDY
 	jz		SHORT NoIdeDeviceFound	; Device needs to be ready
-	ret										; Return with CF cleared
+	ret								; Return with CF cleared
 
 NoIdeDeviceFound:
 	stc
@@ -304,13 +319,15 @@ ALIGN WORD_ALIGN
 	dw		3A0h
 	dw		3C0h
 	dw		3E0h
-	; JR-IDE/ISA (Memory Segment Addresses)
-	dw		0C000h
-	dw		0C400h
-	dw		0C800h
-	dw		0CC00h
-	dw		0D000h
-	dw		0D400h
-	dw		0D800h
+	; Memory Segment Addresses
+	dw		0C000h	; JR-IDE/ISA
+	dw		0C400h	; JR-IDE/ISA
+	dw		0C800h	; JR-IDE/ISA and ADP50L
+	dw		0CA00h	; ADP50L
+	dw		0CC00h	; JR-IDE/ISA and ADP50L
+	dw		0CE00h	; ADP50L
+	dw		0D000h	; JR-IDE/ISA
+	dw		0D400h	; JR-IDE/ISA
+	dw		0D800h	; JR-IDE/ISA
 .wLastIdePort:
-	dw		0DC00h
+	dw		0DC00h	; JR-IDE/ISA

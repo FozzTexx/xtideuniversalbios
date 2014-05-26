@@ -172,8 +172,8 @@ AccessDPT_GetIdevarsToCSBX:
 ;		DS:DI:	Ptr to Disk Parameter Table
 ;	Returns:
 ;		AX:		Translate Mode (TRANSLATEMODE_NORMAL, TRANSLATEMODE_LARGE or TRANSLATEMODE_ASSISTED_LBA)
-;               unshifted (still shifted where it is in bFlagsLow)
-;       ZF:     Set based on value in AL
+;				unshifted (still shifted where it is in bFlagsLow)
+;		ZF:		Set based on value in AL
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------

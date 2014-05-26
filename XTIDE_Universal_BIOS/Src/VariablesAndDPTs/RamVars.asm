@@ -43,7 +43,7 @@ RamVars_Initialize:
 ;	Returns:
 ;		DS:		RAMVARS segment
 ;	Corrupts registers:
-;		AX
+;		AX, CL
 ;--------------------------------------------------------------------
 .StealMemoryForRAMVARS:
 %ifndef USE_AT
@@ -55,8 +55,13 @@ RamVars_Initialize:
 	LOAD_BDA_SEGMENT_TO	ds, ax, !		; Zero AX
 	mov		al, [cs:ROMVARS.bStealSize]
 	sub		[BDA.wBaseMem], ax
-	mov		ax, [BDA.wBaseMem]			; We can save a byte here by using INT 12h instead
-	eSHL_IM	ax, 6						; Segment to first stolen kB (*=40h)
+	mov		ax, [BDA.wBaseMem]
+%ifdef USE_186
+	shl		ax, 6						; Segment to first stolen kB (*=40h)
+%else
+	mov		cl, 6
+	shl		ax, cl
+%endif
 	; Fall to .InitializeRamvars
 
 ;--------------------------------------------------------------------
@@ -185,7 +190,7 @@ RamVars_GetIdeControllerCountToCX:
 ;		DS:		RAMVARS segment
 ;	Returns:
 ;		AL:		First floppy drive number supported
-;       CF:		Number of floppy drives supported (clear = 1, set = 2)
+;		CF:		Number of floppy drives supported (clear = 1, set = 2)
 ;		SF:		Emulating drives (clear = yes, set = no)
 ;	Corrupts registers:
 ;		Nothing

@@ -20,6 +20,12 @@
 ; Section containing code
 SECTION .text
 
+%ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
+	%if $ <> PollBsyOnly.End
+		%error "IdeError.asm must come immediately after IdeWait.asm (PollBsyOnly falls into IdeError_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL)!"
+	%endif
+%endif
+
 ;--------------------------------------------------------------------
 ; IdeError_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL
 ;	Parameters:

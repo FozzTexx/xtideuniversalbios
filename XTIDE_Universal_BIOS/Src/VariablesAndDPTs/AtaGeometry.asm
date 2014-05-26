@@ -198,7 +198,7 @@ ConvertPCHfromAXBLtoRevisedEnhancedCHinAXBL:
 	mul		cx		; DX:AX = Cylinders * 16
 	dec		cx		; CX = 15
 	div		cx		; AX = (Cylinders * 16) / 15
-	; Fall to ConvertPCHfromAXBXtoEnhancedCHinAXBX
+	; Fall to ConvertPCHfromAXBLtoEnhancedCHinAXBL
 
 
 ;--------------------------------------------------------------------

@@ -30,7 +30,7 @@ SECTION .text
 Int19h_BootLoaderHandler:
 	sti											; Enable interrupts
 	cld											; String instructions to increment pointers
-%ifdef MODULE_VERY_LATE_INITIALIZATION
+%ifdef MODULE_VERY_LATE_INIT
 	LOAD_BDA_SEGMENT_TO	ds, ax					; Load BDA segment (zero) to DS
 	les		ax, [TEMPORARY_VECTOR_FOR_SYSTEM_INT13h*4]
 	mov		[BIOS_DISK_INTERRUPT_13h*4], ax
@@ -213,9 +213,9 @@ SelectDriveToBootFrom:		; Function starts here
 ;
 ;	Parameters:
 ;		DL:		Drive to boot from (translated, 00h or 80h)
-;       CF:     Set for Boot Sector Boot
-;               Clear for ROM Boot
-;	   	ES:BX:	(if CF set) Ptr to boot sector
+;		CF:		Set for Boot Sector Boot
+;				Clear for ROM Boot
+;		ES:BX:	(if CF set) Ptr to boot sector
 ;
 ;	Returns:
 ;		Never returns

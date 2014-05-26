@@ -74,20 +74,20 @@ ALIGN JUMP_ALIGN
 	cmp		dl, al								; Below first supported?
 	jb		SHORT .DiskIsNotHandledByThisBIOS
 %endif
-	; fall-through to CalcDPTForDriveNumber
+	; Fall to .CalcDPTForDriveNumber
 
 ;--------------------------------------------------------------------
 ; Finds Disk Parameter Table for drive number.
 ; Not intended to be called except by FindDPT_ForDriveNumberInDL
 ;
-; CalcDPTForDriveNumber
+; .CalcDPTForDriveNumber
 ;	Parameters:
 ;		DL:		Drive number
 ;		DS:		RAMVARS segment
-;       DI:     Saved copy of AX from entry at FindDPT_ForDriveNumberInDL
+;		DI:		Saved copy of AX from entry at FindDPT_ForDriveNumberInDL
 ;	Returns:
 ;		DS:DI:	Ptr to DPT
-;       CF:     Clear
+;		CF:		Clear
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
@@ -135,38 +135,6 @@ ALIGN JUMP_ALIGN
 
 
 ;--------------------------------------------------------------------
-; FindDPT_MasterOrSingleForIdevarsOffsetInDL
-;	Parameters:
-;		DL:		Offset to IDEVARS to search for
-;		DS:		RAMVARS segment
-;	Returns:
-;		DS:DI:		Ptr to first DPT with same IDEVARS as in DL
-;		CF:			Clear if wanted DPT found
-;					Set if DPT not found, or no DPTs present
-;	Corrupts registers:
-;		SI
-;--------------------------------------------------------------------
-FindDPT_MasterOrSingleForIdevarsOffsetInDL:
-	mov		si, IterateFindFirstDPTforIdevars			; iteration routine (see below)
-	jmp		SHORT FindDPT_IterateAllDPTs				; look for the first drive on this controller, if any
-
-;--------------------------------------------------------------------
-; FindDPT_SlaveForIdevarsOffsetInDL
-;	Parameters:
-;		DL:		Offset to IDEVARS to search for
-;		DS:		RAMVARS segment
-;	Returns:
-;		DS:DI:		Ptr to second DPT with same IDEVARS as in DL
-;		CF:			Clear if wanted DPT found
-;					Set if DPT not found, or no DPTs present
-;	Corrupts registers:
-;		SI
-;--------------------------------------------------------------------
-FindDPT_SlaveForIdevarsOffsetInDL:
-	mov		si, IterateFindSecondDPTforIdevars			; iteration routine (see below)
-	jmp		SHORT FindDPT_IterateAllDPTs				; look for the second drive on this controller, if any
-
-;--------------------------------------------------------------------
 ; Iteration routines for FindDPT_MasterOrSingleForIdevarsOffsetInDL and
 ; FindDPT_SlaveForIdevarsOffsetInDL, for use with IterateAllDPTs
 ;
@@ -174,11 +142,11 @@ FindDPT_SlaveForIdevarsOffsetInDL:
 ;
 ; IterateFindSecondDPTforIdevars
 ; IterateFindFirstDPTforIdevars
-;       DL:		Offset to IDEVARS to search from DPTs
+;		DL:		Offset to IDEVARS to search from DPTs
 ;		SI:		Offset to this callback function
 ;		DS:DI:	Ptr to DPT to examine
 ;	Returns:
-;		CF:		Clear if wanted DPT found
+;		CF:		Cleared if wanted DPT found
 ;				Set if wrong DPT
 ;--------------------------------------------------------------------
 IterateFindSecondDPTforIdevars:
@@ -191,9 +159,9 @@ IterateFindSecondDPTforIdevars:
 
 IterateFindFirstDPTforIdevars:
 	cmp		dl, [di+DPT.bIdevarsOffset]			; Clears CF if matched
-	je		.done
+	je		.Done
 	stc											; Set CF for not found
-.done:
+.Done:
 	ret
 
 
@@ -220,19 +188,20 @@ FindDPT_ForNewDriveToDSDI:
 	mov		dl, [RAMVARS.bDrvCnt]
 %endif
 
-	jmp		short FindDPT_ForDriveNumberInDL.CalcDPTForNewDrive
+	jmp		SHORT FindDPT_ForDriveNumberInDL.CalcDPTForNewDrive
 
 ;--------------------------------------------------------------------
 ; IterateToDptWithFlagsHighInBL
 ;	Parameters:
 ;		DS:DI:	Ptr to DPT to examine
-;       BL:		Bit(s) to test in DPT.bFlagsHigh
+;		BL:		Bit(s) to test in DPT.bFlagsHigh
 ;	Returns:
-;		CF:		Clear if wanted DPT found
+;		CF:		Cleared if wanted DPT found
 ;				Set if wrong DPT
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+%ifdef MODULE_SERIAL
 ALIGN JUMP_ALIGN
 IterateToDptWithFlagsHighInBL:
 	test	[di+DPT.bFlagsHigh], bl				; Clears CF
@@ -240,6 +209,7 @@ IterateToDptWithFlagsHighInBL:
 	stc
 .ReturnRightDPT:
 	ret
+%endif
 
 ;--------------------------------------------------------------------
 ; FindDPT_ToDSDIforSerialDevice
@@ -247,8 +217,8 @@ IterateToDptWithFlagsHighInBL:
 ;		DS:		RAMVARS segment
 ;	Returns:
 ;		DS:DI:	Ptr to DPT
-;		CF:		Set if wanted DPT found
-;				Cleared if DPT not found
+;		CF:		Cleared if wanted DPT found
+;				Set if DPT not found, or no DPTs present
 ;	Corrupts registers:
 ;		SI
 ;--------------------------------------------------------------------
@@ -256,27 +226,61 @@ IterateToDptWithFlagsHighInBL:
 ALIGN JUMP_ALIGN
 FindDPT_ToDSDIforSerialDevice:
 	mov		bl, FLGH_DPT_SERIAL_DEVICE
-; fall-through
+	; Fall to FindDPT_ToDSDIforFlagsHighInBL
 %endif
 
 ;--------------------------------------------------------------------
-; FindDPT_ToDSDIforFlagsHigh
+; FindDPT_ToDSDIforFlagsHighInBL
 ;	Parameters:
 ;		DS:		RAMVARS segment
-;       BL:		Bit(s) to test in DPT.bFlagsHigh
+;		BL:		Bit(s) to test in DPT.bFlagsHigh
 ;	Returns:
 ;		DS:DI:	Ptr to DPT
-;		CF:		Set if wanted DPT found
-;				Cleared if DPT not found
+;		CF:		Cleared if wanted DPT found
+;				Set if DPT not found, or no DPTs present
 ;	Corrupts registers:
 ;		SI
 ;--------------------------------------------------------------------
-%ifdef MODULE_IRQ
-ALIGN JUMP_ALIGN
-FindDPT_ToDSDIforFlagsHighInBL:
-%endif
+%ifdef MODULE_SERIAL
+;%ifdef MODULE_IRQ
+;ALIGN JUMP_ALIGN
+;FindDPT_ToDSDIforFlagsHighInBL:	; This label is unused
+;%endif
 	mov		si, IterateToDptWithFlagsHighInBL
-	; Fall to IterateAllDPTs
+	jmp		SHORT FindDPT_IterateAllDPTs
+%endif
+
+;--------------------------------------------------------------------
+; FindDPT_MasterOrSingleForIdevarsOffsetInDL
+;	Parameters:
+;		DL:		Offset to IDEVARS to search for
+;		DS:		RAMVARS segment
+;	Returns:
+;		DS:DI:	Ptr to first DPT with same IDEVARS as in DL
+;		CF:		Cleared if wanted DPT found
+;				Set if DPT not found, or no DPTs present
+;	Corrupts registers:
+;		SI
+;--------------------------------------------------------------------
+FindDPT_MasterOrSingleForIdevarsOffsetInDL:
+	mov		si, IterateFindFirstDPTforIdevars
+	jmp		SHORT FindDPT_IterateAllDPTs
+
+;--------------------------------------------------------------------
+; FindDPT_SlaveForIdevarsOffsetInDL
+;	Parameters:
+;		DL:		Offset to IDEVARS to search for
+;		DS:		RAMVARS segment
+;	Returns:
+;		DS:DI:	Ptr to second DPT with same IDEVARS as in DL
+;		CF:		Cleared if wanted DPT found
+;				Set if DPT not found, or no DPTs present
+;	Corrupts registers:
+;		SI
+;--------------------------------------------------------------------
+FindDPT_SlaveForIdevarsOffsetInDL:
+	mov		si, IterateFindSecondDPTforIdevars
+	; Fall to FindDPT_IterateAllDPTs
 
 ;--------------------------------------------------------------------
 ; Iterates all Disk Parameter Tables.
@@ -285,12 +289,12 @@ FindDPT_ToDSDIforFlagsHighInBL:
 ;	Parameters:
 ;		AX,BX,DX:	Parameters to callback function
 ;		CS:SI:		Ptr to callback function
-;                   Callback routine should return CF=clear if found
+;					Callback routine should return CF=clear if found
 ;		DS:			RAMVARS segment
 ;	Returns:
 ;		DS:DI:		Ptr to wanted DPT (if found)
 ;					If not found, points to first empty DPT
-;		CF:			Clear if wanted DPT found
+;		CF:			Cleared if wanted DPT found
 ;					Set if DPT not found, or no DPTs present
 ;	Corrupts registers:
 ;		Nothing unless corrupted by callback function

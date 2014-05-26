@@ -112,22 +112,21 @@ Prepare_BufferToESSIforOldInt13hTransfer:
 ;---------------------------------------------------------------------
 ; Prepare_ByValidatingSectorsInALforOldInt13h
 ;	Parameters:
-;		AL:		Number of sectors to transfer
+;		AL:		Number of sectors to transfer (1...128 is valid)
 ;	Returns:
 ;		Exits INT 13h if invalid number of sectors in AL
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
 Prepare_ByValidatingSectorsInALforOldInt13h:
-	test	al, al
-	js		SHORT .CheckZeroOffsetFor128Sectors		; 128 or more
-	jz		SHORT InvalidNumberOfSectorsRequested	; Zero not allowed for old INT 13h
+	test	al, al								; Check if 0 < AL < 128 (Clears OF)
+	jle		SHORT .CheckIf128Sectors			; Jump if not
 	ret		; Continue with transfer
 
 ALIGN JUMP_ALIGN
-.CheckZeroOffsetFor128Sectors:
+.CheckIf128Sectors:
 	cmp		al, 128
-	ja		SHORT InvalidNumberOfSectorsRequested
+	jne		SHORT InvalidNumberOfSectorsRequested
 	test	si, si								; Offset must be zero to xfer 128 sectors
 	jnz		SHORT CannotAlignPointerProperly
 	ret		; Continue with transfer

@@ -388,3 +388,24 @@ ALIGN JUMP_ALIGN
 	pop		es
 	mov		di, g_cfgVars
 	ret
+
+
+;--------------------------------------------------------------------
+; EnableMenuitemFromCSBX
+; DisableMenuitemFromCSBX
+;	Parameters:
+;		CS:BX:	Ptr to MENUITEM
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+EnableMenuitemFromCSBX:
+	or		BYTE [cs:bx+MENUITEM.bFlags], FLG_MENUITEM_VISIBLE
+	ret
+
+ALIGN JUMP_ALIGN
+DisableMenuitemFromCSBX:
+	and		BYTE [cs:bx+MENUITEM.bFlags], ~FLG_MENUITEM_VISIBLE
+	ret

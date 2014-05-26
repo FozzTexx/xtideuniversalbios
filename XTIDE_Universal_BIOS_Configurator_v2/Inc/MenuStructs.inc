@@ -46,7 +46,7 @@ FLG_MENUITEM_MODIFY_MENU	EQU	(1<<1)	; Item modifies visibility of other items
 FLG_MENUITEM_FLAGVALUE		EQU	(1<<2)	; Item value is single bit
 FLG_MENUITEM_BYTEVALUE		EQU	(1<<3)	; Item value is single byte
 FLG_MENUITEM_PROGRAMVAR		EQU	(1<<4)	; Item is for configuring program, not BIOS
-FLG_MENUITEM_CHOICESTRINGS  EQU (1<<5)  ; ChoiceToStringLookup table is 1-1 with ChoiceToValueLookup table,
+FLG_MENUITEM_CHOICESTRINGS	EQU (1<<5)	; ChoiceToStringLookup table is 1-1 with ChoiceToValueLookup table,
 										; ChoiceToStringLookup table must also be NULL terminated
 FLG_MENUITEM_MASKVALUE		EQU	(1<<6)	; Item value is more than one bit among other bits
 

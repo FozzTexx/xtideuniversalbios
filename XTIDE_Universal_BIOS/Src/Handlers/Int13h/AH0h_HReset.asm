@@ -118,11 +118,11 @@ ResetHardDisksHandledByOurBIOS:
 														; but reset of all drives will still happen
 	mov		dl, ROMVARS.ideVars0						; starting Idevars offset
 
-    ; Get count of ALL Idevars structures, not just the ones that are configured.  This may seem odd,
-    ; but it catches the .ideVarsSerialAuto structure, which would not be scanned if the count from
+	; Get count of ALL Idevars structures, not just the ones that are configured.  This may seem odd,
+	; but it catches the .ideVarsSerialAuto structure, which would not be scanned if the count from
 	; RamVars_GetIdeControllerCountToCX was used.  Unused controllers won't make a difference, since no DPT
 	; will point to them.  Performance isn't an issue, as this is a reset operation.
-    ;
+	;
 	mov		cx, NUMBER_OF_IDEVARS
 
 .loop:

@@ -112,7 +112,12 @@ ALIGN UTIL_SIZE_JUMP_ALIGN
 	call	Size_DivideBXDXAXbyTwo
 	rcr		si, 1					; Update remainder
 	loop	.ShiftLoop
-	eSHR_IM	si, 6					; Remainder to SI beginning
+%ifdef USE_186
+	shr		si, 6					; Remainder to SI beginning
+%else
+	mov		cl, 6
+	shr		si, cl
+%endif
 	pop		cx
 	inc		cx						; Increment magnitude
 	ret

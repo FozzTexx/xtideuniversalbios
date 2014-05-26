@@ -1,5 +1,5 @@
 ; Project name	:	XTIDE Universal BIOS
-; Description	:	Lo-tech XT-CFv2 board specifications.
+; Description	:	Lo-tech XT-CF board specifications.
 ;
 ; More information at http://www.lo-tech.co.uk/XT-CF
 
@@ -18,9 +18,6 @@
 ; GNU General Public License for more details.
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 ;
-
-; Modified by JJP for XT-CFv3 support, Mar-13
-
 
 %ifndef XTCF_INC
 %define XTCF_INC
@@ -55,7 +52,7 @@ XTCF_CONTROL_REGISTER				EQU		1Eh
 ;
 ; For XT-CFv3 adapter, DMA transfers are also supported via channel 3.
 ;
-; XT-CFv3 cannot be distinguised by software, so user must decide and set
+; XT-CFv3 cannot be distinguished by software, so user must decide and set
 ; the mode via a call to Int 13h function 1Eh accordingly (see AH1E_XTCF.asm).
 ;
 XTCF_8BIT_PIO_MODE					EQU		00h

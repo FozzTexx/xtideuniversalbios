@@ -241,10 +241,12 @@ g_rgszChoiceToStringLookupForCOM:
 	dw	g_szValueCfgCOMx
 	dw	NULL
 
-SERIAL_DEFAULT_CUSTOM_PORT   EQU		300h           ; can't be any of the pre-defined COM values
+SERIAL_DEFAULT_CUSTOM_PORT		EQU		300h		; can't be any of the pre-defined COM values
+SERIAL_DEFAULT_COM				EQU		'1'
+SERIAL_DEFAULT_BAUD				EQU		((115200 / 9600)	& 0xff)
 
-PackedCOMPortAddresses:				; COM1 - COMC (or COM12)
-	db      SERIAL_COM1_IOADDRESS >> 2
+PackedCOMPortAddresses:								; COM1 - COMC (or COM12)
+	db		SERIAL_COM1_IOADDRESS >> 2
 	db		SERIAL_COM2_IOADDRESS >> 2
 	db		SERIAL_COM3_IOADDRESS >> 2
 	db		SERIAL_COM4_IOADDRESS >> 2
@@ -257,7 +259,6 @@ PackedCOMPortAddresses:				; COM1 - COMC (or COM12)
 	db		SERIAL_COMB_IOADDRESS >> 2
 	db		SERIAL_COMC_IOADDRESS >> 2
 	db		SERIAL_DEFAULT_CUSTOM_PORT >> 2			; must be last entry (see reader/writer routines)
-SERIAL_DEFAULT_COM			EQU		'1'
 
 g_rgbChoiceToValueLookupForBaud:
 	dw		(115200 / 115200) & 0xff
@@ -278,7 +279,6 @@ g_rgszChoiceToStringLookupForBaud:
 	dw		g_szValueCfgBaud4800
 	dw		g_szValueCfgBaud2400
 	dw		NULL
-SERIAL_DEFAULT_BAUD			EQU		((115200 / 9600)	& 0xff)
 
 ; Section containing code
 SECTION .text
@@ -338,12 +338,32 @@ ALIGN JUMP_ALIGN
 IdeControllerMenu_EnterMenuOrModifyItemVisibility:
 	push	cs
 	pop		ds
+	call	.EnableOrDisableCommandBlockPort
 	call	.EnableOrDisableControlBlockPort
 	call	.DisableIRQchannelSelection
 	call	.EnableOrDisableEnableInterrupt
 	call	.EnableOrDisableSerial
 	mov		si, g_MenupageForIdeControllerMenu
 	jmp		Menupage_ChangeToNewMenupageInDSSI
+
+
+;--------------------------------------------------------------------
+; .EnableOrDisableCommandBlockPort
+;	Parameters:
+;		SS:BP:	Menu handle
+;	Returns:
+;		Nothing
+;	Corrupts registers:
+;		AX, BX
+;--------------------------------------------------------------------
+ALIGN JUMP_ALIGN
+.EnableOrDisableCommandBlockPort:
+	mov		bx, [cs:g_MenuitemIdeControllerDevice+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset]
+	call	Buffers_GetRomvarsValueToAXfromOffsetInBX
+	mov		bx, g_MenuitemIdeControllerCommandBlockAddress
+	cmp		al, DEVICE_SERIAL_PORT
+	je		SHORT .DisableMenuitemFromCSBX
+	jmp		SHORT .EnableMenuitemFromCSBX
 
 
 ;--------------------------------------------------------------------
@@ -384,10 +404,10 @@ ALIGN JUMP_ALIGN
 	mov		bx, [cs:g_MenuitemIdeControllerDevice+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset]
 	call	Buffers_GetRomvarsValueToAXfromOffsetInBX
 	mov		bx, g_MenuitemIdeControllerEnableInterrupt
-	cmp		al, DEVICE_8BIT_XTIDE_REV2
+	cmp		al, DEVICE_8BIT_XTCF_PIO8
 	jae		SHORT .DisableMenuitemFromCSBX
 
-	call	.EnableMenuitemFromCSBX
+	call	EnableMenuitemFromCSBX
 	; Fall to .EnableOrDisableIRQchannelSelection
 
 ;--------------------------------------------------------------------
@@ -423,42 +443,40 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 .DisableMenuitemFromCSBX:
-	and		BYTE [cs:bx+MENUITEM.bFlags], ~FLG_MENUITEM_VISIBLE
-	ret
+	jmp		DisableMenuitemFromCSBX
 
 ALIGN JUMP_ALIGN
 .EnableMenuitemFromCSBX:
-	or		BYTE [cs:bx+MENUITEM.bFlags], FLG_MENUITEM_VISIBLE
-	ret
+	jmp		EnableMenuitemFromCSBX
 
 
 .EnableOrDisableSerial:
 	mov		bx, g_MenuitemIdeControllerSerialBaud
-	call	.DisableMenuitemFromCSBX
+	call	DisableMenuitemFromCSBX
 
 	mov		bx, g_MenuitemIdeControllerSerialCOM
-	call	.DisableMenuitemFromCSBX
+	call	DisableMenuitemFromCSBX
 
 	mov		bx, g_MenuitemIdeControllerSerialPort
-	call	.DisableMenuitemFromCSBX
+	call	DisableMenuitemFromCSBX
 
 	mov		bx, [cs:g_MenuitemIdeControllerDevice+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset]
 	call	Buffers_GetRomvarsValueToAXfromOffsetInBX
 	cmp		al, DEVICE_SERIAL_PORT
-	jnz		.DisableAllSerial
+	jne		.DisableAllSerial
 
 	mov		bx, g_MenuitemIdeControllerSerialCOM
-	call	.EnableMenuitemFromCSBX
+	call	EnableMenuitemFromCSBX
 
 	mov		bx, g_MenuitemIdeControllerSerialBaud
-	call	.EnableMenuitemFromCSBX
+	call	EnableMenuitemFromCSBX
 
 	mov		bx, [cs:g_MenuitemIdeControllerSerialCOM+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset]
 	call	Buffers_GetRomvarsValueToAXfromOffsetInBX
 	mov		bx, g_MenuitemIdeControllerSerialPort
-	cmp		al,'x'
-	jz		.EnableMenuitemFromCSBX
-	jmp		.DisableMenuitemFromCSBX
+	cmp		al, 'x'
+	je		SHORT .EnableMenuitemFromCSBX
+	jmp		SHORT .DisableMenuitemFromCSBX
 .DisableAllSerial:
 	ret
 
@@ -484,18 +502,26 @@ SlaveDrive:
 ALIGN JUMP_ALIGN
 DisplayMasterSlaveMenu:
 ;
-; block mode is not supported on serial drives, disable/enable the option as appropriate
+; "Block Mode Transfers" and "Internal Write Cache" are not supported on serial drives, disable/enable the options as appropriate
 ;
 	push	bx
 	mov		bx, [cs:g_MenuitemIdeControllerDevice+MENUITEM.itemValue+ITEM_VALUE.wRomvarsValueOffset]
 	call	Buffers_GetRomvarsValueToAXfromOffsetInBX
 	mov		bx, g_MenuitemMasterSlaveBlockModeTransfers
-	cmp		al,DEVICE_SERIAL_PORT
-	jz		.isSerial
-	or		BYTE [cs:bx+MENUITEM.bFlags], FLG_MENUITEM_VISIBLE
+
+	cmp		al, DEVICE_SERIAL_PORT
+	je		.isSerial
+
+	call	EnableMenuitemFromCSBX
+	mov		bx, g_MenuitemMasterSlaveWriteCache
+	call	EnableMenuitemFromCSBX
 	jmp		.isDone
+
 .isSerial:
-	and		BYTE [cs:bx+MENUITEM.bFlags], ~FLG_MENUITEM_VISIBLE
+	call	DisableMenuitemFromCSBX
+	mov		bx, g_MenuitemMasterSlaveWriteCache
+	call	DisableMenuitemFromCSBX
+
 .isDone:
 	pop		bx
 
@@ -514,9 +540,9 @@ DisplayMasterSlaveMenu:
 ;
 ; Writers:
 ;	Parameters:
-;       AX:     Value that the MENUITEM system was interacting with
-;		ES:DI:  ROMVARS location where the value is to be stored
-;	    DS:SI:  MENUITEM pointer
+;		AX:		Value that the MENUITEM system was interacting with
+;		ES:DI:	ROMVARS location where the value is to be stored
+;		DS:SI:	MENUITEM pointer
 ;	Returns:
 ;		AX:		Value to actually write to ROMVARS
 ;	Corrupts registers:
@@ -524,9 +550,9 @@ DisplayMasterSlaveMenu:
 ;
 ; Readers:
 ;	Parameters:
-;       AX:     Value read from the ROMVARS location
-;		ES:DI:  ROMVARS location where the value was just read from
-;	    DS:SI:  MENUITEM pointer
+;		AX:		Value read from the ROMVARS location
+;		ES:DI:	ROMVARS location where the value was just read from
+;		DS:SI:	MENUITEM pointer
 ;	Returns:
 ;		AX:		Value that the MENUITEM system will interact with and display
 ;	Corrupts registers:
@@ -534,14 +560,11 @@ DisplayMasterSlaveMenu:
 ;
 ALIGN JUMP_ALIGN
 WriterForXTCFwindow:
-	mov		al, ah
-	xor		ah, ah
-	ret
-
-ALIGN JUMP_ALIGN
-ReaderForXTCFwindow:
-	mov		ah, al
 	xor		al, al
+	SKIP2B	f
+ReaderForXTCFwindow:
+	xor		ah, ah
+	xchg	al, ah
 	ret
 
 
@@ -551,64 +574,62 @@ ReaderForXTCFwindow:
 ;
 ALIGN JUMP_ALIGN
 IdeControllerMenu_WriteDevice:
-		push	bx
-		push	di
-		push	di
-		push	ax
+	push	bx
+	push	di
+	push	ax
 
-		; Note! AL is the choice index, not device code
-		shl		ax, 1								; Selection to device code
-		mov		bl, [es:di]							; what is the current Device we are changing from?
-		sub		di, BYTE IDEVARS.bDevice - IDEVARS.wBasePort	; Get ready to set the Port addresses
-		cmp		al, DEVICE_SERIAL_PORT
-		je		SHORT .changingToSerial
-		cmp		al, DEVICE_8BIT_JRIDE_ISA
-		je		SHORT .ChangingToJrIdeIsa
-		cmp		al, DEVICE_8BIT_ADP50L
-		je		SHORT .ChangingToADP50L
+	; Note! AL is the choice index, not device code
+	shl		ax, 1								; Selection to device code
+	mov		bl, [es:di]							; what is the current Device we are changing from?
+	sub		di, BYTE IDEVARS.bDevice - IDEVARS.wBasePort	; Get ready to set the Port addresses
+	cmp		al, DEVICE_SERIAL_PORT
+	je		SHORT .ChangingToSerial
+	cmp		al, DEVICE_8BIT_JRIDE_ISA
+	je		SHORT .ChangingToJrIdeIsa
+	cmp		al, DEVICE_8BIT_ADP50L
+	je		SHORT .ChangingToADP50L
 
-		; Restore ports to default values
-		cmp		al, DEVICE_8BIT_ATA					; Standard ATA controllers, including 8-bit mode
-		mov		ax, DEVICE_ATA_PRIMARY_PORT			; Defaults for 16-bit and better ATA devices
-		mov		bx, DEVICE_ATA_PRIMARY_PORTCTRL
-		jbe		SHORT .writeNonSerial
+	; Restore ports to default values
+	cmp		al, DEVICE_8BIT_ATA					; Standard ATA controllers, including 8-bit mode
+	mov		ax, DEVICE_ATA_PRIMARY_PORT			; Defaults for 16-bit and better ATA devices
+	mov		bx, DEVICE_ATA_PRIMARY_PORTCTRL
+	jbe		SHORT .WriteNonSerial
 
-		mov		ax, DEVICE_XTIDE_DEFAULT_PORT		; Defaults for 8-bit XTIDE and XT-CF devices
-		mov		bx, DEVICE_XTIDE_DEFAULT_PORTCTRL
+	mov		ax, DEVICE_XTIDE_DEFAULT_PORT		; Defaults for 8-bit XTIDE and XT-CF devices
+	mov		bx, DEVICE_XTIDE_DEFAULT_PORTCTRL
 
-.writeNonSerial:
-		stosw										; Store defaults in IDEVARS.wBasePort and IDEVARS.wBasePortCtrl
-		xchg	bx, ax
-		stosw
-		jmp		SHORT .done
+.WriteNonSerial:
+	stosw										; Store defaults in IDEVARS.wBasePort and IDEVARS.wBasePortCtrl
+	xchg	bx, ax
+	stosw
+	jmp		SHORT .Done
 
 .ChangingToJrIdeIsa:
-		mov		ah, JRIDE_DEFAULT_SEGMENT_ADDRESS >> 8
-		SKIP2B	bx
+	mov		ah, JRIDE_DEFAULT_SEGMENT_ADDRESS >> 8
+	SKIP2B	bx
 
 .ChangingToADP50L:
-		mov		ah, ADP50L_DEFAULT_BIOS_SEGMENT_ADDRESS >> 8
-		xor		al, al
-		xor		bx, bx
-		jmp		SHORT .writeNonSerial
+	mov		ah, ADP50L_DEFAULT_BIOS_SEGMENT_ADDRESS >> 8
+	xor		al, al
+	xor		bx, bx
+	jmp		SHORT .WriteNonSerial
 
-.changingToSerial:
-		cmp		bl, DEVICE_SERIAL_PORT
-		je		SHORT .done							; if we were already serial, nothing to do
+.ChangingToSerial:
+	cmp		bl, DEVICE_SERIAL_PORT
+	je		SHORT .Done							; if we were already serial, nothing to do
 
-		mov		BYTE [es:di+IDEVARS.bSerialBaud-IDEVARS.wBasePort], SERIAL_DEFAULT_BAUD
+	mov		BYTE [es:di+IDEVARS.bSerialBaud-IDEVARS.wBasePort], SERIAL_DEFAULT_BAUD
 
-		mov		al, SERIAL_DEFAULT_COM
-		sub		di, IDEVARS.wBasePort - IDEVARS.bSerialCOMPortChar
-		call	IdeControllerMenu_SerialWriteCOM
-		stosb
+	mov		al, SERIAL_DEFAULT_COM
+	sub		di, IDEVARS.wBasePort - IDEVARS.bSerialCOMPortChar
+	call	IdeControllerMenu_SerialWriteCOM
+	stosb
 
-.done:
-		pop		ax
-		pop		di			; IDEVARS.bDevice
-		pop		di
-		pop		bx
-		ret
+.Done:
+	pop		ax
+	pop		di			; IDEVARS.bDevice
+	pop		bx
+	ret
 
 ;
 ; Doesn't modify COM character (unless it is not recognized, which would be an error case),
@@ -616,39 +637,39 @@ IdeControllerMenu_WriteDevice:
 ;
 ALIGN JUMP_ALIGN
 IdeControllerMenu_SerialWriteCOM:
-		push	ax
-		push	bx
-		push	si
+	push	ax
+	push	bx
+	push	si
 
-		mov		si,g_rgbChoiceToValueLookupForCOM
-		mov		bx,PackedCOMPortAddresses
+	mov		si, g_rgbChoiceToValueLookupForCOM
+	mov		bx, PackedCOMPortAddresses
 
 .loop:
-		mov		ah,[bx]
+	mov		ah, [bx]
 
-		cmp		ah,(SERIAL_DEFAULT_CUSTOM_PORT >> 2)
-		jz		.notFound
+	cmp		ah, (SERIAL_DEFAULT_CUSTOM_PORT >> 2)
+	je		.notFound
 
-		cmp		al,[si]
-		jz		.found
+	cmp		al, [si]
+	je		.found
 
-		inc		si
-		inc		si
-		inc		bx
+	inc		si
+	inc		si
+	inc		bx
 
-		jmp		.loop
+	jmp		.loop
 
 .notFound:
-		mov		al, 'x'
+	mov		al, 'x'
 
 .found:
-		mov		[es:di+IDEVARS.bSerialPort-IDEVARS.bSerialCOMPortChar], ah
+	mov		[es:di+IDEVARS.bSerialPort-IDEVARS.bSerialCOMPortChar], ah
 
-		pop		si
-		pop		bx
-		pop		ax
+	pop		si
+	pop		bx
+	pop		ax
 
-		ret
+	ret
 
 
 ;
@@ -656,9 +677,9 @@ IdeControllerMenu_SerialWriteCOM:
 ;
 ALIGN JUMP_ALIGN
 IdeControllerMenu_SerialReadPort:
-		xor		ah,ah
-		eSHL_IM	ax, 2
-		ret
+	xor		ah, ah
+	eSHL_IM	ax, 2
+	ret
 
 ;
 ; Numeric Port (word) -> Packed Port (byte)
@@ -666,34 +687,34 @@ IdeControllerMenu_SerialReadPort:
 ;
 ALIGN JUMP_ALIGN
 IdeControllerMenu_SerialWritePort:
-		push	bx
-		push	si
+	push	bx
+	push	si
 
-		eSHR_IM	ax, 2
-		and		al,0feh			; force 8-byte boundary
+	eSHR_IM	ax, 2
+	and		al, 0feh			; force 8-byte boundary
 
-		mov		si,g_rgbChoiceToValueLookupForCOM
-		mov		bx,PackedCOMPortAddresses			; loop, looking for port address in known COM address list
+	mov		si, g_rgbChoiceToValueLookupForCOM
+	mov		bx, PackedCOMPortAddresses			; loop, looking for port address in known COM address list
 
 .loop:
-		mov		ah,[si]
-		cmp		ah,'x'
-		jz		.found
+	mov		ah, [si]
+	cmp		ah, 'x'
+	je		.found
 
-		cmp		al,[bx]
-		jz		.found
+	cmp		al, [bx]
+	je		.found
 
-		inc		si
-		inc		si
-		inc		bx
+	inc		si
+	inc		si
+	inc		bx
 
-		jmp		.loop
+	jmp		.loop
 
 .found:
-		mov		[es:di+IDEVARS.bSerialCOMPortChar-IDEVARS.bSerialPort], ah
+	mov		[es:di+IDEVARS.bSerialCOMPortChar-IDEVARS.bSerialPort], ah
 
-		pop		si
-		pop		bx
+	pop		si
+	pop		bx
 
-		ret
+	ret
 
