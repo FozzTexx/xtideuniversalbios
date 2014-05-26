@@ -38,7 +38,11 @@ SECTION .text
 ;--------------------------------------------------------------------
 AH41h_HandlerForCheckIfExtensionsPresent:
 	cmp		WORD [bp+IDEPACK.intpack+INTPACK.bx], 55AAh
+%ifdef USE_386
+	jne		Int13h_DirectCallToAnotherBios
+%else
 	jne		SHORT .EbiosNotSupported
+%endif
 
 	mov		BYTE [bp+IDEPACK.intpack+INTPACK.ah], EBIOS_VERSION
 	mov		WORD [bp+IDEPACK.intpack+INTPACK.bx], 0AA55h
@@ -52,8 +56,11 @@ AH41h_HandlerForCheckIfExtensionsPresent:
 
 	and		BYTE [bp+IDEPACK.intpack+INTPACK.flags], ~FLG_FLAGS_CF	; Return with CF cleared
 	jmp		Int13h_ReturnFromHandlerWithoutStoringErrorCode
+
+%ifndef USE_386
 .EbiosNotSupported:
 	jmp		Int13h_DirectCallToAnotherBios
+%endif
 
 
 %ifdef MODULE_COMPATIBLE_TABLES

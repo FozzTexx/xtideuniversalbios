@@ -29,10 +29,10 @@
 ;	486:		 7 cycles for jump + 6 cycles for last comparison
 ;
 ; LOOP instruction uses two bytes so aligned fetching will require:
-;   8088:		8 cycles (two BYTE reads)
-;   8086:		4 cycles (one WORD read)
-;   286:		2 cycles + wait states (usually 1)
-;   386:		?
+;	8088:		8 cycles (two BYTE reads)
+;	8086:		4 cycles (one WORD read)
+;	286:		2 cycles + wait states (usually 1)
+;	386:		?
 ;	486:		Fetched only once to internal cache
 ;
 ; DELAY_WITH_LOOP_INSTRUCTION_NA	; No JUMP_ALIGN

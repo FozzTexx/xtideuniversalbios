@@ -289,23 +289,23 @@ ALIGN JUMP_ALIGN
 
 	; Enable both
 	mov		bx, g_MenuitemMasterSlaveUserCHS
-	call	.EnableMenuitemFromCSBX
+	call	EnableMenuitemFromCSBX
 	mov		bx, g_MenuitemMasterSlaveUserLBA
-	jmp		.EnableMenuitemFromCSBX
+	jmp		SHORT .EnableMenuitemFromCSBX
 
 ALIGN JUMP_ALIGN
 .EnableCHSandDisableLBA:
 	mov		bx, g_MenuitemMasterSlaveUserCHS
-	call	.EnableMenuitemFromCSBX
+	call	EnableMenuitemFromCSBX
 	mov		bx, g_MenuitemMasterSlaveUserLBA
-	jmp		.DisableMenuitemFromCSBX
+	jmp		SHORT .DisableMenuitemFromCSBX
 
 ALIGN JUMP_ALIGN
 .DisableCHSandEnableLBA:
 	mov		bx, g_MenuitemMasterSlaveUserLBA
-	call	.EnableMenuitemFromCSBX
+	call	EnableMenuitemFromCSBX
 	mov		bx, g_MenuitemMasterSlaveUserCHS
-	jmp		.DisableMenuitemFromCSBX
+	jmp		SHORT .DisableMenuitemFromCSBX
 
 
 ;--------------------------------------------------------------------
@@ -327,18 +327,18 @@ ALIGN JUMP_ALIGN
 	jnz		SHORT .DisableCHandS
 
 	mov		bx, g_MenuitemMasterSlaveCylinders
-	call	.EnableMenuitemFromCSBX
+	call	EnableMenuitemFromCSBX
 	mov		bx, g_MenuitemMasterSlaveHeads
-	call	.EnableMenuitemFromCSBX
+	call	EnableMenuitemFromCSBX
 	mov		bx, g_MenuitemMasterSlaveSectors
 	jmp		SHORT .EnableMenuitemFromCSBX
 
 ALIGN JUMP_ALIGN
 .DisableCHandS:
 	mov		bx, g_MenuitemMasterSlaveCylinders
-	call	.DisableMenuitemFromCSBX
+	call	DisableMenuitemFromCSBX
 	mov		bx, g_MenuitemMasterSlaveHeads
-	call	.DisableMenuitemFromCSBX
+	call	DisableMenuitemFromCSBX
 	mov		bx, g_MenuitemMasterSlaveSectors
 	jmp		SHORT .DisableMenuitemFromCSBX
 
@@ -376,13 +376,11 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 .EnableMenuitemFromCSBX:
-	or		BYTE [cs:bx+MENUITEM.bFlags], FLG_MENUITEM_VISIBLE
-	ret
+	jmp		EnableMenuitemFromCSBX
 
 ALIGN JUMP_ALIGN
 .DisableMenuitemFromCSBX:
-	and		BYTE [cs:bx+MENUITEM.bFlags], ~FLG_MENUITEM_VISIBLE
-	ret
+	jmp		DisableMenuitemFromCSBX
 
 
 ;--------------------------------------------------------------------
@@ -406,7 +404,7 @@ ValueReaderForUserLbaValue:
 	adc		dx, BYTE 0
 
 	xchg	ax, dx				; SHR 16
-	eSHIFT_IM ax, 4, shr		; SHR 4 => AX = DX:AX / (1024*1024)
+	eSHR_IM	ax, 4				; SHR 4 => AX = DX:AX / (1024*1024)
 
 	pop		dx
 	ret
@@ -428,7 +426,7 @@ ValueWriterForUserLbaValue:
 	push	dx
 
 	xor		dx, dx
-	eSHIFT_IM ax, 4, shl
+	eSHL_IM	ax, 4
 	xchg	dx, ax			; DX:AX now holds AX * 1024 * 1024
 
 	sub		ax, BYTE 1		; Decrement DX:AX by one
@@ -444,31 +442,31 @@ ValueWriterForUserLbaValue:
 ;
 ALIGN JUMP_ALIGN
 MasterSlaveMenu_WriteCHSFlag:
-		test	word [es:di], FLG_DRVPARAMS_USERCHS
-		jnz		.alreadySet
+	test	word [es:di], FLG_DRVPARAMS_USERCHS
+	jnz		.alreadySet
 
-		push	ax
-		push	di
-		push	si
+	push	ax
+	push	di
+	push	si
 
-		mov		ax, MASTERSLAVE_CYLINDERS_DEFAULT
-		mov		si, g_MenuitemMasterSlaveCylinders
-		call	Menuitem_StoreValueFromAXtoMenuitemInDSSI
+	mov		ax, MASTERSLAVE_CYLINDERS_DEFAULT
+	mov		si, g_MenuitemMasterSlaveCylinders
+	call	Menuitem_StoreValueFromAXtoMenuitemInDSSI
 
-		mov		ax, MASTERSLAVE_HEADS_DEFAULT
-		mov		si, g_MenuitemMasterSlaveHeads
-		call	Menuitem_StoreValueFromAXtoMenuitemInDSSI
+	mov		ax, MASTERSLAVE_HEADS_DEFAULT
+	mov		si, g_MenuitemMasterSlaveHeads
+	call	Menuitem_StoreValueFromAXtoMenuitemInDSSI
 
-		mov		ax, MASTERSLAVE_SECTORS_DEFAULT
-		mov		si, g_MenuitemMasterSlaveSectors
-		call	Menuitem_StoreValueFromAXtoMenuitemInDSSI
+	mov		ax, MASTERSLAVE_SECTORS_DEFAULT
+	mov		si, g_MenuitemMasterSlaveSectors
+	call	Menuitem_StoreValueFromAXtoMenuitemInDSSI
 
-		pop		si
-		pop		di
-		pop		ax
+	pop		si
+	pop		di
+	pop		ax
 
 .alreadySet:
-		ret
+	ret
 
 ;
 ; No change to LBA flag, but we use this opportunity to change defaults stored in the LBA value if we are
@@ -476,20 +474,20 @@ MasterSlaveMenu_WriteCHSFlag:
 ;
 ALIGN JUMP_ALIGN
 MasterSlaveMenu_WriteLBAFlag:
-		test	word [es:di], FLG_DRVPARAMS_USERLBA
-		jnz		.alreadySet
+	test	word [es:di], FLG_DRVPARAMS_USERLBA
+	jnz		.alreadySet
 
-		push	ax
-		push	di
-		push	si
+	push	ax
+	push	di
+	push	si
 
-		mov		ax, MASTERSLAVE_USERLBA_DEFAULT
-		mov		si, g_MenuitemMasterSlaveUserLbaValue
-		call	Menuitem_StoreValueFromAXtoMenuitemInDSSI
+	mov		ax, MASTERSLAVE_USERLBA_DEFAULT
+	mov		si, g_MenuitemMasterSlaveUserLbaValue
+	call	Menuitem_StoreValueFromAXtoMenuitemInDSSI
 
-		pop		si
-		pop		di
-		pop		ax
+	pop		si
+	pop		di
+	pop		ax
 
 .alreadySet:
-		ret
+	ret

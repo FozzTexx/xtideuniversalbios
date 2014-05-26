@@ -19,8 +19,6 @@
 ; Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 ;
 
-; Modified by JJP for XT-CFv3 support, Mar-13
-
 ; Section containing code
 SECTION .text
 

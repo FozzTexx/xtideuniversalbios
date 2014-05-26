@@ -36,7 +36,7 @@ SECTION .text
 ;	Returns with INTPACK:
 ;		If successful:
 ;			AH:		Hard Disk: 3 (Hard disk accessible)
-;                   Floppy:    1 (Floppy disk, without change detection)
+;					Floppy:    1 (Floppy disk, without change detection)
 ;			CX:DX:	Total number of sectors
 ;			CF:		0
 ;		If failed:

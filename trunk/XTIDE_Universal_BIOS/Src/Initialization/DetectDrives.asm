@@ -61,13 +61,13 @@ DetectDrives_FromAllIDEControllers:
 ;
 ; if serial drive detected, do not scan (avoids duplicate drives and isn't needed - we already have a connection)
 ;
-	call	FindDPT_ToDSDIforSerialDevice   ; does not modify AX
+	call	FindDPT_ToDSDIforSerialDevice	; Does not modify AX
 	jnc		.AddHardDisks
 
 	mov		bp, ROMVARS.ideVarsSerialAuto	; Point to our special IDEVARS structure, just for serial scans
 
 %ifdef MODULE_HOTKEYS
-	cmp		al, COM_DETECT_HOTKEY_SCANCODE  ; Set by last call to HotkeyBar_UpdateDuringDriveDetection above
+	cmp		al, COM_DETECT_HOTKEY_SCANCODE	; Set by last call to HotkeyBar_UpdateDuringDriveDetection above
 	je		.DriveDetectLoop
 %endif
 
@@ -133,10 +133,6 @@ DetectDrives_FromAllIDEControllers:
 .NoFloppies:
 	mov		[RAMVARS.xlateVars+XLATEVARS.bFlopCntAndFirst], al
 %endif
-
-%ifdef MODULE_8BIT_IDE_ADVANCED
-NoSlaveDriveAvailable:
-%endif
 	ret
 
 %ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
@@ -155,24 +151,11 @@ NoSlaveDriveAvailable:
 ;		DS:		RAMVARS segment
 ;		ES:		Zero (BDA segment)
 ;	Returns:
-;       Nothing
+;		Nothing
 ;	Corrupts registers:
 ;		AX, BL, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 StartDetectionWithDriveSelectByteInBHandStringInCX:
-%ifdef MODULE_8BIT_IDE_ADVANCED
-	mov		al, [cs:bp+IDEVARS.bDevice]
-	cmp		al, DEVICE_8BIT_XTCF_PIO8
-	jb		SHORT .DoNotSkipSlaveDriveDetection
-	cmp		al, DEVICE_8BIT_XTCF_DMA
-	ja		SHORT .DoNotSkipSlaveDriveDetection
-
-	; XT-CF do not support slave drives so skip detection
-	test	bh, FLG_DRVNHEAD_DRV
-	jnz		SHORT NoSlaveDriveAvailable
-.DoNotSkipSlaveDriveDetection:
-%endif ; MODULE_8BIT_IDE_ADVANCED
-
 	call	DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP
 
 %ifdef MODULE_HOTKEYS
@@ -220,7 +203,7 @@ StartDetectionWithDriveSelectByteInBHandStringInCX:
 ;	Parameters:
 ;		Nothing
 ;	Returns:
-;		CF:     Set (from DetectPrint_NullTerminatedStringFromCSSIandSetCF)
+;		CF:		Set (from DetectPrint_NullTerminatedStringFromCSSIandSetCF)
 ;	Corrupts registers:
 ;		AX, SI
 ;--------------------------------------------------------------------
@@ -247,7 +230,7 @@ CreateBiosTablesForHardDisk:
 	push	bx
 	call	AtaID_VerifyFromESSI
 	pop		bx
-	jc		SHORT DetectDrives_DriveNotFound
+	jnz		SHORT DetectDrives_DriveNotFound
 	call	CreateDPT_FromAtaInformation
 	jc		SHORT DetectDrives_DriveNotFound
 	call	DriveDetectInfo_CreateForHardDisk

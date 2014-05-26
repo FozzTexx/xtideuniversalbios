@@ -64,7 +64,7 @@ SECTION .text
 ;
 ;	Parameters:
 ;		DS:		BDA segment (zero)
-;		AX:     Parameter to Format
+;		AX:		Parameter to Format
 ;		ES:DI:	Ptr to cursor location in video RAM
 ;	Returns:
 ;		DI:		Updated offset to video RAM
@@ -93,7 +93,7 @@ DisplayFormatCompressed_Format_z:
 DisplayFormatCompressed_Format_x:
 DisplayFormatCompressed_Format_5_x:
 	mov		si,16						; hex output, change base to 16
-	mov		bx,(04<<8) + 'h'	        ; 4 bytes, with postfix character 'h' to emit
+	mov		bx,(04<<8) + 'h'			; 4 bytes, with postfix character 'h' to emit
 										; (note that the count includes the 'h')
 	jmp		DisplayFormatCompressed_Format_u
 

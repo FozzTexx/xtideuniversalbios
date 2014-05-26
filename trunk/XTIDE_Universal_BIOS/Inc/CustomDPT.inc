@@ -60,27 +60,26 @@ endstruc
 %endif
 	FLGL_DPT_LBA						EQU	FLG_DRVNHEAD_LBA	; Bit 6, Drive supports LBA and so EBIOS functions can be supported
 %ifdef MODULE_EBIOS
-	FLGL_DPT_LBA48						EQU	(1<<7)				; Bit 7, Drive supports 48-bit LBA (Must be bit 7!)
+	FLGL_DPT_LBA48						EQU	(1<<7)				; Bit 7, Drive supports 48-bit LBA (must be bit 7!)
 %endif
 
 
 	; Bit definitions for DPT.bFlagsHigh
-	FLGH_DPT_USE_BLOCK_MODE_COMMANDS	EQU	(1<<1)	; Bit 1, Use block transfer commands (must be bit 1!)
+	FLGH_DPT_USE_BLOCK_MODE_COMMANDS	EQU	(1<<1)				; Bit 1, Use block transfer commands (must be bit 1!)
 %ifdef MODULE_SERIAL
-	FLGH_DPT_SERIAL_DEVICE				EQU	(1<<2)	; Bit 2, Serial Port Device
+	FLGH_DPT_SERIAL_DEVICE				EQU	(1<<2)				; Bit 2, Serial Port Device
 %endif
-%ifdef MODULE_FEATURE_SETS
-	FLGH_DPT_POWER_MANAGEMENT_SUPPORTED	EQU (1<<5)	; Bit 5, Drive supports power management
+%ifdef MODULE_POWER_MANAGEMENT
+	FLGH_DPT_POWER_MANAGEMENT_SUPPORTED	EQU (1<<3)				; Bit 3, Drive supports power management (must be bit 3!)
 %endif
 %ifdef MODULE_ADVANCED_ATA
-	FLGH_DPT_IORDY						EQU	(1<<7)	; Bit 7, Controller and Drive supports IORDY
+	FLGH_DPT_IORDY						EQU	(1<<7)				; Bit 7, Controller and Drive supports IORDY
 %endif
 
 	; Serial device only
 %ifdef MODULE_SERIAL_FLOPPY
-	FLGH_DPT_SERIAL_FLOPPY						EQU	(1<<4)
-	FLGH_DPT_SERIAL_FLOPPY_TYPE_MASK			EQU	0e0h
-	FLGH_DPT_SERIAL_FLOPPY_TYPE_FIELD_POSITION	EQU	5
+	FLGH_DPT_SERIAL_FLOPPY						EQU	(1<<4)		; Bit 4, Drive is a serial floppy drive
+	FLGH_DPT_SERIAL_FLOPPY_TYPE_FIELD_POSITION	EQU	5			; Bits 7...5, Serial floppy drive type
 %endif
 
 

@@ -193,7 +193,7 @@ AH9h_InitializeDriveForUse:
 %endif ; MODULE_ADVANCED_ATA
 
 
-%ifdef MODULE_FEATURE_SETS
+%ifdef MODULE_POWER_MANAGEMENT
 ;;;	InitStandbyTimer
 	; Initialize the standby timer (if supported)
 	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_POWER_MANAGEMENT_SUPPORTED
@@ -205,7 +205,7 @@ AH9h_InitializeDriveForUse:
 	call	Idepack_StoreNonExtParametersAndIssueCommandFromAL
 	STORE_ERROR_FLAG_TO_DPT		FLG_INITERROR_FAILED_TO_INITIALIZE_STANDBY_TIMER
 .NoPowerManagementSupport:
-%endif ; MODULE_FEATURE_SETS
+%endif ; MODULE_POWER_MANAGEMENT
 
 
 	; There might have been several errors so just return one error code for them all

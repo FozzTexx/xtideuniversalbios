@@ -371,7 +371,7 @@ ScanHotkeysFromKeyBufferAndStoreToBootvars:
 ;		DS:		RAMVARS segment
 ;		ES:		BDA segment (zero)
 ;	Returns:
-;       AL:     Last scancode seen
+;		AL:		Last scancode seen
 ;		CF:		Set if valid hotkey in AL
 ;				Clear if scancode in AL is not for any hotkey
 ;	Corrupts registers:

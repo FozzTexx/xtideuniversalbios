@@ -59,8 +59,8 @@ DetectPrint_GetSoftwareCoordinatesToAX:
 ;		AX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP:
-	mov		ax, [cs:bp+IDEVARS.wBasePort]   ; for IDE: AX=port address, DH=.bDevice
-	; fall through to DetectPrint_StartDetectWithAutodetectedBasePortInAXandIdeVarsInCSBP
+	mov		ax, [cs:bp+IDEVARS.wBasePort]	; For IDE: AX=port address, DH=.bDevice
+	; Fall to DetectPrint_StartDetectWithAutodetectedBasePortInAXandIdeVarsInCSBP
 
 ;--------------------------------------------------------------------
 ; DetectPrint_StartDetectWithAutodetectedBasePortInAXandIdeVarsInCSBP
@@ -74,9 +74,9 @@ DetectPrint_StartDetectWithMasterOrSlaveStringInCXandIdeVarsInCSBP:
 ;		AX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 DetectPrint_StartDetectWithAutodetectedBasePortInAXandIdeVarsInCSBP:
-	mov		dx, [cs:bp+IDEVARS.bDevice-1]   ; for Serial: AL=port address>>2, AH=baud rate
+	mov		dx, [cs:bp+IDEVARS.bDevice-1]	; For Serial: AL=port address>>2, AH=baud rate
 											;			  DL=COM number character, DH=.bDevice
-	push	bp								; setup stack for call to
+	push	bp								; Setup stack for call to
 	mov		bp, sp							; BootMenuPrint_FormatCSSIfromParamsInSSBP
 
 	push 	cx								; Push "Master" or "Slave"
@@ -88,7 +88,7 @@ DetectPrint_StartDetectWithAutodetectedBasePortInAXandIdeVarsInCSBP:
 											; on the same 256 byte page, which is checked in strings.asm.
 
 %ifdef MODULE_SERIAL
-	cmp		dh, DEVICE_SERIAL_PORT		  	; Check if this is a serial device
+	cmp		dh, DEVICE_SERIAL_PORT			; Check if this is a serial device
 
 	jnz		.pushAndPrint					; CX = string to print, AX = port address, DX won't be used
 

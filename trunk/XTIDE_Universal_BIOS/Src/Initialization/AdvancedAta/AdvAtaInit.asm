@@ -87,12 +87,12 @@ AdvAtaInit_InitializeControllerForDPTinDSDI:
 	; We only support Vision at the moment so no need to identify ID
 	call	AdvAtaInit_LoadMasterDPTtoDSSIifSlaveInDSDI
 	call	Vision_InitializeWithIDinAHandConfigInAL
+	xor		ax, ax						; Success
 
 	pop		si
 	pop		bp
 
 .NoAdvancedController:
-	xor		ax, ax						; Success
 	ret
 
 

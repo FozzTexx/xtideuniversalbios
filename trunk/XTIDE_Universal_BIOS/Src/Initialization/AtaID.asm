@@ -26,8 +26,8 @@ SECTION .text
 ;	Parameters:
 ;		ES:SI:	Ptr to 512-byte ATA information read from the drive
 ;	Returns:
-;		CF:		Set if failed to verify ATA-ID
-;				Cleared if ATA-ID verified successfully
+;		ZF:		Set if ATA-ID verified successfully
+;				Cleared if failed to verify ATA-ID
 ;	Corrupts registers:
 ;		AX, BX, CX
 ;--------------------------------------------------------------------
@@ -40,16 +40,16 @@ AtaID_VerifyFromESSI:
 
 	; Verify P-CHS cylinders
 	mov		bx, ATA1.wCylCnt
-	mov		cx, MAX_VALID_PCHS_CYLINDERS
-	call	.CompareCHorSfromOffsetBXtoMaxValueInCX
+	mov		ax, MAX_VALID_PCHS_CYLINDERS
+	call	.CompareCHorSfromOffsetBXtoMaxValueInAX
 
 	mov		bl, ATA1.wHeadCnt & 0FFh
-	mov		cx, MAX_VALID_PCHS_HEADS
-	call	.CompareCHorSfromOffsetBXtoMaxValueInCX
+	mov		ax, MAX_VALID_PCHS_HEADS
+	call	.CompareCHorSfromOffsetBXtoMaxValueInAX
 
 	mov		bl, ATA1.wSPT & 0FFh
-	mov		cl, MAX_VALID_PCHS_SECTORS_PER_TRACK
-	call	.CompareCHorSfromOffsetBXtoMaxValueInCX
+	mov		al, MAX_VALID_PCHS_SECTORS_PER_TRACK
+	call	.CompareCHorSfromOffsetBXtoMaxValueInAX
 
 	; Check signature byte. It is only found on ATA-5 and later. It should be zero on
 	; ATA-4 and older.
@@ -61,43 +61,37 @@ AtaID_VerifyFromESSI:
 
 	; Check checksum byte since signature was present
 	mov		cx, ATA6_size
-	call	Memory_SumCXbytesFromESSItoAL		; Returns with ZF set according to result
-	jnz		SHORT .FailedToVerifyAtaID
-
-	; ATA-ID is now verified to be valid
-.AtaIDverifiedSuccessfully:
-	clc
-	ret
+	jmp		Memory_SumCXbytesFromESSItoAL		; Returns with ZF set according to result
 
 ;--------------------------------------------------------------------
-; .CompareCHorSfromOffsetBXtoMaxValueInCX
+; .CompareCHorSfromOffsetBXtoMaxValueInAX
 ;	Parameters:
+;		AX:		Maximum valid C, H or S value
 ;		BX:		C, H or S offset to ATA-ID
-;		CX:		Maximum valid C, H or S value
 ;		ES:SI:	Ptr to 512-byte ATA information read from the drive
 ;	Returns:
-;		Exits from AtaID_VerifyFromESSI with CF set if invalid value
+;		Exits from AtaID_VerifyFromESSI with ZF cleared if invalid value
 ;	Corrupts registers:
-;		AX
+;		CX
 ;--------------------------------------------------------------------
-.CompareCHorSfromOffsetBXtoMaxValueInCX:
-	mov		ax, [es:bx+si]
-	test	ax, ax
-	jz		SHORT .InvalidPCHorSinOffsetBX
-	cmp		ax, cx			; Compare to max valid value
+.CompareCHorSfromOffsetBXtoMaxValueInAX:
+	mov		cx, [es:bx+si]
+	jcxz	.InvalidPCHorSinOffsetBX
+	cmp		cx, ax			; Compare to max valid value
 	jbe		SHORT .ValidPCHorSinOffsetBX
 .InvalidPCHorSinOffsetBX:
-	add		sp, BYTE 2		; Clear return address for this function
+	pop		cx				; Clear return address for this function
+	inc		cx				; Clear ZF to indicate invalid ATA-ID (safe to do since return address in CX will never be FFFFh)
+.AtaIDverifiedSuccessfully:
 .FailedToVerifyAtaID:
-	stc						; Set carry to indicate invalid ATA-ID
 .ValidPCHorSinOffsetBX:
 	ret
 
 
 ;--------------------------------------------------------------------
 ; Writes user defined limits from ROMVARS to ATA ID read from the drive.
-; Modifying the ATA ID reduces code and possibilites for bugs since
-; only little furher checks are needed elsewhere.
+; Modifying the ATA ID reduces code and possibilities for bugs since
+; only little further checks are needed elsewhere.
 ;
 ; AtaID_ModifyESSIforUserDefinedLimitsAndReturnTranslateModeInDX
 ;	Parameters:

@@ -108,12 +108,12 @@ CreateDPT_FromAtaInformation:
 	; Store P-CHS and flags
 	call	AtaGeometry_GetPCHStoAXBLBHfromAtaInfoInESSI
 	dec		dl						; Set ZF if TRANSLATEMODE_LARGE, SF if TRANSLATEMODE_NORMAL
-	js		SHORT .NothingToChange
-	jz		SHORT .LimitHeadsForLargeAddressingMode
+	jle		SHORT .JumpOverSetBitForAssistedLBA
 
 	; Set LBA bit for Assisted LBA
 	or		cl, FLGL_DPT_LBA
-	jmp		SHORT .NothingToChange
+.JumpOverSetBitForAssistedLBA:
+	jnz		SHORT .NothingToChange
 
 .LimitHeadsForLargeAddressingMode:
 	; We cannot have 16 P-Heads heads in Revised ECHS mode (8193 or more cylinders)
@@ -217,9 +217,9 @@ CreateDPT_FromAtaInformation:
 ;    effectively discarded.  This is more of a safety check then code that should ever normally be hit (see below).
 ;    Since the floppy DPT's come after the hard disk DPT's, without expensive (code size) code to relocate a DPT,
 ;    this was necessary.  Now, this situation shouldn't happen in normal operation, for a couple of reasons:
-; 		A. xtidecfg always puts configured serial ports at the end of the IDEVARS list
-;       B. the auto serial code is always executed last
-;       C. the serial server always returns floppy drives last
+;		A. xtidecfg always puts configured serial ports at the end of the IDEVARS list
+;		B. the auto serial code is always executed last
+;		C. the serial server always returns floppy drives last
 ;
 	adc		byte [RAMVARS.xlateVars+XLATEVARS.bFlopCreateCnt], 0
 	jnz		.AllDone

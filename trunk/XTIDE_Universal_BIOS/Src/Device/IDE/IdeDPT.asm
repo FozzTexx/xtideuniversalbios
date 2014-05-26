@@ -33,7 +33,7 @@ SECTION .text
 ;--------------------------------------------------------------------
 IdeDPT_Finalize:
 
-%ifdef MODULE_FEATURE_SETS
+%ifdef MODULE_POWER_MANAGEMENT
 ;--------------------------------------------------------------------
 ; .DetectPowerManagementSupport
 ;	Parameters:
@@ -42,14 +42,13 @@ IdeDPT_Finalize:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		Nothing
+;		AL
 ;--------------------------------------------------------------------
 .DetectPowerManagementSupport:
-	test	BYTE [es:si+ATA6.wSetSup82], A6_wSetSup82_POWERMAN
-	jz		SHORT .NoPowerManagementSupport
-	or		BYTE [di+DPT.bFlagsHigh], FLGH_DPT_POWER_MANAGEMENT_SUPPORTED
-.NoPowerManagementSupport:
-%endif ; MODULE_FEATURE_SETS
+	mov		al, [es:si+ATA6.wSetSup82]
+	and		al, A6_wSetSup82_POWERMAN	; A6_wSetSup82_POWERMAN (bit 3) is the same
+	or		[di+DPT.bFlagsHigh], al		; bit as FLGH_DPT_POWER_MANAGEMENT_SUPPORTED
+%endif ; MODULE_POWER_MANAGEMENT
 
 
 ;--------------------------------------------------------------------

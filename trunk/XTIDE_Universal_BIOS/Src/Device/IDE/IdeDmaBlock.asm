@@ -2,8 +2,6 @@
 ; Description	:	IDE Read/Write functions for transferring block using DMA.
 ;					These functions should only be called from IdeTransfer.asm.
 
-; Modified JJP 05-Jun-13
-
 ;
 ; XTIDE Universal BIOS and Associated Tools
 ; Copyright (C) 2009-2010 by Tomi Tilli, 2011-2013 by XTIDE Universal BIOS Team.
@@ -90,7 +88,7 @@ TransferBlockToOrFromXTCF:
 
 	; Calculate bytes for first page
 	mov		ax, di
-	neg		ax			; 2s compliment
+	neg		ax			; 2s complement
 
 	; If DI was zero carry flag will be cleared (and set otherwise)
 	; When DI is zero only one transfer is required since we've limited the
@@ -186,9 +184,19 @@ ALIGN JUMP_ALIGN
 	test	al, FLG_CH3_HAS_REACHED_TERMINAL_COUNT
 	jz		SHORT .TransferNextBlock	; All bytes transferred?
 %else	; Fast DMA code - perform computed number of transfers, then check DMA status register to be sure
-	add		cx, BYTE 15					; We'll divide transfers in 16-byte atomic transfers,
-	eSHR_IM	cx, 4						; so include any partial block, which will be terminated
-ALIGN JUMP_ALIGN						; by the DMA controller raising T/C
+	; We'll divide transfers in 16-byte atomic transfers, so include any partial block, which will be terminated by the DMA controller raising T/C
+	add		cx, BYTE 15
+
+%ifdef USE_186
+	shr		cx, 4
+%else
+	xchg	cx, ax
+	mov		cl, 4
+	shr		ax, cl
+	xchg	cx, ax
+%endif
+
+ALIGN JUMP_ALIGN
 .TransferNextDmaBlock:
 	out		dx, al						; Transfer up to 16 bytes to/from XT-CF card
 	loop	.TransferNextDmaBlock		; dec CX and loop if CX > 0, also adds required wait-state

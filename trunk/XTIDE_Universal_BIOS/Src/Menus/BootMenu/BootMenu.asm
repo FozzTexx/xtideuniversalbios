@@ -54,8 +54,8 @@ BootMenu_DisplayAndReturnDriveInDLRomBootClearCF:
 ;		DS:		RAMVARS segment
 ;	Returns:
 ;		DX:		Drive number to be used for booting
-;       CF:     Set: There is a selected menu item, DL is valid
-;               Clear: The item selected is Rom Boot, DL is not valid
+;		CF:		Set: There is a selected menu item, DL is valid
+;				Clear: The item selected is Rom Boot, DL is not valid
 ;	Corrupts registers:
 ;		AX, BX
 ;

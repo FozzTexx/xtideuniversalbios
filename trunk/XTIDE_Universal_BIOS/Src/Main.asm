@@ -33,9 +33,9 @@
 	; We must define included libraries before including "AssemblyLibrary.inc".
 %define	EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS	; Exclude unused library functions
 %ifdef MODULE_BOOT_MENU
-	%define MENUEVENT_INLINE_OFFSETS    	; Only one menu required, save space and inline offsets
+	%define MENUEVENT_INLINE_OFFSETS		; Only one menu required, save space and inline offsets
 	%define INCLUDE_MENU_LIBRARY
-	%define MENU_NO_ESC					    ; User cannot 'esc' out of the menu
+	%define MENU_NO_ESC						; User cannot 'esc' out of the menu
 %else	; If no boot menu included
 	%define	INCLUDE_DISPLAY_LIBRARY
 	%define INCLUDE_KEYBOARD_LIBRARY
@@ -127,7 +127,7 @@ istruc ROMVARS
 %ifdef MODULE_BOOT_MENU
 	at	ROMVARS.wBootTimeout,	dw	BOOT_MENU_DEFAULT_TIMEOUT
 %endif
-	at  ROMVARS.bIdeCnt,		db	1
+	at	ROMVARS.bIdeCnt,		db	1
 	at	ROMVARS.bBootDrv,		db	80h						; Boot Menu default drive
 	at	ROMVARS.bMinFddCnt, 	db	0						; Do not force minimum number of floppy drives
 	at	ROMVARS.bStealSize,		db	1						; Steal 1kB from base memory in full mode
@@ -217,7 +217,7 @@ iend
 %endif
 
 	; Boot loader
-%ifdef MODULE_VERY_LATE_INITIALIZATION
+%ifdef MODULE_VERY_LATE_INIT
 	%include "Int13hBiosInit.asm"
 %endif
 	%include "Int19h.asm"			; For Int 19h, Boot Loader

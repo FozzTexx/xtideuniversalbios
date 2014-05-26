@@ -46,9 +46,9 @@ Initialize_FromMainBiosRomSearch:		; unused entrypoint ok
 	mov		WORD [BIOS_BOOT_LOADER_INTERRUPT_19h*4], Int19h_BootLoaderHandler
 	mov		[BIOS_BOOT_LOADER_INTERRUPT_19h*4+2], cs
 
-%ifdef MODULE_VERY_LATE_INITIALIZATION
+%ifdef MODULE_VERY_LATE_INIT
 	push	es
-	; Install special INT 13h hander that initializes XTIDE Universal BIOS
+	; Install special INT 13h handler that initializes XTIDE Universal BIOS
 	; when our INT 19h is not called
 	les		ax, [BIOS_DISK_INTERRUPT_13h*4]	; Load system INT 13h handler
 	mov		WORD [BIOS_DISK_INTERRUPT_13h*4], Int13hBiosInit_Handler
@@ -94,31 +94,34 @@ Initialize_AndDetectDrives:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, CX, DX, SI, DI
+;		AX, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 %ifdef MODULE_COMPATIBLE_TABLES
 .StoreDptPointersToIntVectors:
 %ifndef USE_AT
 	test	BYTE [cs:ROMVARS.wFlags], FLG_ROMVARS_FULLMODE
-	jz		SHORT .CompatibleDPTsCreated	; Only Full operating mode has extra RAM to spare
+	jz		SHORT .SkipToReturn				; Only Full operating mode has extra RAM to spare
 %endif
 
+	mov		bx, HD0_DPT_POINTER_41h * 4
 	mov		dl, 80h
-	call	FindDPT_ForDriveNumberInDL	; DPT to DS:DI
-	jc		SHORT .FindForDrive81h		; Store nothing if not our drive
+.FindForNextDrive:
+	call	FindDPT_ForDriveNumberInDL		; DPT to DS:DI
+	jc		SHORT .NextDrive				; Store nothing if not our drive
 
+	push	dx
 	call	CompatibleDPT_CreateToAXSIforDriveDL
-	mov		[es:HD0_DPT_POINTER_41h*4], si
-	mov		[es:HD0_DPT_POINTER_41h*4+2], ax
+	pop		dx
 
-.FindForDrive81h:
-	mov		dl, 81h
-	call	FindDPT_ForDriveNumberInDL
-	jc		SHORT .CompatibleDPTsCreated
+	mov		[es:bx], si
+	mov		[es:bx+2], ax
 
-	call	CompatibleDPT_CreateToAXSIforDriveDL
-	mov		[es:HD1_DPT_POINTER_46h*4], si
-	mov		[es:HD1_DPT_POINTER_46h*4+2], ax
-.CompatibleDPTsCreated:
+.NextDrive:
+	inc		dx
+	add		bx, (HD1_DPT_POINTER_46h - HD0_DPT_POINTER_41h) * 4
+	cmp		dl, 82h
+	jb		SHORT .FindForNextDrive
+
+.SkipToReturn:
 %endif ; MODULE_COMPATIBLE_TABLES
 	ret

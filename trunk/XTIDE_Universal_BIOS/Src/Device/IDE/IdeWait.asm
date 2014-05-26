@@ -129,4 +129,6 @@ PollBsyOnly:
 	jz		SHORT IdeError_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL
 	call	Timer_SetCFifTimeout				; Update timeout counter
 	jnc		SHORT .PollLoop						; Loop if time left (sets CF on timeout)
-	jmp		SHORT IdeError_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL
+.End:											; Label used for sanity check during assembly
+	; Fall to IdeError_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL
+

@@ -30,9 +30,9 @@ SECTION .text
 ;--------------------------------------------------------------------
 ; SerialServerScan_ScanForServer:
 ;	Parameters:
-;       BH:		Drive Select byte for Drive and Head Select Register
-;               0xAx: Scan for drive, low nibble indicates drive
-;               0x0:  Scan for Server, independent of drives
+;		BH:		Drive Select byte for Drive and Head Select Register
+;				0xAx: Scan for drive, low nibble indicates drive
+;				0x0:  Scan for Server, independent of drives
 ;		DX:		Port and Baud to Scan for
 ;				0: Scan a known set of ports and bauds
 ;		ES:SI:	Ptr to buffer for return
@@ -88,7 +88,7 @@ SerialServerScan_ScanForServer:
 ;
 ; Note: hardware baud multipliers (2x, 4x) will impact the final baud rate and are not known at this level
 ;
-		mov		dh,030h * 2	    ; multiply by 2 since we are about to divide by 2
+		mov		dh,030h * 2		; multiply by 2 since we are about to divide by 2
 		mov		dl,[cs:di]		; restore single byte port address for scan
 
 .nextBaud:
@@ -118,12 +118,12 @@ SerialServerScan_ScanForServer:
 ;--------------------------------------------------------------------
 ; SerialServer_CheckForServer_PortAndBaudInDX:
 ;	Parameters:
-;       BH:		Drive Select byte for Drive and Head Select Register
-;               0xAx: Scan for drive, low nibble indicates drive
-;               0x0:  Scan for Server, independent of drives
+;		BH:		Drive Select byte for Drive and Head Select Register
+;				0xAx: Scan for drive, low nibble indicates drive
+;				0x0:  Scan for Server, independent of drives
 ;		DX:		Baud and Port
 ;		CH:		1: We are doing a scan for the serial server
-;               0: We are working off a specific port given by the user
+;				0: We are working off a specific port given by the user
 ;		CL:		1, for one sector to read
 ;		ES:SI:	Ptr to buffer for return
 ;	Returns:

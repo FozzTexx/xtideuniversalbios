@@ -160,12 +160,12 @@ FloppyDrive_GetCountToAX:
 ;		AH
 ;--------------------------------------------------------------------
 FloppyDrive_GetCountFromBIOS_or_BDA:
-	push	es
-
+%ifdef USE_AT
 ; Reads Floppy Drive Count from BIOS.
 ; Does not work on most XT systems. Call .GetCountFromBDA
 ; if this function fails.
-%ifdef USE_AT
+
+	push	es
 	push	di
 	push	bx
 	push	cx
@@ -180,12 +180,16 @@ FloppyDrive_GetCountFromBIOS_or_BDA:
 	pop		cx
 	pop		bx
 	pop		di
+	pop		es
 
+%else ; ifndef USE_AT
 ; Reads Floppy Drive Count (0...4) from BIOS Data Area.
 ; This function should be used only if .GetCountFromBIOS fails.
-%else ; ifndef USE_AT
-	LOAD_BDA_SEGMENT_TO	es, ax
-	mov		al, [es:BDA.wEquipment]	; Load Equipment WORD low byte
+
+	push	ds
+	LOAD_BDA_SEGMENT_TO	ds, ax
+	mov		al, [BDA.wEquipment]	; Load Equipment WORD low byte
+	pop		ds
 
 %ifdef USE_UNDOC_INTEL
 	and		al, 0C1h
@@ -199,5 +203,4 @@ FloppyDrive_GetCountFromBIOS_or_BDA:
 	add		al, ah					; AL = Floppy Drive count
 %endif ; USE_AT
 
-	pop		es
 	ret

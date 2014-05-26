@@ -68,8 +68,8 @@ g_szItemMainLoadStngs:	db	"Load old settings from EEPROM",NULL
 g_szItemMainConfigure:	db	"Configure XTIDE Universal BIOS",NULL
 g_szItemMainFlash:		db	"Flash EEPROM",NULL
 g_szItemMainSave:		db	"Save BIOS back to original file",NULL
-g_szItemMainLicense:	db  "Copyright and License Information",NULL
-g_szItemMainHomePage:	db  "Web Links",NULL
+g_szItemMainLicense:	db	"Copyright and License Information",NULL
+g_szItemMainHomePage:	db	"Web Links",NULL
 
 g_szDlgMainLoadROM:		db	"Successfully loaded XTIDE Universal BIOS from EEPROM.",NULL
 g_szDlgMainLoadStngs:	db	"Successfully loaded settings from EEPROM.",NULL
@@ -127,7 +127,7 @@ g_szNfoCfgStealSize:	db	"How many kiB's to steal from Conventional memory for XT
 g_szNfoCfgIdeCnt:		db	"Number of IDE controllers to manage.",NULL
 g_szNfoCfgIdleTimeout:	db	"Enable Power Management to set the harddrive(s) to spin down after idling a certain amount of time.",NULL
 
-g_szSerialMoved:		db  "A Serial Controller has been moved to the end of the Controller list."
+g_szSerialMoved:		db	"A Serial Controller has been moved to the end of the Controller list."
 						db	" No further action is required. Serial Controllers must be placed at the end of the list.",NULL
 
 g_szHelpCfgFullMode:	db	"Full mode supports up to 4 IDE controllers (8 drives). Full mode reserves a bit of RAM from the top of"
@@ -293,19 +293,19 @@ g_szValueCfgDeviceJrIdeIsa:					db	"JR-ISA",NULL
 g_szValueCfgDeviceADP50L:					db	"ADP50L",NULL
 g_szValueCfgDeviceSerial:					db	"Serial",NULL
 
-g_szSerialCOMChoice:	db  "COM1 - address 3F8h",LF
+g_szSerialCOMChoice:	db	"COM1 - address 3F8h",LF
 						db	"COM2 - address 2F8h",LF
-						db  "COM3 - address 3E8h",LF
-						db  "COM4 - address 2E8h",LF
-						db  "COM5 - address 2F0h",LF
-						db  "COM6 - address 3E0h",LF
+						db	"COM3 - address 3E8h",LF
+						db	"COM4 - address 2E8h",LF
+						db	"COM5 - address 2F0h",LF
+						db	"COM6 - address 3E0h",LF
 						db	"COM7 - address 2E0h",LF
 						db	"COM8 - address 260h",LF
 						db	"COM9 - address 368h",LF
 						db	"COMA - address 268h",LF
 						db	"COMB - address 360h",LF
 						db	"COMC - address 270h",LF
-						db  "COMx - Custom address",NULL
+						db	"COMx - Custom address",NULL
 
 g_szValueCfgCOM1:		db	"COM1",NULL
 g_szValueCfgCOM2:		db	"COM2",NULL
@@ -321,14 +321,14 @@ g_szValueCfgCOMB:		db	"COMB",NULL
 g_szValueCfgCOMC:		db	"COMC",NULL
 g_szValueCfgCOMx:		db	"Custom",NULL
 
-g_szSerialBaudChoice:	db  "115.2K baud",LF
-						db  "57.6K baud",LF
+g_szSerialBaudChoice:	db	"115.2K baud",LF
+						db	"57.6K baud",LF
 						db	"38.4K baud",LF
-						db  "28.8K baud",LF
-						db  "19.2K baud",LF
+						db	"28.8K baud",LF
+						db	"19.2K baud",LF
 						db	"9600 baud",LF
-						db  "4800 baud",LF
-						db  "2400 baud",NULL
+						db	"4800 baud",LF
+						db	"2400 baud",NULL
 
 g_szValueCfgBaud115_2:	db	"115.2K",NULL
 g_szValueCfgBaud57_6:	db	"57.6K",NULL
@@ -376,10 +376,10 @@ g_szHelpDrvBlockMode:	db	"Block Mode will speed up transfers since multiple sect
 						db	" Normally Block Mode should always be kept enabled but there is at"
 						db	" least one drive with buggy Block Mode implementation.",NULL
 
-g_szHelpDrvWriteCache:	db	"Modern Hard Drives have large internal write cache."
-						db	" The cache will speed up writes since the drive can free the bus right after data has been written in cache."
-						db	" The drive then starts to write the data from cache by itself."
-						db	" That can be dangerous since all unwritten data in cache is lost if power is turned off or the system is reset."
+g_szHelpDrvWriteCache:	db	"Modern Hard Drives have a large amount of internal write cache."
+						db	" The cache will speed up writes since the drive can free the bus right after data has been written to cache."
+						db	" The drive then starts to write the data from cache to disk by itself."
+						db	" This can be dangerous since all unwritten data in cache is lost if power is turned off or the system is reset."
 						db	" Modern operating systems will flush the cache when user shuts down the system."
 						db	" DOS does not have that sort of protection so it is up to the user to make sure cache is flushed."
 						db	" WARNING!!! Write cache should be left disabled.",NULL

@@ -216,25 +216,22 @@ ConfigurationMenu_EnterMenuOrModifyItemVisibility:
 ALIGN JUMP_ALIGN
 .DisableAllIdeControllerMenuitems:
 	mov		cx, MAX_ALLOWED_IDE_CONTROLLERS-1
-	mov		bx, g_MenuitemConfigurationSecondaryIdeController
-ALIGN JUMP_ALIGN
-.DisableNextIdeControllerMenuitem:
-	call	.DisableMenuitemFromCSBX
-	add		bx, BYTE MENUITEM_size
-	loop	.DisableNextIdeControllerMenuitem
-	ret
+	mov		ax, DisableMenuitemFromCSBX
+	jmp		SHORT .Go
 
 ALIGN JUMP_ALIGN
 .EnableIdeControllerMenuitemsBasedOnConfiguration:
 	call	Buffers_GetIdeControllerCountToCX
 	dec		cx			; Primary always enabled
 	jz		SHORT .PrimaryControllerAlreadyEnabled
+	mov		ax, EnableMenuitemFromCSBX
+.Go:
 	mov		bx, g_MenuitemConfigurationSecondaryIdeController
 ALIGN JUMP_ALIGN
-.EnableNextIdeControllerMenuitem:
-	call	.EnableMenuitemFromCSBX
+.EnableOrDisableNextIdeControllerMenuitem:
+	call	ax
 	add		bx, BYTE MENUITEM_size
-	loop	.EnableNextIdeControllerMenuitem
+	loop	.EnableOrDisableNextIdeControllerMenuitem
 .PrimaryControllerAlreadyEnabled:
 	ret
 
@@ -287,7 +284,7 @@ ALIGN JUMP_ALIGN
 .EnableOrDisableIdleTimeout:
 	call	Buffers_GetRomvarsFlagsToAX
 	mov		bx, g_MenuitemConfigurationIdleTimeout
-	test	ax, FLG_ROMVARS_MODULE_FEATURE_SETS
+	test	ax, FLG_ROMVARS_MODULE_POWER_MANAGEMENT
 	jz		SHORT .DisableMenuitemFromCSBX
 	; Fall to .EnableMenuitemFromCSBX
 
@@ -304,14 +301,11 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 .EnableMenuitemFromCSBX:
-	or		BYTE [cs:bx+MENUITEM.bFlags], FLG_MENUITEM_VISIBLE
-	ret
+	jmp		EnableMenuitemFromCSBX
 
 ALIGN JUMP_ALIGN
 .DisableMenuitemFromCSBX:
-	and		BYTE [cs:bx+MENUITEM.bFlags], ~FLG_MENUITEM_VISIBLE
-	ret
-
+	jmp		DisableMenuitemFromCSBX
 
 
 ;--------------------------------------------------------------------
@@ -418,7 +412,7 @@ ConfigurationMenu_CheckAndMoveSerialDrivesToBottom:
 	test	si, si						; record the first serial controller that we find
 	jnz		.next
 	mov		si, di
-	jmp		.next
+	SKIP2B	f
 
 .notSerial:
 	mov		ax, di						; record the *last* non-serial controller that we find

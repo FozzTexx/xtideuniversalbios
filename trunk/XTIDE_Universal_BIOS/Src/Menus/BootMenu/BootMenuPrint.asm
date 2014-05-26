@@ -124,11 +124,11 @@ BootMenuPrint_RefreshInformation:
 	call	AH8h_GetDriveParameters
 .around:
 
-	mov		ax, g_szFddSizeOr	        				; .PrintXTFloppyType
+	mov		ax, g_szFddSizeOr							; .PrintXTFloppyType
 	test	bl, bl										; Two possibilities? (FLOPPY_TYPE_525_OR_35_DD)
 	jz		SHORT .PushAXAndOutput
 
-	mov		al, (g_szFddUnknown - $$) & 0xff	        ; .PrintUnknownFloppyType
+	mov		al, (g_szFddUnknown - $$) & 0xff			; .PrintUnknownFloppyType
 	cmp		bl, FLOPPY_TYPE_35_ED
 	ja		SHORT .PushAXAndOutput
 
@@ -145,14 +145,14 @@ BootMenuPrint_RefreshInformation:
 ;
 ; Floppy Drive Types:
 ;
-;   0  Handled above
-;   1  FLOPPY_TYPE_525_DD          5 1/4   360K
-;   2  FLOPPY_TYPE_525_HD          5 1/4   1.2M
-;   3  FLOPPY_TYPE_35_DD           3 1/2   720K
-;   4  FLOPPY_TYPE_35_HD           3 1/2   1.44M
-;   5  3.5" ED on some BIOSes      3 1/2   2.88M
-;   6  FLOPPY_TYPE_35_ED		   3 1/2   2.88M
-;   >6 Unknown, handled above
+;	0  Handled above
+;	1  FLOPPY_TYPE_525_DD		   5 1/4   360K
+;	2  FLOPPY_TYPE_525_HD		   5 1/4   1.2M
+;	3  FLOPPY_TYPE_35_DD		   3 1/2   720K
+;	4  FLOPPY_TYPE_35_HD		   3 1/2   1.44M
+;	5  3.5" ED on some BIOSes	   3 1/2   2.88M
+;	6  FLOPPY_TYPE_35_ED		   3 1/2   2.88M
+;	>6 Unknown, handled above
 ;
 ;--------------------------------------------------------------------
 .PrintKnownFloppyType:
@@ -168,7 +168,7 @@ BootMenuPrint_RefreshInformation:
 
 	xor		bh, bh
 	mov		al,FloppyTypes.rgbCapacityMultiplier
-	mul		BYTE [cs:bx+FloppyTypes.rgbCapacity - 1]    ; -1 since 0 is handled above and not in the table
+	mul		BYTE [cs:bx+FloppyTypes.rgbCapacity - 1]	; -1 since 0 is handled above and not in the table
 
 .PushAXAndOutput:
 	push	ax

@@ -227,22 +227,21 @@ InitializePiovarsInSSBPwithSectorCountInAH:
 	mov		[bp+PIOVARS.bSectorsDone], ah		; Zero
 
 	; Get transfer function based on bus type
-	xchg	ax, bx								; Lookup table offset to AX
-	mov		bl, [di+DPT_ATA.bDevice]
-%ifdef MODULE_8BIT_IDE_ADVANCED
-	mov		dl, bl
-%endif
+	mov		al, [di+DPT_ATA.bDevice]
 	add		bx, ax
+%ifdef MODULE_8BIT_IDE_ADVANCED
+	cmp		al, DEVICE_8BIT_XTCF_DMA
+%endif
 	mov		ax, [cs:bx]							; Load offset to transfer function
 	mov		[bp+PIOVARS.fnXfer], ax
 
 	; Normalize pointer for PIO-transfers and convert to physical address for DMA transfers
 %ifdef MODULE_8BIT_IDE_ADVANCED
-	cmp		dl, DEVICE_8BIT_XTCF_DMA
 	jb		SHORT IdeTransfer_NormalizePointerInESSI
 
 	; Convert ES:SI to physical address
-%ifdef USE_186			; Bytes	EU Cycles(286)
+%ifdef USE_186
+						; Bytes	EU Cycles(286)
 	mov		ax, es		; 2		2
 	rol		ax, 4		; 3		9
 	mov		dx, ax		; 2		2
@@ -254,8 +253,6 @@ InitializePiovarsInSSBPwithSectorCountInAH:
 	;------------------------------------
 						; 18	24
 %else ; 808x
-
-%if 0
 						; Bytes	EU Cycles(808x)
 	mov		al, 4		; 2		4
 	mov		dx, es		; 2		2
@@ -278,7 +275,7 @@ InitializePiovarsInSSBPwithSectorCountInAH:
 ; (if any) might not be worth the extra 5 bytes.
 ; In other words, we could use a real world test here.
 ;
-%endif ; 0
+%if 0
 						; Bytes	EU Cycles(808x/286)
 	xor		dx, dx		; 2		3/2
 	mov		ax, es		; 2		2/2
@@ -290,9 +287,11 @@ InitializePiovarsInSSBPwithSectorCountInAH:
 	adc		dl, dh		; 2		3/2
 	mov		es, dx		; 2		2/2
 	;------------------------------------
-%endif					; 26	29/26
-	clc
-	ret
+						; 26	29/26
+%endif ; 0
+%endif
+
+	ret		; With CF cleared (taken care of by the physical address conversion)
 %endif ; MODULE_8BIT_IDE_ADVANCED
 	; Fall to IdeTransfer_NormalizePointerInESSI if no MODULE_8BIT_IDE_ADVANCED
 

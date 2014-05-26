@@ -42,20 +42,20 @@ Buffers_Clear:
 ;		Nothing
 ;	Returns:
 ;		ZF:		Set if supported version of XTIDE Universal BIOS is loaded
-;				Cleared no file or some other file is loaded
+;				Cleared if no file or some other file is loaded
 ;	Corrupts registers:
 ;		CX, SI, DI, ES
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Buffers_IsXtideUniversalBiosLoaded:
 	test	WORD [cs:g_cfgVars+CFGVARS.wFlags], FLG_CFGVARS_FILELOADED | FLG_CFGVARS_ROMLOADED
-	jz		SHORT .NoFileOrBiosLoaded
-
-	call	Buffers_GetFileBufferToESDI
-	jmp		SHORT Buffers_IsXtideUniversalBiosSignatureInESDI
-.NoFileOrBiosLoaded:
+	jnz		SHORT .FileOrBiosLoaded
 	or		cl, 1		; Clear ZF
 	ret
+
+.FileOrBiosLoaded:
+	call	Buffers_GetFileBufferToESDI
+	; Fall to Buffers_IsXtideUniversalBiosSignatureInESDI
 
 
 ;--------------------------------------------------------------------
@@ -64,7 +64,7 @@ Buffers_IsXtideUniversalBiosLoaded:
 ;		ES:DI:	Ptr to possible XTIDE Universal BIOS location
 ;	Returns:
 ;		ZF:		Set if supported version of XTIDE Universal BIOS is loaded
-;				Cleared no file or some other file is loaded
+;				Cleared if no file or some other file is loaded
 ;	Corrupts registers:
 ;		CX, SI
 ;--------------------------------------------------------------------
@@ -182,7 +182,7 @@ Buffers_AppendZeroesIfNeeded:
 	eMOVZX	di, [cs:g_cfgVars+CFGVARS.bEepromType]
 	mov		cx, [cs:di+g_rgwEepromTypeToSizeInWords]
 	sub		cx, [cs:g_cfgVars+CFGVARS.wImageSizeInWords]	; CX = WORDs to append
-	jle		SHORT .NoNeedToAppendZeroes
+	jbe		SHORT .NoNeedToAppendZeroes
 
 	call	Buffers_GetFileBufferToESDI
 	mov		ax, [cs:g_cfgVars+CFGVARS.wImageSizeInWords]
