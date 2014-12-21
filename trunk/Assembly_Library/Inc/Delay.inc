@@ -4,8 +4,8 @@
 %define DELAY_INC
 
 ;--------------------------------------------------------------------
-; Clears prefetch queue by jumping to next instruction.
-; This delays much more than nop instruction of fast systems.
+; Clears prefetch queue by jumping to the next instruction.
+; This delays much more than the nop instruction on fast systems.
 ;
 ; JMP_DELAY
 ;	Parameters

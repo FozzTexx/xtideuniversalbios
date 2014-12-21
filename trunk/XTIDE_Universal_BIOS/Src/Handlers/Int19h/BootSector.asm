@@ -41,19 +41,15 @@ BootSector_TryToLoadFromDriveDL_AndBoot:
 	; it most likely mean no diskette in drive. This way we do not
 	; display error code every time user intends to boot from hard disk
 	; when A then C boot order is used.
+	test	dl, dl
 	js		SHORT .PrintFailedToLoadErrorCode	; Hard Drive
 	cmp		ah, RET_HD_TIMEOUT
 	je		SHORT .ReturnWithCFclearSinceFailedToLoadBootSector
 	cmp		ah, RET_HD_NOMEDIA
 	je		SHORT .ReturnWithCFclearSinceFailedToLoadBootSector
 .PrintFailedToLoadErrorCode:
-%ifdef USE_186
-	push	.ReturnWithCFclearSinceFailedToLoadBootSector
-	jmp		DetectPrint_FailedToLoadFirstSector
-%else
 	call	DetectPrint_FailedToLoadFirstSector
-	jmp		.ReturnWithCFclearSinceFailedToLoadBootSector
-%endif
+	jmp		SHORT .ReturnWithCFclearSinceFailedToLoadBootSector
 
 
 .FirstSectorLoadedToESBX:
@@ -62,7 +58,7 @@ BootSector_TryToLoadFromDriveDL_AndBoot:
 	cmp		WORD [es:bx+510], 0AA55h		; Valid boot sector?
 	jne		SHORT .FirstHardDiskSectorNotBootable
 .AlwaysBootFromFloppyDriveForBooterGames:
-	stc		; Boot Sector loaded succesfully
+	stc		; Boot Sector loaded successfully
 	jmp		SHORT Int19_JumpToBootSectorOrRomBoot
 
 .FirstHardDiskSectorNotBootable:

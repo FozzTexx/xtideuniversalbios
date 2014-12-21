@@ -115,13 +115,11 @@ CreateDPT_FromAtaInformation:
 .JumpOverSetBitForAssistedLBA:
 	jnz		SHORT .NothingToChange
 
-.LimitHeadsForLargeAddressingMode:
 	; We cannot have 16 P-Heads heads in Revised ECHS mode (8193 or more cylinders)
 	; but 16 heads are allowed when there are 8192 or less cylinders (ECHS).
 	; Both of these are LARGE modes so do not confuse with NORMAL mode.
 	call	AtaGeometry_IsDriveSmallEnoughForECHS
-	jc		SHORT .NothingToChange
-	dec		bx						; Adjust 16 P-Heads to 15
+	adc		bx, -1					; Adjust 16 P-Heads to 15 if needed
 
 .NothingToChange:
 	or		[di+DPT.bFlagsLow], cl	; Shift count and addressing mode

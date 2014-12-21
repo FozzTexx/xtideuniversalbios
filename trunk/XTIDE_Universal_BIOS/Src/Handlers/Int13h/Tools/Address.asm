@@ -36,8 +36,8 @@ SECTION .text
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Address_ExtractLCHSparametersFromOldInt13hAddress:
-	mov		bl, cl				; Copy sector number...
-	and		bl, 3Fh				; ...and limit to 1...63
+	mov		bl, 3Fh				; Load sector number mask
+	and		bl, cl				; Sector number now in BL
 	sub		cl, bl				; Remove from cylinder number high
 	eROL_IM	cl, 2				; High bits to beginning
 	mov		bh, dh				; Copy Head number
@@ -74,14 +74,18 @@ ConvertLargeModeLCHStoPCHS:
 
 	; (LCylinder << n) + (LHead / PHeadCount)
 	mov		dx, cx					; Copy L-CHS Cylinder number to DX
-	mov		cl, [di+DPT.bFlagsLow]	; Load shift count
-	and		cl, MASKL_DPT_CHS_SHIFT_COUNT
+	mov		cl, MASKL_DPT_CHS_SHIFT_COUNT	; Load shift count mask
+	and		cl, [di+DPT.bFlagsLow]	; Shift count now in CL
 	shl		dx, cl					; DX = LCylinder << n
 	add		ax, dx					; AX = P-CHS Cylinder number
 	xchg	cx, ax					; Move P-CHS Cylinder number to CX
 DoNotConvertLCHS:
 	ret
 
+; *FIXME* The above function description doesn't match the code.
+; If CX has a maximum value of 1023 on entry then there is no way CX can be 16382 on return.
+; 1023 SHL 3 (MASKL_DPT_CHS_SHIFT_COUNT) is 8184. With the addition of AX (at most 255?)
+; the result is 8439.
 
 ;--------------------------------------------------------------------
 ; Address_OldInt13hAddressToIdeAddress
@@ -101,18 +105,19 @@ DoNotConvertLCHS:
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 Address_OldInt13hAddressToIdeAddress:
-		call	Address_ExtractLCHSparametersFromOldInt13hAddress
-		ACCESSDPT__GET_UNSHIFTED_TRANSLATE_MODE_TO_AXZF
+	call	Address_ExtractLCHSparametersFromOldInt13hAddress
+	mov		al, [di+DPT.bFlagsLow]
+	and		al, MASKL_DPT_TRANSLATEMODE
 
 ;;; 0: ADDRESSING_MODE_NORMAL
-		jz		SHORT DoNotConvertLCHS
+	jz		SHORT DoNotConvertLCHS
 
 ;;; 1: ADDRESSING_MODE_LARGE
-		test	al, FLGL_DPT_ASSISTED_LBA
-		jz		SHORT ConvertLargeModeLCHStoPCHS
+	test	al, FLGL_DPT_ASSISTED_LBA
+	jz		SHORT ConvertLargeModeLCHStoPCHS
 
 ;;; 2: ADDRESSING_MODE_ASSISTED_LBA
-		; Fall through to ConvertAssistedLBAModeLCHStoLBARegisterValues
+	; Fall to ConvertAssistedLBAModeLCHStoLBARegisterValues
 
 
 ;---------------------------------------------------------------------

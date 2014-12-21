@@ -180,7 +180,7 @@ DetectPrint_RomFoundAtSegment:
 	mov		ax, ROMVARS.szTitle
 	push	ax
 	push	di							; BIOS segment
-	add		al, ROMVARS.szVersion - ROMVARS.szTitle
+	mov		al, ROMVARS.szVersion & 0FFh
 	push	ax
 %else
 	; szTitle and szVersion have the high order byte of their addresses zero,

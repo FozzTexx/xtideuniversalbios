@@ -37,7 +37,7 @@ SECTION .text
 ;		DH:		Starting head number (0...255)
 ;	Returns with INTPACK in SS:BP:
 ;		AH:		Int 13h/40h floppy return status
-;		AL:		Number of sectors actually verified (only valid if CF set for someBIOSes)
+;		AL:		Number of sectors actually verified (only valid if CF set for some BIOSes)
 ;		CF:		0 if successful, 1 if error
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN

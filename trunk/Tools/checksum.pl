@@ -56,6 +56,25 @@ if( $bytes > $desiredSize - 1 )
 }
 
 $fixzero = chr(0);
+
+#
+# Compatibility fix for 3Com 3C503 cards. They use 8 KB ROMs and return 8080h as the last word of the ROM.
+#
+if( $desiredSize == 8192 ) {
+	if( $bytes < $desiredSize - 3 ) {
+		while( $bytes < $desiredSize - 3 ) {
+			print FILE $fixzero;
+			$bytes++;
+		}
+		$fixl = ($cs == 0 ? 0 : 256 - $cs);
+		$fix = chr($fixl).chr($cs);
+		print FILE $fix;
+		$bytes += 2;
+	} else {
+		print "Warning! ".$ARGV[0]." cannot be used on a 3Com 3C503 card!\n";
+	}
+}
+
 while( $bytes < $desiredSize - 1 )
 {
 	print FILE $fixzero;

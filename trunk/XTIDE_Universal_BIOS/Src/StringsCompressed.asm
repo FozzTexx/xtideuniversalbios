@@ -490,37 +490,37 @@ StringsCompressed_NormalBase     equ   58
 StringsCompressed_FormatsBegin   equ   20
 
 StringsCompressed_TranslatesAndFormats:
-        db     32  ; 0
-        db     172  ; 1
-        db     171  ; 2
-        db     179  ; 3
-        db     175  ; 4
-        db     33  ; 5
-        db     34  ; 6
-        db     44  ; 7
-        db     45  ; 8
-        db     46  ; 9
-        db     47  ; 10
-        db     49  ; 11
-        db     50  ; 12
-        db     51  ; 13
-        db     53  ; 14
-        db     54  ; 15
-        db     56  ; 16
-        db     200  ; 17
-        db     181  ; 18
-        db     48  ; 19
-        db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_2_I)    ; 20
-        db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_u)    ; 21
-        db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_5_u)    ; 22
-        db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_x)    ; 23
-        db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_5_x)    ; 24
-        db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_nl)    ; 25
-        db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_2_u)    ; 26
-        db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_A)    ; 27
-        db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_c)    ; 28
-        db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_s)    ; 29
-        db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_z)    ; 30
+		db     32	; 0
+		db     172	; 1
+		db     171	; 2
+		db     179	; 3
+		db     175	; 4
+		db     33	; 5
+		db     34	; 6
+		db     44	; 7
+		db     45	; 8
+		db     46	; 9
+		db     47	; 10
+		db     49	; 11
+		db     50	; 12
+		db     51	; 13
+		db     53	; 14
+		db     54	; 15
+		db     56	; 16
+		db     200	; 17
+		db     181	; 18
+		db     48	; 19
+		db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_2_I)	; 20
+		db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_u)	; 21
+		db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_5_u)	; 22
+		db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_x)	; 23
+		db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_5_x)	; 24
+		db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_nl)	; 25
+		db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_2_u)	; 26
+		db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_A)	; 27
+		db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_c)	; 28
+		db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_s)	; 29
+		db     (DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_z)	; 30
 
 %ifndef CHECK_FOR_UNUSED_ENTRYPOINTS
 %if DisplayFormatCompressed_BaseFormatOffset < DisplayFormatCompressed_Format_2_I || DisplayFormatCompressed_BaseFormatOffset - DisplayFormatCompressed_Format_2_I > 255
@@ -559,40 +559,40 @@ StringsCompressed_TranslatesAndFormats:
 %endif
 
 ;; translated usage stats
-;; 33:1
-;; 32:35
-;; 181:1
-;; 53:2
-;; 48:2
-;; 200:1
-;; 46:3
-;; 179:8
+;; 54:1
+;; 47:2
+;; 175:1
+;; 49:1
 ;; 44:1
 ;; 50:2
-;; 51:3
-;; 47:2
+;; 200:1
+;; 181:1
 ;; 172:2
-;; 34:3
-;; 49:1
-;; 56:8
 ;; 45:2
-;; 175:1
+;; 56:8
+;; 33:1
+;; 53:2
+;; 179:8
 ;; 171:2
-;; 54:1
+;; 51:3
+;; 34:3
+;; 48:2
+;; 46:3
+;; 32:35
 ;; total translated: 20
 
 ;; format usage stats
-;; A:4
-;; 2-u:1
-;; 5-u:2
-;; x:5
-;; s:14
-;; 5-x:1
 ;; nl:12
+;; x:5
+;; A:4
+;; 5-x:1
+;; 2-u:1
+;; z:2
+;; 5-u:2
+;; s:14
 ;; 2-I:1
 ;; u:6
 ;; c:13
-;; z:2
 ;; total format: 11
 
 ;; alphabet usage stats

@@ -115,23 +115,9 @@ ALIGN MENU_JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN MENU_JUMP_ALIGN
 MenuScrollbars_MoveHighlightedItemByAX:
-	mov		cx, [bp+MENUINIT.wHighlightedItem]
-	add		cx, ax
-	; Fall to .RotateItemInCX
-
-;--------------------------------------------------------------------
-; .RotateItemInCX
-;	Parameters
-;		CX:		Possibly under of overflown item to be rotated
-;		SS:BP:	Ptr to MENU
-;	Returns:
-;		CX:		Valid item index
-;	Corrupts registers:
-;		DX
-;--------------------------------------------------------------------
-;.RotateItemInCX:
 	mov		dx, [bp+MENUINIT.wItems]
-	test	cx, cx
+	add		ax, [bp+MENUINIT.wHighlightedItem]
+	xchg	cx, ax
 	js		SHORT .RotateNegativeItemInCX
 	sub		cx, dx
 	jae		SHORT .ScrollPageForNewItemInCX

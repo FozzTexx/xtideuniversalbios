@@ -106,13 +106,17 @@ AtaID_VerifyFromESSI:
 AtaID_ModifyESSIforUserDefinedLimitsAndReturnTranslateModeInDX:
 	call	AccessDPT_GetPointerToDRVPARAMStoCSBX
 	push	ds
-	push	es
-	pop		ds		; DS:SI now points to ATA information
+
+	push	cs
+	pop		ds
 
 	; Load User Defined CHS or LBA to CX:AX
-	mov		dx, [cs:bx+DRVPARAMS.wFlags]
-	mov		ax, [cs:bx+DRVPARAMS.wCylinders]		; Or .dwMaximumLBA
-	mov		cx, [cs:bx+DRVPARAMS.wHeadsAndSectors]	; Or .dwMaximumLBA+2
+	mov		dx, [bx+DRVPARAMS.wFlags]
+	mov		ax, [bx+DRVPARAMS.wCylinders]		; Or .dwMaximumLBA
+	mov		cx, [bx+DRVPARAMS.wHeadsAndSectors]	; Or .dwMaximumLBA+2
+
+	push	es
+	pop		ds		; DS:SI now points to ATA information
 
 	; * User defined CHS *
 	test	dl, FLG_DRVPARAMS_USERCHS

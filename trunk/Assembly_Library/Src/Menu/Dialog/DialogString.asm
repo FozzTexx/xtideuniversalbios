@@ -98,32 +98,16 @@ GetStringFromUser:
 	lds		si, [bp+DIALOG.fpDialogIO]
 	mov		cx, [si+STRING_DIALOG_IO.wBufferSize]
 	les		di, [si+STRING_DIALOG_IO.fpReturnBuffer]
-	call	.GetCharacterFilterFunctionToDX
+	mov		dx, [si+STRING_DIALOG_IO.fnCharFilter]
+	test	dx, dx
+	jnz		SHORT .CharacterFilterFunctionInDX
+	mov		dx, Char_CharIsValid
 
+.CharacterFilterFunctionInDX:
 	call	Keyboard_ReadUserInputtedStringToESDIWhilePrinting
 	jz		SHORT .UserCancellation
 
 	mov		BYTE [si+STRING_DIALOG_IO.bUserCancellation], FALSE
 	mov		[si+STRING_DIALOG_IO.wReturnLength], cx
 .UserCancellation:
-	ret
-
-;--------------------------------------------------------------------
-; .GetCharacterFilterFunctionToDX
-;	Parameters
-;		DS:SI:	Ptr to STRING_DIALOG_IO
-;		SS:BP:	Ptr to DIALOG
-;	Returns:
-;		CS:DX:	Ptr to character filter function
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-.GetCharacterFilterFunctionToDX:
-	mov		dx, [si+STRING_DIALOG_IO.fnCharFilter]
-	test	dx, dx
-	jnz		SHORT .ReturnFilterFunctionInDX
-	mov		dx, Char_CharIsValid
-ALIGN JUMP_ALIGN, ret
-.ReturnFilterFunctionInDX:
 	ret

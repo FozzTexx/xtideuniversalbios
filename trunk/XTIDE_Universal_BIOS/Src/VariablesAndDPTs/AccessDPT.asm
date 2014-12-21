@@ -57,7 +57,7 @@ AccessDPT_GetDeviceControlByteToAL:
 	test	BYTE [di+DPT.bFlagsLow], FLGL_DPT_ENABLE_IRQ	; Clears CF
 
 %ifdef USE_UNDOC_INTEL
-	eSALC	; Clears AL using CF while preserving flags
+	salc	; Clears AL using CF while preserving flags
 %endif
 
 	jnz		SHORT .EnableDeviceIrq
@@ -162,26 +162,6 @@ AccessDPT_GetPointerToDRVPARAMStoCSBX:
 ;		Nothing
 ;--------------------------------------------------------------------
 AccessDPT_GetIdevarsToCSBX:
-	eMOVZX	bx, BYTE [di+DPT.bIdevarsOffset]
+	eMOVZX	bx, [di+DPT.bIdevarsOffset]
 	ret
 
-
-;--------------------------------------------------------------------
-; ACCESSDPT__GET_UNSHIFTED_TRANSLATE_MODE_TO_AXZF
-;	Parameters:
-;		DS:DI:	Ptr to Disk Parameter Table
-;	Returns:
-;		AX:		Translate Mode (TRANSLATEMODE_NORMAL, TRANSLATEMODE_LARGE or TRANSLATEMODE_ASSISTED_LBA)
-;				unshifted (still shifted where it is in bFlagsLow)
-;		ZF:		Set based on value in AL
-;	Corrupts registers:
-;		Nothing
-;--------------------------------------------------------------------
-;
-; Converted to a macro since only called in two places, and the call/ret overhead
-; is not worth it for these two instructions (4 bytes total)
-;
-%macro ACCESSDPT__GET_UNSHIFTED_TRANSLATE_MODE_TO_AXZF 0
-	mov		al, [di+DPT.bFlagsLow]
-	and		ax, BYTE MASKL_DPT_TRANSLATEMODE
-%endmacro

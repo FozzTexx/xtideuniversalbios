@@ -82,9 +82,9 @@ SerialServer_SendReceive:
 		out		dx,al
 
 %ifdef USE_UNDOC_INTEL
-		eSALC	; Clear AL using CF
+		salc	; Clear AL using CF
 %else
-		xor		ax,ax
+		xor		al, al
 %endif
 		inc		dx				; divisor high
 		push	dx
@@ -107,9 +107,9 @@ SerialServer_SendReceive:
 
 		pop		dx				; base, interrupts disabled
 %ifdef USE_UNDOC_INTEL
-		eSALC	; Clear AL using CF
+		salc	; Clear AL using CF
 %else
-		xor		ax,ax
+		xor		al, al
 %endif
 		out		dx,al
 

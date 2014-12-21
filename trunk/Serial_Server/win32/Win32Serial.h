@@ -54,7 +54,7 @@ public:
 		{
 			log( 0, "Opening named pipe %s (simulating %s baud)", name, baudRate->display );
 
-			pipe = CreateNamedPipeA( name, PIPE_ACCESS_DUPLEX, PIPE_TYPE_BYTE|PIPE_REJECT_REMOTE_CLIENTS, 2, 1024, 1024, 0, NULL );
+			pipe = CreateNamedPipeA( name, PIPE_ACCESS_DUPLEX, PIPE_TYPE_BYTE, 2, 1024, 1024, 0, NULL );
 			if( pipe == INVALID_HANDLE_VALUE )
 				log( -1, "Could not CreateNamedPipe " PIPENAME );
 

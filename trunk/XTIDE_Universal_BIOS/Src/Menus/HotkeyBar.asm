@@ -68,8 +68,8 @@ HotkeyBar_DrawToTopOfScreen:
 ;--------------------------------------------------------------------
 .PrintFloppyDriveHotkeys:
 	call	FloppyDrive_GetCountToAX
-	test	ax, ax		; Any Floppy Drives?
-	jz		SHORT .SkipFloppyDriveHotkeys
+	xchg	cx, ax		; Any Floppy Drives?
+	jcxz	.SkipFloppyDriveHotkeys
 
 	mov		ax, (ANGLE_QUOTE_RIGHT << 8) | DEFAULT_FLOPPY_DRIVE_LETTER
 	mov		cl, [es:BOOTVARS.hotkeyVars+HOTKEYVARS.bFddLetter]

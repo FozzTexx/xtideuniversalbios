@@ -321,6 +321,7 @@ Int13h_CallPreviousInt13hHandler:
 
 
 ;--------------------------------------------------------------------
+; Int13h_SetErrorCodeToBdaAndToIntpackInSSBPfromAH_ALHasDriveNumber
 ; Int13h_SetErrorCodeToBdaAndToIntpackInSSBPfromAH
 ; Int13h_SetErrorCodeToIntpackInSSBPfromAH
 ;	Parameters:
@@ -329,7 +330,7 @@ Int13h_CallPreviousInt13hHandler:
 ;	Returns:
 ;		SS:BP:	Ptr to IDEPACK with error condition set
 ;	Corrupts registers:
-;		DS, DI
+;		DS, BX, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 %ifdef MODULE_SERIAL_FLOPPY

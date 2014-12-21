@@ -146,7 +146,7 @@ AH48h_HandlerForGetExtendedDriveParameters:
 	; since the same buffer is used for all drives so it contains parameters
 	; from previously scanned drive.
 .DoNotSetChsFlag:
-	eMOVZX	dx, BYTE [es:si+DPT.bPchsHeads]
+	eMOVZX	dx, [es:si+DPT.bPchsHeads]
 	mov		[di+EDRIVE_INFO.dwHeads], dx
 	mov		[di+EDRIVE_INFO.dwHeads+2], cx
 
@@ -158,7 +158,5 @@ AH48h_HandlerForGetExtendedDriveParameters:
 	mov		[di+EDRIVE_INFO.dwCylinders], dx
 	mov		[di+EDRIVE_INFO.dwCylinders+2], cx
 
-.ReturnWithSuccess:
-	xor		ax, ax
-.ReturnWithError:
+	xor		ax, ax		; Success
 	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH

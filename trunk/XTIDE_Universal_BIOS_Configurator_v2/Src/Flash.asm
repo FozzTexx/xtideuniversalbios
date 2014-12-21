@@ -82,7 +82,7 @@ Flash_SinglePageWithFlashvarsInSSBP:
 	je		SHORT .NoNeedToFlashThePage	; CF cleared
 
 	push	cx
-	call	.GetSdpCommandFunctionToDXwithFlashvarsInSSBP
+	call	.GetSdpCommandFunctionToAXwithFlashvarsInSSBP
 	mov		cx, [bp+FLASHVARS.wEepromPageSize]
 	mov		si, [bp+FLASHVARS.fpNextSourcePage]
 	les		di, [bp+FLASHVARS.fpNextComparisonPage]
@@ -93,20 +93,20 @@ Flash_SinglePageWithFlashvarsInSSBP:
 	ret
 
 ;--------------------------------------------------------------------
-; .GetSdpCommandFunctionToDXwithFlashvarsInSSBP
+; .GetSdpCommandFunctionToAXwithFlashvarsInSSBP
 ;	Parameters:
 ;		SS:BP:	Ptr to FLASHVARS
 ;	Returns:
-;		DX:		Ptr to SDP Command function
+;		AX:		Ptr to SDP Command function
 ;	Corrupts registers:
 ;		BX, SI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
-.GetSdpCommandFunctionToDXwithFlashvarsInSSBP:
+.GetSdpCommandFunctionToAXwithFlashvarsInSSBP:
 	eMOVZX	bx, [bp+FLASHVARS.bEepromSdpCommand]
 	mov		si, [cs:bx+.rgpSdpCommandToEepromTypeLookupTable]
 	mov		bl, [bp+FLASHVARS.bEepromType]
-	mov		dx, [cs:bx+si]
+	mov		ax, [cs:bx+si]
 	ret
 
 ALIGN WORD_ALIGN
@@ -181,15 +181,17 @@ AreSourceAndDestinationPagesEqualFromFlashvarsInSSBP:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		Nothing
+;		AX
 ;--------------------------------------------------------------------
 %macro DISABLE_SDP 2
-	mov		BYTE [%1], 0AAh
-	mov		BYTE [%2], 55h
-	mov		BYTE [%1], 80h
-	mov		BYTE [%1], 0AAh
-	mov		BYTE [%2], 55h
-	mov		BYTE [%1], 20h
+	mov		ax, 80AAh
+%%Again:
+	mov		[%1], al		; 0AAh
+	shr		al, 1
+	mov		[%2], al		; 55h
+	mov		[%1], ah		; 80h/20h
+	xor		ax, 0A0FFh
+	jns		SHORT %%Again
 %endmacro
 
 ;--------------------------------------------------------------------
@@ -214,12 +216,12 @@ WriteSdpEnableCommandFor2864:
 ALIGN JUMP_ALIGN
 WriteSdpEnableCommandFor2864mod:
 	ENABLE_SDP 155Ch, 0AA3h
-	jmp		ReturnFromSdpCommand
+	jmp		SHORT ReturnFromSdpCommand
 
 ALIGN JUMP_ALIGN
 WriteSdpEnableCommandFor28256or28512:
 	ENABLE_SDP 5555h, 2AAAh
-	jmp		ReturnFromSdpCommand
+	jmp		SHORT ReturnFromSdpCommand
 
 
 ALIGN JUMP_ALIGN
@@ -240,16 +242,17 @@ WriteSdpDisableCommandFor2864mod:
 ALIGN JUMP_ALIGN
 WriteSdpDisableCommandFor28256or28512:
 	DISABLE_SDP 5555h, 2AAAh
-DoNotWriteAnySdpCommand:
 	jmp		SHORT ReturnFromSdpCommand
+
+DoNotWriteAnySdpCommand EQU ReturnFromSdpCommand
 
 
 ;--------------------------------------------------------------------
-; WriteNextChangedByteFromPageToEeprom
+; WriteAllChangedBytesFromPageToEeprom
 ;	Parameters:
-;		CX:		Number of bytes left to write
-;		DX:		Offset to SDP command function
+;		AX:		Offset to SDP command function
 ;		BX:		Offset to next destination byte
+;		CX:		Number of bytes left to write
 ;		SI:		Offset to next source byte
 ;		ES:DI:	Ptr to next comparison byte
 ;		SS:BP:	Ptr to FLASHVARS
@@ -257,17 +260,17 @@ DoNotWriteAnySdpCommand:
 ;		CF:		Set if polling timeout error
 ;				Cleared if page written successfully
 ;	Corrupts registers:
-;		AX, BX, CX, SI, DI, DS, ES
+;		AX, BX, CX, DX, SI, DI, DS, ES
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 WriteAllChangedBytesFromPageToEeprom:
-	mov		ax, [bp+FLASHVARS.fpNextSourcePage+2]		; AX = Source segment
+	mov		dx, [bp+FLASHVARS.fpNextSourcePage+2]		; DX = Source segment
 	mov		ds, [bp+FLASHVARS.fpNextDestinationPage+2]	; DS = EEPROM segment
 	cli						; Disable interrupts
-	jmp		dx				; Write SDP command (once to the beginning of page)
+	jmp		ax				; Write SDP command (once to the beginning of page)
 ALIGN JUMP_ALIGN
 ReturnFromSdpCommand:
-	mov		ds, ax			; DS:SI now points to source byte
+	mov		ds, dx			; DS:SI now points to source byte
 
 ALIGN JUMP_ALIGN
 .WriteActualDataByteAfterSdpCommand:
@@ -277,7 +280,7 @@ ALIGN JUMP_ALIGN
 
 	mov		ds, [bp+FLASHVARS.fpNextDestinationPage+2]	; DS:BX now points to EEPROM
 	mov		[bx], al		; Write byte to EEPROM
-	mov		ds, [bp+FLASHVARS.fpNextSourcePage+2]		; Restore DS
+	mov		ds, dx			; Restore DS
 	mov		[bp+FLASHVARS.wLastOffsetWritten], bx
 	mov		[bp+FLASHVARS.bLastByteWritten], al
 
