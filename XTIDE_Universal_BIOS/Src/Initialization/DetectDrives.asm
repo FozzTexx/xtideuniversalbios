@@ -71,9 +71,9 @@ DetectDrives_FromAllIDEControllers:
 	je		.DriveDetectLoop
 %endif
 
-	mov		al,[cs:ROMVARS.wFlags]			; Configurator set to always scan?
-	or		al,[es:BDA.bKBFlgs1]			; Or, did the user hold down the ALT key?
-	and		al,8							; 8 = alt key depressed, same as FLG_ROMVARS_SERIAL_ALWAYSDETECT
+	mov		al, [cs:ROMVARS.wFlags]			; Configurator set to always scan?
+	or		al, [es:BDA.bKBFlgs1]			; Or, did the user hold down the ALT key?
+	and		al, 8							; 8 = alt key depressed, same as FLG_ROMVARS_SERIAL_ALWAYSDETECT
 	jnz		.DriveDetectLoop
 %endif
 
@@ -88,10 +88,8 @@ DetectDrives_FromAllIDEControllers:
 ; FindDPT_ForDriveNumber will not find any drives that are ours.
 ;
 	mov		cx, [RAMVARS.wDrvCntAndFlopCnt]		; Our count of hard disks
-
 	mov		al, [es:BDA.bHDCount]
-	add		cl, al						; Add our drives to the system count
-	mov		[es:BDA.bHDCount], cl
+	add		[es:BDA.bHDCount], cl		; Add our drives to the system count
 	or		al, 80h						; Or in hard disk flag
 	mov		[RAMVARS.bFirstDrv], al		; Store first drive number
 
@@ -117,12 +115,12 @@ DetectDrives_FromAllIDEControllers:
 	eROR_IM	al, 2							; move to bits 6-7
 	inc		ax								; low order bit, indicating floppy drive exists
 
-	mov		ah, [es:BDA.wEquipment]			; Load Equipment WORD low byte
-	and		ah, 03eh						; Mask off drive number and drives present bit
+	mov		ah, 3Eh							; AND mask to AH (all bits set except floppy drive count/present)
+	and		ah, [es:BDA.wEquipment]			; Load Equipment WORD low byte and mask off drive number and drives present bit
 	or		al, ah							; Or in new values
 	mov		[es:BDA.wEquipment], al			; and store
 
-	mov		al, 1eh							; BDA pointer to Floppy DPT
+	mov		al, 1Eh							; BDA pointer to Floppy DPT
 	mov		si, AH8h_FloppyDPT
 	call	Interrupts_InstallHandlerToVectorInALFromCSSI
 

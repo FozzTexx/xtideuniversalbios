@@ -141,7 +141,6 @@ AtaGeometry_GetPCHStoAXBLBHfromAtaInfoInESSI:
 ;--------------------------------------------------------------------
 ; GetSectorCountToDXAXfromCHSinAXBLBH
 ;	Parameters:
-;		ES:SI:	Ptr to 512-byte ATA information read from the drive
 ;		AX:		Number of cylinders (1...16383)
 ;		BL:		Number of heads (1...255)
 ;		BH:		Number of sectors per track (1...63)
@@ -327,9 +326,9 @@ ConvertChsSectorCountFromDXAXtoLbaAssistedLCHSinAXBLBH:
 .CompareNextValidNumberOfHeads:
 	cmp		ax, cx
 	jbe		SHORT .NumberOfHeadsNowInCX
-	eSHL_IM	cl, 1						; Double number of heads
-	jnz		SHORT .CompareNextValidNumberOfHeads	; Reached 256 heads?
-	dec		cl							;  If so, limit heads to 255
+	eSHL_IM	cx, 1						; Double number of heads
+	jpo		SHORT .CompareNextValidNumberOfHeads	; Reached 256 heads?
+	dec		cx							;  If so, limit heads to 255
 .NumberOfHeadsNowInCX:
 	mov		bx, cx						; Number of heads are returned in BL
 	mov		bh, LBA_ASSIST_SPT			; Sectors per Track

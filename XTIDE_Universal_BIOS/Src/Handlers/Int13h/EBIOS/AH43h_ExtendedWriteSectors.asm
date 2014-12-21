@@ -47,10 +47,5 @@ AH43h_HandlerForExtendedWriteSectors:
 	call	Prepare_ByLoadingDapToESSIandVerifyingForTransfer
 	mov		ah, [cs:bx+g_rgbWriteCommandLookup]
 	mov		bx, TIMEOUT_AND_STATUS_TO_WAIT(TIMEOUT_DRQ, FLG_STATUS_DRQ)
-%ifdef USE_186
-	push	AH42h_ReturnFromInt13hAfterStoringErrorCodeFromAHandTransferredSectorsFromCX
-	jmp		Idepack_ConvertDapToIdepackAndIssueCommandFromAH
-%else
 	call	Idepack_ConvertDapToIdepackAndIssueCommandFromAH
 	jmp		SHORT AH42h_ReturnFromInt13hAfterStoringErrorCodeFromAHandTransferredSectorsFromCX
-%endif

@@ -184,8 +184,8 @@ FlashMenu_EnterMenuOrModifyItemVisibility:
 	push	cs
 	pop		ds
 
-	cmp		word [cs:g_cfgVars+CFGVARS.wEepromSegment], 0
-	jnz		.alreadySet
+	cmp		WORD [cs:g_cfgVars+CFGVARS.wEepromSegment], 0
+	jne		.alreadySet
 
 	push	es
 	push	di
@@ -197,7 +197,7 @@ FlashMenu_EnterMenuOrModifyItemVisibility:
 	jc		.storeEepromSegment
 	mov		ax, DEFAULT_EEPROM_SEGMENT
 .storeEepromSegment:
-	mov		word [cs:g_cfgVars+CFGVARS.wEepromSegment], ax
+	mov		WORD [cs:g_cfgVars+CFGVARS.wEepromSegment], ax
 
 .alreadySet:
 

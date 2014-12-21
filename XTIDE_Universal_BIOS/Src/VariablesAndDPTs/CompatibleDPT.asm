@@ -113,20 +113,20 @@ FillToESDIusingDPTfromDSSI:
 ;		AX, CX, DX
 ;--------------------------------------------------------------------
 FillTranslatedDPTtoESDIfromDPTinDSSI:
-	xor		dx, dx						; Clear for checksum
+	cwd									; Clear for checksum
 	call	StoswThenAddALandAHtoDL		; Bytes 0 and 1 (Logical number of cylinders)
 
-	mov		al, BYTE [si+DPT.bLchsHeads]
+	mov		al, [si+DPT.bLchsHeads]
 	mov		ah, TRANSLATED_DPT_SIGNATURE
 	call	StoswThenAddALandAHtoDL		; Bytes 2 (Logical number of heads) and 3 (Axh signature to indicate Translated DPT)
 
-	eMOVZX	ax, BYTE [si+DPT.bPchsSectorsPerTrack]
+	eMOVZX	ax, [si+DPT.bPchsSectorsPerTrack]
 	call	StoswThenAddALandAHtoDL		; Bytes 4 (Physical sectors per track) and 5 (Write Precompensation Cylinder low)
 
-	mov		al, ah
-	call	StoswThenAddALandAHtoDL		; Bytes 6 (Write Precompensation Cylinder high) and 7
+	mov		al, ah						; Zero AX
+	stosw								; Bytes 6 (Write Precompensation Cylinder high) and 7
 
-	xchg	ax, cx						; Device Control byte to AL
+	xchg	cx, ax						; Device Control byte to AL, zero to CX
 	mov		ah, [si+DPT.wPchsCylinders]
 	call	StoswThenAddALandAHtoDL		; Bytes 8 (Drive Control Byte) and 9 (Physical number of cylinders low)
 
@@ -134,8 +134,8 @@ FillTranslatedDPTtoESDIfromDPTinDSSI:
 	mov		ah, [si+DPT.bPchsHeads]
 	call	StoswThenAddALandAHtoDL		; Bytes 10 (Physical number of cylinders high) and 11 (Physical number of heads)
 
-	xor		ax, ax
-	call	StoswThenAddALandAHtoDL		; Bytes 12 and 13 (Landing Zone Cylinder)
+	xchg	cx, ax						; Zero to AX
+	stosw								; Bytes 12 and 13 (Landing Zone Cylinder)
 
 	mov		al, [si+DPT.bLchsSectorsPerTrack]
 %ifndef USE_186
@@ -157,7 +157,7 @@ FillTranslatedDPTtoESDIfromDPTinDSSI:
 ;		DL:		Sum of bytes so far
 ;		DI:		Incremented by 2
 ;	Corrupts registers:
-;		Nothing
+;		AH
 ;--------------------------------------------------------------------
 StoswALandChecksumFromDL:
 	mov		ah, al
@@ -181,14 +181,26 @@ StoswALandChecksumFromDL:
 ;--------------------------------------------------------------------
 FillStandardDPTtoESDIfromDPTinDSSI:
 	stosw				; Bytes 0 and 1 (Physical number of cylinders)
-	eMOVZX	ax, BYTE [si+DPT.bLchsHeads]
+	eMOVZX	ax, [si+DPT.bLchsHeads]
 	stosw				; Bytes 2 (Physical number of heads) and 3
+%ifdef USE_UNDOC_INTEL
+%ifdef USE_386
+	xor		al, al		; Zero AX and clear CF
+%else
+	salc				; Zero AX (CF cleared by eMOVZX above)
+%endif
+%else
 	mov		al, ah		; Zero AX
+%endif
 	stosw				; Bytes 4 and 5 (Write Precompensation Cylinder low)
 	stosw				; Bytes 6 (Write Precompensation Cylinder high) and 7
 	mov		al, cl		; Device control byte to AL
 	stosw				; Bytes 8 (Drive Control Byte) and 9
+%ifdef USE_UNDOC_INTEL
+	salc				; Zero AX (CF cleared above)
+%else
 	mov		al, ah		; Zero AX
+%endif
 	stosw				; Bytes 10 and 11
 	stosw				; Bytes 12 and 13 (Landing Zone Cylinder)
 	mov		al, [si+DPT.bLchsSectorsPerTrack]
@@ -207,22 +219,24 @@ FillStandardDPTtoESDIfromDPTinDSSI:
 ;	Returns:
 ;		ES:BX:	Ptr to Device Parameter Table Extension (DPTE)
 ;	Corrupts registers:
-;		AX, CX, DX, DI
+;		AX, CX, DL, DI
 ;--------------------------------------------------------------------
 CompatibleDPT_CreateDeviceParameterTableExtensionToESBXfromDPTinDSSI:
-	call	GetTemporaryBufferForDPTEtoESDI	; valid until next AH=48h call
+	call	GetTemporaryBufferForDPTEtoESDI	; Valid until next AH=48h call
 
 	; Set 32-bit flag for 32-bit controllers
 	mov		cx, FLG_LBA_TRANSLATION_ENABLED	; DPTE.wFlags
 	cmp		BYTE [si+DPT_ATA.bDevice], DEVICE_32BIT_ATA
 	eCMOVE	cl, FLG_LBA_TRANSLATION_ENABLED | FLG_32BIT_XFER_MODE
 
+	xor		dl, dl							; Clear DL for checksum
+
 	; DPTE.wBasePort
 	mov		ax, [si+DPT.wBasePort]
 	call	StoswThenAddALandAHtoDL			; Bytes 0 and 1
 
 	; DPTE.wControlBlockPort
-	eMOVZX	bx, BYTE [si+DPT.bIdevarsOffset]
+	eMOVZX	bx, [si+DPT.bIdevarsOffset]
 	mov		ax, [cs:bx+IDEVARS.wControlBlockPort]
 	call	StoswThenAddALandAHtoDL			; Bytes 2 and 3
 
@@ -243,15 +257,16 @@ CompatibleDPT_CreateDeviceParameterTableExtensionToESBXfromDPTinDSSI:
 
 	; DPTE.bDmaChannelAndType and DPTE.bPioMode
 	xor		ax, ax
-%ifdef MODULE_ADVANCED_ATA
+%ifndef MODULE_ADVANCED_ATA
+	stosw									; Bytes 8 and 9
+%else
 	or		ah, [si+DPT_ADVANCED_ATA.bPioMode]
 	jz		SHORT .DoNotSetFastPioFlag
-	cmp		WORD [si+DPT_ADVANCED_ATA.wControllerID], BYTE 0
-	je		SHORT .DoNotSetFastPioFlag
-	inc		cx		; FLG_FAST_PIO_ENABLED
+	cmp		WORD [si+DPT_ADVANCED_ATA.wControllerID], BYTE 1
+	sbb		cl, -1	; FLG_FAST_PIO_ENABLED (if .wControllerID > 0)
 .DoNotSetFastPioFlag:
-%endif
 	call	StoswThenAddALandAHtoDL			; Bytes 8 and 9
+%endif
 
 	; Set CHS translation flags and store DPTE.wFlags
 	mov		al, [si+DPT.bFlagsLow]
@@ -260,20 +275,19 @@ CompatibleDPT_CreateDeviceParameterTableExtensionToESBXfromDPTinDSSI:
 	or		cl, FLG_CHS_TRANSLATION_ENABLED
 	test	al, FLGL_DPT_ASSISTED_LBA
 	jz		SHORT .NoChsTranslationOrBitShiftTranslationSet
-	or		cx, LBA_ASSISTED_TRANSLATION << TRANSLATION_TYPE_FIELD_POSITION
+	or		ch, LBA_ASSISTED_TRANSLATION << (TRANSLATION_TYPE_FIELD_POSITION - 8)
 .NoChsTranslationOrBitShiftTranslationSet:
 	xchg	ax, cx
 	call	StoswThenAddALandAHtoDL			; Bytes 10 and 11
 
 	; DPTE.wReserved (must be zero)
 	xor		ax, ax
-	call	StoswThenAddALandAHtoDL			; Bytes 12 and 13
+	stosw									; Bytes 12 and 13
 
 	; DPTE.bRevision and DPTE.bChecksum
 	mov		al, DPTE_REVISION
-	call	StoswALandChecksumFromDL		; Bytes 14 and 15
-	lea		bx, [di-DPTE_size]
-	ret
+	lea		bx, [di+2-DPTE_size]			; The +2 compensates for the last WORD yet to be stored
+	jmp		StoswALandChecksumFromDL		; Bytes 14 and 15
 %endif ; MODULE_EBIOS
 
 

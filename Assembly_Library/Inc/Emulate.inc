@@ -73,7 +73,8 @@ BITS 16							; Set 16 bit code generation
 ;		Nothing
 ;--------------------------------------------------------------------
 %macro eSALC 0
-	db		0D6h
+;	db		0D6h
+	salc
 %endmacro
 
 

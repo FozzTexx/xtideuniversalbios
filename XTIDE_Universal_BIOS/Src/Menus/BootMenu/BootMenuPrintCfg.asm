@@ -55,7 +55,8 @@ SECTION .text
 ;		AX, CX, DX
 ;--------------------------------------------------------------------
 .PushAddressingMode:
-	ACCESSDPT__GET_UNSHIFTED_TRANSLATE_MODE_TO_AXZF
+	mov		al, [di+DPT.bFlagsLow]
+	and		ax, BYTE MASKL_DPT_TRANSLATEMODE
 	;;
 	;; This multiply both shifts the addressing mode bits down to low order bits, and
 	;; at the same time multiplies by the size of the string displacement.  The result is in AH,
@@ -106,7 +107,7 @@ SECTION .text
 	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE	; Clears CF
 	eCMOVZ	ah, [di+DPT_ATA.bDevice]	; DPT_ATA contains up to date device information for IDE drives
 %ifdef USE_UNDOC_INTEL
-	eSALC	; Clear AL using CF (from TEST above)
+	salc	; Clear AL using CF (from TEST above)
 	eAAD	g_szDeviceTypeValues_Displacement
 %else
 	mov		al, g_szDeviceTypeValues_Displacement

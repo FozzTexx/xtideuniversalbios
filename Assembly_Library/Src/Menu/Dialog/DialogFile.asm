@@ -622,17 +622,8 @@ HandleFunctionKeyForCreatingNewFileOrDirectory:
 
 	mov		cx, STRING_DIALOG_IO_size
 	call	Memory_ReserveCXbytesFromStackToDSSI
-	call	.InitializeStringDialogIoInDSSIforInputtingFileName
 
-	CALL_MENU_LIBRARY GetStringWithIoInDSSI
-	mov		al, [si+STRING_DIALOG_IO.bUserCancellation]
-	add		sp, BYTE STRING_DIALOG_IO_size
-	test	al, al		; User cancellation?
-	jnz		SHORT ReturnWithoutHandlingKeystroke
-	jmp		CloseFileDialogAfterSuccessfulSelection
-
-ALIGN JUMP_ALIGN
-.InitializeStringDialogIoInDSSIforInputtingFileName:
+;;;	InitializeStringDialogIoInDSSIforInputtingFileName
 	call	InitializeNullStringsToDialogInputInDSSI
 	mov		WORD [si+DIALOG_INPUT.fszTitle], g_szEnterNewFileOrDirectory
 	mov		WORD [si+STRING_DIALOG_IO.fnCharFilter], NULL
@@ -641,7 +632,14 @@ ALIGN JUMP_ALIGN
 	add		ax, BYTE FILE_DIALOG_IO.szFile
 	mov		[si+STRING_DIALOG_IO.fpReturnBuffer], ax
 	mov		[si+STRING_DIALOG_IO.fpReturnBuffer+2], es
-	ret
+;;;
+
+	CALL_MENU_LIBRARY GetStringWithIoInDSSI
+	mov		al, [si+STRING_DIALOG_IO.bUserCancellation]
+	add		sp, BYTE STRING_DIALOG_IO_size
+	test	al, al		; User cancellation?
+	jnz		SHORT ReturnWithoutHandlingKeystroke
+	jmp		CloseFileDialogAfterSuccessfulSelection
 
 
 ;--------------------------------------------------------------------

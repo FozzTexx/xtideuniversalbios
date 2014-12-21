@@ -216,7 +216,7 @@ foreach $f (keys(%translate))
 
 for( $g = 0; $translate_index[$g]; $g++ )
 {
-	print "        db     ".$translate_index[$g]."  ; ".$g."\n";
+	print "\t\tdb     ".$translate_index[$g]."\t; ".$g."\n";
 }
 
 foreach $f (keys(%format))
@@ -230,7 +230,7 @@ foreach $f (keys(%format))
 
 for( $t = $format_begin; $format_index[$t]; $t++ )
 {
-	print "        db     (DisplayFormatCompressed_BaseFormatOffset - ".$format_index[$t].")    ; ".$t."\n";
+	print "\t\tdb     (DisplayFormatCompressed_BaseFormatOffset - ".$format_index[$t].")\t; ".$t."\n";
 }
 
 print "\n";

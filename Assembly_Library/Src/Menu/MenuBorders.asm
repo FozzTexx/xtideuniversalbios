@@ -55,7 +55,7 @@ MenuBorders_RefreshAll:
 	push	RefreshItemBorders
 	push	RefreshTitleBorders
 	push	MenuBorders_GetNumberOfMiddleCharactersToDX
-	jmp		MenuBorders_AdjustDisplayContextForDrawingBorders
+	jmp		SHORT MenuBorders_AdjustDisplayContextForDrawingBorders
 %endif
 
 
@@ -119,7 +119,7 @@ MenuBorders_AdjustDisplayContextForDrawingBorders:
 	call	MenuLocation_GetTitleBordersTopLeftCoordinatesToAX
 	CALL_DISPLAY_LIBRARY SetCursorCoordinatesFromAX
 
-	mov		si, ATTRIBUTE_CHARS.cBordersAndBackground
+	xor		si, si		; SI = ATTRIBUTE_CHARS.cBordersAndBackground
 	jmp		MenuAttribute_SetToDisplayContextFromTypeInSI
 
 
@@ -140,39 +140,9 @@ MenuBorders_GetNumberOfMiddleCharactersToDX:
 
 
 ;--------------------------------------------------------------------
-; RefreshTitleBorders
-;	Parameters
-;		DX:		Number of times to repeat middle character
-;		SS:BP:	Ptr to MENU
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, BX, CX, SI, DI
-;--------------------------------------------------------------------
-ALIGN MENU_JUMP_ALIGN
-RefreshTitleBorders:
-	call	DrawTopBorderLine
-	eMOVZX	cx, [bp+MENUINIT.bTitleLines]
-	jmp		SHORT DrawTextBorderLinesByCXtimes
-
-;--------------------------------------------------------------------
-; RefreshInformationBorders
-;	Parameters
-;		DX:		Number of times to repeat middle character
-;		SS:BP:	Ptr to MENU
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, BX, CX, SI, DI
-;--------------------------------------------------------------------
-ALIGN MENU_JUMP_ALIGN
-RefreshInformationBorders:
-	call	DrawSeparationBorderLine
-	eMOVZX	cx, [bp+MENUINIT.bInfoLines]
-	jmp		SHORT DrawTextBorderLinesByCXtimes
-
-;--------------------------------------------------------------------
 ; RefreshItemBorders
+; RefreshTitleBorders
+; RefreshInformationBorders
 ;	Parameters
 ;		DX:		Number of times to repeat middle character
 ;		SS:BP:	Ptr to MENU
@@ -185,12 +155,25 @@ ALIGN MENU_JUMP_ALIGN
 RefreshItemBorders:
 	call	DrawSeparationBorderLine
 	call	MenuScrollbars_GetMaxVisibleItemsOnPageToCX
-	; Fall to DrawTextBorderLinesByCXtimes
+	jmp		SHORT DrawTextBorderLinesByCXtimes
+
+ALIGN MENU_JUMP_ALIGN
+RefreshTitleBorders:
+	call	DrawTopBorderLine
+	mov		cl, [bp+MENUINIT.bTitleLines]
+	jmp		SHORT DrawTextBorderLinesByCLtimes
+
+ALIGN MENU_JUMP_ALIGN
+RefreshInformationBorders:
+	call	DrawSeparationBorderLine
+	mov		cl, [bp+MENUINIT.bInfoLines]
+	; Fall to DrawTextBorderLinesByCLtimes
 
 ;--------------------------------------------------------------------
+; DrawTextBorderLinesByCLtimes
 ; DrawTextBorderLinesByCXtimes
 ;	Parameters
-;		CX:		Number of border lines to draw
+;		CL/CX:	Number of border lines to draw
 ;		DX:		Number of times to repeat middle character
 ;		SS:BP:	Ptr to MENU
 ;	Returns:
@@ -198,6 +181,8 @@ RefreshItemBorders:
 ;	Corrupts registers:
 ;		AX, CX, SI, DI
 ;--------------------------------------------------------------------
+DrawTextBorderLinesByCLtimes:
+	xor		ch, ch
 DrawTextBorderLinesByCXtimes:
 	jcxz	.NoBorderLinesToDraw
 ALIGN MENU_JUMP_ALIGN
@@ -212,7 +197,6 @@ ALIGN MENU_JUMP_ALIGN
 ; DrawTopBorderLine
 ; DrawSeparationBorderLine
 ; DrawBottomBorderLine
-; DrawTimeoutCounterOverBottomBorderLine
 ; DrawBottomShadowLine
 ; DrawTextBorderLine
 ;	Parameters
@@ -241,10 +225,11 @@ DrawBottomBorderLine:
 	jz		SHORT PrintBorderCharactersFromCSSIandShadowCharacter
 
 	call	DrawTimeoutCounterString
+	push	dx
 	sub		dx, BYTE MENU_TIMEOUT_STRING_CHARACTERS
 	mov		si, g_BottomBorderWithTimeoutCharacters
 	call	PrintBorderCharactersFromCSSIandShadowCharacter
-	add		dx, BYTE MENU_TIMEOUT_STRING_CHARACTERS
+	pop		dx
 	ret
 
 ALIGN MENU_JUMP_ALIGN
@@ -402,7 +387,9 @@ DrawTimeoutCounterString:
 	xchg	di, ax
 	mov		si, ATTRIBUTE_CHARS.cNormalTimeout
 	cmp		di, BYTE MENU_TIMEOUT_SECONDS_FOR_HURRY
-	eCMOVB	si, ATTRIBUTE_CHARS.cHurryTimeout
+	jnb		SHORT .NormalTimeout
+	dec		si			; SI = ATTRIBUTE_CHARS.cHurryTimeout
+.NormalTimeout:
 	call	MenuAttribute_GetToAXfromTypeInSI
 
 	push	bp

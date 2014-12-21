@@ -188,13 +188,8 @@ ALIGN JUMP_ALIGN
 .WriteLastBlockToDrive:
 	mov		cl, [bp+PIOVARS.bSectorsLeft]		; CH is already zero
 	push	cx
-%ifdef USE_186
-	push	CheckErrorsAfterTransferringLastBlock
-	jmp		[bp+PIOVARS.fnXfer]					; Transfer possibly partial block
-%else
 	call	[bp+PIOVARS.fnXfer]					; Transfer possibly partial block
 	jmp		SHORT CheckErrorsAfterTransferringLastBlock
-%endif
 
 
 ;--------------------------------------------------------------------
@@ -240,7 +235,17 @@ InitializePiovarsInSSBPwithSectorCountInAH:
 	jb		SHORT IdeTransfer_NormalizePointerInESSI
 
 	; Convert ES:SI to physical address
-%ifdef USE_186
+%ifdef USE_386
+
+	mov		dx, es
+	xor		ax, ax
+	shld	ax, dx, 4
+	shl		dx, 4
+	add		si, dx
+	adc		al, ah
+	mov		es, ax
+
+%elifdef USE_186
 						; Bytes	EU Cycles(286)
 	mov		ax, es		; 2		2
 	rol		ax, 4		; 3		9

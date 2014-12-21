@@ -92,14 +92,14 @@ iend
 ;	Returns:
 ;		Nothing (User input stored to WORD_DIALOG_IO)
 ;	Corrupts registers:
-;		AX, BX, DX, SI, DI
+;		AX, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 GetWordFromUser:
 	lds		si, [bp+DIALOG.fpDialogIO]
 	eMOVZX	bx, [si+WORD_DIALOG_IO.bNumericBase]
 ALIGN JUMP_ALIGN
-.GetUserInputIntilValidOrCancelled:
+.GetUserInputUntilValidOrCancelled:
 	call	Keyboard_ReadUserInputtedWordWhilePrinting
 	jz		SHORT .UserCancellation
 
@@ -115,20 +115,7 @@ ALIGN JUMP_ALIGN
 
 .InputtedWordNotInRange:
 	call	Keyboard_PlayBellForUnwantedKeystroke
-	call	.ClearInputtedWordFromDialog
-	jmp		SHORT .GetUserInputIntilValidOrCancelled
-
-;--------------------------------------------------------------------
-; .ClearInputtedWordFromDialog
-;	Parameters
-;		SS:BP:	Ptr to DIALOG
-;	Returns:
-;		Nothing
-;	Corrupts registers:
-;		AX, CX, DX, DI
-;--------------------------------------------------------------------
-ALIGN JUMP_ALIGN
-.ClearInputtedWordFromDialog:
+	; Clear inputted word from dialog
 	CALL_DISPLAY_LIBRARY GetSoftwareCoordinatesToAX
 	xchg	dx, ax
 
@@ -137,5 +124,5 @@ ALIGN JUMP_ALIGN
 	CALL_DISPLAY_LIBRARY PrintRepeatedCharacterFromALwithCountInCX
 
 	xchg	ax, dx
-	JMP_DISPLAY_LIBRARY SetCursorCoordinatesFromAX
-
+	CALL_DISPLAY_LIBRARY SetCursorCoordinatesFromAX
+	jmp		SHORT .GetUserInputUntilValidOrCancelled

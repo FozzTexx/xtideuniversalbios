@@ -46,11 +46,17 @@ SECTION .text
 ;--------------------------------------------------------------------
 %ifdef MODULE_SERIAL	; IDE + Serial
 Device_FinalizeDPT:
-	; needs to check IDEVARS vs. checking the DPT as the serial bit in the DPT is set in the Finalize routine
-	CMP_USING_IDEVARS_IN_CSBP_AND_JUMP_IF	DEVICE_SERIAL_PORT, .FinalizeDptForSerialPortDevice
+	; Needs to check IDEVARS vs. checking the DPT as the serial bit in the DPT is set in the Finalize routine
+	cmp		BYTE [cs:bp+IDEVARS.bDevice], DEVICE_SERIAL_PORT
+%ifdef USE_386
+	jne		IdeDPT_Finalize
+	jmp		SerialDPT_Finalize
+%else
+	je		SHORT .FinalizeDptForSerialPortDevice
 	jmp		IdeDPT_Finalize
 .FinalizeDptForSerialPortDevice:
 	jmp		SerialDPT_Finalize
+%endif
 
 %else					; IDE
 	Device_FinalizeDPT		EQU		IdeDPT_Finalize
@@ -93,10 +99,16 @@ Device_ResetMasterAndSlaveController:
 ;--------------------------------------------------------------------
 %ifdef MODULE_SERIAL	; IDE + Serial
 Device_IdentifyToBufferInESSIwithDriveSelectByteInBH:
-	CMP_USING_IDEVARS_IN_CSBP_AND_JUMP_IF	DEVICE_SERIAL_PORT, .IdentifyDriveFromSerialPort
+	cmp		BYTE [cs:bp+IDEVARS.bDevice], DEVICE_SERIAL_PORT
+%ifdef USE_386
+	jne		IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH
+	jmp		SerialCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH
+%else
+	je		SHORT .IdentifyDriveFromSerialPort
 	jmp		IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH
 .IdentifyDriveFromSerialPort:
 	jmp		SerialCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH
+%endif
 
 %else					; IDE
 	Device_IdentifyToBufferInESSIwithDriveSelectByteInBH	EQU		IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH
@@ -121,12 +133,18 @@ Device_IdentifyToBufferInESSIwithDriveSelectByteInBH:
 %ifdef MODULE_SERIAL	; IDE + Serial
 ALIGN JUMP_ALIGN
 Device_OutputCommandWithParameters:
-	TEST_USING_DPT_AND_JUMP_IF_SERIAL_DEVICE .OutputCommandToSerialPort
+	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE
+%ifdef USE_386
+	jz		IdeCommand_OutputWithParameters
+	jmp		SerialCommand_OutputWithParameters
+%else
+	jnz		SHORT .OutputCommandToSerialPort
 	jmp		IdeCommand_OutputWithParameters
 
 ALIGN JUMP_ALIGN
 .OutputCommandToSerialPort:
 	jmp		SerialCommand_OutputWithParameters
+%endif
 
 %else					; IDE
 	Device_OutputCommandWithParameters		EQU		IdeCommand_OutputWithParameters
@@ -146,8 +164,14 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 %ifdef MODULE_SERIAL	; IDE + Serial
 Device_SelectDrive:
-	TEST_USING_DPT_AND_JUMP_IF_SERIAL_DEVICE	ReturnSuccessForSerialPort
+	test	BYTE [di+DPT.bFlagsHigh], FLGH_DPT_SERIAL_DEVICE
+%ifndef USE_386
+	jnz		SHORT ReturnSuccessForSerialPort
 	jmp		IdeCommand_SelectDrive
+%else
+	jz		IdeCommand_SelectDrive
+	; Fall to ReturnSuccessForSerialPort
+%endif
 
 %else					; IDE
 	Device_SelectDrive		EQU		IdeCommand_SelectDrive

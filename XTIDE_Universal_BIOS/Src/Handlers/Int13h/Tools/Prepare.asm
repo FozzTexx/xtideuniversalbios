@@ -45,7 +45,7 @@ Prepare_ByLoadingDapToESSIandVerifyingForTransfer:
 
 	; Make sure that sector count is valid
 %ifdef USE_UNDOC_INTEL
-	eSALC	; Clear AL using CF (CF is cleared since JB above fell through)
+	salc	; Clear AL using CF (CF is cleared since JB above fell through)
 	or		al, [es:si+DAP.wSectorCount]
 %else
 	mov		al, [es:si+DAP.wSectorCount]

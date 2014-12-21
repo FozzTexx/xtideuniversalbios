@@ -135,8 +135,8 @@ AdvAtaInit_SelectSlowestCommonPioTimingsToBXandCXfromDSSIandDSDI:
 	eMOVZX	bx, [di+DPT_ADVANCED_ATA.bPioMode]
 	mov		cx, [di+DPT_ADVANCED_ATA.wMinPioCycleTime]
 	test	si, si
-	jz		SHORT .PioTimingsLoadedToAXandCX
+	jz		SHORT .PioTimingsLoadedToBXandCX
 	MIN_U	bl, [si+DPT_ADVANCED_ATA.bPioMode]
 	MAX_U	cx, [si+DPT_ADVANCED_ATA.wMinPioCycleTime]
-.PioTimingsLoadedToAXandCX:
+.PioTimingsLoadedToBXandCX:
 	ret
