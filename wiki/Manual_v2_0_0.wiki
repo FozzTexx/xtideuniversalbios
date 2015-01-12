@@ -337,7 +337,7 @@ Some CF cards and microdrives do not work properly with IBM 5150/5160 when using
 ----
 = Contact information =
 
-[http://www.vintage-computer.com/vcforum/showthread.php?17986-XTIDE-Universal-BIOS XTIDE Universal BIOS thread can be found at Vintage Computer Forums]. I recommend to post there but you can also send email to aitotat (at) gmail.com.
+[http://www.vintage-computer.com/vcforum/showthread.php?17986-XTIDE-Universal-BIOS XTIDE Universal BIOS thread can be found at Vintage Computer Forums]. I recommend to post there but you can also send email to aitotat (at) gmail.com. Another thread to take a look at is [http://www.vintage-computer.com/vcforum/showthread.php?29749-XTIDE-Universal-BIOS-v2-0-0-beta-testing-thread XTIDE Universal BIOS v2.0.0 beta testing thread.]
 
 When reporting bugs or other problems, please post the following information:
   * Computer specs (at least CPU and RAM but details about expansion cards and how they are configured might be useful)
