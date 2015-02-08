@@ -8,7 +8,7 @@
 
 XTIDE Universal BIOS makes it possible to use modern large ATA hard disks or Compact Flash cards on old PC's. You can then enjoy quiet or noiseless drives with more capacity than you'll ever need for old computers.
 
-XTIDE Universal BIOS can be used on any IBM PC, XT, AT or 100% compatible system. On AT systems you can use any 16-bit ISA or VLB IDE or Multi I/O controller. For XT systems you can use XTIDE rev1 (not available anymore), [http://www.vintage-computer.com/vcforum/showwiki.php?title=XTIDE+Rev2 XTIDE rev2] or [http://www.retrotronics.org/tiki/tiki-index.php JR-IDE/ISA].
+XTIDE Universal BIOS can be used on any IBM PC, XT, AT or 100% compatible system. On AT systems you can use any 16-bit ISA or VLB IDE or Multi I/O controller. For XT systems you can use XTIDE rev1 (not available anymore), [http://www.vintage-computer.com/vcforum/showthread.php?29202-XTIDE-Rev2] or [https://www.retrotronics.org/home-page/jride/].
 
 == License ==
 
