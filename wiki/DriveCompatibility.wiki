@@ -48,5 +48,5 @@ Not all CF adapters can be used in 8-bit mode. Tests have been done with 40- and
 || 8 MHz Turbo Board (XT clone) || IDE-PLUS-V4L (2 in the picture) || Hitachi 6 GB Microdrive (HMS360606D5CF00) || No problems ||
 || 8 MHz Turbo Board (XT clone) || JGBPRIME2C Super I/O (3 in the picture) || Hitachi 6 GB Microdrive (HMS360606D5CF00) || Does not POST ||
 
-http://kotisivu.dnainternet.net/ttilli/XTIDE/pictures/CfAdapters.jpg
-http://kotisivu.dnainternet.net/ttilli/XTIDE/pictures/MultiIoCards.jpg
+https://xtideuniversalbios.googlecode.com/svn/wiki/pictures/CfAdapters.jpg
+https://xtideuniversalbios.googlecode.com/svn/wiki/pictures/MultiIoCards.jpg
