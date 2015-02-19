@@ -124,34 +124,30 @@ DisplayPrint_SignedWordFromAXWithBaseInBX:
 ALIGN DISPLAY_JUMP_ALIGN
 DisplayPrint_WordFromAXWithBaseInBX:
 	push	cx
-	push	bx
 
 	xor		cx, cx
 ALIGN DISPLAY_JUMP_ALIGN
 .DivideLoop:
+	inc		cx					; Increment character count
 	xor		dx, dx				; DX:AX now holds the integer
 	div		bx					; Divide DX:AX by base
 	push	dx					; Push remainder
-	inc		cx					; Increment character count
 	test	ax, ax				; All divided?
 	jnz		SHORT .DivideLoop	;  If not, loop
 
-PrintAllPushedDigits:			; Unused entrypoint OK
-	mov		bx, g_rgcDigitToCharacter
 ALIGN DISPLAY_JUMP_ALIGN
+PrintAllPushedDigits:			; Unused entrypoint OK
 .PrintNextDigit:
 	pop		ax					; Pop digit
-	cs xlatb
+	cmp		al, 10				; Convert binary digit in AL to ASCII hex digit ('0'-'9' or 'A'-'F')
+	sbb		al, 69h
+	das
 	call	DisplayPrint_CharacterFromAL
 	loop	.PrintNextDigit
 
-	pop		bx
 	pop		cx
 	ret
-
-g_rgcDigitToCharacter:	db	"0123456789ABCDEF"
-
-%endif ; MODULE_STRINGS_COMPRESSED
+%endif ; ~MODULE_STRINGS_COMPRESSED
 
 ;--------------------------------------------------------------------
 ; DisplayPrint_QWordFromSSBPwithBaseInBX
@@ -169,7 +165,6 @@ g_rgcDigitToCharacter:	db	"0123456789ABCDEF"
 ALIGN DISPLAY_JUMP_ALIGN
 DisplayPrint_QWordFromSSBPwithBaseInBX:
 	push	cx
-	push	bx
 
 	mov		cx, bx				; CX = Integer base
 	xor		bx, bx				; BX = Character count
@@ -180,7 +175,7 @@ ALIGN DISPLAY_JUMP_ALIGN
 	inc		bx					; Increment character count
 	cmp		WORD [bp], BYTE 0	; All divided?
 	jne		SHORT .DivideLoop	;  If not, loop
-	mov		cx, bx				; Character count to CX
+	xchg	cx, bx				; Character count to CX, Integer base to BX
 	jmp		SHORT PrintAllPushedDigits
 %endif
 

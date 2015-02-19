@@ -56,10 +56,16 @@ Size_GetSizeToAXAndCharToDLfromBXDXAXwithMagnitudeInCX:
 ALIGN UTIL_SIZE_JUMP_ALIGN
 .MagnitudeConversionLoop:
 	ePUSH_T	di, .MagnitudeConversionLoop; DI corrupted only on 8086/8088 build
+%ifdef USE_186
 	test	bx, bx						; Bits 32...47 in use?
 	jnz		SHORT Size_DivideSizeInBXDXAXby1024andIncrementMagnitudeInCX
 	test	dx, dx						; Bits 16...31 in use?
 	jnz		SHORT Size_DivideSizeInBXDXAXby1024andIncrementMagnitudeInCX
+%else ; 808x
+	mov		di, bx
+	or		di, dx
+	jnz		SHORT Size_DivideSizeInBXDXAXby1024andIncrementMagnitudeInCX
+%endif
 	cmp		ax, 10000					; 5 digits needed?
 	jae		SHORT Size_DivideSizeInBXDXAXby1024andIncrementMagnitudeInCX
 	add		sp, BYTE 2					; Clean return address from stack
@@ -67,7 +73,7 @@ ALIGN UTIL_SIZE_JUMP_ALIGN
 
 	; Convert remainder to tenths
 	xchg	bx, ax						; Store AX
-	mov		ax, 5
+	mov		al, 5						; AH = 0
 	mul		cx							; DX:AX = remainder * (10 / 2)
 %ifdef USE_186
 	shr		ax, 9						; Divide AX by (1024 / 2)
@@ -88,13 +94,12 @@ ALIGN UTIL_SIZE_JUMP_ALIGN
 %endif
 	ret
 .rgbMagnitudeToChar:	db	" kMGTP"
-%endif
 
 ;--------------------------------------------------------------------
 ; Size_DivideSizeInBXDXAXby1024andIncrementMagnitudeInCX
 ;	Parameters:
 ;		BX:DX:AX:	Size
-;		CX:			Magnitude in BYTE_MULTIPLES
+;		CX:			Magnitude in BYTE_MULTIPLES (must be 254 or less)
 ;	Returns:
 ;		BX:DX:AX:	Size in magnitude
 ;		SI:			Remainder (0...1023)
@@ -104,22 +109,37 @@ ALIGN UTIL_SIZE_JUMP_ALIGN
 ;--------------------------------------------------------------------
 ALIGN UTIL_SIZE_JUMP_ALIGN
 Size_DivideSizeInBXDXAXby1024andIncrementMagnitudeInCX:
+	inc		cx						; Increment magnitude
+	mov		si, 1023
+	and		si, ax					; Remainder now in SI
+	; Fall to Size_DivideSizeInBXDXAXby1024
+%endif ; INCLUDE_MENU_LIBRARY
+
+;--------------------------------------------------------------------
+; Size_DivideSizeInBXDXAXby1024
+;	Parameters:
+;		BX:DX:AX:	Size
+;		CX:			Must be 255 or less
+;	Returns:
+;		BX:DX:AX:	Size divided by 1024
+;	Corrupts registers:
+;		Nothing
+;--------------------------------------------------------------------
+ALIGN UTIL_SIZE_JUMP_ALIGN
+Size_DivideSizeInBXDXAXby1024:
+%ifdef USE_386
+	shrd	ax, dx, 10
+	shrd	dx, bx, 10
+	shr		bx, 10
+%else
 	push	cx
-	xor		si, si					; Zero remainder
-	mov		cl, 10					; Divide by 1024
+	mov		cl, 10
 ALIGN UTIL_SIZE_JUMP_ALIGN
 .ShiftLoop:
 	call	Size_DivideBXDXAXbyTwo
-	rcr		si, 1					; Update remainder
 	loop	.ShiftLoop
-%ifdef USE_186
-	shr		si, 6					; Remainder to SI beginning
-%else
-	mov		cl, 6
-	shr		si, cl
-%endif
 	pop		cx
-	inc		cx						; Increment magnitude
+%endif
 	ret
 
 ;--------------------------------------------------------------------
@@ -133,6 +153,16 @@ ALIGN UTIL_SIZE_JUMP_ALIGN
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
+%ifdef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
+	%ifdef USE_386
+		%define EXCLUDE
+	%endif
+	%ifdef MODULE_BOOT_MENU
+		%undef EXCLUDE
+	%endif
+%endif
+
+%ifndef EXCLUDE
 ALIGN UTIL_SIZE_JUMP_ALIGN
 Size_ConvertSectorCountInBXDXAXtoKiB:	; unused entrypoint ok
 Size_DivideBXDXAXbyTwo:
@@ -140,3 +170,5 @@ Size_DivideBXDXAXbyTwo:
 	rcr		dx, 1					; ...to get disk size in...
 	rcr		ax, 1					; ...kiB
 	ret
+%endif
+%undef EXCLUDE

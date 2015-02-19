@@ -88,29 +88,23 @@ DisplayFormatCompressed_ret:			; jump target for other routines who need a "ret"
 DisplayFormatCompressed_Format_z:
 	xor		bx, bx
 	xchg	si, ax
-	jmp		short DisplayPrint_NullTerminatedStringFromBXSI
+	jmp		SHORT DisplayPrint_NullTerminatedStringFromBXSI
 
 DisplayFormatCompressed_Format_x:
 DisplayFormatCompressed_Format_5_x:
-	mov		si,16						; hex output, change base to 16
-	mov		bx,(04<<8) + 'h'			; 4 bytes, with postfix character 'h' to emit
+	mov		si, 16						; hex output, change base to 16
+	mov		bx, (04<<8) + 'h'			; 4 bytes, with postfix character 'h' to emit
 										; (note that the count includes the 'h')
-	jmp		DisplayFormatCompressed_Format_u
-
-DisplayFormatCompressed_Format_2_I:
-	mov		si,g_szDashForZero			; preload dash string in case we jump
-	test	ax,ax						; if parameter equals zero, emit dash string instead
-	jz		DisplayFormat_ParseCharacters
-	; fall through
+	SKIP2B	f							; Fall through to DisplayFormatCompressed_Format_u
 
 DisplayFormatCompressed_Format_2_u:
-	mov		bh,2						; only two characters (instead of the default 5)
+	mov		bh, 2						; only two characters (instead of the default 5)
 	; fall through
 
 DisplayFormatCompressed_Format_u:
 DisplayFormatCompressed_Format_5_u:
 	push	bx							; push postfix character - either a zero (default) or a 'h'
-	mov		bl,bh						; preserve character count for .PrintLoop
+	mov		bl, bh						; preserve character count for .PrintLoop
 
 .DivLoop:
 	xor		dx, dx						; Zero DX for division
@@ -118,22 +112,21 @@ DisplayFormatCompressed_Format_5_u:
  	push	dx							; Push digit
 
 	dec		bh
-	jnz		.DivLoop
+	jnz		SHORT .DivLoop
 
 .PrintLoop:
 	pop		ax							; Pop digit, postfix character on last iteration
 
 	dec		bl							; on second to last iteration, emit digit whether it is zero or not
-	jz		.PrintDigit
-
-	js		short DisplayPrint_CharacterFromAL	; on last iteration, emit postfix character
+	jz		SHORT .PrintDigit
+	js		SHORT DisplayPrint_CharacterFromAL	; on last iteration, emit postfix character
 												; if it is zero, DisplayPrint_CharacterFromAL will not emit
 
 	or		bh, al						; skip leading zeros, bh keeps track if we have emitted anything non-zero
-	jnz		.PrintDigit					; note that bh starts at zero, from the loop above
+	jnz		SHORT .PrintDigit			; note that bh starts at zero, from the loop above
 
-	test	ch,2						; are we padding with leading spaces?
-	jnz		.PrintLoop					; test the even/odd of the format byte in the string
+	test	ch, 2						; are we padding with leading spaces?
+	jnz		SHORT .PrintLoop			; test the even/odd of the format byte in the string
 
 	mov		al, 89h						; emit space
 
@@ -143,9 +136,13 @@ DisplayFormatCompressed_Format_5_u:
 	das
 
 	call	DisplayPrint_CharacterFromAL
+	jmp		SHORT .PrintLoop
 
-	jmp		.PrintLoop
-
+DisplayFormatCompressed_Format_2_I:
+	test	ax, ax
+	jnz		SHORT DisplayFormatCompressed_Format_2_u
+	mov		si, g_szDashForZero			; if parameter equals zero, emit dash string instead
+	SKIP2B	bx							; Fall through to DisplayFormat_ParseCharacters
 
 ;--------------------------------------------------------------------
 ; DisplayFormat_ParseCharacters
@@ -160,11 +157,9 @@ DisplayFormatCompressed_Format_5_u:
 ;	Corrupts registers:
 ;		AX, BX, CX, DX, BP
 ;--------------------------------------------------------------------
-
 DisplayFormatCompressed_BaseFormatOffset:
-
 DisplayFormat_ParseCharacters_FromAX:
-	mov		si,ax
+	mov		si, ax
 	; fall through to DisplayFormat_ParseCharacters
 
 ALIGN DISPLAY_JUMP_ALIGN
@@ -173,31 +168,29 @@ DisplayFormat_ParseCharacters:
 ; This routine is used to output all strings from the ROM.  The strings in ROMVARS are not compressed,
 ; and must be handled differently.
 ;
-	cmp		si,byte 07fh		; well within the boundaries of ROMVARS_size
-	mov		bx,cs				; preload bx with cs in case we take the following jump
-	jb		short DisplayPrint_NullTerminatedStringFromBXSI
+	cmp		si, BYTE 7Fh		; well within the boundaries of ROMVARS_size
+	mov		bx, cs				; preload bx with cs in case we take the following jump
+	jb		SHORT DisplayPrint_NullTerminatedStringFromBXSI
 
 .decode:
 	cs lodsb					; load next byte of the string
+	mov		ch, al				; save a copy for later processing of high order bits
+	test	al, 0C0h			; check for translation/format character
+	jz		SHORT DisplayFormatCompressed_TranslatesAndFormats
 
-	mov		ch,al				; save a copy for later processing of high order bits
-
-	test	al,0c0h				; check for translation/format character
-	jz		DisplayFormatCompressed_TranslatesAndFormats
-
-	and		al,03fh								; "Normal" character, mask off high order bits
-	add		al,StringsCompressed_NormalBase		; and add character offset (usually around 0x40)
+	and		al, 3Fh								; "Normal" character, mask off high order bits
+	add		al, StringsCompressed_NormalBase	; and add character offset (usually around 0x40)
 
 .output:
 	call 	DisplayPrint_CharacterFromAL
 
 .process_after_output:
-	eSHL_IM	ch,1								; check high order bits for end of string or space
-	jns		short DisplayFormatCompressed_ret
-	jnc		.decode
-	mov		al,' '
+	eSHL_IM	ch, 1								; check high order bits for end of string or space
+	jns		SHORT DisplayFormatCompressed_ret
+	jnc		SHORT .decode
+	mov		al, ' '
 	call	DisplayPrint_CharacterFromAL
-	jmp		.decode
+	jmp		SHORT .decode
 
 
 ALIGN DISPLAY_JUMP_ALIGN
@@ -206,40 +199,36 @@ DisplayFormatCompressed_TranslatesAndFormats:
 ; This routine is here (above DisplayFormat_ParseCharacters) to reduce the amount of code between
 ; DisplayFormatCompressed_BaseFormatOffset and jump targets (must fit in 256 bytes)
 ;
-	eSHL_IM	ch,1				; setup ch for later testing of null in .process_after_output
-	and		ax,0001fh			; also clears AH for addition with BX and DX below
+	eSHL_IM	ch, 1				; setup ch for later testing of null in .process_after_output
+	and		ax, 001Fh			; also clears AH for addition with BX and DX below
 
-	mov		bx,StringsCompressed_TranslatesAndFormats	; calculate offset of translation/formats offset byte
-	add		bx,ax
+	mov		bx, StringsCompressed_TranslatesAndFormats	; calculate offset of translation/formats offset byte
+	add		bx, ax
 
-	cmp		al,StringsCompressed_FormatsBegin			; determine if this is a translation or a format
-
-	mov		al,[cs:bx]									; fetch translation/formats byte
-
-	jb		DisplayFormat_ParseCharacters.output		; check if this a translation or a format
+	cmp		al, StringsCompressed_FormatsBegin			; determine if this is a translation or a format
+	mov		al, [cs:bx]									; fetch translation/formats byte
+	jb		SHORT DisplayFormat_ParseCharacters.output	; check if this a translation or a format
 														; if it is translation, output and postprocess for eos
 														; note that the flags for this conditional jump were
 														; set with the cmp al,StringsCompressed_FormatsBegin
 
-	mov		dx,DisplayFormatCompressed_BaseFormatOffset   ; calculate address to jump to for format handler
-	sub		dx,ax
+	mov		dx, DisplayFormatCompressed_BaseFormatOffset	; calculate address to jump to for format handler
+	sub		dx, ax
 
-	mov		ax,[bp]				; preload ax with parameter
+	mov		ax, [bp]			; preload ax with parameter
 	dec		bp					; if no parameter is needed (format 'nl' for example),
 	dec		bp					; the format handler can reincrement bp
 
-	mov		bx,0500h			; preload bh with 5 decimal places for numeric output
+	mov		bx, 0500h			; preload bh with 5 decimal places for numeric output
 								; bl is zero, indicating not to output a 'h' (default base 10)
 
 	push	si					; preserve si and cx, in the case of outputing a string
 	push	cx
 
-	mov		si,10				; preload si with 10 for numeric output (default base 10)
-
+	mov		si, 10				; preload si with 10 for numeric output (default base 10)
 	call	dx					; call the format routine
 
 	pop		cx					; restore cx and si
 	pop		si
 
-	jmp		DisplayFormat_ParseCharacters.process_after_output	; continue postprocessing, check for end of string
-
+	jmp		SHORT DisplayFormat_ParseCharacters.process_after_output	; continue postprocessing, check for end of string

@@ -303,7 +303,7 @@ ConvertChsSectorCountFromDXAXtoLbaAssistedLCHSinAXBLBH:
 	; Value CH = Total sector count / 63
 	; Max = 16,514,064 / 63 = 262128
 	mov		cx, LBA_ASSIST_SPT			; CX = 63
-	call	Math_DivDXAXbyCX
+	call	Math_DivDXAXbyCX			; Preserves CX
 	push	dx
 	push	ax							; Value CH stored for later use
 
@@ -315,14 +315,12 @@ ConvertChsSectorCountFromDXAXtoLbaAssistedLCHSinAXBLBH:
 
 	; AX = Number of heads = ((Value CH - 1) / 1024) + 1
 	; Max = (262127 / 1024) + 1 = 256
-	push	si
-	call	Size_DivideSizeInBXDXAXby1024andIncrementMagnitudeInCX
-	pop		si
+	call	Size_DivideSizeInBXDXAXby1024	; Preserves CX
 	inc		ax							; + 1
 
 	; Heads must be 16, 32, 64, 128 or 255 (round up to the nearest)
 	; Max = 255
-	mov		cx, 16						; Min number of heads
+	mov		cl, 16						; Min number of heads
 .CompareNextValidNumberOfHeads:
 	cmp		ax, cx
 	jbe		SHORT .NumberOfHeadsNowInCX

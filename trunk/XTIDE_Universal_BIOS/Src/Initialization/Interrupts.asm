@@ -21,7 +21,8 @@
 SECTION .text
 
 ;--------------------------------------------------------------------
-; Drives must be detected before this function is called!
+; Drives must be detected before this function is called unless
+; MODULE_DRIVEXLATE has been included in the BIOS.
 ;
 ; Interrupts_InitializeInterruptVectors
 ;	Parameters:

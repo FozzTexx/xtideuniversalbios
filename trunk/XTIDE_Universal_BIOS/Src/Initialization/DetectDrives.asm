@@ -47,6 +47,13 @@ DetectDrives_FromAllIDEControllers:
 	mov		bh, MASK_DRVNHEAD_SET | FLG_DRVNHEAD_DRV
 	call	StartDetectionWithDriveSelectByteInBHandStringInCX
 
+%ifdef MODULE_HOTKEYS
+%ifdef MODULE_SERIAL
+	; This is only needed for hotkey F6 (ComDtct) to work
+	call	ScanHotkeysFromKeyBufferAndStoreToBootvars			; Done here while CX is still protected
+%endif
+%endif
+
 	pop		cx
 
 	add		bp, BYTE IDEVARS_size			; Point to next IDEVARS
@@ -67,7 +74,7 @@ DetectDrives_FromAllIDEControllers:
 	mov		bp, ROMVARS.ideVarsSerialAuto	; Point to our special IDEVARS structure, just for serial scans
 
 %ifdef MODULE_HOTKEYS
-	cmp		al, COM_DETECT_HOTKEY_SCANCODE	; Set by last call to HotkeyBar_UpdateDuringDriveDetection above
+	cmp		al, COM_DETECT_HOTKEY_SCANCODE	; Set by last call to ScanHotkeysFromKeyBufferAndStoreToBootvars above
 	je		.DriveDetectLoop
 %endif
 
@@ -75,7 +82,7 @@ DetectDrives_FromAllIDEControllers:
 	or		al, [es:BDA.bKBFlgs1]			; Or, did the user hold down the ALT key?
 	and		al, 8							; 8 = alt key depressed, same as FLG_ROMVARS_SERIAL_ALWAYSDETECT
 	jnz		.DriveDetectLoop
-%endif
+%endif ; MODULE_SERIAL
 
 .AddHardDisks:
 ;----------------------------------------------------------------------
@@ -225,10 +232,12 @@ DetectDrives_DriveNotFound:
 ;		AX, BX, CX, DX, SI, DI
 ;--------------------------------------------------------------------
 CreateBiosTablesForHardDisk:
+%ifndef NO_ATAID_VALIDATION
 	push	bx
 	call	AtaID_VerifyFromESSI
 	pop		bx
 	jnz		SHORT DetectDrives_DriveNotFound
+%endif
 	call	CreateDPT_FromAtaInformation
 	jc		SHORT DetectDrives_DriveNotFound
 	call	DriveDetectInfo_CreateForHardDisk
