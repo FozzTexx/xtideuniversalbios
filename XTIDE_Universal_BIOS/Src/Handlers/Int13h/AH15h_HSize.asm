@@ -73,8 +73,8 @@ AH15h_HandlerForReadDiskDriveSize:
 
 
 ;--------------------------------------------------------------------
-; AH15h_GetSectorCountFromForeignDriveToDXAX:
-; AH15h_GetSectorCountToBXDXAX:
+; AH15h_GetSectorCountFromForeignDriveToDXAX
+; AH15h_GetSectorCountToBXDXAX
 ;	Parameters:
 ;		DL:		Drive number (AH15h_GetSectorCountFromForeignDriveToDXAX only)
 ;		DS:		RAMVARS segment

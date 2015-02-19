@@ -31,6 +31,7 @@ SECTION .text
 ;	Corrupts registers:
 ;		AX, BX, CX
 ;--------------------------------------------------------------------
+%ifndef NO_ATAID_VALIDATION
 AtaID_VerifyFromESSI:
 	; We cannot start by reading ATA version since the ID might be
 	; corrupted. We start by making sure P-CHS values are valid.
@@ -86,6 +87,7 @@ AtaID_VerifyFromESSI:
 .FailedToVerifyAtaID:
 .ValidPCHorSinOffsetBX:
 	ret
+%endif ; NO_ATAID_VALIDATION
 
 
 ;--------------------------------------------------------------------

@@ -387,9 +387,7 @@ DrawTimeoutCounterString:
 	xchg	di, ax
 	mov		si, ATTRIBUTE_CHARS.cNormalTimeout
 	cmp		di, BYTE MENU_TIMEOUT_SECONDS_FOR_HURRY
-	jnb		SHORT .NormalTimeout
-	dec		si			; SI = ATTRIBUTE_CHARS.cHurryTimeout
-.NormalTimeout:
+	sbb		si, 0		; SI = ATTRIBUTE_CHARS.cHurryTimeout (if CF was set)
 	call	MenuAttribute_GetToAXfromTypeInSI
 
 	push	bp

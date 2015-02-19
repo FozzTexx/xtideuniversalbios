@@ -162,6 +162,7 @@ ALIGN JUMP_ALIGN
 BootMenuSettingsMenu_EnterMenuOrModifyItemVisibility:
 	push	cs
 	pop		ds
+	call	Buffers_GetRomvarsFlagsToAX
 	call	.EnableOrDisableScanForSerialDrives
 	call	.EnableOrDisableDefaultBootDrive
 	call	.EnableOrDisableBootMenuSelectionTimeout
@@ -172,15 +173,15 @@ BootMenuSettingsMenu_EnterMenuOrModifyItemVisibility:
 ;--------------------------------------------------------------------
 ; .EnableOrDisableScanForSerialDrives
 ;	Parameters:
+;		AX:		ROMVARS.wFlags
 ;		SS:BP:	Menu handle
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, BX
+;		BX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 .EnableOrDisableScanForSerialDrives:
-	call	Buffers_GetRomvarsFlagsToAX
 	mov		bx, g_MenuitemBootMenuSerialScanDetect
 	test	ax, FLG_ROMVARS_MODULE_SERIAL
 	jmp		SHORT .DisableMenuitemFromCSBXifZFset
@@ -189,32 +190,32 @@ ALIGN JUMP_ALIGN
 ;--------------------------------------------------------------------
 ; .EnableOrDisableDefaultBootDrive
 ;	Parameters:
+;		AX:		ROMVARS.wFlags
 ;		SS:BP:	Menu handle
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, BX
+;		BX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 .EnableOrDisableDefaultBootDrive:
-	call	Buffers_GetRomvarsFlagsToAX
 	mov		bx, g_MenuitemBootMnuStngsDefaultBootDrive
-	test	ax, FLG_ROMVARS_MODULE_HOTKEYS
+	test	ax, FLG_ROMVARS_MODULE_HOTKEYS | FLG_ROMVARS_MODULE_BOOT_MENU
 	jmp		SHORT .DisableMenuitemFromCSBXifZFset
 
 
 ;--------------------------------------------------------------------
 ; .EnableOrDisableBootMenuSelectionTimeout
 ;	Parameters:
+;		AX:		ROMVARS.wFlags
 ;		SS:BP:	Menu handle
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, BX
+;		BX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 .EnableOrDisableBootMenuSelectionTimeout:
-	call	Buffers_GetRomvarsFlagsToAX
 	mov		bx, g_MenuitemBootMnuStngsSelectionTimeout
 	test	ax, FLG_ROMVARS_MODULE_BOOT_MENU
 .DisableMenuitemFromCSBXifZFset:

@@ -158,7 +158,7 @@ Memory_ReserveCXbytesFromStackToDSSI:
 ;	Corrupts registers:
 ;		CX
 ;--------------------------------------------------------------------
-%ifndef EXCLUDE_FROM_XTIDECFG
+%ifndef EXCLUDE_FROM_XTIDECFG OR NO_ATAID_VALIDATION
 ALIGN JUMP_ALIGN
 Memory_SumCXbytesFromESSItoAL:
 	push	si

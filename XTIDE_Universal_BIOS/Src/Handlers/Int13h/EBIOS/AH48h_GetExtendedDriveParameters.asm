@@ -99,10 +99,10 @@ AH48h_HandlerForGetExtendedDriveParameters:
 	cmp		cx, ax
 	jb		Prepare_ReturnFromInt13hWithInvalidFunctionError
 	mov		[di+EDRIVE_INFO.wSize], ax
-	add		al, EDRIVEINFO_SIZE_WITH_DPTE - MINIMUM_EDRIVEINFO_SIZE
+	mov		al, EDRIVEINFO_SIZE_WITH_DPTE
 	cmp		cx, ax
 	jb		SHORT .SkipEddConfigurationParameters
-	mov		[di+EDRIVE_INFO.wSize], ax
+	mov		[di+EDRIVE_INFO.wSize], al
 
 	; Store DPTE for standard controllers only,
 	; FFFF:FFFF for non standard controllers
@@ -158,5 +158,5 @@ AH48h_HandlerForGetExtendedDriveParameters:
 	mov		[di+EDRIVE_INFO.dwCylinders], dx
 	mov		[di+EDRIVE_INFO.dwCylinders+2], cx
 
-	xor		ax, ax		; Success
+	xchg	ax, cx		; Success
 	jmp		Int13h_ReturnFromHandlerAfterStoringErrorCodeFromAH

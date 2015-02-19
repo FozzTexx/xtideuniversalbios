@@ -48,7 +48,7 @@ IdePioBlock_ReadFromXtideRev1:
 	mov		bl, 8		; Bit mask for toggling data low/high reg
 ALIGN JUMP_ALIGN
 .InswLoop:
-	%rep 8 ; WORDs
+	%rep 8	; WORDs
 		XTIDE_INSW
 	%endrep
 	loop	.InswLoop
@@ -75,7 +75,7 @@ IdePioBlock_ReadFrom8bitDataPort:
 	shl		cx, 9		; Sectors to BYTEs
 	rep insb
 	ret
-%else ; If 8088/8086
+%else ; 808x
 	UNROLL_SECTORS_IN_CX_TO_OWORDS
 ALIGN JUMP_ALIGN
 .ReadNextOword:
@@ -111,7 +111,7 @@ IdePioBlock_ReadFrom16bitDataPort:
 	rep insw
 	ret
 
-%else ; If 8088/8086
+%else ; 808x
 	UNROLL_SECTORS_IN_CX_TO_OWORDS
 ALIGN JUMP_ALIGN
 .ReadNextOword:
@@ -129,7 +129,7 @@ ALIGN JUMP_ALIGN
 IdePioBlock_ReadFrom32bitDataPort:
 	db		0C1h		; SHL
 	db		0E1h		; CX
-	db		7			; 7	(Sectors to DWORDs)
+	db		7			; 7 (Sectors to DWORDs)
 	rep
 	db		66h			; Override operand size to 32-bit
 	db		6Dh			; INSW/INSD
@@ -154,15 +154,15 @@ IdePioBlock_ReadFrom32bitDataPort:
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, BX, CX, DX
+;		AX, BX, CX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 IdePioBlock_WriteToXtideRev1:
 	push	ds
 	UNROLL_SECTORS_IN_CX_TO_QWORDS
 	mov		bl, 8		; Bit mask for toggling data low/high reg
-	push	es			; Copy ES...
-	pop		ds			; ...to DS
+	push	es
+	pop		ds
 ALIGN JUMP_ALIGN
 .OutswLoop:
 	%rep 4	; WORDs
@@ -182,18 +182,18 @@ ALIGN JUMP_ALIGN
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, BX, CX, DX
+;		AX, BX, CX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 IdePioBlock_WriteToXtideRev2:
 	UNROLL_SECTORS_IN_CX_TO_QWORDS
 	push	ds
-	push	es		; Copy ES...
-	pop		ds		; ...to DS
+	push	es
+	pop		ds
 ALIGN JUMP_ALIGN
 .WriteNextQword:
 	%rep 4	; WORDs
-		XTIDE_MOD_OUTSW	; special macro
+		XTIDE_MOD_OUTSW
 	%endrep
 	loop	.WriteNextQword
 	pop		ds
@@ -209,7 +209,7 @@ ALIGN JUMP_ALIGN
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, BX, CX, DX
+;		AX, BX, CX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 IdePioBlock_WriteTo8bitDataPort:
@@ -219,18 +219,16 @@ IdePioBlock_WriteTo8bitDataPort:
 	rep outsb
 	ret
 
-%else ; If 8088/8086
+%else ; 808x
 	UNROLL_SECTORS_IN_CX_TO_QWORDS
 	push	ds
-	;mov	ax, es
-	;mov	ds, ax	; move es to ds via ax (does this run faster on 8088?)
 	push	es
 	pop		ds
 ALIGN JUMP_ALIGN
 .WriteNextQword:
 	%rep 8	; BYTEs
 		lodsb			; Load BYTE from [DS:SI]
-		out	dx, al		; Write BYTE
+		out		dx, al	; Write BYTE
 	%endrep
 	loop	.WriteNextQword
 	pop		ds
@@ -250,7 +248,7 @@ ALIGN JUMP_ALIGN
 ;	Returns:
 ;		Nothing
 ;	Corrupts registers:
-;		AX, BX, CX, DX
+;		AX, BX, CX
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 IdePioBlock_WriteTo16bitDataPort:
@@ -260,30 +258,28 @@ IdePioBlock_WriteTo16bitDataPort:
 	rep outsw
 	ret
 
-%else ; If 8088/8086
+%else ; 808x
 	UNROLL_SECTORS_IN_CX_TO_QWORDS
 	push	ds
-	;mov	ax, es
-	;mov	ds, ax		; move es to ds via ax (does this run faster on 8088?)
 	push	es
 	pop		ds
 ALIGN JUMP_ALIGN
 .WriteNextQword:
 	%rep 4	; WORDs
 		lodsw			; Load WORD from [DS:SI]
-		out	dx, ax		; Write WORD
+		out		dx, ax	; Write WORD
 	%endrep
 	loop	.WriteNextQword
 	pop		ds
 	ret
-%endif	; if/else USE_186
+%endif
 
 ;--------------------------------------------------------------------
 ALIGN JUMP_ALIGN
 IdePioBlock_WriteTo32bitDataPort:
 	db		0C1h		; SHL
 	db		0E1h		; CX
-	db		7			; 7	(Sectors to DWORDs)
+	db		7			; 7 (Sectors to DWORDs)
 	es					; Source is ES segment
 	rep
 	db		66h			; Override operand size to 32-bit

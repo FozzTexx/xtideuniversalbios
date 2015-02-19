@@ -81,8 +81,18 @@ Initialize_AndDetectDrives:
 	call	DetectPrint_RomFoundAtSegment
 	call	RamVars_Initialize
 	call	BootVars_Initialize
+%ifdef MODULE_HOTKEYS
+	; This is a simple fix for the so called "No Fixed Disk Present in FDISK"-bug introduced in r551. MODULE_HOTKEYS includes the internal
+	; module MODULE_DRIVEXLATE which is needed if interrupt handlers are installed before drive detection. The reason for this is that
+	; Interrupts_InitializeInterruptVectors won't install our interrupt 13h handler if no drives were detected (unless MODULE_DRIVEXLATE is included).
+	; Since the drive detection hasn't been done yet, the handler will not be installed, causing the above mentioned bug.
 	call	Interrupts_InitializeInterruptVectors	; HotkeyBar requires INT 40h so install handlers before drive detection
 	call	DetectDrives_FromAllIDEControllers
+%else
+	; Without MODULE_HOTKEYS (or actually MODULE_DRIVEXLATE) we *must* use this call order.
+	call	DetectDrives_FromAllIDEControllers
+	call	Interrupts_InitializeInterruptVectors
+%endif
 	mov		[RAMVARS.wDrvDetectSignature], es		; No longer in drive detection mode (set normal timeouts)
 	; Fall to .StoreDptPointersToIntVectors
 
