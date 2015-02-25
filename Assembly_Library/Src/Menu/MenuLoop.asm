@@ -201,10 +201,11 @@ ALIGN MENU_JUMP_ALIGN
 
 ALIGN MENU_JUMP_ALIGN
 .DecrementSelectedItem:
-	mov		ax, -1
-	SKIP2B	cx	; mov cx, <next instruction>
+	mov		al, -1
+	SKIP2B	cx
 .IncrementSelectedItem:
-	mov		al, 1	; AH is already 0
+	mov		al, 1
+	cbw
 ALIGN MENU_JUMP_ALIGN
 .MoveHighlightedItemByAX:
 	call	MenuScrollbars_MoveHighlightedItemByAX

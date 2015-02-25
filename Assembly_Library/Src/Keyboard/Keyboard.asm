@@ -288,7 +288,6 @@ Keyboard_RemoveAllKeystrokesFromBuffer:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-
 %ifdef EXCLUDE_FROM_XTIDE_UNIVERSAL_BIOS
 	%define EXCLUDE
 	%ifdef MODULE_HOTKEYS
@@ -300,7 +299,6 @@ Keyboard_RemoveAllKeystrokesFromBuffer:
 %endif
 
 %ifndef EXCLUDE
-
 ALIGN KEYBOARD_JUMP_ALIGN
 Keyboard_GetKeystrokeToAXandLeaveItToBuffer:
 	mov		ah, CHECK_FOR_KEYSTROKE
