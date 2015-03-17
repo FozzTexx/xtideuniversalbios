@@ -118,7 +118,7 @@ IdeDPT_Finalize:
 	; Use highest common PIO mode from controller and drive.
 	; Many VLB controllers support PIO modes up to 2.
 	call	AdvAtaInit_GetControllerMaxPioModeToALandMinPioCycleTimeToBX
-	jnc		SHORT .ChangeTo32bitDevice
+	jnz		SHORT .ChangeTo32bitDevice
 
 	and		BYTE [di+DPT.bFlagsHigh], ~FLGH_DPT_IORDY	; No IORDY supported if need to limit
 	MIN_U	[di+DPT_ADVANCED_ATA.bPioMode], al
