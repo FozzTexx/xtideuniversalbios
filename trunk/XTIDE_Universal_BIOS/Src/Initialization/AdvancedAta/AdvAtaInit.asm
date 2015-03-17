@@ -55,11 +55,11 @@ AdvAtaInit_DetectControllerForIdeBaseInBX:
 ;	Returns:
 ;		AL:		Max supported PIO mode
 ;		AH:		FLGH_DPT_IORDY if IORDY supported, zero otherwise
-;		BX:		Min PIO cycle time (only if CF set)
-;		CF:		Set if PIO limit necessary
+;		BX:		Min PIO cycle time (only if ZF set)
+;		ZF:		Set if PIO limit necessary
 ;				Cleared if no need to limit timings
 ;	Corrupts registers:
-;		(AX if CF cleared)
+;		Nothing
 ;--------------------------------------------------------------------
 AdvAtaInit_GetControllerMaxPioModeToALandMinPioCycleTimeToBX	equ	Vision_GetMaxPioModeToALandMinCycleTimeToBX
 

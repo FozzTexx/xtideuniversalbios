@@ -101,10 +101,11 @@ Vision_DoesIdePortInBXbelongToControllerWithIDinAX:
 
 	; Check if Secondary IDE channel is enabled
 	push	ax
+	push	dx
 	add		dx, BYTE QD6580_CONTROL_REGISTER
 	in		al, dx
-	sub		dx, BYTE QD6580_CONTROL_REGISTER
 	test	al, FLG_QDCONTROL_SECONDARY_DISABLED_in
+	pop		dx
 	pop		ax
 	jz		SHORT .CompareBXtoSecondaryIDE
 	ret
@@ -130,22 +131,18 @@ Vision_DoesIdePortInBXbelongToControllerWithIDinAX:
 ;	Returns:
 ;		AL:		Max supported PIO mode
 ;		AH:		FLGH_DPT_IORDY if IORDY supported, zero otherwise
-;		BX:		Min PIO Cycle Time (only if CF set)
-;		CF:		Set if PIO limit necessary
+;		BX:		Min PIO Cycle Time (only if ZF set)
+;		ZF:		Set if PIO limit necessary
 ;				Cleared if no need to limit timings
-;	Corrupts registers:
-;		(AX if CF cleared)
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
 Vision_GetMaxPioModeToALandMinCycleTimeToBX:
 	cmp		ah, ID_QD6500 << 4
-	clc
 	jne		SHORT .NoNeedToLimitForQD6580
 
 	mov		ax, 2	; Limit to PIO 2 because QD6500 does not support IORDY
 	mov		bx, PIO_2_MIN_CYCLE_TIME_NS
-	stc
 .NoNeedToLimitForQD6580:
 	ret
 
@@ -166,37 +163,30 @@ Vision_GetMaxPioModeToALandMinCycleTimeToBX:
 ;--------------------------------------------------------------------
 Vision_InitializeWithIDinAHandConfigInAL:
 	; QD6580 has a Control Register that needs to be programmed
-	mov		dx, [di+DPT_ADVANCED_ATA.wControllerBasePort]
 	cmp		ah, ID_QD6500 << 4
-	je		SHORT .CalculateTimingForQD6500
+	mov		dx, [di+DPT_ADVANCED_ATA.wControllerBasePort]
+	mov		bp, QD6500_MAX_ACTIVE_TIME_CLOCKS | (QD6500_MIN_ACTIVE_TIME_CLOCKS << 8)	; Assume QD6500
+	je		SHORT .CalculateTimingsForQD65xx
+	mov		bp, QD6580_MAX_ACTIVE_TIME_CLOCKS | (QD6580_MIN_ACTIVE_TIME_CLOCKS << 8)	; It's a QD6580
 
 	; Program QD6580 Control Register (not available on QD6500) to
 	; Enable or Disable Read-Ahead and Post-Write Buffer to match
 	; jumper setting on the multi I/O card.
-	xor		ax, ax
 	add		dx, BYTE QD6580_CONTROL_REGISTER
-	in		al, dx									; Read to get ATAPI jumper status
+	in		al, dx						; Read to get ATAPI jumper status
 	test	al, FLG_QDCONTROL_HDONLY_in
-	eCMOVNZ	ah, FLG_QDCONTROL_NONATAPI				; Enable Read-Ahead and Post-Write Buffers
-	mov		al, ah
-	or		al, MASK_QDCONTROL_FLAGS_TO_SET
+	mov		al, MASK_QDCONTROL_FLAGS_TO_SET
+	eCMOVNZ	al, FLG_QDCONTROL_NONATAPI | MASK_QDCONTROL_FLAGS_TO_SET	; Enable Read-Ahead and Post-Write Buffers
 	out		dx, al
-	sub		dx, BYTE QD6580_CONTROL_REGISTER
+	dec		dx							; Secondary Channel IDE Timing Register
 
 	; Now we need to determine is the drive connected to the Primary or Secondary channel.
 	; QD6500 has only one channel that can be Primary at 1F0h or Secondary at 170h.
 	; QD6580 always has Primary channel at 1F0h. Secondary channel at 170h can be Enabled or Disabled.
-	cmp		WORD [di+DPT.wBasePort], DEVICE_ATA_PRIMARY_PORT
-	je		SHORT .CalculateTimingTicksForQD6580	; Primary Channel so no need to modify DX
-	times 2 inc dx									; Secondary Channel IDE Timing Register
-
-	; QD6500 and QD6580 require slightly different calculations.
-.CalculateTimingTicksForQD6580:
-	mov		bp, QD6580_MAX_ACTIVE_TIME_CLOCKS | (QD6580_MIN_ACTIVE_TIME_CLOCKS << 8)
-	jmp		SHORT .CalculateTimingsForQD65xx
-
-.CalculateTimingForQD6500:
-	mov		bp, QD6500_MAX_ACTIVE_TIME_CLOCKS | (QD6500_MIN_ACTIVE_TIME_CLOCKS << 8)
+	cmp		BYTE [di+DPT.wBasePort], DEVICE_ATA_SECONDARY_PORT & 0FFh
+	je		SHORT .CalculateTimingsForQD65xx		; Secondary Channel so no need to modify DX
+	dec		dx
+	dec		dx							; Primary Channel IDE Timing Register
 
 	; We need the PIO Cycle Time in CX to calculate Active and Recovery Times.
 .CalculateTimingsForQD65xx:
