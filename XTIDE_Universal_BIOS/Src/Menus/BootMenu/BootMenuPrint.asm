@@ -198,7 +198,7 @@ BootMenuPrint_RefreshInformation:
 
 .HardDiskMenuitemInfoForForeignDrive:
 	call	DriveXlate_ToOrBack
-	call	AH15h_GetSectorCountFromForeignDriveToDXAX
+	call	AH15h_GetSectorCountFromForeignDriveToBXDXAX
 
 .ConvertSectorCountInBXDXAXtoSizeAndPushForFormat:
 	ePUSH_T	cx, g_szCapacityNum		; Push format substring

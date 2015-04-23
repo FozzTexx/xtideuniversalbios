@@ -28,7 +28,7 @@ SECTION .text
 ;		CF:		Set if CGA detected
 ;				Cleared if CGA not detected
 ;	Corrupts registers:
-;		AX
+;		Nothing
 ;--------------------------------------------------------------------
 ALIGN DISPLAY_JUMP_ALIGN
 CgaSnow_IsCgaPresent:
@@ -36,9 +36,8 @@ CgaSnow_IsCgaPresent:
 	jne		SHORT .CgaNotFound
 
 	; All standard CGA modes use 25 rows but only EGA and later store it to BDA.
-	cmp		BYTE [BDA.bVidRows], 25
-	jge		SHORT .CgaNotFound
-	stc
+	cmp		BYTE [BDA.bVidRows], 25		; *FIXME* Shouldn't this be 24 (rows - 1)?
+	jae		SHORT .CgaNotFound
 	ret
 ALIGN DISPLAY_JUMP_ALIGN
 .CgaNotFound:

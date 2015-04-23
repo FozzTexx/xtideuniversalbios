@@ -76,7 +76,7 @@ struc BDA
 
 	.wKBPtrStart	resb	2		; 0:480h, Keyboard, Pointer to start of buffer (XT+)
 	.wKBPtrEnd		resb	2		; 0:482h, Keyboard, Pointer to end of buffer (XT+)
-	.bVidRows		resb	1		; 0:484h, Video, Number of rows (EGA+)
+	.bVidRows		resb	1		; 0:484h, Video, Number of rows minus one (EGA+)
 	.wVidPpC		resb	2		; 0:485h, Video, Pixels per character (EGA+)
 	.bVidOptns		resb	1		; 0:487h, Video, Options (EGA+)
 	.bVidSwitches	resb	1		; 0:488h, Video, Switches (EGA+)

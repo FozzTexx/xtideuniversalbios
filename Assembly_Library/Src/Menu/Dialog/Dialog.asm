@@ -179,10 +179,10 @@ ALIGN JUMP_ALIGN
 .GetHeightToAH:
 	CALL_DISPLAY_LIBRARY GetColumnsToALandRowsToAH
 	xchg	bx, ax
-	mov		ah, [bp+MENUINIT.bTitleLines]
+	mov		ah, MENU_VERTICAL_BORDER_LINES
+	add		ah, [bp+MENUINIT.bTitleLines]
 	add		ah, [bp+MENUINIT.wItems]
 	add		ah, [bp+MENUINIT.bInfoLines]
-	add		ah, BYTE MENU_VERTICAL_BORDER_LINES
 	cmp		ah, bh
 	jb		.AHlessThanBH
 	xchg	bx, ax

@@ -73,12 +73,12 @@ AH15h_HandlerForReadDiskDriveSize:
 
 
 ;--------------------------------------------------------------------
-; AH15h_GetSectorCountFromForeignDriveToDXAX
+; AH15h_GetSectorCountFromForeignDriveToBXDXAX
 ; AH15h_GetSectorCountToBXDXAX
 ;	Parameters:
-;		DL:		Drive number (AH15h_GetSectorCountFromForeignDriveToDXAX only)
+;		DL:		Drive number (AH15h_GetSectorCountFromForeignDriveToBXDXAX only)
 ;		DS:		RAMVARS segment
-;		DS:DI:	Ptr to DPT (AH15h_GetSectorCountToDXAX only)
+;		DS:DI:	Ptr to DPT (AH15h_GetSectorCountToBXDXAX only)
 ;	Returns:
 ;		DX:AX:	Total sector count
 ;		BX:		Zero
@@ -86,7 +86,7 @@ AH15h_HandlerForReadDiskDriveSize:
 ;		CX
 ;--------------------------------------------------------------------
 %ifdef MODULE_BOOT_MENU
-AH15h_GetSectorCountFromForeignDriveToDXAX:
+AH15h_GetSectorCountFromForeignDriveToBXDXAX:
 	mov		ah, GET_DRIVE_PARAMETERS
 	call	Int13h_CallPreviousInt13hHandler
 	jmp		SHORT ConvertAH08hReturnValuesToSectorCount
