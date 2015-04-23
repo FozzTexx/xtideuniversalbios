@@ -134,8 +134,8 @@ MenuBorders_AdjustDisplayContextForDrawingBorders:
 ;--------------------------------------------------------------------
 ALIGN MENU_JUMP_ALIGN
 MenuBorders_GetNumberOfMiddleCharactersToDX:
-	eMOVZX	dx, [bp+MENUINIT.bWidth]
-	sub		dx, BYTE MENU_HORIZONTAL_BORDER_LINES
+	mov		dx, -MENU_HORIZONTAL_BORDER_LINES & 0FFh
+	add		dl, [bp+MENUINIT.bWidth]
 	ret
 
 

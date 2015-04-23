@@ -398,10 +398,10 @@ ALIGN JUMP_ALIGN
 ValueReaderForUserLbaValue:
 	push	dx
 
-	mov		ax, [es:di]
-	mov		dx, [es:di+2]		; DX:AX now holds user defined LBA28 limit
-	add		ax, BYTE 1			; Increment by one
-	adc		dx, BYTE 0
+	mov		ax, 1
+	cwd							; DX:AX = 1
+	add		ax, [es:di]
+	adc		dx, [es:di+2]		; User defined LBA28 limit added
 
 	xchg	ax, dx				; SHR 16
 	eSHR_IM	ax, 4				; SHR 4 => AX = DX:AX / (1024*1024)

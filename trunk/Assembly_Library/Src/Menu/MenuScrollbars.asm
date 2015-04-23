@@ -247,8 +247,8 @@ ALIGN MENU_JUMP_ALIGN, ret
 ;--------------------------------------------------------------------
 ALIGN MENU_JUMP_ALIGN
 MenuScrollbars_GetMaxVisibleItemsOnPageToCX:
-	eMOVZX	cx, [bp+MENUINIT.bHeight]
+	mov		cx, -MENU_VERTICAL_BORDER_LINES & 0FFh
+	add		cl, [bp+MENUINIT.bHeight]
 	sub		cl, [bp+MENUINIT.bTitleLines]
 	sub		cl, [bp+MENUINIT.bInfoLines]
-	sub		cl, MENU_VERTICAL_BORDER_LINES
 	ret

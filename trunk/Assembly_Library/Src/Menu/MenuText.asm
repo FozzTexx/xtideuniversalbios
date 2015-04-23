@@ -239,7 +239,7 @@ GetItemTextAttributeTypeToSIforItemInCX:
 
 	cmp		cx, [bp+MENUINIT.wHighlightedItem]
 	jne		SHORT .ReturnAttributeTypeInSI
-	sub		si, BYTE ATTRIBUTE_CHARS.cItem - ATTRIBUTE_CHARS.cHighlightedItem
+	inc		si		; SI = ATTRIBUTE_CHARS.cHighlightedItem
 ALIGN MENU_JUMP_ALIGN, ret
 .ReturnAttributeTypeInSI:
 	ret

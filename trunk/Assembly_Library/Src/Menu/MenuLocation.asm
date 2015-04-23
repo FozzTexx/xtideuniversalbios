@@ -132,6 +132,6 @@ MenuLocation_AddTitleBordersTopLeftCoordinatesToAX:
 ;--------------------------------------------------------------------
 ALIGN MENU_JUMP_ALIGN
 MenuLocation_GetMaxTextLineLengthToAX:
-	eMOVZX	ax, [bp+MENUINIT.bWidth]
-	sub		ax, BYTE MENU_HORIZONTAL_BORDER_LINES + MENU_TEXT_COLUMN_OFFSET
+	mov		ax, -(MENU_HORIZONTAL_BORDER_LINES + MENU_TEXT_COLUMN_OFFSET) & 0FFh
+	add		al, [bp+MENUINIT.bWidth]
 	ret
