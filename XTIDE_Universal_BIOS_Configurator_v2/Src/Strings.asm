@@ -22,7 +22,7 @@ SECTION .data
 
 ; Menu title
 g_szProgramTitle:					db	"Configuration and Flashing program for XTIDE Universal BIOS v2.0.0.",LF,CR,NULL
-g_szXtideUniversalBiosSignature:	db	"XTIDE204",NULL
+g_szXtideUniversalBiosSignature:	db	"XTIDE205",NULL
 g_szBiosIsNotLoaded:				db	"BIOS is not loaded!",NULL
 g_szEEPROM:							db	"EEPROM",NULL
 g_szSourceAndTypeSeparator:			db	" : ",NULL
@@ -275,7 +275,8 @@ g_szMultichoiceCfgDevice:	db	"16-bit ISA/VLB/PCI IDE",LF
 							db	"XTIDE rev 1",LF
 							db	"XTIDE rev 2 or modded rev 1",LF
 							db	"XT-CF (PIO)",LF
-							db	"XT-CF (PIO w/BIU offload)",LF
+							db	"XT-CF (PIO8 w/BIU offload)",LF
+							db	"XT-CF (PIO16 w/BIU offload)",LF
 							db	"XT-CF DMA (v3 only)",LF
 							db	"JR-IDE/ISA",LF
 							db	"SVC ADP50L",LF
@@ -287,7 +288,8 @@ g_szValueCfgDevice8b:						db	"8-bit",NULL
 g_szValueCfgDeviceRev1:						db	"XTIDE r1",NULL
 g_szValueCfgDeviceRev2:						db	"XTIDE r2",NULL
 g_szValueCfgDeviceXTCFPio8:					db	"XTCF PIO",NULL
-g_szValueCfgDeviceXTCFPio8WithBIUOffload:	db	"XTCF BIU",NULL
+g_szValueCfgDeviceXTCFPio8WithBIUOffload:	db	"BIU 8",NULL
+g_szValueCfgDeviceXTCFPio16WithBIUOffload:	db	"BIU 16",NULL
 g_szValueCfgDeviceXTCFDMA:					db	"XTCF DMA",NULL
 g_szValueCfgDeviceJrIdeIsa:					db	"JR-ISA",NULL
 g_szValueCfgDeviceADP50L:					db	"ADP50L",NULL
