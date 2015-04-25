@@ -194,6 +194,7 @@ g_rgwChoiceToValueLookupForDevice:
 	dw	DEVICE_8BIT_XTIDE_REV2
 	dw	DEVICE_8BIT_XTCF_PIO8
 	dw	DEVICE_8BIT_XTCF_PIO8_WITH_BIU_OFFLOAD
+	dw	DEVICE_8BIT_XTCF_PIO16_WITH_BIU_OFFLOAD
 	dw	DEVICE_8BIT_XTCF_DMA
 	dw	DEVICE_8BIT_JRIDE_ISA
 	dw	DEVICE_8BIT_ADP50L
@@ -206,6 +207,7 @@ g_rgszValueToStringLookupForDevice:
 	dw	g_szValueCfgDeviceRev2
 	dw	g_szValueCfgDeviceXTCFPio8
 	dw	g_szValueCfgDeviceXTCFPio8WithBIUOffload
+	dw	g_szValueCfgDeviceXTCFPio16WithBIUOffload
 	dw	g_szValueCfgDeviceXTCFDMA
 	dw	g_szValueCfgDeviceJrIdeIsa
 	dw	g_szValueCfgDeviceADP50L
