@@ -99,7 +99,7 @@ endstruc
 ; DPT for ATA devices
 struc DPT_ATA
 	.dpt					resb	DPT_size
-	.bDevice				resb	1	; Device Type from IDEVARS (overrided when 32-bit controller detected)
+	.bDevice				resb	1	; Device Type from IDEVARS (overrided when 32-bit controller detected or XT-CF mode is changed)
 	.bBlockSize				resb	1	; Current block size in sectors (do not set to zero!)
 endstruc
 

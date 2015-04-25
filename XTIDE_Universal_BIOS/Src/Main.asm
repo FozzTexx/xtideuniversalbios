@@ -135,7 +135,7 @@ istruc ROMVARS
 
 %ifdef MODULE_8BIT_IDE_ADVANCED
 	at	ROMVARS.ideVars0+IDEVARS.wBasePort,				dw	DEVICE_XTIDE_DEFAULT_PORT		; Controller Command Block base port
-	at	ROMVARS.ideVars0+IDEVARS.bDevice,				db	DEVICE_8BIT_XTCF_PIO8
+	at	ROMVARS.ideVars0+IDEVARS.bDevice,				db	XTCF_8BIT_PIO_MODE_WITH_BIU_OFFLOAD
 %else
 	at	ROMVARS.ideVars0+IDEVARS.wBasePort,				dw	DEVICE_XTIDE_DEFAULT_PORT		; Controller Command Block base port
 	at	ROMVARS.ideVars0+IDEVARS.wControlBlockPort,		dw	DEVICE_XTIDE_DEFAULT_PORTCTRL	; Controller Control Block base port

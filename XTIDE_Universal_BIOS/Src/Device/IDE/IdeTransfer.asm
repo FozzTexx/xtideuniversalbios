@@ -349,10 +349,11 @@ g_rgfnPioRead:
 		dw		IdePioBlock_ReadFrom8bitDataPort	; 2, DEVICE_8BIT_ATA
 		dw		IdePioBlock_ReadFromXtideRev1		; 3, DEVICE_8BIT_XTIDE_REV1
 		dw		IdePioBlock_ReadFrom16bitDataPort	; 4, DEVICE_8BIT_XTIDE_REV2
+%ifdef MODULE_8BIT_IDE_ADVANCED
 		dw		IdePioBlock_ReadFrom8bitDataPort	; 5, DEVICE_8BIT_XTCF_PIO8
 		dw		IdePioBlock_ReadFrom16bitDataPort	; 6, DEVICE_8BIT_XTCF_PIO8_WITH_BIU_OFFLOAD
-%ifdef MODULE_8BIT_IDE_ADVANCED
-		dw		IdeDmaBlock_ReadFromXTCF			; 7, DEVICE_8BIT_XTCF_DMA
+		dw		IdePioBlock_ReadFrom16bitDataPort	; 7, DEVICE_8BIT_XTCF_PIO16_WITH_BIU_OFFLOAD
+		dw		IdeDmaBlock_ReadFromXTCF			; 8, DEVICE_8BIT_XTCF_DMA
 %endif ; MODULE_8BIT_IDE_ADVANCED
 %endif ; MODULE_8BIT_IDE
 
@@ -364,9 +365,10 @@ g_rgfnPioWrite:
 		dw		IdePioBlock_WriteTo8bitDataPort		; 2, DEVICE_8BIT_ATA
 		dw		IdePioBlock_WriteToXtideRev1		; 3, DEVICE_8BIT_XTIDE_REV1
 		dw		IdePioBlock_WriteToXtideRev2		; 4, DEVICE_8BIT_XTIDE_REV2
+%ifdef MODULE_8BIT_IDE_ADVANCED
 		dw		IdePioBlock_WriteTo8bitDataPort		; 5, DEVICE_8BIT_XTCF_PIO8
 		dw		IdePioBlock_WriteTo16bitDataPort	; 6, DEVICE_8BIT_XTCF_PIO8_WITH_BIU_OFFLOAD
-%ifdef MODULE_8BIT_IDE_ADVANCED
-		dw		IdeDmaBlock_WriteToXTCF				; 7, DEVICE_8BIT_XTCF_DMA
+		dw		IdePioBlock_WriteTo16bitDataPort	; 7, DEVICE_8BIT_XTCF_PIO16_WITH_BIU_OFFLOAD
+		dw		IdeDmaBlock_WriteToXTCF				; 8, DEVICE_8BIT_XTCF_DMA
 %endif ; MODULE_8BIT_IDE_ADVANCED
 %endif ; MODULE_8BIT_IDE
