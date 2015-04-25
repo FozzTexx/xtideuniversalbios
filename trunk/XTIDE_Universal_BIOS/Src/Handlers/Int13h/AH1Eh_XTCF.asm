@@ -110,7 +110,7 @@ AH1Eh_ChangeXTCFmodeBasedOnModeInAL:
 	;       whose purpose is *only* to raise DRQ.  The register cannot be read.
 	;       Selected transfer mode is stored in BIOS variable (DPT_ATA.bDevice).
 
-	; Note that when selecting 'DEVICE_8BIT_PIO_MODE_WITH_BIU_OFFLOAD' mode,
+	; Note that when selecting 'DEVICE_8BIT_XTCF_PIO8_WITH_BIU_OFFLOAD' mode,
 	; the ATA device (i.e. CompactFlash card) will operate in 8-bit mode, but
 	; data will be transferred from its data register using 16-bit CPU instructions
 	; like REP INSW.  This works because XT-CF adapters are 8-bit cards, and
@@ -133,6 +133,8 @@ AH1Eh_ChangeXTCFmodeBasedOnModeInAL:
 	jz		SHORT .Set8bitPioMode	; XTCF_8BIT_PIO_MODE = 0
 	dec		ax						; XTCF_8BIT_PIO_MODE_WITH_BIU_OFFLOAD = 1
 	jz		SHORT .Set8bitPioModeWithBIUOffload
+	dec		ax
+	jz		SHORT .Set16bitPioModeWithBIUOffload
 
 	; XTCF_DMA_MODE = 2 (allow 3 as well for more optimized code)
 	mov		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_XTCF_DMA
@@ -143,6 +145,12 @@ AH1Eh_ChangeXTCFmodeBasedOnModeInAL:
 	jbe		SHORT AH24h_SetBlockSize
 	mov		al, XTCF_DMA_MODE_MAX_BLOCK_SIZE
 	jmp		SHORT AH24h_SetBlockSize
+
+.Set16bitPioModeWithBIUOffload:
+	pop		bx								; Do not enable 8-bit PIO...
+	ePUSH_T	bx, AH23h_Disable8bitPioMode	; ...disable it instead
+	mov		al, DEVICE_8BIT_XTCF_PIO16_WITH_BIU_OFFLOAD
+	SKIP2B	bx
 
 .Set8bitPioMode:
 	mov		al, DEVICE_8BIT_XTCF_PIO8

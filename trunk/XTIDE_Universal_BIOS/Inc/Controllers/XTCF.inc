@@ -55,9 +55,11 @@ XTCF_CONTROL_REGISTER				EQU		1Eh
 ; XT-CFv3 cannot be distinguished by software, so user must decide and set
 ; the mode via a call to Int 13h function 1Eh accordingly (see AH1E_XTCF.asm).
 ;
-XTCF_8BIT_PIO_MODE					EQU		00h
-XTCF_8BIT_PIO_MODE_WITH_BIU_OFFLOAD	EQU		01h
-XTCF_DMA_MODE						EQU		02h
+XTCF_8BIT_PIO_MODE					EQU		((DEVICE_8BIT_XTCF_PIO8 >> 1) - XTCF_DEVICE_OFFSET)
+XTCF_8BIT_PIO_MODE_WITH_BIU_OFFLOAD	EQU		(XTCF_8BIT_PIO_MODE + 1)
+XTCF_16BIT_PIO_WITH_BIU_OFFLOAD		EQU		(XTCF_8BIT_PIO_MODE + 2)	; Lo-tech 8-bit IDE Adapter
+XTCF_DMA_MODE						EQU		(XTCF_8BIT_PIO_MODE + 3)
+
 
 ; Subcommands for AH=1Eh, Lo-tech XT-CF features.
 ; Return values common for all subcommands:

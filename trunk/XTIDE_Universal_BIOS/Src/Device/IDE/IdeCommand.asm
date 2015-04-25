@@ -88,12 +88,15 @@ IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 	call	Idepack_FakeToSSBP
 
 %ifdef MODULE_8BIT_IDE
-	; Enable 8-bit PIO mode for 8-bit ATA and XT-CF
 	push	si
+
+	; Enable 8-bit PIO for DEVICE_8BIT_ATA (no need to verify device type here)
 	call	AH9h_Enable8bitModeForDevice8bitAta
+
+	; Set XT-CF mode. No need to check here if device is XT-CF or not.
 %ifdef MODULE_8BIT_IDE_ADVANCED
-	mov		al, XTCF_8BIT_PIO_MODE		; initialise with most basic transfer mode
-	call	AH9h_SetModeFromALtoXTCF
+	call	AH1Eh_GetCurrentXTCFmodeToAX	; Reads from DPT_ATA.bDevice that we just stored
+	call	AH9h_SetModeFromALtoXTCF		; Enables/disables 8-bit mode when necessary
 %endif ; MODULE_8BIT_IDE_ADVANCED
 	pop		si
 %endif ; MODULE_8BIT_IDE
@@ -105,7 +108,6 @@ IdeCommand_IdentifyDeviceToBufferInESSIwithDriveSelectByteInBH:
 	call	Idepack_StoreNonExtParametersAndIssueCommandFromAL
 
 	; Clean stack and return
-.FailedToSet8bitMode:
 	lea		sp, [bp+SIZE_OF_IDEPACK_WITHOUT_INTPACK]	; This assumes BP hasn't changed between Idepack_FakeToSSBP and here
 	pop		bp
 	ret
