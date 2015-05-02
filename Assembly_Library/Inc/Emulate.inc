@@ -303,6 +303,13 @@ ALIGN JUMP_ALIGN
 %%Return:
 %endmacro
 
+%macro eCSETNZ 1
+	mov		%1, 0			; Clear while preserving flags
+	jz		SHORT %%Return	; Nothing to set
+	inc		%1
+%%Return:
+%endmacro
+
 
 ;--------------------------------------------------------------------
 ; Moves byte with zero-extending to any Register.
