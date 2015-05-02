@@ -39,6 +39,8 @@ AdvAtaInit_DetectControllerForIdeBaseInBX:
 	jne		SHORT .NoAdvancedControllerForPortBX
 	call	Vision_DoesIdePortInBXbelongToControllerWithIDinAX
 	jne		SHORT .NoAdvancedControllerForPortBX
+	call	PDC20x30_DetectControllerForIdeBaseInBX
+	jnc		SHORT .NoAdvancedControllerForPortBX
 
 	stc		; Advanced Controller found for port BX
 	ret
@@ -61,7 +63,12 @@ AdvAtaInit_DetectControllerForIdeBaseInBX:
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
-AdvAtaInit_GetControllerMaxPioModeToALandMinPioCycleTimeToBX	equ	Vision_GetMaxPioModeToALandMinCycleTimeToBX
+AdvAtaInit_GetControllerMaxPioModeToALandMinPioCycleTimeToBX:
+	cmp		ah, ID_QD6580_ALTERNATE
+	jae		SHORT .Vision
+	jmp		PDC20x30_GetMaxPioModeToALandMinPioCycleTimeToBX
+.Vision:
+	jmp		Vision_GetMaxPioModeToALandMinCycleTimeToBX
 
 
 ;--------------------------------------------------------------------
@@ -80,11 +87,15 @@ AdvAtaInit_InitializeControllerForDPTinDSDI:
 	mov		ax, [di+DPT_ADVANCED_ATA.wControllerID]
 	test	ax, ax
 	jz		SHORT .NoAdvancedController	; Return with CF cleared
+	
+	cmp		ah, ID_QD6580_ALTERNATE
+	jae		SHORT .Vision
+	jmp		PDC20x30_InitializeForDPTinDSDI
 
+.Vision:
 	push	bp
 	push	si
 
-	; We only support Vision at the moment so no need to identify ID
 	call	AdvAtaInit_LoadMasterDPTtoDSSIifSlaveInDSDI
 	call	Vision_InitializeWithIDinAHandConfigInAL
 	xor		ax, ax						; Success

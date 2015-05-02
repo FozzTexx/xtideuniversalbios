@@ -46,6 +46,8 @@
 %endif
 
 %ifdef MODULE_ADVANCED_ATA
+	%include "AdvancedID.inc"
+	%include "PDC20x30.inc"			; For Promise PDC 20230-C and 20630 controllers
 	%include "Vision.inc"			; For QDI Vision QD65xx VLB IDE Controllers
 %endif
 

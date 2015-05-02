@@ -233,6 +233,7 @@ iend
 %ifdef MODULE_ADVANCED_ATA
 	%include "AdvAtaInit.asm"		; For initializing VLB and PCI controllers
 	%include "Vision.asm"			; QDI Vision QD6500 and QD6580 support
+	%include "PDC20x30.asm"			; Promise PDC 20230-C and 20630 support
 %endif
 	%include "IdeCommand.asm"
 %ifdef MODULE_8BIT_IDE_ADVANCED

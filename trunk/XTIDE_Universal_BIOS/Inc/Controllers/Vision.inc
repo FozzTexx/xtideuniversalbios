@@ -63,11 +63,6 @@ FLG_QDCONFIG_QD6500STATUS				EQU	(1<<3)	; QD6500 Enabled/Disabled status
 													; 0 = Enabled, 1 = Disabled
 MASK_QDCONFIG_CONTROLLER_ID				EQU	0F0h	; QDI Vision Controller Identification nibble
 
-; QDI Vision Controller Identification nibbles
-ID_QD6500								EQU	1100b
-ID_QD6580								EQU	1010b
-ID_QD6580_ALTERNATE						EQU	0101b
-
 
 ; Bit definitions for QD6580 Control Register
 FLG_QDCONTROL_SECONDARY_DISABLED_in		EQU	(1<<0)	; 0 = Primary and Secondary IDE enabled (Primary at 1F0h and Secondary at 170h)
