@@ -199,8 +199,8 @@ SetSpeedForDriveInCX:
 
 	add		dx, BYTE SECTOR_NUMBER_REGISTER
 	mov		bh, ~MASK_PDCSCR_DEV1SPEED	; Assume slave
-	test	cx, cx
-	jnz		.setSpeed
+	inc		cx
+	loop	.setSpeed
 	eSHL_IM	bl, POS_PDCSCR_DEV0SPEED
 	mov		bh, ~MASK_PDCSCR_DEV0SPEED
 .setSpeed:

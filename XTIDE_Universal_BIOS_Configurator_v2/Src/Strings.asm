@@ -274,7 +274,7 @@ g_szMultichoiceCfgDevice:	db	"16-bit ISA/VLB/PCI IDE",LF
 							db	"16-bit ISA IDE in 8-bit mode",LF
 							db	"XTIDE rev 1",LF
 							db	"XTIDE rev 2 or modded rev 1",LF
-							db	"XT-CF (PIO)",LF
+							db	"XT-CF (PIO8)",LF
 							db	"XT-CF (PIO8 w/BIU offload)",LF
 							db	"XT-CF (PIO16 w/BIU offload)",LF
 							db	"XT-CF DMA (v3 only)",LF

@@ -23,7 +23,7 @@
 ; Controller IDs contained in high byte of ID word.
 ; Low byte is controller specific to be used in controller initialization and such
 
-ID_NOT_ADVANCED_CONTROLLER	EQU	0
+ID_NOT_ADVANCED_CONTROLLER	EQU		0
 
 ; Promise
 ID_PDC20230					EQU		1
@@ -31,9 +31,9 @@ ID_PDC20630					EQU		2
 
 ; Vision
 ; QDI Vision Controller Identification nibbles used by hardware so do not modify these
-ID_QD6580_ALTERNATE			EQU	0101b
-ID_QD6580					EQU	1010b
-ID_QD6500					EQU	1100b
+ID_QD6580_ALTERNATE			EQU		5
+ID_QD6580					EQU		10
+ID_QD6500					EQU		12
 
 
 %endif ; ADVANCEDID_INC

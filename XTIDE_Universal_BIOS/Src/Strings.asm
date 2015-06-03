@@ -134,17 +134,18 @@ g_szAddressingModes_Displacement equ (g_szLARGE - g_szAddressingModes)
 
 
 g_szDeviceTypeValues:
-g_szDeviceTypeValues_16bit:		db	" 16",NULL
-g_szDeviceTypeValues_32bit:		db	" 32",NULL
-g_szDeviceTypeValues_8bit:		db	"  8",NULL
-g_szDeviceTypeValues_XTIDEr1:	db	"D8 ",NULL	; Dual 8-bit
-g_szDeviceTypeValues_XTIDEr2:	db	"X8 ",NULL	; A0<->A3 swapped 8-bit
-g_szDeviceTypeValues_XTCFpio8:	db	"T8 ",NULL	; True 8-bit
-g_szDeviceTypeValues_XTCFdma:	db	"8MA",NULL	; DMA 8-bit
-g_szDeviceTypeValues_XTCFmem:	db	"M8 ",NULL	; Memory Mapped 8-bit
-g_szDeviceTypeValues_JrIde:		db	"M8 ",NULL
-g_szDeviceTypeValues_ADP50L:	db	"M8 ",NULL
-g_szDeviceTypeValues_Serial:	db	"SER",NULL
+g_szDeviceTypeValues_16bit:			db	" 16",NULL
+g_szDeviceTypeValues_32bit:			db	" 32",NULL
+g_szDeviceTypeValues_8bit:			db	"  8",NULL
+g_szDeviceTypeValues_XTIDEr1:		db	"D8 ",NULL	; Dual 8-bit
+g_szDeviceTypeValues_XTIDEr2:		db	"X8 ",NULL	; A0<->A3 swapped 8-bit
+g_szDeviceTypeValues_XTCFpio8:		db	"T8 ",NULL	; True 8-bit
+g_szDeviceTypeValues_XTCFpio8BIU:	db	"T8B",NULL
+g_szDeviceTypeValues_XTCFpio16BIU:	db	"16B",NULL
+g_szDeviceTypeValues_XTCFdma:		db	"8MA",NULL	; DMA 8-bit
+g_szDeviceTypeValues_JrIde:			db	"M8 ",NULL	; Memory Mapped 8-bit
+g_szDeviceTypeValues_ADP50L:		db	"M8 ",NULL	; Memory Mapped 8-bit
+g_szDeviceTypeValues_Serial:		db	"SER",NULL
 
 g_szDeviceTypeValues_Displacement equ (g_szDeviceTypeValues_32bit - g_szDeviceTypeValues)
 ;
@@ -158,31 +159,34 @@ g_szDeviceTypeValues_Displacement equ (g_szDeviceTypeValues_32bit - g_szDeviceTy
 		%error "g_szDeviceTypeValues Displacement Incorrect 2"
 	%endif
 	%if g_szDeviceTypeValues_8bit <> g_szDeviceTypeValues_32bit + g_szDeviceTypeValues_Displacement
-		%error "g_szDeviceTypeValues Displacement Incorrect 2"
-	%endif
-	%if g_szDeviceTypeValues_XTIDEr1 <> g_szDeviceTypeValues_8bit + g_szDeviceTypeValues_Displacement
 		%error "g_szDeviceTypeValues Displacement Incorrect 3"
 	%endif
-	%if g_szDeviceTypeValues_XTIDEr2 <> g_szDeviceTypeValues_XTIDEr1 + g_szDeviceTypeValues_Displacement
+	%if g_szDeviceTypeValues_XTIDEr1 <> g_szDeviceTypeValues_8bit + g_szDeviceTypeValues_Displacement
 		%error "g_szDeviceTypeValues Displacement Incorrect 4"
 	%endif
-	%if g_szDeviceTypeValues_XTCFpio8 <> g_szDeviceTypeValues_XTIDEr2 + g_szDeviceTypeValues_Displacement
+	%if g_szDeviceTypeValues_XTIDEr2 <> g_szDeviceTypeValues_XTIDEr1 + g_szDeviceTypeValues_Displacement
 		%error "g_szDeviceTypeValues Displacement Incorrect 5"
 	%endif
-	%if g_szDeviceTypeValues_XTCFdma <> g_szDeviceTypeValues_XTCFpio8 + g_szDeviceTypeValues_Displacement
+	%if g_szDeviceTypeValues_XTCFpio8 <> g_szDeviceTypeValues_XTIDEr2 + g_szDeviceTypeValues_Displacement
 		%error "g_szDeviceTypeValues Displacement Incorrect 6"
 	%endif
-	%if g_szDeviceTypeValues_XTCFmem <> g_szDeviceTypeValues_XTCFdma + g_szDeviceTypeValues_Displacement
+	%if g_szDeviceTypeValues_XTCFpio8BIU <> g_szDeviceTypeValues_XTCFpio8 + g_szDeviceTypeValues_Displacement
 		%error "g_szDeviceTypeValues Displacement Incorrect 7"
 	%endif
-	%if g_szDeviceTypeValues_JrIde <> g_szDeviceTypeValues_XTCFmem + g_szDeviceTypeValues_Displacement
+	%if g_szDeviceTypeValues_XTCFpio16BIU <> g_szDeviceTypeValues_XTCFpio8BIU + g_szDeviceTypeValues_Displacement
 		%error "g_szDeviceTypeValues Displacement Incorrect 8"
 	%endif
-	%if g_szDeviceTypeValues_ADP50L <> g_szDeviceTypeValues_JrIde + g_szDeviceTypeValues_Displacement
+	%if g_szDeviceTypeValues_XTCFdma <> g_szDeviceTypeValues_XTCFpio16BIU + g_szDeviceTypeValues_Displacement
 		%error "g_szDeviceTypeValues Displacement Incorrect 9"
 	%endif
-	%if g_szDeviceTypeValues_Serial <> g_szDeviceTypeValues_ADP50L + g_szDeviceTypeValues_Displacement
+	%if g_szDeviceTypeValues_JrIde <> g_szDeviceTypeValues_XTCFdma + g_szDeviceTypeValues_Displacement
 		%error "g_szDeviceTypeValues Displacement Incorrect 10"
+	%endif
+	%if g_szDeviceTypeValues_ADP50L <> g_szDeviceTypeValues_JrIde + g_szDeviceTypeValues_Displacement
+		%error "g_szDeviceTypeValues Displacement Incorrect 11"
+	%endif
+	%if g_szDeviceTypeValues_Serial <> g_szDeviceTypeValues_ADP50L + g_szDeviceTypeValues_Displacement
+		%error "g_szDeviceTypeValues Displacement Incorrect 12"
 	%endif
 %endif
 
