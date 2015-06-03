@@ -93,19 +93,18 @@ AccessDPT_GetLCHStoAXBLBH:
 ;		DS:DI:	Ptr to Disk Parameter Table
 ;	Returns:
 ;		AH:		Device Type
-;		ZF:		Set if XTCF
-;				Cleared if some other device
+;		CF:		Cleared if XTCF
+;				Set if some other device
 ;	Corrupts registers:
 ;		Nothing
 ;--------------------------------------------------------------------
 AccessDPT_IsThisDeviceXTCF:
 	mov		ah, [di+DPT_ATA.bDevice]
-	cmp		ah, DEVICE_8BIT_XTCF_PIO8
-	je		SHORT .DeviceIsXTCF
-	cmp		ah, DEVICE_8BIT_XTCF_PIO8_WITH_BIU_OFFLOAD
-	je		SHORT .DeviceIsXTCF
-	cmp		ah, DEVICE_8BIT_XTCF_DMA
-.DeviceIsXTCF:
+	cmp		ah, FIRST_XTCF_DEVICE
+	jb		SHORT .DeviceIsNotXTCF
+	cmp		ah, LAST_XTCF_DEVICE+1
+	cmc
+.DeviceIsNotXTCF:
 	ret
 %endif ; MODULE_8BIT_IDE_ADVANCED
 

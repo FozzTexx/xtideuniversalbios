@@ -621,6 +621,7 @@ IdeControllerMenu_WriteDevice:
 	je		SHORT .Done							; if we were already serial, nothing to do
 
 	mov		BYTE [es:di+IDEVARS.bSerialBaud-IDEVARS.wBasePort], SERIAL_DEFAULT_BAUD
+	mov		BYTE [es:di+IDEVARS.bIRQ-IDEVARS.wBasePort], 0	; Clear .bIRQ to keep the boot menu from printing it
 
 	mov		al, SERIAL_DEFAULT_COM
 	sub		di, IDEVARS.wBasePort - IDEVARS.bSerialCOMPortChar

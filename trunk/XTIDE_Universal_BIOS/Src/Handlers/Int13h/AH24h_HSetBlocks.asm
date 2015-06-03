@@ -67,7 +67,7 @@ AH24h_SetBlockSize:
 	; Do not limit it to maximum supported since software calling AH=24h
 	; must know what the actual block size is.
 	cmp		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_XTCF_DMA
-	je		SHORT .DisableBlockMode
+	je		SHORT ProcessXTCFsubcommandFromAL.AH1Eh_LoadInvalidCommandToAHandSetCF
 .NoNeedToLimitBlockSize:
 %endif ; MODULE_8BIT_IDE_ADVANCED
 

@@ -96,8 +96,8 @@ IdeWait_PollStatusFlagInBLwithTimeoutInBH:
 PollBsyAndFlgInAH:
 .PollLoop:
 	call	IdeIO_InputStatusRegisterToAL
-	test	al, FLG_STATUS_BSY					; Controller busy?
-	jnz		SHORT .UpdateTimeout				;  If so, jump to timeout update
+	test	al, al								; Controller busy? (Check for FLG_STATUS_BSY)
+	js		SHORT .UpdateTimeout				;  If so, jump to timeout update
 	test	al, ah								; Test secondary flag
 	jnz		SHORT IdeError_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL
 .UpdateTimeout:
@@ -125,8 +125,8 @@ PollBsyAndFlgInAH:
 PollBsyOnly:
 .PollLoop:
 	call	IdeIO_InputStatusRegisterToAL
-	test	al, FLG_STATUS_BSY					; Controller busy?
-	jz		SHORT IdeError_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL
+	test	al, al								; Controller busy? (Check for FLG_STATUS_BSY)
+	jns		SHORT IdeError_GetBiosErrorCodeToAHfromPolledStatusRegisterInAL
 	call	Timer_SetCFifTimeout				; Update timeout counter
 	jnc		SHORT .PollLoop						; Loop if time left (sets CF on timeout)
 .End:											; Label used for sanity check during assembly

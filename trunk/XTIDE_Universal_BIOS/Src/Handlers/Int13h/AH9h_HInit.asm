@@ -233,6 +233,52 @@ AH9h_InitializeDriveForUse:
 
 
 
+%ifdef MODULE_8BIT_IDE
+;--------------------------------------------------------------------
+; AH9h_Enable8bitModeForDevice8bitAta
+;	Parameters:
+;		DS:DI:	Ptr to DPT (in RAMVARS segment)
+;		SS:BP:	Ptr to IDEPACK
+;	Returns:
+;		AH:		Int 13h return status
+;		CF:		Clear if successful or device is not DEVICE_8BIT_ATA
+;				Set if failed to set 8-bit mode for DEVICE_8BIT_ATA
+;	Corrupts registers:
+;		AL, BX, CX, DX, SI
+;--------------------------------------------------------------------
+AH9h_Enable8bitModeForDevice8bitAta:
+	cmp		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_ATA
+%ifdef MODULE_8BIT_IDE_ADVANCED
+	jne		SHORT IgnoreInvalidCommandError
+	jmp		AH23h_Enable8bitPioMode
+%else ; ~MODULE_8BIT_IDE_ADVANCED
+	je		AH23h_Enable8bitPioMode
+	; Fall to IgnoreInvalidCommandError
+%endif ; MODULE_8BIT_IDE_ADVANCED
+%endif ; MODULE_8BIT_IDE
+
+
+%ifdef MODULE_8BIT_IDE_ADVANCED
+;--------------------------------------------------------------------
+; AH9h_SetModeFromALtoXTCF
+;	Parameters:
+;		AL:		XT-CF Mode to set
+;		DS:DI:	Ptr to DPT (in RAMVARS segment)
+;		SS:BP:	Ptr to IDEPACK
+;	Returns:
+;		AH:		Int 13h return status
+;		CF:		Clear if successful or device is not XT-CF
+;				Set if failed to set mode for XT-CF
+;	Corrupts registers:
+;		AL, BX, CX, DX, SI
+;--------------------------------------------------------------------
+AH9h_SetModeFromALtoXTCF:
+	call	AccessDPT_IsThisDeviceXTCF
+	jnc		AH1Eh_ChangeXTCFmodeBasedOnModeInAL
+	; Fall to IgnoreInvalidCommandError
+%endif ; MODULE_8BIT_IDE_ADVANCED
+
+
 ;--------------------------------------------------------------------
 ; SetErrorFlagFromALwithErrorCodeInAH
 ;	Parameters:
@@ -258,44 +304,3 @@ SetErrorFlagFromALwithErrorCodeInAH:
 	stc
 .NoErrorFlagToSet:
 	ret
-
-
-%ifdef MODULE_8BIT_IDE_ADVANCED
-;--------------------------------------------------------------------
-; AH9h_SetModeFromALtoXTCF
-;	Parameters:
-;		AL:		XT-CF Mode to set
-;		DS:DI:	Ptr to DPT (in RAMVARS segment)
-;		SS:BP:	Ptr to IDEPACK
-;	Returns:
-;		AH:		Int 13h return status
-;		CF:		Clear if successful or device is not XT-CF
-;				Set if failed to set mode for XT-CF
-;	Corrupts registers:
-;		AL, BX, CX, DX, SI
-;--------------------------------------------------------------------
-AH9h_SetModeFromALtoXTCF:
-	call	AccessDPT_IsThisDeviceXTCF
-	jne		SHORT IgnoreInvalidCommandError
-	jmp		AH1Eh_ChangeXTCFmodeBasedOnModeInAL
-%endif ; MODULE_8BIT_IDE_ADVANCED
-
-
-%ifdef MODULE_8BIT_IDE
-;--------------------------------------------------------------------
-; AH9h_Enable8bitModeForDevice8bitAta
-;	Parameters:
-;		DS:DI:	Ptr to DPT (in RAMVARS segment)
-;		SS:BP:	Ptr to IDEPACK
-;	Returns:
-;		AH:		Int 13h return status
-;		CF:		Clear if successful or device is not DEVICE_8BIT_ATA
-;				Set if failed to set 8-bit mode for DEVICE_8BIT_ATA
-;	Corrupts registers:
-;		AL, BX, CX, DX, SI
-;--------------------------------------------------------------------
-AH9h_Enable8bitModeForDevice8bitAta:
-	cmp		BYTE [di+DPT_ATA.bDevice], DEVICE_8BIT_ATA
-	jne		SHORT IgnoreInvalidCommandError
-	jmp		AH23h_Enable8bitPioMode
-%endif ; MODULE_8BIT_IDE

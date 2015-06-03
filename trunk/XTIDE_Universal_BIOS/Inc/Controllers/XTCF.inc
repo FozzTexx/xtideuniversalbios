@@ -53,12 +53,12 @@ XTCF_CONTROL_REGISTER				EQU		1Eh
 ; For XT-CFv3 adapter, DMA transfers are also supported via channel 3.
 ;
 ; XT-CFv3 cannot be distinguished by software, so user must decide and set
-; the mode via a call to Int 13h function 1Eh accordingly (see AH1E_XTCF.asm).
+; the mode via a call to Int 13h function 1Eh accordingly (see AH1Eh_XTCF.asm).
 ;
-XTCF_8BIT_PIO_MODE					EQU		((DEVICE_8BIT_XTCF_PIO8 >> 1) - XTCF_DEVICE_OFFSET)
-XTCF_8BIT_PIO_MODE_WITH_BIU_OFFLOAD	EQU		(XTCF_8BIT_PIO_MODE + 1)
-XTCF_16BIT_PIO_WITH_BIU_OFFLOAD		EQU		(XTCF_8BIT_PIO_MODE + 2)	; Lo-tech 8-bit IDE Adapter
-XTCF_DMA_MODE						EQU		(XTCF_8BIT_PIO_MODE + 3)
+XTCF_8BIT_PIO_MODE					EQU		0	; XT-CF using 8-bit PIO mode
+XTCF_8BIT_PIO_MODE_WITH_BIU_OFFLOAD	EQU		1	; XT-CF using 8-bit PIO mode, but with 16-bit instructions
+XTCF_16BIT_PIO_WITH_BIU_OFFLOAD		EQU		2	; Lo-tech 8-bit IDE Adapter
+XTCF_DMA_MODE						EQU		3	; XT-CFv3 using DMA
 
 
 ; Subcommands for AH=1Eh, Lo-tech XT-CF features.

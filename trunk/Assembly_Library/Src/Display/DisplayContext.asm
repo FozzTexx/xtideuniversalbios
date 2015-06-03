@@ -65,9 +65,7 @@ DisplayContext_Initialize:
 .InitializeFlags:
 	mov		dl, FLG_CONTEXT_ATTRIBUTES
 	call	CgaSnow_IsCgaPresent
-	jnc		SHORT .DoNotSetCgaFlag
-	or		dl, FLG_CONTEXT_CGA
-.DoNotSetCgaFlag:
+	eCMOVC	dl, FLG_CONTEXT_ATTRIBUTES | FLG_CONTEXT_CGA
 	mov		[VIDEO_BDA.displayContext+DISPLAY_CONTEXT.bFlags], dl
 	; Fall to .InitializeCursor
 
