@@ -95,12 +95,13 @@ public:
 
 	void SeekSectors( unsigned long lba )
 	{
-		off64_t offset;
+		off64_t offset, result;
 
 		offset = lba;
 		offset <<= 9;
 
-		if( lseek64(fp, offset, SEEK_SET) )
+		result = lseek64(fp, offset, SEEK_SET);
+		if( result < 0 || result != offset)
 			log( -1, "'%s', Failed to seek to lba=%lu", name, lba );
 	}
 
