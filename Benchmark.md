@@ -1,0 +1,11 @@
+# Introduction #
+
+XTIDE Universal BIOS results with [DOS Disk Tester](http://vintage-blog.peacon.co.uk/wiki/DOS_Disk_Tester) (disktest.exe).
+
+
+|Drive Name|Capacity|Drive Type|PC|Controller|XTIDE Universal BIOS|OS|Buffers|Partition|[DiskTest](http://www.lo-tech.co.uk/wiki/DOS_Disk_Tester)|Write Speed (KB/s)|Read Speed (KB/s)|8k random, 70% read (IOPS)|Sector random read (IOPS)|Access Time (ms)|Comments|
+|:---------|:-------|:---------|:-|:---------|:-------------------|:-|:------|:--------|:--------------------------------------------------------|:-----------------|:----------------|:-------------------------|:------------------------|:---------------|:-------|
+|Hitachi HMS360606D5CF00|6 GB    |Microdrive|IBM 5150 (8088 @ 4.77 MHz)|XTIDE rev1|v2.0.0β1            |MS-DOS 6.22|Default|2 GB FAT-16|1.7                                                      |77.52             |134.12           |10.6                      |26.8                     |37              |        |
+|Hitachi HMS360606D5CF00|6 GB    |Microdrive|IBM 5150 (8088 @ 4.77 MHz)|XTIDE rev1 with Chuck Mod|v2.0.0β1            |MS-DOS 6.22|Default|2 GB FAT-16|1.7                                                      |127.48            |241.37           |13.5                      |26.9                     |37              |        |
+|Magicstor GS10040A-11 47|4 GB    |Microdrive|IBM 5150 (8088 @ 4.77 MHz)|XTIDE rev1 with Chuck Mod|v2.0.0β1            |- |Default|-        |-                                                        |-                 |-                |-                         |-                        |-               |Incompatible with IBM 5150/5160 and XTIDE (rev 1 and 2)|
+|SAMSUNG SP1634N|160 GB  |Hard Drive|486DX4 100 MHz|QDI Vision QD6580 (VLB)|SVN [r417](https://code.google.com/p/xtideuniversalbios/source/detail?r=417)|FreeDOS Ripcord Boot Disk (Jan 2012)|Default|16 GB FAT-32|2.3                                                      |1222.69           |8192.00          |72.9                      |272.3                    |4               |        |
