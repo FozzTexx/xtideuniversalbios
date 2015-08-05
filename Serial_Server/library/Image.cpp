@@ -21,7 +21,7 @@
 // Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 //
 
-#include "library.h"
+#include "Library.h"
 #include <memory.h>
 #include <stdlib.h>
 #include <string.h>
@@ -61,25 +61,25 @@ void flipEndian( unsigned short *buff, unsigned int len )
 		buff[t] = (buff[t] & 0xff) << 8 | (buff[t] & 0xff00) >> 8;
 }
 
-Image::Image( char *name, int p_readOnly, int p_drive )
+Image::Image( const char *name, int p_readOnly, int p_drive )
 {
 }
 
-Image::Image( char *name, int p_readOnly, int p_drive, int p_create, unsigned long p_lba )
+Image::Image( const char *name, int p_readOnly, int p_drive, int p_create, unsigned long p_lba )
 {
 }
 
-Image::Image( char *name, int p_readOnly, int p_drive, int p_create, unsigned long p_cyl, unsigned long p_head, unsigned long p_sect, int p_useCHS )
+Image::Image( const char *name, int p_readOnly, int p_drive, int p_create, unsigned long p_cyl, unsigned long p_head, unsigned long p_sect, int p_useCHS )
 {
 }
 
-void Image::init( char *name, int p_readOnly, int p_drive, unsigned long p_cyl, unsigned long p_head, unsigned long p_sect, int p_useCHS )
+void Image::init( const char *name, int p_readOnly, int p_drive, unsigned long p_cyl, unsigned long p_head, unsigned long p_sect, int p_useCHS )
 {
 	double sizef;
 	char sizeChar;
 	struct floppyInfo *f;
 
-	for( char *c = shortFileName = name; *c; c++ )
+	for( const char *c = shortFileName = name; *c; c++ )
 		if( *c == '\\' || *c == '/' || *c == ':' )
 			shortFileName = c+1;
 

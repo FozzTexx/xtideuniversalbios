@@ -21,7 +21,8 @@
 // Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 //
 
-#include "library.h"
+#include "Library.h"
+#include <string.h>
 
 class FlatImage : public Image
 {
@@ -73,7 +74,7 @@ public:
 		init( name, p_readOnly, p_drive, p_cyl, p_head, p_sect, p_useCHS );
 	}
 
-	FlatImage::~FlatImage()
+	~FlatImage()
 	{
 		fp.Close();
 	}

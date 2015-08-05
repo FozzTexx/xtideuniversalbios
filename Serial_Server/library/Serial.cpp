@@ -21,29 +21,29 @@
 // Visit http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 //
 
-#include "library.h"
+#include "Library.h"
 #include <stdlib.h>
 #include <string.h>
 
 struct baudRate supportedBaudRates[] =
 {
-	{   2400,  0x30,    "2400" },
-	{   4800,  0x18,    "4800" },
-	{   9600,   0xc,    "9600" },
-	{  19200,  0xff,   "19.2K" },
-	{  28800,   0x4,   "28.8K" },
-	{  38400,  0xff,   "38.4K" },
-	{  57600,   0x2,   "57.6K" },
-	{  76800,  0xff,   "76.8K" },
-	{ 115200,   0x1,  "115.2K" },
-	{ 153600,  0xff,  "153.6K" },
-	{ 230400,  0xff,  "230.4K" },
-	{ 460800,  0xff,  "460.8K" },
-    { 921600,  0xff,  "921.6K" },
-	{      0,     0, "Unknown" },
+  {   2400,  0x30,    "2400",   B2400 },
+  {   4800,  0x18,    "4800",   B4800 },
+  {   9600,   0xc,    "9600",   B9600 },
+  {  19200,  0xff,   "19.2K",  B19200 },
+//{  28800,   0x4,   "28.8K",  B28800 },
+  {  38400,  0xff,   "38.4K",  B38400 },
+  {  57600,   0x2,   "57.6K",  B57600 },
+//{  76800,  0xff,   "76.8K",  B76800 },
+  { 115200,   0x1,  "115.2K", B115200 },
+//{ 153600,  0xff,  "153.6K", B153600 },
+  { 230400,  0xff,  "230.4K", B230400 },
+  { 460800,  0xff,  "460.8K", B460800 },
+  { 921600,  0xff,  "921.6K", B921600 },
+  {      0,     0, "Unknown", 0 },
 };
 
-struct baudRate *baudRateMatchString( char *str )
+struct baudRate *baudRateMatchString( const char *str )
 {
 	struct baudRate *b;
 

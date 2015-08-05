@@ -4,47 +4,39 @@
 #
 # File:        makefile
 #
-# Use with GNU Make or Microsoft Nmake
-# Build with Microsoft Visual C++ 2010 or Windows SDK v7.1
-#
-# Also works with Open Watcom C/C++ Version 1.9
+# Use with GNU Make
 #
 
-HEADERS = library/library.h win32/win32file.h win32/win32serial.h library/file.h library/flatimage.h
+HEADERS = library/Library.h linux/LinuxFile.h linux/LinuxSerial.h library/File.h library/FlatImage.h
 
-CXX = cl
-CXXFLAGS = /Ox /DWIN32
+CXX = c++
+CXXFLAGS = -g
 
-WIN32OBJS = build/win32.obj build/checksum.obj build/serial.obj build/process.obj build/image.obj
+LINUXOBJS = build/linux.o build/checksum.o build/serial.o build/process.o build/image.o
 
-build/serdrive.exe:	$(WIN32OBJS)
-	@$(CXX) /Febuild/serdrive.exe $(WIN32OBJS)
+build/serdrive:	$(LINUXOBJS)
+	$(CXX) -lrt -o build/serdrive $(LINUXOBJS)
 
-build/win32.obj:	win32/win32.cpp $(HEADERS)
-	@$(CXX) /c $(CXXFLAGS) win32/win32.cpp /Fobuild/win32.obj
+build/linux.o:	linux/Linux.cpp $(HEADERS)
+	$(CXX) -c $(CXXFLAGS) linux/Linux.cpp -o build/linux.o
 
-build/checksum.obj:	library/checksum.cpp $(HEADERS)
-	@$(CXX) /c $(CXXFLAGS) library/checksum.cpp /Fobuild/checksum.obj
+build/checksum.o:	library/Checksum.cpp $(HEADERS)
+	$(CXX) -c $(CXXFLAGS) library/Checksum.cpp -o build/checksum.o
 
-build/serial.obj:	library/serial.cpp $(HEADERS)
-	@$(CXX) /c $(CXXFLAGS) library/serial.cpp /Fobuild/serial.obj
+build/serial.o:	library/Serial.cpp $(HEADERS)
+	$(CXX) -c $(CXXFLAGS) library/Serial.cpp -o build/serial.o
 
-build/process.obj:	library/process.cpp $(HEADERS)
-	@$(CXX) /c $(CXXFLAGS) library/process.cpp /Fobuild/process.obj
+build/process.o:	library/Process.cpp $(HEADERS)
+	$(CXX) -c $(CXXFLAGS) library/Process.cpp -o build/process.o
 
-build/image.obj:	library/image.cpp $(HEADERS)
-	@$(CXX) /c $(CXXFLAGS) library/image.cpp /Fobuild/image.obj
+build/image.o:	library/Image.cpp $(HEADERS)
+	$(CXX) -c $(CXXFLAGS) library/Image.cpp -o build/image.o
 
-
-release:	build/serdrive.exe
-	@echo Compressing with UPX...
-	@upx -qq --ultra-brute build/serdrive.exe
-	@echo Done!
 
 clean:
-	@del /q build\*.*
+	rm -rf build
 
 
 build/checksum_test.exe:	library/checksum.cpp
-	@$(CXX) /Febuild/checksum_test.exe /Ox library/checksum.cpp /Fobuild/checksum_test.obj -D CHECKSUM_TEST
+	$(CXX) /Febuild/checksum_test.exe /Ox library/checksum.cpp /Fobuild/checksum_test.obj -D CHECKSUM_TEST
 

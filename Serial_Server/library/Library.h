@@ -27,7 +27,9 @@
 #define SERIAL_SERVER_MAJORVERSION 1
 #define SERIAL_SERVER_MINORVERSION 0
 
-void log( int level, char *message, ... );
+#include <termios.h>
+
+void log( int level, const char *message, ... );
 
 unsigned long GetTime(void);
 unsigned long GetTime_Timeout(void);
@@ -54,9 +56,9 @@ public:
 
 	virtual void readSector( void *buff ) = 0;
 
-	Image( char *name, int p_readOnly, int p_drive );
-	Image( char *name, int p_readOnly, int p_drive, int p_create, unsigned long p_lba );
-	Image( char *name, int p_readOnly, int p_drive, int p_create, unsigned long p_cyl, unsigned long p_head, unsigned long p_sect, int p_useCHS );
+	Image( const char *name, int p_readOnly, int p_drive );
+	Image( const char *name, int p_readOnly, int p_drive, int p_create, unsigned long p_lba );
+	Image( const char *name, int p_readOnly, int p_drive, int p_create, unsigned long p_cyl, unsigned long p_head, unsigned long p_sect, int p_useCHS );
 
 	virtual ~Image() {};
 
@@ -66,7 +68,7 @@ public:
 
 	unsigned long totallba;
 
-	char *shortFileName;
+	const char *shortFileName;
 	int readOnly;
 	int drive;
 
@@ -74,27 +76,32 @@ public:
 
 	void respondInquire( unsigned short *buff, unsigned short originalPortAndBaud, struct baudRate *baudRate, unsigned short port, unsigned char scan );
 
-	void init( char *name, int p_readOnly, int p_drive, unsigned long p_cyl, unsigned long p_head, unsigned long p_sect, int p_useCHS );
+	void init( const char *name, int p_readOnly, int p_drive, unsigned long p_cyl, unsigned long p_head, unsigned long p_sect, int p_useCHS );
 };
 
 struct baudRate {
 	unsigned long rate;
 	unsigned char divisor;
-	char *display;
+	const char *display;
+	speed_t speed;
 };
-struct baudRate *baudRateMatchString( char *str );
+struct baudRate *baudRateMatchString( const char *str );
 struct baudRate *baudRateMatchDivisor( unsigned char divisor );
 
 #ifdef WIN32
 #include "../win32/win32serial.h"
+#elif defined(linux)
+#include "../linux/LinuxSerial.h"
 #else
 // there is no standard way to read/write and configure the serial port, OS specific only
 #endif
 
 #ifdef WIN32
 #include "../win32/win32file.h"
+#elif defined(linux)
+#include "../linux/LinuxFile.h"
 #else
-#include "file.h"
+#include "File.h"
 #endif
 
 void processRequests( SerialAccess *serial, Image *image0, Image *image1, int timeoutEnabled, int verboseLevel );

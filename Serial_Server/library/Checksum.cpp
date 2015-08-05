@@ -38,7 +38,7 @@
 // levels of errors introduced.
 //
 
-#include "library.h"
+#include "Library.h"
 
 unsigned short checksum( unsigned short *wbuff, int wlen )
 {
