@@ -37,7 +37,7 @@ class FileAccess
 public:
 	int Create( char *p_name )
 	{
-	  fp = open(p_name, O_CREAT | O_RDWR, 0666);
+	  fp = open(p_name, O_CREAT | O_EXCL | O_RDWR, 0666);
 
 		if( fp < 0 )
 		{
