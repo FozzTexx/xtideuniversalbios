@@ -11,6 +11,7 @@
 //
 // XTIDE Universal BIOS and Associated Tools
 // Copyright (C) 2009-2010 by Tomi Tilli, 2011-2013 by XTIDE Universal BIOS Team.
+// Linux port created by Chris Osborn <fozztexx@fozztexx.com> 6 Aug 2015
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -140,7 +141,7 @@ int main(int argc, char* argv[])
 	{
 		char *next = (t+1 < argc ? argv[t+1] : NULL );
 
-		if( argv[t][0] == '/' || argv[t][0] == '-' )
+		if( /*argv[t][0] == '/' ||*/ argv[t][0] == '-' )
 		{
 		    char *c;
 			unsigned long a;
